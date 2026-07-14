@@ -4,7 +4,8 @@
 -- Idempotent: safe to re-run. Does NOT delete your data.
 -- Adds all tables, columns, constraints, RLS policies, and realtime.
 -- Includes v1.0 platform extensions: auth linking, audit log, availability,
--- recurring shifts, compliance alerts, invoicing, onboarding progress, and role-based RLS.
+-- recurring shifts, compliance alerts, invoicing, onboarding progress, role-based RLS,
+-- open-contract pricing, shift reports/activity logs, and company public placard.
 -- Replaces the former supabase/migrations/ folder (87 incremental files).
 -- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
@@ -426,6 +427,18 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_extra_amo
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_actual_hours NUMERIC;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_amount NUMERIC;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_paid BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pricing_mode TEXT NOT NULL DEFAULT 'standard';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS agreement_fee_config JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS opening_price_offer JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS price_negotiations JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS reports JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS activity_log JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS self_audit JSONB;
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_pricing_mode_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_pricing_mode_check
+  CHECK (pricing_mode IN ('standard', 'open_contract'));
 
 COMMENT ON COLUMN security_requests.break_minutes IS 'Total unpaid break minutes the client allows during the shift';
 COMMENT ON COLUMN security_requests.shift_breaks IS 'Guard break sessions: [{ id, startedAt, endedAt? }]';
@@ -454,6 +467,14 @@ COMMENT ON COLUMN security_requests.overtime_original_hours IS 'Overtime hours c
 COMMENT ON COLUMN security_requests.overtime_original_amount IS 'Overtime amount claimed when the client opened a dispute';
 COMMENT ON COLUMN security_requests.overtime_client_payment_method IS 'stripe | cash — how the client paid overtime';
 COMMENT ON COLUMN security_requests.overtime_guard_payout_method IS 'stripe | cash — how the guard was paid for overtime';
+COMMENT ON COLUMN security_requests.break_paid IS 'When true, scheduled break minutes are paid; when false, breaks are unpaid';
+COMMENT ON COLUMN security_requests.pricing_mode IS 'standard = preset rates; open_contract = client-guard negotiated pricing';
+COMMENT ON COLUMN security_requests.agreement_fee_config IS 'Per-deal platform fee override for open-contract jobs';
+COMMENT ON COLUMN security_requests.opening_price_offer IS 'Client opening offer before guard responds on open-contract jobs';
+COMMENT ON COLUMN security_requests.price_negotiations IS 'Per-guard price negotiation threads for open-contract jobs';
+COMMENT ON COLUMN security_requests.reports IS 'Incident and activity reports filed during the shift';
+COMMENT ON COLUMN security_requests.activity_log IS 'Timestamped activity entries during the shift';
+COMMENT ON COLUMN security_requests.self_audit IS 'Legacy offline self-audit payload; main flow uses check_in_audit';
 
 UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
 UPDATE security_requests SET cash_deposited_amount = estimated_payout
@@ -488,6 +509,11 @@ UPDATE security_requests SET overtime_guard_payout_available = FALSE WHERE overt
 UPDATE security_requests SET break_minutes = 0 WHERE break_minutes IS NULL;
 UPDATE security_requests SET shift_breaks = '[]'::jsonb WHERE shift_breaks IS NULL;
 UPDATE security_requests SET schedule_change_status = 'none' WHERE schedule_change_status IS NULL;
+UPDATE security_requests SET break_paid = TRUE WHERE break_paid IS NULL;
+UPDATE security_requests SET pricing_mode = 'standard' WHERE pricing_mode IS NULL;
+UPDATE security_requests SET price_negotiations = '[]'::jsonb WHERE price_negotiations IS NULL;
+UPDATE security_requests SET reports = '[]'::jsonb WHERE reports IS NULL;
+UPDATE security_requests SET activity_log = '[]'::jsonb WHERE activity_log IS NULL;
 UPDATE security_requests
 SET
   guard_payout_available = TRUE,
@@ -1139,12 +1165,33 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_insurance_policies_guard_id
 COMMENT ON TABLE guard_insurance_policies IS
   'Guard general liability COI — required for marketplace profile approval and jobs';
 
+-- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
+CREATE TABLE IF NOT EXISTS company_public_documents (
+  id TEXT PRIMARY KEY,
+  document_type TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  document_number TEXT,
+  issuer TEXT,
+  issued_date DATE,
+  expiry_date DATE,
+  image_url TEXT,
+  display_on_homepage BOOLEAN NOT NULL DEFAULT TRUE,
+  notes TEXT DEFAULT '',
+  uploaded_at TIMESTAMPTZ,
+  uploaded_by TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_public_documents_type ON company_public_documents(document_type);
+
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_arrived BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_left_site BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_open_to_guards BOOLEAN NOT NULL DEFAULT true;
 
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS company_placard_expiry BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.company_placard_expiry IS 'Director/Founder alert for company placard missing items or upcoming expirations';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_schedule_changed BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.job_schedule_changed IS 'Alert when a job schedule changes (client, guard, or staff)';
 
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
@@ -1211,6 +1258,7 @@ ALTER TABLE team_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_public_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
 
@@ -1394,25 +1442,6 @@ COMMENT ON COLUMN platform_settings.trusted_client_auto_publish IS 'When true, t
 
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS company_placard_public_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true, the public homepage shows the company license & insurance placard.';
-
--- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
-CREATE TABLE IF NOT EXISTS company_public_documents (
-  id TEXT PRIMARY KEY,
-  document_type TEXT NOT NULL UNIQUE,
-  title TEXT NOT NULL,
-  document_number TEXT,
-  issuer TEXT,
-  issued_date DATE,
-  expiry_date DATE,
-  image_url TEXT,
-  display_on_homepage BOOLEAN NOT NULL DEFAULT TRUE,
-  notes TEXT DEFAULT '',
-  uploaded_at TIMESTAMPTZ,
-  uploaded_by TEXT,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_company_public_documents_type ON company_public_documents(document_type);
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
@@ -1664,7 +1693,9 @@ WHERE table_schema = 'public'
     'pending_start_date', 'pending_end_date', 'pending_duration_hours', 'pending_estimated_payout',
     'schedule_change_status', 'schedule_change_requested_at', 'schedule_change_requested_by',
     'schedule_change_extra_amount',
-    'early_clock_out_actual_hours', 'early_clock_out_refund_amount', 'early_clock_out_refund_status'
+    'early_clock_out_actual_hours', 'early_clock_out_refund_amount', 'early_clock_out_refund_status',
+    'break_paid', 'pricing_mode', 'agreement_fee_config', 'opening_price_offer', 'price_negotiations',
+    'reports', 'activity_log', 'self_audit'
   )
 ORDER BY column_name;
 
@@ -1727,7 +1758,8 @@ WHERE table_schema = 'public'
     'client_pending_approval', 'credential_pending', 'payment_attention',
     'support_ticket', 'support_ticket_status', 'dispute_update',
     'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification',
-    'guard_arrived', 'guard_left_site', 'job_open_to_guards'
+    'guard_arrived', 'guard_left_site', 'job_open_to_guards', 'company_placard_expiry',
+    'job_schedule_changed'
   )
 ORDER BY column_name;
 
@@ -1748,6 +1780,17 @@ FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'user_notifications'
 ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'company_public_documents'
+ORDER BY column_name;
+
+SELECT policyname, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'company_public_documents'
+ORDER BY policyname;
 
 SELECT policyname, cmd
 FROM pg_policies
