@@ -279,6 +279,8 @@ function resolveNotificationUrl(type, options = {}) {
       return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
     case "standing_crew_invite":
       return "/guard/crew";
+    case "company_placard_expiry":
+      return "/staff/settings";
     case "test":
       return "/";
     default:
@@ -473,6 +475,8 @@ function rolesForNotificationType(type) {
       return ["guard", "dispatch", "admin"];
     case "standing_crew_invite":
       return ["guard"];
+    case "company_placard_expiry":
+      return ["dispatch", "admin"];
     case "test":
       return [];
     default:
@@ -531,7 +535,8 @@ var PREF_COLUMN = {
   job_relisted: "job_relisted",
   job_schedule_changed: "assignment",
   team_chat_message: "team_chat_message",
-  standing_crew_invite: "assignment"
+  standing_crew_invite: "assignment",
+  company_placard_expiry: "company_placard_expiry"
 };
 async function isTypeEnabledForUser(db, userId, type) {
   const column = PREF_COLUMN[type];
