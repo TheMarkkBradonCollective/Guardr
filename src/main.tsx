@@ -1,7 +1,6 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { ensureNativePermissions } from './lib/platform/nativePermissions';
 import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
 import { registerNativeInstall, registerPwaInstall } from './lib/platform/installRegistry';
@@ -24,12 +23,6 @@ async function initNativeShell(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   initNativeSafeArea();
   initNativePushBridge();
-  try {
-    await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#5E7B61' });
-  } catch (error) {
-    console.warn('[native] status bar setup failed:', error);
-  }
   await ensureNativePermissions();
   await restoreNativePushIfEnabled();
   await registerNativeInstall();

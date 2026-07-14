@@ -218,7 +218,7 @@ import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient }
 import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
-import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
+import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -478,6 +478,18 @@ export default function App() {
     setThemeMode(mode);
     saveTheme(mode, currentUser?.id);
     applyThemeToDocument(mode);
+    if (currentUser) {
+      setGuards((prev) =>
+        prev.map((guard) =>
+          guard.id === currentUser.id ? { ...guard, themePreference: mode } : guard
+        )
+      );
+      setClients((prev) =>
+        prev.map((client) =>
+          client.id === currentUser.id ? { ...client, themePreference: mode } : client
+        )
+      );
+    }
     if (isDbConnected && currentUser) {
       const table =
         currentUser.role === 'client'
@@ -1451,7 +1463,7 @@ export default function App() {
   }, [currentUser, guards, loading]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || hasPerUserThemePreference(currentUser.id)) return;
     const profile =
       currentUser.role === 'client'
         ? clients.find((c) => c.id === currentUser.id)
