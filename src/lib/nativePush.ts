@@ -5,6 +5,7 @@ import {
   PushNotifications,
   Token,
 } from '@capacitor/push-notifications';
+import { SITE_URL } from './siteConfig';
 import type { PushSubscriptionDto } from './push';
 import { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 
@@ -103,7 +104,7 @@ export function syncNativePushLocalState(
 function resolveNotificationUrl(rawUrl: unknown): string {
   if (typeof rawUrl !== 'string' || !rawUrl.trim()) return '/';
   try {
-    const parsed = new URL(rawUrl, 'https://guardr.co');
+    const parsed = new URL(rawUrl, SITE_URL);
     return parsed.pathname + parsed.search + parsed.hash;
   } catch {
     return rawUrl.startsWith('/') ? rawUrl : '/';

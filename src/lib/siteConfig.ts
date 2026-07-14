@@ -1,8 +1,9 @@
 /** Public site configuration (safe for client bundle) */
 export const SITE_DOMAIN = 'guardr.co';
+/** Use www — apex guardr.co 307-redirects and breaks native POST fetch in the APK WebView. */
 export const SITE_URL =
   ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_APP_URL)?.replace(/\/$/, '') ||
-  `https://${SITE_DOMAIN}`;
+  'https://www.guardr.co';
 export const SITE_NAME = 'Guardr';
 
 /** Resolve API paths for Capacitor (bundled WebView origin is not guardr.co). */

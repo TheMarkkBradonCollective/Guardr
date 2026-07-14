@@ -61,7 +61,14 @@ async function fetchWithRetry(
       await sleep(PUSH_RETRY_DELAY_MS * (attempt + 1));
     } catch (err) {
       lastError = err;
-      if (attempt === retries) throw err;
+      if (attempt === retries) {
+        if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
+          throw new Error(
+            'Could not reach the Guardr server. Check your connection or update the app from guardr.co/download.'
+          );
+        }
+        throw err;
+      }
       await sleep(PUSH_RETRY_DELAY_MS * (attempt + 1));
     }
   }
