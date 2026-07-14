@@ -103,6 +103,7 @@ const QUICK_LINK_META: Record<
   overview: { label: 'Overview', icon: LayoutDashboard },
   map: { label: 'Map', icon: MapPin },
   applications: { label: 'Applications', icon: UserCheck },
+  credentials: { label: 'Credentials', icon: ClipboardCheck },
   jobs: { label: 'Jobs', icon: Briefcase },
   guards: { label: 'Guards', icon: Shield },
   team: { label: 'Staff', icon: Users },
