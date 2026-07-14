@@ -385,7 +385,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             {' · '}
             Guardr device registration: {enabled ? 'On' : 'Off'}
             {!nativeFcmReady
-              ? ' — Firebase is not configured in this APK build.'
+              ? ' — install a push-enabled APK (built with google-services.json).'
               : permission === 'denied'
                 ? ' — enable notifications for Guardr in Android settings.'
                 : !enabled && !busy && !message
