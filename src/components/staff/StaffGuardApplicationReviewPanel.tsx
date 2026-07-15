@@ -11,7 +11,6 @@ import { confirmApproveGuardProfile } from '../../lib/importantActionConfirm';
 import { promptRejectGuardApplicationNote } from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
-  guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
@@ -21,10 +20,6 @@ interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
   canReview: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (
-    guardId: string,
-    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
-  ) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
 }
@@ -33,7 +28,6 @@ export function StaffGuardApplicationReviewPanel({
   guard,
   canReview,
   onApproveGuardAccount,
-  onActivateGuardAccount,
   onRejectGuardApplication,
   onOpenGuardProfile,
 }: StaffGuardApplicationReviewPanelProps) {
@@ -137,34 +131,6 @@ export function StaffGuardApplicationReviewPanel({
                 className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
               >
                 Revoke application
-              </button>
-            )}
-            {guardAccountStatus === 'approved' && onActivateGuardAccount && (
-              <button
-                type="button"
-                onClick={() => {
-                  void (async () => {
-                    if (!guardCanStaffActivateAccount(guard)) return;
-                    try {
-                      await onActivateGuardAccount(guard.id);
-                    } catch (err) {
-                      showAppToast(
-                        err instanceof Error ? err.message : 'Could not grant marketplace eligibility.',
-                        { tone: 'error' }
-                      );
-                    }
-                  })();
-                }}
-                disabled={!guardCanStaffActivateAccount(guard) || actionPending}
-                className="app-button-primary app-btn-sm disabled:opacity-50"
-                title={
-                  guardCanStaffActivateAccount(guard)
-                    ? 'Grant marketplace eligibility'
-                    : activationChecklist.staffActivationBlockers.join(' · ') ||
-                      'All five credentials must be on file'
-                }
-              >
-                Grant marketplace eligibility
               </button>
             )}
           </div>

@@ -32,7 +32,7 @@ import {
   GuardStandingCrewMember,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -88,15 +88,17 @@ import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
   getGuardMissingGraceCredentialLabels,
-  type ActivateGuardAccountOptions,
 } from './lib/guardMissingCredentials';
 import {
   getPendingGuardAccountReviews,
   guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
-  buildMarketplaceEligibilityActivation,
-  MARKETPLACE_ELIGIBILITY_LABEL,
 } from './lib/guardAccountActivation';
+import {
+  guardAutoActivated,
+  guardAutoActivationRowPatch,
+  withAutoGuardActivation,
+} from './lib/guardAutoActivation';
 import {
   processGuardCredentialGraceBatch,
   syncGuardCredentialGraceState,
@@ -2925,11 +2927,13 @@ export default function App() {
       updateRequestNote: status === 'verified' ? undefined : guard.insurancePolicy.updateRequestNote,
     };
     const resolved = { ...nextPolicy, status: resolveInsuranceStatus(nextPolicy) };
-    const nextGuard = syncGuardCredentialExpiryState(
-      syncGuardCredentialGraceState({
-        ...guard,
-        insurancePolicy: resolved,
-      })
+    const nextGuard = withAutoGuardActivation(
+      syncGuardCredentialExpiryState(
+        syncGuardCredentialGraceState({
+          ...guard,
+          insurancePolicy: resolved,
+        })
+      )
     );
     if (isDbConnected) {
       await supabase
@@ -2946,13 +2950,17 @@ export default function App() {
         .eq('guard_id', guardId);
       if (
         nextGuard.userStatus !== guard.userStatus ||
-        nextGuard.credentialExpiryRestricted !== guard.credentialExpiryRestricted
+        nextGuard.credentialExpiryRestricted !== guard.credentialExpiryRestricted ||
+        nextGuard.verified !== guard.verified ||
+        guardAutoActivationRowPatch(guard, nextGuard)
       ) {
         await supabase
           .from('guards')
           .update({
             user_status: nextGuard.userStatus,
+            verified: nextGuard.verified,
             credential_expiry_restricted: nextGuard.credentialExpiryRestricted ?? false,
+            ...(guardAutoActivationRowPatch(guard, nextGuard) ?? {}),
           })
           .eq('id', guardId);
       }
@@ -2973,6 +2981,18 @@ export default function App() {
         status === 'verified'
           ? 'Your Certificate of Insurance was verified by Guardr staff.'
           : rejectionReason ?? 'Your Certificate of Insurance needs a clearer upload.'
+      );
+    }
+    if (currentUser && guardAutoActivated(guard, nextGuard)) {
+      void writeAuditLog(currentUser, 'guard_activated', 'guard', guardId, {
+        email: nextGuard.email,
+        automatic: true,
+      });
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Account activated',
+        'Your credentials are verified. You can now browse and accept jobs on Guardr.'
       );
     }
   };
@@ -3715,11 +3735,13 @@ export default function App() {
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;
-        return syncGuardCredentialExpiryState(
-          syncGuardCredentialGraceState({
-            ...g,
-            certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
-          })
+        return withAutoGuardActivation(
+          syncGuardCredentialExpiryState(
+            syncGuardCredentialGraceState({
+              ...g,
+              certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+            })
+          )
         );
       })
     );
@@ -3742,15 +3764,21 @@ export default function App() {
         throw new Error(verifyResult.error);
       }
       const after = before
-        ? syncGuardCredentialExpiryState(
-            syncGuardCredentialGraceState({
-              ...before,
-              certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
-            })
+        ? withAutoGuardActivation(
+            syncGuardCredentialExpiryState(
+              syncGuardCredentialGraceState({
+                ...before,
+                certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
+              })
+            )
           )
         : null;
       if (after) {
         const guardPatch: Record<string, unknown> = {};
+        const activationPatch = before ? guardAutoActivationRowPatch(before, after) : null;
+        if (activationPatch) {
+          Object.assign(guardPatch, activationPatch);
+        }
         if (
           after.credentialGraceDeadline !== before?.credentialGraceDeadline ||
           JSON.stringify(after.credentialGraceMissing ?? []) !==
@@ -3794,6 +3822,28 @@ export default function App() {
         'Credential verified',
         `Your ${cert.name} was verified by Guardr staff.`
       );
+      const after = before
+        ? withAutoGuardActivation(
+            syncGuardCredentialExpiryState(
+              syncGuardCredentialGraceState({
+                ...before,
+                certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
+              })
+            )
+          )
+        : null;
+      if (before && after && guardAutoActivated(before, after)) {
+        void writeAuditLog(currentUser, 'guard_activated', 'guard', guardId, {
+          email: after.email,
+          automatic: true,
+        });
+        notifyAccountUpdate(
+          currentUser,
+          guardId,
+          'Account activated',
+          'Your credentials are verified. You can now browse and accept jobs on Guardr.'
+        );
+      }
     }
   };
 
@@ -4192,8 +4242,9 @@ export default function App() {
           return;
         }
         appToast(
-          'Use Activate account in Approvals to fully activate this guard (guard card on file, optional grace for missing PTA/32-hour).'
-        , 'error');
+          'Accounts activate automatically once all five credentials are uploaded and verified.',
+          'error'
+        );
         return;
       }
     }
@@ -4642,58 +4693,6 @@ export default function App() {
     );
   };
 
-  const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
-    if (!currentUser || !canActivateGuardAccounts(currentUser)) {
-      appToast('Only Administrators and above can activate guard accounts.', 'error');
-      return;
-    }
-    const guard = guards.find((g) => g.id === guardId);
-    if (!guard) throw new Error('Guard not found.');
-    const blockers = guardAccountActivationBlockers(guard);
-    if (blockers.length > 0) {
-      throw new Error(`Cannot grant marketplace eligibility yet:\n• ${blockers.join('\n• ')}`);
-    }
-
-    const activeGuard: SecurityGuard = {
-      ...guard,
-      userStatus: 'active',
-      verified: true,
-      credentialGraceDeadline: undefined,
-      credentialGraceMissing: undefined,
-      credentialGraceHours: undefined,
-    };
-
-    setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
-    if (isDbConnected) {
-      beginLocalMutation();
-      const result = await updateGuardAccountRow(
-        supabase,
-        guardId,
-        {
-          user_status: 'active',
-          verified: true,
-          credential_grace_deadline: null,
-          credential_grace_missing: null,
-          credential_grace_hours: null,
-        },
-        'activate'
-      );
-      if (result.ok === false) {
-        setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error(result.error);
-      }
-    }
-    if (currentUser) {
-      void writeAuditLog(currentUser, 'guard_activated', 'guard', guardId, { email: guard.email });
-      notifyAccountUpdate(
-        currentUser,
-        guardId,
-        `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
-        'Your credentials are verified. You can now browse and accept jobs on Guardr.'
-      );
-    }
-  };
-
   const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
     if (!currentUser || !canSetTrustedStatus(currentUser)) {
       appToast('Only Directors and Founders can set a guard as trusted.', 'error');
@@ -4939,15 +4938,17 @@ export default function App() {
 
     const reviewedAt = new Date().toISOString();
     const previous = { ...guard };
-    const nextGuard = syncGuardCredentialExpiryState(
-      syncGuardCredentialGraceState({
-        ...guard,
-        idVerificationStatus: 'verified' as const,
-        idVerificationReviewedAt: reviewedAt,
-        idVerificationRejectionReason: undefined,
-        idUpdateRequestedAt: undefined,
-        idUpdateRequestNote: undefined,
-      })
+    const nextGuard = withAutoGuardActivation(
+      syncGuardCredentialExpiryState(
+        syncGuardCredentialGraceState({
+          ...guard,
+          idVerificationStatus: 'verified' as const,
+          idVerificationReviewedAt: reviewedAt,
+          idVerificationRejectionReason: undefined,
+          idUpdateRequestedAt: undefined,
+          idUpdateRequestNote: undefined,
+        })
+      )
     );
     setGuards((prev) => prev.map((g) => (g.id === guardId ? nextGuard : g)));
     if (isDbConnected) {
@@ -4961,7 +4962,9 @@ export default function App() {
           id_update_requested_at: null,
           id_update_request_note: null,
           user_status: nextGuard.userStatus,
+          verified: nextGuard.verified,
           credential_expiry_restricted: nextGuard.credentialExpiryRestricted ?? false,
+          ...(guardAutoActivationRowPatch(guard, nextGuard) ?? {}),
         })
         .eq('id', guardId);
       if (error) {
@@ -4977,6 +4980,18 @@ export default function App() {
         'Government ID verified',
         'Your government ID was verified. Continue uploading your remaining activation credentials.'
       );
+      if (guardAutoActivated(guard, nextGuard)) {
+        void writeAuditLog(currentUser, 'guard_activated', 'guard', guardId, {
+          email: nextGuard.email,
+          automatic: true,
+        });
+        notifyAccountUpdate(
+          currentUser,
+          guardId,
+          'Account activated',
+          'Your credentials are verified. You can now browse and accept jobs on Guardr.'
+        );
+      }
     }
   };
 
@@ -10975,7 +10990,6 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
-          onActivateGuardAccount={handleActivateGuardAccount}
           onSetGuardTrusted={handleSetGuardTrusted}
           onSetClientTrusted={handleSetClientTrusted}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}

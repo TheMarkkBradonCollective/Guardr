@@ -67,11 +67,11 @@ export interface GuardActivationChecklist {
   canActivate: boolean;
   /** Staff can approve the application (pending → approved). */
   canStaffApprove: boolean;
-  /** Staff can grant marketplace eligibility when approved and all five credentials are verified. */
+  /** Approved guard with all five credentials verified — account activates automatically. */
   canStaffActivate: boolean;
   /** Blockers for approving the guard application. */
   staffApprovalBlockers: string[];
-  /** Blockers for granting marketplace eligibility (manual activation). */
+  /** Blockers preventing automatic activation after approval. */
   staffActivationBlockers: string[];
   missingWorkCredentials: string[];
   missingGraceCredentials: string[];
@@ -217,7 +217,7 @@ function buildApplicationApprovalBlockers(guard: SecurityGuard): string[] {
 function buildStaffActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
   const blockers: string[] = [];
   if (!isGuardAccountApproved(guard) && !isGuardUserStatusActive(guard)) {
-    blockers.push('Approve the guard application before granting marketplace eligibility');
+    blockers.push('Approve the guard application before the account can activate');
   }
   blockers.push(...buildCredentialActivationBlockers(guard, state));
   return blockers;
@@ -294,7 +294,7 @@ export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): Se
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountApproved(g)) return false;
     const checklist = getGuardActivationChecklist(g);
-    return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffActivate;
+    return guardHasSubmittedItemsForStaffReview(g) || guardAccountActivationBlockers(g).length > 0;
   });
 }
 
@@ -314,7 +314,7 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
     return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove;
   }
   if (isGuardAccountApproved(guard)) {
-    return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffActivate;
+    return guardHasSubmittedItemsForStaffReview(guard) || guardAccountActivationBlockers(guard).length > 0;
   }
   return false;
 }
@@ -461,7 +461,7 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
     if (!checklist.canStaffActivate) {
       return `Approved — ${checklist.staffActivationBlockers[0] ?? 'upload and verify credentials'}`;
     }
-    return 'Approved — ready for staff to grant marketplace eligibility';
+    return 'Approved — all credentials verified, account activating';
   }
   if (checklist.canStaffApprove) return 'Application ready for staff approval';
   const parts: string[] = [];
@@ -471,8 +471,8 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
 }
 
 /**
- * Manual activation only — never auto-promote from credential uploads.
- * Returns the active guard patch when staff explicitly grants marketplace eligibility.
+ * Returns the active guard patch when an approved guard has all five credentials verified.
+ * @deprecated Use buildAutoGuardActivationPatch from guardAutoActivation.ts
  */
 export function buildMarketplaceEligibilityActivation(
   guard: SecurityGuard,
