@@ -14215,6 +14215,153 @@ html.theme-grey .landing-wordmark {
 
 /* ─── GUARD AVAILABILITY CALENDAR: POLISH ───────────────────────────────── */
 
+.guard-availability-panel {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.25rem;
+  box-sizing: border-box;
+}
+
+.guard-availability-day-tabs {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.guard-availability-day-tab {
+  padding: 0.75rem 0.125rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.guard-availability-day-tab:hover {
+  color: var(--brand-text);
+}
+
+.guard-availability-day-tab-active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.guard-availability-body {
+  padding: 0.875rem 0 1rem;
+}
+
+.guard-availability-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--brand-text-muted);
+}
+
+.guard-availability-slots {
+  display: flex;
+  flex-direction: column;
+}
+
+.guard-availability-slot-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.guard-availability-slot-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.guard-availability-slot-row-invalid .guard-availability-time-input {
+  border-bottom-color: color-mix(in srgb, var(--status-danger) 55%, var(--brand-border));
+}
+
+.guard-availability-slot-times {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.guard-availability-time-input {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--brand-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--brand-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.guard-availability-time-input:focus {
+  outline: none;
+  border-bottom-color: var(--brand-primary);
+}
+
+.guard-availability-slot-separator {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-availability-slot-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.guard-availability-available-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-text);
+}
+
+.guard-availability-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+}
+
+.guard-availability-remove:hover {
+  color: var(--status-danger);
+}
+
+.guard-availability-slot-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--status-danger);
+}
+
+.guard-availability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.875rem 0 0;
+  border-top: 1px solid var(--brand-border);
+}
+
 .availability-calendar-header {
   display: flex;
   align-items: center;
