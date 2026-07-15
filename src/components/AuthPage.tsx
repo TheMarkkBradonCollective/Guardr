@@ -15,6 +15,11 @@ import {
   MapPin,
   Users,
   ChevronDown,
+  BadgeCheck,
+  Clock,
+  Lock,
+  CreditCard,
+  type LucideIcon,
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
@@ -125,6 +130,46 @@ const HOW_HEARD_OPTIONS = [
   'Advertisement',
   'Other',
 ] as const;
+
+interface AuthHeroFeature {
+  icon: LucideIcon;
+  text: string;
+}
+
+interface AuthHeroContent {
+  icon: LucideIcon;
+  headline: string;
+  sub: string;
+  features: AuthHeroFeature[];
+  trustLine: string;
+}
+
+/** Fills the sign-in hero panel with role-specific content on tablet/desktop —
+ * see .auth-hero-content in index.css for the responsive layout. */
+const AUTH_HERO_CONTENT: Record<'client' | 'guard', AuthHeroContent> = {
+  client: {
+    icon: Building2,
+    headline: 'Coverage for your site, on your terms.',
+    sub: 'Post jobs, review licensed guards, and track live coverage from one dashboard.',
+    features: [
+      { icon: MapPin, text: 'Post coverage by site in minutes' },
+      { icon: BadgeCheck, text: 'Browse licensed, verified guards' },
+      { icon: Clock, text: 'Track live shifts as they happen' },
+    ],
+    trustLine: 'Direct-connect marketplace — you contract each job directly with the guard you choose.',
+  },
+  guard: {
+    icon: Shield,
+    headline: 'Work independently. Get paid directly.',
+    sub: 'Browse open jobs on the map, choose what fits your schedule, and manage every shift from one place.',
+    features: [
+      { icon: MapPin, text: 'Browse jobs near you on the map' },
+      { icon: Lock, text: 'Your credentials, verified and portable' },
+      { icon: CreditCard, text: 'Get paid directly for every shift' },
+    ],
+    trustLine: 'Independent contractor marketplace — you choose your assignments and your rate.',
+  },
+};
 
 const OWNER_BOOTSTRAP_ACCOUNTS: Record<
   string,
@@ -591,6 +636,8 @@ export function AuthPage({
     { id: 'client' as const, label: 'Client', desc: 'Business seeking security', icon: Building2 },
   ];
 
+  const heroContent = AUTH_HERO_CONTENT[role];
+
   return (
     <div
       className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience-${role}`}
@@ -627,12 +674,38 @@ export function AuthPage({
             )}
           </div>
         </header>
-        {/* Ambient glow in auth hero */}
+        {/* Ambient glow in auth hero — tinted to the active role's color */}
         <div className="absolute inset-0 pointer-events-none opacity-40">
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(107,143,110,0.4) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 45%, transparent) 0%, transparent 70%)' }}
           />
+        </div>
+
+        {/* Decorative watermark — desktop only, pure texture behind the content */}
+        <heroContent.icon className="auth-hero-watermark" strokeWidth={1} aria-hidden="true" />
+
+        {/* Role-specific content — hidden on mobile, horizontal chips on tablet,
+            full panel on desktop (see .auth-hero-content in index.css) */}
+        <div className="auth-hero-content">
+          <span className="auth-hero-icon-badge shrink-0">
+            <heroContent.icon className="w-6 h-6" strokeWidth={1.75} />
+          </span>
+          <div className="auth-hero-headline-block">
+            <h2 className="auth-hero-headline">{heroContent.headline}</h2>
+            <p className="auth-hero-sub">{heroContent.sub}</p>
+          </div>
+          <ul className="auth-hero-feature-list" role="list">
+            {heroContent.features.map(({ icon: Icon, text }) => (
+              <li key={text} className="auth-hero-feature">
+                <span className="auth-hero-feature-icon">
+                  <Icon className="w-4 h-4" strokeWidth={1.75} />
+                </span>
+                <span className="auth-hero-feature-text">{text}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="auth-hero-trust-line">{heroContent.trustLine}</p>
         </div>
       </div>
 
