@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import {
+  AlertTriangle,
+  Briefcase,
+  CheckCircle2,
+  Loader2,
+  ShieldAlert,
+  UserRound,
+} from 'lucide-react';
 import type { SecurityGuard, SecurityRequest } from '../../types';
 import {
   canClientReportViolation,
@@ -10,7 +18,6 @@ import {
   type ClientViolationTarget,
 } from '../../lib/clientViolations';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
-import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export interface ClientViolationReportInput {
   target: ClientViolationTarget;
@@ -26,6 +33,26 @@ interface ClientViolationReportSheetProps {
   hiredGuard?: SecurityGuard | null;
   onSubmit: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
 }
+
+const TARGET_OPTIONS: {
+  id: ClientViolationTarget;
+  label: string;
+  description: string;
+  icon: typeof UserRound;
+}[] = [
+  {
+    id: 'guard',
+    label: 'Guard violation',
+    description: 'Conduct, uniform, attendance, or post-order issues',
+    icon: UserRound,
+  },
+  {
+    id: 'job',
+    label: 'Job violation',
+    description: 'Site access, equipment, briefing, or scheduling problems',
+    icon: Briefcase,
+  },
+];
 
 export function ClientViolationReportSheet({
   open,
@@ -81,15 +108,22 @@ export function ClientViolationReportSheet({
         onClose();
       }}
       title="Report violation"
-      subtitle={
-        hiredGuard
-          ? `Report a guard or job issue on "${request.title}". Incident reports are filed separately by the guard for site record-keeping.`
-          : `Report a job issue on "${request.title}".`
-      }
+      subtitle={`${request.title} · ${request.siteName || request.location}`}
     >
-      <div className="space-y-4">
+      <div className="client-violation-sheet">
+        <div className="client-violation-callout">
+          <ShieldAlert className="client-violation-callout-icon" aria-hidden />
+          <div>
+            <p className="client-violation-callout-title">Not an incident report</p>
+            <p className="client-violation-callout-body">
+              Guards file incident reports for on-site events. Use this form to flag guard conduct or
+              job setup issues for staff review.
+            </p>
+          </div>
+        </div>
+
         {!canReport && (
-          <p className="text-sm text-brand-text-muted leading-relaxed">
+          <p className="client-violation-muted">
             Violations can be reported once a guard is assigned and the shift is active or complete.
           </p>
         )}
@@ -97,70 +131,76 @@ export function ClientViolationReportSheet({
         {canReport && (
           <>
             {hiredGuard && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide">
-                  What are you reporting?
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['guard', 'job'] as const).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setTarget(option)}
-                      className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
-                        target === option
-                          ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                          : 'border-brand-border bg-brand-bg-sec text-brand-text'
-                      }`}
-                    >
-                      {option === 'guard' ? 'Guard violation' : 'Job violation'}
-                    </button>
-                  ))}
+              <section className="client-violation-section">
+                <p className="client-violation-section-label">What are you reporting?</p>
+                <div className="client-violation-target-grid">
+                  {TARGET_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const selected = target === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setTarget(option.id)}
+                        className={`client-violation-target-card ${selected ? 'client-violation-target-card-selected' : ''}`}
+                      >
+                        <div className="client-violation-target-icon-wrap">
+                          <Icon className="client-violation-target-icon" aria-hidden />
+                        </div>
+                        <p className="client-violation-target-label">{option.label}</p>
+                        <p className="client-violation-target-desc">{option.description}</p>
+                      </button>
+                    );
+                  })}
                 </div>
-                {target === 'guard' && (
-                  <p className="text-xs text-brand-text-muted leading-relaxed">
-                    Guard violations affect {hiredGuard.name}&apos;s performance rating.
+                {target === 'guard' && hiredGuard && (
+                  <p className="client-violation-impact client-violation-impact-guard">
+                    This may affect <strong>{hiredGuard.name}</strong>&apos;s performance rating.
                   </p>
                 )}
                 {target === 'job' && (
-                  <p className="text-xs text-brand-text-muted leading-relaxed">
-                    Job violations are logged for staff review and do not penalize the guard.
+                  <p className="client-violation-impact client-violation-impact-job">
+                    Logged for staff only — the assigned guard is not penalized.
                   </p>
                 )}
-              </div>
+              </section>
             )}
 
-            <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-brand-text-muted">Category</span>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="uber-input w-full"
-              >
+            <section className="client-violation-section">
+              <p className="client-violation-section-label">Category</p>
+              <div className="client-violation-chip-grid">
                 {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setCategory(option.value)}
+                    className={`client-violation-chip ${category === option.value ? 'client-violation-chip-selected' : ''}`}
+                  >
                     {option.label}
-                  </option>
+                  </button>
                 ))}
-              </select>
-            </label>
+              </div>
+            </section>
 
-            <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-brand-text-muted">Details</span>
+            <section className="client-violation-section">
+              <label className="client-violation-section-label" htmlFor="violation-details">
+                Details
+              </label>
               <textarea
+                id="violation-details"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what happened so staff can review…"
-                className="uber-input w-full min-h-[120px] resize-y"
-                rows={4}
+                placeholder="Describe what happened, when it occurred, and any context staff should know…"
+                className="client-violation-textarea"
+                rows={5}
               />
-            </label>
+            </section>
 
             <button
               type="button"
               disabled={!description.trim() || !category || submitting || (target === 'guard' && !hiredGuard)}
               onClick={() => void handleSubmit()}
-              className="app-button-primary w-full disabled:opacity-50 gap-1.5"
+              className="client-violation-submit"
             >
               {submitting ? (
                 <>
@@ -168,38 +208,53 @@ export function ClientViolationReportSheet({
                   Submitting…
                 </>
               ) : (
-                'Submit violation report'
+                <>
+                  <AlertTriangle className="w-4 h-4" />
+                  Submit violation report
+                </>
               )}
             </button>
           </>
         )}
 
         {existingReports.length > 0 && (
-          <div className="border-t border-brand-border pt-4 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-              Reports on this job
-            </p>
-            <ul className="space-y-2">
+          <section className="client-violation-history">
+            <p className="client-violation-section-label">Reports on this job</p>
+            <ul className="client-violation-history-list">
               {existingReports.map((report: ClientViolationReport) => (
-                <li
-                  key={report.id}
-                  className="rounded-xl border border-brand-border bg-brand-bg-sec px-3 py-2.5 text-sm"
-                >
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <AlertTriangle className="w-3.5 h-3.5 text-status-warning shrink-0" />
-                    <span className="font-semibold">
-                      {report.target === 'guard' ? 'Guard' : 'Job'} ·{' '}
+                <li key={report.id} className="client-violation-history-card">
+                  <div className="client-violation-history-card-top">
+                    <span
+                      className={`client-violation-history-badge ${
+                        report.target === 'guard'
+                          ? 'client-violation-history-badge-guard'
+                          : 'client-violation-history-badge-job'
+                      }`}
+                    >
+                      {report.target === 'guard' ? 'Guard' : 'Job'}
+                    </span>
+                    <span className="client-violation-history-category">
                       {clientViolationCategoryLabel(report.target, report.category)}
                     </span>
-                    <span className="text-xs text-brand-text-muted">
+                    <span className="client-violation-history-time">
                       {new Date(report.reportedAt).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-brand-text-muted mt-1 leading-relaxed">{report.description}</p>
+                  <p className="client-violation-history-body">{report.description}</p>
+                  {report.reportedByClientName && (
+                    <p className="client-violation-history-meta">Reported by {report.reportedByClientName}</p>
+                  )}
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
+        )}
+
+        {canReport && existingReports.length === 0 && (
+          <p className="client-violation-footnote">
+            <CheckCircle2 className="client-violation-footnote-icon" aria-hidden />
+            Staff is notified immediately when you submit a report.
+          </p>
         )}
       </div>
     </AppFormSheet>

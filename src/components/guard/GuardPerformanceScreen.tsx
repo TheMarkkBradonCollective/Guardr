@@ -5,7 +5,7 @@ import {
   computeGuardSkillRatings,
 } from '../../lib/guardPerformance';
 import { GuardRatingSection } from './GuardRatingSection';
-import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { AppScreen } from '../ui/app/AppPrimitives';
 
 interface GuardPerformanceScreenProps {
   guard: SecurityGuard;
@@ -24,19 +24,14 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
 
   return (
     <AppScreen>
-      <AppFormSection title="Your performance">
-        <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-1">
-          DoorDash-style rating with levels, factor breakdown, and tier progress. Clients see your
-          tier and factors when they browse or hire.
-        </p>
-        <GuardRatingSection
-          guard={guard}
-          requests={requests}
-          performance={performance}
-          skillRatings={skillRatings}
-          variant="full"
-        />
-      </AppFormSection>
+      <GuardRatingSection
+        guard={guard}
+        requests={requests}
+        performance={performance}
+        skillRatings={skillRatings}
+        variant="full"
+        className="guard-performance-screen-card"
+      />
     </AppScreen>
   );
 }
