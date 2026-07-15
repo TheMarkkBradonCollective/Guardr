@@ -8850,15 +8850,73 @@ html.theme-grey .wf-badge-success {
   background: var(--brand-bg-sec);
 }
 
-.guard-tier-hero {
+/* Tier hero — fixed height, shield-crest bottom cut, pinned on tiered screens */
+:root {
+  --guard-tier-hero-height: 16.5rem;
+  --guard-tier-hero-clip: polygon(
+    0% 0%,
+    100% 0%,
+    100% 80%,
+    90% 88%,
+    50% 100%,
+    10% 88%,
+    0% 80%
+  );
+}
+
+.guard-tiered-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.guard-tiered-screen-pinned {
+  flex-shrink: 0;
+  z-index: 4;
+}
+
+.guard-tiered-screen-toolbar {
+  flex-shrink: 0;
+  z-index: 3;
+}
+
+.guard-tiered-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.guard-tier-hero-card {
+  margin-top: 0.25rem;
+}
+
+.guard-tier-hero,
+.guard-pref-hero-tiered {
   position: relative;
   overflow: hidden;
   color: #fff;
-  padding: 2rem 1.25rem 2.25rem;
+  box-sizing: border-box;
+  height: var(--guard-tier-hero-height);
+  min-height: var(--guard-tier-hero-height);
+  max-height: var(--guard-tier-hero-height);
+  padding: 1.35rem 1.25rem 2.35rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  clip-path: var(--guard-tier-hero-clip);
 }
 
-.guard-tier-hero-glow {
+.guard-tier-hero-glow,
+.guard-pref-hero-tiered .guard-pref-hero-glow {
   position: absolute;
   inset: 0;
   background:
@@ -8867,15 +8925,10 @@ html.theme-grey .wf-badge-success {
   pointer-events: none;
 }
 
-.guard-tier-hero::after {
-  content: '';
-  position: absolute;
-  left: -2%;
-  right: -2%;
-  bottom: -1.5rem;
-  height: 2.5rem;
-  background: var(--brand-bg-sec);
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+.guard-tier-hero::after,
+.guard-pref-hero-tiered::after {
+  content: none;
+  display: none;
 }
 
 .guard-tier-hero-starting {
@@ -8894,6 +8947,31 @@ html.theme-grey .wf-badge-success {
   background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
 }
 
+.guard-tier-hero .guard-pref-tier-medal,
+.guard-tier-hero .guard-tier-medal-lg {
+  width: 3.5rem;
+  height: 4rem;
+  margin: 0 auto 0.25rem;
+}
+
+.guard-tier-hero .guard-pref-onboard-progress,
+.guard-tier-hero .guard-tier-progress {
+  width: 100%;
+  max-width: 16rem;
+  margin-top: 0.15rem;
+}
+
+.guard-pay-hero-amount {
+  font-size: clamp(1.35rem, 5vw, 1.65rem);
+}
+
+.guard-rating-body .guard-pay-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem 1rem 0;
+}
+
 .guard-tier-medal {
   position: relative;
   display: inline-flex;
@@ -8905,7 +8983,7 @@ html.theme-grey .wf-badge-success {
 
 .guard-tier-medal-sm { width: 3rem; height: 3.5rem; }
 .guard-tier-medal-md { width: 4rem; height: 4.5rem; }
-.guard-tier-medal-lg { width: 5rem; height: 5.75rem; }
+.guard-tier-medal-lg { width: 4rem; height: 4.5rem; }
 
 .guard-tier-medal-ring {
   position: relative;
@@ -8971,12 +9049,13 @@ html.theme-grey .wf-badge-success {
 .guard-tier-hero-name {
   position: relative;
   z-index: 1;
-  font-size: clamp(2rem, 7vw, 2.75rem);
+  font-size: clamp(1.35rem, 5vw, 1.65rem);
   font-weight: 900;
   letter-spacing: -0.05em;
-  margin: 0.2rem 0 0;
-  line-height: 1;
+  margin: 0.1rem 0 0;
+  line-height: 1.05;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
 }
 
 .guard-tier-hero-score-row {
@@ -8986,8 +9065,8 @@ html.theme-grey .wf-badge-success {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  margin: 0.85rem 0 1.15rem;
-  padding: 0.45rem 0.9rem;
+  margin: 0.2rem 0 0.35rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -9014,9 +9093,15 @@ html.theme-grey .wf-badge-success {
 .guard-tier-hero-subtitle {
   position: relative;
   z-index: 1;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  line-height: 1.35;
   opacity: 0.88;
-  margin: 0.9rem 0 0;
+  margin: 0.25rem 0 0;
+  max-width: 18rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .guard-tier-progress {
@@ -13874,40 +13959,19 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   grid-row: 1;
 }
 
-/* Crew hub — tier hero, tabs, then body (matches Performance / Preferences / Availability) */
-.crew-hub-screen {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.crew-hub-tiered-layout {
-  display: flex;
-  flex-direction: column;
-}
-
-.crew-hub-hero-card {
-  margin-top: 0.25rem;
-}
-
-.crew-hub-hero-card .guard-tier-hero::after {
-  background: var(--brand-bg);
-}
-
+/* Crew hub — tier hero pinned, tabs in toolbar slot, body scrolls */
 .crew-hub-sticky-head {
-  position: sticky;
-  top: 0;
-  z-index: 5;
   padding: 0.5rem 1rem 0;
   background: var(--brand-bg);
 }
 
-.crew-hub-sticky-head .app-segmented-control {
+.crew-hub-sticky-head .app-segmented-control,
+.guard-tiered-screen-toolbar .app-segmented-control {
   margin-bottom: 0.75rem;
 }
 
 .crew-hub-team-body {
-  padding-bottom: 2rem;
+  padding-bottom: calc(1.5rem + var(--app-safe-bottom));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -15299,19 +15363,11 @@ html.theme-grey .landing-wordmark {
 /* ─── GUARD PREFERENCES (performance-tier layout) ─────────────────────────── */
 
 .guard-preferences-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0;
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  /* layout handled by .guard-tiered-screen */
 }
 
 .guard-preferences-panel-tiered {
-  margin-top: 0.25rem;
+  margin-top: 0;
   padding: 0;
   overflow: hidden;
   gap: 0;
@@ -15323,9 +15379,37 @@ html.theme-grey .landing-wordmark {
     0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
-.guard-pref-body {
-  background: var(--brand-bg-sec);
-  padding-bottom: calc(1.5rem + var(--app-safe-bottom));
+.guard-pref-hero-tiered {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 88%, #1d4f8f) 0%,
+    color-mix(in srgb, var(--brand-primary) 62%, #12345f) 55%,
+    color-mix(in srgb, var(--brand-primary) 48%, #0c2444) 100%
+  );
+}
+
+.guard-pref-hero-tiered .guard-pref-hero-glow {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  filter: none;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.28), transparent 55%),
+    radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.12), transparent 40%);
+  pointer-events: none;
+}
+
+.guard-pref-hero-medal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.75rem;
+  height: 4.25rem;
+  margin: 0 auto 0.35rem;
+  z-index: 1;
 }
 
 .guard-settings-screen {
@@ -15353,55 +15437,6 @@ html.theme-grey .landing-wordmark {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-.guard-pref-hero-tiered {
-  position: relative;
-  overflow: hidden;
-  color: #fff;
-  padding: 2rem 1.25rem 2.25rem;
-  text-align: center;
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--brand-primary) 88%, #1d4f8f) 0%,
-    color-mix(in srgb, var(--brand-primary) 62%, #12345f) 55%,
-    color-mix(in srgb, var(--brand-primary) 48%, #0c2444) 100%
-  );
-}
-
-.guard-pref-hero-tiered .guard-pref-hero-glow {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  filter: none;
-  background:
-    radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.28), transparent 55%),
-    radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.12), transparent 40%);
-  pointer-events: none;
-}
-
-.guard-pref-hero-tiered::after {
-  content: '';
-  position: absolute;
-  left: -2%;
-  right: -2%;
-  bottom: -1.5rem;
-  height: 2.5rem;
-  background: var(--brand-bg-sec);
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-}
-
-.guard-pref-hero-medal {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 5rem;
-  height: 5.75rem;
-  margin: 0 auto 0.875rem;
-  z-index: 1;
 }
 
 .guard-pref-hero-medal-ring {
@@ -15456,19 +15491,19 @@ html.theme-grey .landing-wordmark {
 .guard-pref-hero-tiered .guard-pref-hero-title {
   position: relative;
   z-index: 1;
-  margin: 0.2rem 0 0;
-  font-size: clamp(1.75rem, 6vw, 2.35rem);
+  margin: 0.1rem 0 0;
+  font-size: clamp(1.35rem, 5vw, 1.65rem);
   font-weight: 900;
   letter-spacing: -0.05em;
-  line-height: 1;
+  line-height: 1.05;
   color: #fff;
 }
 
 .guard-pref-hero-tiered .guard-pref-hero-subtitle-block {
   position: relative;
   z-index: 1;
-  margin-top: 0.75rem;
-  max-width: 34rem;
+  margin-top: 0.35rem;
+  max-width: 18rem;
   margin-left: auto;
   margin-right: auto;
 }
