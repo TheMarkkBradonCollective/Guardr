@@ -23,7 +23,6 @@ export type JobType =
   | 'armed-escort'
   | 'bodyguard'
   | 'asset-protection'
-  | 'long-term'
   | 'nightclub-bar'
   | 'event-wedding'
   | 'event-concert'

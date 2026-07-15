@@ -148,16 +148,6 @@ export const JOB_TYPE_ONBOARDING: Record<JobType, JobTypeOnboardingContent> = {
     ],
     acknowledgment: 'I understand property posts require consistent access control and reporting.',
   },
-  'long-term': {
-    title: 'Long-term post',
-    summary: 'Recurring or ongoing site assignments with regular schedules and site familiarity.',
-    expectations: [
-      'Commit to the posted schedule and provide adequate notice if you cannot continue.',
-      'Build rapport with site contacts while enforcing policies consistently.',
-      'Keep credentials, uniforms, and insurance current for the duration of the assignment.',
-    ],
-    acknowledgment: 'I understand long-term posts require schedule reliability and site continuity.',
-  },
   other: {
     title: 'Custom security request',
     summary: 'Non-standard assignments that need extra review before you accept.',

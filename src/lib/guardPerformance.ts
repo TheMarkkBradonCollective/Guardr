@@ -125,7 +125,6 @@ const SKILL_BY_JOB_TYPE: Partial<Record<JobType, string>> = {
   'armed-escort': 'Armed Escort',
   bodyguard: 'Executive Protection',
   'asset-protection': 'Asset Protection',
-  'long-term': 'Site Security',
   other: 'General Security',
 };
 

@@ -22,7 +22,6 @@ export const ALL_JOB_TYPES: JobType[] = [
   'bodyguard',
   'armed-escort',
   'asset-protection',
-  'long-term',
   'other',
 ];
 
@@ -98,11 +97,6 @@ export const JOB_TYPE_PREFERENCE_OPTIONS: JobTypePreferenceOption[] = [
     type: 'asset-protection',
     label: 'Property security',
     description: 'Buildings, retail, and facility asset protection.',
-  },
-  {
-    type: 'long-term',
-    label: 'Long-term post',
-    description: 'Recurring site assignments with ongoing schedules.',
   },
   {
     type: 'other',

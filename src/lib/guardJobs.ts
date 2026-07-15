@@ -37,7 +37,6 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   'armed-escort': 'Armed escort',
   bodyguard: 'Executive protection',
   'asset-protection': 'Property security',
-  'long-term': 'Long-term post',
   other: 'Custom request',
 };
 
@@ -77,7 +76,7 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
         job.type === 'event-private'
       );
     case 'construction':
-      return job.type === 'construction' || job.type === 'long-term' || job.title.toLowerCase().includes('construction');
+      return job.type === 'construction' || job.title.toLowerCase().includes('construction');
     case 'fire-watch':
       return job.type === 'fire-watch' || job.title.toLowerCase().includes('fire');
     case 'standing':
@@ -94,7 +93,7 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
             job.title.toLowerCase().includes('music')))
       );
     case 'apartment':
-      return job.type === 'long-term' || job.title.toLowerCase().includes('apartment') || job.title.toLowerCase().includes('residential');
+      return job.title.toLowerCase().includes('apartment') || job.title.toLowerCase().includes('residential');
     default:
       return true;
   }
