@@ -15,6 +15,7 @@ import {
   staffCanVerifyCertification,
   staffVerifyCertificationBlocker,
 } from '../../lib/certImagePolicy';
+import { approvalFeedItemMatchesSearch } from '../../lib/credentialSearch';
 import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
@@ -26,7 +27,8 @@ import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
-import { WfBadge } from '../ui/wireframe';
+import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
+import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 
@@ -61,6 +63,7 @@ interface StaffCredentialsProps {
     payload: CertUpdatePayload
   ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
+  onAddCredentialForGuard?: (guardId: string) => void;
 }
 
 function CredentialFeedRow({
@@ -155,8 +158,10 @@ export function StaffCredentials({
   onReviewGuardInsurance,
   onUpdateCertification,
   onOpenGuardProfile,
+  onAddCredentialForGuard,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialFilter>('pending');
+  const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [coiModalOpen, setCoiModalOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -180,6 +185,10 @@ export function StaffCredentials({
     if (filter === 'all') return credentialFeed;
     return credentialFeed.filter((item) => item.status === 'pending' || item.status === 'in_review');
   }, [credentialFeed, filter]);
+
+  const filteredFeed = useMemo(() => {
+    return visibleFeed.filter((item) => approvalFeedItemMatchesSearch(item, search));
+  }, [visibleFeed, search]);
 
   const openItem = (itemId: string | null) => {
     setActiveItemId(itemId);
@@ -481,7 +490,19 @@ export function StaffCredentials({
   return (
     <div className="animate-fade-in space-y-4" data-tour="staff-credentials">
       {!showDetailOnly && (
-        <div className="flex flex-wrap gap-2">
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            {onAddCredentialForGuard && (
+              <StaffCredentialAddForGuardForm guards={guards} onSelectGuard={onAddCredentialForGuard} />
+            )}
+          </div>
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search credentials..."
+            className="max-w-md"
+          />
+          <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setFilter('pending')}
@@ -497,17 +518,20 @@ export function StaffCredentials({
             All ({credentialFeed.length})
           </button>
         </div>
+        </>
       )}
 
-      {visibleFeed.length === 0 ? (
+      {filteredFeed.length === 0 ? (
         <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="All clear">
-          {filter === 'pending'
+          {search.trim()
+            ? 'No credentials match your search.'
+            : filter === 'pending'
             ? 'No guard credentials waiting for review.'
             : 'No credential submissions on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
-          items={visibleFeed}
+          items={filteredFeed}
           selectedId={activeItemId}
           onSelectId={openItem}
           getItemId={(item) => item.id}

@@ -429,7 +429,7 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "team_chat_message":
       if (role === "guard") {
-        return options.requestId ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
+        return options.requestId ? `/guard/messages?tc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
       }
       return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
     case "standing_crew_invite":

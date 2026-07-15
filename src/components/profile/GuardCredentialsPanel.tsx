@@ -30,9 +30,10 @@ import {
   getGuardIdVerificationStatus,
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
-import { Award, BookOpen, Shield } from 'lucide-react';
+import { Award, BookOpen, Plus, Shield } from 'lucide-react';
 import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { credentialMatchesSearch } from '../../lib/credentialSearch';
 import { getCourseUploadStatus } from '../../lib/certStatus';
 import {
   CERT_IMAGE_POLICY_HINT,
@@ -46,6 +47,8 @@ import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
+import { GuardOptionalCredentialAddSheet } from '../guard/GuardOptionalCredentialAddSheet';
+import { WfSearchBar } from '../ui/wireframe';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -122,6 +125,8 @@ export function GuardCredentialsPanel({
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
+  const [optionalAddOpen, setOptionalAddOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
@@ -247,8 +252,18 @@ export function GuardCredentialsPanel({
       ),
     []
   );
-  const showSection = (count: number) => editing || staffMode || count > 0;
+  const showSection = (count: number) =>
+    search.trim() ? count > 0 : editing || staffMode || count > 0;
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
+  const matchesSearch = (cert: Certification) => credentialMatchesSearch(cert, search);
+  const filteredRefresherItems = useMemo(
+    () => refresherItems.filter(matchesSearch),
+    [refresherItems, search]
+  );
+  const filteredOtherBsisItems = useMemo(
+    () => otherBsisItems.filter(matchesSearch),
+    [otherBsisItems, search]
+  );
   const idStatus = getGuardIdVerificationStatus(guard);
   const canEditId = !guard.isStaff && guardIdVerificationCanEdit(guard);
 
@@ -386,11 +401,39 @@ export function GuardCredentialsPanel({
 
   return (
     <section className="app-form-section space-y-4">
-      <div className="space-y-1">
-        <p className="text-sm font-semibold text-brand-primary">
-          {editing ? 'Upload credentials' : 'Credentials'}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-brand-primary">
+            {editing ? 'Upload credentials' : 'Credentials'}
+          </p>
+        </div>
+        {canUpload && onAddCertification && (
+          <button
+            type="button"
+            onClick={() => setOptionalAddOpen(true)}
+            className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add credential
+          </button>
+        )}
       </div>
+
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search credentials..."
+        className="max-w-md"
+      />
+
+      {canUpload && onAddCertification && (
+        <GuardOptionalCredentialAddSheet
+          guard={guard}
+          open={optionalAddOpen}
+          onClose={() => setOptionalAddOpen(false)}
+          onAddCertification={onAddCertification}
+        />
+      )}
 
       {!guard.isStaff && idStatus === 'rejected' && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
@@ -450,7 +493,7 @@ export function GuardCredentialsPanel({
         onUpdateCertification={onUpdateCertification}
         renderCertActions={renderCertActions}
       />
-      {showSection(refresherItems.length) && (
+      {showSection(filteredRefresherItems.length) && (
       <div className="mt-14 pt-8 border-t border-b border-brand-border pb-5">
       <section className="app-form-section space-y-3 !pt-0 !border-t-0">
         <CredentialRowHeader
@@ -478,21 +521,23 @@ export function GuardCredentialsPanel({
           }
         />
 
-        {refresherItems.length === 0 ? (
+        {filteredRefresherItems.length === 0 ? (
           canUpload || editing ? (
             <div className="border-t border-brand-border py-3">
-              <p className="text-xs text-brand-text-muted">No refresher course on file.</p>
+              <p className="text-xs text-brand-text-muted">
+                {search.trim() ? 'No matching refresher course on file.' : 'No refresher course on file.'}
+              </p>
             </div>
           ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
-            {refresherItems.map((cert) => renderCertRow(cert))}
+            {filteredRefresherItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
       </div>
       )}
-      {showSection(otherBsisItems.length) && (
+      {showSection(filteredOtherBsisItems.length) && (
       <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
         <CredentialRowHeader
           rawTitle
@@ -519,22 +564,24 @@ export function GuardCredentialsPanel({
           }
         />
 
-        {otherBsisItems.length === 0 ? (
+        {filteredOtherBsisItems.length === 0 ? (
           canUpload || editing ? (
             <div className="border-t border-brand-border py-3">
-              <p className="text-xs text-brand-text-muted">No other BSIS training on file.</p>
+              <p className="text-xs text-brand-text-muted">
+                {search.trim() ? 'No matching BSIS training on file.' : 'No other BSIS training on file.'}
+              </p>
             </div>
           ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
-            {otherBsisItems.map((cert) => renderCertRow(cert))}
+            {filteredOtherBsisItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
       )}
 
       {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
-        const items = grouped[category] ?? [];
+        const items = (grouped[category] ?? []).filter(matchesSearch);
         if (!showSection(items.length)) return null;
         const catalogOptions = getCertsByCategory(category);
 
@@ -567,7 +614,9 @@ export function GuardCredentialsPanel({
               canUpload || editing ? (
                 <div className="border-t border-brand-border py-3">
                   <p className="text-xs text-brand-text-muted">
-                    No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
+                    {search.trim()
+                      ? `No matching ${CERT_CATEGORY_LABELS[category].toLowerCase()} on file.`
+                      : `No ${CERT_CATEGORY_LABELS[category].toLowerCase()} on file.`}
                   </p>
                 </div>
               ) : null
