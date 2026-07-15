@@ -17442,6 +17442,26 @@ body[data-form-factor="desktop"] .app-metric-cell-value {
   overflow: hidden;
 }
 
+/* Guard/client/job detail panels: give each section real card structure
+   instead of a hairline-bottom-border list (a dense profile of 6-8 sections
+   with zero visual grouping was the clearest "boxes and lines" complaint). */
+.staff-shell .staff-detail-section {
+  background: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 1.125rem 1.25rem !important;
+  margin-bottom: 0.875rem !important;
+}
+
+.staff-shell .staff-detail-section:last-child {
+  margin-bottom: 0 !important;
+}
+
+body[data-form-factor="desktop"] .staff-detail-pane {
+  max-width: 52rem;
+}
+
 .staff-shell .staff-overview-focus-band,
 .staff-shell .staff-overview-focus-line-wrap {
   border-bottom: none !important;
