@@ -6849,6 +6849,22 @@ html.theme-light .app-chat-typing-bubble {
   animation: accountMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.nav-menu-panel {
+  animation: accountMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.app-screen-header-brand-row {
+  min-height: 1.75rem;
+}
+
+.app-screen-header-row {
+  align-items: center;
+}
+
+.app-screen-header-title {
+  text-align: left;
+}
+
 @keyframes accountMenuIn {
   from {
     opacity: 0;
@@ -16881,10 +16897,6 @@ html.theme-dark .role-side-nav-brand {
 
 .app-header-branding-name {
   user-select: none;
-}
-
-.app-screen-header--map .app-header-branding {
-  display: none;
 }
 
 /* ─── SIDEBAR NAV ITEMS ──────────────────────────────────────────────────── */

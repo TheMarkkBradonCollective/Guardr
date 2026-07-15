@@ -1,67 +1,51 @@
 import React from 'react';
-import { MapPin, Menu } from 'lucide-react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { AppHeaderBranding } from './AppHeaderBranding';
 
 interface AppScreenHeaderProps {
   title: string;
-  subtitle?: string;
-  locationLabel?: string;
   accountMenu: AccountMenuProps;
-  right?: React.ReactNode;
+  notifications?: React.ReactNode;
+  navMenu?: React.ReactNode;
   extension?: React.ReactNode;
   className?: string;
-  onMenuClick?: () => void;
   hideAccountMenu?: boolean;
+  brandingTrailing?: React.ReactNode;
+  showTitle?: boolean;
 }
 
 export function AppScreenHeader({
   title,
-  subtitle,
-  locationLabel,
   accountMenu,
-  right,
+  notifications,
+  navMenu,
   extension,
   className = '',
-  onMenuClick,
   hideAccountMenu = false,
+  brandingTrailing,
+  showTitle = true,
 }: AppScreenHeaderProps) {
-  const showLocation = !!locationLabel;
-
   return (
     <header
       className={`app-screen-header shrink-0 border-b border-brand-border bg-brand-surface/88 backdrop-blur-xl backdrop-saturate-150 transition-colors ${extension ? 'app-screen-header--with-extension' : ''} ${className}`}
     >
-      <div className="app-screen-header-row px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <AppHeaderBranding className="mb-1.5" />
-          {showLocation ? (
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-sm font-medium text-brand-text max-w-full"
-              aria-label={`Location: ${locationLabel}`}
-            >
-              <MapPin className="w-4 h-4 text-brand-text shrink-0" />
-              <span className="truncate">{locationLabel}</span>
-            </button>
-          ) : subtitle ? (
-            <p className="text-xs text-brand-text-muted leading-none truncate app-screen-header-subtitle">{subtitle}</p>
-          ) : null}
-          <h1 className="text-lg sm:text-xl font-black truncate leading-tight tracking-[-0.04em] mt-0.5 app-screen-header-title">{title}</h1>
-        </div>
+      <div className="app-screen-header-brand-row flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
+        <AppHeaderBranding trailing={brandingTrailing} />
+      </div>
 
-        <div className="shrink-0 flex items-center gap-2 pt-0.5">
-          {onMenuClick ? (
-            <button
-              type="button"
-              className="app-chrome-btn text-brand-text shrink-0"
-              onClick={onMenuClick}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          ) : null}
-          {right}
+      <div className="app-screen-header-row px-4 pb-3 flex items-center gap-2 min-h-[2.75rem]">
+        <div className="shrink-0 flex items-center">{notifications}</div>
+
+        {showTitle ? (
+          <h1 className="flex-1 min-w-0 text-base sm:text-lg font-black truncate leading-tight tracking-[-0.04em] app-screen-header-title">
+            {title}
+          </h1>
+        ) : (
+          <div className="flex-1 min-w-0" aria-hidden />
+        )}
+
+        <div className="shrink-0 flex items-center gap-1.5">
+          {navMenu}
           {!hideAccountMenu ? <AccountMenu {...accountMenu} /> : null}
         </div>
       </div>
