@@ -329,7 +329,7 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home') {
+  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home' && view !== 'guide') {
     return page(
       'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />

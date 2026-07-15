@@ -361,7 +361,7 @@ export function resolveNotificationUrlForRole(
     case 'team_chat_message':
       if (role === 'guard') {
         return options.requestId
-          ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}`
+          ? `/guard/messages?tc=${encodeURIComponent(options.requestId)}`
           : '/guard/messages';
       }
       return options.requestId

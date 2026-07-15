@@ -182,6 +182,7 @@ interface GuardDashboardProps {
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
   jobChatRequestId?: string | null;
+  initialTeamChatRequestId?: string | null;
   openJobChat?: boolean;
   /** Deep-link job selection without opening chat (notifications) */
   initialSelectedJobId?: string | null;
@@ -290,6 +291,7 @@ export function GuardDashboard({
   onRequestCashPayout,
   onRequestStripePayout,
   jobChatRequestId = null,
+  initialTeamChatRequestId = null,
   openJobChat = false,
   initialSelectedJobId = null,
   onJobChatRequestIdChange,
@@ -560,7 +562,14 @@ export function GuardDashboard({
     }
   }, [tab, openJobChat, jobChatRequestId, setTab]);
 
-  const [teamChatRequestId, setTeamChatRequestId] = useState<string | null>(null);
+  const [teamChatRequestId, setTeamChatRequestId] = useState<string | null>(initialTeamChatRequestId);
+
+  useEffect(() => {
+    if (initialTeamChatRequestId) {
+      setTeamChatRequestId(initialTeamChatRequestId);
+      setTab('messages');
+    }
+  }, [initialTeamChatRequestId, setTab]);
 
   const openMessagesForTeam = useCallback(
     (requestId: string) => {

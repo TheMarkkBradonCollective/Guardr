@@ -628,6 +628,12 @@ export default function App() {
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
+  const [teamChatRequestId, setTeamChatRequestIdState] = useState<string | null>(
+    () => initialRoute?.teamChatRequestId ?? null
+  );
+  const [staffMessagesTab, setStaffMessagesTabState] = useState<'team' | 'jobs' | null>(
+    () => initialRoute?.staffMessageTab ?? null
+  );
   const [supportTicketId, setSupportTicketIdState] = useState<string | null>(
     () => initialRoute?.supportTicketId ?? null
   );
@@ -657,6 +663,8 @@ export default function App() {
       clientGuardId: clientGuardId ?? undefined,
       clientDirectGuardId: clientDirectGuardId ?? undefined,
       jobChatRequestId: jobChatRequestId ?? undefined,
+      teamChatRequestId: teamChatRequestId ?? undefined,
+      staffMessageTab: staffMessagesTab ?? undefined,
       supportTicketId: supportTicketId ?? undefined,
       supportSection: supportSection ?? undefined,
       supportMode: supportMode ?? undefined,
@@ -696,6 +704,8 @@ export default function App() {
     setClientGuardIdState(route.clientGuardId ?? null);
     setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
     setJobChatRequestIdState(route.jobChatRequestId ?? null);
+    setTeamChatRequestIdState(route.teamChatRequestId ?? null);
+    setStaffMessagesTabState(route.staffMessageTab ?? null);
     setSupportTicketIdState(route.supportTicketId ?? null);
     setSupportSectionState(route.supportSection ?? 'support');
     setSupportModeState(route.supportMode ?? null);
@@ -940,6 +950,38 @@ export default function App() {
           clientView: openChat ? 'messages' : clientView,
           jobChatRequestId: requestId ?? undefined,
           openJobChat: openChat,
+        })
+      );
+    }
+  };
+
+  const setTeamChatRequestId = (requestId: string | null) => {
+    setTeamChatRequestIdState(requestId);
+    if (requestId) setJobChatRequestIdState(null);
+    const role = currentUser ? appRoleForUser(currentUser) : null;
+    if (role === 'staff') {
+      setStaffSectionState('messages');
+      setStaffMessagesTabState('team');
+      syncAppRoute(
+        buildAppRoute({
+          role: 'staff',
+          staffSection: 'messages',
+          staffMessageTab: 'team',
+          teamChatRequestId: requestId ?? undefined,
+          jobChatRequestId: undefined,
+        })
+      );
+      return;
+    }
+    if (role === 'guard') {
+      setGuardTabState('messages');
+      syncAppRoute(
+        buildAppRoute({
+          role: 'guard',
+          guardTab: 'messages',
+          teamChatRequestId: requestId ?? undefined,
+          jobChatRequestId: undefined,
+          openJobChat: false,
         })
       );
     }
@@ -10157,7 +10199,7 @@ export default function App() {
         </>
       );
     }
-    if (isAuthView) {
+    if (isAuthView && !isAppExperience()) {
       return (
         <>
           <AuthPage
@@ -10169,7 +10211,42 @@ export default function App() {
             isAppLoading={loading}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
-            onOpenGuide={isAppExperience() ? undefined : openPublicGuide}
+            onOpenGuide={openPublicGuide}
+            onAuthModeChange={setAuthViewMode}
+            onAuthRoleChange={setAuthViewRole}
+            initialRole={initialAuthRole}
+            initialMode={initialAuthMode}
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            presentation="page"
+          />
+          <InstallPrompt />
+        </>
+      );
+    }
+    if (isAppExperience()) {
+      return (
+        <>
+          <AppHomeScreen
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            authSheetOpen={isAuthView}
+            onNavigateToAuth={(role, mode) => {
+              openAuthView(role ?? 'guard', mode ?? 'sign-in');
+            }}
+            onOpenLegal={openLegalPage}
+          />
+          <AuthPage
+            presentation="sheet"
+            open={isAuthView}
+            onSignIn={handleSignIn}
+            onSignUp={handleSignUp}
+            guardsList={guards}
+            clientsList={clients}
+            isDbConnected={isDbConnected}
+            isAppLoading={loading}
+            onBackToHome={closeAuthView}
+            onOpenLegal={openLegalPage}
             onAuthModeChange={setAuthViewMode}
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
@@ -10183,29 +10260,18 @@ export default function App() {
     }
     return (
       <>
-        {isAppExperience() ? (
-          <AppHomeScreen
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            onNavigateToAuth={(role, mode) => {
-              openAuthView(role ?? 'client', mode ?? 'sign-in');
-            }}
-            onOpenLegal={openLegalPage}
-          />
-        ) : (
-          <HomePage
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            ownerMessage={platformSettings.ownerMessage}
-            directorMessage={platformSettings.directorMessage}
-            companyPlacardDocuments={companyPlacardPublicDocuments}
-            onNavigateToAuth={(role, mode) => {
-              openAuthView(role ?? 'client', mode ?? 'sign-in');
-            }}
-            onOpenLegal={openLegalPage}
-            onOpenGuide={openPublicGuide}
-          />
-        )}
+        <HomePage
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
+          ownerMessage={platformSettings.ownerMessage}
+          directorMessage={platformSettings.directorMessage}
+          companyPlacardDocuments={companyPlacardPublicDocuments}
+          onNavigateToAuth={(role, mode) => {
+            openAuthView(role ?? 'client', mode ?? 'sign-in');
+          }}
+          onOpenLegal={openLegalPage}
+          onOpenGuide={openPublicGuide}
+        />
         <InstallPrompt />
       </>
     );
@@ -10372,6 +10438,7 @@ export default function App() {
           onSendGuardMessage={handleSendGuardMessage}
           onRefreshGuardMessages={refreshGuardMessages}
           jobChatRequestId={jobChatRequestId}
+          initialTeamChatRequestId={teamChatRequestId}
           openJobChat={openJobChat}
           initialSelectedJobId={jobChatRequestId && !openJobChat ? jobChatRequestId : null}
           onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
@@ -10422,6 +10489,7 @@ export default function App() {
         view !== 'profile' &&
         view !== 'settings' &&
         view !== 'messages' &&
+        view !== 'guide' &&
         view !== 'support-compose' &&
         view !== 'support-report'
       ) {
@@ -10608,6 +10676,9 @@ export default function App() {
           onSelectedSupportTicketIdChange={setSupportTicketId}
           selectedJobChatRequestId={jobChatRequestId}
           onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
+          selectedTeamChatRequestId={teamChatRequestId}
+          onSelectedTeamChatRequestIdChange={(id) => setTeamChatRequestId(id)}
+          initialStaffMessagesTab={staffMessagesTab}
           guards={verifiedGuards}
           clients={clients}
           requests={displayRequests}
