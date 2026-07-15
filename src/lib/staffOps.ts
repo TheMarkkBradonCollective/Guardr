@@ -7,13 +7,12 @@ import {
   listIncidentReportsForRequest,
   requestHasOpenIncident,
 } from './incidentReports';
-import { isClientAccountPending } from './accountStatus';
+import { isClientAccountPending, isGuardAccountPending } from './accountStatus';
 import {
   isUserSubmittedPendingCert,
 } from './approvalSubmissions';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
-import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { getPendingInsuranceReviews } from './guardInsurance';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
@@ -322,11 +321,9 @@ export function computePlatformStats(
   const pendingInsuranceReviews = getPendingInsuranceReviews(guards).length;
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts + pendingInsuranceReviews;
-  const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
-  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
   const pendingAccountApplications =
-    getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length + pendingClientAccounts;
+    guards.filter((g) => !g.isStaff && isGuardAccountPending(g)).length + pendingClientAccounts;
   const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
   const pendingApprovals =
     pendingJobApprovals +
@@ -963,7 +960,7 @@ export function countPendingCredentialApprovals(guards: SecurityGuard[]): number
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
-  return [...getPendingGuardAccountReviews(guards), ...getApprovedGuardsAwaitingActivation(guards)];
+  return guards.filter((g) => !g.isStaff && isGuardAccountPending(g));
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {

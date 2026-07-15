@@ -13,8 +13,8 @@ import {
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
-import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
-import { guardActivationSummaryLabel, guardBelongsInAccountApprovalsQueue } from './guardAccountActivation';
+import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
+import { guardActivationSummaryLabel } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
@@ -191,22 +191,17 @@ export function buildApplicationFeed(
 
 export function isApplicationFeedItemPending(
   item: ApprovalFeedItem,
-  guards: SecurityGuard[],
-  clients: Client[]
+  _guards: SecurityGuard[],
+  _clients: Client[]
 ): boolean {
-  if (item.status === 'pending' || item.status === 'in_review') return true;
-  const guard = guards.find((entry) => entry.id === item.id);
-  if (guard && !guard.isStaff) return guardBelongsInAccountApprovalsQueue(guard);
-  const client = clients.find((entry) => entry.id === item.id);
-  if (client) return getClientAccountStatus(client) === 'pending';
-  return false;
+  return item.status === 'pending' || item.status === 'in_review';
 }
 
 export function countPendingAccountSignupApplications(
   guards: SecurityGuard[],
   clients: Client[]
 ): number {
-  const pendingGuards = guards.filter((g) => !g.isStaff && guardBelongsInAccountApprovalsQueue(g)).length;
+  const pendingGuards = guards.filter((g) => !g.isStaff && isGuardAccountPending(g)).length;
   const pendingClients = clients.filter(isClientAccountPending).length;
   return pendingGuards + pendingClients;
 }
