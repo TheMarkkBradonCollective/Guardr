@@ -9,6 +9,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 import { CertPhotoRow } from './CertPhotoRow';
+import { CredentialRevisionTimeline } from './CredentialRevisionTimeline';
 
 import { CredentialQuickViewLinks } from './CredentialQuickViewLinks';
 
@@ -241,6 +242,12 @@ export function CertDetailModal({
           </p>
         )}
 
+        {cert.updateRequestNote && !cert.pendingUpdate && (
+          <p className="text-sm text-brand-primary border border-brand-primary/30 bg-brand-primary/10 rounded-lg px-3 py-2 leading-relaxed">
+            {cert.updateRequestNote}
+          </p>
+        )}
+
         {editing ? (
           <div className="space-y-4">
             <div className="space-y-3">
@@ -381,6 +388,7 @@ export function CertDetailModal({
             </dl>
 
             <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
+            <CredentialRevisionTimeline cert={cert} />
           </>
         )}
       </div>

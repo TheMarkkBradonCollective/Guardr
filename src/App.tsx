@@ -114,10 +114,21 @@ import type { CertImageMutationResult } from './lib/certImagePolicy';
 import { credentialRequiresExpiry, resolveCertCatalogId } from './lib/certCatalog';
 import {
   buildCertImageResubmitReason,
+  buildCertUpdateRequestReason,
   buildIdResubmitReason,
   GUARD_APPLICATION_REJECT_DEFAULT_REASON,
   type IdVerificationSlot,
 } from './lib/staffDocumentReview';
+import {
+  certRevisionDbPatch,
+  certHasPendingUpdate,
+  certUpdateSubmissionAllowed,
+  pendingUpdateFromPayload,
+  prependCertRevision,
+  snapshotCertRevision,
+  parseCertificationPendingUpdate,
+  parseCertificationRevisionHistory,
+} from './lib/certRevisionHistory';
 import {
   getGuardIdVerificationStatus,
   staffApproveIdVerificationBlocker,
@@ -1796,6 +1807,10 @@ export default function App() {
             c.submitted_by_role === 'staff' || c.submitted_by_role === 'guard'
               ? c.submitted_by_role
               : undefined,
+          updateRequestedAt: c.update_requested_at ?? undefined,
+          updateRequestNote: c.update_request_note ?? undefined,
+          pendingUpdate: parseCertificationPendingUpdate(c.pending_update),
+          revisionHistory: parseCertificationRevisionHistory(c.revision_history),
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -3400,7 +3415,8 @@ export default function App() {
       submittedByRole === 'guard' &&
       imageUrl &&
       imageUrl !== (cert.imageUrl ?? '').trim() &&
-      certImageIsLocked(cert)
+      certImageIsLocked(cert) &&
+      !certUpdateSubmissionAllowed(cert)
     ) {
       return { ok: false, error: 'This credential photo cannot be changed after upload.' };
     }
@@ -3418,6 +3434,88 @@ export default function App() {
       (imageUrl ?? '') !== (cert.imageUrl ?? '').trim();
 
     if (!dataChanged) return { ok: true };
+
+    if (cert.status === 'verified' && certUpdateSubmissionAllowed(cert)) {
+      const pendingUpdate = pendingUpdateFromPayload({
+        issuer,
+        number,
+        state,
+        expiryDate: nextExpiryDate,
+        imageUrl: nextImageUrl,
+      });
+      const previous = { ...cert };
+      const nextCert: Certification = {
+        ...cert,
+        pendingUpdate,
+        updateRequestedAt: undefined,
+        updateRequestNote: cert.updateRequestNote,
+        revisionHistory: prependCertRevision(
+          cert.revisionHistory,
+          snapshotCertRevision(
+            {
+              issuer: pendingUpdate.issuer,
+              number: pendingUpdate.number,
+              state: pendingUpdate.state,
+              expiryDate: pendingUpdate.expiryDate,
+              imageUrl: pendingUpdate.imageUrl,
+              status: 'pending',
+            },
+            'update_submitted'
+          )
+        ),
+      };
+
+      setGuards((prev) =>
+        prev.map((g) =>
+          g.id === guardId
+            ? {
+                ...g,
+                certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+              }
+            : g
+        )
+      );
+
+      if (isDbConnected) {
+        beginLocalMutation();
+        try {
+          const updateResult = await updateCertificationRow(supabase, certId, {
+            pending_update: pendingUpdate,
+            update_requested_at: null,
+            update_request_note: nextCert.updateRequestNote ?? null,
+            revision_history: nextCert.revisionHistory ?? [],
+          });
+          if (!updateResult.ok) {
+            setGuards((prev) =>
+              prev.map((g) =>
+                g.id === guardId
+                  ? {
+                      ...g,
+                      certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                    }
+                  : g
+              )
+            );
+            return updateResult;
+          }
+        } catch (e) {
+          setGuards((prev) =>
+            prev.map((g) =>
+              g.id === guardId
+                ? {
+                    ...g,
+                    certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                  }
+                : g
+            )
+          );
+          console.error('Cert update error:', e);
+          return { ok: false, error: 'Could not save credential update. Please try again.' };
+        }
+      }
+
+      return { ok: true };
+    }
 
     let nextStatus = cert.status;
     if (cert.status === 'verified') {
@@ -3520,20 +3618,66 @@ export default function App() {
       throw new Error('This credential cannot be verified yet.');
     }
 
+    const approvingPendingUpdate = certHasPendingUpdate(cert) && cert.pendingUpdate;
+    const nextCert: Certification = approvingPendingUpdate
+      ? {
+          ...cert,
+          issuer: cert.pendingUpdate!.issuer,
+          number: cert.pendingUpdate!.number,
+          state: cert.pendingUpdate!.state,
+          expiryDate: cert.pendingUpdate!.expiryDate,
+          imageUrl: cert.pendingUpdate!.imageUrl,
+          status: 'verified',
+          rejectionReason: undefined,
+          pendingUpdate: undefined,
+          updateRequestedAt: undefined,
+          updateRequestNote: undefined,
+          revisionHistory: prependCertRevision(
+            prependCertRevision(cert.revisionHistory, snapshotCertRevision(cert, 'superseded')),
+            snapshotCertRevision(
+              {
+                issuer: cert.pendingUpdate!.issuer,
+                number: cert.pendingUpdate!.number,
+                state: cert.pendingUpdate!.state,
+                expiryDate: cert.pendingUpdate!.expiryDate,
+                imageUrl: cert.pendingUpdate!.imageUrl,
+                status: 'verified',
+              },
+              'verified'
+            )
+          ),
+        }
+      : {
+          ...cert,
+          status: 'verified',
+          rejectionReason: undefined,
+          revisionHistory: prependCertRevision(
+            cert.revisionHistory,
+            snapshotCertRevision({ ...cert, status: 'verified' }, 'verified')
+          ),
+        };
+
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;
         return syncGuardCredentialGraceState({
           ...g,
-          certifications: g.certifications.map((c) =>
-            c.id === certId ? { ...c, status: 'verified' as const } : c
-          ),
+          certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
         });
       })
     );
     if (isDbConnected) {
       beginLocalMutation();
-      const verifyResult = await updateCertificationRow(supabase, certId, { status: 'verified' });
+      const verifyResult = await updateCertificationRow(supabase, certId, {
+        status: 'verified',
+        issuer: nextCert.issuer,
+        number: nextCert.number,
+        state: nextCert.state ?? null,
+        expiry_date: nextCert.expiryDate ?? null,
+        image_url: nextCert.imageUrl ?? null,
+        rejection_reason: null,
+        ...certRevisionDbPatch(nextCert),
+      });
       if (verifyResult.ok === false) {
         setGuards((prev) =>
           prev.map((g) => (g.id === guardId && before ? { ...before } : g))
@@ -3543,9 +3687,7 @@ export default function App() {
       const after = before
         ? syncGuardCredentialGraceState({
             ...before,
-            certifications: before.certifications.map((c) =>
-              c.id === certId ? { ...c, status: 'verified' as const } : c
-            ),
+            certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
           })
         : null;
       if (
@@ -3595,6 +3737,75 @@ export default function App() {
     const cert = before?.certifications.find((c) => c.id === certId);
     if (!cert) throw new Error('Credential not found.');
 
+    if (certHasPendingUpdate(cert) && cert.pendingUpdate) {
+      const rejectionReason = buildCertImageResubmitReason(cert.name);
+      const rejectedUpdate = {
+        ...cert.pendingUpdate,
+        status: 'rejected' as const,
+        rejectionReason,
+      };
+      const nextCert: Certification = {
+        ...cert,
+        pendingUpdate: undefined,
+        updateRequestedAt: new Date().toISOString(),
+        updateRequestNote: rejectionReason,
+        revisionHistory: prependCertRevision(
+          prependCertRevision(
+            cert.revisionHistory,
+            snapshotCertRevision(
+              {
+                issuer: rejectedUpdate.issuer,
+                number: rejectedUpdate.number,
+                state: rejectedUpdate.state,
+                expiryDate: rejectedUpdate.expiryDate,
+                imageUrl: rejectedUpdate.imageUrl,
+                status: 'rejected',
+                rejectionReason,
+              },
+              'rejected',
+              { note: rejectionReason }
+            )
+          ),
+          snapshotCertRevision(cert, 'update_requested', { note: rejectionReason })
+        ),
+      };
+
+      setGuards((prev) =>
+        prev.map((g) =>
+          g.id === guardId
+            ? {
+                ...g,
+                certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+              }
+            : g
+        )
+      );
+      if (isDbConnected) {
+        beginLocalMutation();
+        const result = await updateCertificationRow(supabase, certId, {
+          pending_update: null,
+          update_requested_at: nextCert.updateRequestedAt ?? null,
+          update_request_note: rejectionReason,
+          revision_history: nextCert.revisionHistory ?? [],
+        });
+        if (result.ok === false) {
+          setGuards((prev) =>
+            prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+          );
+          throw new Error(result.error);
+        }
+      }
+      if (currentUser) {
+        notifyAccountUpdate(
+          currentUser,
+          guardId,
+          'Credential update needs revision',
+          `Your updated ${cert.name} was not approved. Your previous verified copy stays on file — please upload another update.`
+        );
+      }
+      return;
+    }
+
     const rejectionReason = buildCertImageResubmitReason(cert.name);
     setGuards((prev) =>
       prev.map((g) =>
@@ -3633,7 +3844,7 @@ export default function App() {
     }
   };
 
-  const handleUnverifyCert = async (guardId: string, certId: string) => {
+  const handleRequestCertUpdate = async (guardId: string, certId: string, staffNote?: string) => {
     if (!currentUser || !canVerifyCredentials(currentUser)) {
       appToast('Only Administrators and above can verify credentials.', 'error');
       return;
@@ -3641,59 +3852,53 @@ export default function App() {
     const before = guards.find((g) => g.id === guardId);
     const cert = before?.certifications.find((c) => c.id === certId);
     if (!cert || !before) throw new Error('Credential not found.');
-    if (cert.status !== 'verified') throw new Error('Only verified credentials can be unverified.');
+    if (cert.status !== 'verified') throw new Error('Only verified credentials can receive an update request.');
+    if (cert.pendingUpdate?.status === 'pending') {
+      throw new Error('This credential already has an update awaiting review.');
+    }
+
+    const updateRequestNote = buildCertUpdateRequestReason(cert.name, staffNote);
+    const requestedAt = new Date().toISOString();
+    const nextCert: Certification = {
+      ...cert,
+      updateRequestedAt: requestedAt,
+      updateRequestNote,
+      revisionHistory: prependCertRevision(
+        cert.revisionHistory,
+        snapshotCertRevision(cert, 'update_requested', { note: updateRequestNote, recordedAt: requestedAt })
+      ),
+    };
 
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;
-        return syncGuardCredentialGraceState({
+        return {
           ...g,
-          certifications: g.certifications.map((c) =>
-            c.id === certId
-              ? { ...c, status: 'pending' as const, rejectionReason: undefined }
-              : c
-          ),
-        });
+          certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+        };
       })
     );
     if (isDbConnected) {
       beginLocalMutation();
       const result = await updateCertificationRow(supabase, certId, {
-        status: 'pending',
-        rejection_reason: null,
+        update_requested_at: requestedAt,
+        update_request_note: updateRequestNote,
+        revision_history: nextCert.revisionHistory ?? [],
       });
       if (result.ok === false) {
         setGuards((prev) => prev.map((g) => (g.id === guardId && before ? { ...before } : g)));
         throw new Error(result.error);
       }
-      const after = syncGuardCredentialGraceState({
-        ...before,
-        certifications: before.certifications.map((c) =>
-          c.id === certId ? { ...c, status: 'pending' as const, rejectionReason: undefined } : c
-        ),
-      });
-      if (
-        after.credentialGraceDeadline !== before.credentialGraceDeadline ||
-        JSON.stringify(after.credentialGraceMissing ?? []) !==
-          JSON.stringify(before.credentialGraceMissing ?? [])
-      ) {
-        const graceResult = await updateGuardAccountRow(
-          supabase,
-          guardId,
-          {
-            credential_grace_deadline: after.credentialGraceDeadline ?? null,
-            credential_grace_missing: after.credentialGraceMissing ?? null,
-            credential_grace_hours: after.credentialGraceHours ?? null,
-          },
-          'activate'
-        );
-        if (graceResult.ok === false) {
-          setGuards((prev) => prev.map((g) => (g.id === guardId && before ? { ...before } : g)));
-          throw new Error(graceResult.error);
-        }
-      }
     }
-    appToast('Credential moved back to pending review.', 'success');
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Credential update requested',
+        updateRequestNote
+      );
+    }
+    appToast('Update request sent — verified copy stays on file.', 'success');
   };
 
   const handleRevokeGuardIdentityVerification = async (guardId: string) => {
@@ -10704,7 +10909,7 @@ export default function App() {
           onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onReviewGuardInsurance={handleReviewGuardInsurance}
-          onUnverifyCert={handleUnverifyCert}
+          onRequestCertUpdate={handleRequestCertUpdate}
           onRevokeGuardIdentityVerification={handleRevokeGuardIdentityVerification}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}

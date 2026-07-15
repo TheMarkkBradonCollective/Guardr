@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, ClipboardCheck, Eye, RefreshCw, ShieldCheck, Undo2, X } from 'lucide-react';
+import { Check, ChevronRight, Eye, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -9,6 +9,7 @@ import {
   formatApprovalTimestamp,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
+  credentialFeedThumbnailUrl,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import {
@@ -19,7 +20,8 @@ import { approvalFeedItemMatchesSearch } from '../../lib/credentialSearch';
 import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
-import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
+import { promptStaffCredentialUpdateNote, promptStaffResubmitNote } from '../../lib/staffDocumentReview';
+import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
@@ -30,6 +32,7 @@ import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout
 import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 
 type CredentialFilter = 'pending' | 'all';
@@ -42,7 +45,7 @@ interface StaffCredentialsProps {
   onItemIdChange?: (itemId: string | null) => void;
   onApproveCert: (guardId: string, certId: string) => void | Promise<void>;
   onRejectCert: (guardId: string, certId: string) => void | Promise<void>;
-  onUnverifyCert?: (guardId: string, certId: string) => void | Promise<void>;
+  onRequestCertUpdate?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void | Promise<void>;
@@ -65,14 +68,20 @@ interface StaffCredentialsProps {
   onOpenGuardProfile?: (guardId: string) => void;
   onAddCredentialForGuard?: (guardId: string) => void;
   onEditGuardProfile?: (guardId: string) => void;
+  onAddCertification?: (
+    guardId: string,
+    cert: Partial<Certification>
+  ) => Promise<AddCertificationResult>;
 }
 
 function CredentialFeedRow({
   item,
+  guards,
   isSelected,
   onSelect,
 }: {
   item: ApprovalFeedItem;
+  guards: SecurityGuard[];
   isSelected: boolean;
   onSelect: () => void;
 }) {
@@ -82,17 +91,28 @@ function CredentialFeedRow({
       : item.status === 'approved' || item.status === 'active'
         ? 'success'
         : 'danger';
+  const thumbnailUrl = credentialFeedThumbnailUrl(guards, item.id);
+  const pending = item.status === 'pending' || item.status === 'in_review';
 
   return (
     <AppItemCard onClick={onSelect} className={isSelected ? 'app-item-card-selected' : ''}>
       <div className="flex items-start gap-3 w-full text-left">
-        <span
-          className={`staff-overview-action-icon ${
-            item.status === 'pending' || item.status === 'in_review' ? 'staff-overview-action-icon-urgent' : ''
-          }`}
-        >
-          <ClipboardCheck className="w-4 h-4" />
-        </span>
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={item.title}
+            className={`w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec ${
+              pending ? 'ring-2 ring-amber-500/35' : ''
+            }`}
+          />
+        ) : (
+          <span
+            className={`w-11 h-11 rounded-lg shrink-0 border border-dashed border-brand-border bg-brand-bg-sec ${
+              pending ? 'ring-2 ring-amber-500/35' : ''
+            }`}
+            aria-hidden
+          />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold truncate">{item.title}</p>
@@ -150,7 +170,7 @@ export function StaffCredentials({
   onItemIdChange,
   onApproveCert,
   onRejectCert,
-  onUnverifyCert,
+  onRequestCertUpdate,
   onRequestCertImageResubmit,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
@@ -161,12 +181,14 @@ export function StaffCredentials({
   onOpenGuardProfile,
   onAddCredentialForGuard,
   onEditGuardProfile,
+  onAddCertification,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [coiModalOpen, setCoiModalOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
+  const [pendingFocusGuardId, setPendingFocusGuardId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +220,15 @@ export function StaffCredentials({
   };
 
   useEffect(() => {
+    if (!pendingFocusGuardId) return;
+    const focused = resolveApprovalFocusItemId(credentialFeed, 'credentials', pendingFocusGuardId, guards);
+    if (focused) {
+      openItem(focused);
+      setPendingFocusGuardId(null);
+    }
+  }, [pendingFocusGuardId, credentialFeed, guards]);
+
+  useEffect(() => {
     if (initialItemId) {
       setActiveItemId(initialItemId);
       return;
@@ -222,8 +253,66 @@ export function StaffCredentials({
     })();
   };
 
+  const requestCertUpdate = (guard: SecurityGuard, cert: Certification) => {
+    if (!onRequestCertUpdate) return;
+    void (async () => {
+      const note = await promptStaffCredentialUpdateNote(certDisplayName(cert));
+      if (note === null) return;
+      try {
+        await onRequestCertUpdate(guard.id, cert.id, note);
+      } catch (err) {
+        showAppToast(err instanceof Error ? err.message : 'Could not request credential update.', {
+          tone: 'error',
+        });
+      }
+    })();
+  };
+
   const renderCertActions = (guard: SecurityGuard, cert: Certification) => {
     if (!canVerifyCredentials) return null;
+
+    if (certHasPendingUpdate(cert)) {
+      return (
+        <div className="flex flex-col items-stretch gap-1.5 w-full">
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Updated document pending review — verified copy stays on file until you approve this version.
+          </p>
+          <div className="app-action-row--equal w-full">
+            <button
+              type="button"
+              onClick={() => onRejectCert(guard.id, cert.id)}
+              className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+            >
+              <X className="w-3 h-3" /> Reject update
+            </button>
+            <button
+              type="button"
+              disabled={!staffCanVerifyCertification(cert, guard)}
+              title={staffVerifyCertificationBlocker(cert, guard) ?? 'Verify updated credential'}
+              onClick={() => {
+                void (async () => {
+                  try {
+                    await onApproveCert(guard.id, cert.id);
+                  } catch (err) {
+                    showAppToast(err instanceof Error ? err.message : 'Could not verify credential update.', {
+                      tone: 'error',
+                    });
+                  }
+                })();
+              }}
+              className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+            >
+              <Check className="w-3 h-3" /> Verify update
+            </button>
+          </div>
+          {staffVerifyCertificationBlocker(cert, guard) && (
+            <p className="text-xs text-amber-500 leading-relaxed break-words">
+              {staffVerifyCertificationBlocker(cert, guard)}
+            </p>
+          )}
+        </div>
+      );
+    }
 
     if (cert.status === 'pending') {
       return (
@@ -274,24 +363,14 @@ export function StaffCredentials({
       );
     }
 
-    if (cert.status === 'verified' && onUnverifyCert) {
+    if (cert.status === 'verified' && onRequestCertUpdate) {
       return (
         <button
           type="button"
-          onClick={() => {
-            void (async () => {
-              try {
-                await onUnverifyCert(guard.id, cert.id);
-              } catch (err) {
-                showAppToast(err instanceof Error ? err.message : 'Could not unverify credential.', {
-                  tone: 'error',
-                });
-              }
-            })();
-          }}
+          onClick={() => requestCertUpdate(guard, cert)}
           className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
         >
-          <Undo2 className="w-3 h-3" /> Unverify
+          <RefreshCw className="w-3 h-3" /> Request update
         </button>
       );
     }
@@ -329,15 +408,7 @@ export function StaffCredentials({
     }
 
     if (status === 'verified') {
-      return (
-        <button
-          type="button"
-          className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
-          onClick={() => void onReviewGuardInsurance(guard.id, 'pending')}
-        >
-          <Undo2 className="w-3 h-3" /> Unverify
-        </button>
-      );
+      return null;
     }
 
     return null;
@@ -353,16 +424,22 @@ export function StaffCredentials({
     />
   );
 
-  const renderGovIdUnverify = (guard: SecurityGuard) => {
-    if (!canVerifyCredentials || !onRevokeIdentityVerification) return null;
+  const renderGovIdUpdateRequest = (guard: SecurityGuard) => {
+    if (!canVerifyCredentials || !onRequestIdentityResubmit) return null;
     if (getGuardIdVerificationStatus(guard) !== 'verified') return null;
     return (
       <button
         type="button"
         className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
-        onClick={() => void onRevokeIdentityVerification(guard.id)}
+        onClick={() => {
+          void (async () => {
+            const note = await promptStaffCredentialUpdateNote('Government ID');
+            if (note === null) return;
+            await onRequestIdentityResubmit(guard.id, ['front', 'back', 'selfie'], note);
+          })();
+        }}
       >
-        <Undo2 className="w-3 h-3" /> Unverify ID
+        <RefreshCw className="w-3 h-3" /> Request update
       </button>
     );
   };
@@ -476,7 +553,7 @@ export function StaffCredentials({
               }
             />
             {renderGovIdActions(guard)}
-            {renderGovIdUnverify(guard)}
+            {renderGovIdUpdateRequest(guard)}
           </div>
         )}
       </div>
@@ -510,8 +587,15 @@ export function StaffCredentials({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {onAddCredentialForGuard && (
-              <StaffCredentialAddForGuardForm guards={guards} onSelectGuard={onAddCredentialForGuard} />
+            {onAddCertification && (
+              <StaffCredentialAddForGuardForm
+                guards={guards}
+                onAddCertification={onAddCertification}
+                onCredentialAdded={(guardId) => {
+                  setFilter('all');
+                  setPendingFocusGuardId(guardId);
+                }}
+              />
             )}
           </div>
           <WfSearchBar
@@ -562,7 +646,7 @@ export function StaffCredentials({
             </div>
           }
           renderItem={(item, isSelected, onSelect) => (
-            <CredentialFeedRow item={item} isSelected={isSelected} onSelect={onSelect} />
+            <CredentialFeedRow item={item} guards={guards} isSelected={isSelected} onSelect={onSelect} />
           )}
           renderDetail={(item, options) => renderCredentialDetail(item, options)}
         />

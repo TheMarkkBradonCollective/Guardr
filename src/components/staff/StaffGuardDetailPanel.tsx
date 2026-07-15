@@ -463,36 +463,6 @@ export function StaffGuardDetailPanel({
     );
   };
 
-  const renderPendingCertActions = () => {
-    const pendingCerts = allCerts.filter((c) => c.status === 'pending');
-    if (pendingCerts.length === 0) return null;
-
-    return (
-      <section className="staff-detail-section space-y-3">
-        <WfSectionHeader title="Pending credentials" count={pendingCerts.length} className="mb-0" />
-        <div className="app-cert-item-stack">
-          {pendingCerts.map((cert) => (
-            <div key={cert.id} className="space-y-2">
-              <CertItemCard
-                cert={cert}
-                guardName={guard.name}
-                canEdit={canManage}
-                staffMode={canManage}
-                onUpdate={onUpdateCertification ? (payload) => onUpdateCertification(cert.id, payload) : undefined}
-                onViewFull={
-                  onOpenGuardCredential ? () => onOpenGuardCredential(guard.id, cert.id) : undefined
-                }
-                viewFullLabel="View full in Credentials →"
-                onEditFullPage={canManage ? () => setEditing(true) : undefined}
-              />
-              {renderStaffCertActions(cert)}
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  };
-
   return (
     <div className={`staff-detail-pane ${compact ? '' : 'h-full overflow-y-auto'}`}>
       {(onBack || (canEdit && !guard.isStaff)) && (
@@ -757,12 +727,13 @@ export function StaffGuardDetailPanel({
                 onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
-                onSubmitIdentityVerification={onSubmitIdentityVerification}
+                onSubmitIdentityVerification={onUpdateGuardIdImages ?? onSubmitIdentityVerification}
+                onReviewInsurance={onReviewInsurance}
               />
             </section>
           )}
 
-          {editing ? renderPendingCertActions() : (
+          {!editing && (
             <section className="staff-detail-section space-y-3">
               {!guard.isStaff && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && (
                 <StaffGuardActivationChecklistView guard={guard} />
