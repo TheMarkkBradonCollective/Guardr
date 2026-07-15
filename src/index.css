@@ -8925,61 +8925,60 @@ html.theme-grey .wf-badge-success {
 }
 
 .guard-factors-section {
-  padding: 1rem 1.125rem;
+  padding: 0 1.125rem 1rem;
 }
 
-.guard-factors-heading {
-  font-size: 1rem;
-  font-weight: 800;
-  margin: 0 0 0.875rem;
-  color: var(--brand-text);
-}
-
-.guard-factors-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.625rem;
-}
-
-.guard-factor-card {
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app);
-  padding: 0.75rem 0.875rem;
+.guard-factors-list {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.75rem;
 }
 
-.guard-factor-card-label {
-  font-size: 0.75rem;
+.guard-factor-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.guard-factor-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.guard-factor-row-label {
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--brand-text-muted);
-  margin: 0;
-}
-
-.guard-factor-card-rate {
-  font-size: 1.375rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
   color: var(--brand-text);
-  margin: 0;
-  line-height: 1.2;
 }
 
-.guard-factor-card-points {
+.guard-factor-row-rate {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+  flex-shrink: 0;
+}
+
+.guard-factor-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.guard-factor-row-points {
   font-size: 0.6875rem;
   color: var(--brand-text-muted);
-  margin: 0;
 }
 
-.guard-factor-card-status {
+.guard-factor-row-status {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.6875rem;
   font-weight: 700;
-  margin: 0.25rem 0 0;
 }
 
 .guard-factor-status-dot {
@@ -9051,16 +9050,12 @@ html.theme-grey .wf-badge-success {
   line-height: 1.2;
 }
 
-.guard-rating-section-compact .guard-factors-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.guard-rating-section-compact .guard-factors-list {
+  gap: 0.625rem;
 }
 
-.guard-rating-section-compact .guard-factor-card {
-  padding: 0.5rem 0.625rem;
-}
-
-.guard-rating-section-compact .guard-factor-card-rate {
-  font-size: 1rem;
+.guard-rating-section-compact .guard-factor-row-rate {
+  font-size: 0.9375rem;
 }
 
 

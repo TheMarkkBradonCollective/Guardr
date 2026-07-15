@@ -99,18 +99,28 @@ function TierProgressBar({
   );
 }
 
-function FactorCard({ factor }: { factor: PerformanceFactor }) {
+function FactorRow({ factor }: { factor: PerformanceFactor }) {
+  const percent =
+    factor.pointsMax > 0 ? Math.round((factor.pointsEarned / factor.pointsMax) * 100) : 0;
+
   return (
-    <div className="guard-factor-card">
-      <p className="guard-factor-card-label">{factor.label}</p>
-      <p className="guard-factor-card-rate">{factor.rateDisplay}</p>
-      <p className="guard-factor-card-points">
-        {factor.pointsEarned} of {factor.pointsMax} points
-      </p>
-      <p className={`guard-factor-card-status guard-factor-status-${factor.status}`}>
-        <span className="guard-factor-status-dot" aria-hidden />
-        {factor.statusLabel}
-      </p>
+    <div className="guard-factor-row">
+      <div className="guard-factor-row-head">
+        <span className="guard-factor-row-label">{factor.label}</span>
+        <span className="guard-factor-row-rate">{factor.rateDisplay}</span>
+      </div>
+      <div className="guard-factor-row-meta">
+        <span className="guard-factor-row-points">
+          {factor.pointsEarned} of {factor.pointsMax} points
+        </span>
+        <span className={`guard-factor-row-status guard-factor-status-${factor.status}`}>
+          <span className="guard-factor-status-dot" aria-hidden />
+          {factor.statusLabel}
+        </span>
+      </div>
+      <div className="guard-rating-bar-track" role="presentation">
+        <div className="guard-rating-bar-fill" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }
@@ -196,9 +206,9 @@ export function GuardRatingSection({
           </div>
         </div>
         {rating.factors.length > 0 && (
-          <div className="guard-rating-breakdown">
+          <div className="guard-factors-list">
             {rating.factors.slice(0, 3).map((factor) => (
-              <FactorCard key={factor.id} factor={factor} />
+              <FactorRow key={factor.id} factor={factor} />
             ))}
           </div>
         )}
@@ -237,10 +247,10 @@ export function GuardRatingSection({
 
       {rating.factors.length > 0 && (
         <div className="guard-factors-section">
-          <h3 className="guard-factors-heading">Your rating factors</h3>
-          <div className="guard-factors-grid">
+          <p className="guard-rating-group-label">Your rating factors</p>
+          <div className="guard-factors-list">
             {rating.factors.map((factor) => (
-              <FactorCard key={factor.id} factor={factor} />
+              <FactorRow key={factor.id} factor={factor} />
             ))}
           </div>
         </div>
