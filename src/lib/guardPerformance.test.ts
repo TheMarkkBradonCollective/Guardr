@@ -47,7 +47,16 @@ test('buildPerformanceBreakdown includes client reviews and behavior rows', () =
       ratingGiven: 5,
       checkInAudit: {
         checkedAt: '2026-01-01T17:55:00',
-        uniform: { uniformPresent: true, blackShoes: true, professionalAppearance: true },
+        uniform: {
+          uniformPresent: true,
+          blackShoes: true,
+          dutyBelt: true,
+          nameBadge: true,
+          professionalAppearance: true,
+        },
+        equipment: { radio: true, flashlight: true, requiredEquipment: true },
+        selfieUpload: 'selfie.jpg',
+        gpsVerified: true,
       },
     }),
   ];

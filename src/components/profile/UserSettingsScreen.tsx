@@ -1,5 +1,5 @@
 import React from 'react';
-import type { JobType, SecurityGuard, SessionUser } from '../../types';
+import type { SessionUser } from '../../types';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 import { LegalInfoCards } from '../legal/LegalInfoCards';
@@ -10,8 +10,6 @@ import type { ThemeMode } from '../../lib/platform/theme';
 import { appVersionLabel } from '../../lib/appVersion';
 import { isNativeShell } from '../../lib/platform/device';
 import { SITE_URL } from '../../lib/siteConfig';
-import { GuardJobPreferencesPanel } from '../guard/GuardJobPreferencesPanel';
-import { TeamCodeJoinPanel } from '../guard/TeamCodeJoinPanel';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
@@ -19,9 +17,6 @@ interface UserSettingsScreenProps {
   onChangeTheme: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
-  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
-  guard?: SecurityGuard | null;
-  onSaveJobPreferences?: (preferences: JobType[]) => void | Promise<void>;
 }
 
 export function UserSettingsScreen({
@@ -30,28 +25,15 @@ export function UserSettingsScreen({
   onChangeTheme,
   isDbConnected = false,
   onOpenLegal,
-  onJoinTeamWithCode,
-  guard,
-  onSaveJobPreferences,
 }: UserSettingsScreenProps) {
   return (
     <AppScreen>
-      {currentUser.role === 'guard' && onJoinTeamWithCode && (
-        <AppFormSection title="Join a crew">
-          <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-1">
-            Crew codes are only for joining an existing coordinated crew. To apply for a job on your
-            own, use Apply on the job listing.
+      {currentUser.role === 'guard' && (
+        <AppFormSection title="Work preferences">
+          <p className="text-sm text-brand-text-muted leading-relaxed">
+            Job alerts, push notifications, availability, and crew codes live under{' '}
+            <span className="font-semibold text-brand-text">Preferences</span> in the sidebar.
           </p>
-          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
-        </AppFormSection>
-      )}
-
-      {currentUser.role === 'guard' && guard && onSaveJobPreferences && (
-        <AppFormSection title="Job preferences">
-          <GuardJobPreferencesPanel
-            guard={guard}
-            onChange={onSaveJobPreferences}
-          />
         </AppFormSection>
       )}
 
@@ -59,9 +41,11 @@ export function UserSettingsScreen({
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
       </AppFormSection>
 
-      <section className="border-b border-brand-border">
-        <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
-      </section>
+      {currentUser.role !== 'guard' && (
+        <section className="border-b border-brand-border">
+          <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
+        </section>
+      )}
 
       {onOpenLegal && (
         <AppFormSection title="Legal">

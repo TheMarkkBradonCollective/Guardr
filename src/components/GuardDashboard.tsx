@@ -52,7 +52,8 @@ import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
-import { GuardAvailabilityCalendar } from './guard/GuardAvailabilityCalendar';
+import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
+import { GuardPreferencesScreen } from './guard/GuardPreferencesScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
@@ -62,7 +63,7 @@ import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -226,13 +227,15 @@ interface GuardDashboardProps {
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
   onEnterPracticeMode?: () => void;
+  isDbConnected?: boolean;
 }
 
-export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
+export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
 const GUARD_BOTTOM_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
+const GUARD_SIDEBAR_TABS = new Set<GuardTab>(['preferences', 'performance']);
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -246,6 +249,8 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   settings: 'Settings',
   guide: 'Guide',
   crew: 'Crew',
+  preferences: 'Preferences',
+  performance: 'Performance',
 };
 
 export function GuardDashboard({
@@ -338,6 +343,7 @@ export function GuardDashboard({
   tutorialActive,
   onStartTutorial,
   onEnterPracticeMode,
+  isDbConnected = false,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
   const isControlled = controlledTab !== undefined;
@@ -1036,6 +1042,11 @@ export function GuardDashboard({
     ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
+  const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
+    { id: 'performance', icon: BarChart3, label: 'Performance' },
+    { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
+  ];
+
   const accountMenu = {
     userName: guard.name,
     userSubtitle: currentUser.email,
@@ -1044,7 +1055,7 @@ export function GuardDashboard({
     onOpenSettings: () => setTab('settings'),
     onSignOut,
     hideProfile: accountNeedsActivation,
-    active: activeTab === 'profile' || activeTab === 'settings',
+    active: activeTab === 'profile' || activeTab === 'settings' || activeTab === 'preferences' || activeTab === 'performance',
     extraLinks: accountNeedsActivation
       ? []
       : [
@@ -1417,7 +1428,19 @@ export function GuardDashboard({
                   themeMode={themeMode as 'dark' | 'light' | 'grey'}
                   onChangeTheme={onChangeTheme}
                   onOpenLegal={onOpenLegal}
+                />
+              </div>
+            </div>
+          )}
+
+          {tab === 'preferences' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
+                <GuardPreferencesScreen
                   guard={guard}
+                  currentUser={currentUser}
+                  standingCrewMembers={standingCrewMembers}
+                  isDbConnected={isDbConnected}
                   onSaveJobPreferences={onSaveJobPreferences}
                   onJoinTeamWithCode={
                     shouldOfferTeamCodeJoin(guard, standingCrewMembers)
@@ -1425,9 +1448,17 @@ export function GuardDashboard({
                       : undefined
                   }
                 />
-                <div className="px-4 pb-8 max-w-lg mx-auto">
-                  <GuardAvailabilityCalendar guardId={guard.id} />
-                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'performance' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
+                <GuardPerformanceScreen
+                  guard={guard}
+                  requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}
+                />
               </div>
             </div>
           )}
@@ -1642,7 +1673,15 @@ export function GuardDashboard({
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
       navItems={accountNeedsActivation ? [] : NAV_TABS}
-      activeNavId={GUARD_BOTTOM_NAV_TABS.has(tab) ? tab : ''}
+      overflowNavItems={accountNeedsActivation ? [] : OVERFLOW_NAV}
+      moreMenuTitle="More"
+      activeNavId={
+        GUARD_BOTTOM_NAV_TABS.has(tab)
+          ? tab
+          : GUARD_SIDEBAR_TABS.has(tab)
+            ? tab
+            : ''
+      }
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}
