@@ -41,10 +41,11 @@ export function credentialListStatusLabel(
   return getCourseUploadStatusLabel(status, options);
 }
 
-function listStatusTone(status: CredentialListStatus, staffMode: boolean): WfBadgeTone {
+function listStatusTone(status: CredentialListStatus, staffMode: boolean, label: string): WfBadgeTone {
+  if (label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) return 'warning';
   if (status === 'on-file' || status === 'expired') return 'primary';
-  if (status === 'listed') return staffMode ? 'warning' : 'default';
-  return 'default';
+  if (status === 'listed') return 'warning';
+  return 'warning';
 }
 
 /** Row-level upload status — boxed to match section headers. */
@@ -56,7 +57,7 @@ export function CredentialListStatusBadge({
   staffMode?: boolean;
 }) {
   const label = credentialListStatusLabel(status, { staffMode });
-  return <CredentialSectionStatusBadge label={label} tone={listStatusTone(status, staffMode)} />;
+  return <CredentialSectionStatusBadge label={label} tone={listStatusTone(status, staffMode, label)} />;
 }
 
 export function credentialNeedsUploadAction(status: CredentialListStatus): boolean {
