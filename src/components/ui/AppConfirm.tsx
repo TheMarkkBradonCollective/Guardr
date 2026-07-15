@@ -3,6 +3,14 @@ import { createPortal } from 'react-dom';
 import { AppModal } from './motion/AppMotion';
 
 export type AppConfirmTone = 'default' | 'danger';
+export type AppAlertTone = 'default' | 'warning';
+
+export interface AppAlertOptions {
+  title: string;
+  message?: string;
+  confirmLabel?: string;
+  tone?: AppAlertTone;
+}
 
 export interface AppConfirmOptions {
   title: string;
@@ -25,7 +33,8 @@ export interface AppPromptOptions {
 
 type DialogRequest =
   | { kind: 'confirm'; options: AppConfirmOptions; resolve: (value: boolean) => void }
-  | { kind: 'prompt'; options: AppPromptOptions; resolve: (value: string | null) => void };
+  | { kind: 'prompt'; options: AppPromptOptions; resolve: (value: string | null) => void }
+  | { kind: 'alert'; options: AppAlertOptions; resolve: () => void };
 
 type Listener = (request: DialogRequest | null) => void;
 
@@ -49,13 +58,19 @@ function dismissCurrent(value: boolean | string | null) {
   emit();
   if (current.kind === 'confirm') {
     current.resolve(Boolean(value));
-  } else {
+  } else if (current.kind === 'prompt') {
     current.resolve(typeof value === 'string' ? value : null);
+  } else {
+    current.resolve();
   }
 }
 
 export function dismissAppConfirm(value: boolean | string | null = false): boolean {
   if (!activeRequest) return false;
+  if (activeRequest.kind === 'alert') {
+    dismissCurrent(null);
+    return true;
+  }
   dismissCurrent(value);
   return true;
 }
@@ -67,7 +82,7 @@ export function isAppConfirmActive(): boolean {
 export function showAppConfirm(options: AppConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     if (activeRequest) {
-      dismissCurrent(activeRequest.kind === 'confirm' ? false : null);
+      dismissCurrent(activeRequest.kind === 'confirm' ? false : activeRequest.kind === 'prompt' ? null : null);
     }
     activeRequest = { kind: 'confirm', options, resolve };
     emit();
@@ -77,9 +92,19 @@ export function showAppConfirm(options: AppConfirmOptions): Promise<boolean> {
 export function showAppPrompt(options: AppPromptOptions): Promise<string | null> {
   return new Promise((resolve) => {
     if (activeRequest) {
-      dismissCurrent(activeRequest.kind === 'confirm' ? false : null);
+      dismissCurrent(activeRequest.kind === 'confirm' ? false : activeRequest.kind === 'prompt' ? null : null);
     }
     activeRequest = { kind: 'prompt', options, resolve };
+    emit();
+  });
+}
+
+export function showAppAlert(options: AppAlertOptions): Promise<void> {
+  return new Promise((resolve) => {
+    if (activeRequest) {
+      dismissCurrent(activeRequest.kind === 'confirm' ? false : activeRequest.kind === 'prompt' ? null : null);
+    }
+    activeRequest = { kind: 'alert', options, resolve };
     emit();
   });
 }
@@ -198,6 +223,31 @@ function PromptDialogBody({
   );
 }
 
+function AlertDialogBody({
+  options,
+  onClose,
+}: {
+  options: AppAlertOptions;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  const warning = options.tone === 'warning';
+
+  return (
+    <div className={`app-confirm-dialog${warning ? ' app-confirm-dialog--warning' : ''}`}>
+      <h2 id={titleId} className="app-confirm-title">
+        {options.title}
+      </h2>
+      {options.message ? <p className="app-confirm-message">{options.message}</p> : null}
+      <div className="app-confirm-actions app-confirm-actions--single">
+        <button type="button" onClick={onClose} className="app-button-primary app-confirm-btn">
+          {options.confirmLabel ?? 'OK'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AppConfirmHost() {
   const [request, setRequest] = useState<DialogRequest | null>(null);
 
@@ -206,7 +256,7 @@ export function AppConfirmHost() {
   if (!request) return null;
 
   const handleClose = () => {
-    dismissCurrent(request.kind === 'confirm' ? false : null);
+    dismissCurrent(request.kind === 'confirm' ? false : request.kind === 'prompt' ? null : null);
   };
 
   const dialog = (
@@ -217,12 +267,14 @@ export function AppConfirmHost() {
           onCancel={handleClose}
           onConfirm={() => dismissCurrent(true)}
         />
-      ) : (
+      ) : request.kind === 'prompt' ? (
         <PromptDialogBody
           options={request.options}
           onCancel={handleClose}
           onSubmit={(value) => dismissCurrent(value)}
         />
+      ) : (
+        <AlertDialogBody options={request.options} onClose={handleClose} />
       )}
     </AppModal>
   );

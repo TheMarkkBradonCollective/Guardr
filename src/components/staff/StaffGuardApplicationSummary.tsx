@@ -6,6 +6,7 @@ import {
   guardCardStatusLabel,
   guardHasApplicationIntake,
 } from '../../lib/guardApplicationIntake';
+import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
   if (value == null || value === '') return null;
@@ -88,10 +89,11 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
       <DetailRow label="Availability & schedule" value={guard.availabilityNotes} />
 
       {!hasIntake && (
-        <p className="text-xs text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
-          This guard signed up before the expanded application form. Review the bio and use Full profile
-          if you need more context before approving.
-        </p>
+        <AppNoticeChip
+          label="Legacy application"
+          title="Legacy application"
+          message="This guard signed up before the expanded application form. Review the bio and use Full profile if you need more context before approving."
+        />
       )}
     </section>
   );

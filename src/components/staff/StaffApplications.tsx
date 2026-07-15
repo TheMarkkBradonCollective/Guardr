@@ -19,6 +19,8 @@ import {
   matchesApplicationStatusFilter,
 } from '../../lib/staffListFilters';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
+import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Building2, ChevronRight, Shield, UserCheck } from 'lucide-react';
@@ -366,9 +368,11 @@ export function StaffApplications({
 
   if (!canReview) {
     return (
-      <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="No access">
-        Your role cannot review account applications.
-      </AppEmptyState>
+      <AppBlockedAccessScreen
+        title={STAFF_SECTION_ACCESS_MESSAGES.applications!.title}
+        message={STAFF_SECTION_ACCESS_MESSAGES.applications!.message}
+        placeholders={['Search applications', 'Pending review', 'Guard applications', 'Client applications']}
+      />
     );
   }
 

@@ -34,6 +34,8 @@ import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppBlockedAccessScreen, AppNoticeChip } from '../ui/app/AppBlockedAccess';
+import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
@@ -460,9 +462,11 @@ export function StaffCredentials({
 
   if (!canVerifyCredentials) {
     return (
-      <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="No access">
-        Your role cannot verify guard credentials.
-      </AppEmptyState>
+      <AppBlockedAccessScreen
+        title={STAFF_SECTION_ACCESS_MESSAGES.credentials!.title}
+        message={STAFF_SECTION_ACCESS_MESSAGES.credentials!.message}
+        placeholders={['Search credentials', 'Pending review', 'Pending upload', 'All credentials']}
+      />
     );
   }
 
@@ -542,10 +546,11 @@ export function StaffCredentials({
 
         {context.kind === 'activation-pending' && (
           <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title={`${context.label} not submitted`}>
-            <p className="text-sm text-brand-text-muted leading-relaxed">
-              This required activation credential has not been uploaded yet. The guard can add it from their
-              profile after signing in, or staff can add it from the guard profile.
-            </p>
+            <AppNoticeChip
+              label="View details"
+              title={`${context.label} not submitted`}
+              message="This required activation credential has not been uploaded yet. The guard can add it from their profile after signing in, or staff can add it from the guard profile."
+            />
             <div className="flex flex-wrap gap-2 mt-3">
               {onOpenGuardProfile && (
                 <button

@@ -88,6 +88,8 @@ import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
+import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
+import { STAFF_SECTION_ACCESS_MESSAGES } from '../lib/staffNavAccess';
 import { DevNotesPage } from './docs/DevNotesPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
@@ -814,12 +816,11 @@ export function StaffDashboard({
             />
           </div>
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Messages</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Messaging is not available for your account right now. Contact your Director if you need access.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.messages!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.messages!.message}
+            placeholders={['Job chats', 'Team chat', 'Support inbox']}
+          />
         );
       case 'payments':
         return showFinance ? (
@@ -850,13 +851,11 @@ export function StaffDashboard({
             onCompletePayoutInvoice={onCompletePayoutInvoice}
           />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Payments</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Financial controls are limited to Director and Founder roles. If money is owed on
-              jobs, ask your Director to review the Payments section.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.payments!.message}
+            placeholders={['Pending payouts', 'Client payments', 'Guard payouts', 'Platform fees']}
+          />
         );
       case 'disputes':
         return canResolveDisputes ? (
@@ -866,13 +865,11 @@ export function StaffDashboard({
             onResolveOvertimeDispute={onResolveOvertimeDispute}
           />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Disputes</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Dispute resolution is limited to Administrator roles and above. Escalate open disputes
-              to your Administrator or Director.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.disputes!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.disputes!.message}
+            placeholders={['Open disputes', 'Resolved disputes']}
+          />
         );
       case 'analytics':
         return (
@@ -902,12 +899,11 @@ export function StaffDashboard({
         return showFinance ? (
           <DevNotesPage />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Dev notes</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Dev notes are available to Director and Founder accounts.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.message}
+            placeholders={['Release notes', 'Build history']}
+          />
         );
       case 'payment-settings':
         return showFinance ? (
@@ -917,13 +913,11 @@ export function StaffDashboard({
             onUpdatePlatformSettings={onUpdatePlatformSettings}
           />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Payment settings</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Payment method, platform fee, and crew pay settings are limited to Director and Founder
-              roles. Ask your Director to review or update these controls.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.message}
+            placeholders={['Payment methods', 'Platform fees', 'Crew pay rules']}
+          />
         );
       case 'agreements':
         return showFinance ? (
@@ -933,23 +927,21 @@ export function StaffDashboard({
             legalAcceptances={legalAcceptances}
           />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Marketplace agreements</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Marketplace agreement compliance is limited to Director and Founder roles.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.agreements!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.agreements!.message}
+            placeholders={['Guard agreements', 'Client agreements']}
+          />
         );
       case 'audit-log':
         return showFinance ? (
           <StaffAuditLogPanel />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Audit log</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              The platform audit log is limited to Director and Founder roles.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['audit-log']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['audit-log']!.message}
+            placeholders={['Recent activity', 'Compliance events']}
+          />
         );
       case 'settings':
         return showSettings ? (
@@ -965,13 +957,11 @@ export function StaffDashboard({
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
           />
         ) : (
-          <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Settings</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Platform settings are limited to Administrator roles and above. Ask your Director to update
-              approval rules, integrations, or other system-wide controls.
-            </p>
-          </div>
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
+            placeholders={['Approval rules', 'Integrations', 'Platform controls']}
+          />
         );
       case 'profile':
         return (

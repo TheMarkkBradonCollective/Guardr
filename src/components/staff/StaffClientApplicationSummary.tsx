@@ -2,6 +2,7 @@ import React from 'react';
 import { Client } from '../../types';
 import { WfBadge } from '../ui/wireframe';
 import { Globe, MapPin } from 'lucide-react';
+import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 function IntakeField({ label, value }: { label: string; value: string | number | undefined | null }) {
   if (!value && value !== 0) return null;
@@ -41,9 +42,11 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
     return (
       <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-2">
         <p className="text-sm font-semibold text-brand-text">Application details</p>
-        <p className="text-xs text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
-          No sign-up intake on file for this client. Use Full profile if you need more context before approving.
-        </p>
+        <AppNoticeChip
+          label="No intake on file"
+          title="No sign-up intake on file"
+          message="No sign-up intake on file for this client. Use Full profile if you need more context before approving."
+        />
       </section>
     );
   }
