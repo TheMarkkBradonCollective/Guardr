@@ -349,9 +349,9 @@ export function syncGuardCredentialRuntimeState(guard: SecurityGuard, state = 'C
 }
 
 export function guardHasExpiredIdUpdatePending(
-  guard: Pick<SecurityGuard, 'idUpdateRequestedAt' | 'idVerificationStatus' | 'idExpiryDate'>
+  guard: Pick<SecurityGuard, 'idUpdateRequestedAt' | 'idExpiryDate'>
 ): boolean {
-  return Boolean(guard.idUpdateRequestedAt) && guardHasExpiredIdOnFile(guard);
+  return Boolean(guard.idUpdateRequestedAt) && isIdExpired(guard);
 }
 
 /** Shown in staff roster, guard dashboard, and approvals when expiry enforcement downgraded the account. */

@@ -328,7 +328,7 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
       const actor = actorLabel(active ? activationAudit ?? profileAudit : profileAudit);
 
       let status: ApprovalFeedStatus = 'pending';
-      let statusLabel = APPLICATION_FEED_STATUS_LABELS.pending;
+      let statusLabel: string = APPLICATION_FEED_STATUS_LABELS.pending;
       if (isGuardCredentialExpiryRestricted(guard)) {
         status = 'denied';
         statusLabel = APPLICATION_FEED_STATUS_LABELS.restricted;

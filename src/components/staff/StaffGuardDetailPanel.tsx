@@ -717,8 +717,18 @@ export function StaffGuardDetailPanel({
                 onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
-                onSubmitIdentityVerification={onUpdateGuardIdImages ?? onSubmitIdentityVerification}
-                onReviewInsurance={onReviewInsurance}
+                onSubmitIdentityVerification={
+                  onUpdateGuardIdImages
+                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                    : onSubmitIdentityVerification
+                }
+                onReviewInsurance={
+                  onReviewInsurance
+                    ? async (status, rejectionReason) => {
+                        await onReviewInsurance(status, rejectionReason);
+                      }
+                    : undefined
+                }
               />
             </section>
           )}

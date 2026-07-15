@@ -85,7 +85,10 @@ export function getGovIdCredentialRecords(guard: SecurityGuard): CredentialRecor
     guard.idSelfieUrl?.trim()
       ? { id: 'id-selfie', label: ID_VERIFICATION_SLOT_LABELS.selfie, url: guard.idSelfieUrl.trim() }
       : null,
-  ].filter((image): image is { id: string; label: string; url: string } => image != null);
+  ].filter(
+    (image): image is { id: string; label: (typeof ID_VERIFICATION_SLOT_LABELS)[keyof typeof ID_VERIFICATION_SLOT_LABELS]; url: string } =>
+      image != null
+  );
 
   const details = [
     guard.idState ? { label: 'Issuing state', value: formatStateName(guard.idState) } : null,

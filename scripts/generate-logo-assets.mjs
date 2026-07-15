@@ -110,7 +110,7 @@ async function writeWordmarkPng(master, height, dest) {
 
 /** Colored shield centered on a solid theme background (PWA / favicon). */
 async function renderIconOnBackground(iconMaster, size, background) {
-  const markSize = Math.round(size * 0.72);
+  const markSize = Math.round(size * 0.85);
   const offset = Math.round((size - markSize) / 2);
   const mark = await iconMaster.clone().resize(markSize, markSize).png().toBuffer();
   return sharp({
@@ -123,7 +123,7 @@ async function renderIconOnBackground(iconMaster, size, background) {
 
 /** Maskable safe-zone icon on theme background. */
 async function renderMaskableOnBackground(iconMaster, size, background) {
-  const markSize = Math.round(size * 0.56);
+  const markSize = Math.round(size * 0.68);
   const offset = Math.round((size - markSize) / 2);
   const mark = await iconMaster.clone().resize(markSize, markSize).png().toBuffer();
   return sharp({
