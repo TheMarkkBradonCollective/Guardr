@@ -7,26 +7,15 @@
  *   public/download/guardr.apk  (copied for guardr.co/download)
  */
 import { copyFile, mkdir, unlink } from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { isGoogleServicesConfigured, writeGoogleServicesFromEnv } from './write-google-services.mjs';
 
 const ROOT = process.cwd();
 const ANDROID_HOME = process.env.ANDROID_HOME || path.join(process.env.HOME || '', 'Android', 'Sdk');
 const GRADLE = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
 const EXPECTED_ANDROID_PACKAGE = 'com.signaturesecurity.guardr';
-
-function isGoogleServicesConfigured() {
-  const servicesPath = path.join(ROOT, 'android/app/google-services.json');
-  if (!existsSync(servicesPath)) return false;
-  try {
-    const json = JSON.parse(readFileSync(servicesPath, 'utf8'));
-    const packageName = json.client?.[0]?.client_info?.android_client_info?.package_name;
-    return packageName === EXPECTED_ANDROID_PACKAGE;
-  } catch {
-    return false;
-  }
-}
 
 function run(cmd, args, options = {}) {
   const result = spawnSync(cmd, args, {
@@ -39,6 +28,9 @@ function run(cmd, args, options = {}) {
     process.exit(result.status ?? 1);
   }
 }
+
+console.log('→ Writing Firebase google-services.json (if configured)…');
+await writeGoogleServicesFromEnv();
 
 console.log('→ Generating download version manifest…');
 run('npm', ['run', 'generate:download-version']);
