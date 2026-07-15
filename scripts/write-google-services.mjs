@@ -2,6 +2,7 @@
 /**
  * Write android/app/google-services.json from GOOGLE_SERVICES_JSON when set.
  * Used by local builds and GitHub Actions so push-enabled APKs share one path.
+ * CI: secret GOOGLE_SERVICES_JSON must target com.signaturesecurity.guardr.
  */
 import { writeFile, mkdir } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
