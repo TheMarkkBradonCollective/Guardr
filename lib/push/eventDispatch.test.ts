@@ -81,18 +81,38 @@ describe('buildEventDispatchPayloads', () => {
   });
 
   it('notifies dispatch and the assigned guard on missed check-ins', async () => {
-    const payloads = await buildEventDispatchPayloads(mockDb(), {
-      type: 'missed_checkin',
-      guardId: 'guard-7',
-      guardName: 'Alex',
-      requestId: 'job-9',
-      location: 'Warehouse',
-    });
+    const payloads = await buildEventDispatchPayloads(
+      mockDb({ client_id: 'client-1', assigned_guard_id: 'guard-7' }),
+      {
+        type: 'missed_checkin',
+        guardId: 'guard-7',
+        guardName: 'Alex',
+        requestId: 'job-9',
+        location: 'Warehouse',
+      }
+    );
 
     assert.equal(payloads.length, 2);
     assert.equal(payloads[0].role, 'dispatch');
     assert.equal(payloads[1].userId, 'guard-7');
     assert.match(payloads[1].body ?? '', /missed your hourly check-in/i);
+  });
+
+  it('notifies guard and client at alert tier', async () => {
+    const payloads = await buildEventDispatchPayloads(
+      mockDb({ client_id: 'client-1', assigned_guard_id: 'guard-7' }),
+      {
+        type: 'missed_checkin',
+        checkinEscalationTier: 'alert',
+        guardName: 'Alex',
+        requestId: 'job-9',
+        location: 'Warehouse',
+      }
+    );
+
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[0].userId, 'guard-7');
+    assert.equal(payloads[1].userId, 'client-1');
   });
 
   it('notifies ticket owner on support status changes', async () => {

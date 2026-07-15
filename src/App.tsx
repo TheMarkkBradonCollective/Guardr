@@ -348,6 +348,8 @@ import {
   syncPushSubscriptionWithServer,
 } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
+import { evaluateCheckInEscalation, checkInEscalationDedupKey } from './lib/checkInEscalation';
+import { notifyOpenJobToGuards } from './lib/openJobNotifications';
 import {
   notifyAccountUpdate,
   notifyGuardAppliedToJob,
@@ -1940,6 +1942,9 @@ export default function App() {
           operationalDetails: normalizeJobOperationalDetails(r.operational_details),
           startDate: r.start_date,
           endDate: r.end_date,
+          scheduleType: r.schedule_type === 'recurring' ? 'recurring' : 'one-time',
+          recurringEndDate: r.recurring_end_date ?? undefined,
+          recurringDays: Array.isArray(r.recurring_days) ? r.recurring_days : undefined,
           durationHours: r.duration_hours,
           hourlyRate: r.hourly_rate,
           scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
@@ -2662,26 +2667,26 @@ export default function App() {
     const interval = setInterval(() => {
       const now = Date.now();
       for (const req of requests) {
-        if (req.status !== 'in-progress' || !req.assignedGuardId || !req.checkInAudit?.checkedAt) continue;
-        const key = `${req.id}-${Math.floor(now / (60 * 60 * 1000))}`;
-        if (missedCheckinNotifiedRef.current.has(key)) continue;
+        const snapshot = evaluateCheckInEscalation(req, now);
+        if (!snapshot || snapshot.tier === 'none' || snapshot.tier === 'due') continue;
 
-        const lastMid = req.midShiftAudits?.[req.midShiftAudits.length - 1];
-        const lastActivity = lastMid?.checkedAt ?? req.checkInAudit.checkedAt;
-        const hoursSince = (now - new Date(lastActivity).getTime()) / (60 * 60 * 1000);
-        if (hoursSince < 1) continue;
+        const dedupKey = checkInEscalationDedupKey(req.id, snapshot.dueBucket, snapshot.tier);
+        if (missedCheckinNotifiedRef.current.has(dedupKey)) continue;
 
-        missedCheckinNotifiedRef.current.add(key);
+        missedCheckinNotifiedRef.current.add(dedupKey);
         const guard = guards.find((g) => g.id === req.assignedGuardId);
         void reportPushEvent(currentUser, {
           type: 'missed_checkin',
+          checkinEscalationTier: snapshot.tier,
+          checkinDueBucket: snapshot.dueBucket,
           guardId: guard?.id,
           guardName: guard?.name,
           requestId: req.id,
           location: req.location,
+          priority: snapshot.tier === 'escalate' ? 'high' : 'normal',
         });
       }
-    }, 5 * 60 * 1000);
+    }, 60_000);
 
     return () => clearInterval(interval);
   }, [isDbConnected, currentUser?.id, requests, guards]);
@@ -5450,7 +5455,11 @@ export default function App() {
       latitude,
       longitude,
       operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
-      startDate, endDate, durationHours, hourlyRate, guardPay,
+      startDate, endDate,
+      scheduleType: newRequest.scheduleType ?? 'one-time',
+      recurringEndDate: newRequest.recurringEndDate,
+      recurringDays: newRequest.recurringDays,
+      durationHours, hourlyRate, guardPay,
       platformFeePerHour,
       pricingMode,
       agreementFeeConfig,
@@ -5537,6 +5546,9 @@ export default function App() {
           equipment_requirements: freshJob.equipmentRequirements,
           site_instructions: freshJob.siteInstructions,
           start_date: freshJob.startDate, end_date: freshJob.endDate,
+          schedule_type: freshJob.scheduleType ?? 'one-time',
+          recurring_end_date: freshJob.recurringEndDate ?? null,
+          recurring_days: freshJob.recurringDays ?? null,
           duration_hours: freshJob.durationHours, hourly_rate: freshJob.hourlyRate,
           guard_pay: freshJob.guardPay, platform_fee_per_hour: freshJob.platformFeePerHour,
           pricing_mode: freshJob.pricingMode ?? 'standard',
@@ -5934,12 +5946,7 @@ export default function App() {
       });
     }
     if (currentUser && req.status === 'open') {
-      void reportPushEvent(currentUser, {
-        type: 'job_open_to_guards',
-        requestId,
-        location: req.location,
-        body: `"${req.title}" is paid and open on the map — browse and apply.`,
-      });
+      notifyOpenJobToGuards(currentUser, req, verifiedGuards, standingCrewMembers);
     }
   };
 

@@ -1,5 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { claimNotificationDedup, missedCheckinDedupKey, pruneStaleNotificationDedup } from './dedup';
+import {
+  checkInEscalationDedupKey,
+  claimNotificationDedup,
+  pruneStaleNotificationDedup,
+} from './dedup';
 import { buildEventDispatchPayloads } from './eventDispatch';
 import { dispatchPushNotification } from './delivery';
 import { isPushConfigured } from './config';
@@ -16,13 +20,34 @@ interface InProgressJob {
   mid_shift_audits: MidShiftAudit[] | null;
 }
 
+const HOUR_MS = 60 * 60 * 1000;
+const TIER_ALERT_MS = 5 * 60 * 1000;
+const TIER_STAFF_MS = 10 * 60 * 1000;
+const TIER_ESCALATE_MS = 15 * 60 * 1000;
+
 function lastActivityIso(job: InProgressJob): string | null {
   const checkIn = job.check_in_audit?.checkedAt;
   if (!checkIn) return null;
-
   const mids = job.mid_shift_audits ?? [];
   const lastMid = mids.length ? mids[mids.length - 1]?.checkedAt : null;
   return lastMid ?? checkIn;
+}
+
+function getDueAtMs(job: InProgressJob, now: number): number | null {
+  const last = lastActivityIso(job);
+  if (!last) return null;
+  const anchor = new Date(last).getTime();
+  if (Number.isNaN(anchor)) return null;
+  return anchor + HOUR_MS;
+}
+
+type EscalationTier = 'alert' | 'staff' | 'escalate';
+
+function tierForOverdueMs(overdueMs: number): EscalationTier | null {
+  if (overdueMs < TIER_ALERT_MS) return null;
+  if (overdueMs >= TIER_ESCALATE_MS) return 'escalate';
+  if (overdueMs >= TIER_STAFF_MS) return 'staff';
+  return 'alert';
 }
 
 export interface MissedCheckinScanResult {
@@ -51,7 +76,6 @@ export async function scanAndNotifyMissedCheckins(
   if (error) throw new Error(error.message);
 
   const now = Date.now();
-  const hourBucket = Math.floor(now / (60 * 60 * 1000));
   let notified = 0;
   let skipped = 0;
   let sent = 0;
@@ -74,19 +98,26 @@ export async function scanAndNotifyMissedCheckins(
   }
 
   for (const job of (jobs ?? []) as InProgressJob[]) {
-    const lastActivity = lastActivityIso(job);
-    if (!lastActivity || !job.assigned_guard_id) {
+    if (!job.assigned_guard_id) {
       skipped += 1;
       continue;
     }
 
-    const hoursSince = (now - new Date(lastActivity).getTime()) / (60 * 60 * 1000);
-    if (hoursSince < 1) {
+    const dueAtMs = getDueAtMs(job, now);
+    if (dueAtMs == null || now < dueAtMs) {
       skipped += 1;
       continue;
     }
 
-    const dedupKey = missedCheckinDedupKey(job.id, hourBucket);
+    const overdueMs = now - dueAtMs;
+    const tier = tierForOverdueMs(overdueMs);
+    if (!tier) {
+      skipped += 1;
+      continue;
+    }
+
+    const dueBucket = Math.floor(dueAtMs / HOUR_MS);
+    const dedupKey = checkInEscalationDedupKey(job.id, dueBucket, tier);
     const alreadySent = await claimNotificationDedup(db, dedupKey, 'missed_checkin');
     if (alreadySent) {
       skipped += 1;
@@ -96,11 +127,14 @@ export async function scanAndNotifyMissedCheckins(
     const guardName = guardNames.get(job.assigned_guard_id);
     const payloads = await buildEventDispatchPayloads(db, {
       type: 'missed_checkin',
+      checkinEscalationTier: tier,
+      checkinDueBucket: dueBucket,
       guardId: job.assigned_guard_id,
       guardName,
       requestId: job.id,
       siteId: job.site_name || undefined,
       location: job.location || undefined,
+      priority: tier === 'escalate' ? 'high' : 'normal',
     });
 
     for (const payload of payloads) {

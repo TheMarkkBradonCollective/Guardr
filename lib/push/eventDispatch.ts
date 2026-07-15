@@ -15,6 +15,8 @@ export interface PushEventInput {
   excludeUserId?: string;
   clientId?: string;
   priority?: 'normal' | 'high';
+  checkinEscalationTier?: 'alert' | 'staff' | 'escalate';
+  checkinDueBucket?: number;
 }
 
 const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string; body: string }> = {
@@ -251,12 +253,78 @@ export async function buildEventDispatchPayloads(
     return payloads;
   }
 
-  if (event.type === 'missed_checkin') {
+  if (event.type === 'missed_checkin' && event.requestId) {
+    const tier = event.checkinEscalationTier ?? 'legacy';
+    const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+
+    if (tier === 'alert') {
+      const payloads: PushSendPayload[] = [];
+      if (guardId) {
+        payloads.push({
+          ...payload,
+          userId: guardId,
+          title: 'Hourly check-in overdue',
+          body: event.location
+            ? `Check in now — you are 5+ minutes past due at ${event.location}`
+            : 'Check in now — you are 5+ minutes past your hourly check-in',
+          priority: 'high',
+        });
+      }
+      if (clientId) {
+        payloads.push({
+          ...payload,
+          userId: clientId,
+          title: 'Guard check-in overdue',
+          body: event.guardName
+            ? `${event.guardName} is 5+ minutes past due for an hourly check-in${event.location ? ` at ${event.location}` : ''}`
+            : 'Your guard is overdue for an hourly check-in',
+        });
+      }
+      return payloads;
+    }
+
+    if (tier === 'staff') {
+      return [
+        {
+          ...payload,
+          role: 'dispatch',
+          title: 'Check-in overdue — staff alert',
+          body: event.guardName
+            ? `${event.guardName} is 10+ minutes past due for hourly check-in${event.location ? ` at ${event.location}` : ''}`
+            : 'A guard is 10+ minutes past due for hourly check-in',
+        },
+      ];
+    }
+
+    if (tier === 'escalate') {
+      const payloads: PushSendPayload[] = [
+        {
+          ...payload,
+          role: 'dispatch',
+          title: 'Check-in escalation',
+          body: event.guardName
+            ? `ESCALATION: ${event.guardName} missed hourly check-in for 15+ minutes${event.location ? ` at ${event.location}` : ''}`
+            : 'ESCALATION: guard missed hourly check-in for 15+ minutes',
+          priority: 'high',
+        },
+      ];
+      if (clientId) {
+        payloads.push({
+          ...payload,
+          userId: clientId,
+          title: 'Check-in escalation',
+          body: 'Your guard has not completed a required hourly check-in. Guardr staff has been escalated.',
+          priority: 'high',
+        });
+      }
+      return payloads;
+    }
+
     const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
-    if (event.guardId) {
+    if (guardId) {
       payloads.push({
         ...payload,
-        userId: event.guardId,
+        userId: guardId,
         title: 'Missed check-in reminder',
         body: event.location
           ? `You missed your hourly check-in at ${event.location}`
@@ -318,6 +386,21 @@ export async function buildEventDispatchPayloads(
   }
 
   if (event.type === 'job_open_to_guards') {
+    if (event.guardId || event.recipientUserId) {
+      const userId = event.recipientUserId ?? event.guardId;
+      if (!userId) return [];
+      return [
+        {
+          ...payload,
+          userId,
+          priority: event.priority ?? 'high',
+          title: event.title ?? 'Priority job for your crew',
+          body:
+            event.body ??
+            'A new job matches your standing crew size — browse and apply early.',
+        },
+      ];
+    }
     return [{ ...payload, role: 'guard' }];
   }
 

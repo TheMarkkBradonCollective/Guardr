@@ -70,6 +70,7 @@ export function RequestSecurityFlow({
   }, [preset]);
 
   const [step, setStep] = useState<FlowStep>(1);
+  const [serviceSkipped, setServiceSkipped] = useState(false);
   const [serviceId, setServiceId] = useState<ClientServiceId>(
     preset === 'recurring' ? 'construction' : 'standing-guard'
   );
@@ -78,6 +79,11 @@ export function RequestSecurityFlow({
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, preset === 'recurring' ? 12 : 8));
+  const [scheduleType, setScheduleType] = useState<'one-time' | 'recurring'>(
+    preset === 'recurring' ? 'recurring' : 'one-time'
+  );
+  const [recurringEndDate, setRecurringEndDate] = useState('');
+  const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [guardsNeeded, setGuardsNeeded] = useState(preset === 'recurring' ? 2 : 1);
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
@@ -114,7 +120,9 @@ export function RequestSecurityFlow({
     return browseable.filter((g) => favoriteGuardIds.includes(g.id));
   }, [guards, favoriteGuardIds]);
 
-  const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
+  const effectiveGuards = customGuards
+    ? Math.min(50, Math.max(1, parseInt(customGuards, 10) || 1))
+    : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
   const billing = computeJobBilling(
@@ -136,15 +144,33 @@ export function RequestSecurityFlow({
   const title = resolveJobTitle(jobTitle, serviceId);
 
   const selectService = (id: ClientServiceId) => {
+    setServiceSkipped(false);
     setServiceId(id);
     if (!jobTitleTouched) {
       setJobTitle(serviceDefaultTitle(id));
     }
   };
 
+  const skipServiceStep = () => {
+    setServiceSkipped(true);
+    setServiceId('custom');
+    if (!jobTitleTouched) {
+      setJobTitle(serviceDefaultTitle('custom'));
+    }
+    setStep(2);
+  };
+
+  const toggleRecurringDay = (day: number) => {
+    setRecurringDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
+    );
+  };
+
+  const RECURRING_DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
   const canNext = (): boolean => {
     switch (step) {
-      case 1: return !!serviceId && jobTitle.trim().length > 0;
+      case 1: return serviceSkipped || (!!serviceId && jobTitle.trim().length > 0);
       case 2: return address.trim().length > 3 && isCaliforniaCity(jobState);
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveGuards >= 1;
@@ -191,6 +217,12 @@ export function RequestSecurityFlow({
       guardsNeeded: selectedFavoriteGuardId ? 1 : effectiveGuards,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
+      scheduleType,
+      recurringEndDate:
+        scheduleType === 'recurring' && recurringEndDate
+          ? new Date(`${recurringEndDate}T23:59:59`).toISOString()
+          : undefined,
+      recurringDays: scheduleType === 'recurring' && recurringDays.length ? recurringDays : undefined,
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
@@ -289,6 +321,13 @@ export function RequestSecurityFlow({
                 Shown to guards on your listing. You can customize it for any service type.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={skipServiceStep}
+              className="w-full text-sm font-semibold text-brand-text-muted hover:text-brand-primary transition-colors py-2"
+            >
+              Skip for now — describe in listing details
+            </button>
           </div>
         )}
 
@@ -352,6 +391,59 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">When?</h2>
             </div>
+            <div className="segmented-control segmented-control-full">
+              <button
+                type="button"
+                onClick={() => setScheduleType('one-time')}
+                className={`segmented-control-btn flex-1 py-3 text-sm ${
+                  scheduleType === 'one-time' ? 'segmented-control-btn-active' : ''
+                }`}
+              >
+                One-time shift
+              </button>
+              <button
+                type="button"
+                onClick={() => setScheduleType('recurring')}
+                className={`segmented-control-btn flex-1 py-3 text-sm ${
+                  scheduleType === 'recurring' ? 'segmented-control-btn-active' : ''
+                }`}
+              >
+                Recurring coverage
+              </button>
+            </div>
+            {scheduleType === 'recurring' && (
+              <div className="space-y-4 rounded-2xl border border-brand-border p-4">
+                <div>
+                  <label className="uber-label block mb-1.5">Repeat on (optional)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {RECURRING_DAY_LABELS.map((label, day) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => toggleRecurringDay(day)}
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                          recurringDays.includes(day)
+                            ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                            : 'border-brand-border text-brand-text-muted'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="uber-label block mb-1.5">Series end date (optional)</label>
+                  <input
+                    type="date"
+                    min={startDate.slice(0, 10)}
+                    value={recurringEndDate}
+                    onChange={(e) => setRecurringEndDate(e.target.value)}
+                    className="uber-input rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="uber-label block mb-1.5">Start Date</label>
@@ -437,6 +529,9 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
+              <p className="text-sm text-brand-text-muted mt-2 font-medium">
+                Trusted guards with a standing crew of this size or larger get priority notification when the job goes live.
+              </p>
             </div>
             {/* Disable count picker when a favourite is selected (direct = 1 guard) */}
             {!selectedFavoriteGuardId && (
@@ -460,7 +555,8 @@ export function RequestSecurityFlow({
                   <input
                     type="number"
                     min={1}
-                    placeholder="Enter count..."
+                    max={50}
+                    placeholder="Enter count (max 50)..."
                     value={customGuards}
                     onChange={(e) => setCustomGuards(e.target.value)}
                     className="uber-input rounded-xl"

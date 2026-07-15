@@ -92,7 +92,7 @@ async function markJobPaid(
     const { notifyStripePaymentComplete, notifyJobOpenToGuards } = await import('../../lib/push/paymentNotifications');
     const { data: jobRow } = await db
       .from('security_requests')
-      .select('title, location, status')
+      .select('title, location, status, guards_needed')
       .eq('id', jobId)
       .maybeSingle();
     await notifyStripePaymentComplete(db, {
@@ -102,7 +102,9 @@ async function markJobPaid(
     if (jobRow?.status === 'open') {
       await notifyJobOpenToGuards(db, {
         requestId: jobId,
+        title: jobRow.title ?? 'job',
         location: jobRow.location ?? undefined,
+        guardsNeeded: jobRow.guards_needed ?? 1,
         body: `"${jobRow.title}" is paid and open on the map.`,
       });
     }

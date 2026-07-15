@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { isValidPushSubscriptionPayload } from '../../lib/push/fcm';
 import { isPushConfigured } from './config';
-import { claimNotificationDedup, missedCheckinDedupKey } from './dedup';
+import { checkInEscalationDedupKey, claimNotificationDedup, missedCheckinDedupKey } from './dedup';
 import { dispatchPushNotification } from './delivery';
 import { buildEventDispatchPayloads } from './eventDispatch';
 import { authorizePushEvent } from './eventAuth';
@@ -138,6 +138,8 @@ export interface PushEventBody extends SessionCredentials {
   ticketId?: string;
   clientId?: string;
   priority?: 'normal' | 'high';
+  checkinEscalationTier?: 'alert' | 'staff' | 'escalate';
+  checkinDueBucket?: number;
 }
 
 export async function dispatchPushEvent(
@@ -172,8 +174,13 @@ export async function dispatchPushEvent(
   }
 
   if (event.type === 'missed_checkin' && event.requestId) {
-    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
-    const dedupKey = missedCheckinDedupKey(event.requestId, hourBucket);
+    const tier = event.checkinEscalationTier ?? 'legacy';
+    const dueBucket =
+      event.checkinDueBucket ?? Math.floor(Date.now() / (60 * 60 * 1000));
+    const dedupKey =
+      tier === 'legacy'
+        ? missedCheckinDedupKey(event.requestId, dueBucket)
+        : checkInEscalationDedupKey(event.requestId, dueBucket, tier);
     const alreadySent = await claimNotificationDedup(db, dedupKey, 'missed_checkin');
     if (alreadySent) {
       return { sent: 0, failed: 0 };

@@ -792,6 +792,12 @@ export interface SecurityRequest {
   operationalDetails?: JobOperationalDetails;
   startDate: string;
   endDate: string;
+  /** One-time shift vs ongoing recurring coverage */
+  scheduleType?: 'one-time' | 'recurring';
+  /** When scheduleType is recurring, optional end date for the series */
+  recurringEndDate?: string;
+  /** Days of week for recurring posts (0 = Sunday … 6 = Saturday) */
+  recurringDays?: number[];
   durationHours: number;
   /** Original scheduled duration before late clock-out billing adjustment */
   scheduledDurationHours?: number;

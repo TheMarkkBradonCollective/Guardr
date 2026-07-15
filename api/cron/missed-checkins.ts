@@ -3,8 +3,8 @@
 
 // api/_push/dedup.ts
 var DEDUP_TTL_MS = 25 * 60 * 60 * 1e3;
-function missedCheckinDedupKey(requestId, hourBucket) {
-  return `missed_checkin:${requestId}:${hourBucket}`;
+function checkInEscalationDedupKey(requestId, dueBucket, tier) {
+  return `checkin_esc:${requestId}:${dueBucket}:${tier}`;
 }
 async function claimNotificationDedup(db, dedupKey, notificationType) {
   const { data: existing } = await db.from("push_notification_dedup").select("id").eq("id", dedupKey).maybeSingle();
@@ -205,12 +205,66 @@ async function buildEventDispatchPayloads(db, event) {
     if (clientId) payloads.push({ ...payload, userId: clientId });
     return payloads;
   }
-  if (event.type === "missed_checkin") {
+  if (event.type === "missed_checkin" && event.requestId) {
+    const tier = event.checkinEscalationTier ?? "legacy";
+    const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+    if (tier === "alert") {
+      const payloads2 = [];
+      if (guardId) {
+        payloads2.push({
+          ...payload,
+          userId: guardId,
+          title: "Hourly check-in overdue",
+          body: event.location ? `Check in now \u2014 you are 5+ minutes past due at ${event.location}` : "Check in now \u2014 you are 5+ minutes past your hourly check-in",
+          priority: "high"
+        });
+      }
+      if (clientId) {
+        payloads2.push({
+          ...payload,
+          userId: clientId,
+          title: "Guard check-in overdue",
+          body: event.guardName ? `${event.guardName} is 5+ minutes past due for an hourly check-in${event.location ? ` at ${event.location}` : ""}` : "Your guard is overdue for an hourly check-in"
+        });
+      }
+      return payloads2;
+    }
+    if (tier === "staff") {
+      return [
+        {
+          ...payload,
+          role: "dispatch",
+          title: "Check-in overdue \u2014 staff alert",
+          body: event.guardName ? `${event.guardName} is 10+ minutes past due for hourly check-in${event.location ? ` at ${event.location}` : ""}` : "A guard is 10+ minutes past due for hourly check-in"
+        }
+      ];
+    }
+    if (tier === "escalate") {
+      const payloads2 = [
+        {
+          ...payload,
+          role: "dispatch",
+          title: "Check-in escalation",
+          body: event.guardName ? `ESCALATION: ${event.guardName} missed hourly check-in for 15+ minutes${event.location ? ` at ${event.location}` : ""}` : "ESCALATION: guard missed hourly check-in for 15+ minutes",
+          priority: "high"
+        }
+      ];
+      if (clientId) {
+        payloads2.push({
+          ...payload,
+          userId: clientId,
+          title: "Check-in escalation",
+          body: "Your guard has not completed a required hourly check-in. Guardr staff has been escalated.",
+          priority: "high"
+        });
+      }
+      return payloads2;
+    }
     const payloads = [{ ...payload, role: "dispatch" }];
-    if (event.guardId) {
+    if (guardId) {
       payloads.push({
         ...payload,
-        userId: event.guardId,
+        userId: guardId,
         title: "Missed check-in reminder",
         body: event.location ? `You missed your hourly check-in at ${event.location}` : "You missed your hourly check-in \u2014 please check in now"
       });
@@ -236,6 +290,19 @@ async function buildEventDispatchPayloads(db, event) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
   if (event.type === "job_open_to_guards") {
+    if (event.guardId || event.recipientUserId) {
+      const userId = event.recipientUserId ?? event.guardId;
+      if (!userId) return [];
+      return [
+        {
+          ...payload,
+          userId,
+          priority: event.priority ?? "high",
+          title: event.title ?? "Priority job for your crew",
+          body: event.body ?? "A new job matches your standing crew size \u2014 browse and apply early."
+        }
+      ];
+    }
     return [{ ...payload, role: "guard" }];
   }
   if (event.type === "guard_application") {
@@ -1002,12 +1069,29 @@ function isPushConfigured() {
 }
 
 // api/_push/missedCheckins.ts
+var HOUR_MS = 60 * 60 * 1e3;
+var TIER_ALERT_MS = 5 * 60 * 1e3;
+var TIER_STAFF_MS = 10 * 60 * 1e3;
+var TIER_ESCALATE_MS = 15 * 60 * 1e3;
 function lastActivityIso(job) {
   const checkIn = job.check_in_audit?.checkedAt;
   if (!checkIn) return null;
   const mids = job.mid_shift_audits ?? [];
   const lastMid = mids.length ? mids[mids.length - 1]?.checkedAt : null;
   return lastMid ?? checkIn;
+}
+function getDueAtMs(job, now) {
+  const last = lastActivityIso(job);
+  if (!last) return null;
+  const anchor = new Date(last).getTime();
+  if (Number.isNaN(anchor)) return null;
+  return anchor + HOUR_MS;
+}
+function tierForOverdueMs(overdueMs) {
+  if (overdueMs < TIER_ALERT_MS) return null;
+  if (overdueMs >= TIER_ESCALATE_MS) return "escalate";
+  if (overdueMs >= TIER_STAFF_MS) return "staff";
+  return "alert";
 }
 async function scanAndNotifyMissedCheckins(db) {
   if (!isPushConfigured()) {
@@ -1017,7 +1101,6 @@ async function scanAndNotifyMissedCheckins(db) {
   const { data: jobs, error } = await db.from("security_requests").select("id, location, site_name, assigned_guard_id, check_in_audit, mid_shift_audits").eq("status", "in-progress").not("assigned_guard_id", "is", null);
   if (error) throw new Error(error.message);
   const now = Date.now();
-  const hourBucket = Math.floor(now / (60 * 60 * 1e3));
   let notified = 0;
   let skipped = 0;
   let sent = 0;
@@ -1035,17 +1118,23 @@ async function scanAndNotifyMissedCheckins(db) {
     }
   }
   for (const job of jobs ?? []) {
-    const lastActivity = lastActivityIso(job);
-    if (!lastActivity || !job.assigned_guard_id) {
+    if (!job.assigned_guard_id) {
       skipped += 1;
       continue;
     }
-    const hoursSince = (now - new Date(lastActivity).getTime()) / (60 * 60 * 1e3);
-    if (hoursSince < 1) {
+    const dueAtMs = getDueAtMs(job, now);
+    if (dueAtMs == null || now < dueAtMs) {
       skipped += 1;
       continue;
     }
-    const dedupKey = missedCheckinDedupKey(job.id, hourBucket);
+    const overdueMs = now - dueAtMs;
+    const tier = tierForOverdueMs(overdueMs);
+    if (!tier) {
+      skipped += 1;
+      continue;
+    }
+    const dueBucket = Math.floor(dueAtMs / HOUR_MS);
+    const dedupKey = checkInEscalationDedupKey(job.id, dueBucket, tier);
     const alreadySent = await claimNotificationDedup(db, dedupKey, "missed_checkin");
     if (alreadySent) {
       skipped += 1;
@@ -1054,11 +1143,14 @@ async function scanAndNotifyMissedCheckins(db) {
     const guardName = guardNames.get(job.assigned_guard_id);
     const payloads = await buildEventDispatchPayloads(db, {
       type: "missed_checkin",
+      checkinEscalationTier: tier,
+      checkinDueBucket: dueBucket,
       guardId: job.assigned_guard_id,
       guardName,
       requestId: job.id,
       siteId: job.site_name || void 0,
-      location: job.location || void 0
+      location: job.location || void 0,
+      priority: tier === "escalate" ? "high" : "normal"
     });
     for (const payload of payloads) {
       const result = await dispatchPushNotification(db, payload);

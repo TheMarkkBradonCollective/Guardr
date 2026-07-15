@@ -354,6 +354,9 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_name TEXT DEFAULT ''
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS state TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guards_needed INTEGER DEFAULT 1;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_type TEXT DEFAULT 'one-time';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_end_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_days INTEGER[];
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS uniform_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS equipment_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_instructions TEXT DEFAULT '';
