@@ -1,29 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { applyApiCors } from '../_push/apiCors';
 
 const APK_COOKIE = 'guardr_apk';
 const PWA_COOKIE = 'guardr_pwa';
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
-
-const ALLOWED_ORIGINS = /^https:\/\/([a-z0-9-]+\.)?guardr\.co$/i;
-
-function applyCors(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = req.headers.origin;
-  if (
-    origin &&
-    (ALLOWED_ORIGINS.test(origin) || /^https:\/\/localhost(?::\d+)?$/i.test(origin) || /^capacitor:\/\//i.test(origin))
-  ) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
-  }
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(204).end();
-    return true;
-  }
-  return false;
-}
 
 function cookieValue(version: string, versionCode?: string): string {
   return versionCode ? `${version}|${versionCode}` : version;
@@ -38,7 +18,7 @@ function setCookie(res: VercelResponse, name: string, value: string): void {
 
 /** Record APK/PWA install version in a first-party cookie for the download page. */
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  if (applyCors(req, res)) return;
+  if (applyApiCors(req, res)) return;
 
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

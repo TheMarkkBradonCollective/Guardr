@@ -1,4 +1,5 @@
-import express, { type Express } from 'express';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import { isAllowedApiOrigin, applyApiCors } from '../api/_push/apiCors';
 import { registerCronRoutes } from './cronRoutes';
 import { registerPushRoutes } from './pushRoutes';
 import { registerStripeRoutes, registerStripeWebhook } from './stripe';
@@ -7,6 +8,21 @@ import { rateLimitMiddleware } from './rateLimitMiddleware';
 /** Express app with API routes only (Stripe, health). Used by Vercel serverless and local server. */
 export function createApiApp(): Express {
   const app = express();
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const origin = req.headers.origin;
+    if (origin && isAllowedApiOrigin(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+    }
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      return res.status(204).end();
+    }
+    return next();
+  });
 
   // Webhook needs raw body — register before JSON parser
   registerStripeWebhook(app);

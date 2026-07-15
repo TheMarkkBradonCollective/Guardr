@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { applyApiCors } from '../_push/apiCors';
 
 /** Public VAPID key — no database required. */
 export default function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyApiCors(req, res)) return;
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

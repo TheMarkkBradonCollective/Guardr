@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { applyApiCors } from '../apiCors';
 import { handlePushEvent } from '../handlers';
 
 async function getSupabaseAdmin() {
@@ -15,6 +16,8 @@ async function getSupabaseAdmin() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyApiCors(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
