@@ -164,13 +164,34 @@ function accountSignupApplicationItems(
   return [...guardItems, ...clientItems];
 }
 
-/** Applications section — guard and client sign-ups awaiting staff review or activation. */
+/** Applications section — guard and client sign-ups (pending through approved/active). */
 export function buildApplicationFeed(
   guards: SecurityGuard[],
   clients: Client[],
   auditLog: AuditLogEntry[] = []
 ): ApprovalFeedItem[] {
-  return accountSignupApplicationItems(guards, clients, auditLog).sort(compareFeedItems);
+  const guardItems = guardAccountItems(guards, auditLog).map((item) => ({
+    ...item,
+    queue: 'applications' as const,
+  }));
+  const clientItems = clientAccountItems(clients, auditLog).map((item) => ({
+    ...item,
+    queue: 'applications' as const,
+  }));
+  return [...guardItems, ...clientItems].sort(compareFeedItems);
+}
+
+export function isApplicationFeedItemPending(
+  item: ApprovalFeedItem,
+  guards: SecurityGuard[],
+  clients: Client[]
+): boolean {
+  if (item.status === 'pending' || item.status === 'in_review') return true;
+  const guard = guards.find((entry) => entry.id === item.id);
+  if (guard && !guard.isStaff) return guardBelongsInAccountApprovalsQueue(guard);
+  const client = clients.find((entry) => entry.id === item.id);
+  if (client) return getClientAccountStatus(client) === 'pending';
+  return false;
 }
 
 export function countPendingAccountSignupApplications(
