@@ -267,9 +267,9 @@ export function ClientHomeScreen({
             accent={openRequestCount > 0}
           />
           <AppMetricCell
-            label="Upcoming"
+            label="Scheduled"
             value={upcoming.length}
-            sub="Scheduled shifts"
+            sub="Upcoming shifts"
             onClick={() => runAction('requests')}
           />
         </AppMetricStrip>
@@ -337,12 +337,12 @@ export function ClientHomeScreen({
       )}
 
       <AppDashboardZone
-        title="Upcoming coverage"
+        title="Scheduled coverage"
         actionLabel={upcoming.length > 0 ? 'All jobs' : undefined}
         onAction={upcoming.length > 0 ? () => runAction('requests') : undefined}
       >
         {upcoming.length === 0 ? (
-          <AppEmptyState icon={<Calendar className="w-5 h-5" />} title="No upcoming coverage">
+          <AppEmptyState icon={<Calendar className="w-5 h-5" />} title="No scheduled coverage">
             Post a job to get matched with licensed guards.
           </AppEmptyState>
         ) : (

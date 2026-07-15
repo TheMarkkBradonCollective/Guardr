@@ -427,8 +427,8 @@ export function GuardDashboard({
     const inProgress = requests.filter(
       (r) => r.assignedGuardId === guard.id && r.status === 'in-progress'
     );
-    return [...inProgress, ...browseJobLists.upcoming];
-  }, [requests, guard.id, browseJobLists.upcoming]);
+    return [...inProgress, ...browseJobLists.scheduled];
+  }, [requests, guard.id, browseJobLists.scheduled]);
 
   const assignedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status !== 'completed' && r.status !== 'closed'),
@@ -570,7 +570,7 @@ export function GuardDashboard({
       if (!job) return;
       const kind = guardMapPinKind(guard.id, job as unknown as SecurityRequest);
       if (kind === 'available') handleBrowseTabChange('available');
-      else if (kind === 'scheduled') handleBrowseTabChange('upcoming');
+      else if (kind === 'scheduled') handleBrowseTabChange('scheduled');
       else if (kind === 'past') handleBrowseTabChange('past');
     },
     [browseJobLists.all, guard.id, handleBrowseTabChange]
@@ -1347,8 +1347,9 @@ export function GuardDashboard({
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-my-jobs">
               <GuardMyJobsPanel
                 availableJobs={browseJobLists.available}
-                upcomingJobs={browseJobLists.upcoming}
-                pastJobs={browseJobLists.past}
+                scheduledJobs={browseJobLists.scheduled}
+                completedJobs={browseJobLists.completed}
+                missedJobs={browseJobLists.missed}
                 guard={guard}
                 currentUser={currentUser}
                 coworkerGuards={coworkerGuards}

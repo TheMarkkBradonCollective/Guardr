@@ -4249,9 +4249,9 @@ html.theme-light .app-button-primary:hover {
 
 .role-app-shell .app-screen-header h1,
 .role-app-shell .app-screen-header h1 {
-  font-size: 1.375rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .role-app-shell .app-screen-header:not(.app-screen-header--map) p,
@@ -6853,16 +6853,94 @@ html.theme-light .app-chat-typing-bubble {
   animation: accountMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.jobs-tally-strip {
+  margin-bottom: 0;
+}
+
+.jobs-tally-strip .app-metric-cell-sub {
+  font-size: 0.625rem;
+  line-height: 1.2;
+}
+
 .app-screen-header-brand-row {
-  min-height: 1.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: max(0.625rem, env(safe-area-inset-top)) 1rem 0.25rem;
+}
+
+.app-screen-header-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.75rem 0.625rem;
+  min-height: 2.5rem;
+}
+
+.app-screen-header-toolbar-side {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.app-screen-header-toolbar-side--left {
+  justify-content: flex-start;
+}
+
+.app-screen-header-toolbar-side--right {
+  justify-content: flex-end;
+}
+
+.app-screen-header-title {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--brand-text);
+  max-width: min(11rem, 42vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  justify-self: center;
+}
+
+.app-screen-header-title--spacer {
+  visibility: hidden;
+  min-height: 1.125rem;
+}
+
+.app-screen-header .app-chrome-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border-radius: 0.625rem;
+}
+
+.app-screen-header .notification-bell-btn {
+  border: none;
+  background: transparent;
+}
+
+.app-screen-header .app-header-account-trigger {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
+}
+
+html.theme-dark .app-screen-header .app-header-account-trigger {
+  border-color: color-mix(in srgb, var(--brand-border) 65%, transparent);
+  background: color-mix(in srgb, var(--brand-surface) 72%, transparent);
 }
 
 .app-screen-header-row {
   align-items: center;
-}
-
-.app-screen-header-title {
-  text-align: center;
 }
 
 @keyframes accountMenuIn {
@@ -13664,9 +13742,9 @@ html.theme-light .role-app-shell .bottom-nav-bar {
   backdrop-filter: none !important;
 }
 
-.app-screen-header h1 {
-  font-weight: 900 !important;
-  letter-spacing: -0.04em !important;
+.app-screen-header h1.app-screen-header-title {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
 }
 
 .bottom-nav-item[aria-current="page"] {
@@ -16792,14 +16870,15 @@ html.theme-dark .role-side-nav-footer {
 /* ─── DOCKED HEADER: cleaner with sidebar ───────────────────────────────── */
 
 .role-app-shell--docked .role-main > .app-screen-header h1 {
-  font-size: 1.5rem !important;
-  letter-spacing: -0.04em !important;
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
 }
 
 /* ─── TABLET: sidebar layout improvements ───────────────────────────────── */
 
 body[data-form-factor="tablet"] .role-app-shell--docked .role-main > .app-screen-header h1 {
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 /* ─── APP SCREEN: constrain and center on larger screens ─────────────────── */
@@ -17079,18 +17158,18 @@ body[data-form-factor="mobile"] .app-screen {
 /* ─── APP SCREEN HEADER: responsive title sizing ─────────────────────────── */
 
 .app-screen-header-title {
-  font-size: 1.1875rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 body[data-form-factor="tablet"] .app-screen-header-title {
-  font-size: 1.3125rem;
+  font-size: 1rem;
 }
 
 body[data-form-factor="desktop"] .app-screen-header-title {
-  font-size: 1.5rem;
+  font-size: 1.0625rem;
 }
 
 .app-screen-header-subtitle {

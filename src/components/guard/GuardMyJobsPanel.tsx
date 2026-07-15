@@ -5,15 +5,16 @@ import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
+import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
+import { JobsTallyStrip } from '../jobs/JobsTallyStrip';
 import {
   AppEmptyState,
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
-import { Briefcase, Clock, CheckCircle2, Map } from 'lucide-react';
+import { Briefcase, Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
 /** Format time until a shift in a human-friendly way. */
@@ -32,7 +33,6 @@ function formatTimeUntilShift(startDate: string): string {
     const mins = Math.round((diffHours - hours) * 60);
     return mins > 0 ? `In ${hours}h ${mins}m` : `In ${hours}h`;
   }
-  // > 24 hours — show date + time
   return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
     ' at ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
@@ -42,8 +42,9 @@ export { GuardMyJobDetail } from './GuardMyJobDetail';
 
 interface GuardMyJobsPanelProps {
   availableJobs: GuardJobView[];
-  upcomingJobs: GuardJobView[];
-  pastJobs: GuardJobView[];
+  scheduledJobs: GuardJobView[];
+  completedJobs: GuardJobView[];
+  missedJobs: GuardJobView[];
   guard: SecurityGuard;
   currentUser: SessionUser;
   jobChatThreads?: JobChatThread[];
@@ -118,16 +119,11 @@ function JobRow({
   );
 }
 
-const TAB_OPTIONS: { id: GuardJobsBrowseTab; label: string }[] = [
-  { id: 'available', label: 'Available' },
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'past', label: 'Past' },
-];
-
 export function GuardMyJobsPanel({
   availableJobs,
-  upcomingJobs,
-  pastJobs,
+  scheduledJobs,
+  completedJobs,
+  missedJobs,
   guard,
   jobChatThreads = [],
   selectedJobId: selectedJobIdProp,
@@ -179,9 +175,24 @@ export function GuardMyJobsPanel({
     }
   }, [activeTabProp]);
 
+  const tallies = useMemo(
+    () => [
+      { id: 'available' as const, label: JOB_TALLY_LABELS.available, value: availableJobs.length },
+      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled, value: scheduledJobs.length },
+      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed, value: completedJobs.length },
+      {
+        id: 'missed' as const,
+        label: JOB_TALLY_LABELS.missed,
+        value: missedJobs.length,
+        sub: 'No call / no show',
+      },
+    ],
+    [availableJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
+  );
+
   const allJobs = useMemo(
-    () => [...availableJobs, ...upcomingJobs, ...pastJobs],
-    [availableJobs, upcomingJobs, pastJobs]
+    () => [...availableJobs, ...scheduledJobs, ...completedJobs, ...missedJobs],
+    [availableJobs, scheduledJobs, completedJobs, missedJobs]
   );
   const selectedJob = allJobs.find((j) => j.id === selectedId) ?? null;
 
@@ -235,14 +246,12 @@ export function GuardMyJobsPanel({
 
   return (
     <AppScreen>
-      <AppSegmentedControl<GuardJobsBrowseTab>
-        options={TAB_OPTIONS}
-        value={activeTab}
-        onChange={setActiveTab}
-      />
+      <div className="px-4 pt-4">
+        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
+      </div>
 
       {activeTab === 'available' && (
-        <div className="app-section-body pt-4">
+        <div className="app-section-body pt-2">
           {availableJobs.length === 0 ? (
             <AppEmptyState
               icon={<Map className="w-5 h-5" />}
@@ -265,18 +274,18 @@ export function GuardMyJobsPanel({
         </div>
       )}
 
-      {activeTab === 'upcoming' && (
-        <div className="app-section-body pt-4">
-          {upcomingJobs.length === 0 ? (
+      {activeTab === 'scheduled' && (
+        <div className="app-section-body pt-2">
+          {scheduledJobs.length === 0 ? (
             <AppEmptyState
               icon={<Clock className="w-5 h-5" />}
-              title="No upcoming shifts"
+              title="No scheduled shifts"
             >
               Accepted jobs will appear here before they start.
             </AppEmptyState>
           ) : (
             <AppItemCardStack>
-              {upcomingJobs.map((job) => (
+              {scheduledJobs.map((job) => (
                 <JobRow
                   key={job.id}
                   job={job}
@@ -290,18 +299,41 @@ export function GuardMyJobsPanel({
         </div>
       )}
 
-      {activeTab === 'past' && (
-        <div className="app-section-body pt-4">
-          {pastJobs.length === 0 ? (
+      {activeTab === 'completed' && (
+        <div className="app-section-body pt-2">
+          {completedJobs.length === 0 ? (
             <AppEmptyState
               icon={<CheckCircle2 className="w-5 h-5" />}
               title="No completed shifts yet"
             >
-              Your shift history will show up here after you complete jobs.
+              Your completed shift history will show up here.
             </AppEmptyState>
           ) : (
             <AppItemCardStack>
-              {pastJobs.map((job) => (
+              {completedJobs.map((job) => (
+                <JobRow
+                  key={job.id}
+                  job={job}
+                  onSelect={() => updateSelectedId(job.id)}
+                />
+              ))}
+            </AppItemCardStack>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'missed' && (
+        <div className="app-section-body pt-2">
+          {missedJobs.length === 0 ? (
+            <AppEmptyState
+              icon={<AlertTriangle className="w-5 h-5" />}
+              title="No missed shifts"
+            >
+              No-call and no-show shifts will appear here.
+            </AppEmptyState>
+          ) : (
+            <AppItemCardStack>
+              {missedJobs.map((job) => (
                 <JobRow
                   key={job.id}
                   job={job}
