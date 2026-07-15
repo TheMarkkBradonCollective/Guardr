@@ -11,6 +11,10 @@ import {
   isGuardTrusted,
 } from '../../lib/guardTrust';
 import { guardCredentialGraceNotice } from '../../lib/guardCredentialGrace';
+import {
+  guardCredentialRestrictedDetail,
+  isGuardCredentialExpiryRestricted,
+} from '../../lib/guardCredentialExpiryEnforcement';
 import { WfBadge } from '../ui/wireframe';
 
 /** Staff guard list — one primary account status badge (pending / approved / active / suspended / blocked). */
@@ -24,6 +28,8 @@ export function GuardRosterStatusBadges({
   showTrusted?: boolean;
 }) {
   const graceNotice = guardCredentialGraceNotice(guard);
+  const restricted = isGuardCredentialExpiryRestricted(guard);
+  const restrictedDetail = guardCredentialRestrictedDetail(guard);
   const status = getGuardUserStatus(guard);
   const isApproved = isGuardProfileApproved(guard);
   const showTrustedBadge =
@@ -37,6 +43,11 @@ export function GuardRosterStatusBadges({
         </WfBadge>
         {showTrustedBadge && <WfBadge tone="primary">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
       </div>
+      {restricted && restrictedDetail && (
+        <p className="text-[10px] font-medium text-red-500 dark:text-red-400 leading-snug">
+          {restrictedDetail}
+        </p>
+      )}
       {graceNotice && (
         <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 leading-snug">
           {graceNotice.periodHours}h grace · {graceNotice.timeRemainingLabel} left

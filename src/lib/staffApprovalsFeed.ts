@@ -15,6 +15,7 @@ import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
 import { getClientAccountStatus, isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel, guardBelongsInAccountApprovalsQueue } from './guardAccountActivation';
+import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
 
@@ -322,7 +323,10 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
 
       let status: ApprovalFeedStatus = 'pending';
       let statusLabel = guardActivationSummaryLabel(guard);
-      if (active) {
+      if (isGuardCredentialExpiryRestricted(guard)) {
+        status = 'denied';
+        statusLabel = 'Restricted';
+      } else if (active) {
         status = 'active';
         statusLabel = 'Active on marketplace';
       } else if (approvedProfile) {

@@ -1,5 +1,6 @@
 import type { SecurityGuard, Certification } from '../types';
 import { credentialRequiresExpiry } from './certCatalog';
+import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 
 export type ComplianceAlertType =
   | 'guard_card_expiring'
@@ -58,7 +59,15 @@ function certExpiryAlerts(guard: SecurityGuard): ComplianceAlertDraft[] {
 export function scanGuardCompliance(guard: SecurityGuard): ComplianceAlertDraft[] {
   const alerts = certExpiryAlerts(guard);
 
-  if (guard.userStatus === 'suspended' || guard.userStatus === 'blocked') {
+  if (isGuardCredentialExpiryRestricted(guard)) {
+    alerts.push({
+      guardId: guard.id,
+      alertType: 'account_suspended',
+      severity: 'critical',
+      title: 'Account restricted',
+      body: 'A required credential expired. Upload and verify an updated document to work jobs again.',
+    });
+  } else if (guard.userStatus === 'suspended' || guard.userStatus === 'blocked') {
     alerts.push({
       guardId: guard.id,
       alertType: 'account_suspended',

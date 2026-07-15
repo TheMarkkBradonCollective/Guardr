@@ -109,7 +109,7 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     }
     if (isGuardAccountApproved(guard)) {
       if (guard.credentialExpiryRestricted) {
-        return 'A required credential expired. Upload and verify the updated document to work jobs again.';
+        return 'Account restricted — a required credential expired. Upload and verify the updated document to work jobs again.';
       }
       return 'Your profile is approved — Guardr staff will grant marketplace eligibility so you can work jobs.';
     }

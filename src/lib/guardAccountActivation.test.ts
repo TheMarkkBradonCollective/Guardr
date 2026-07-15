@@ -4,11 +4,14 @@ import type { SecurityGuard } from '../types';
 import {
   getGuardActivationChecklist,
   getApprovedGuardsAwaitingActivation,
+  getGuardRosterAccountLabel,
   getPendingGuardAccountReviews,
+  guardActivationSummaryLabel,
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
   isGuardAccountActive,
 } from './guardAccountActivation.ts';
+import { GUARD_CREDENTIAL_RESTRICTED_LABEL } from './guardCredentialExpiryEnforcement.ts';
 import { guardHasSubmittedItemsForStaffReview } from './approvalSubmissions.ts';
 
 function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -179,5 +182,14 @@ describe('guard account activation gates', () => {
 
     const ready = fullyVerifiedGuard({ userStatus: 'approved' });
     assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
+  });
+
+  it('shows Restricted roster label when credential expiry enforcement applied', () => {
+    const guard = baseGuard({
+      userStatus: 'approved',
+      credentialExpiryRestricted: true,
+    });
+    assert.equal(getGuardRosterAccountLabel(guard), GUARD_CREDENTIAL_RESTRICTED_LABEL);
+    assert.equal(guardActivationSummaryLabel(guard), 'Restricted — required credential expired');
   });
 });
