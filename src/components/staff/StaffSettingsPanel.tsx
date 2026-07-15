@@ -5,7 +5,6 @@ import {
   canManagePlatformSettings,
   getAssignableStaffRoles,
 } from '../../lib/permissions';
-import { StaffRolesReference } from './RolePermissionsGuide';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
@@ -170,12 +169,6 @@ export function StaffSettingsPanel({
             <option value="manual">Manual COI review</option>
             <option value="api">Automated verification API</option>
           </select>
-        </div>
-      </AppFormSection>
-
-      <AppFormSection title="Role Permissions">
-        <div className="pb-6">
-          <StaffRolesReference />
         </div>
       </AppFormSection>
 
