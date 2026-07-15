@@ -99,7 +99,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Nothing urgent in the queue. Review financials, team activity, or live jobs on the map.',
-    quickLinkSections: ['map', 'payments', 'team', 'analytics', 'jobs', 'applications'],
+    quickLinkSections: ['map', 'payments', 'payment-settings', 'agreements', 'team', 'analytics', 'jobs', 'applications'],
   },
   owner: {
     roleLabel: ROLE_LABELS.owner,
@@ -117,7 +117,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Platform is clear. Review governance settings, financials, or staff activity.',
-    quickLinkSections: ['settings', 'team', 'payments', 'analytics', 'map', 'applications'],
+    quickLinkSections: ['settings', 'payment-settings', 'agreements', 'team', 'payments', 'analytics', 'map', 'applications'],
   },
 };
 

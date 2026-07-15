@@ -85,6 +85,8 @@ import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
+import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { DevNotesPage } from './docs/DevNotesPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
@@ -909,6 +911,37 @@ export function StaffDashboard({
             </p>
           </div>
         );
+      case 'payment-settings':
+        return showFinance ? (
+          <StaffPaymentSettingsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+          />
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Payment settings</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Payment method, platform fee, and crew pay settings are limited to Director and Founder
+              roles. Ask your Director to review or update these controls.
+            </p>
+          </div>
+        );
+      case 'agreements':
+        return showFinance ? (
+          <StaffLegalCompliancePanel
+            guards={guards}
+            clients={clients}
+            legalAcceptances={legalAcceptances}
+          />
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Marketplace agreements</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Marketplace agreement compliance is limited to Director and Founder roles.
+            </p>
+          </div>
+        );
       case 'settings':
         return showSettings ? (
           <div className="space-y-8">
@@ -919,9 +952,6 @@ export function StaffDashboard({
               showStaffOnboard={canProposeStaff}
               requiresDirectorApproval={requiresDirectorApproval}
               onAddStaffProfile={onAddStaffProfile}
-              guards={guards}
-              clients={clients}
-              legalAcceptances={legalAcceptances}
               companyPublicDocuments={companyPublicDocuments}
               onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
               onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
@@ -932,8 +962,8 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Settings</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Platform settings are limited to Director and Founder roles. Ask your Director to update fees,
-              payment gates, or system-wide controls.
+              Platform settings are limited to Administrator roles and above. Ask your Director to update
+              approval rules, integrations, or other system-wide controls.
             </p>
           </div>
         );

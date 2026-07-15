@@ -36,6 +36,8 @@ export type StaffSection =
   | 'team-chat'
   | 'job-chats'
   | 'payments'
+  | 'payment-settings'
+  | 'agreements'
   | 'disputes'
   | 'analytics'
   | 'settings'
@@ -64,7 +66,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   }
   const valid: StaffSection[] = [
     'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
-    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'dev-updates', 'profile', 'preferences',
+    'incidents', 'messages', 'payments', 'payment-settings', 'agreements', 'disputes', 'analytics', 'settings', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }
