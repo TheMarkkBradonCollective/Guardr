@@ -225,6 +225,29 @@ export function slotsForWeekDay(slots: GuardAvailabilitySlot[], dayOfWeek: numbe
   return slots.filter((slot) => slot.dayOfWeek === dayOfWeek);
 }
 
+/** Primary slot for a weekday (at most one per day in the UI). */
+export function slotForWeekDay(
+  slots: GuardAvailabilitySlot[],
+  dayOfWeek: number
+): GuardAvailabilitySlot | undefined {
+  return slots.find((slot) => slot.dayOfWeek === dayOfWeek && slot.isAvailable);
+}
+
+/** Keep only the first available slot for each weekday. */
+export function normalizeWeeklySlotsToOnePerDay(
+  slots: GuardAvailabilitySlot[]
+): GuardAvailabilitySlot[] {
+  const seen = new Set<number>();
+  const normalized: GuardAvailabilitySlot[] = [];
+  for (const slot of slots) {
+    if (!slot.isAvailable) continue;
+    if (seen.has(slot.dayOfWeek)) continue;
+    seen.add(slot.dayOfWeek);
+    normalized.push(slot);
+  }
+  return normalized;
+}
+
 export function toggleWeekDay(
   slots: GuardAvailabilitySlot[],
   guardId: string,

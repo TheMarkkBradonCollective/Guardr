@@ -210,7 +210,7 @@ export function GuardAvailabilityCalendar({
                   }`}
                 >
                   <div className="availability-day-card-head">
-                    <p className="guard-factor-card-label">{dayLabelFull(day)}</p>
+                    <h3 className="availability-day-card-title">{dayLabelFull(day)}</h3>
                     {!readOnly && (
                       <button
                         type="button"
@@ -221,9 +221,6 @@ export function GuardAvailabilityCalendar({
                       </button>
                     )}
                   </div>
-                  <p className="guard-factor-card-rate availability-day-card-hours">
-                    {daySlots.length} window{daySlots.length === 1 ? '' : 's'}
-                  </p>
                   <div className="availability-day-card-slots">
                     {daySlots.map((slot) => {
                       const invalidWindow = isInvalidAvailabilityWindow(slot);
@@ -267,10 +264,15 @@ export function GuardAvailabilityCalendar({
                     })}
                   </div>
                   {!readOnly && (
-                    <button type="button" onClick={() => addSlot(day)} className="availability-add-slot">
-                      <Plus className="w-4 h-4" />
-                      Add another window
-                    </button>
+                    <div className="availability-day-card-actions">
+                      <span className="availability-window-count">
+                        {daySlots.length} window{daySlots.length === 1 ? '' : 's'}
+                      </span>
+                      <button type="button" onClick={() => addSlot(day)} className="availability-add-slot">
+                        <Plus className="w-4 h-4" />
+                        Add another window
+                      </button>
+                    </div>
                   )}
                   <div className="guard-factor-card-footer availability-day-card-footer">
                     <span className="guard-factor-card-points">

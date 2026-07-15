@@ -8,6 +8,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
+import { AppHeaderToolbar } from '../layouts/AppHeaderToolbar';
 import { NavMenuPopover } from '../layouts/NavMenuPopover';
 import { AccountMenu } from '../layouts/AccountMenu';
 import { showAppAlert } from '../ui/AppConfirm';
@@ -207,17 +208,20 @@ export function StaffOpsLayout({
             {headerOverride}
           </header>
         ) : hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact shrink-0 border-b border-brand-border">
-            <div className="flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
-              <AppHeaderBranding trailing={brandingTrailing} />
+          <header className="staff-main-header staff-main-header-compact app-screen-header shrink-0 border-b border-brand-border">
+            <div className="app-screen-header-brand-row">
+              <AppHeaderBranding trailing={brandingTrailing} logoSize={18} />
             </div>
-            <div className="relative px-4 pb-2.5 flex items-center justify-between gap-2 min-h-[2.75rem]">
-              <div className="shrink-0 flex items-center z-[1]">{navMenu}</div>
-              <div className="shrink-0 flex items-center gap-1.5 z-[1]">
-                {headerActions}
-                <AccountMenu {...accountMenu} />
-              </div>
-            </div>
+            <AppHeaderToolbar
+              showTitle={false}
+              left={navMenu}
+              right={
+                <>
+                  {headerActions}
+                  <AccountMenu {...accountMenu} />
+                </>
+              }
+            />
           </header>
         ) : (
           <AppScreenHeader

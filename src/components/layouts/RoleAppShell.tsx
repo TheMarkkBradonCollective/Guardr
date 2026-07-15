@@ -4,6 +4,7 @@ import { BottomNavItem } from './BottomNavBar';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { NavMenuPopover } from './NavMenuPopover';
 import { AppHeaderBranding } from './AppHeaderBranding';
+import { AppHeaderToolbar } from './AppHeaderToolbar';
 import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 
 interface RoleAppShellProps {
@@ -120,16 +121,19 @@ export function RoleAppShell({
           />
         ) : (
           <header className="app-screen-header app-screen-header--compact shrink-0 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
-            <div className="flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
-              <AppHeaderBranding />
+            <div className="app-screen-header-brand-row">
+              <AppHeaderBranding logoSize={18} />
             </div>
-            <div className="relative px-4 pb-2.5 flex items-center justify-between gap-2 min-h-[2.75rem]">
-              <div className="shrink-0 flex items-center z-[1]">{navMenu}</div>
-              <div className="shrink-0 flex items-center gap-1.5 z-[1]">
-                {notifications ?? headerRight}
-                {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
-              </div>
-            </div>
+            <AppHeaderToolbar
+              showTitle={false}
+              left={navMenu}
+              right={
+                <>
+                  {notifications ?? headerRight}
+                  {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
+                </>
+              }
+            />
           </header>
         )}
 
