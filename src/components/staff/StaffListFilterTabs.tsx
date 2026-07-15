@@ -32,7 +32,11 @@ export function StaffListFilterTabs({
   'aria-label': ariaLabel = 'Filter list',
 }: StaffListFilterTabsProps) {
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`.trim()} role="tablist" aria-label={ariaLabel}>
+    <div
+      className={`flex flex-wrap gap-2 staff-list-filter-tabs ${className}`.trim()}
+      role="tablist"
+      aria-label={ariaLabel}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.id}

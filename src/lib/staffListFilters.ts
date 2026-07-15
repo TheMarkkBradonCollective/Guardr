@@ -20,7 +20,7 @@ export type ApplicationKindFilter = 'all' | 'guard' | 'client';
 
 export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'all';
 
-export type GuardRosterFilter = 'pending' | 'activating' | 'active' | 'all';
+export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
 export type ClientRosterFilter = 'pending' | 'active' | 'suspended' | 'all';
 
@@ -83,7 +83,7 @@ export function matchesGuardRosterFilter(guard: SecurityGuard, filter: GuardRost
       return true;
     case 'pending':
       return isGuardAccountPending(guard);
-    case 'activating':
+    case 'activated':
       return isGuardAccountApproved(guard);
     case 'active':
       return status === 'active';

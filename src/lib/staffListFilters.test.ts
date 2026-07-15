@@ -100,11 +100,11 @@ describe('staffListFilters', () => {
 
   it('filters guard roster tabs', () => {
     const pending = { id: 'g-1', isStaff: false, userStatus: 'pending' } as SecurityGuard;
-    const activating = { id: 'g-2', isStaff: false, userStatus: 'approved', verified: true } as SecurityGuard;
+    const activated = { id: 'g-2', isStaff: false, userStatus: 'approved', verified: true } as SecurityGuard;
     const active = { id: 'g-3', isStaff: false, userStatus: 'active', verified: true } as SecurityGuard;
 
     assert.equal(matchesGuardRosterFilter(pending, 'pending'), true);
-    assert.equal(matchesGuardRosterFilter(activating, 'activating'), true);
+    assert.equal(matchesGuardRosterFilter(activated, 'activated'), true);
     assert.equal(matchesGuardRosterFilter(active, 'active'), true);
     assert.equal(matchesGuardRosterFilter(active, 'pending'), false);
   });
