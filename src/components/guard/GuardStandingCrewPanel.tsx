@@ -25,6 +25,8 @@ interface GuardStandingCrewPanelProps {
   trusted: boolean;
   coordinatingJobs?: GuardJobView[];
   variant?: 'default' | 'embedded';
+  /** When embedded, render only the hero card or body sections (for crew hub layout). */
+  section?: 'hero' | 'body';
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
@@ -144,6 +146,7 @@ export function GuardStandingCrewPanel({
   trusted,
   coordinatingJobs = [],
   variant = 'default',
+  section,
   onJoinTeamWithCode,
   onUpdateStandingCrewProfile,
   onInvite,
@@ -228,7 +231,57 @@ export function GuardStandingCrewPanel({
   const sectionTitle = (title: string) =>
     embedded ? null : <h2 className="app-section-title">{title}</h2>;
 
+  const leadHero = (
+    <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
+      <div
+        className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}
+      >
+        <div className="guard-tier-hero-glow" aria-hidden />
+        <div className="guard-pref-tier-medal" aria-hidden>
+          <div className="guard-pref-tier-medal-ring">
+            <Users className="guard-pref-tier-medal-icon" />
+          </div>
+        </div>
+        <p className="guard-tier-hero-eyebrow">Standing crew</p>
+        <h2 className="guard-tier-hero-name guard-crew-hero-name">{crewDisplayName}</h2>
+        <div className="guard-tier-hero-score-row">
+          <span className="guard-tier-hero-score-label">Active members</span>
+          <span className="guard-tier-hero-score-value">
+            {active.length}
+            {pendingOutgoing.length > 0 ? (
+              <span className="guard-pref-hero-score-total"> +{pendingOutgoing.length} pending</span>
+            ) : null}
+          </span>
+        </div>
+        <p className="guard-tier-hero-subtitle">
+          {active.length > 0
+            ? 'Your standing roster is ready for coordinated jobs.'
+            : 'Build your team below — clients see this crew in the Teams directory.'}
+        </p>
+      </div>
+    </section>
+  );
+
+  const renderMemberHero = (leadName: string) => (
+    <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
+      <div
+        className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}
+      >
+        <div className="guard-tier-hero-glow" aria-hidden />
+        <div className="guard-pref-tier-medal" aria-hidden>
+          <div className="guard-pref-tier-medal-ring">
+            <Users className="guard-pref-tier-medal-icon" />
+          </div>
+        </div>
+        <p className="guard-tier-hero-eyebrow">Standing crew</p>
+        <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
+        <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
+      </div>
+    </section>
+  );
+
   if (!trusted && pendingIncoming.length === 0) {
+    if (embedded && section === 'hero') return null;
     return (
       <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
         When a trusted guard invites you to their standing crew, it will show up here.
@@ -303,21 +356,15 @@ export function GuardStandingCrewPanel({
     );
 
     if (embedded) {
+      if (section === 'hero') return renderMemberHero(leadName);
+      if (section === 'body') {
+        return <div className="guard-rating-body crew-hub-team-body">{memberBody}</div>;
+      }
       return (
-        <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
-          <div className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}>
-            <div className="guard-tier-hero-glow" aria-hidden />
-            <div className="guard-pref-tier-medal" aria-hidden>
-              <div className="guard-pref-tier-medal-ring">
-                <Users className="guard-pref-tier-medal-icon" />
-              </div>
-            </div>
-            <p className="guard-tier-hero-eyebrow">Standing crew</p>
-            <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
-            <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
-          </div>
+        <>
+          {renderMemberHero(leadName)}
           <div className="guard-rating-body">{memberBody}</div>
-        </section>
+        </>
       );
     }
 
@@ -517,35 +564,21 @@ export function GuardStandingCrewPanel({
   );
 
   if (embedded && trusted && leadsStandingCrew) {
+    if (section === 'hero') return leadHero;
+    if (section === 'body') {
+      return <div className="guard-rating-body crew-hub-team-body">{bodyContent}</div>;
+    }
     return (
-      <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
-        <div className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}>
-          <div className="guard-tier-hero-glow" aria-hidden />
-          <div className="guard-pref-tier-medal" aria-hidden>
-            <div className="guard-pref-tier-medal-ring">
-              <Users className="guard-pref-tier-medal-icon" />
-            </div>
-          </div>
-          <p className="guard-tier-hero-eyebrow">Standing crew</p>
-          <h2 className="guard-tier-hero-name guard-crew-hero-name">{crewDisplayName}</h2>
-          <div className="guard-tier-hero-score-row">
-            <span className="guard-tier-hero-score-label">Active members</span>
-            <span className="guard-tier-hero-score-value">
-              {active.length}
-              {pendingOutgoing.length > 0 ? (
-                <span className="guard-pref-hero-score-total"> +{pendingOutgoing.length} pending</span>
-              ) : null}
-            </span>
-          </div>
-          <p className="guard-tier-hero-subtitle">
-            {active.length > 0
-              ? 'Your standing roster is ready for coordinated jobs.'
-              : 'Build your team below — clients see this crew in the Teams directory.'}
-          </p>
-        </div>
+      <>
+        {leadHero}
         <div className="guard-rating-body">{bodyContent}</div>
-      </section>
+      </>
     );
+  }
+
+  if (embedded && section === 'hero') return null;
+  if (embedded && section === 'body') {
+    return <div className="guard-rating-body crew-hub-team-body">{bodyContent}</div>;
   }
 
   return (
