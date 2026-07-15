@@ -10,7 +10,6 @@ import type { ThemeMode } from '../../lib/platform/theme';
 import { appVersionLabel } from '../../lib/appVersion';
 import { isNativeShell } from '../../lib/platform/device';
 import { SITE_URL } from '../../lib/siteConfig';
-import { GuardCrewJoinSection } from '../guard/GuardCrewJoinSection';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
@@ -18,7 +17,6 @@ interface UserSettingsScreenProps {
   onChangeTheme: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
-  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 export function UserSettingsScreen({
@@ -27,7 +25,6 @@ export function UserSettingsScreen({
   onChangeTheme,
   isDbConnected = false,
   onOpenLegal,
-  onJoinTeamWithCode,
 }: UserSettingsScreenProps) {
   return (
     <AppScreen className="guard-settings-screen">
@@ -39,12 +36,6 @@ export function UserSettingsScreen({
             <span className="font-semibold text-brand-text">Availability</span>.
           </p>
         </AppFormSection>
-      )}
-
-      {currentUser.role === 'guard' && onJoinTeamWithCode && (
-        <div className="guard-settings-crew-wrap">
-          <GuardCrewJoinSection onJoin={onJoinTeamWithCode} />
-        </div>
       )}
 
       <AppFormSection title="Appearance">

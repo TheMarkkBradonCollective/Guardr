@@ -356,7 +356,7 @@ export function GuardStandingCrewPanel({
             <p className="text-xs text-brand-text-muted leading-relaxed">
               {leadMembership?.status === 'pending'
                 ? 'Accept the invitation above to join coordinated jobs with this crew.'
-                : 'Your coordinator can invite you to job crews. Use Settings → Join a crew when you have a job crew code.'}
+                : 'Your coordinator can invite you to job crews when a shift needs your team.'}
             </p>
           </div>
         </CrewSection>
@@ -420,7 +420,8 @@ export function GuardStandingCrewPanel({
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
                   staff. To join another coordinator&apos;s crew instead, use{' '}
-                  <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
+                  <span className="font-semibold text-brand-text">Join a crew</span> at the top of
+                  this page.
                 </p>
                 {pendingCrewLeadRequest ? (
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
@@ -546,8 +547,8 @@ export function GuardStandingCrewPanel({
       {!trusted && isStandingTeamMember && (
         <CrewSection title="Job crew codes">
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            When your coordinator shares a job crew code, enter it under{' '}
-            <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
+            When your coordinator shares a job crew code for a specific shift, they will send it
+            directly or post it in your crew chat.
           </p>
         </CrewSection>
       )}

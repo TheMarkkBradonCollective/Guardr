@@ -9056,7 +9056,6 @@ html.theme-grey .wf-badge-success {
   line-height: 1.05;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
-}
 
 .guard-tier-hero-score-row {
   position: relative;
@@ -13970,6 +13969,83 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   margin-bottom: 0.75rem;
 }
 
+.crew-join-section {
+  padding: 0.75rem 1rem 0;
+}
+
+.crew-join-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-app-lg, 14px);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.crew-join-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.crew-join-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
+  color: var(--brand-primary);
+}
+
+.crew-join-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.crew-join-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+}
+
+.crew-join-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--brand-text-muted);
+}
+
+.crew-join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.crew-join-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.crew-join-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.crew-join-submit {
+  width: 100%;
+}
+
 .crew-hub-team-body {
   padding-bottom: calc(1.5rem + var(--app-safe-bottom));
 }
@@ -15429,16 +15505,6 @@ html.theme-grey .landing-wordmark {
   margin-right: 1rem;
 }
 
-.guard-settings-crew-wrap {
-  margin: 0 1rem;
-}
-
-.guard-settings-crew-card {
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
 .guard-pref-hero-medal-ring {
   position: relative;
   z-index: 2;
@@ -15808,66 +15874,6 @@ html.theme-grey .landing-wordmark {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-.guard-pref-crew-header {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-bottom: 0.85rem;
-}
-
-.guard-pref-crew-icon-wrap {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
-  flex-shrink: 0;
-}
-
-.guard-pref-crew-icon {
-  width: 1.15rem;
-  height: 1.15rem;
-  color: var(--brand-primary);
-}
-
-.guard-pref-crew-title {
-  margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--brand-text);
-}
-
-.guard-pref-crew-desc {
-  margin: 0.25rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: var(--brand-text-muted);
-}
-
-.guard-pref-crew-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.guard-pref-crew-input-row {
-  display: flex;
-  gap: 0.55rem;
-}
-
-.guard-pref-crew-input {
-  min-width: 0;
-}
-
-.guard-pref-crew-submit {
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
 .guard-pref-onboarding {
