@@ -1,5 +1,6 @@
 import type { SecurityRequest } from '../types';
 import type { GuardJobView } from './guardJobView';
+import { isJobMissed } from './jobTallies';
 import {
   guardJobMatchesMapStatusFilter,
   guardMapPinKind,
@@ -8,12 +9,15 @@ import {
 } from './mapJobVisibility';
 
 /** Shared guard job buckets — list (Jobs tab) and map pins use the same data. */
-export type GuardJobsBrowseTab = 'available' | 'upcoming' | 'past';
+export type GuardJobsBrowseTab = 'available' | 'scheduled' | 'completed' | 'missed';
 
 export interface GuardBrowseJobLists {
   all: GuardJobView[];
   available: GuardJobView[];
-  upcoming: GuardJobView[];
+  scheduled: GuardJobView[];
+  completed: GuardJobView[];
+  missed: GuardJobView[];
+  /** Completed + missed history (messages, map past filter). */
   past: GuardJobView[];
 }
 
@@ -26,10 +30,41 @@ export function getGuardBrowseJobLists(
   const all = guardVisibleMapJobs(guardId, requests, jobs).filter(
     (job) => job.status !== 'in-progress'
   );
-  const available = all.filter((job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'available');
-  const upcoming = all.filter((job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'scheduled');
-  const past = all.filter((job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'past');
-  return { all, available, upcoming, past };
+
+  const available = all.filter(
+    (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'available'
+  );
+
+  const booked = all.filter(
+    (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'scheduled'
+  );
+  const scheduled = booked.filter(
+    (job) => !isJobMissed(job as unknown as SecurityRequest, { guardId })
+  );
+  const missedFromBooked = booked.filter((job) =>
+    isJobMissed(job as unknown as SecurityRequest, { guardId })
+  );
+
+  const pastJobs = all.filter(
+    (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'past'
+  );
+  const completed = pastJobs.filter(
+    (job) => !isJobMissed(job as unknown as SecurityRequest, { guardId })
+  );
+  const missedFromPast = pastJobs.filter((job) =>
+    isJobMissed(job as unknown as SecurityRequest, { guardId })
+  );
+
+  const missed = [...missedFromBooked, ...missedFromPast];
+
+  return {
+    all,
+    available,
+    scheduled,
+    completed,
+    missed,
+    past: [...completed, ...missed],
+  };
 }
 
 export function filterGuardBrowseJobs(
@@ -43,12 +78,13 @@ export function filterGuardBrowseJobs(
 }
 
 export function guardBrowseTabFromMapFilter(filter: GuardMapStatusFilter): GuardJobsBrowseTab {
-  if (filter === 'upcoming') return 'upcoming';
-  if (filter === 'complete') return 'past';
+  if (filter === 'upcoming') return 'scheduled';
+  if (filter === 'complete') return 'completed';
   return 'available';
 }
 
 export function mapFilterFromBrowseTab(tab: GuardJobsBrowseTab): GuardMapStatusFilter {
-  if (tab === 'past') return 'complete';
+  if (tab === 'completed' || tab === 'missed') return 'complete';
+  if (tab === 'scheduled') return 'upcoming';
   return tab;
 }

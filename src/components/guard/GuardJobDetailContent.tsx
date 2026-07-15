@@ -66,7 +66,7 @@ export function GuardJobDetailContent({
   const distance = getJobDistance(job);
   const { checks, canAccept } = checkJobRequirements(guard, job);
   const hasApplied = guardHasApplied(job, guard.id);
-  const isUpcoming = job.status === 'accepted';
+  const isScheduled = job.status === 'accepted';
   const isDirectRequest = job.requestType === 'direct';
   const isOpenContract = isOpenContractPricing(job.pricingMode);
   const agreedOffer = getAgreedPriceOffer(getGuardNegotiation(job.priceNegotiations, guard.id));
@@ -77,7 +77,7 @@ export function GuardJobDetailContent({
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <JobStatusBadge job={job} />
-          {isUpcoming && <WfBadge tone="primary">Upcoming job</WfBadge>}
+          {isScheduled && <WfBadge tone="primary">Scheduled job</WfBadge>}
           {isDirectRequest && job.status === 'open' && (
             <WfBadge tone="warning">Direct request</WfBadge>
           )}
