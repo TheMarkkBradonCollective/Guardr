@@ -4,9 +4,10 @@ import type {
   SecurityGuard,
 } from '../types';
 import { isGuardTrusted } from './guardTrust';
+import { guardLeadsOwnStandingCrew } from './guardStandingCrew';
 
-export function crewJoinRequestId(guardId: string): string {
-  return `cjr-${guardId}`;
+export function crewLeadRequestId(guardId: string): string {
+  return `clr-${guardId}`;
 }
 
 export function guardIsOnStandingCrew(
@@ -19,66 +20,51 @@ export function guardIsOnStandingCrew(
   );
 }
 
-export function guardLeadsStandingCrew(
-  members: GuardStandingCrewMember[],
-  guardId: string
-): boolean {
-  return members.some(
-    (m) =>
-      m.leadGuardId === guardId && (m.status === 'active' || m.status === 'pending')
-  );
-}
-
-export function guardHasOwnStandingCrewProfile(guard: SecurityGuard): boolean {
-  return !!guard.standingCrewName?.trim();
-}
-
-export function getPendingCrewJoinRequest(
+export function getPendingCrewLeadRequest(
   requests: GuardCrewJoinRequest[],
   guardId: string
 ): GuardCrewJoinRequest | undefined {
   return requests.find((r) => r.guardId === guardId && r.status === 'pending');
 }
 
-export function getPendingCrewJoinRequests(
+export function getPendingCrewLeadRequests(
   requests: GuardCrewJoinRequest[]
 ): GuardCrewJoinRequest[] {
   return requests.filter((r) => r.status === 'pending');
 }
 
-export function countPendingCrewJoinRequests(requests: GuardCrewJoinRequest[]): number {
-  return getPendingCrewJoinRequests(requests).length;
+export function countPendingCrewLeadRequests(requests: GuardCrewJoinRequest[]): number {
+  return getPendingCrewLeadRequests(requests).length;
 }
 
-/** Trusted guards without a crew can ask staff to place them on one. */
-export function canRequestCrewPlacement(
+/** Trusted guards without their own crew can ask staff to set them up as a crew lead. */
+export function canRequestCrewLead(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[],
-  crewJoinRequests: GuardCrewJoinRequest[]
+  crewLeadRequests: GuardCrewJoinRequest[]
 ): boolean {
   if (!isGuardTrusted(guard)) return false;
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
   if (guardIsOnStandingCrew(standingCrewMembers, guard.id)) return false;
-  if (guardLeadsStandingCrew(standingCrewMembers, guard.id)) return false;
-  if (guardHasOwnStandingCrewProfile(guard)) return false;
-  if (getPendingCrewJoinRequest(crewJoinRequests, guard.id)) return false;
+  if (getPendingCrewLeadRequest(crewLeadRequests, guard.id)) return false;
   return true;
 }
 
-export function submitCrewJoinRequest(
+export function submitCrewLeadRequest(
   requests: GuardCrewJoinRequest[],
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[],
   message = '',
   now = new Date()
 ): { requests: GuardCrewJoinRequest[]; request: GuardCrewJoinRequest } | { error: string } {
-  if (!canRequestCrewPlacement(guard, standingCrewMembers, requests)) {
+  if (!canRequestCrewLead(guard, standingCrewMembers, requests)) {
     return {
       error:
-        'You already have a crew, are on one, or already have a pending placement request.',
+        'You already lead a crew, are on another crew, or already have a pending crew lead request.',
     };
   }
   const request: GuardCrewJoinRequest = {
-    id: crewJoinRequestId(guard.id),
+    id: crewLeadRequestId(guard.id),
     guardId: guard.id,
     status: 'pending',
     message: message.trim() || undefined,
@@ -88,11 +74,10 @@ export function submitCrewJoinRequest(
   return { requests: [...withoutPrior, request], request };
 }
 
-export function approveCrewJoinRequest(
+export function approveCrewLeadRequest(
   requests: GuardCrewJoinRequest[],
   requestId: string,
   staffId: string,
-  assignedLeadGuardId: string,
   now = new Date()
 ): { requests: GuardCrewJoinRequest[]; request: GuardCrewJoinRequest } | { error: string } {
   const row = requests.find((r) => r.id === requestId);
@@ -104,7 +89,6 @@ export function approveCrewJoinRequest(
     status: 'approved',
     resolvedAt,
     resolvedByStaffId: staffId,
-    assignedLeadGuardId,
   };
   return {
     requests: requests.map((r) => (r.id === requestId ? updated : r)),
@@ -112,7 +96,7 @@ export function approveCrewJoinRequest(
   };
 }
 
-export function declineCrewJoinRequest(
+export function declineCrewLeadRequest(
   requests: GuardCrewJoinRequest[],
   requestId: string,
   staffId: string,
@@ -145,7 +129,7 @@ export function makeGuardCrewLeadProfile(
   return { standingCrewName, standingCrewDescription };
 }
 
-export function crewJoinRequestRowFromDb(row: Record<string, unknown>): GuardCrewJoinRequest {
+export function crewLeadRequestRowFromDb(row: Record<string, unknown>): GuardCrewJoinRequest {
   return {
     id: String(row.id),
     guardId: String(row.guard_id),
@@ -154,13 +138,10 @@ export function crewJoinRequestRowFromDb(row: Record<string, unknown>): GuardCre
     requestedAt: String(row.requested_at),
     resolvedAt: row.resolved_at ? String(row.resolved_at) : undefined,
     resolvedByStaffId: row.resolved_by_staff_id ? String(row.resolved_by_staff_id) : undefined,
-    assignedLeadGuardId: row.assigned_lead_guard_id
-      ? String(row.assigned_lead_guard_id)
-      : undefined,
   };
 }
 
-export function crewJoinRequestRowToDb(request: GuardCrewJoinRequest) {
+export function crewLeadRequestRowToDb(request: GuardCrewJoinRequest) {
   return {
     id: request.id,
     guard_id: request.guardId,
@@ -169,7 +150,12 @@ export function crewJoinRequestRowToDb(request: GuardCrewJoinRequest) {
     requested_at: request.requestedAt,
     resolved_at: request.resolvedAt ?? null,
     resolved_by_staff_id: request.resolvedByStaffId ?? null,
-    assigned_lead_guard_id: request.assignedLeadGuardId ?? null,
     updated_at: new Date().toISOString(),
   };
 }
+
+// Backward-compatible aliases for store layer
+export const crewJoinRequestRowFromDb = crewLeadRequestRowFromDb;
+export const crewJoinRequestRowToDb = crewLeadRequestRowToDb;
+export const getPendingCrewJoinRequests = getPendingCrewLeadRequests;
+export const countPendingCrewJoinRequests = countPendingCrewLeadRequests;

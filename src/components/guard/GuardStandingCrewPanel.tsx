@@ -34,9 +34,9 @@ interface GuardStandingCrewPanelProps {
   onRemove?: (memberGuardId: string) => void | Promise<void>;
   onAcceptInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineInvite?: (inviteId: string) => void | Promise<void>;
-  onRequestCrewPlacement?: () => void | Promise<void>;
-  canRequestCrewPlacement?: boolean;
-  pendingCrewJoinRequest?: boolean;
+  onRequestCrewLead?: () => void | Promise<void>;
+  canRequestCrewLead?: boolean;
+  pendingCrewLeadRequest?: boolean;
 }
 
 function guardName(guards: SecurityGuard[], id: string): string {
@@ -77,9 +77,9 @@ export function GuardStandingCrewPanel({
   onRemove,
   onAcceptInvite,
   onDeclineInvite,
-  onRequestCrewPlacement,
-  canRequestCrewPlacement = false,
-  pendingCrewJoinRequest = false,
+  onRequestCrewLead,
+  canRequestCrewLead = false,
+  pendingCrewLeadRequest = false,
 }: GuardStandingCrewPanelProps) {
   const [search, setSearch] = useState('');
   const [invitingId, setInvitingId] = useState<string | null>(null);
@@ -130,11 +130,11 @@ export function GuardStandingCrewPanel({
     [members, guard.id, guard.standingCrewName]
   );
 
-  const handleRequestPlacement = async () => {
-    if (!onRequestCrewPlacement) return;
+  const handleRequestCrewLead = async () => {
+    if (!onRequestCrewLead) return;
     setRequestingPlacement(true);
     try {
-      await onRequestCrewPlacement();
+      await onRequestCrewLead();
     } finally {
       setRequestingPlacement(false);
     }
@@ -213,15 +213,23 @@ export function GuardStandingCrewPanel({
         )}
         <section>
           {sectionTitle('Your crew')}
-          <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3">
+          <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
             <p className="text-sm font-semibold text-brand-text">
               You are on {leadName}&apos;s standing crew
             </p>
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            <p className="text-xs text-brand-text-muted leading-relaxed">
               {leadMembership?.status === 'pending'
                 ? 'Accept the invitation above to join coordinated jobs with this crew.'
                 : 'Your coordinator can invite you to job crews. Team chat appears under Messages when you join a job crew.'}
             </p>
+            {onJoinTeamWithCode && (
+              <>
+                <p className="text-xs text-brand-text-muted leading-relaxed">
+                  Enter a crew code from your coordinator to join their roster on a specific job.
+                </p>
+                <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
+              </>
+            )}
           </div>
         </section>
       </div>
@@ -267,28 +275,27 @@ export function GuardStandingCrewPanel({
         </section>
       )}
 
-      {trusted && (
+      {trusted && !leadsStandingCrew && (
         <>
-          {(canRequestCrewPlacement || pendingCrewJoinRequest) && (
+          {(canRequestCrewLead || pendingCrewLeadRequest) && (
             <section>
-              {sectionTitle('Join a crew')}
+              {sectionTitle('Lead your own crew')}
               <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
                 <p className="text-xs text-brand-text-muted leading-relaxed">
-                  Trusted guards cannot join with a crew code. If you prefer supporting another
-                  coordinator instead of leading your own team, request placement through Guardr
-                  staff.
+                  Want to coordinate your own standing team? Request crew lead approval from Guardr
+                  staff. Otherwise, join another coordinator&apos;s crew with a crew code below.
                 </p>
-                {pendingCrewJoinRequest ? (
-                  <WfBadge tone="warning">Placement request pending staff review</WfBadge>
+                {pendingCrewLeadRequest ? (
+                  <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
                 ) : (
-                  onRequestCrewPlacement && (
+                  onRequestCrewLead && (
                     <button
                       type="button"
                       className="app-button-primary app-btn-sm"
                       disabled={requestingPlacement}
-                      onClick={() => void handleRequestPlacement()}
+                      onClick={() => void handleRequestCrewLead()}
                     >
-                      {requestingPlacement ? 'Submitting…' : 'Request crew placement'}
+                      {requestingPlacement ? 'Submitting…' : 'Request to lead a crew'}
                     </button>
                   )
                 )}
@@ -296,8 +303,20 @@ export function GuardStandingCrewPanel({
             </section>
           )}
 
-          {leadsStandingCrew && (
-            <>
+          {!isStandingTeamMember && onJoinTeamWithCode && (
+            <section>
+              {sectionTitle('Join another crew')}
+              <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
+                Enter a crew code from a coordinator to join their coordinated crew on a job.
+              </p>
+              <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
+            </section>
+          )}
+        </>
+      )}
+
+      {trusted && leadsStandingCrew && (
+        <>
           {onUpdateStandingCrewProfile && (
             <section>
               {sectionTitle('Team profile')}
@@ -440,8 +459,6 @@ export function GuardStandingCrewPanel({
           )}
             </>
           )}
-        </>
-      )}
 
       {!trusted && isStandingTeamMember && onJoinTeamWithCode && (
         <section>

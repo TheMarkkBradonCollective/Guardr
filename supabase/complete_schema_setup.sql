@@ -1079,7 +1079,7 @@ CREATE INDEX IF NOT EXISTS idx_standing_crew_member
 COMMENT ON TABLE guard_standing_crew_members IS
   'Persistent roster a trusted guard maintains across jobs; pending until member accepts';
 
--- ── CREW PLACEMENT REQUESTS (trusted guards seeking a crew) ───────────────────
+-- ── CREW LEAD REQUESTS (trusted guards requesting to lead their own crew) ─────
 CREATE TABLE IF NOT EXISTS guard_crew_join_requests (
   id TEXT PRIMARY KEY,
   guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
@@ -1089,7 +1089,6 @@ CREATE TABLE IF NOT EXISTS guard_crew_join_requests (
   requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   resolved_at TIMESTAMPTZ,
   resolved_by_staff_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
-  assigned_lead_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (guard_id)
@@ -1099,7 +1098,7 @@ CREATE INDEX IF NOT EXISTS idx_crew_join_requests_status
   ON guard_crew_join_requests (status, requested_at DESC);
 
 COMMENT ON TABLE guard_crew_join_requests IS
-  'Trusted guards without a crew can request staff placement on an existing standing crew';
+  'Trusted guards without their own crew can request staff approval to become a crew lead';
 
 -- ── USER NOTIFICATION INBOX ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_notifications (

@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { GuardCrewJoinRequest, GuardStandingCrewMember, SecurityGuard } from '../types';
 import {
-  canRequestCrewPlacement,
-  declineCrewJoinRequest,
+  canRequestCrewLead,
+  declineCrewLeadRequest,
   makeGuardCrewLeadProfile,
-  submitCrewJoinRequest,
+  submitCrewLeadRequest,
 } from './guardCrewJoinRequest';
 
 function trustedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -30,12 +30,12 @@ function trustedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   };
 }
 
-test('canRequestCrewPlacement allows trusted guards without a crew', () => {
+test('canRequestCrewLead allows trusted guards without their own crew', () => {
   const guard = trustedGuard();
-  assert.equal(canRequestCrewPlacement(guard, [], []), true);
+  assert.equal(canRequestCrewLead(guard, [], []), true);
 });
 
-test('canRequestCrewPlacement blocks guards already on a crew', () => {
+test('canRequestCrewLead blocks guards already on another crew', () => {
   const guard = trustedGuard();
   const members: GuardStandingCrewMember[] = [
     {
@@ -46,35 +46,21 @@ test('canRequestCrewPlacement blocks guards already on a crew', () => {
       invitedAt: new Date().toISOString(),
     },
   ];
-  assert.equal(canRequestCrewPlacement(guard, members, []), false);
+  assert.equal(canRequestCrewLead(guard, members, []), false);
 });
 
-test('canRequestCrewPlacement blocks guards leading a crew', () => {
-  const guard = trustedGuard();
-  const members: GuardStandingCrewMember[] = [
-    {
-      id: 'sc-g1-m2',
-      leadGuardId: 'g1',
-      memberGuardId: 'm2',
-      status: 'pending',
-      invitedAt: new Date().toISOString(),
-    },
-  ];
-  assert.equal(canRequestCrewPlacement(guard, members, []), false);
-});
-
-test('canRequestCrewPlacement blocks guards with a crew profile', () => {
+test('canRequestCrewLead blocks guards who already lead a crew', () => {
   const guard = trustedGuard({ standingCrewName: 'Night Watch' });
-  assert.equal(canRequestCrewPlacement(guard, [], []), false);
+  assert.equal(canRequestCrewLead(guard, [], []), false);
 });
 
-test('submitCrewJoinRequest creates a pending request', () => {
+test('submitCrewLeadRequest creates a pending request', () => {
   const guard = trustedGuard();
-  const result = submitCrewJoinRequest([], guard, [], 'Looking for a team');
+  const result = submitCrewLeadRequest([], guard, [], 'Ready to coordinate');
   assert.ok(!('error' in result));
   if ('error' in result) return;
   assert.equal(result.request.status, 'pending');
-  assert.equal(result.request.message, 'Looking for a team');
+  assert.equal(result.request.message, 'Ready to coordinate');
 });
 
 test('makeGuardCrewLeadProfile requires trusted status', () => {
@@ -91,16 +77,16 @@ test('makeGuardCrewLeadProfile sets a default crew name', () => {
   assert.equal(result.standingCrewName, "Alex Guard's Crew");
 });
 
-test('declineCrewJoinRequest resolves pending requests', () => {
+test('declineCrewLeadRequest resolves pending requests', () => {
   const requests: GuardCrewJoinRequest[] = [
     {
-      id: 'cjr-g1',
+      id: 'clr-g1',
       guardId: 'g1',
       status: 'pending',
       requestedAt: new Date().toISOString(),
     },
   ];
-  const result = declineCrewJoinRequest(requests, 'cjr-g1', 'staff1');
+  const result = declineCrewLeadRequest(requests, 'clr-g1', 'staff1');
   assert.ok(!('error' in result));
   if ('error' in result) return;
   assert.equal(result.request.status, 'declined');

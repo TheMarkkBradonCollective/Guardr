@@ -9,7 +9,7 @@ import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewOutgoing,
 } from '../../lib/guardStandingCrew';
-import { getPendingCrewJoinRequests } from '../../lib/guardCrewJoinRequest';
+import { getPendingCrewLeadRequests } from '../../lib/guardCrewJoinRequest';
 import { formatShiftRange } from '../../lib/dates';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
@@ -59,11 +59,8 @@ interface StaffGuardCrewsPanelProps {
   onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveCrewJoinRequest?: (
-    requestId: string,
-    assignedLeadGuardId: string
-  ) => void | Promise<void>;
-  onDeclineCrewJoinRequest?: (requestId: string) => void | Promise<void>;
+  onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
 }
 
 export function StaffGuardCrewsPanel({
@@ -80,15 +77,13 @@ export function StaffGuardCrewsPanel({
   onApproveCrewMember,
   onDenyCrewMember,
   onRemoveCrewMember,
-  onApproveCrewJoinRequest,
-  onDeclineCrewJoinRequest,
+  onApproveCrewLeadRequest,
+  onDeclineCrewLeadRequest,
 }: StaffGuardCrewsPanelProps) {
   const [view, setView] = useState<CrewView>('standing');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CrewFilter>('all');
   const [selectedStandingLeadId, setSelectedStandingLeadId] = useState<string | null>(null);
-  const [selectedJoinRequestId, setSelectedJoinRequestId] = useState<string | null>(null);
-  const [assignLeadGuardId, setAssignLeadGuardId] = useState('');
   const [resolvingRequestId, setResolvingRequestId] = useState<string | null>(null);
   const [internalSelectedJobId, setInternalSelectedJobId] = useState<string | null>(initialSelectedJobId);
   const isControlled = controlledSelectedJobId !== undefined;
@@ -141,20 +136,9 @@ export function StaffGuardCrewsPanel({
     });
   }, [trustedGuards, search]);
 
-  const pendingJoinRequests = useMemo(
-    () => getPendingCrewJoinRequests(crewJoinRequests),
+  const pendingLeadRequests = useMemo(
+    () => getPendingCrewLeadRequests(crewJoinRequests),
     [crewJoinRequests]
-  );
-
-  const assignableLeads = useMemo(
-    () =>
-      trustedGuards.filter((g) => {
-        if (!g.standingCrewName?.trim()) return false;
-        const activeMembers = getActiveStandingCrewMembers(standingCrewMembers, g.id);
-        const pendingMembers = getPendingStandingCrewOutgoing(standingCrewMembers, g.id);
-        return activeMembers.length > 0 || pendingMembers.length > 0 || !!g.standingCrewName?.trim();
-      }),
-    [trustedGuards, standingCrewMembers]
   );
 
   const { showDetailOnly: showJobDetailOnly } = useSplitListDetail(selectedJobId, 'page');
@@ -286,17 +270,16 @@ export function StaffGuardCrewsPanel({
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
         <>
-          {pendingJoinRequests.length > 0 && (
+          {pendingLeadRequests.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-brand-text">Crew placement requests</h2>
-                <WfBadge tone="warning">{pendingJoinRequests.length} pending</WfBadge>
+                <h2 className="text-sm font-bold text-brand-text">Crew lead requests</h2>
+                <WfBadge tone="warning">{pendingLeadRequests.length} pending</WfBadge>
               </div>
               <div className="space-y-2">
-                {pendingJoinRequests.map((request) => {
+                {pendingLeadRequests.map((request) => {
                   const requester = guards.find((g) => g.id === request.guardId);
                   if (!requester) return null;
-                  const isSelected = selectedJoinRequestId === request.id;
                   return (
                     <div
                       key={request.id}
@@ -307,7 +290,8 @@ export function StaffGuardCrewsPanel({
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-brand-text">{requester.name}</p>
                           <p className="text-xs text-brand-text-muted">
-                            Trusted guard · {requester.badgeNumber ? `Badge ${requester.badgeNumber}` : 'No badge'}
+                            Trusted guard · wants to lead their own crew
+                            {requester.badgeNumber ? ` · Badge ${requester.badgeNumber}` : ''}
                           </p>
                           {request.message && (
                             <p className="text-sm text-brand-text-muted mt-2 leading-relaxed whitespace-pre-wrap">
@@ -319,87 +303,40 @@ export function StaffGuardCrewsPanel({
                           </p>
                         </div>
                       </div>
-                      {canManage && (onApproveCrewJoinRequest || onDeclineCrewJoinRequest) && (
-                        <div className="space-y-2">
-                          {isSelected ? (
-                            <>
-                              <label className="block text-xs font-semibold text-brand-text-muted">
-                                Assign to crew lead
-                              </label>
-                              <select
-                                value={assignLeadGuardId}
-                                onChange={(e) => setAssignLeadGuardId(e.target.value)}
-                                className="app-input w-full text-sm"
-                              >
-                                <option value="">Select a crew lead…</option>
-                                {assignableLeads
-                                  .filter((g) => g.id !== requester.id)
-                                  .map((lead) => (
-                                    <option key={lead.id} value={lead.id}>
-                                      {lead.standingCrewName || lead.name}
-                                    </option>
-                                  ))}
-                              </select>
-                              <div className="flex flex-wrap gap-2">
-                                {onApproveCrewJoinRequest && (
-                                  <button
-                                    type="button"
-                                    className="app-button-primary app-btn-sm"
-                                    disabled={!assignLeadGuardId || resolvingRequestId === request.id}
-                                    onClick={async () => {
-                                      if (!assignLeadGuardId) return;
-                                      setResolvingRequestId(request.id);
-                                      try {
-                                        await onApproveCrewJoinRequest(request.id, assignLeadGuardId);
-                                        setSelectedJoinRequestId(null);
-                                        setAssignLeadGuardId('');
-                                      } finally {
-                                        setResolvingRequestId(null);
-                                      }
-                                    }}
-                                  >
-                                    {resolvingRequestId === request.id ? 'Assigning…' : 'Assign to crew'}
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  className="app-button-outline app-btn-sm"
-                                  onClick={() => {
-                                    setSelectedJoinRequestId(null);
-                                    setAssignLeadGuardId('');
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                                {onDeclineCrewJoinRequest && (
-                                  <button
-                                    type="button"
-                                    className="app-button-outline app-btn-sm text-red-400 border-red-500/30"
-                                    disabled={resolvingRequestId === request.id}
-                                    onClick={async () => {
-                                      setResolvingRequestId(request.id);
-                                      try {
-                                        await onDeclineCrewJoinRequest(request.id);
-                                      } finally {
-                                        setResolvingRequestId(null);
-                                      }
-                                    }}
-                                  >
-                                    Decline
-                                  </button>
-                                )}
-                              </div>
-                            </>
-                          ) : (
+                      {canManage && (onApproveCrewLeadRequest || onDeclineCrewLeadRequest) && (
+                        <div className="flex flex-wrap gap-2">
+                          {onApproveCrewLeadRequest && (
                             <button
                               type="button"
-                              className="app-button-outline app-btn-sm"
-                              onClick={() => {
-                                setSelectedJoinRequestId(request.id);
-                                setAssignLeadGuardId('');
+                              className="app-button-primary app-btn-sm"
+                              disabled={resolvingRequestId === request.id}
+                              onClick={async () => {
+                                setResolvingRequestId(request.id);
+                                try {
+                                  await onApproveCrewLeadRequest(request.id);
+                                } finally {
+                                  setResolvingRequestId(null);
+                                }
                               }}
                             >
-                              Review request
+                              {resolvingRequestId === request.id ? 'Approving…' : 'Make crew lead'}
+                            </button>
+                          )}
+                          {onDeclineCrewLeadRequest && (
+                            <button
+                              type="button"
+                              className="app-button-outline app-btn-sm text-red-400 border-red-500/30"
+                              disabled={resolvingRequestId === request.id}
+                              onClick={async () => {
+                                setResolvingRequestId(request.id);
+                                try {
+                                  await onDeclineCrewLeadRequest(request.id);
+                                } finally {
+                                  setResolvingRequestId(null);
+                                }
+                              }}
+                            >
+                              Decline
                             </button>
                           )}
                         </div>

@@ -78,7 +78,7 @@ import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
-import { countPendingCrewJoinRequests } from '../lib/guardCrewJoinRequest';
+import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -166,11 +166,8 @@ interface StaffDashboardProps {
   onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveCrewJoinRequest?: (
-    requestId: string,
-    assignedLeadGuardId: string
-  ) => void | Promise<void>;
-  onDeclineCrewJoinRequest?: (requestId: string) => void | Promise<void>;
+  onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
   onMakeGuardCrewLead?: (guardId: string) => void | Promise<void>;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
@@ -330,8 +327,8 @@ export function StaffDashboard({
   onApproveCrewMember,
   onDenyCrewMember,
   onRemoveCrewMember,
-  onApproveCrewJoinRequest,
-  onDeclineCrewJoinRequest,
+  onApproveCrewLeadRequest,
+  onDeclineCrewLeadRequest,
   onMakeGuardCrewLead,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
@@ -553,7 +550,7 @@ export function StaffDashboard({
       support: openTicketCount(supportTickets),
       messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
-      crews: countStaffCrewsNeedingReview(requests) + countPendingCrewJoinRequests(crewJoinRequests),
+      crews: countStaffCrewsNeedingReview(requests) + countPendingCrewLeadRequests(crewJoinRequests),
     }),
     [guards, stats, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests]
   );
@@ -772,8 +769,8 @@ export function StaffDashboard({
             onApproveCrewMember={canReviewJobs ? onApproveCrewMember : undefined}
             onDenyCrewMember={canReviewJobs ? onDenyCrewMember : undefined}
             onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
-            onApproveCrewJoinRequest={canReviewJobs ? onApproveCrewJoinRequest : undefined}
-            onDeclineCrewJoinRequest={canReviewJobs ? onDeclineCrewJoinRequest : undefined}
+            onApproveCrewLeadRequest={canReviewJobs ? onApproveCrewLeadRequest : undefined}
+            onDeclineCrewLeadRequest={canReviewJobs ? onDeclineCrewLeadRequest : undefined}
           />
         );
       case 'clients':

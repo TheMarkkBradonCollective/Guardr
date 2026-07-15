@@ -45,7 +45,7 @@ test('getPendingStandingCrewIncoming lists invites for member', () => {
   assert.equal(pending.length, 1);
 });
 
-test('shouldOfferTeamCodeJoin hides for trusted guards and standing roster members', () => {
+test('shouldOfferTeamCodeJoin allows trusted guards without their own crew', () => {
   const member = {
     id: 'guard-2',
     name: 'Member',
@@ -54,8 +54,11 @@ test('shouldOfferTeamCodeJoin hides for trusted guards and standing roster membe
     verified: true,
   } as SecurityGuard;
 
-  assert.equal(shouldOfferTeamCodeJoin(trustedLead(), []), false);
+  assert.equal(shouldOfferTeamCodeJoin(trustedLead(), []), true);
   assert.equal(shouldOfferTeamCodeJoin(member, []), true);
+
+  const leadWithCrew = { ...trustedLead(), standingCrewName: 'Lead Crew' } as SecurityGuard;
+  assert.equal(shouldOfferTeamCodeJoin(leadWithCrew, []), false);
 
   const invited = inviteToStandingCrew([], trustedLead(), 'guard-2');
   assert.ok(!('error' in invited));

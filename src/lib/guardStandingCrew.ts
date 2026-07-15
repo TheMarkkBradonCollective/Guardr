@@ -128,12 +128,23 @@ export function removeStandingCrewMember(
   };
 }
 
-/** Team codes in Settings are for independent guards joining a job crew — not trusted leads or standing roster members. */
+export function guardLeadsOwnStandingCrew(
+  guard: SecurityGuard,
+  members: GuardStandingCrewMember[]
+): boolean {
+  if (guard.standingCrewName?.trim()) return true;
+  return members.some(
+    (m) =>
+      m.leadGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
+  );
+}
+
+/** Crew codes join an existing coordinated crew — not for guards who already lead their own team. */
 export function shouldOfferTeamCodeJoin(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[]
 ): boolean {
-  if (isGuardTrusted(guard)) return false;
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
   return !standingCrewMembers.some(
     (m) =>
       m.memberGuardId === guard.id && (m.status === 'active' || m.status === 'pending')

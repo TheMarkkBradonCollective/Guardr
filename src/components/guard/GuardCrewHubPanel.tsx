@@ -43,9 +43,9 @@ interface GuardCrewHubPanelProps {
   onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
   onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
-  onRequestCrewPlacement?: () => void | Promise<void>;
-  canRequestCrewPlacement?: boolean;
-  pendingCrewJoinRequest?: boolean;
+  onRequestCrewLead?: () => void | Promise<void>;
+  canRequestCrewLead?: boolean;
+  pendingCrewLeadRequest?: boolean;
   onDetailOpenChange?: (open: boolean) => void;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
@@ -173,9 +173,9 @@ export function GuardCrewHubPanel({
   onRemoveStandingCrew,
   onAcceptStandingCrewInvite,
   onDeclineStandingCrewInvite,
-  onRequestCrewPlacement,
-  canRequestCrewPlacement = false,
-  pendingCrewJoinRequest = false,
+  onRequestCrewLead,
+  canRequestCrewLead = false,
+  pendingCrewLeadRequest = false,
   onDetailOpenChange,
   onJoinTeamWithCode,
 }: GuardCrewHubPanelProps) {
@@ -265,9 +265,9 @@ export function GuardCrewHubPanel({
             onRemove={onRemoveStandingCrew}
             onAcceptInvite={onAcceptStandingCrewInvite}
             onDeclineInvite={onDeclineStandingCrewInvite}
-            onRequestCrewPlacement={onRequestCrewPlacement}
-            canRequestCrewPlacement={canRequestCrewPlacement}
-            pendingCrewJoinRequest={pendingCrewJoinRequest}
+            onRequestCrewLead={onRequestCrewLead}
+            canRequestCrewLead={canRequestCrewLead}
+            pendingCrewLeadRequest={pendingCrewLeadRequest}
           />
         </div>
       )}
