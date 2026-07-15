@@ -4,6 +4,7 @@ import {
   activePreShiftBriefingReminderTier,
   canGuardStartEnRoute,
   evaluatePreShiftBriefingReminder,
+  guardCanOpenPreShiftBriefing,
   isPreShiftBriefingWindowOpen,
   msUntilEnRouteUnlock,
   PRE_SHIFT_BRIEFING_UNLOCK_MS,
@@ -68,4 +69,14 @@ test('msUntilEnRouteUnlock counts down to one hour before start', () => {
   const start = new Date('2026-07-16T20:00:00.000Z');
   const now = start.getTime() - 90 * 60 * 1000;
   assert.equal(msUntilEnRouteUnlock(start.toISOString(), now), 30 * 60 * 1000);
+});
+
+test('guardCanOpenPreShiftBriefing requires assignment within briefing window', () => {
+  const start = new Date('2026-07-16T20:00:00.000Z');
+  const req = { ...job(start.toISOString()), assignedGuardId: 'guard-1' as string };
+  assert.equal(
+    guardCanOpenPreShiftBriefing(req, 'guard-1', start.getTime() - PRE_SHIFT_BRIEFING_UNLOCK_MS),
+    true
+  );
+  assert.equal(guardCanOpenPreShiftBriefing(req, 'other-guard', start.getTime() - 2 * HOUR), false);
 });
