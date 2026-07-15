@@ -49,7 +49,6 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
   guardCanStaffActivateAccount,
@@ -583,7 +582,7 @@ export function StaffGuardDetailPanel({
                       ? 'Open this application in Applications to review and approve'
                       : activationChecklist.staffApprovalBlockers.length > 0
                         ? activationChecklist.staffApprovalBlockers.join(' · ')
-                        : 'Approve guard application — unlocks credential upload'
+                        : 'Approve guard application'
                   }
                 >
                   {onOpenGuardApplication ? 'Review application' : 'Approve application'}
@@ -724,9 +723,6 @@ export function StaffGuardDetailPanel({
 
           {!editing && (
             <section className="staff-detail-section space-y-3">
-              {!guard.isStaff && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && (
-                <StaffGuardActivationChecklistView guard={guard} />
-              )}
               <GuardCredentialsPanel
                 guard={guard}
                 editing={false}
