@@ -139,43 +139,48 @@ export function GuardJobPreferencesPanel({
   };
 
   return (
-    <section className="guard-preferences-panel guard-preferences-panel-tiered">
-      <div className="guard-pref-hero guard-pref-hero-tiered">
-        <div className="guard-pref-hero-glow" aria-hidden />
-        <div className="guard-pref-hero-medal" aria-hidden>
-          <div className="guard-pref-hero-medal-ring">
-            <Bell className="guard-pref-hero-medal-icon" />
+    <>
+      <div className="guard-tiered-screen-pinned">
+        <section className="guard-preferences-panel guard-preferences-panel-tiered guard-tier-hero-card">
+          <div className="guard-pref-hero guard-pref-hero-tiered">
+            <div className="guard-pref-hero-glow" aria-hidden />
+            <div className="guard-pref-hero-medal" aria-hidden>
+              <div className="guard-pref-hero-medal-ring">
+                <Bell className="guard-pref-hero-medal-icon" />
+              </div>
+              <div className="guard-pref-hero-medal-ribbon" />
+            </div>
+            <p className="guard-pref-hero-eyebrow">Job alerts</p>
+            <h2 className="guard-pref-hero-title">Your alert profile</h2>
+            <div className="guard-pref-hero-subtitle-block">
+              <p className="guard-pref-hero-subtitle">
+                Turn on the job types you want. Complete the read-aloud onboarding once per type, then
+                toggle alerts anytime.
+                {welcomeExpanded ? (
+                  <span className="guard-pref-hero-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
+                ) : null}
+              </p>
+              <button
+                type="button"
+                className="guard-pref-hero-read-more"
+                onClick={() => setWelcomeExpanded((open) => !open)}
+                aria-expanded={welcomeExpanded}
+              >
+                {welcomeExpanded ? 'Read less' : 'Read more'}
+              </button>
+            </div>
+            <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
+            <p className="guard-pref-hero-footnote">
+              {stats.active > 0
+                ? `${stats.active} alert${stats.active === 1 ? '' : 's'} active right now`
+                : 'Enable alerts after you complete onboarding for each type'}
+            </p>
           </div>
-          <div className="guard-pref-hero-medal-ribbon" />
-        </div>
-        <p className="guard-pref-hero-eyebrow">Job alerts</p>
-        <h2 className="guard-pref-hero-title">Your alert profile</h2>
-        <div className="guard-pref-hero-subtitle-block">
-          <p className="guard-pref-hero-subtitle">
-            Turn on the job types you want. Complete the read-aloud onboarding once per type, then
-            toggle alerts anytime.
-            {welcomeExpanded ? (
-              <span className="guard-pref-hero-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
-            ) : null}
-          </p>
-          <button
-            type="button"
-            className="guard-pref-hero-read-more"
-            onClick={() => setWelcomeExpanded((open) => !open)}
-            aria-expanded={welcomeExpanded}
-          >
-            {welcomeExpanded ? 'Read less' : 'Read more'}
-          </button>
-        </div>
-        <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
-        <p className="guard-pref-hero-footnote">
-          {stats.active > 0
-            ? `${stats.active} alert${stats.active === 1 ? '' : 's'} active right now`
-            : 'Enable alerts after you complete onboarding for each type'}
-        </p>
+        </section>
       </div>
 
-      <div className="guard-pref-body">
+      <div className="guard-tiered-screen-scroll">
+        <div className="guard-pref-body">
         {stats.active === 0 && (
           <div className="guard-pref-empty-banner">
             <div className="guard-pref-empty-banner-icon-wrap">
@@ -267,6 +272,7 @@ export function GuardJobPreferencesPanel({
           </div>
         </div>
       </div>
+      </div>
 
       <JobTypeOnboardingSheet
         jobType={onboardingType}
@@ -275,6 +281,6 @@ export function GuardJobPreferencesPanel({
         onClose={() => setOnboardingType(null)}
         onComplete={handleCompleteOnboarding}
       />
-    </section>
+    </>
   );
 }

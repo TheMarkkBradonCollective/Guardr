@@ -23,13 +23,14 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
   );
 
   return (
-    <AppScreen>
+    <AppScreen className="guard-tiered-screen">
       <GuardRatingSection
         guard={guard}
         requests={requests}
         performance={performance}
         skillRatings={skillRatings}
         variant="full"
+        pinnedLayout
         className="guard-performance-screen-card"
       />
     </AppScreen>

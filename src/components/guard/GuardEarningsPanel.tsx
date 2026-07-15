@@ -66,86 +66,93 @@ export function GuardEarningsPanel({
   const needsBankForOnline =
     !stripeReady && (breakdown.onlineAvailable > 0 || (breakdown.cashAvailable ?? 0) === 0);
 
-  return (
-    <AppScreen>
-      <section className="guard-rating-section guard-rating-section-tiered guard-pay-screen-card">
-        <div className={`guard-tier-hero guard-pay-tier-hero ${payHeroClass(readyToCollect)}`}>
-          <div className="guard-tier-hero-glow" aria-hidden />
-          <div className="guard-pref-tier-medal" aria-hidden>
-            <div className="guard-pref-tier-medal-ring">
-              <DollarSign className="guard-pref-tier-medal-icon" />
-            </div>
-          </div>
-          <p className="guard-tier-hero-eyebrow">Your pay</p>
-          <h2 className="guard-tier-hero-name guard-pay-hero-amount">${readyToCollect.toFixed(2)}</h2>
-          <div className="guard-tier-hero-score-row">
-            <span className="guard-tier-hero-score-label">Ready to collect</span>
-            <span className="guard-tier-hero-score-value">${alreadyPaid.toFixed(2)} paid</span>
-          </div>
-          {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
-            <p className="guard-tier-hero-subtitle">
-              {(breakdown.cashAvailable ?? 0) > 0 && (
-                <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
-              )}
-              {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
-              {breakdown.onlineAvailable > 0 && (
-                <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
-              )}
-            </p>
+  const payHeroActions = (
+    <div className="guard-pay-hero-actions">
+      <button
+        type="button"
+        onClick={() => void onRequestStripePayout?.()}
+        disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
+        className="guard-pay-action-btn guard-pay-action-btn-primary disabled:opacity-40"
+      >
+        <span className="guard-pay-action-btn-label">
+          {stripeRequestPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <p className="guard-tier-hero-subtitle">
-              Complete shifts to start earning — payouts appear here when jobs are settled.
-            </p>
+            <CreditCard className="w-4 h-4" />
           )}
+          Send to my bank
+        </span>
+        {!stripeReady && needsBankForOnline && (
+          <span className="guard-pay-action-btn-hint">Connect your bank through Stripe first</span>
+        )}
+        {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
+          <span className="guard-pay-action-btn-hint">
+            Pending deposit — cash pickup available now
+          </span>
+        )}
+        {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
+          <span className="guard-pay-action-btn-hint">
+            No bank payouts ready yet — complete more shifts first
+          </span>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => void onRequestCashPayout?.()}
+        disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
+        className="guard-pay-action-btn guard-pay-action-btn-secondary disabled:opacity-40"
+      >
+        <span className="guard-pay-action-btn-label">
+          {cashRequestPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Banknote className="w-4 h-4" />
+          )}
+          Request cash pickup
+        </span>
+      </button>
+    </div>
+  );
 
-          <div className="guard-pay-hero-actions">
-            <button
-              type="button"
-              onClick={() => void onRequestStripePayout?.()}
-              disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
-              className="guard-pay-action-btn guard-pay-action-btn-primary disabled:opacity-40"
-            >
-              <span className="guard-pay-action-btn-label">
-                {stripeRequestPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CreditCard className="w-4 h-4" />
+  return (
+    <AppScreen className="guard-tiered-screen">
+      <div className="guard-tiered-screen-pinned">
+        <section className="guard-rating-section guard-rating-section-tiered guard-pay-screen-card guard-tier-hero-card">
+          <div className={`guard-tier-hero guard-pay-tier-hero ${payHeroClass(readyToCollect)}`}>
+            <div className="guard-tier-hero-glow" aria-hidden />
+            <div className="guard-pref-tier-medal" aria-hidden>
+              <div className="guard-pref-tier-medal-ring">
+                <DollarSign className="guard-pref-tier-medal-icon" />
+              </div>
+            </div>
+            <p className="guard-tier-hero-eyebrow">Your pay</p>
+            <h2 className="guard-tier-hero-name guard-pay-hero-amount">${readyToCollect.toFixed(2)}</h2>
+            <div className="guard-tier-hero-score-row">
+              <span className="guard-tier-hero-score-label">Ready to collect</span>
+              <span className="guard-tier-hero-score-value">${alreadyPaid.toFixed(2)} paid</span>
+            </div>
+            {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
+              <p className="guard-tier-hero-subtitle">
+                {(breakdown.cashAvailable ?? 0) > 0 && (
+                  <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
                 )}
-                Send to my bank
-              </span>
-              {!stripeReady && needsBankForOnline && (
-                <span className="guard-pay-action-btn-hint">Connect your bank through Stripe first</span>
-              )}
-              {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
-                <span className="guard-pay-action-btn-hint">
-                  Pending deposit — cash pickup available now
-                </span>
-              )}
-              {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
-                <span className="guard-pay-action-btn-hint">
-                  No bank payouts ready yet — complete more shifts first
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => void onRequestCashPayout?.()}
-              disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-              className="guard-pay-action-btn guard-pay-action-btn-secondary disabled:opacity-40"
-            >
-              <span className="guard-pay-action-btn-label">
-                {cashRequestPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Banknote className="w-4 h-4" />
+                {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
+                {breakdown.onlineAvailable > 0 && (
+                  <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
                 )}
-                Request cash pickup
-              </span>
-            </button>
+              </p>
+            ) : (
+              <p className="guard-tier-hero-subtitle">
+                Complete shifts to start earning — payouts appear here when jobs are settled.
+              </p>
+            )}
           </div>
-        </div>
+        </section>
+      </div>
 
+      <div className="guard-tiered-screen-scroll">
         <div className="guard-rating-body">
+          {payHeroActions}
           {!stripeReady && onConnectStripe && (
             <div className="guard-pref-empty-banner guard-pay-connect-banner">
               <Link2 className="guard-pref-empty-banner-icon" aria-hidden />
@@ -262,7 +269,7 @@ export function GuardEarningsPanel({
             )}
           </section>
         </div>
-      </section>
+      </div>
     </AppScreen>
   );
 }

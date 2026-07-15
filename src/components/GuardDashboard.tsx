@@ -1323,7 +1323,7 @@ export function GuardDashboard({
         <AppPageTransition motionKey={tab} className="absolute inset-0">
           {tab === 'earnings' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-earnings">
-              <div className="guard-scroll-panel flex-1">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <GuardEarningsPanel
                   breakdown={earningsBreakdown}
                   completedJobs={completedJobs}
@@ -1507,25 +1507,27 @@ export function GuardDashboard({
 
           {tab === 'availability' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <GuardAvailabilityScreen guard={guard} />
               </div>
             </div>
           )}
 
           {tab === 'preferences' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0">
-              <GuardPreferencesScreen
-                guard={guard}
-                onSaveJobPreferences={onSaveJobPreferences}
-                onCompleteJobTypeOnboarding={onCompleteJobTypeOnboarding}
-              />
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <GuardPreferencesScreen
+                  guard={guard}
+                  onSaveJobPreferences={onSaveJobPreferences}
+                  onCompleteJobTypeOnboarding={onCompleteJobTypeOnboarding}
+                />
+              </div>
             </div>
           )}
 
           {tab === 'performance' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <GuardPerformanceScreen
                   guard={guard}
                   requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}

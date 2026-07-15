@@ -16,6 +16,7 @@ import {
   type GuardAvailabilitySlot,
 } from '../../lib/guardAvailability';
 import { showAppToast } from '../ui/AppToast';
+import { GuardAvailabilityDatesPanel } from './GuardAvailabilityDatesPanel';
 
 interface GuardAvailabilityCalendarProps {
   guardId: string;
@@ -121,42 +122,47 @@ export function GuardAvailabilityCalendar({
   };
 
   return (
-    <div className="availability-calendar">
-      <div className={`guard-tier-hero guard-availability-tier-hero ${availabilityHeroClass(enabledDays.length)}`}>
-        <div className="guard-tier-hero-glow" aria-hidden />
-        <div className="guard-pref-tier-medal" aria-hidden>
-          <div className="guard-pref-tier-medal-ring">
-            <Calendar className="guard-pref-tier-medal-icon" />
+    <>
+      <div className="guard-tiered-screen-pinned">
+        <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
+          <div className={`guard-tier-hero guard-availability-tier-hero ${availabilityHeroClass(enabledDays.length)}`}>
+            <div className="guard-tier-hero-glow" aria-hidden />
+            <div className="guard-pref-tier-medal" aria-hidden>
+              <div className="guard-pref-tier-medal-ring">
+                <Calendar className="guard-pref-tier-medal-icon" />
+              </div>
+            </div>
+            <p className="guard-tier-hero-eyebrow">Weekly schedule</p>
+            <h2 className="guard-tier-hero-name">Your availability</h2>
+            <div className="guard-tier-hero-score-row">
+              <span className="guard-tier-hero-score-label">Active days</span>
+              <span className="guard-tier-hero-score-value">
+                {enabledDays.length}
+                <span className="guard-pref-hero-score-total"> / {WEEK_DAY_ORDER.length}</span>
+              </span>
+            </div>
+            <div className="guard-pref-onboard-progress">
+              <div className="guard-tier-progress-track" role="presentation">
+                <div className="guard-tier-progress-fill" style={{ width: `${enabledPercent}%` }} />
+              </div>
+              <p className="guard-pref-onboard-progress-hint">
+                <TrendingUp className="guard-tier-progress-hint-icon" aria-hidden />
+                <span>
+                  {enabledDays.length > 0
+                    ? `${enabledDays.map((day) => dayLabel(day)).join(', ')} selected`
+                    : 'Select at least one day to receive jobs and alerts'}
+                </span>
+              </p>
+            </div>
+            <p className="guard-tier-hero-subtitle">
+              Jobs and alerts only appear when a shift fits your enabled days and hours.
+            </p>
           </div>
-        </div>
-        <p className="guard-tier-hero-eyebrow">Weekly schedule</p>
-        <h2 className="guard-tier-hero-name">Your availability</h2>
-        <div className="guard-tier-hero-score-row">
-          <span className="guard-tier-hero-score-label">Active days</span>
-          <span className="guard-tier-hero-score-value">
-            {enabledDays.length}
-            <span className="guard-pref-hero-score-total"> / {WEEK_DAY_ORDER.length}</span>
-          </span>
-        </div>
-        <div className="guard-pref-onboard-progress">
-          <div className="guard-tier-progress-track" role="presentation">
-            <div className="guard-tier-progress-fill" style={{ width: `${enabledPercent}%` }} />
-          </div>
-          <p className="guard-pref-onboard-progress-hint">
-            <TrendingUp className="guard-tier-progress-hint-icon" aria-hidden />
-            <span>
-              {enabledDays.length > 0
-                ? `${enabledDays.map((day) => dayLabel(day)).join(', ')} selected`
-                : 'Select at least one day to receive jobs and alerts'}
-            </span>
-          </p>
-        </div>
-        <p className="guard-tier-hero-subtitle">
-          Jobs and alerts only appear when a shift fits your enabled days and hours.
-        </p>
+        </section>
       </div>
 
-      <div className="guard-pref-body availability-body">
+      <div className="guard-tiered-screen-scroll">
+        <div className="guard-pref-body availability-body">
         <section className="guard-factors-section availability-days-section">
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Select your days</h3>
@@ -301,7 +307,12 @@ export function GuardAvailabilityCalendar({
             </button>
           </div>
         )}
+
+          <div className="availability-dates-wrap">
+            <GuardAvailabilityDatesPanel guardId={guardId} />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
