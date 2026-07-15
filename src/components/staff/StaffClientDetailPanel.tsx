@@ -14,18 +14,9 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { ArrowLeft, Building2, Globe, Mail, MapPin, Phone, Star } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
-
-function IntakeField({ label, value }: { label: string; value: string | number | undefined | null }) {
-  if (!value && value !== 0) return null;
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-0.5">{label}</p>
-      <p className="text-sm text-brand-text leading-relaxed">{String(value)}</p>
-    </div>
-  );
-}
+import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -226,131 +217,7 @@ export function StaffClientDetailPanel({
         </section>
       )}
 
-      {/* Client intake / application data */}
-      {(client.serviceDescription || client.businessType || client.industries?.length ||
-        client.businessLicense || client.website || client.serviceTypes?.length ||
-        client.estimatedGuardsNeeded || client.armedPreference || client.serviceFrequencies?.length ||
-        client.estimatedStartDate || client.budgetRange || client.serviceCity ||
-        client.propertyTypes?.length || client.referredBy || client.howHeardAboutUs ||
-        client.hasPriorSecurityService != null || client.specialRequirements) && (
-        <section className="staff-detail-section space-y-4">
-          <WfSectionHeader title="Client application" className="mb-1" />
-
-          {/* Business */}
-          {(client.businessType || client.businessLicense || client.website || client.industries?.length) && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Business</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <IntakeField label="Business type" value={client.businessType} />
-                <IntakeField label="License / EIN" value={client.businessLicense} />
-              </div>
-              {client.industries?.length ? (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Industries</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {client.industries.map((i) => <WfBadge key={i}>{i}</WfBadge>)}
-                  </div>
-                </div>
-              ) : null}
-              {client.website && (
-                <a
-                  href={client.website.startsWith('http') ? client.website : `https://${client.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-brand-primary"
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  {client.website}
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Service needs */}
-          {(client.serviceDescription || client.serviceTypes?.length || client.estimatedGuardsNeeded ||
-            client.armedPreference || client.serviceFrequencies?.length || client.estimatedStartDate || client.budgetRange) && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Security needs</p>
-              {client.serviceDescription && (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Description</p>
-                  <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">{client.serviceDescription}</p>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <IntakeField label="Estimated guards" value={client.estimatedGuardsNeeded} />
-                <IntakeField label="Armed preference" value={
-                  client.armedPreference === 'armed' ? 'Armed' :
-                  client.armedPreference === 'unarmed' ? 'Unarmed' :
-                  client.armedPreference === 'no-preference' ? 'No preference' : undefined
-                } />
-                <IntakeField label="Est. start" value={client.estimatedStartDate} />
-                <IntakeField label="Budget range" value={client.budgetRange} />
-              </div>
-              {client.serviceTypes?.length ? (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Service types</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {client.serviceTypes.map((s) => <WfBadge key={s}>{s}</WfBadge>)}
-                  </div>
-                </div>
-              ) : null}
-              {client.serviceFrequencies?.length ? (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Frequency</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {client.serviceFrequencies.map((f) => <WfBadge key={f}>{f}</WfBadge>)}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          )}
-
-          {/* Location & site */}
-          {(client.serviceCity || client.propertyTypes?.length) && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Location & site</p>
-              {client.serviceCity && (
-                <div className="inline-flex items-center gap-1.5 text-sm">
-                  <MapPin className="w-3.5 h-3.5 text-brand-primary" />
-                  <span>{client.serviceCity}{client.serviceState ? `, ${client.serviceState}` : ', CA'}</span>
-                </div>
-              )}
-              {client.propertyTypes?.length ? (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Property types</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {client.propertyTypes.map((p) => <WfBadge key={p}>{p}</WfBadge>)}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          )}
-
-          {/* Referral & history */}
-          {(client.referredBy || client.howHeardAboutUs || client.hasPriorSecurityService != null ||
-            client.priorSecurityProvider || client.specialRequirements) && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Background</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <IntakeField label="Referred by" value={client.referredBy} />
-                <IntakeField label="How they heard" value={client.howHeardAboutUs} />
-                <IntakeField
-                  label="Prior security service"
-                  value={client.hasPriorSecurityService == null ? undefined : client.hasPriorSecurityService ? 'Yes' : 'No'}
-                />
-                <IntakeField label="Prior provider" value={client.priorSecurityProvider} />
-              </div>
-              {client.specialRequirements && (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Special requirements</p>
-                  <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">{client.specialRequirements}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      )}
+      <StaffClientApplicationSummary client={client} />
 
       <section className="staff-detail-section space-y-2">
         <div className="flex items-center gap-1.5 mb-2">
