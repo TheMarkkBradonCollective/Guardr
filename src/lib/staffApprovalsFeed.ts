@@ -514,6 +514,15 @@ export function resolveCredentialFeedContext(
   return null;
 }
 
+/** Thumbnail for credentials-queue list rows (cert photo, COI doc, or ID front). */
+export function credentialFeedThumbnailUrl(guards: SecurityGuard[], itemId: string): string | undefined {
+  const context = resolveCredentialFeedContext(guards, itemId);
+  if (!context) return undefined;
+  if (context.kind === 'cert') return context.cert.imageUrl?.trim() || undefined;
+  if (context.kind === 'coi') return context.guard.insurancePolicy?.documentUrl?.trim() || undefined;
+  return context.guard.idFrontUrl?.trim() || context.guard.idSelfieUrl?.trim() || undefined;
+}
+
 export function formatApprovalTimestamp(iso?: string): string {
   if (!iso) return '—';
   const date = new Date(iso);

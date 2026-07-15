@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, ClipboardCheck, Eye, RefreshCw, ShieldCheck, Undo2, X } from 'lucide-react';
+import { Check, ChevronRight, Eye, RefreshCw, ShieldCheck, Undo2, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -9,6 +9,7 @@ import {
   formatApprovalTimestamp,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
+  credentialFeedThumbnailUrl,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import {
@@ -72,10 +73,12 @@ interface StaffCredentialsProps {
 
 function CredentialFeedRow({
   item,
+  guards,
   isSelected,
   onSelect,
 }: {
   item: ApprovalFeedItem;
+  guards: SecurityGuard[];
   isSelected: boolean;
   onSelect: () => void;
 }) {
@@ -85,17 +88,28 @@ function CredentialFeedRow({
       : item.status === 'approved' || item.status === 'active'
         ? 'success'
         : 'danger';
+  const thumbnailUrl = credentialFeedThumbnailUrl(guards, item.id);
+  const pending = item.status === 'pending' || item.status === 'in_review';
 
   return (
     <AppItemCard onClick={onSelect} className={isSelected ? 'app-item-card-selected' : ''}>
       <div className="flex items-start gap-3 w-full text-left">
-        <span
-          className={`staff-overview-action-icon ${
-            item.status === 'pending' || item.status === 'in_review' ? 'staff-overview-action-icon-urgent' : ''
-          }`}
-        >
-          <ClipboardCheck className="w-4 h-4" />
-        </span>
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={item.title}
+            className={`w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec ${
+              pending ? 'ring-2 ring-amber-500/35' : ''
+            }`}
+          />
+        ) : (
+          <span
+            className={`w-11 h-11 rounded-lg shrink-0 border border-dashed border-brand-border bg-brand-bg-sec ${
+              pending ? 'ring-2 ring-amber-500/35' : ''
+            }`}
+            aria-hidden
+          />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold truncate">{item.title}</p>
@@ -565,7 +579,7 @@ export function StaffCredentials({
             </div>
           }
           renderItem={(item, isSelected, onSelect) => (
-            <CredentialFeedRow item={item} isSelected={isSelected} onSelect={onSelect} />
+            <CredentialFeedRow item={item} guards={guards} isSelected={isSelected} onSelect={onSelect} />
           )}
           renderDetail={(item, options) => renderCredentialDetail(item, options)}
         />
