@@ -320,32 +320,53 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
 }
 
 /** Staff guard roster — approved guards also show marketplace / restriction state. */
-export const PENDING_CREDENTIAL_PILL_PREFIX = 'Pending: ';
+export const GUARD_PENDING_CREDENTIALS_LABEL = 'Pending credentials';
+export const GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL = 'Pending credential verification';
 
-export function formatPendingCredentialPillLabel(credentialLabel: string): string {
-  return `${PENDING_CREDENTIAL_PILL_PREFIX}${credentialLabel}`;
+export function guardHasPendingCredentialUploads(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return false;
+  const status = getGuardUserStatus(guard);
+  if (status !== 'approved' && status !== 'pending') return false;
+  return getGuardApplicationCredentialSteps(guard).some((step) => step.status === 'pending');
 }
 
-/** Short pill labels for credentials still missing, submitted, or awaiting re-upload. */
-export function getGuardPendingCredentialPillLabels(guard: SecurityGuard, state = 'CA'): string[] {
+export function guardHasPendingCredentialVerification(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return false;
+  const status = getGuardUserStatus(guard);
+  if (status !== 'approved' && status !== 'pending') return false;
+  return getGuardApplicationCredentialSteps(guard).some((step) => step.status === 'submitted');
+}
+
+/** Aggregate roster badge labels for guards with incomplete activation credentials. */
+export function getGuardPendingCredentialBadgeLabels(guard: SecurityGuard, state = 'CA'): string[] {
   if (guard.isStaff) return [];
 
+  const labels: string[] = [];
+
   if (isGuardCredentialExpiryRestricted(guard)) {
-    return listExpiredCredentialsForEnforcement(guard, state)
-      .filter((item) => item.blocksWork)
-      .map((item) => formatPendingCredentialPillLabel(item.label));
+    const expiredBlocking = listExpiredCredentialsForEnforcement(guard, state).filter(
+      (item) => item.blocksWork
+    );
+    if (expiredBlocking.length > 0) {
+      labels.push(GUARD_PENDING_CREDENTIALS_LABEL);
+    }
+    if (guardHasPendingCredentialVerification(guard)) {
+      labels.push(GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL);
+    }
+    return labels;
   }
 
-  const status = getGuardUserStatus(guard);
-  if (status !== 'approved' && status !== 'pending') return [];
-
-  return getGuardApplicationCredentialSteps(guard)
-    .filter((step) => step.status !== 'verified')
-    .map((step) => formatPendingCredentialPillLabel(step.label));
+  if (guardHasPendingCredentialUploads(guard)) {
+    labels.push(GUARD_PENDING_CREDENTIALS_LABEL);
+  }
+  if (guardHasPendingCredentialVerification(guard)) {
+    labels.push(GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL);
+  }
+  return labels;
 }
 
 function pendingCredentialBadges(guard: SecurityGuard, state = 'CA'): GuardRosterAccountBadge[] {
-  return getGuardPendingCredentialPillLabels(guard, state).map((label) => ({
+  return getGuardPendingCredentialBadgeLabels(guard, state).map((label) => ({
     label,
     tone: 'warning' as const,
   }));
