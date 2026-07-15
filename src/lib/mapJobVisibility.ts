@@ -119,7 +119,7 @@ export type ClientMapStatusFilter = 'all' | 'open' | 'scheduled' | 'complete';
 export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'available', label: 'Available' },
-  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'upcoming', label: 'Scheduled' },
   { id: 'complete', label: 'Past' },
 ];
 

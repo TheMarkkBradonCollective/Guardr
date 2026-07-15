@@ -10,18 +10,19 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
-import { ClipboardList, Clock, CheckCircle2, Plus } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
+import { isJobMissed, JOB_TALLY_LABELS, splitCompletedAndMissed } from '../../lib/jobTallies';
+import { JobsTallyStrip } from '../jobs/JobsTallyStrip';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 
-type JobTab = 'open' | 'upcoming' | 'past';
+type JobTab = 'open' | 'scheduled' | 'completed' | 'missed';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
@@ -96,12 +97,6 @@ function JobRow({
   );
 }
 
-const TAB_OPTIONS: { id: JobTab; label: string }[] = [
-  { id: 'open', label: 'Open' },
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'past', label: 'Past' },
-];
-
 export function ClientRequestsList({
   requests,
   guards,
@@ -153,13 +148,44 @@ export function ClientRequestsList({
     () => requests.filter((r) => r.status === 'open' || r.status === 'pending-review'),
     [requests]
   );
-  const upcomingJobs = useMemo(
+  const activeJobs = useMemo(
     () => requests.filter((r) => r.status === 'accepted' || r.status === 'in-progress'),
     [requests]
+  );
+  const scheduledJobs = useMemo(
+    () => activeJobs.filter((r) => !isJobMissed(r)),
+    [activeJobs]
+  );
+  const missedActiveJobs = useMemo(
+    () => activeJobs.filter((r) => isJobMissed(r)),
+    [activeJobs]
   );
   const pastJobs = useMemo(
     () => requests.filter((r) => r.status === 'completed' || r.status === 'closed'),
     [requests]
+  );
+  const { completed: completedJobs, missed: missedPastJobs } = useMemo(
+    () => splitCompletedAndMissed(pastJobs),
+    [pastJobs]
+  );
+  const missedJobs = useMemo(
+    () => [...missedActiveJobs, ...missedPastJobs],
+    [missedActiveJobs, missedPastJobs]
+  );
+
+  const tallies = useMemo(
+    () => [
+      { id: 'open' as const, label: JOB_TALLY_LABELS.open, value: openJobs.length },
+      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled, value: scheduledJobs.length },
+      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed, value: completedJobs.length },
+      {
+        id: 'missed' as const,
+        label: JOB_TALLY_LABELS.missed,
+        value: missedJobs.length,
+        sub: 'No call / no show',
+      },
+    ],
+    [openJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
   );
 
   const updateSelectedId = (jobId: string | null) => {
@@ -243,14 +269,12 @@ export function ClientRequestsList({
 
   return (
     <AppScreen>
-      <AppSegmentedControl<JobTab>
-        options={TAB_OPTIONS}
-        value={activeTab}
-        onChange={setActiveTab}
-      />
+      <div className="px-4 pt-4">
+        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
+      </div>
 
       {activeTab === 'open' && (
-        <div className="app-section-body pt-4">
+        <div className="app-section-body pt-2">
           {openJobs.length === 0 ? (
             <AppEmptyState
               icon={<ClipboardList className="w-5 h-5" />}
@@ -283,18 +307,18 @@ export function ClientRequestsList({
         </div>
       )}
 
-      {activeTab === 'upcoming' && (
-        <div className="app-section-body pt-4">
-          {upcomingJobs.length === 0 ? (
+      {activeTab === 'scheduled' && (
+        <div className="app-section-body pt-2">
+          {scheduledJobs.length === 0 ? (
             <AppEmptyState
               icon={<Clock className="w-5 h-5" />}
-              title="No upcoming coverage"
+              title="No scheduled coverage"
             >
               Accepted jobs will appear here leading up to their start date.
             </AppEmptyState>
           ) : (
             <AppItemCardStack>
-              {upcomingJobs.map((job) => (
+              {scheduledJobs.map((job) => (
                 <JobRow
                   key={job.id}
                   job={job}
@@ -307,18 +331,37 @@ export function ClientRequestsList({
         </div>
       )}
 
-      {activeTab === 'past' && (
-        <div className="app-section-body pt-4">
-          {pastJobs.length === 0 ? (
+      {activeTab === 'completed' && (
+        <div className="app-section-body pt-2">
+          {completedJobs.length === 0 ? (
             <AppEmptyState
               icon={<CheckCircle2 className="w-5 h-5" />}
               title="No completed jobs yet"
             >
-              Your shift history will appear here once jobs are closed out.
+              Your completed jobs will appear here once shifts are closed out.
             </AppEmptyState>
           ) : (
             <AppItemCardStack>
-              {pastJobs.map((job) => (
+              {completedJobs.map((job) => (
+                <JobRow key={job.id} job={job} onSelect={() => updateSelectedId(job.id)} />
+              ))}
+            </AppItemCardStack>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'missed' && (
+        <div className="app-section-body pt-2">
+          {missedJobs.length === 0 ? (
+            <AppEmptyState
+              icon={<AlertTriangle className="w-5 h-5" />}
+              title="No missed coverage"
+            >
+              No-call and no-show shifts will appear here.
+            </AppEmptyState>
+          ) : (
+            <AppItemCardStack>
+              {missedJobs.map((job) => (
                 <JobRow key={job.id} job={job} onSelect={() => updateSelectedId(job.id)} />
               ))}
             </AppItemCardStack>

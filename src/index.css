@@ -6853,6 +6853,15 @@ html.theme-light .app-chat-typing-bubble {
   animation: accountMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.jobs-tally-strip {
+  margin-bottom: 0;
+}
+
+.jobs-tally-strip .app-metric-cell-sub {
+  font-size: 0.625rem;
+  line-height: 1.2;
+}
+
 .app-screen-header-brand-row {
   display: flex;
   justify-content: center;
