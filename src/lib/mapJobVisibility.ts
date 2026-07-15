@@ -1,5 +1,6 @@
 import type { SecurityGuard, SecurityRequest } from '../types';
 import type { GuardJobView } from './guardJobView';
+import { guardIsAvailableForJob } from './guardAvailability';
 import { guardCanApplyToJob } from './guardJobs';
 import { guardHasApplied } from './jobApplications';
 import { isMultiGuardJob } from './guardTeams';
@@ -20,7 +21,7 @@ export function clientOwnsRequest(
 }
 
 export type MapViewerRole = 'guard' | 'client' | 'staff';
-type GuardMapJobLike = Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status'>;
+type GuardMapJobLike = Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status' | 'startDate' | 'endDate'>;
 
 /** Staff sees all jobs — active, completed, past, and cancelled. */
 export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
@@ -32,7 +33,9 @@ export function guardMapPinKind(guardId: string, req: GuardMapJobLike): 'availab
   const isMine =
     req.assignedGuardId === guardId ||
     (req.guardSlots ?? []).some((s) => s.guardId === guardId);
-  if (req.status === 'open') return 'available';
+  if (req.status === 'open') {
+    return guardIsAvailableForJob(guardId, req) ? 'available' : null;
+  }
   if (isMine && (req.status === 'accepted' || req.status === 'in-progress')) return 'scheduled';
   if (isMine && (req.status === 'completed' || req.status === 'closed')) return 'past';
   return null;

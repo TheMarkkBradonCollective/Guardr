@@ -2,6 +2,10 @@ import type { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { isJobPaid } from './jobEditRules';
 import { GuardJobView } from './guardJobView';
 import { findGuardScheduleConflict, type ScheduleJob } from './guardSchedule';
+import {
+  guardAvailabilityBlockReason,
+  guardIsAvailableForJob,
+} from './guardAvailability';
 import { estimateJobDistanceMiles } from './geo';
 import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
@@ -222,6 +226,15 @@ export function checkJobRequirements(
     canAccept = false;
   }
 
+  const availabilityReason = guardAvailabilityBlockReason(guard.id, job);
+  if (availabilityReason) {
+    checks.push({
+      label: availabilityReason,
+      met: false,
+    });
+    canAccept = false;
+  }
+
   if (canAccept && allRequests) {
     const conflict = findGuardScheduleConflict(guard.id, job, allRequests);
     if (conflict) {
@@ -304,6 +317,7 @@ export function guardCanViewJob(
   if (job.status !== 'open') return false;
   if (!openMarketplaceJobIsGuardVisible(job)) return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
+  if (!guardIsAvailableForJob(guard.id, job)) return false;
   return true;
 }
 
