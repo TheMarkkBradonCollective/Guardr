@@ -209,7 +209,6 @@ export function GuardProfileScreen({
           )}
 
           <section>
-            <WfSectionHeader title="Credentials" className="mb-3" />
             <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
           </section>
 

@@ -12,7 +12,7 @@ interface WfListCardProps {
   className?: string;
 }
 
-/** Clickable entity card — guards, clients, jobs, posts, etc. */
+/** Clickable entity row — matches overview attention-item layout. */
 export function WfListCard({
   avatar,
   title,
@@ -28,29 +28,29 @@ export function WfListCard({
     <Wrapper
       type={onClick ? 'button' : undefined}
       onClick={onClick}
-      className={`app-item-card app-item-card-align-top !flex-col !items-stretch gap-2 ${className}`}
+      className={`app-item-card app-item-card-align-top ${className}`}
     >
-      <div className="flex items-start gap-3.5 w-full min-w-0">
+      <div className="flex items-start gap-3 w-full min-w-0 text-left">
         {avatar && <div className="shrink-0">{avatar}</div>}
-        <div className="min-w-0 flex-1 text-left">
+        <div className="min-w-0 flex-1">
           {typeof title === 'string' ? (
-            <p className="font-bold text-[0.9375rem] leading-snug truncate tracking-tight">{title}</p>
+            <p className="text-sm font-semibold leading-snug truncate">{title}</p>
           ) : (
-            <div className="font-bold text-[0.9375rem] leading-snug min-w-0 tracking-tight">{title}</div>
+            <div className="text-sm font-semibold leading-snug min-w-0">{title}</div>
           )}
           {subtitle && (
-            <p className="text-sm text-brand-text-muted mt-0.5 leading-snug line-clamp-2">{subtitle}</p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed truncate">{subtitle}</p>
           )}
+          {meta && <div className="mt-1.5 w-full">{meta}</div>}
         </div>
         {action ?? (
           actionLabel ? (
             <span className="app-pill-btn shrink-0">{actionLabel}</span>
           ) : onClick ? (
-            <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
+            <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" />
           ) : null
         )}
       </div>
-      {meta && <div className="w-full text-xs text-brand-text-muted">{meta}</div>}
     </Wrapper>
   );
 }

@@ -3318,10 +3318,10 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   align-items: center;
   gap: 0.875rem;
   width: 100%;
-  padding: 1rem 1.125rem;
+  padding: 0.875rem 1rem;
   background: var(--brand-surface);
   border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-xl);
+  border-radius: var(--radius-app-lg);
   box-shadow: var(--shadow-card);
   text-align: left;
   font-family: inherit;
@@ -3639,11 +3639,17 @@ a.app-item-card:active,
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 1rem 1.125rem;
+  padding: 0.875rem 1rem;
   background: var(--brand-bg-sec);
-  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
   max-width: 100%;
   box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.app-cert-item:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
 }
 
 button.app-cert-item-interactive {
@@ -4794,6 +4800,9 @@ html.theme-light .staff-ops-btn-primary:hover {
 }
 
 .staff-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
   padding: 1.25rem;
   border-bottom: 1px solid var(--brand-border);
 }
@@ -6786,6 +6795,118 @@ html.theme-light .app-chat-typing-bubble {
 .credential-category-fema,
 .credential-category-industry {
   color: var(--brand-text-muted);
+}
+
+/* ─── PROFILE OVERVIEW (aligned with dashboard zones) ──────── */
+.app-profile-screen .app-dashboard-hero {
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+
+.app-profile-overview {
+  padding-bottom: 0.5rem;
+}
+
+.app-profile-identity-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.app-profile-hero-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--brand-text);
+}
+
+.app-profile-hero-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.app-profile-hero-email {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.app-profile-meta {
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-profile-screen .app-dashboard-zone-head,
+.app-profile-screen .app-dashboard-zone-body {
+  padding-inline: 1.25rem;
+}
+
+.guard-credentials-view .app-dashboard-zone-head,
+.guard-credentials-view .app-dashboard-zone-body {
+  padding-inline: 1.25rem;
+}
+
+/* ─── SPLIT LIST / DETAIL (overview-flat in staff shell) ─── */
+.split-list-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+}
+
+.split-detail-pane {
+  min-height: 0;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+body[data-form-factor="tablet"] .tablet-split-panel .split-list-pane,
+body[data-form-factor="desktop"] .tablet-split-panel .split-list-pane {
+  padding-right: 0.75rem;
+}
+
+body[data-form-factor="tablet"] .tablet-split-panel .split-detail-pane,
+body[data-form-factor="desktop"] .tablet-split-panel .split-detail-pane {
+  min-height: 60vh;
+}
+
+/* Credential rows inside zone stacks */
+.app-cert-item-wrap {
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-cert-item-wrap:last-child {
+  border-bottom: none;
+}
+
+.app-cert-item-stack .app-cert-item {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0.875rem 0;
+}
+
+.app-cert-item-stack .app-cert-item:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--brand-primary) 4%, transparent);
 }
 
 /* ─── APP TOAST ───────────────────────────────────────────── */
@@ -10260,7 +10381,7 @@ html.theme-light .bottom-nav-bar {
 .app-item-card-selected {
   border-color: var(--brand-primary) !important;
   border-left-width: 3px !important;
-  padding-left: calc(1.125rem - 2px) !important;
+  padding-left: calc(1rem - 2px) !important;
   box-shadow: none !important;
   background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-surface)) !important;
 }
@@ -16502,6 +16623,42 @@ textarea.uber-input {
 
 .staff-shell .staff-overview-feed-item {
   padding: 0.625rem 0 !important;
+}
+
+.staff-shell .app-cert-item,
+.staff-shell .app-cert-item-stack .app-cert-item,
+.staff-shell .split-detail-pane,
+.staff-shell .app-profile-overview,
+.staff-shell .app-profile-identity-row,
+.staff-shell .app-profile-actions,
+.staff-shell .guard-credentials-view .app-dashboard-zone {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.staff-shell .app-cert-item-stack .app-cert-item {
+  padding: 0.875rem 0 !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+}
+
+.staff-shell .split-detail-pane {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.staff-shell .app-profile-identity-row,
+.staff-shell .app-profile-actions {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.staff-shell .guard-credentials-view .app-dashboard-zone-head,
+.staff-shell .guard-credentials-view .app-dashboard-zone-body,
+.staff-shell .app-profile-screen .app-dashboard-zone-head,
+.staff-shell .app-profile-screen .app-dashboard-zone-body {
+  padding-inline: 0 !important;
 }
 
 /* Detail panes & forms — sections on the page, not cards */

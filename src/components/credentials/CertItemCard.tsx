@@ -54,8 +54,8 @@ export function CertItemCard({
     guardCanAttachCertImage(cert) &&
     (!useModalEdit || !cert.imageUrl?.trim() || cert.status === 'rejected');
   const thumbClass = compact
-    ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
-    : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
+    ? 'w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec'
+    : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
 
   return (
     <>
@@ -63,35 +63,45 @@ export function CertItemCard({
         <button
           type="button"
           onClick={() => setShowDetail(true)}
-          className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${cert.imageUrl ? ' flex gap-3' : ''}`}
+          className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3`}
         >
-          {cert.imageUrl && <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />}
+          {cert.imageUrl ? (
+            <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />
+          ) : (
+            <div
+              className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
+              aria-hidden
+            >
+              <ChevronRight className="w-4 h-4 opacity-40" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+              <div className="shrink-0">
+                <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
+              </div>
+            </div>
             {showCategory && (
-              <div className="mb-1.5">
+              <div className="mt-1">
                 <CredentialCategoryBadge cert={cert} />
               </div>
             )}
-            <p className="font-semibold text-sm leading-snug break-words">{title}</p>
-            <p className="text-xs text-brand-text-muted mt-1 break-words">
+            <p className="text-xs text-brand-text-muted mt-1 break-words line-clamp-2">
               {cert.state ? `${formatStateName(cert.state)} · ` : ''}
               {cert.issuer} · #{cert.number}
             </p>
             {cert.status === 'rejected' && cert.rejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
             )}
-            <p className="text-[10px] text-brand-primary mt-1">
-              {cert.imageUrl ? 'Tap to view details' : editing ? 'Tap to view · add photo' : 'Tap to view details'}
-            </p>
           </div>
         </button>
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
-            <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
           {cert.imageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />
-              Photo locked
+              Locked
             </span>
           )}
           {canDelete ? (
@@ -107,7 +117,7 @@ export function CertItemCard({
             <button
               type="button"
               onClick={() => setShowDetail(true)}
-              className="p-1 text-brand-text-muted hover:text-brand-text"
+              className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec transition-colors"
               aria-label="View credential details"
             >
               <ChevronRight className="w-4 h-4 shrink-0" />
