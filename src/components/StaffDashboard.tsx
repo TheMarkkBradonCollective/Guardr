@@ -150,6 +150,7 @@ interface StaffDashboardProps {
     status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => void | Promise<void>;
+  onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
   onRequestCertUpdate?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onRevokeGuardIdentityVerification?: (guardId: string) => void | Promise<void>;
   onUpdateGuardIdImages?: (
@@ -309,6 +310,7 @@ export function StaffDashboard({
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
+  onRequestCoiUpdate,
   onRequestCertUpdate,
   onRevokeGuardIdentityVerification,
   onUpdateGuardIdImages,
@@ -626,6 +628,7 @@ export function StaffDashboard({
             onRevokeIdentityVerification={onRevokeGuardIdentityVerification}
             onRequestIdentityResubmit={onRequestGuardIdResubmit}
             onReviewGuardInsurance={onReviewGuardInsurance}
+            onRequestCoiUpdate={onRequestCoiUpdate}
             onUpdateCertification={onUpdateCertification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onAddCredentialForGuard={

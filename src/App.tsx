@@ -2943,6 +2943,8 @@ export default function App() {
       submittedAt: policy.submittedAt ?? new Date().toISOString(),
       reviewedAt: policy.reviewedAt,
       reviewedBy: policy.reviewedBy,
+      updateRequestedAt: policy.updateRequestedAt ?? existing?.updateRequestedAt,
+      updateRequestNote: policy.updateRequestNote ?? existing?.updateRequestNote,
     };
     if (isDbConnected) {
       const { error } = await supabase
@@ -2962,6 +2964,58 @@ export default function App() {
         body: `${guard.name} uploaded Certificate of Insurance for review`,
       });
     }
+  };
+
+  const handleRequestCoiUpdate = async (guardId: string, staffNote?: string) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
+    const before = guards.find((g) => g.id === guardId);
+    const policy = before?.insurancePolicy;
+    if (!before || !policy) throw new Error('Insurance policy not found.');
+    if (resolveInsuranceStatus(policy) !== 'verified') {
+      throw new Error('Only verified COI can receive an update request.');
+    }
+    if (policy.updateRequestedAt) {
+      throw new Error('An update has already been requested for this COI.');
+    }
+
+    const updateRequestNote = buildCertUpdateRequestReason('Certificate of Insurance', staffNote);
+    const requestedAt = new Date().toISOString();
+    const nextPolicy: GuardInsurancePolicy = {
+      ...policy,
+      updateRequestedAt: requestedAt,
+      updateRequestNote,
+    };
+
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, insurancePolicy: nextPolicy } : g))
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase
+        .from('guard_insurance_policies')
+        .update({
+          update_requested_at: requestedAt,
+          update_request_note: updateRequestNote,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('guard_id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId && before ? { ...before } : g)));
+        throw new Error(error.message);
+      }
+    }
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Credential update requested',
+        updateRequestNote
+      );
+    }
+    appToast('Update request sent — verified copy stays on file.', 'success');
   };
 
   const handleReviewGuardInsurance = async (
@@ -11069,6 +11123,7 @@ export default function App() {
           onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onReviewGuardInsurance={handleReviewGuardInsurance}
+          onRequestCoiUpdate={handleRequestCoiUpdate}
           onRequestCertUpdate={handleRequestCertUpdate}
           onRevokeGuardIdentityVerification={handleRevokeGuardIdentityVerification}
           onDeleteGuardAccount={handleDeleteGuardAccount}

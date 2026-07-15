@@ -190,6 +190,12 @@ export function GuardCoiDetailModal({
             </p>
           )}
 
+          {policy?.updateRequestNote && status === 'verified' && (
+            <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
+              {policy.updateRequestNote}
+            </p>
+          )}
+
           {editing ? (
             <div className="space-y-4">
               <div className="space-y-3">

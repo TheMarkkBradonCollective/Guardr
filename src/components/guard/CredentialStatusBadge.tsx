@@ -126,9 +126,17 @@ export function CoiCredentialStatusBadges({
 }) {
   const uploadLabel = getCoiCredentialUploadLabel(guard);
   const verified = guardHasValidInsurance(guard);
+  const policy = guard.insurancePolicy;
+  const updateRequested = Boolean(policy?.updateRequestedAt && verified);
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
+      {updateRequested && (
+        <Badge
+          label="Update requested"
+          className="bg-brand-primary/15 text-brand-primary border-brand-primary/30"
+        />
+      )}
       {showUpload && uploadLabel && !verified && (
         <Badge label={uploadLabel} className={getCoiCredentialUploadBadgeClass(guard)} />
       )}

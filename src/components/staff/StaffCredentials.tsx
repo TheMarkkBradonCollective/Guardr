@@ -66,6 +66,7 @@ interface StaffCredentialsProps {
     status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => void | Promise<void>;
+  onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
   onUpdateCertification?: (
     guardId: string,
     certId: string,
@@ -187,6 +188,7 @@ export function StaffCredentials({
   onRevokeIdentityVerification,
   onRequestIdentityResubmit,
   onReviewGuardInsurance,
+  onRequestCoiUpdate,
   onUpdateCertification,
   onOpenGuardProfile,
   onAddCredentialForGuard,
@@ -432,6 +434,34 @@ export function StaffCredentials({
     />
   );
 
+  const renderCoiUpdateRequest = (guard: SecurityGuard) => {
+    if (!canVerifyCredentials || !onRequestCoiUpdate) return null;
+    const policy = guard.insurancePolicy;
+    if (!policy || resolveInsuranceStatus(policy) !== 'verified') return null;
+    if (policy.updateRequestedAt) return null;
+    return (
+      <button
+        type="button"
+        className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
+        onClick={() => {
+          void (async () => {
+            const note = await promptStaffCredentialUpdateNote('Certificate of Insurance');
+            if (note === null) return;
+            try {
+              await onRequestCoiUpdate(guard.id, note);
+            } catch (err) {
+              showAppToast(err instanceof Error ? err.message : 'Could not request COI update.', {
+                tone: 'error',
+              });
+            }
+          })();
+        }}
+      >
+        <RefreshCw className="w-3 h-3" /> Request update
+      </button>
+    );
+  };
+
   const renderGovIdUpdateRequest = (guard: SecurityGuard) => {
     if (!canVerifyCredentials || !onRequestIdentityResubmit) return null;
     if (getGuardIdVerificationStatus(guard) !== 'verified') return null;
@@ -520,6 +550,7 @@ export function StaffCredentials({
               }
             />
             {renderCoiActions(guard)}
+            {renderCoiUpdateRequest(guard)}
           </div>
         )}
 

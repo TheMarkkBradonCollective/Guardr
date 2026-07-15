@@ -91,6 +91,11 @@ export function GuardCoiItemCard({
             <p className="text-xs text-amber-500 mt-1.5 leading-snug">{policy.rejectionReason}</p>
           )}
           <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
+          {policy?.updateRequestNote && resolveInsuranceStatus(policy) === 'verified' && (
+            <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-3">
+              {policy.updateRequestNote}
+            </p>
+          )}
         </div>
       </button>
       <div className="app-cert-item-meta">
