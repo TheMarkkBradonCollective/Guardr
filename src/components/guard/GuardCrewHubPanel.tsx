@@ -153,10 +153,6 @@ function CrewJobDetail({
   );
 }
 
-function tabLabel(base: string, count: number): string {
-  return count > 0 ? `${base} (${count})` : base;
-}
-
 export function GuardCrewHubPanel({
   guard,
   coordinatingJobs,
@@ -184,10 +180,10 @@ export function GuardCrewHubPanel({
 
   const tabOptions = useMemo(
     () => [
-      { id: 'team' as const, label: tabLabel('My team', pendingInvites.length) },
-      { id: 'active' as const, label: tabLabel('Active', coordinatingJobs.length) },
+      { id: 'team' as const, label: 'My team' },
+      { id: 'active' as const, label: 'Active' },
     ],
-    [pendingInvites.length, coordinatingJobs.length]
+    []
   );
 
   const [activeTab, setActiveTab] = useState<CrewHubTab>(() =>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Certification,
   Experience,
@@ -143,18 +143,6 @@ export function StaffGuardsPanel({
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
   const roster = guards.filter((g) => !g.isStaff);
-  const pendingGuardCount = useMemo(
-    () => roster.filter((g) => matchesGuardRosterFilter(g, 'pending')).length,
-    [roster]
-  );
-  const activatedGuardCount = useMemo(
-    () => roster.filter((g) => matchesGuardRosterFilter(g, 'activated')).length,
-    [roster]
-  );
-  const activeGuardCount = useMemo(
-    () => roster.filter((g) => matchesGuardRosterFilter(g, 'active')).length,
-    [roster]
-  );
 
   const filtered = roster
     .filter(
@@ -254,10 +242,10 @@ export function StaffGuardsPanel({
             activeId={statusFilter}
             onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
             tabs={[
-              { id: 'pending', label: 'Pending review', count: pendingGuardCount },
-              { id: 'activated', label: 'Activated', count: activatedGuardCount },
-              { id: 'active', label: 'Active', count: activeGuardCount },
-              { id: 'all', label: 'All', count: roster.length, alwaysShowCount: true },
+              { id: 'pending', label: 'Pending review' },
+              { id: 'activated', label: 'Activated' },
+              { id: 'active', label: 'Active' },
+              { id: 'all', label: 'All' },
             ]}
           />
         </>

@@ -57,9 +57,6 @@ export function StaffClientsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
-  const pendingClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'pending')).length;
-  const activeClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'active')).length;
-  const suspendedClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'suspended')).length;
 
   const filtered = clients
     .filter(
@@ -121,10 +118,10 @@ export function StaffClientsPanel({
             activeId={statusFilter}
             onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
             tabs={[
-              { id: 'pending', label: 'Pending review', count: pendingClientCount },
-              { id: 'active', label: 'Active', count: activeClientCount },
-              { id: 'suspended', label: 'Suspended', count: suspendedClientCount },
-              { id: 'all', label: 'All', count: clients.length, alwaysShowCount: true },
+              { id: 'pending', label: 'Pending review' },
+              { id: 'active', label: 'Active' },
+              { id: 'suspended', label: 'Suspended' },
+              { id: 'all', label: 'All' },
             ]}
           />
         </>

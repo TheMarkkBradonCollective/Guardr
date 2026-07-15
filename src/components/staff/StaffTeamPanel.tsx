@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
 import {
@@ -63,18 +63,6 @@ export function StaffTeamPanel({
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
   const roster = guards.filter((g) => g.isStaff);
-  const pendingStaffCount = useMemo(
-    () => roster.filter((member) => matchesStaffTeamFilter(member, 'pending')).length,
-    [roster]
-  );
-  const activeStaffCount = useMemo(
-    () => roster.filter((member) => matchesStaffTeamFilter(member, 'active')).length,
-    [roster]
-  );
-  const suspendedStaffCount = useMemo(
-    () => roster.filter((member) => matchesStaffTeamFilter(member, 'suspended')).length,
-    [roster]
-  );
 
   const filtered = roster
     .filter(
@@ -122,10 +110,10 @@ export function StaffTeamPanel({
             activeId={statusFilter}
             onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
             tabs={[
-              { id: 'pending', label: 'Pending review', count: pendingStaffCount },
-              { id: 'active', label: 'Active', count: activeStaffCount },
-              { id: 'suspended', label: 'Suspended', count: suspendedStaffCount },
-              { id: 'all', label: 'All', count: roster.length, alwaysShowCount: true },
+              { id: 'pending', label: 'Pending review' },
+              { id: 'active', label: 'Active' },
+              { id: 'suspended', label: 'Suspended' },
+              { id: 'all', label: 'All' },
             ]}
           />
         </>

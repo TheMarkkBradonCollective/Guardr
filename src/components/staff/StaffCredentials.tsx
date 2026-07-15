@@ -7,7 +7,6 @@ import {
   filterApprovalsFeedByQueue,
   findFeedItem,
   formatApprovalTimestamp,
-  isCredentialFeedItemAwaitingStaffReview,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
   credentialFeedThumbnailUrl,
@@ -19,8 +18,6 @@ import {
 } from '../../lib/certImagePolicy';
 import { approvalFeedItemMatchesSearch } from '../../lib/credentialSearch';
 import {
-  isCredentialFeedItemPendingUpload,
-  isCredentialFeedItemVerified,
   matchesCredentialStatusFilter,
   type CredentialStatusFilter,
 } from '../../lib/staffListFilters';
@@ -454,10 +451,6 @@ export function StaffCredentials({
     );
   };
 
-  const pendingUploadCount = credentialFeed.filter(isCredentialFeedItemPendingUpload).length;
-  const pendingReviewCount = credentialFeed.filter(isCredentialFeedItemAwaitingStaffReview).length;
-  const verifiedCount = credentialFeed.filter(isCredentialFeedItemVerified).length;
-
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
 
   if (!canVerifyCredentials) {
@@ -626,10 +619,10 @@ export function StaffCredentials({
             activeId={filter}
             onChange={(id) => setFilter(id as CredentialStatusFilter)}
             tabs={[
-              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
-              { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
-              { id: 'verified', label: 'Verified', count: verifiedCount },
-              { id: 'all', label: 'All', count: credentialFeed.length, alwaysShowCount: true },
+              { id: 'pending_upload', label: 'Pending upload' },
+              { id: 'pending_review', label: 'Pending review' },
+              { id: 'verified', label: 'Verified' },
+              { id: 'all', label: 'All' },
             ]}
           />
         </>
