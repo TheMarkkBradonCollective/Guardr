@@ -180,9 +180,7 @@ export function saveAvailabilityDateOverrides(
 }
 
 export function loadGuardAvailabilitySchedule(guardId: string): GuardAvailabilitySchedule {
-  const weeklySlots = normalizeWeeklySlotsToOnePerDay(
-    loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId)
-  );
+  const weeklySlots = loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId);
   const dateOverrides = loadAvailabilityDateOverrides(guardId);
   return { weeklySlots, dateOverrides };
 }
@@ -192,9 +190,8 @@ export function saveGuardAvailabilitySchedule(
   schedule: GuardAvailabilitySchedule
 ): GuardAvailabilitySchedule {
   const dateOverrides = saveAvailabilityDateOverrides(guardId, schedule.dateOverrides);
-  const weeklySlots = normalizeWeeklySlotsToOnePerDay(schedule.weeklySlots);
-  saveAvailabilitySlots(guardId, weeklySlots);
-  return { weeklySlots, dateOverrides };
+  saveAvailabilitySlots(guardId, schedule.weeklySlots);
+  return { weeklySlots: schedule.weeklySlots, dateOverrides };
 }
 
 export function formatLocalDateKey(date: Date): string {
