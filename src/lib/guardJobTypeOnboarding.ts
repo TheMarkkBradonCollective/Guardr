@@ -8,9 +8,9 @@ export interface JobTypeOnboardingContent {
   acknowledgment: string;
 }
 
-/** Shown at the top of every job-type onboarding sheet. */
+/** Expanded copy on the preferences hero (Read more). */
 export const GENERAL_ONBOARDING_INTRO =
-  'Welcome to Guardr. Before accepting any assignment, carefully review the onboarding information for the specific type of security post. Every client, location, and assignment may have unique requirements, but all officers are expected to maintain the highest level of professionalism, integrity, and customer service while representing both the company and our clients.';
+  'Before accepting any assignment, carefully review the onboarding information for the specific type of security post. Every client, location, and assignment may have unique requirements, but all officers are expected to maintain the highest level of professionalism, integrity, and customer service while representing both the company and our clients.';
 
 /** Words per minute used to estimate how long a guard must remain on the briefing. */
 export const ONBOARDING_READ_WPM = 130;
