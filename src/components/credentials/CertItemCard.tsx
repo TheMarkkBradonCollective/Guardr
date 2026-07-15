@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Lock, Trash2 } from 'lucide-react';
+import { Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
@@ -86,7 +86,7 @@ export function CertItemCard({
               className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
               aria-hidden
             >
-              <ChevronRight className="w-4 h-4 opacity-40" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">No photo</span>
             </div>
           )}
           <div className="min-w-0 flex-1">
@@ -126,15 +126,6 @@ export function CertItemCard({
             >
               <Trash2 className="w-3 h-3" />
               Delete
-            </button>
-          ) : !editing ? (
-            <button
-              type="button"
-              onClick={openDetail}
-              className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec transition-colors"
-              aria-label="View credential details"
-            >
-              <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
           ) : null}
         </div>

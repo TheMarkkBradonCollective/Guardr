@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, Eye, RefreshCw, ShieldCheck, X } from 'lucide-react';
+import { Check, ChevronRight, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -23,7 +23,6 @@ import { resolveInsuranceStatus } from '../../lib/guardInsurance';
 import { promptStaffCredentialUpdateNote, promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
 import { CertItemCard } from '../credentials/CertItemCard';
-import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -186,7 +185,6 @@ export function StaffCredentials({
   const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
-  const [coiModalOpen, setCoiModalOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
   const [pendingFocusGuardId, setPendingFocusGuardId] = useState<string | null>(null);
 
@@ -513,32 +511,7 @@ export function StaffCredentials({
                 onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
               }
             />
-            <button
-              type="button"
-              onClick={() => setCoiModalOpen(true)}
-              className="app-button-outline app-btn-sm gap-1.5 w-fit"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Open COI document
-            </button>
             {renderCoiActions(guard)}
-            {coiModalOpen && (
-              <GuardCoiDetailModal
-                guard={guard}
-                onClose={() => setCoiModalOpen(false)}
-                staffMode
-                onReview={
-                  onReviewGuardInsurance
-                    ? async (status, rejectionReason) => {
-                        await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                      }
-                    : undefined
-                }
-                onEditFullPage={
-                  onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-                }
-              />
-            )}
           </div>
         )}
 

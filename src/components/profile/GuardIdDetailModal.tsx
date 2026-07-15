@@ -2,20 +2,19 @@ import React, { useState } from 'react';
 import { IdCard, Loader2, Pencil, UserRound, X } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
-  formatIdExpiryLabel,
   getGuardIdVerificationStatus,
   guardIdVerificationIsLocked,
   guardIdVerificationPhotosComplete,
   guardIdVerificationSubmissionReady,
   ID_VERIFICATION_SELFIE_HINT,
   ID_VERIFICATION_SLOT_LABELS,
-  isIdExpired,
 } from '../../lib/guardIdentityVerification';
-import { formatStateName, US_STATES } from '../../lib/states';
+import { US_STATES } from '../../lib/states';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
-import { IdVerificationImageThumb } from './IdVerificationImageModal';
+import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
+import { getGovIdCredentialRecords } from '../../lib/credentialRecordBuilders';
 import { GuardIdPhotoRow } from './GuardIdPhotoRow';
 import type {
   GuardIdentityVerificationPayload,
@@ -96,8 +95,7 @@ export function GuardIdDetailModal({
     idSelfieUrl: selfieUrl.trim() || guard.idSelfieUrl,
   };
 
-  const expired = isIdExpired(displayGuard);
-  const expiryLabel = formatIdExpiryLabel(displayGuard.idExpiryDate);
+  const idRecords = getGovIdCredentialRecords(guard);
 
   const draftState = idState.trim().toUpperCase();
   const draftNumber = idNumber.trim();
@@ -319,48 +317,7 @@ export function GuardIdDetailModal({
           </div>
         ) : (
           <>
-            <dl className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <dt className="text-xs text-brand-text-muted">Issuing state</dt>
-                <dd className="font-medium mt-0.5">
-                  {displayGuard.idState ? formatStateName(displayGuard.idState) : '—'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-brand-text-muted">ID number</dt>
-                <dd className="font-medium mt-0.5 font-mono text-[0.8125rem]">
-                  {displayGuard.idNumber ? `#${displayGuard.idNumber}` : '—'}
-                </dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-xs text-brand-text-muted">Expiration date</dt>
-                <dd className={`font-medium mt-0.5 ${expired ? 'text-amber-600' : ''}`}>
-                  {expiryLabel ? (expired ? `Expired ${expiryLabel}` : expiryLabel) : '—'}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <IdVerificationImageThumb
-                label={ID_VERIFICATION_SLOT_LABELS.front}
-                imageUrl={displayGuard.idFrontUrl}
-                guardName={guardName}
-              />
-              <IdVerificationImageThumb
-                label={ID_VERIFICATION_SLOT_LABELS.back}
-                imageUrl={displayGuard.idBackUrl}
-                guardName={guardName}
-              />
-              <div className="sm:col-span-2">
-                <IdVerificationImageThumb
-                  label={ID_VERIFICATION_SLOT_LABELS.selfie}
-                  imageUrl={displayGuard.idSelfieUrl}
-                  guardName={guardName}
-                  imageClassName="w-full h-44 object-cover rounded-lg border border-brand-border bg-brand-bg-sec"
-                  emptyClassName="h-44 rounded-lg border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center text-xs text-brand-text-muted px-2 text-center"
-                />
-              </div>
-            </div>
+            <CredentialRecordsList items={idRecords} />
 
             {photosLocked && guardIdVerificationPhotosComplete(guard) && status !== 'rejected' && (
               <p className="text-xs text-brand-text-muted">

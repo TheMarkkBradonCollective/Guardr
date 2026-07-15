@@ -10,6 +10,8 @@ import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { showAppToast } from '../ui/AppToast';
+import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
+import { getCoiCredentialRecords } from '../../lib/credentialRecordBuilders';
 
 interface GuardCoiDetailModalProps {
   guard: SecurityGuard;
@@ -23,13 +25,6 @@ interface GuardCoiDetailModalProps {
   onViewFull?: () => void;
   viewFullLabel?: string;
   onEditFullPage?: () => void;
-}
-
-function formatDisplayDate(iso?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function GuardCoiDetailModal({
@@ -126,7 +121,7 @@ export function GuardCoiDetailModal({
   const sectionLabel = coiViewSectionLabel();
   const categoryLabel = CERT_CATEGORY_LABELS.industry;
   const title = policy?.carrier?.trim() || sectionLabel;
-  const displayDocumentUrl = documentUrl.trim() || policy?.documentUrl?.trim() || '';
+  const coiRecords = getCoiCredentialRecords(guard);
 
   return (
     <AppOverlaySheet open onClose={onClose} ariaLabel={title} panelClassName="rounded-t-2xl">
@@ -271,59 +266,7 @@ export function GuardCoiDetailModal({
             </div>
           ) : (
             <>
-              {displayDocumentUrl ? (
-                <img
-                  src={displayDocumentUrl}
-                  alt={`${title} document`}
-                  className="w-full max-h-[min(52vh,28rem)] object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
-                  <p className="text-sm">No photo uploaded for this credential</p>
-                </div>
-              )}
-
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Category</dt>
-                  <dd className="font-medium mt-0.5">{sectionLabel}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Credential group</dt>
-                  <dd className="font-medium mt-0.5">{categoryLabel}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Issuing organization</dt>
-                  <dd className="font-medium mt-0.5">{policy?.carrier?.trim() || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">License / cert number</dt>
-                  <dd className="font-medium mt-0.5 font-mono text-[0.8125rem]">
-                    {policy?.policyNumber?.trim() || '—'}
-                  </dd>
-                </div>
-                {policy?.generalLiabilityLimit != null && (
-                  <div>
-                    <dt className="text-xs text-brand-text-muted">General liability limit</dt>
-                    <dd className="font-medium mt-0.5">
-                      ${policy.generalLiabilityLimit.toLocaleString()}
-                    </dd>
-                  </div>
-                )}
-                {policy?.effectiveDate && (
-                  <div>
-                    <dt className="text-xs text-brand-text-muted">Effective date</dt>
-                    <dd className="font-medium mt-0.5">{formatDisplayDate(policy.effectiveDate)}</dd>
-                  </div>
-                )}
-                {policy?.expiryDate && (
-                  <div>
-                    <dt className="text-xs text-brand-text-muted">Expiration date</dt>
-                    <dd className="font-medium mt-0.5">{formatDisplayDate(policy.expiryDate)}</dd>
-                  </div>
-                )}
-              </dl>
-
+              <CredentialRecordsList items={coiRecords} />
               <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
             </>
           )}

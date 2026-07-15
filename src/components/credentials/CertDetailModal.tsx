@@ -3,13 +3,14 @@ import { Loader2, Pencil, X } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName, credentialRequiresExpiry, getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import { certCategoryLabel, certViewSectionLabel } from '../../lib/guardCredentialSections';
+import { getCertificationRevisionTimeline } from '../../lib/certRevisionHistory';
 import { certPhotoIsLockedForEditor } from '../../lib/certImagePolicy';
-import { formatStateName, US_STATES } from '../../lib/states';
+import { US_STATES } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 import { CertPhotoRow } from './CertPhotoRow';
-import { CredentialRevisionTimeline } from './CredentialRevisionTimeline';
+import { CredentialRecordsList } from './CredentialRecordsList';
 
 import { CredentialQuickViewLinks } from './CredentialQuickViewLinks';
 
@@ -72,6 +73,8 @@ export function CertDetailModal({
   const [submitError, setSubmitError] = useState('');
 
   const photosLocked = certPhotoIsLockedForEditor(cert, staffMode);
+  const revisionItems = getCertificationRevisionTimeline(cert);
+  const showRevisionList = revisionItems.length > 0;
 
   React.useEffect(() => {
     if (editing) return;
@@ -334,62 +337,15 @@ export function CertDetailModal({
               </button>
             </div>
           </div>
-        ) : (
+        ) : showRevisionList ? (
           <>
-            {displayCert.imageUrl ? (
-              <img
-                src={displayCert.imageUrl}
-                alt={`${title} document`}
-                className="w-full max-h-[min(52vh,28rem)] object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
-                <p className="text-sm">No photo uploaded for this credential</p>
-              </div>
-            )}
-
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <div>
-                <dt className="text-xs text-brand-text-muted">Category</dt>
-                <dd className="font-medium mt-0.5">{sectionLabel}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-brand-text-muted">Credential group</dt>
-                <dd className="font-medium mt-0.5">{categoryLabel}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-brand-text-muted">Issuing organization</dt>
-                <dd className="font-medium mt-0.5">{displayCert.issuer || '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-brand-text-muted">License / cert number</dt>
-                <dd className="font-medium mt-0.5 font-mono text-[0.8125rem]">{displayCert.number || '—'}</dd>
-              </div>
-              {displayCert.state && (
-                <div>
-                  <dt className="text-xs text-brand-text-muted">State</dt>
-                  <dd className="font-medium mt-0.5">{formatStateName(displayCert.state)}</dd>
-                </div>
-              )}
-              {requiresExpiry && (
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Expiration date</dt>
-                  <dd className="font-medium mt-0.5">
-                    {displayCert.expiryDate
-                      ? new Date(`${displayCert.expiryDate}T12:00:00`).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })
-                      : '—'}
-                  </dd>
-                </div>
-              )}
-            </dl>
-
+            <CredentialRecordsList items={revisionItems} />
             <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
-            <CredentialRevisionTimeline cert={cert} />
           </>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
+            <p className="text-sm">No photo uploaded for this credential</p>
+          </div>
         )}
       </div>
       </div>
