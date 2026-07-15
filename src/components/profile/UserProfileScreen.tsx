@@ -85,6 +85,7 @@ export function UserProfileScreen({
   const [middleName, setMiddleName] = useState(initialName.middleName ?? '');
   const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
+  const [bio, setBio] = useState(guard?.bio ?? '');
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
   const [hourlyRate, setHourlyRate] = useState(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
   const [resume, setResume] = useState<GuardResumeSavePayload>({
@@ -113,6 +114,7 @@ export function UserProfileScreen({
     setMiddleName(resolved.middleName ?? '');
     setLastName(resolved.lastName);
     setPhone(guard?.phone ?? client?.phone ?? '');
+    setBio(guard?.bio ?? '');
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
     setHourlyRate(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
     setResume({
@@ -147,7 +149,7 @@ export function UserProfileScreen({
       return { ...base, companyName: companyName.trim() };
     }
     if (isStaffAccount) {
-      return base;
+      return { ...base, bio: bio.trim() };
     }
     if (isGuardAccount) {
       return {
@@ -208,28 +210,20 @@ export function UserProfileScreen({
   const canBuildResume = isGuardAccount && !!guard && !guard.isStaff;
   const credentialsEditing = editing || !!(guard && isGuardAccountPreActive(guard));
   const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
-
-  if (isStaffAccount) {
-    return (
-      <AppScreen className="app-profile-screen">
-        <ProfileHero
-          kicker={roleLabel}
-          title={staffBadgeId || '—'}
-          subtitle="Staff ID"
-          email={currentUser.email}
-          avatar={<ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />}
-        />
-      </AppScreen>
-    );
-  }
+  const heroTitle = isStaffAccount && !displayName.trim() ? staffBadgeId || '—' : displayName;
 
   return (
     <AppScreen className="app-profile-screen">
       <ProfileHero
         kicker={roleLabel}
-        title={displayName}
+        title={heroTitle}
+        subtitle={
+          isStaffAccount ? (
+            <p className="text-sm text-brand-text-muted">Staff ID: {staffBadgeId || '—'}</p>
+          ) : undefined
+        }
         email={currentUser.email}
-        avatar={<ProfileAvatar src={avatar} name={displayName} size="xl" />}
+        avatar={<ProfileAvatar src={avatar} name={heroTitle} size="xl" />}
         photoControls={
           <>
             <label
@@ -289,7 +283,13 @@ export function UserProfileScreen({
         {isClient && (
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
         )}
+        {isStaffAccount && (
+          <Field label="Staff ID" value={staffBadgeId} editing={false} readOnly />
+        )}
         <Field label="Phone" value={phone} onChange={setPhone} editing={editing} type="tel" />
+        {isStaffAccount && (
+          <BioField label="Bio / notes" value={bio} onChange={setBio} editing={editing} />
+        )}
         {isGuardAccount && (
           <Field
             label="Minimum hourly rate ($)"
@@ -329,6 +329,34 @@ export function UserProfileScreen({
         </section>
       )}
     </AppScreen>
+  );
+}
+
+function BioField({
+  label,
+  value,
+  onChange,
+  editing,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  editing: boolean;
+}) {
+  return (
+    <div>
+      <label className="uber-label">{label}</label>
+      {editing ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+          className="uber-input w-full mt-1 resize-y min-h-[5rem]"
+        />
+      ) : (
+        <p className="text-sm font-medium mt-1 whitespace-pre-wrap">{value || '—'}</p>
+      )}
+    </div>
   );
 }
 
