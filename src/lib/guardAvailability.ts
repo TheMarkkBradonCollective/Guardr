@@ -180,7 +180,9 @@ export function saveAvailabilityDateOverrides(
 }
 
 export function loadGuardAvailabilitySchedule(guardId: string): GuardAvailabilitySchedule {
-  const weeklySlots = loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId);
+  const weeklySlots = normalizeWeeklySlotsToOnePerDay(
+    loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId)
+  );
   const dateOverrides = loadAvailabilityDateOverrides(guardId);
   return { weeklySlots, dateOverrides };
 }
@@ -190,8 +192,9 @@ export function saveGuardAvailabilitySchedule(
   schedule: GuardAvailabilitySchedule
 ): GuardAvailabilitySchedule {
   const dateOverrides = saveAvailabilityDateOverrides(guardId, schedule.dateOverrides);
-  saveAvailabilitySlots(guardId, schedule.weeklySlots);
-  return { weeklySlots: schedule.weeklySlots, dateOverrides };
+  const weeklySlots = normalizeWeeklySlotsToOnePerDay(schedule.weeklySlots);
+  saveAvailabilitySlots(guardId, weeklySlots);
+  return { weeklySlots, dateOverrides };
 }
 
 export function formatLocalDateKey(date: Date): string {
@@ -223,6 +226,29 @@ export function isWeekDayEnabled(slots: GuardAvailabilitySlot[], dayOfWeek: numb
 
 export function slotsForWeekDay(slots: GuardAvailabilitySlot[], dayOfWeek: number): GuardAvailabilitySlot[] {
   return slots.filter((slot) => slot.dayOfWeek === dayOfWeek);
+}
+
+/** Primary slot for a weekday (at most one per day in the UI). */
+export function slotForWeekDay(
+  slots: GuardAvailabilitySlot[],
+  dayOfWeek: number
+): GuardAvailabilitySlot | undefined {
+  return slots.find((slot) => slot.dayOfWeek === dayOfWeek && slot.isAvailable);
+}
+
+/** Keep only the first available slot for each weekday. */
+export function normalizeWeeklySlotsToOnePerDay(
+  slots: GuardAvailabilitySlot[]
+): GuardAvailabilitySlot[] {
+  const seen = new Set<number>();
+  const normalized: GuardAvailabilitySlot[] = [];
+  for (const slot of slots) {
+    if (!slot.isAvailable) continue;
+    if (seen.has(slot.dayOfWeek)) continue;
+    seen.add(slot.dayOfWeek);
+    normalized.push(slot);
+  }
+  return normalized;
 }
 
 export function toggleWeekDay(

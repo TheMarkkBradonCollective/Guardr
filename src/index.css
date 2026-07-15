@@ -15057,6 +15057,51 @@ html.theme-grey .landing-wordmark {
   background: var(--brand-bg-sec);
 }
 
+.availability-day-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 0 1rem 0.75rem;
+}
+
+.availability-day-card {
+  gap: 0.55rem;
+}
+
+.availability-day-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.availability-day-card-title {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--brand-text);
+}
+
+.availability-day-card-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.availability-day-card-footer {
+  margin-top: 0.15rem;
+}
+
+.availability-body {
+  padding-top: 0.25rem;
+}
+
+.availability-days-section {
+  padding-bottom: 0.5rem;
+}
+
 .availability-save-row {
   display: flex;
   justify-content: flex-end;
