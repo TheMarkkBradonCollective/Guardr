@@ -17,6 +17,7 @@ import { MarkdownDoc } from './MarkdownDoc';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
 import type { PlatformRole } from '../../types';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
@@ -357,13 +358,22 @@ function GuideHub({
       />
 
       <div className="px-4 pb-3 border-b border-brand-border">
-        <div className="app-guide-tabs -mx-0">
-          <AppSegmentedControl<AudienceFilter>
-            options={tabs}
-            value={audience}
-            onChange={setAudience}
+        {tabs.length > 3 ? (
+          <StaffListFilterTabs
+            aria-label="Guide audience"
+            activeId={audience}
+            onChange={(id) => setAudience(id as AudienceFilter)}
+            tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
           />
-        </div>
+        ) : (
+          <div className="app-guide-tabs -mx-0">
+            <AppSegmentedControl<AudienceFilter>
+              options={tabs}
+              value={audience}
+              onChange={setAudience}
+            />
+          </div>
+        )}
       </div>
 
       <div>

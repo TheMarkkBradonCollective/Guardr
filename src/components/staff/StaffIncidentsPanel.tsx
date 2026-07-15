@@ -37,7 +37,7 @@ export function StaffIncidentsPanel({
           onBack={() => setSelectedId(null)}
           backLabel="Incidents"
         />
-        <div className="px-4 sm:px-5 pb-8 space-y-4">
+        <div className="pb-8 space-y-4">
           <IncidentReportDetailView report={selectedDetail} compact />
           {onOpenJob && (
             <button
