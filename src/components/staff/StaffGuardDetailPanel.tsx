@@ -599,32 +599,20 @@ export function StaffGuardDetailPanel({
                   {onOpenGuardApplication ? 'Review application' : 'Approve application'}
                 </button>
               )}
-              {guardAccountStatus === 'approved' && onActivateGuardAccount && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void (async () => {
-                      if (!guardCanStaffActivateAccount(guard)) return;
-                      try {
-                        await onActivateGuardAccount(guard.id);
-                      } catch (err) {
-                        showAppToast(err instanceof Error ? err.message : 'Could not grant marketplace eligibility.', { tone: 'error' });
-                      }
-                    })();
-                  }}
-                  disabled={!guardCanStaffActivateAccount(guard)}
-                  className="app-button-primary app-btn-sm disabled:opacity-50"
+              {guardAccountStatus === 'approved' && (
+                <span
+                  className="app-button-outline app-btn-sm opacity-50 cursor-default pointer-events-none inline-flex items-center"
                   title={
                     guardCanStaffActivateAccount(guard)
-                      ? 'Grant marketplace eligibility'
+                      ? 'Grant marketplace eligibility from Applications when ready'
                       : activationChecklist.staffActivationBlockers.join(' · ') ||
-                        'All five credentials must be on file'
+                        'All five credentials must be verified before marketplace eligibility'
                   }
                 >
                   Grant marketplace eligibility
-                </button>
+                </span>
               )}
-              {canSuspend && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && onDeleteGuard && (
+              {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
                 <button
                   type="button"
                   onClick={() => void handleDeleteGuard()}
@@ -678,18 +666,13 @@ export function StaffGuardDetailPanel({
                 </button>
               )}
               {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
-                <p className="text-xs text-brand-text-muted">
-                  Guard must be approved and active before they can be marked as trusted.
-                </p>
-              )}
-              {onDeleteGuard && guardAccountStatus !== 'pending' && (
                 <button
                   type="button"
-                  onClick={() => void handleDeleteGuard()}
-                  disabled={deleting}
-                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                  disabled
+                  className="app-button-outline app-btn-sm opacity-50 cursor-not-allowed"
+                  title="Guard must be approved and active before they can be marked as trusted."
                 >
-                  {deleting ? 'Deleting…' : 'Delete account'}
+                  Mark as trusted
                 </button>
               )}
             </div>
