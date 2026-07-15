@@ -4,13 +4,15 @@ import type { SecurityGuard } from '../types';
 import {
   getGuardActivationChecklist,
   getApprovedGuardsAwaitingActivation,
-  getGuardPendingCredentialPillLabels,
+  getGuardPendingCredentialBadgeLabels,
   getGuardRosterAccountBadges,
   getGuardRosterAccountLabel,
   getPendingGuardAccountReviews,
   guardActivationSummaryLabel,
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
+  GUARD_PENDING_CREDENTIALS_LABEL,
+  GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL,
   isGuardAccountActive,
 } from './guardAccountActivation.ts';
 import { GUARD_CREDENTIAL_RESTRICTED_LABEL } from './guardCredentialExpiryEnforcement.ts';
@@ -186,7 +188,7 @@ describe('guard account activation gates', () => {
     assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
   });
 
-  it('shows Approved + Restricted + pending credential pills when expiry restricted', () => {
+  it('shows Approved + Restricted + pending credentials when expiry restricted', () => {
     const guard = baseGuard({
       userStatus: 'approved',
       verified: true,
@@ -202,7 +204,7 @@ describe('guard account activation gates', () => {
     const badges = getGuardRosterAccountBadges(guard);
     assert.equal(badges[0]?.label, 'Approved');
     assert.equal(badges[1]?.label, GUARD_CREDENTIAL_RESTRICTED_LABEL);
-    assert.ok(badges.some((badge) => badge.label === 'Pending: Government ID'));
+    assert.ok(badges.some((badge) => badge.label === GUARD_PENDING_CREDENTIALS_LABEL));
     assert.equal(getGuardRosterAccountLabel(guard), 'Approved');
     assert.equal(guardActivationSummaryLabel(guard), 'Restricted — required credential expired');
   });
@@ -215,14 +217,43 @@ describe('guard account activation gates', () => {
     assert.equal(badges[1]?.label, 'Active');
   });
 
-  it('shows Approved plus specific pending credential pills for approved guards', () => {
+  it('shows Approved plus pending credentials badge when nothing is uploaded', () => {
     const guard = baseGuard({ userStatus: 'approved', verified: true });
     const badges = getGuardRosterAccountBadges(guard);
-    const pendingLabels = getGuardPendingCredentialPillLabels(guard);
+    const pendingLabels = getGuardPendingCredentialBadgeLabels(guard);
     assert.equal(badges[0]?.label, 'Approved');
-    assert.ok(pendingLabels.length > 0);
-    assert.ok(pendingLabels.every((label) => label.startsWith('Pending: ')));
-    assert.ok(badges.some((badge) => badge.label === 'Pending: Government ID'));
-    assert.ok(badges.some((badge) => badge.label === 'Pending: BSIS Guard Card'));
+    assert.deepEqual(pendingLabels, [GUARD_PENDING_CREDENTIALS_LABEL]);
+    assert.ok(badges.some((badge) => badge.label === GUARD_PENDING_CREDENTIALS_LABEL));
+    assert.equal(
+      badges.some((badge) => badge.label === GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL),
+      false
+    );
+  });
+
+  it('shows both pending credentials and pending verification badges when partially uploaded', () => {
+    const guard = fullyVerifiedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'pending',
+      insurancePolicy: {
+        id: 'ins-1',
+        guardId: 'g1',
+        carrier: 'Carrier',
+        policyNumber: 'POL-1',
+        expiryDate: '2099-12-31',
+        documentUrl: 'doc',
+        status: 'pending',
+      },
+      certifications: [],
+    });
+    const badges = getGuardRosterAccountBadges(guard);
+    const pendingLabels = getGuardPendingCredentialBadgeLabels(guard);
+    assert.equal(badges[0]?.label, 'Approved');
+    assert.deepEqual(pendingLabels, [
+      GUARD_PENDING_CREDENTIALS_LABEL,
+      GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL,
+    ]);
+    assert.ok(badges.some((badge) => badge.label === GUARD_PENDING_CREDENTIALS_LABEL));
+    assert.ok(badges.some((badge) => badge.label === GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL));
   });
 });
