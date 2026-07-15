@@ -44,6 +44,11 @@ import {
   incidentChatSummary,
   IncidentReportFormInput,
 } from './lib/incidentReports';
+import {
+  createClientViolationReport,
+  clientViolationCategoryLabel,
+} from './lib/clientViolations';
+import type { ClientViolationReportInput } from './components/client/ClientViolationReportSheet';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import { formatCityLabel, normalizeGuardServiceAreas, resolveJobCity } from './lib/californiaCities';
 import {
@@ -2100,6 +2105,9 @@ export default function App() {
           guardLiveLocation: r.guard_live_location ?? undefined,
           replacementRequest: r.replacement_request ?? undefined,
           noShow: !!r.no_show,
+          clientViolationReports: Array.isArray(r.client_violation_reports)
+            ? r.client_violation_reports
+            : [],
           breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
           breakPaid: r.break_paid !== false,
           shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
@@ -7160,6 +7168,49 @@ export default function App() {
     }
   };
 
+  const handleReportClientViolation = async (requestId: string, input: ClientViolationReportInput) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !currentUser) return;
+
+    const report = createClientViolationReport({
+      target: input.target,
+      category: input.category,
+      description: input.description,
+      reportedByClientId: currentUser.id,
+      reportedByClientName: currentUser.name,
+      guardId: input.guardId,
+    });
+
+    const nextReports = [...(req.clientViolationReports ?? []), report];
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, clientViolationReports: nextReports } : r))
+    );
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ client_violation_reports: nextReports })
+        .eq('id', requestId);
+    }
+
+    const categoryLabel = clientViolationCategoryLabel(input.target, input.category);
+    if (input.target === 'guard' && input.guardId) {
+      notifyAccountUpdate(
+        currentUser,
+        input.guardId,
+        'Performance violation reported',
+        `A client reported "${categoryLabel}" on "${req.title}".`
+      );
+    }
+
+    appToast(
+      input.target === 'guard'
+        ? 'Guard violation reported. Staff will review.'
+        : 'Job violation reported for staff review.',
+      'success'
+    );
+  };
+
   const handleApproveRequest = async (requestId: string) => {
     if (isTutorialDemoId(requestId)) {
       appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
@@ -11419,6 +11470,7 @@ export default function App() {
               onUpdateStatus={handleUpdateStatus}
               onCancelRequest={handleCancelRequest}
               onAddReview={handleAddReview}
+              onReportViolation={handleReportClientViolation}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
               onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}

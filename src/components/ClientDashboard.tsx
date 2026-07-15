@@ -67,6 +67,7 @@ interface ClientDashboardProps {
   onCancelRequest: (requestId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  onReportViolation?: (requestId: string, input: import('./client/ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
@@ -154,6 +155,7 @@ export function ClientDashboard({
   onCancelRequest,
   onUpdateStatus,
   onAddReview,
+  onReportViolation,
   onConfirmSelfAudit,
   onRequestCashPayment,
   onApproveOvertime,
@@ -386,6 +388,7 @@ export function ClientDashboard({
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}
         onAddReview={onAddReview}
+        onReportViolation={onReportViolation}
         onCancelRequest={onCancelRequest}
         onEditRequest={onEditRequest}
         onUpdateStatus={onUpdateStatus}
@@ -580,6 +583,7 @@ export function ClientDashboard({
         onEditRequest={onEditRequest}
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
+        onReportViolation={onReportViolation}
         onConfirmSelfAudit={onConfirmSelfAudit}
         onRequestCashPayment={onRequestCashPayment}
         onApproveOvertime={onApproveOvertime}

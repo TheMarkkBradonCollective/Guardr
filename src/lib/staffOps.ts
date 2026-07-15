@@ -722,8 +722,19 @@ export function buildPlatformActivityFeed(
       items.push({
         id: `${req.id}-incident-${incident.id}`,
         timestamp: incident.submittedAt,
-        message: `Client incident report filed — ${site}`,
+        message: `Guard incident report filed — ${site}`,
         sortKey: new Date(incident.submittedAt).getTime(),
+      });
+    }
+    for (const violation of req.clientViolationReports ?? []) {
+      items.push({
+        id: `${req.id}-violation-${violation.id}`,
+        timestamp: violation.reportedAt,
+        message:
+          violation.target === 'guard'
+            ? `Client reported guard violation (${violation.category}) — ${site}`
+            : `Client reported job violation (${violation.category}) — ${site}`,
+        sortKey: new Date(violation.reportedAt).getTime(),
       });
     }
     if (req.checkOutAudit?.dailyActivityReport) {

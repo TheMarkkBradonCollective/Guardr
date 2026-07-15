@@ -32,6 +32,7 @@ interface ClientRequestsListProps {
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  onReportViolation?: (requestId: string, input: import('./ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
@@ -110,6 +111,7 @@ export function ClientRequestsList({
   onEditRequest,
   onUpdateStatus,
   onAddReview,
+  onReportViolation,
   onConfirmSelfAudit,
   onRequestCashPayment,
   onApproveOvertime,
@@ -197,6 +199,7 @@ export function ClientRequestsList({
           onRequestEdit={setEditingId}
           onUpdateStatus={onUpdateStatus}
           onAddReview={onAddReview}
+          onReportViolation={onReportViolation}
           onConfirmSelfAudit={onConfirmSelfAudit}
           onRequestCashPayment={onRequestCashPayment}
           onApproveOvertime={onApproveOvertime}

@@ -149,7 +149,22 @@ test('buildPerformanceFactors sums to overall rating components', () => {
 test('computeGuardPerformanceRating includes tier and violations', () => {
   const requests = [
     completedJob({ id: 'j1', applicants: ['guard-1'], noShow: true }),
-    completedJob({ id: 'j2', applicants: ['guard-1'], ratingGiven: 4 }),
+    completedJob({
+      id: 'j2',
+      applicants: ['guard-1'],
+      ratingGiven: 4,
+      clientViolationReports: [
+        {
+          id: 'v1',
+          target: 'guard',
+          category: 'uniform',
+          description: 'Wrong shoes',
+          reportedAt: '2026-01-02T12:00:00Z',
+          reportedByClientId: 'client-1',
+          guardId: 'guard-1',
+        },
+      ],
+    }),
   ];
   const guard = { ...baseGuard, failedAudits: 1 };
   const rating = computeGuardPerformanceRating(guard, requests);
@@ -157,6 +172,8 @@ test('computeGuardPerformanceRating includes tier and violations', () => {
   assert.ok(rating.overallRating >= 0);
   assert.ok(rating.tier);
   assert.ok(rating.factors.length >= 4);
-  assert.ok(rating.violations.length >= 2);
+  assert.ok(rating.violations.length >= 3);
+  assert.ok(rating.violations.some((v) => v.id === 'client-reported'));
+  assert.equal(rating.violations.some((v) => v.id === 'incident'), false);
   assert.equal(formatViolationSummary(rating.violations).includes('violation'), true);
 });
