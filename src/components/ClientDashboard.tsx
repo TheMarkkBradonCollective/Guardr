@@ -78,6 +78,7 @@ interface ClientDashboardProps {
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
+  onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
   onSubmitPriceOffer?: (
     requestId: string,
     guardId: string,
@@ -161,6 +162,7 @@ export function ClientDashboard({
   onDenyTeamSlot,
   onApproveFullTeam,
   onDenyFullTeam,
+  onRequestReplacement,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
   crewSettings,
@@ -368,6 +370,7 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        onRequestReplacement={onRequestReplacement}
         feeConfig={feeConfig}
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}
@@ -563,6 +566,7 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        onRequestReplacement={onRequestReplacement}
         feeConfig={feeConfig}
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}

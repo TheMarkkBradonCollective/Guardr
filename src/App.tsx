@@ -172,6 +172,13 @@ import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
 import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
+import {
+  acceptReplacementOffer,
+  createReplacementRequest,
+  findReplacementCandidates,
+  startReplacementOffers,
+} from './lib/emergencyReplacement';
+import { jobsNeedingNoShowReplacement } from './lib/noShowDetection';
 import { guardScheduleConflictError } from './lib/guardSchedule';
 import { findOpenTeamJobByCode, generateUniqueTeamCode } from './lib/teamCode';
 import {
@@ -2027,6 +2034,10 @@ export default function App() {
           checkInAudit: r.check_in_audit ?? undefined,
           spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
           midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
+          enRouteAt: r.en_route_at ?? undefined,
+          guardLiveLocation: r.guard_live_location ?? undefined,
+          replacementRequest: r.replacement_request ?? undefined,
+          noShow: !!r.no_show,
           breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
           breakPaid: r.break_paid !== false,
           shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
@@ -9332,6 +9343,225 @@ export default function App() {
     }
   };
 
+  const handleStartEnRoute = async (requestId: string) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.assignedGuardId !== activeGuardId) return;
+    const enRouteAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, enRouteAt } : r))
+    );
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ en_route_at: enRouteAt }).eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_arrived',
+        guardId: activeGuardId,
+        guardName: activeGuard?.name,
+        requestId,
+        location: req.location,
+        body: `${activeGuard?.name ?? 'Guard'} is en route to "${req.title}".`,
+      });
+    }
+  };
+
+  const handleUpdateGuardLiveLocation = async (
+    requestId: string,
+    location: { lat: number; lng: number; updatedAt: string }
+  ) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, guardLiveLocation: location } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ guard_live_location: location })
+        .eq('id', requestId);
+    }
+  };
+
+  const broadcastReplacementOffers = async (
+    job: SecurityRequest,
+    guardIds: string[]
+  ) => {
+    if (!currentUser) return;
+    for (const guardId of guardIds) {
+      const guard = guards.find((g) => g.id === guardId);
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId: job.id,
+        guardId,
+        guardName: guard?.name,
+        title: 'Replacement mission offer',
+        body: `Urgent coverage needed for "${job.title}" — first to accept gets the mission.`,
+        priority: 'high',
+      });
+    }
+    void reportPushEvent(currentUser, {
+      type: 'assignment',
+      recipientUserId: job.clientId,
+      requestId: job.id,
+      title: 'Finding replacement',
+      body: `${guardIds.length} qualified guard${guardIds.length === 1 ? '' : 's'} notified for "${job.title}".`,
+    });
+  };
+
+  const handleRequestReplacement = async (requestId: string, reasonNote?: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || !job.assignedGuardId) return;
+    const replacement = createReplacementRequest(job, {
+      requestedBy: 'client',
+      reason: 'call-off',
+      reasonNote,
+      previousGuardId: job.assignedGuardId,
+    });
+    const candidates = findReplacementCandidates(job, guards, requests, [job.assignedGuardId]);
+    const withOffers = startReplacementOffers(
+      { ...job, replacementRequest: replacement },
+      candidates
+    );
+    if (!withOffers || withOffers.status === 'failed') {
+      appToast('No qualified replacement guards available nearby.', 'error');
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, replacementRequest: withOffers } : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ replacement_request: withOffers })
+        .eq('id', requestId);
+    }
+    await broadcastReplacementOffers(job, withOffers.offeredGuardIds);
+    appToast('Replacement search started — first guard to accept is auto-assigned.', 'success');
+  };
+
+  const handleAcceptReplacementOffer = async (requestId: string, guardId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = acceptReplacementOffer(job, guardId);
+    if (!result) {
+      appToast('This replacement offer is no longer available.', 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    const workBlocked = guard ? guardWorkBlockedMessage(guard, job.state) : null;
+    if (workBlocked) {
+      appToast(workBlocked, 'error');
+      return;
+    }
+    if (guard) {
+      const scheduleBlocked = guardScheduleConflictError(guardId, job, requests, {
+        guardName: guard.name,
+      });
+      if (scheduleBlocked) {
+        appToast(scheduleBlocked, 'error');
+        return;
+      }
+    }
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, ...result.patch } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          replacement_request: result.replacement,
+          assigned_guard_id: guardId,
+          status: 'accepted',
+          pending_guard_id: null,
+          staff_approved_guard_at: null,
+          en_route_at: null,
+          guard_live_location: null,
+          applicants: result.patch.applicants,
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId,
+        guardName: guard.name,
+        title: 'Replacement guard assigned',
+        body: `${guard.name} accepted the replacement mission for "${job.title}".`,
+      });
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `You are booked for "${job.title}" via emergency replacement.`,
+      });
+    }
+    appToast('Mission accepted — you are assigned.', 'success');
+  };
+
+  const triggerNoShowReplacement = async (job: SecurityRequest) => {
+    if (job.replacementRequest?.status === 'offering' || job.replacementRequest?.status === 'filled') {
+      return;
+    }
+    const replacement = createReplacementRequest(job, {
+      requestedBy: 'system',
+      reason: 'no-show',
+      previousGuardId: job.assignedGuardId ?? undefined,
+    });
+    const candidates = findReplacementCandidates(
+      job,
+      guards,
+      requests,
+      job.assignedGuardId ? [job.assignedGuardId] : []
+    );
+    const withOffers = startReplacementOffers(
+      { ...job, replacementRequest: replacement, noShow: true },
+      candidates
+    );
+    const patch = {
+      noShow: true,
+      replacementRequest: withOffers ?? { ...replacement, status: 'failed' as const },
+    };
+    setRequests((prev) =>
+      prev.map((r) => (r.id === job.id ? { ...r, ...patch } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          no_show: true,
+          replacement_request: patch.replacementRequest,
+        })
+        .eq('id', job.id);
+    }
+    if (withOffers?.status === 'offering' && withOffers.offeredGuardIds.length) {
+      await broadcastReplacementOffers(job, withOffers.offeredGuardIds);
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId: job.id,
+          title: 'Guard no-show',
+          body: `Scheduled guard did not clock in for "${job.title}". Searching for a replacement.`,
+          priority: 'high',
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isDbConnected) return;
+    const interval = setInterval(() => {
+      const needing = jobsNeedingNoShowReplacement(requests);
+      for (const job of needing) {
+        void triggerNoShowReplacement(job);
+      }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isDbConnected, requests, guards, currentUser?.id]);
+
   const handleClientConfirmSelfAudit = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
@@ -10723,6 +10953,7 @@ export default function App() {
           onAcceptStandingCrewInvite={handleAcceptStandingCrewInvite}
           onDeclineStandingCrewInvite={handleDeclineStandingCrewInvite}
           requests={guardJobs}
+          allRequests={requests}
           payments={guardPayouts}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
@@ -10757,6 +10988,11 @@ export default function App() {
           }
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
           onUpdateJobAudit={handleUpdateJobAudit}
+          onStartEnRoute={handleStartEnRoute}
+          onUpdateGuardLiveLocation={handleUpdateGuardLiveLocation}
+          onAcceptReplacementOffer={(requestId) =>
+            void handleAcceptReplacementOffer(requestId, activeGuardId)
+          }
           onGuardArrived={(requestId) => {
             if (!currentUser) return;
             const req = requests.find((r) => r.id === requestId);
@@ -10965,6 +11201,7 @@ export default function App() {
               onDenyTeamSlot={handleClientDenyTeamSlot}
               onApproveFullTeam={handleClientApproveFullTeam}
               onDenyFullTeam={handleClientDenyFullTeam}
+              onRequestReplacement={handleRequestReplacement}
               onSubmitPriceOffer={(requestId, guardId, input) =>
                 void handleSubmitPriceOffer(requestId, guardId, input, 'client')
               }

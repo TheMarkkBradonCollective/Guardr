@@ -355,7 +355,7 @@ export function computeEarningsSummary(completedJobs: GuardJobView[]): EarningsS
   };
 }
 
-export type ShiftPhase = 'upcoming' | 'arrived' | 'on-duty' | 'complete';
+export type ShiftPhase = 'upcoming' | 'en-route' | 'arrived' | 'on-duty' | 'complete';
 
 export function getShiftPhaseKey(guardId: string, jobId: string): string {
   return `guardr_shift_phase_${guardId}_${jobId}`;
@@ -364,7 +364,15 @@ export function getShiftPhaseKey(guardId: string, jobId: string): string {
 export function loadShiftPhase(guardId: string, jobId: string): ShiftPhase {
   try {
     const v = localStorage.getItem(getShiftPhaseKey(guardId, jobId));
-    if (v === 'upcoming' || v === 'arrived' || v === 'on-duty' || v === 'complete') return v;
+    if (
+      v === 'upcoming' ||
+      v === 'en-route' ||
+      v === 'arrived' ||
+      v === 'on-duty' ||
+      v === 'complete'
+    ) {
+      return v;
+    }
   } catch { /* ignore */ }
   return 'upcoming';
 }

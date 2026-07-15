@@ -31,6 +31,11 @@ import {
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
 import { GuardActiveShift } from './guard/GuardActiveShift';
+import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
+import { activeReplacementOffers } from '../lib/emergencyReplacement';
+import { useGuardLiveLocation } from '../lib/useGuardLiveLocation';
+import { midShiftCheckInDue } from './guard/MidShiftCheckInPanel';
+import { shiftDutyStartedAt } from '../lib/shiftWindow';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardStripeConnectSheet } from './guard/GuardStripeConnectSheet';
 import { GuardJobDetailView } from './guard/GuardJobDetailView';
@@ -108,6 +113,8 @@ import { useUserLocation } from '../lib/useUserLocation';
 interface GuardDashboardProps {
   guard: SecurityGuard;
   requests: GuardJobView[];
+  /** Full job records for matching, replacement offers, and live tracking. */
+  allRequests?: SecurityRequest[];
   currentUser: SessionUser;
   payments?: GuardPayoutView[];
   onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
@@ -156,6 +163,12 @@ interface GuardDashboardProps {
   onAcceptPriceOffer?: (requestId: string, offerId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
+  onStartEnRoute?: (requestId: string) => void | Promise<void>;
+  onUpdateGuardLiveLocation?: (
+    requestId: string,
+    location: { lat: number; lng: number; updatedAt: string }
+  ) => void | Promise<void>;
+  onAcceptReplacementOffer?: (requestId: string) => void | Promise<void>;
   onGuardArrived?: (requestId: string) => void;
   onGeofenceLeave?: (requestId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
@@ -234,6 +247,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
 export function GuardDashboard({
   guard,
   requests,
+  allRequests = [],
   currentUser,
   payments = [],
   onAddCertification,
@@ -265,6 +279,9 @@ export function GuardDashboard({
   onAcceptPriceOffer,
   coworkerGuards = [],
   onUpdateJobAudit,
+  onStartEnRoute,
+  onUpdateGuardLiveLocation,
+  onAcceptReplacementOffer,
   onGuardArrived,
   onGeofenceLeave,
   onApproveOvertime,
@@ -405,8 +422,31 @@ export function GuardDashboard({
   const activePhase: ShiftPhase | null = useMemo(() => {
     if (!activeShiftJob) return null;
     if (activeShiftJob.status === 'in-progress') return 'on-duty';
-    return shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
+    const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
+    if (activeShiftJob.enRouteAt && (stored === 'upcoming' || stored === 'en-route')) return 'en-route';
+    return stored;
   }, [activeShiftJob, shiftPhases, guard.id]);
+
+  const replacementOffers = useMemo(
+    () => activeReplacementOffers(allRequests.length ? allRequests : (requests as SecurityRequest[]), guard.id),
+    [allRequests, requests, guard.id]
+  );
+
+  const activeShiftRequest = useMemo(
+    () => {
+      if (!activeShiftJob) return null;
+      return (allRequests.length ? allRequests : (requests as SecurityRequest[])).find((r) => r.id === activeShiftJob.id) ?? null;
+    },
+    [activeShiftJob, allRequests, requests]
+  );
+
+  useGuardLiveLocation({
+    activeJob: activeShiftRequest,
+    enabled: !!onUpdateGuardLiveLocation,
+    onUpdate: (requestId, location) => {
+      void onUpdateGuardLiveLocation?.(requestId, location);
+    },
+  });
 
   const selectedJob = useMemo(
     () => browseJobLists.all.find((j) => j.id === guardSelectedJobId) ?? null,
@@ -424,12 +464,15 @@ export function GuardDashboard({
   const mapJobs = useMemo(() => {
     const onDutyOverlay =
       activeTab === 'map' &&
-      activeShiftJob?.status === 'in-progress' &&
+      activeShiftJob &&
+      (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
       activePhase &&
       activePhase !== 'complete';
     if (onDutyOverlay) {
       return requests.filter(
-        (j) => j.status === 'in-progress' && j.assignedGuardId === guard.id
+        (j) =>
+          j.assignedGuardId === guard.id &&
+          (j.status === 'in-progress' || j.status === 'accepted')
       );
     }
     return filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
@@ -649,6 +692,37 @@ export function GuardDashboard({
     updatePhase(activeShiftJob.id, 'arrived');
     onGuardArrived?.(activeShiftJob.id);
   };
+
+  const handleStartEnRoute = () => {
+    if (!activeShiftJob || !onStartEnRoute) return;
+    updatePhase(activeShiftJob.id, 'en-route');
+    void onStartEnRoute(activeShiftJob.id);
+  };
+
+  const handleMidShiftCheckIn = async (payload: {
+    selfie: string;
+    uniformVerified: boolean;
+    equipmentVerified: boolean;
+  }) => {
+    if (!activeShiftJob) return;
+    await onUpdateJobAudit(activeShiftJob.id, {
+      midShiftAudit: {
+        checkedAt: new Date().toISOString(),
+        selfie: payload.selfie,
+        uniformVerified: payload.uniformVerified,
+        equipmentVerified: payload.equipmentVerified,
+      },
+    });
+    showAppToast('Hourly check-in recorded.', { tone: 'success' });
+  };
+
+  const midShiftDue =
+    !!activeShiftJob &&
+    activePhase === 'on-duty' &&
+    midShiftCheckInDue(
+      shiftDutyStartedAt(activeShiftJob) ?? activeShiftJob.checkInAudit?.checkedAt,
+      activeShiftJob.midShiftAudits
+    );
 
   const handleBeginAudit = async () => {
     if (!activeShiftJob) return;
@@ -942,7 +1016,8 @@ export function GuardDashboard({
 
   const showShiftOverlay =
     activeTab === 'map' &&
-    activeShiftJob?.status === 'in-progress' &&
+    !!activeShiftJob &&
+    (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
     activePhase &&
     activePhase !== 'complete';
   const workBlockedMessage = guardWorkBlockedMessage(guard);
@@ -1056,6 +1131,7 @@ export function GuardDashboard({
             userLocation ? isWithinSiteRadius(userLocation, activeShiftJob) : false
           }
           onArrived={handleArrived}
+          onStartEnRoute={onStartEnRoute ? handleStartEnRoute : undefined}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}
           onIncidentReport={() => setShowIncidentReport(true)}
@@ -1066,7 +1142,22 @@ export function GuardDashboard({
           onOpenJobChat={
             onSendJobChatMessage ? () => openMessagesForJob(activeShiftJob.id) : undefined
           }
+          onMidShiftCheckIn={handleMidShiftCheckIn}
+          captureSelfie={captureSelfie}
+          midShiftCheckInDue={midShiftDue}
         />
+      )}
+
+      {activeTab === 'map' && replacementOffers.length > 0 && !showShiftOverlay && (
+        <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2 map-browse-offset">
+          {replacementOffers.map((offer) => (
+            <ReplacementOfferCard
+              key={offer.id}
+              request={offer}
+              onAccept={(requestId) => void onAcceptReplacementOffer?.(requestId)}
+            />
+          ))}
+        </div>
       )}
 
       {activeTab === 'map' && !showShiftOverlay && selectedJob && (

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { rankGuardsForJob } from '../../lib/guardQualificationMatching';
+import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { isGuardAccountActive } from '../../lib/guardAccountActivation';
@@ -84,6 +86,13 @@ export function StaffJobDetailPanel({
   );
   const rankedApplicants = useMemo(
     () => (req.status === 'open' && !req.assignedGuardId ? rankApplicantGuards(req, guards) : []),
+    [req, guards]
+  );
+  const rankedMatchScores = useMemo(
+    () =>
+      req.status === 'open' && !req.assignedGuardId
+        ? rankGuardsForJob(req, guards, { applicantsOnly: true })
+        : [],
     [req, guards]
   );
 
@@ -170,25 +179,16 @@ export function StaffJobDetailPanel({
             </p>
           )}
           <div className="space-y-2">
-            {rankedApplicants.map((guard, index) => {
-              const meets = guardMeetsJobRequirements(guard, req);
+            {rankedMatchScores.map((score, index) => {
+              const guard = score.guard;
+              const meets = score.meetsRequirements;
               const isPending = req.pendingGuardId === guard.id;
               const anotherPending = !!req.pendingGuardId && !isPending;
               return (
-                <WfListCard
+                <GuardMatchScoreRow
                   key={guard.id}
-                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
-                  title={index === 0 ? `${guard.name} · Best fit` : guard.name}
-                  subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
-                  meta={
-                    <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
-                      {isPending
-                        ? 'Awaiting client approval'
-                        : meets
-                          ? 'Meets job requirements'
-                          : 'Missing required credentials'}
-                    </span>
-                  }
+                  score={score}
+                  rank={index + 1}
                   action={
                     <div className="flex flex-col gap-1.5 shrink-0">
                       {isPending ? (

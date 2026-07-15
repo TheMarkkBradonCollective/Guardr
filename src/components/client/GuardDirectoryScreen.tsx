@@ -23,6 +23,7 @@ import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack, AppEmptyState, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import {
   GUARD_APPROVED_BADGE_LABEL,
   GUARD_TRUSTED_BADGE_LABEL,
@@ -698,6 +699,7 @@ export function GuardDirectoryScreen({
                     meta={
                       <div>
                         <div className="flex items-center gap-2 text-sm text-brand-text-muted flex-wrap">
+                          <GuardArmedStatusPill guard={guard} />
                           {guard.isStaff && <WfBadge tone="primary">Staff</WfBadge>}
                           {isGuardProfileApproved(guard) && <WfBadge tone="success">{GUARD_APPROVED_BADGE_LABEL}</WfBadge>}
                           {workedBefore && <WfBadge tone="primary">Worked with before</WfBadge>}

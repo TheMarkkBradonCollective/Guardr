@@ -1,6 +1,7 @@
 import { SecurityGuard, SecurityRequest } from '../types';
-import { checkJobRequirements, guardCanApplyToJob } from './guardJobs';
+import { guardCanApplyToJob } from './guardJobs';
 import { toGuardJobView } from './guardJobView';
+import { rankGuardsForJob } from './guardQualificationMatching';
 
 export { guardCanApplyToJob };
 
@@ -50,14 +51,7 @@ export function guardMeetsJobRequirements(guard: SecurityGuard, job: SecurityReq
   return guardCanApplyToJob(guard, toGuardJobView(job));
 }
 
-/** Sort applicants — verified/active credentials first, then rating, then experience */
+/** Sort applicants by smart qualification match score (rule-based, no AI). */
 export function rankApplicantGuards(job: SecurityRequest, guards: SecurityGuard[]): SecurityGuard[] {
-  const applicants = guards.filter((g) => guardHasApplied(job, g.id));
-  return [...applicants].sort((a, b) => {
-    const aMeets = guardMeetsJobRequirements(a, job) ? 1 : 0;
-    const bMeets = guardMeetsJobRequirements(b, job) ? 1 : 0;
-    if (bMeets !== aMeets) return bMeets - aMeets;
-    if (b.rating !== a.rating) return b.rating - a.rating;
-    return b.jobsCompleted - a.jobsCompleted;
-  });
+  return rankGuardsForJob(job, guards, { applicantsOnly: true }).map((s) => s.guard);
 }

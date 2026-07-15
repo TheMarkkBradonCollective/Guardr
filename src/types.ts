@@ -34,6 +34,23 @@ export type ReportType =
   | 'maintenance'
   | 'trespass';
 
+export type ReplacementReason = 'call-off' | 'no-show' | 'emergency' | 'other';
+export type ReplacementStatus = 'searching' | 'offering' | 'filled' | 'failed' | 'cancelled';
+
+export interface ReplacementRequest {
+  id: string;
+  requestedAt: string;
+  requestedBy: 'client' | 'system';
+  reason: ReplacementReason;
+  reasonNote?: string;
+  status: ReplacementStatus;
+  offeredGuardIds: string[];
+  acceptedGuardId?: string;
+  acceptedAt?: string;
+  previousGuardId?: string;
+  expiresAt?: string;
+}
+
 export interface ShiftReport {
   id: string;
   requestId: string;
@@ -936,6 +953,18 @@ export interface SecurityRequest {
     startedAt: string;
     endedAt?: string;
   }>;
+  /** Guard tapped "En route" or auto-inferred heading to site. */
+  enRouteAt?: string;
+  /** Live GPS pin shared during accepted / in-progress shifts. */
+  guardLiveLocation?: {
+    lat: number;
+    lng: number;
+    updatedAt: string;
+  };
+  /** Emergency / no-show replacement workflow (first-accept assignment). */
+  replacementRequest?: ReplacementRequest;
+  /** Set when guard never clocked in after scheduled start. */
+  noShow?: boolean;
   checkOutAudit?: {
     checkedAt: string;
     completed: boolean;

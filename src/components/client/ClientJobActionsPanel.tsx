@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   JobChatThread,
   SecurityGuard,
@@ -52,6 +52,14 @@ import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { ReplacementRequestPanel } from './ReplacementRequestPanel';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
+import { rankGuardsForJob } from '../../lib/guardQualificationMatching';
+import {
+  computeGuardPerformance,
+  formatPerformanceScore,
+} from '../../lib/guardPerformance';
 import {
   Award,
   Banknote,
@@ -107,6 +115,8 @@ export interface ClientJobActionsPanelProps {
     }
   ) => void | Promise<void>;
   onAcceptPriceOffer?: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
+  onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
+  allRequests?: SecurityRequest[];
 }
 
 export function ClientJobActionsPanel({
@@ -141,6 +151,8 @@ export function ClientJobActionsPanel({
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
+  onRequestReplacement,
+  allRequests = [],
 }: ClientJobActionsPanelProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
@@ -166,6 +178,19 @@ export function ClientJobActionsPanel({
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [replacementBusy, setReplacementBusy] = useState(false);
+
+  const rankedApplicants = useMemo(
+    () =>
+      req.status === 'open' && req.applicants.length
+        ? rankGuardsForJob(req, guards, { applicantsOnly: true, allRequests: allRequests.length ? allRequests : [req] })
+        : [],
+    [req, guards, allRequests]
+  );
+
+  const pendingPerformance = pendingGuard
+    ? computeGuardPerformance(pendingGuard.id, allRequests.length ? allRequests : [req])
+    : null;
 
   const disputeClockOutIso = overtimeDisputeClockOutLocal
     ? new Date(overtimeDisputeClockOutLocal).toISOString()
@@ -361,8 +386,13 @@ export function ClientJobActionsPanel({
                     <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
                       Guardr approved <span className="font-medium text-brand-text">{pendingGuard.name}</span> for this job. Confirm to hire them, or decline to send the job back to the applicant list.
                     </p>
-                    <p className="text-xs text-brand-text-muted mt-1">
-                      ★ {pendingGuard.rating.toFixed(1)} · {pendingGuard.jobsCompleted} jobs completed
+                    <p className="text-xs text-brand-text-muted mt-1 flex flex-wrap items-center gap-2">
+                      <GuardArmedStatusPill guard={pendingGuard} />
+                      <span>★ {pendingGuard.rating.toFixed(1)}</span>
+                      {pendingPerformance && pendingPerformance.overallScore > 0 && (
+                        <span>Security score {formatPerformanceScore(pendingPerformance.overallScore)}</span>
+                      )}
+                      <span>{pendingGuard.jobsCompleted} jobs completed</span>
                     </p>
                   </div>
                 </div>
@@ -402,6 +432,21 @@ export function ClientJobActionsPanel({
                     <X className="w-3.5 h-3.5" /> Decline guard
                   </button>
                 </div>
+              </div>
+            )}
+            {rankedApplicants.length > 1 && !awaitingClientGuard && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+                  Qualified applicants (ranked)
+                </p>
+                {rankedApplicants.slice(0, 5).map((score, index) => (
+                  <GuardMatchScoreRow
+                    key={score.guard.id}
+                    score={score}
+                    rank={index + 1}
+                    allRequests={allRequests.length ? allRequests : [req]}
+                  />
+                ))}
               </div>
             )}
             {isClientCashPaymentPendingApproval(req) && (
@@ -480,6 +525,23 @@ export function ClientJobActionsPanel({
             >
               <MessageCircle className="w-3.5 h-3.5" /> Message guard
             </button>
+          </div>
+        )}
+
+        {(req.status === 'accepted' || req.status === 'in-progress') && onRequestReplacement && (
+          <div className="border-t border-brand-border pt-3 w-full">
+            <ReplacementRequestPanel
+              request={req}
+              busy={replacementBusy}
+              onRequestReplacement={async (requestId, reasonNote) => {
+                setReplacementBusy(true);
+                try {
+                  await onRequestReplacement(requestId, reasonNote);
+                } finally {
+                  setReplacementBusy(false);
+                }
+              }}
+            />
           </div>
         )}
 

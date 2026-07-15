@@ -27,6 +27,12 @@ import {
   isGuardProfileApproved,
   isGuardTrusted,
 } from '../../lib/guardTrust';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import {
+  computeGuardPerformance,
+  computeGuardSkillRatings,
+  formatPerformanceScore,
+} from '../../lib/guardPerformance';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import {
   BookOpen,
@@ -113,6 +119,14 @@ export function GuardProfileScreen({
   };
 
   const aboutText = guard.about?.trim() || guard.bio?.trim();
+  const performance = useMemo(
+    () => computeGuardPerformance(guard.id, platformRequests.length ? platformRequests : requests),
+    [guard.id, platformRequests, requests]
+  );
+  const skillRatings = useMemo(
+    () => computeGuardSkillRatings(guard, platformRequests.length ? platformRequests : requests).slice(0, 6),
+    [guard, platformRequests, requests]
+  );
 
   return (
     <AppScreen className="app-full-page-detail">
@@ -138,6 +152,14 @@ export function GuardProfileScreen({
                   </div>
                   <p className="text-base text-brand-primary font-medium mt-1">{getGuardDisplayHeadline(guard)}</p>
                   <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">{getGuardDisplaySummary(guard)}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    <GuardArmedStatusPill guard={guard} />
+                    {performance.overallScore > 0 && (
+                      <span className="text-xs text-brand-text-muted">
+                        Security score {formatPerformanceScore(performance.overallScore)}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                     <WfMetricTile label="Rating" value={guard.rating.toFixed(1)} accent />
                     <WfMetricTile label="Completed" value={guard.jobsCompleted} />
@@ -169,6 +191,22 @@ export function GuardProfileScreen({
           </div>
 
           <CertBadgeRow guard={guard} clientMode />
+
+          {skillRatings.length > 0 && (
+            <section>
+              <WfSectionHeader title="Skill ratings" className="mb-2" />
+              <div className="flex flex-wrap gap-2">
+                {skillRatings.map((skill) => (
+                  <span
+                    key={skill.skill}
+                    className="text-xs px-2.5 py-1 rounded-full border border-brand-border bg-brand-bg-sec"
+                  >
+                    {skill.skill} · {skill.rating.toFixed(1)}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
 
           <GuardWeaponGearClientSection guard={guard} />
 

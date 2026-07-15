@@ -65,6 +65,7 @@ interface ClientRequestsListProps {
     }
   ) => void | Promise<void>;
   onAcceptPriceOffer?: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
+  onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
 }
 
 function JobRow({
@@ -133,6 +134,7 @@ export function ClientRequestsList({
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
+  onRequestReplacement,
 }: ClientRequestsListProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [activeTab, setActiveTab] = useState<JobTab>('open');
@@ -212,6 +214,8 @@ export function ClientRequestsList({
           feeConfig={feeConfig}
           onSubmitPriceOffer={onSubmitPriceOffer}
           onAcceptPriceOffer={onAcceptPriceOffer}
+          onRequestReplacement={onRequestReplacement}
+          allRequests={requests}
         />
       </div>
     );
