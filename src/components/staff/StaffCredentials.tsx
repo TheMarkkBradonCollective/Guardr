@@ -30,6 +30,7 @@ import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout
 import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 
 type CredentialFilter = 'pending' | 'all';
@@ -63,7 +64,10 @@ interface StaffCredentialsProps {
     payload: CertUpdatePayload
   ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
-  onAddCredentialForGuard?: (guardId: string) => void;
+  onAddCertification?: (
+    guardId: string,
+    cert: Partial<Certification>
+  ) => Promise<AddCertificationResult>;
 }
 
 function CredentialFeedRow({
@@ -158,13 +162,14 @@ export function StaffCredentials({
   onReviewGuardInsurance,
   onUpdateCertification,
   onOpenGuardProfile,
-  onAddCredentialForGuard,
+  onAddCertification,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [coiModalOpen, setCoiModalOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
+  const [pendingFocusGuardId, setPendingFocusGuardId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +199,15 @@ export function StaffCredentials({
     setActiveItemId(itemId);
     onItemIdChange?.(itemId);
   };
+
+  useEffect(() => {
+    if (!pendingFocusGuardId) return;
+    const focused = resolveApprovalFocusItemId(credentialFeed, 'credentials', pendingFocusGuardId, guards);
+    if (focused) {
+      openItem(focused);
+      setPendingFocusGuardId(null);
+    }
+  }, [pendingFocusGuardId, credentialFeed, guards]);
 
   useEffect(() => {
     if (initialItemId) {
@@ -492,8 +506,15 @@ export function StaffCredentials({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {onAddCredentialForGuard && (
-              <StaffCredentialAddForGuardForm guards={guards} onSelectGuard={onAddCredentialForGuard} />
+            {onAddCertification && (
+              <StaffCredentialAddForGuardForm
+                guards={guards}
+                onAddCertification={onAddCertification}
+                onCredentialAdded={(guardId) => {
+                  setFilter('all');
+                  setPendingFocusGuardId(guardId);
+                }}
+              />
             )}
           </div>
           <WfSearchBar
