@@ -1,51 +1,80 @@
-import React, { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Calendar, Plus, Trash2 } from 'lucide-react';
 import {
   dayLabel,
-  defaultAvailabilitySlots,
+  dayLabelFull,
+  defaultAvailabilitySchedule,
+  getEnabledWeekDays,
   isInvalidAvailabilityWindow,
-  loadAvailabilitySlots,
-  saveAvailabilitySlots,
+  isWeekDayEnabled,
+  loadGuardAvailabilitySchedule,
+  saveGuardAvailabilitySchedule,
+  slotsForWeekDay,
+  toggleWeekDay,
   WEEK_DAY_ORDER,
-  WEEK_DAY_TAB_OPTIONS,
+  type GuardAvailabilitySchedule,
   type GuardAvailabilitySlot,
 } from '../../lib/guardAvailability';
 import { showAppToast } from '../ui/AppToast';
 
 interface GuardAvailabilityCalendarProps {
   guardId: string;
-  slots?: GuardAvailabilitySlot[];
-  onSave?: (slots: GuardAvailabilitySlot[]) => void | Promise<void>;
+  schedule?: GuardAvailabilitySchedule;
+  onSave?: (schedule: GuardAvailabilitySchedule) => void | Promise<void>;
   readOnly?: boolean;
 }
 
-function defaultSelectedDay(): number {
+function defaultFocusedDay(slots: GuardAvailabilitySlot[]): number {
+  const enabled = getEnabledWeekDays(slots);
+  if (enabled.length) return enabled[0];
   const today = new Date().getDay();
   return WEEK_DAY_ORDER.includes(today as (typeof WEEK_DAY_ORDER)[number]) ? today : 1;
 }
 
 export function GuardAvailabilityCalendar({
   guardId,
-  slots: initialSlots,
+  schedule: initialSchedule,
   onSave,
   readOnly = false,
 }: GuardAvailabilityCalendarProps) {
-  const [slots, setSlots] = useState<GuardAvailabilitySlot[]>(
-    initialSlots?.length ? initialSlots : loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId)
+  const [schedule, setSchedule] = useState<GuardAvailabilitySchedule>(
+    initialSchedule ?? loadGuardAvailabilitySchedule(guardId) ?? defaultAvailabilitySchedule(guardId)
   );
-  const [selectedDay, setSelectedDay] = useState<number>(defaultSelectedDay);
+  const [focusedDay, setFocusedDay] = useState<number>(() =>
+    defaultFocusedDay(initialSchedule?.weeklySlots ?? schedule.weeklySlots)
+  );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  const daySlots = slots.filter((slot) => slot.dayOfWeek === selectedDay);
+  const enabledDays = useMemo(() => getEnabledWeekDays(schedule.weeklySlots), [schedule.weeklySlots]);
+  const daySlots = slotsForWeekDay(schedule.weeklySlots, focusedDay);
+  const focusedDayEnabled = isWeekDayEnabled(schedule.weeklySlots, focusedDay);
 
-  const updateSlot = (id: string, patch: Partial<GuardAvailabilitySlot>) => {
-    setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const updateSchedule = (next: GuardAvailabilitySchedule) => {
+    setSchedule(next);
     setDirty(true);
   };
 
+  const updateSlot = (id: string, patch: Partial<GuardAvailabilitySlot>) => {
+    updateSchedule({
+      ...schedule,
+      weeklySlots: schedule.weeklySlots.map((slot) => (slot.id === id ? { ...slot, ...patch } : slot)),
+    });
+  };
+
+  const handleToggleDay = (day: number) => {
+    const enabled = isWeekDayEnabled(schedule.weeklySlots, day);
+    const nextSlots = toggleWeekDay(schedule.weeklySlots, guardId, day, !enabled);
+    updateSchedule({ ...schedule, weeklySlots: nextSlots });
+    if (!enabled) setFocusedDay(day);
+    else if (focusedDay === day) {
+      const nextEnabled = getEnabledWeekDays(nextSlots);
+      if (nextEnabled.length) setFocusedDay(nextEnabled[0]);
+    }
+  };
+
   const handleSave = async () => {
-    const invalid = slots.find(isInvalidAvailabilityWindow);
+    const invalid = schedule.weeklySlots.find(isInvalidAvailabilityWindow);
     if (invalid) {
       showAppToast('Fix the highlighted time range before saving', {
         body: `${dayLabel(invalid.dayOfWeek)}: end time must be after start time.`,
@@ -55,8 +84,9 @@ export function GuardAvailabilityCalendar({
     }
     setSaving(true);
     try {
-      saveAvailabilitySlots(guardId, slots);
-      await onSave?.(slots);
+      const saved = saveGuardAvailabilitySchedule(guardId, schedule);
+      setSchedule(saved);
+      await onSave?.(saved);
       setDirty(false);
       showAppToast('Availability saved', { tone: 'success' });
     } catch (err) {
@@ -67,116 +97,155 @@ export function GuardAvailabilityCalendar({
   };
 
   const addSlot = () => {
-    setSlots((prev) => [
-      ...prev,
-      {
-        id: `avail-${guardId}-${Date.now()}`,
-        guardId,
-        dayOfWeek: selectedDay,
-        startTime: '09:00',
-        endTime: '17:00',
-        isAvailable: true,
-      },
-    ]);
-    setDirty(true);
+    updateSchedule({
+      ...schedule,
+      weeklySlots: [
+        ...schedule.weeklySlots,
+        {
+          id: `avail-${guardId}-${Date.now()}`,
+          guardId,
+          dayOfWeek: focusedDay,
+          startTime: '09:00',
+          endTime: '17:00',
+          isAvailable: true,
+        },
+      ],
+    });
   };
 
   const removeSlot = (id: string) => {
-    setSlots((prev) => prev.filter((s) => s.id !== id));
-    setDirty(true);
+    const remaining = schedule.weeklySlots.filter((slot) => slot.id !== id);
+    const stillEnabled = remaining.some((slot) => slot.dayOfWeek === focusedDay && slot.isAvailable);
+    updateSchedule({
+      ...schedule,
+      weeklySlots: stillEnabled ? remaining : toggleWeekDay(remaining, guardId, focusedDay, false),
+    });
   };
 
   return (
-    <div className="guard-availability-panel">
-      <div className="guard-availability-day-tabs" role="tablist" aria-label="Day of week">
-        {WEEK_DAY_TAB_OPTIONS.map((option) => {
-          const day = Number(option.id);
-          const active = selectedDay === day;
+    <div className="availability-calendar">
+      <div className="availability-calendar-header">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-brand-primary" />
+          <h3 className="text-base font-bold text-brand-text">Weekly schedule</h3>
+        </div>
+        <p className="availability-calendar-subtitle">
+          Toggle days you work. You only see jobs and alerts on enabled days within these hours.
+        </p>
+      </div>
+
+      <div className="availability-day-row" role="group" aria-label="Days of the week">
+        {WEEK_DAY_ORDER.map((day) => {
+          const enabled = enabledDays.includes(day);
+          const focused = focusedDay === day;
           return (
             <button
-              key={option.id}
+              key={day}
               type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setSelectedDay(day)}
-              className={`guard-availability-day-tab ${active ? 'guard-availability-day-tab-active' : ''}`}
+              disabled={readOnly}
+              onClick={() => {
+                if (!enabled) handleToggleDay(day);
+                else setFocusedDay(day);
+              }}
+              className={`availability-day-circle ${enabled ? 'availability-day-circle-on' : ''} ${
+                focused && enabled ? 'availability-day-circle-focus' : ''
+              }`}
+              aria-pressed={enabled}
+              aria-label={`${dayLabelFull(day)}${enabled ? ', available' : ', unavailable'}`}
+              title={
+                readOnly
+                  ? dayLabel(day)
+                  : enabled
+                    ? `${dayLabel(day)} — click to edit hours`
+                    : `${dayLabel(day)} — click to enable`
+              }
             >
-              {option.label}
+              <span>{dayLabel(day).slice(0, 1)}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="guard-availability-body">
-        {daySlots.length === 0 ? (
-          <p className="guard-availability-empty">
-            No availability on {dayLabel(selectedDay)} — add a time window below, or leave empty if you are not
-            available this day.
-          </p>
-        ) : (
-          <div className="guard-availability-slots">
+      {!readOnly && (
+        <div className="availability-day-actions">
+          {focusedDayEnabled ? (
+            <button
+              type="button"
+              onClick={() => handleToggleDay(focusedDay)}
+              className="availability-day-off-btn"
+            >
+              Turn off {dayLabelFull(focusedDay)}
+            </button>
+          ) : (
+            <p className="text-sm text-brand-text-muted">
+              Select a highlighted day to set hours, or tap a gray day to enable it.
+            </p>
+          )}
+        </div>
+      )}
+
+      {focusedDayEnabled ? (
+        <div className="availability-time-panel">
+          <p className="availability-time-panel-title">{dayLabelFull(focusedDay)} hours</p>
+          <div className="space-y-2">
             {daySlots.map((slot) => {
               const invalidWindow = isInvalidAvailabilityWindow(slot);
               return (
                 <div
                   key={slot.id}
-                  className={`guard-availability-slot-row ${invalidWindow ? 'guard-availability-slot-row-invalid' : ''}`}
+                  className={`availability-slot-row ${invalidWindow ? 'availability-slot-row-invalid' : ''}`}
                 >
-                  <div className="guard-availability-slot-times">
-                    <input
-                      type="time"
-                      value={slot.startTime}
-                      disabled={readOnly}
-                      onChange={(e) => updateSlot(slot.id, { startTime: e.target.value })}
-                      aria-invalid={invalidWindow}
-                      className="guard-availability-time-input"
-                    />
-                    <span className="guard-availability-slot-separator">to</span>
-                    <input
-                      type="time"
-                      value={slot.endTime}
-                      disabled={readOnly}
-                      onChange={(e) => updateSlot(slot.id, { endTime: e.target.value })}
-                      aria-invalid={invalidWindow}
-                      className="guard-availability-time-input"
-                    />
-                  </div>
-                  <div className="guard-availability-slot-actions">
-                    <label className="guard-availability-available-toggle">
-                      <input
-                        type="checkbox"
-                        checked={slot.isAvailable}
-                        disabled={readOnly}
-                        onChange={(e) => updateSlot(slot.id, { isAvailable: e.target.checked })}
-                      />
-                      Available
-                    </label>
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => removeSlot(slot.id)}
-                        className="guard-availability-remove"
-                        aria-label={`Remove ${dayLabel(selectedDay)} availability slot`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+                  <input
+                    type="time"
+                    value={slot.startTime}
+                    disabled={readOnly}
+                    onChange={(e) => updateSlot(slot.id, { startTime: e.target.value })}
+                    aria-invalid={invalidWindow}
+                    className="uber-input text-sm w-28"
+                  />
+                  <span className="text-brand-text-muted text-sm">to</span>
+                  <input
+                    type="time"
+                    value={slot.endTime}
+                    disabled={readOnly}
+                    onChange={(e) => updateSlot(slot.id, { endTime: e.target.value })}
+                    aria-invalid={invalidWindow}
+                    className="uber-input text-sm w-28"
+                  />
+                  {!readOnly && daySlots.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSlot(slot.id)}
+                      className="availability-slot-remove"
+                      aria-label={`Remove ${dayLabel(focusedDay)} availability slot`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   {invalidWindow && (
-                    <p className="guard-availability-slot-error">End time must be after start time.</p>
+                    <p className="availability-slot-error">End time must be after start time.</p>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+          {!readOnly && (
+            <button type="button" onClick={addSlot} className="availability-add-slot">
+              <Plus className="w-4 h-4" />
+              Add another window
+            </button>
+          )}
+        </div>
+      ) : (
+        <p className="availability-off-note">
+          {enabledDays.length === 0
+            ? 'No days selected — you will not receive open jobs or shift alerts until you enable at least one day.'
+            : `${dayLabelFull(focusedDay)} is off. Enable it above to set hours.`}
+        </p>
+      )}
 
       {!readOnly && (
-        <div className="guard-availability-actions">
-          <button type="button" onClick={addSlot} className="app-button-outline app-btn-sm flex items-center gap-1">
-            <Plus className="w-4 h-4" /> Add slot
-          </button>
+        <div className="availability-save-row">
           <button
             type="button"
             onClick={() => void handleSave()}

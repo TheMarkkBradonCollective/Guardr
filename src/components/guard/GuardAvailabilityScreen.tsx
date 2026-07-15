@@ -1,6 +1,7 @@
 import React from 'react';
 import type { SecurityGuard } from '../../types';
 import { GuardAvailabilityCalendar } from './GuardAvailabilityCalendar';
+import { GuardAvailabilityDatesPanel } from './GuardAvailabilityDatesPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 
 interface GuardAvailabilityScreenProps {
@@ -10,11 +11,15 @@ interface GuardAvailabilityScreenProps {
 export function GuardAvailabilityScreen({ guard }: GuardAvailabilityScreenProps) {
   return (
     <AppScreen>
-      <AppFormSection title="Weekly availability">
+      <AppFormSection title="Availability">
         <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-1">
-          Let clients and matching know when you are generally available for shifts.
+          Toggle the days you work and set hours. Jobs and alerts only appear when a shift fits your
+          schedule.
         </p>
         <GuardAvailabilityCalendar guardId={guard.id} />
+        <div className="mt-6 pt-6 border-t border-brand-border">
+          <GuardAvailabilityDatesPanel guardId={guard.id} />
+        </div>
       </AppFormSection>
     </AppScreen>
   );
