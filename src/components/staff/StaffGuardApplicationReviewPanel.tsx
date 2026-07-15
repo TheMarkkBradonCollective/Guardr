@@ -128,14 +128,15 @@ export function StaffGuardApplicationReviewPanel({
                 Approve application
               </button>
             )}
-            {guardAccountStatus === 'pending' && onRejectGuardApplication && (
+            {(guardAccountStatus === 'pending' || guardAccountStatus === 'approved') &&
+              onRejectGuardApplication && (
               <button
                 type="button"
                 onClick={() => void handleDenyApplication()}
                 disabled={actionPending}
                 className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
               >
-                Deny application
+                Revoke application
               </button>
             )}
             {guardAccountStatus === 'approved' && onActivateGuardAccount && (

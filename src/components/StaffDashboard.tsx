@@ -700,7 +700,9 @@ export function StaffDashboard({
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
+            onRejectGuardApplication={
+              canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined
+            }
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}

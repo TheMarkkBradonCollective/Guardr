@@ -47,10 +47,7 @@ interface StaffGuardsPanelProps {
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (
-    guardId: string,
-    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
-  ) => void | Promise<void>;
+  onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (guardId: string, trusted: boolean) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
@@ -105,7 +102,7 @@ export function StaffGuardsPanel({
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
-  onActivateGuardAccount,
+  onRejectGuardApplication,
   onSetGuardTrusted,
   onDeleteGuard,
   onSubmitIdentityVerification,
@@ -187,7 +184,7 @@ export function StaffGuardsPanel({
       onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(guard.id, exp) : undefined,
       onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(guard.id, edu) : undefined,
       onApproveGuardAccount,
-      onActivateGuardAccount,
+      onRejectGuardApplication,
       onSetGuardTrusted: onSetGuardTrusted ? (trusted: boolean) => onSetGuardTrusted(guard.id, trusted) : undefined,
       onDeleteGuard,
       onSubmitIdentityVerification: onSubmitIdentityVerification
