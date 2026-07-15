@@ -13796,15 +13796,24 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   grid-row: 1;
 }
 
-/* Crew hub — segmented tabs like Jobs / Messages */
+/* Crew hub — tier hero, tabs, then body (matches Performance / Preferences / Availability) */
 .crew-hub-screen {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-.crew-hub-screen > .guard-crew-screen-card {
+.crew-hub-tiered-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.crew-hub-hero-card {
   margin-top: 0.25rem;
+}
+
+.crew-hub-hero-card .guard-tier-hero::after {
+  background: var(--brand-bg);
 }
 
 .crew-hub-sticky-head {
@@ -13812,11 +13821,7 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   top: 0;
   z-index: 5;
   padding: 0.5rem 1rem 0;
-  background: var(--brand-bg-sec);
-}
-
-.guard-crew-screen-card > .crew-hub-sticky-head {
-  margin-top: -0.25rem;
+  background: var(--brand-bg);
 }
 
 .crew-hub-sticky-head .app-segmented-control {

@@ -231,12 +231,14 @@ export function GuardStandingCrewPanel({
   const sectionTitle = (title: string) =>
     embedded ? null : <h2 className="app-section-title">{title}</h2>;
 
-  const renderEmbeddedCard = (hero: React.ReactNode, body: React.ReactNode) => (
-    <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
-      {hero}
+  const renderEmbeddedLayout = (hero: React.ReactNode, body: React.ReactNode) => (
+    <div className="crew-hub-tiered-layout">
+      <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card crew-hub-hero-card">
+        {hero}
+      </section>
       {afterHero}
       <div className="guard-rating-body crew-hub-team-body">{body}</div>
-    </section>
+    </div>
   );
 
   const leadHero = (
@@ -354,7 +356,7 @@ export function GuardStandingCrewPanel({
     );
 
     if (embedded) {
-      return renderEmbeddedCard(renderMemberHero(leadName), embeddedBody ?? memberBody);
+      return renderEmbeddedLayout(renderMemberHero(leadName), embeddedBody ?? memberBody);
     }
 
     return (
@@ -545,7 +547,7 @@ export function GuardStandingCrewPanel({
   );
 
   if (embedded && trusted && leadsStandingCrew) {
-    return renderEmbeddedCard(leadHero, embeddedBody ?? bodyContent);
+    return renderEmbeddedLayout(leadHero, embeddedBody ?? bodyContent);
   }
 
   if (embedded) {

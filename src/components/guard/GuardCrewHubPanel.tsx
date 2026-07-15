@@ -284,7 +284,6 @@ export function GuardCrewHubPanel({
     afterHero: tabBar,
     embeddedBody: activeTabBody,
     onUpdateStandingCrewProfile,
-    onJoinTeamWithCode,
     onInvite: onInviteStandingCrew,
     onRemove: onRemoveStandingCrew,
     onAcceptInvite: onAcceptStandingCrewInvite,
