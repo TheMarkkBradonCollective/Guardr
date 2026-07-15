@@ -47,7 +47,6 @@ interface GuardCrewHubPanelProps {
   canRequestCrewLead?: boolean;
   pendingCrewLeadRequest?: boolean;
   onDetailOpenChange?: (open: boolean) => void;
-  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 function crewJobLabel(job: GuardJobView, guard: SecurityGuard, coworkerGuards: SecurityGuard[]): string {
@@ -177,7 +176,6 @@ export function GuardCrewHubPanel({
   canRequestCrewLead = false,
   pendingCrewLeadRequest = false,
   onDetailOpenChange,
-  onJoinTeamWithCode,
 }: GuardCrewHubPanelProps) {
   const pendingInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
