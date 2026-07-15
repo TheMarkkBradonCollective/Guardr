@@ -54,10 +54,25 @@ describe('staff credential verification', () => {
     assert.match(staffVerifyCertificationBlocker(missingPhoto) ?? '', /document photo required/i);
   });
 
-  it('does not offer verify for already verified credentials', () => {
+  it('does not offer verify for already verified credentials without a pending update', () => {
     const verified = cert({ status: 'verified' });
     assert.equal(staffCanVerifyCertification(verified), false);
-    assert.equal(staffVerifyCertificationBlocker(verified), null);
+    assert.match(staffVerifyCertificationBlocker(verified) ?? '', /pending credentials/i);
+  });
+
+  it('allows verify when a verified credential has a pending update', () => {
+    const verifiedWithUpdate = cert({
+      status: 'verified',
+      pendingUpdate: {
+        submittedAt: '2026-01-01T00:00:00.000Z',
+        issuer: 'BSIS',
+        number: 'TR-2',
+        imageUrl: 'scan-2',
+        status: 'pending',
+      },
+    });
+    assert.equal(staffCanVerifyCertification(verifiedWithUpdate), true);
+    assert.equal(staffVerifyCertificationBlocker(verifiedWithUpdate), null);
   });
 
   it('blocks verification while guard application is pending', () => {

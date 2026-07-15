@@ -30,6 +30,14 @@ export function buildCertImageResubmitReason(certName: string, staffNote?: strin
   return `Please upload a clearer photo for ${certName}. Make sure the document is fully visible, in focus, and easy to read.`;
 }
 
+export function buildCertUpdateRequestReason(certName: string, staffNote?: string): string {
+  const note = staffNote?.trim();
+  if (note) {
+    return `Staff requested an updated ${certName}. ${note}`;
+  }
+  return `Staff requested an updated ${certName}. Upload a new document when ready — your current verified copy stays on file until the update is approved.`;
+}
+
 export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
   'Your guard application was not approved. Contact Guardr support if you have questions.';
 
@@ -62,6 +70,19 @@ export async function promptStaffResubmitNote(itemLabel: string): Promise<string
     title: 'Request resubmit',
     message: `What should the guard fix? This note is shown on their profile.\n\n${itemLabel}`,
     defaultValue: 'Image is blurry or hard to read — please upload a clearer photo.',
+    multiline: true,
+    confirmLabel: 'Send request',
+  });
+  if (reason === null) return null;
+  return reason.trim();
+}
+
+/** Returns null if cancelled; otherwise trimmed note (may be empty). */
+export async function promptStaffCredentialUpdateNote(itemLabel: string): Promise<string | null> {
+  const reason = await showAppPrompt({
+    title: 'Request update',
+    message: `What should the guard update? Their current verified copy stays on file until you approve a replacement.\n\n${itemLabel}`,
+    defaultValue: 'Please upload an updated document — expiration date, number, or clearer photo.',
     multiline: true,
     confirmLabel: 'Send request',
   });

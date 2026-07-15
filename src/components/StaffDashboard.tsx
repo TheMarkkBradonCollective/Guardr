@@ -151,7 +151,7 @@ interface StaffDashboardProps {
     status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => void | Promise<void>;
-  onUnverifyCert?: (guardId: string, certId: string) => void | Promise<void>;
+  onRequestCertUpdate?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onRevokeGuardIdentityVerification?: (guardId: string) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
@@ -311,7 +311,7 @@ export function StaffDashboard({
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
-  onUnverifyCert,
+  onRequestCertUpdate,
   onRevokeGuardIdentityVerification,
   onUpdateGuardIdImages,
   onApproveCert,
@@ -626,7 +626,7 @@ export function StaffDashboard({
             initialGuardId={selectedGuardId}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
-            onUnverifyCert={onUnverifyCert}
+            onRequestCertUpdate={onRequestCertUpdate}
             onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
             onApproveIdentityVerification={onApproveGuardIdentityVerification}
             onRejectIdentityVerification={onRejectGuardIdentityVerification}

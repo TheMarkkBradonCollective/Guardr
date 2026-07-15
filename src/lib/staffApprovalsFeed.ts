@@ -2,6 +2,7 @@ import type { Certification, Client, SecurityGuard, SecurityRequest } from '../t
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isSelfSubmittedGuardAccount, isSelfSubmittedClientAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
+import { certHasPendingUpdate } from './certRevisionHistory';
 import {
   coiApprovalItemId,
   govIdApprovalItemId,
@@ -213,22 +214,31 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
       if (cert.submittedByRole === 'staff') continue;
       if (!isSelfSubmittedGuardAccount(guard) && cert.submittedByRole !== 'guard') continue;
       if (cert.status === 'rejected' && !cert.imageUrl) continue;
-      if (cert.status === 'pending' && !cert.imageUrl) continue;
+      if (cert.status === 'pending' && !cert.imageUrl && !certHasPendingUpdate(cert)) continue;
 
-      const pending = cert.status === 'pending';
+      const pendingUpdateReview = certHasPendingUpdate(cert);
+      const pending = cert.status === 'pending' || pendingUpdateReview;
       const audit = latestAudit(auditLog, cert.id, ['cert_verified']);
       const actor = actorLabel(audit);
-      const status: ApprovalFeedStatus =
-        cert.status === 'verified' ? 'approved' : cert.status === 'rejected' ? 'denied' : 'pending';
+      const status: ApprovalFeedStatus = pendingUpdateReview
+        ? 'pending'
+        : cert.status === 'verified'
+          ? 'approved'
+          : cert.status === 'rejected'
+            ? 'denied'
+            : 'pending';
 
       items.push({
         id: cert.id,
         queue: 'credentials',
         title: `${guard.name} — ${certDisplayName(cert)}`,
-        subtitle: `${cert.issuer} · #${cert.number}`,
+        subtitle: pendingUpdateReview
+          ? `${cert.pendingUpdate?.issuer ?? cert.issuer} · update pending review`
+          : `${cert.issuer} · #${cert.number}`,
         status,
-        statusLabel:
-          cert.status === 'verified'
+        statusLabel: pendingUpdateReview
+          ? 'Update pending review'
+          : cert.status === 'verified'
             ? 'Verified'
             : cert.status === 'rejected'
               ? 'Rejected'

@@ -1,6 +1,7 @@
 import { Certification, SecurityGuard } from '../types';
 import { credentialExpectsStaffVerification, certDisplayName, resolveCertCatalogId } from './certCatalog';
 import { guardApplicationCredentialVerificationBlocker } from './guardApplicationIntake';
+import { certHasPendingUpdate, certUpdateSubmissionAllowed } from './certRevisionHistory';
 
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
@@ -83,13 +84,19 @@ export function validateCertDeletion(cert: Pick<Certification, 'imageUrl'>): Cer
 }
 
 /** Credential fields are locked while pending review or after verification. */
-export function guardCertificationIsLocked(cert: Pick<Certification, 'status' | 'imageUrl'>): boolean {
+export function guardCertificationIsLocked(
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'updateRequestedAt' | 'pendingUpdate'>
+): boolean {
+  if (certUpdateSubmissionAllowed(cert)) return false;
   if (cert.status === 'verified') return true;
   if (cert.status === 'pending' && certImageIsLocked(cert)) return true;
   return false;
 }
 
-export function guardCertificationCanEdit(cert: Pick<Certification, 'status' | 'imageUrl'>): boolean {
+export function guardCertificationCanEdit(
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'updateRequestedAt' | 'pendingUpdate'>
+): boolean {
+  if (certUpdateSubmissionAllowed(cert)) return true;
   if (cert.status === 'verified') return false;
   if (cert.status === 'rejected') return true;
   if (cert.status === 'pending') return !certImageIsLocked(cert);
@@ -97,24 +104,31 @@ export function guardCertificationCanEdit(cert: Pick<Certification, 'status' | '
 }
 
 export function certPhotoIsLockedForEditor(
-  cert: Pick<Certification, 'imageUrl' | 'status'>,
+  cert: Pick<Certification, 'imageUrl' | 'status' | 'updateRequestedAt' | 'pendingUpdate'>,
   staffMode = false
 ): boolean {
   if (staffMode) return false;
+  if (certUpdateSubmissionAllowed(cert)) return false;
   if (cert.status === 'rejected') return false;
   return certImageIsLocked(cert);
 }
 
 /** Any credential with a document photo can be staff-verified for client-facing trust. */
 export function staffCanVerifyCertification(
-  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>,
+  cert: Pick<
+    Certification,
+    'status' | 'imageUrl' | 'name' | 'catalogId' | 'pendingUpdate' | 'updateRequestedAt'
+  >,
   guard?: Pick<SecurityGuard, 'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'>
 ): boolean {
-  return staffVerifyCertificationBlocker(cert, guard) === null && cert.status === 'pending';
+  return staffVerifyCertificationBlocker(cert, guard) === null;
 }
 
 export function staffVerifyCertificationBlocker(
-  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>,
+  cert: Pick<
+    Certification,
+    'status' | 'imageUrl' | 'name' | 'catalogId' | 'pendingUpdate' | 'updateRequestedAt'
+  >,
   guard?: Pick<SecurityGuard, 'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'>
 ): string | null {
   if (guard) {
@@ -124,7 +138,13 @@ export function staffVerifyCertificationBlocker(
     );
     if (applicationBlocker) return applicationBlocker;
   }
-  if (cert.status !== 'pending') return null;
+  if (certHasPendingUpdate(cert)) {
+    if (!cert.pendingUpdate?.imageUrl?.trim()) {
+      return 'Updated document photo required before staff can verify';
+    }
+    return null;
+  }
+  if (cert.status !== 'pending') return 'Only pending credentials can be verified';
   if (!certHasDocumentProof(cert)) {
     return 'Document photo required — credential must be on file before staff can verify for clients';
   }
