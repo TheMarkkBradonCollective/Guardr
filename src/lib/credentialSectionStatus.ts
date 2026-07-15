@@ -28,6 +28,10 @@ export interface CredentialSectionStatus {
   tone: CredentialSectionStatusTone;
 }
 
+function notListedOrOnFileStatus(): CredentialSectionStatus {
+  return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'warning' };
+}
+
 export function getGuardCardSectionStatus(
   guard: SecurityGuard,
   staffMode = false
@@ -44,12 +48,12 @@ export function getGuardCardSectionStatus(
   if (uploadStatus === 'listed') {
     return staffMode
       ? { label: 'Listed — document photo required', tone: 'warning' }
-      : { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+      : notListedOrOnFileStatus();
   }
   if (uploadStatus === 'on-file') {
     return { label: 'On file', tone: 'primary' };
   }
-  return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  return notListedOrOnFileStatus();
 }
 
 export function getGovernmentIdSectionStatus(
@@ -67,6 +71,9 @@ export function getGovernmentIdSectionStatus(
     return { label, tone: 'danger' };
   }
   if (checklist.idSubmitted) {
+    return { label, tone: 'warning' };
+  }
+  if (label === 'Not on file' || label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
     return { label, tone: 'warning' };
   }
   return { label, tone: 'default' };
@@ -92,12 +99,12 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
   if (uploadStatus === 'listed') {
     return staffMode
       ? { label: 'Listed — COI document required', tone: 'warning' }
-      : { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+      : notListedOrOnFileStatus();
   }
   if (uploadStatus === 'on-file') {
     return { label: 'On file', tone: 'primary' };
   }
-  return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  return notListedOrOnFileStatus();
 }
 
 export function getAggregateSectionStatus(
@@ -128,12 +135,12 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
     return { label: 'On file — pending review', tone: 'warning' };
   }
   if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
-    return { label: summary, tone: 'default' };
+    return notListedOrOnFileStatus();
   }
   if (summary === 'On file') {
-    return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+    return notListedOrOnFileStatus();
   }
-  return { label: summary, tone: staffMode ? 'warning' : 'default' };
+  return { label: summary, tone: 'warning' };
 }
 
 export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
@@ -145,7 +152,7 @@ export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = 
     return { label: 'On file — pending review', tone: 'warning' };
   }
   if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
-    return { label: summary, tone: 'default' };
+    return notListedOrOnFileStatus();
   }
-  return { label: summary, tone: staffMode ? 'warning' : 'default' };
+  return { label: summary, tone: 'warning' };
 }
