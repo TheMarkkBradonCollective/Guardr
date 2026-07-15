@@ -63,6 +63,23 @@ test('submitCrewLeadRequest creates a pending request', () => {
   assert.equal(result.request.message, 'Ready to coordinate');
 });
 
+test('makeGuardCrewLeadProfile blocks guards on another standing crew', () => {
+  const guard = trustedGuard();
+  const members: GuardStandingCrewMember[] = [
+    {
+      id: 'sc-lead-g1',
+      leadGuardId: 'lead',
+      memberGuardId: 'g1',
+      status: 'active',
+      invitedAt: new Date().toISOString(),
+    },
+  ];
+  const result = makeGuardCrewLeadProfile(guard, members);
+  assert.ok('error' in result);
+  if (!('error' in result)) return;
+  assert.match(result.error, /leave your current standing crew/i);
+});
+
 test('makeGuardCrewLeadProfile requires trusted status', () => {
   const result = makeGuardCrewLeadProfile(trustedGuard({ trusted: false }));
   assert.ok('error' in result);

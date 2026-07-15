@@ -45,6 +45,42 @@ test('getPendingStandingCrewIncoming lists invites for member', () => {
   assert.equal(pending.length, 1);
 });
 
+test('inviteToStandingCrew rejects guards already on another standing crew', () => {
+  const members = [
+    {
+      id: 'sc-other-g2',
+      leadGuardId: 'other-lead',
+      memberGuardId: 'guard-2',
+      status: 'active' as const,
+      invitedAt: new Date().toISOString(),
+    },
+  ];
+  const result = inviteToStandingCrew(members, trustedLead(), 'guard-2');
+  assert.ok('error' in result);
+  if (!('error' in result)) return;
+  assert.match(result.error, /another standing crew/i);
+});
+
+test('acceptStandingCrewInvite rejects when already on another crew', () => {
+  const invited = inviteToStandingCrew([], trustedLead(), 'member-1');
+  assert.ok(!('error' in invited));
+  if ('error' in invited) return;
+  const withOtherCrew = [
+    ...invited.members,
+    {
+      id: 'sc-other-member-1',
+      leadGuardId: 'other-lead',
+      memberGuardId: 'member-1',
+      status: 'active' as const,
+      invitedAt: new Date().toISOString(),
+    },
+  ];
+  const accepted = acceptStandingCrewInvite(withOtherCrew, 'member-1', invited.invite.id);
+  assert.ok('error' in accepted);
+  if (!('error' in accepted)) return;
+  assert.match(accepted.error, /one standing crew/i);
+});
+
 test('shouldOfferTeamCodeJoin allows trusted guards without their own crew', () => {
   const member = {
     id: 'guard-2',

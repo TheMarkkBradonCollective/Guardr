@@ -4,20 +4,10 @@ import type {
   SecurityGuard,
 } from '../types';
 import { isGuardTrusted } from './guardTrust';
-import { guardLeadsOwnStandingCrew } from './guardStandingCrew';
+import { guardLeadsOwnStandingCrew, guardIsMemberOfStandingCrew } from './guardStandingCrew';
 
 export function crewLeadRequestId(guardId: string): string {
   return `clr-${guardId}`;
-}
-
-export function guardIsOnStandingCrew(
-  members: GuardStandingCrewMember[],
-  guardId: string
-): boolean {
-  return members.some(
-    (m) =>
-      m.memberGuardId === guardId && (m.status === 'active' || m.status === 'pending')
-  );
 }
 
 export function getPendingCrewLeadRequest(
@@ -45,7 +35,7 @@ export function canRequestCrewLead(
 ): boolean {
   if (!isGuardTrusted(guard)) return false;
   if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
-  if (guardIsOnStandingCrew(standingCrewMembers, guard.id)) return false;
+  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) return false;
   if (getPendingCrewLeadRequest(crewLeadRequests, guard.id)) return false;
   return true;
 }
@@ -119,10 +109,14 @@ export function declineCrewLeadRequest(
 }
 
 export function makeGuardCrewLeadProfile(
-  guard: SecurityGuard
+  guard: SecurityGuard,
+  standingCrewMembers: GuardStandingCrewMember[] = []
 ): { standingCrewName: string; standingCrewDescription: string } | { error: string } {
   if (!isGuardTrusted(guard)) {
     return { error: 'Must be a trusted guard to lead a team.' };
+  }
+  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) {
+    return { error: 'Leave your current standing crew before leading your own team.' };
   }
   const standingCrewName = guard.standingCrewName?.trim() || `${guard.name}'s Crew`;
   const standingCrewDescription = guard.standingCrewDescription?.trim() || '';

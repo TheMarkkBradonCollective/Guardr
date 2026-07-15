@@ -283,7 +283,8 @@ export function GuardStandingCrewPanel({
               <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
-                  staff. Otherwise, join another coordinator&apos;s crew with a crew code below.
+                  staff. You can only be on one standing crew at a time — leave any current crew
+                  before leading your own.
                 </p>
                 {pendingCrewLeadRequest ? (
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
@@ -307,7 +308,8 @@ export function GuardStandingCrewPanel({
             <section>
               {sectionTitle('Join another crew')}
               <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
-                Enter a crew code from a coordinator to join their coordinated crew on a job.
+                Enter a crew code from a coordinator to join their standing crew on a job. You can
+                only be on one standing crew at a time.
               </p>
               <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
             </section>

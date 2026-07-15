@@ -8495,7 +8495,7 @@ export default function App() {
   const applyGuardCrewLeadProfile = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { error: 'Guard not found.' } as const;
-    const result = makeGuardCrewLeadProfile(guard);
+    const result = makeGuardCrewLeadProfile(guard, standingCrewMembers);
     if ('error' in result) return result;
     const { standingCrewName, standingCrewDescription } = result;
     setGuards((prev) =>
