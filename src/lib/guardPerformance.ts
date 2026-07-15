@@ -158,3 +158,108 @@ export function formatPerformanceScore(score: number): string {
   if (score <= 0) return '—';
   return score.toFixed(1);
 }
+
+export interface ClientReviewStats {
+  average: number;
+  count: number;
+}
+
+export interface PerformanceBreakdownRow {
+  id: string;
+  label: string;
+  /** Display score on a 1–5 scale. */
+  score: number;
+  /** Bar fill width 0–100. */
+  percent: number;
+}
+
+function rateToPercent(rate: number): number {
+  return Math.round(Math.min(100, Math.max(0, rate * 100)));
+}
+
+function rateToScore(rate: number): number {
+  return Number((Math.min(1, Math.max(0, rate)) * 5).toFixed(1));
+}
+
+/** Client star ratings left on completed shifts. */
+export function computeClientReviewStats(
+  guardId: string,
+  requests: SecurityRequest[]
+): ClientReviewStats {
+  const ratings = guardCompletedJobs(guardId, requests)
+    .map((j) => j.ratingGiven)
+    .filter((r): r is number => typeof r === 'number' && r > 0);
+
+  if (!ratings.length) {
+    return { average: 0, count: 0 };
+  }
+
+  const average = Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1));
+  return { average, count: ratings.length };
+}
+
+/** DoorDash-style behavior breakdown rows for rating bars. */
+export function buildPerformanceBreakdown(
+  metrics: GuardPerformanceMetrics,
+  clientReviews: ClientReviewStats
+): PerformanceBreakdownRow[] {
+  const rows: PerformanceBreakdownRow[] = [];
+
+  if (clientReviews.count > 0) {
+    rows.push({
+      id: 'client-reviews',
+      label: 'Client reviews',
+      score: clientReviews.average,
+      percent: rateToPercent(clientReviews.average / 5),
+    });
+  }
+
+  if (metrics.jobsSampled <= 0) return rows;
+
+  rows.push(
+    {
+      id: 'on-time',
+      label: 'On-time arrival',
+      score: rateToScore(metrics.onTimeRate),
+      percent: rateToPercent(metrics.onTimeRate),
+    },
+    {
+      id: 'check-ins',
+      label: 'Check-in reliability',
+      score: rateToScore(metrics.checkInCompletionRate),
+      percent: rateToPercent(metrics.checkInCompletionRate),
+    },
+    {
+      id: 'uniform',
+      label: 'Uniform compliance',
+      score: rateToScore(metrics.uniformComplianceRate),
+      percent: rateToPercent(metrics.uniformComplianceRate),
+    },
+    {
+      id: 'attendance',
+      label: 'Attendance',
+      score: rateToScore(metrics.attendanceRate),
+      percent: rateToPercent(metrics.attendanceRate),
+    },
+    {
+      id: 'incident-free',
+      label: 'Incident-free record',
+      score: rateToScore(1 - metrics.incidentPenalty),
+      percent: rateToPercent(1 - metrics.incidentPenalty),
+    }
+  );
+
+  return rows;
+}
+
+export function formatReviewCount(count: number): string {
+  if (count <= 0) return 'No client reviews yet';
+  if (count === 1) return 'Based on 1 client review';
+  return `Based on ${count} client reviews`;
+}
+
+export function formatShiftSampleCount(count: number): string {
+  if (count <= 0) return 'No completed shifts yet';
+  if (count === 1) return '1 completed shift analyzed';
+  return `${count} completed shifts analyzed`;
+}

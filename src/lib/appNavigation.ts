@@ -69,6 +69,8 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   guide: 'guide',
   crew: 'crew',
   team: 'crew',
+  preferences: 'preferences',
+  performance: 'performance',
 };
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
@@ -83,6 +85,8 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   settings: 'settings',
   guide: 'guide',
   crew: 'crew',
+  preferences: 'preferences',
+  performance: 'performance',
 };
 
 /** Guards need active status plus loaded credentials before non-activation tabs unlock. */
@@ -128,6 +132,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   reports: 'reports',
   requests: 'requests',
   guards: 'guards',
+  locations: 'locations',
   guide: 'guide',
 };
 
@@ -145,6 +150,7 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   reports: 'reports',
   requests: 'requests',
   guards: 'guards',
+  locations: 'locations',
   guide: 'guide',
 };
 

@@ -5,7 +5,7 @@ import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
-import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings } from 'lucide-react';
 
 interface ClientAppLayoutProps {
   children: React.ReactNode;
@@ -29,6 +29,14 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'guards', label: 'Guards', icon: Users },
 ];
 
+const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'locations', label: 'Locations', icon: MapPin },
+  { id: 'reports', label: 'Reports', icon: FileText },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
+
+const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'settings']);
+
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
   home: 'Home',
@@ -36,6 +44,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   requests: 'Jobs',
   'support-compose': 'Contact support',
   'support-report': 'File a report',
+  locations: 'My Locations',
   profile: 'Profile',
   settings: 'Settings',
   request: 'Post job offer',
@@ -63,7 +72,9 @@ export function ClientAppLayout({
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map';
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
-  const navHighlightView = messagesViews.includes(activeView)
+  const navHighlightView = SIDEBAR_VIEWS.has(activeView)
+    ? activeView
+    : messagesViews.includes(activeView)
     ? 'messages'
     : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
       ? 'home'
@@ -112,6 +123,8 @@ export function ClientAppLayout({
         footer: accountFooter,
       }}
       navItems={navItems}
+      overflowNavItems={accountPending ? [] : OVERFLOW_NAV}
+      moreMenuTitle="More"
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       fullBleed={fullBleed}

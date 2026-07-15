@@ -11291,6 +11291,7 @@ export default function App() {
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
           onOpenLegal={openLegalPage}
+          isDbConnected={isDbConnected}
           {...tutorialSettingsProps}
         />
         {passwordChangeOverlay}
