@@ -26,6 +26,7 @@ import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { certOverlayProps, type CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
@@ -42,6 +43,7 @@ interface GuardPtaUofPanelProps {
   renderCertActions?: (cert: Certification) => React.ReactNode;
   /** Activation gate — open upload sheet only (no credential preview list). */
   activationFormOnly?: { open: boolean; onClose: () => void; catalogId?: string };
+  certOverlayNav?: CertOverlayNavigation;
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -73,6 +75,7 @@ export function GuardPtaUofPanel({
   onUpdateCertification,
   renderCertActions,
   activationFormOnly,
+  certOverlayNav,
 }: GuardPtaUofPanelProps) {
   const progress = computePtaUofProgress(guard);
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
@@ -179,6 +182,8 @@ export function GuardPtaUofPanel({
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
       : undefined,
     guardName: guard.name,
+    viewFullLabel: certOverlayNav?.onViewFull ? 'View full in Credentials →' : undefined,
+    ...certOverlayProps(certOverlayNav, cert.id),
   });
 
   const renderCertRow = (cert: Certification) => (

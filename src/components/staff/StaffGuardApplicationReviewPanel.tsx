@@ -14,6 +14,7 @@ import {
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
+import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
@@ -25,6 +26,7 @@ interface StaffGuardApplicationReviewPanelProps {
   ) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
+  onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
 }
 
 export function StaffGuardApplicationReviewPanel({
@@ -34,6 +36,7 @@ export function StaffGuardApplicationReviewPanel({
   onActivateGuardAccount,
   onRejectGuardApplication,
   onOpenGuardProfile,
+  onOpenGuardCredential,
 }: StaffGuardApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
   const guardAccountStatus = getGuardUserStatus(guard);
@@ -91,6 +94,17 @@ export function StaffGuardApplicationReviewPanel({
 
       <StaffGuardApplicationSummary guard={guard} />
 
+      {!guard.isStaff && (
+        <StaffGuardActivationChecklistView
+          guard={guard}
+          onViewCredential={
+            onOpenGuardCredential
+              ? (credentialItemId) => onOpenGuardCredential(guard.id, credentialItemId)
+              : undefined
+          }
+        />
+      )}
+
       {canReview && (
         <section className="staff-detail-section space-y-3">
           <WfSectionHeader title="Review actions" className="!px-0 !mb-0" />
@@ -104,7 +118,7 @@ export function StaffGuardApplicationReviewPanel({
                 title={
                   activationChecklist.staffApprovalBlockers.length > 0
                     ? activationChecklist.staffApprovalBlockers.join(' · ')
-                    : 'Approve guard application — unlocks credential upload'
+                    : 'Approve guard application'
                 }
               >
                 Approve application

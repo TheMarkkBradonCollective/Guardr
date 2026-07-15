@@ -26,6 +26,9 @@ interface CertItemCardProps {
   showCategory?: boolean;
   compact?: boolean;
   guardName?: string;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 /** Individual license or certificate — clickable to view full details and document photo. */
@@ -41,6 +44,9 @@ export function CertItemCard({
   showCategory = true,
   compact = false,
   guardName,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
@@ -57,12 +63,20 @@ export function CertItemCard({
     ? 'w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
 
+  const openDetail = () => {
+    if (openInEditMode && onEditFullPage) {
+      onEditFullPage();
+      return;
+    }
+    setShowDetail(true);
+  };
+
   return (
     <>
       <div className={`app-cert-item ${compact ? 'app-cert-item-compact' : ''}`}>
         <button
           type="button"
-          onClick={() => setShowDetail(true)}
+          onClick={openDetail}
           className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3`}
         >
           {cert.imageUrl ? (
@@ -125,6 +139,9 @@ export function CertItemCard({
           staffMode={staffMode}
           initialEditMode={openInEditMode}
           onSubmit={onUpdate}
+          onViewFull={onViewFull}
+          viewFullLabel={viewFullLabel}
+          onEditFullPage={onEditFullPage}
           onClose={() => setShowDetail(false)}
         />
       )}

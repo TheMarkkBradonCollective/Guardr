@@ -11,6 +11,7 @@ import {
 } from '../../lib/guardIdentityVerification';
 import { US_STATES } from '../../lib/states';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
+import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
 import { getGovIdCredentialRecords } from '../../lib/credentialRecordBuilders';
@@ -28,6 +29,9 @@ interface GuardIdDetailModalProps {
   staffMode?: boolean;
   initialEditMode?: boolean;
   onSubmit: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 export function GuardIdDetailModal({
@@ -38,12 +42,15 @@ export function GuardIdDetailModal({
   staffMode = false,
   initialEditMode = false,
   onSubmit,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: GuardIdDetailModalProps) {
   const status = getGuardIdVerificationStatus(guard);
   const locked = staffMode ? false : guardIdVerificationIsLocked(guard);
   const photosLocked = staffMode ? false : locked;
 
-  const [editing, setEditing] = useState(initialEditMode && canEdit);
+  const [editing, setEditing] = useState(initialEditMode && canEdit && !onEditFullPage);
   const [idState, setIdState] = useState(guard.idState ?? 'CA');
   const [idNumber, setIdNumber] = useState(guard.idNumber ?? '');
   const [idExpiryDate, setIdExpiryDate] = useState(guard.idExpiryDate ?? '');
@@ -175,14 +182,28 @@ export function GuardIdDetailModal({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {canEdit && !editing && !photosLocked && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Edit
-            </button>
+            onEditFullPage ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onEditFullPage();
+                  onClose();
+                }}
+                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            )
           )}
           <button
             type="button"
@@ -303,6 +324,14 @@ export function GuardIdDetailModal({
                 ID details are locked while your submission is on file. Tap Edit after staff requests a resubmit.
               </p>
             )}
+
+            {guard.idVerificationSubmittedAt && (
+              <p className="text-xs text-brand-text-muted">
+                Submitted {new Date(guard.idVerificationSubmittedAt).toLocaleString()}
+              </p>
+            )}
+
+            <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
           </>
         )}
       </div>

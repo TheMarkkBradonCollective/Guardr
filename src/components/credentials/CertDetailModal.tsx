@@ -12,6 +12,8 @@ import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 import { CertPhotoRow } from './CertPhotoRow';
 import { CredentialRecordsList } from './CredentialRecordsList';
 
+import { CredentialQuickViewLinks } from './CredentialQuickViewLinks';
+
 export interface CertUpdatePayload {
   issuer: string;
   number: string;
@@ -30,6 +32,9 @@ interface CertDetailModalProps {
   staffMode?: boolean;
   initialEditMode?: boolean;
   onSubmit?: (payload: CertUpdatePayload) => Promise<CertUpdateResult>;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 function certHasDetailsOnFile(cert: Certification): boolean {
@@ -44,6 +49,9 @@ export function CertDetailModal({
   staffMode = false,
   initialEditMode = false,
   onSubmit,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: CertDetailModalProps) {
   const catalogId = resolveCertCatalogId(cert);
   const entry = catalogId ? getCertCatalogEntry(catalogId) : undefined;
@@ -53,7 +61,9 @@ export function CertDetailModal({
   const requiresState = Boolean(entry?.requiresState);
   const requiresExpiry = credentialRequiresExpiry(cert);
 
-  const [editing, setEditing] = useState(initialEditMode && canEdit && !!onSubmit);
+  const [editing, setEditing] = useState(
+    initialEditMode && canEdit && !!onSubmit && !onEditFullPage
+  );
   const [issuer, setIssuer] = useState(cert.issuer ?? '');
   const [number, setNumber] = useState(cert.number ?? '');
   const [state, setState] = useState(cert.state ?? 'CA');
@@ -190,14 +200,28 @@ export function CertDetailModal({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {canEdit && onSubmit && !editing && (staffMode || !photosLocked) && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Edit
-            </button>
+            onEditFullPage ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onEditFullPage();
+                  onClose();
+                }}
+                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            )
           )}
           <button
             type="button"
@@ -314,7 +338,10 @@ export function CertDetailModal({
             </div>
           </div>
         ) : showRevisionList ? (
-          <CredentialRecordsList items={revisionItems} />
+          <>
+            <CredentialRecordsList items={revisionItems} />
+            <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
             <p className="text-sm">No photo uploaded for this credential</p>

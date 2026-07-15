@@ -49,7 +49,6 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
   guardCanStaffActivateAccount,
@@ -58,6 +57,7 @@ import {
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
+import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -158,6 +158,16 @@ export function StaffGuardDetailPanel({
     if (controlledEditing === undefined) setInternalEditing(next);
     onEditingChange?.(next);
   };
+
+  const certOverlayNav = useMemo((): CertOverlayNavigation | undefined => {
+    if (!onOpenGuardCredential && !canManage) return undefined;
+    return {
+      onViewFull: onOpenGuardCredential
+        ? (credentialItemId: string) => onOpenGuardCredential(guard.id, credentialItemId)
+        : undefined,
+      onEditFullPage: canManage ? () => setEditing(true) : undefined,
+    };
+  }, [onOpenGuardCredential, canManage, guard.id, onEditingChange, controlledEditing]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -583,7 +593,7 @@ export function StaffGuardDetailPanel({
                       ? 'Open this application in Applications to review and approve'
                       : activationChecklist.staffApprovalBlockers.length > 0
                         ? activationChecklist.staffApprovalBlockers.join(' · ')
-                        : 'Approve guard application — unlocks credential upload'
+                        : 'Approve guard application'
                   }
                 >
                   {onOpenGuardApplication ? 'Review application' : 'Approve application'}
@@ -724,9 +734,6 @@ export function StaffGuardDetailPanel({
 
           {!editing && (
             <section className="staff-detail-section space-y-3">
-              {!guard.isStaff && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && (
-                <StaffGuardActivationChecklistView guard={guard} />
-              )}
               <GuardCredentialsPanel
                 guard={guard}
                 editing={false}
@@ -769,6 +776,7 @@ export function StaffGuardDetailPanel({
                   ) : undefined
                 }
                 renderCertActions={renderStaffCertActions}
+                certOverlayNav={certOverlayNav}
               />
             </section>
           )}
