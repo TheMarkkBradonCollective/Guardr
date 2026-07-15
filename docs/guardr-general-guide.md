@@ -735,7 +735,7 @@ Administrators handle credential verification and day-to-day operations. You inh
 | Handle disputes | **Disputes** |
 | Suspend or restore users | **Guards** / **Clients** detail panels |
 | View analytics | **Analytics** |
-| Partial platform settings | **Settings** (fees, crew pay — not payment modes) |
+| Partial platform settings | **Settings** (approval rules, integrations — no payment controls) |
 
 ### Credential verification workflow
 
@@ -762,7 +762,7 @@ Directors have unrestricted operational access and financial controls. You manag
 | Action | Where |
 |--------|-------|
 | All payment and payout controls | **Payments** |
-| Cash handling overrides, refunds, platform fees | **Payments**, **Settings** |
+| Cash handling overrides, refunds, platform fees | **Payments**, **Payment settings** |
 | Manage staff team (add Moderators, Administrators) | **Staff** |
 | Place guard on job (dispute/safety exception only) | **Jobs** — confirmation required |
 | Full analytics with financial data | **Analytics** |
@@ -791,7 +791,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 | Action | Where |
 |--------|-------|
-| Change payment methods and platform modes | **Settings → Payment methods** |
+| Change payment methods and platform modes | **Payment settings** |
 | Edit Founder homepage message | **Settings → Founder message** |
 | Manage Director accounts | **Staff** |
 | Ultimate platform governance | All panels |
@@ -800,7 +800,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 - Financial controls, **Payments**, **Dev notes**
 - Trusted status, job exception placement
-- Fee and crew pay configuration
+- **Payment settings** (fees, crew pay bump), **Marketplace agreements**, **Audit log**
 
 ### Governance principles
 
@@ -822,8 +822,81 @@ The Founder is the platform governance overseer. You inherit everything Director
 | **Analytics** | — | ✓ | + Financials | ✓ |
 | **Payments** | — | — | ✓ | ✓ |
 | **Staff** | — | — | ✓ | + Directors |
-| **Settings** | — | Partial | ✓ | + Payment modes |
+| **Payment settings** | — | — | ✓ | + Payment methods |
+| **Marketplace agreements** | — | — | ✓ | ✓ |
+| **Audit log** | — | — | ✓ | ✓ |
+| **Settings** | — | ✓ | ✓ | ✓ |
 | **Dev notes** | — | — | ✓ | ✓ |
+
+---
+
+## Staff role permissions
+
+Guardr staff roles form a hierarchy: **Moderator → Administrator → Director → Founder**. Each tier inherits the capabilities of the roles below it unless a restriction is noted.
+
+Use this reference when onboarding staff, answering “can I do X?” questions, or routing an escalation to the right tier.
+
+The summary cards below list the key permissions for each role. Expand the topics for sidebar access and common workflows.
+
+### Platform sidebar access
+
+| Page | Moderator | Administrator | Director | Founder |
+|------|-----------|---------------|----------|---------|
+| **Overview**, **Map**, **Jobs** | ✓ | ✓ | ✓ | ✓ |
+| **Applications**, **Credentials**, **Guards**, **Clients** | ✓ | ✓ | ✓ | ✓ |
+| **Messages**, **Incidents** | ✓ | ✓ | ✓ | ✓ |
+| **Disputes**, **Analytics** | — | ✓ | ✓ | ✓ |
+| **Payments** | — | — | ✓ | ✓ |
+| **Staff** (team roster) | — | — | ✓ | + Directors |
+| **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
+| **Marketplace agreements** | — | — | ✓ | ✓ |
+| **Audit log** | — | — | ✓ | ✓ |
+| **Settings** | — | ✓ | ✓ | ✓ |
+| **Dev notes** | — | — | ✓ | ✓ |
+
+### Governance principles
+
+- **Moderators** approve applications — they do not verify credential documents or activate accounts.
+- **Administrators** verify credentials and review jobs — they do not access payments, audit logs, or executive payment settings.
+- **Directors** run operations and finances — they do not manage other Directors.
+- **Founders** oversee the platform — cannot moderate other Founders.
+
+### Moderator permissions
+
+- Approve guard and client **applications** (`pending` → `approved`)
+- Monitor live jobs, map, and incidents
+- Reply to support messages
+- **Cannot:** verify credentials, approve job offers, handle disputes, access payments, or change platform settings
+
+### Administrator permissions
+
+Everything Moderators can do, plus:
+
+- Verify government ID, guard card, COI, and training credentials
+- Approve or decline job offers
+- Handle disputes and suspend or restore users
+- View analytics and manage general **Settings** (approval rules, integrations, homepage messages)
+- **Cannot:** access **Payments**, **Payment settings**, **Marketplace agreements**, **Audit log**, or change payment methods
+
+### Director permissions
+
+Everything Administrators can do, plus:
+
+- Full **Payments** pipeline — deposits, payouts, cash overrides, dispute holds
+- Edit platform fees and crew team pay bump in **Payment settings**
+- Review **Marketplace agreements** compliance and the **Audit log**
+- Manage Moderators and Administrators in **Staff**
+- Mark guards and clients as **trusted**
+- Place guards on jobs (dispute/safety exception only)
+
+### Founder permissions
+
+Everything Directors can do, plus:
+
+- Change **Payment settings → Payment methods** (Stripe / cash toggles)
+- Manage Director accounts
+- Ultimate platform governance across all panels
+- **Cannot** moderate or suspend other Founder accounts
 
 ---
 
@@ -1051,7 +1124,7 @@ The Staff panel lists all platform staff accounts. Staff can:
 
 - View the team roster.
 - Add new staff accounts (**Add staff** button) — Directors and Founders only.
-- Review role and permissions for each team member.
+- Review each member's role — see **General guide → Staff role permissions** for what each tier can do.
 
 Staff accounts manage the platform only and cannot accept field guard jobs.
 
@@ -1081,13 +1154,13 @@ Every job follows the same payment path: the client pays, the job runs, then the
 | **Awaiting guard payout** | Job complete — auto Stripe release scheduled; guard collects from **Pay**. |
 | **Dispute hold** | Payout blocked by overtime dispute — staff resolve in **Disputes**, then release if needed. |
 
-**Settings → Payment methods:**
+**Payment settings** (Directors and Founders — sidebar → **Platform**):
 
-- **Card (Stripe)** — only payment mode; clients pay online at checkout.
+- **Payment methods** — Card (Stripe) and optional cash (Founder edits methods; Directors view)
+- **Platform fees** — flat $/hr or percentage model for new jobs
+- **Crew team pay bump** — extra $/hr for guards rostered on coordinated crew jobs
 
-**Settings → Platform fees:**
-
-Platform fees are set per job at creation time. Existing jobs keep their original fee — only new jobs use the updated model.
+Platform fees are set globally in **Payment settings**. Open-contract jobs can override per agreement. Existing jobs keep their original fee.
 
 #### Incidents panel
 

@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
+import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import type { PlatformRole } from '../../types';
@@ -72,6 +73,10 @@ const SECTION_META: Record<string, SectionMeta> = {
     icon: Crown,
     description: 'Platform governance, payment modes, Director management, and oversight.',
     audience: 'founder',
+  },
+  'staff-role-permissions': {
+    icon: Shield,
+    description: 'What each staff role can see and do — sidebar access, payouts, and governance.',
   },
   'sections-features-reference': {
     icon: BookOpen,
@@ -187,6 +192,12 @@ function SectionDetail({
       {section.topRaw.trim() && (
         <div className="px-4 pt-3 pb-4 border-b border-brand-border">
           <MarkdownDoc source={section.topRaw} />
+        </div>
+      )}
+
+      {section.id === 'staff-role-permissions' && (
+        <div className="px-4 py-4 border-b border-brand-border">
+          <StaffRolesReference />
         </div>
       )}
 
