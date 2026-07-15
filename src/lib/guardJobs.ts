@@ -294,6 +294,8 @@ type GuardJobVisibility = Pick<
   | 'requestType'
   | 'targetGuardId'
   | 'state'
+  | 'startDate'
+  | 'endDate'
   | 'minGuardQualification'
   | 'requiredCertifications'
   | 'armedRequired'
