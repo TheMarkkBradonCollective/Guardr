@@ -36,8 +36,8 @@ export function GuardRosterStatusBadges({
   return (
     <div className={`flex flex-col items-start gap-1.5 ${className ?? ''}`.trim()}>
       <div className="flex flex-wrap items-center gap-1.5">
-        {accountBadges.map((badge) => (
-          <WfBadge key={badge.label} tone={badge.tone}>
+        {accountBadges.map((badge, index) => (
+          <WfBadge key={`${badge.label}-${index}`} tone={badge.tone}>
             {badge.label}
           </WfBadge>
         ))}
