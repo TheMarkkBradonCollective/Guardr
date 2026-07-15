@@ -81,6 +81,8 @@ interface StaffGuardsPanelProps {
   onStaffEditChange?: (editing: boolean) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
+  onOpenGuardApplication?: (guardId: string) => void;
+  onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
 }
 
@@ -120,6 +122,8 @@ export function StaffGuardsPanel({
   onStaffEditChange,
   initialSelectedId = null,
   onOpenJob,
+  onOpenGuardApplication,
+  onOpenGuardCredential,
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
@@ -208,6 +212,8 @@ export function StaffGuardsPanel({
         ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
         : undefined,
       onOpenJob,
+      onOpenGuardApplication,
+      onOpenGuardCredential,
       standingCrewMembers,
     };
   }

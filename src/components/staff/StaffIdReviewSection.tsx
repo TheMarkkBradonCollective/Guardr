@@ -23,6 +23,7 @@ interface StaffIdReviewSectionProps {
   canManage?: boolean;
   onApprove?: (guardId: string) => void | Promise<void>;
   onReject?: (guardId: string, reason?: string) => void | Promise<void>;
+  approveActionLabel?: string;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
   onUpdateImages?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
 }
@@ -33,6 +34,7 @@ export function StaffIdReviewSection({
   canManage = false,
   onApprove,
   onReject,
+  approveActionLabel = 'Approve ID',
   onRequestResubmit,
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
@@ -97,7 +99,7 @@ export function StaffIdReviewSection({
             }}
             className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
           >
-            <Check className="w-3.5 h-3.5" /> Approve ID
+            <Check className="w-3.5 h-3.5" /> {approveActionLabel}
           </button>
         )}
         {onRequestResubmit && canRequestResubmit && (

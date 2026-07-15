@@ -57,6 +57,7 @@ import {
 } from '../../lib/guardAccountActivation';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
+import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -105,6 +106,8 @@ interface StaffGuardDetailPanelProps {
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
+  onOpenGuardApplication?: (guardId: string) => void;
+  onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
   compact?: boolean;
@@ -142,6 +145,8 @@ export function StaffGuardDetailPanel({
   onReviewInsurance,
   onBack,
   onOpenJob,
+  onOpenGuardApplication,
+  onOpenGuardCredential,
   editing: controlledEditing,
   onEditingChange,
   compact = false,
@@ -386,8 +391,22 @@ export function StaffGuardDetailPanel({
     })();
   };
 
-  const renderStaffCertActions = (cert: Certification) =>
-    canVerifyCredentials && cert.status === 'pending' ? (
+  const renderStaffCertActions = (cert: Certification) => {
+    if (!canVerifyCredentials || cert.status !== 'pending') return null;
+
+    if (onOpenGuardCredential) {
+      return (
+        <button
+          type="button"
+          onClick={() => onOpenGuardCredential(guard.id, cert.id)}
+          className="app-button-primary app-btn-sm gap-1"
+        >
+          <Check className="w-3 h-3" /> Review credential
+        </button>
+      );
+    }
+
+    return (
       <div className="flex flex-col items-stretch gap-1.5 w-full">
         <div className="app-action-row--equal w-full">
           {cert.imageUrl && onRequestCertImageResubmit && (
@@ -430,7 +449,8 @@ export function StaffGuardDetailPanel({
           </p>
         )}
       </div>
-    ) : null;
+    );
+  };
 
   const renderPendingCertActions = () => {
     const pendingCerts = allCerts.filter((c) => c.status === 'pending');
@@ -571,19 +591,27 @@ export function StaffGuardDetailPanel({
           <section className="staff-detail-section space-y-3">
             <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
             <div className="staff-detail-actions">
-              {guardAccountStatus === 'pending' && onApproveGuardAccount && (
+              {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
                 <button
                   type="button"
-                  onClick={() => void handleApproveProfile()}
-                  disabled={!guardCanStaffApproveProfile(guard)}
+                  onClick={() => {
+                    if (onOpenGuardApplication) {
+                      onOpenGuardApplication(guard.id);
+                      return;
+                    }
+                    void handleApproveProfile();
+                  }}
+                  disabled={!onOpenGuardApplication && !guardCanStaffApproveProfile(guard)}
                   className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
-                    activationChecklist.staffApprovalBlockers.length > 0
-                      ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : 'Approve guard application — unlocks credential upload'
+                    onOpenGuardApplication
+                      ? 'Open this application in Applications to review and approve'
+                      : activationChecklist.staffApprovalBlockers.length > 0
+                        ? activationChecklist.staffApprovalBlockers.join(' · ')
+                        : 'Approve guard application — unlocks credential upload'
                   }
                 >
-                  Approve application
+                  {onOpenGuardApplication ? 'Review application' : 'Approve application'}
                 </button>
               )}
               {guardAccountStatus === 'approved' && onActivateGuardAccount && (
@@ -747,7 +775,14 @@ export function StaffGuardDetailPanel({
                     <StaffIdReviewSection
                       guard={guard}
                       canManage={canManage}
-                      onApprove={onApproveIdentityVerification}
+                      onApprove={
+                        onOpenGuardCredential
+                          ? (guardId) => onOpenGuardCredential(guardId, govIdApprovalItemId(guardId))
+                          : onApproveIdentityVerification
+                            ? () => onApproveIdentityVerification(guard.id)
+                            : undefined
+                      }
+                      approveActionLabel={onOpenGuardCredential ? 'Review ID' : undefined}
                       onReject={onRejectIdentityVerification}
                       onRequestResubmit={
                         onRequestIdentityResubmit
