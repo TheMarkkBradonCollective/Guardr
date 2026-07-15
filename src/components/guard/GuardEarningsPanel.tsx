@@ -7,8 +7,8 @@ import {
 } from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
-import { AppEmptyState, AppFormSection, AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
-import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
+import { AppEmptyState, AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
+import { Banknote, CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
 
 interface GuardEarningsPanelProps {
   breakdown: GuardEarningsBreakdown;
@@ -24,6 +24,13 @@ interface GuardEarningsPanelProps {
   openCashInvoices?: number;
   openStripeInvoices?: number;
   payments?: GuardPayoutView[];
+}
+
+function payHeroClass(amount: number): string {
+  if (amount >= 500) return 'guard-tier-hero-elite';
+  if (amount >= 100) return 'guard-tier-hero-professional';
+  if (amount > 0) return 'guard-tier-hero-rising';
+  return 'guard-tier-hero-starting';
 }
 
 export function GuardEarningsPanel({
@@ -61,196 +68,201 @@ export function GuardEarningsPanel({
 
   return (
     <AppScreen>
-      <AppScreenTitle>Your pay</AppScreenTitle>
-
-      {!stripeReady && onConnectStripe && (
-        <div className="app-inline-banner space-y-3 mx-5 mb-0">
-          <div className="flex items-center gap-2">
-            <Link2 className="w-4 h-4" />
-            <p className="text-sm font-semibold">
-              {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid online'}
-            </p>
+      <section className="guard-rating-section guard-rating-section-tiered guard-pay-screen-card">
+        <div className={`guard-tier-hero guard-pay-tier-hero ${payHeroClass(readyToCollect)}`}>
+          <div className="guard-tier-hero-glow" aria-hidden />
+          <div className="guard-pref-tier-medal" aria-hidden>
+            <div className="guard-pref-tier-medal-ring">
+              <DollarSign className="guard-pref-tier-medal-icon" />
+            </div>
           </div>
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            {stripeConnected
-              ? 'Stripe still needs a few payout details before online bank transfers are enabled.'
-              : 'Link your bank through Stripe to receive online payouts. Cash pickup stays available without this step.'}
-          </p>
-          <button
-            type="button"
-            onClick={onConnectStripe}
-            disabled={connectPending}
-            className="app-button-primary disabled:opacity-50"
-          >
-            {connectPending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
-              </>
-            ) : (
-              <>
-                <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
-      <section className="app-pay-hero">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
-          Ready to collect
-        </p>
-        <p className="app-pay-amount mb-1">${readyToCollect.toFixed(2)}</p>
-        {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
-          <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
-            {(breakdown.cashAvailable ?? 0) > 0 && (
-              <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
-            )}
-            {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
-            {breakdown.onlineAvailable > 0 && (
-              <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
-            )}
-          </p>
-        ) : null}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => void onRequestStripePayout?.()}
-            disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
-            className="app-button-primary !text-sm !h-auto !py-3 flex-col items-start gap-1 disabled:opacity-40 text-left"
-          >
-            <span className="flex items-center gap-2 font-semibold">
-              {stripeRequestPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <CreditCard className="w-4 h-4" />
+          <p className="guard-tier-hero-eyebrow">Your pay</p>
+          <h2 className="guard-tier-hero-name guard-pay-hero-amount">${readyToCollect.toFixed(2)}</h2>
+          <div className="guard-tier-hero-score-row">
+            <span className="guard-tier-hero-score-label">Ready to collect</span>
+            <span className="guard-tier-hero-score-value">${alreadyPaid.toFixed(2)} paid</span>
+          </div>
+          {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
+            <p className="guard-tier-hero-subtitle">
+              {(breakdown.cashAvailable ?? 0) > 0 && (
+                <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
               )}
-              Send to my bank
-            </span>
-            {!stripeReady && needsBankForOnline && (
-              <span className="text-[11px] font-normal opacity-70 leading-snug">
-                Connect your bank through Stripe first
-              </span>
-            )}
-            {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
-              <span className="text-[11px] font-normal opacity-70 leading-snug">
-                Pending deposit — cash pickup available now
-              </span>
-            )}
-            {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
-              <span className="text-[11px] font-normal opacity-70 leading-snug">
-                No bank payouts ready yet — complete more shifts first
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => void onRequestCashPayout?.()}
-            disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-            className="app-button-outline !text-sm !h-auto !py-3 flex-col items-start gap-1 disabled:opacity-40 text-left"
-          >
-            <span className="flex items-center gap-2 font-semibold">
-              {cashRequestPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Banknote className="w-4 h-4" />
+              {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
+              {breakdown.onlineAvailable > 0 && (
+                <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
               )}
-              Request cash pickup
-            </span>
-          </button>
-        </div>
+            </p>
+          ) : (
+            <p className="guard-tier-hero-subtitle">
+              Complete shifts to start earning — payouts appear here when jobs are settled.
+            </p>
+          )}
 
-        {(openCashInvoices > 0 || openStripeInvoices > 0) && (
-          <p
-            className="text-sm mt-4 rounded-xl px-3 py-2.5 leading-relaxed"
-            style={{
-              color: 'var(--status-warning)',
-              background: 'color-mix(in srgb, var(--status-warning) 12%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)',
-            }}
-          >
-            {openCashInvoices > 0 && (
-              <span>
-                {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
+          <div className="guard-pay-hero-actions">
+            <button
+              type="button"
+              onClick={() => void onRequestStripePayout?.()}
+              disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
+              className="guard-pay-action-btn guard-pay-action-btn-primary disabled:opacity-40"
+            >
+              <span className="guard-pay-action-btn-label">
+                {stripeRequestPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4" />
+                )}
+                Send to my bank
               </span>
-            )}
-            {openCashInvoices > 0 && openStripeInvoices > 0 ? ' ' : null}
-            {openStripeInvoices > 0 && (
-              <span>
-                {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
+              {!stripeReady && needsBankForOnline && (
+                <span className="guard-pay-action-btn-hint">Connect your bank through Stripe first</span>
+              )}
+              {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
+                <span className="guard-pay-action-btn-hint">
+                  Pending deposit — cash pickup available now
+                </span>
+              )}
+              {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
+                <span className="guard-pay-action-btn-hint">
+                  No bank payouts ready yet — complete more shifts first
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => void onRequestCashPayout?.()}
+              disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
+              className="guard-pay-action-btn guard-pay-action-btn-secondary disabled:opacity-40"
+            >
+              <span className="guard-pay-action-btn-label">
+                {cashRequestPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Banknote className="w-4 h-4" />
+                )}
+                Request cash pickup
               </span>
-            )}
-            {' '}You can send another invoice when more jobs are ready to collect.
-          </p>
-        )}
-      </section>
-
-      <AppFormSection title="Already paid">
-        <div className="flex items-baseline justify-between gap-4 -mt-2">
-          <span className="text-sm text-brand-text-muted">Total received</span>
-          <span className="text-xl font-bold">${alreadyPaid.toFixed(2)}</span>
+            </button>
+          </div>
         </div>
-        <div className="flex gap-6 mt-2 text-sm">
-          <p>
-            <span className="text-brand-text-muted">Bank </span>
-            <span className="font-medium">${breakdown.stripePaid.toFixed(2)}</span>
-          </p>
-          <p>
-            <span className="text-brand-text-muted">Cash </span>
-            <span className="font-medium">${breakdown.cashPaid.toFixed(2)}</span>
-          </p>
-        </div>
-        <p className="text-xs text-brand-text-muted mt-3">
-          Total earned from all completed jobs: ${breakdown.totalEarnings.toFixed(2)}
-        </p>
-      </AppFormSection>
 
-      {stripeConnected && stripeReady && (
-        <p
-          className="text-sm font-medium px-5 py-3 border-b border-brand-border"
-          style={{ color: 'var(--status-success)' }}
-        >
-          Bank account connected — online payouts enabled
-        </p>
-      )}
-
-      <AppFormSection title={`Completed jobs (${sortedShifts.length})`}>
-        <p className="text-xs text-brand-text-muted -mt-2 mb-4 leading-relaxed">
-          Each row shows what you earned and whether you&apos;ve been paid yet.
-        </p>
-
-      {sortedShifts.length === 0 ? (
-        <AppEmptyState
-          icon={<Banknote className="w-5 h-5" />}
-          title="No completed shifts yet"
-        >
-          Your earnings history will appear here after you complete jobs.
-        </AppEmptyState>
-      ) : (
-        <AppList>
-          {sortedShifts.map((job) => {
-            const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
-            const earned = getEstimatedGuardEarnings(job);
-            return (
-              <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="font-semibold text-sm">{job.title}</p>
-                  <p className="text-xs text-brand-text-muted mt-0.5">{job.clientName}</p>
-                  <p className="text-xs text-brand-text-muted mt-0.5">
-                    {formatShiftRange(job.startDate, job.endDate)}
-                  </p>
-                  <p className="text-xs font-medium text-brand-text mt-2">{pay.headline}</p>
-                  {pay.subtext && (
-                    <p className="text-xs text-brand-text-muted mt-0.5">{pay.subtext}</p>
+        <div className="guard-rating-body">
+          {!stripeReady && onConnectStripe && (
+            <div className="guard-pref-empty-banner guard-pay-connect-banner">
+              <Link2 className="guard-pref-empty-banner-icon" aria-hidden />
+              <div>
+                <p className="guard-pref-empty-banner-title">
+                  {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid online'}
+                </p>
+                <p className="guard-pref-empty-banner-text">
+                  {stripeConnected
+                    ? 'Stripe still needs a few payout details before online bank transfers are enabled.'
+                    : 'Link your bank through Stripe to receive online payouts. Cash pickup stays available without this step.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={onConnectStripe}
+                  disabled={connectPending}
+                  className="app-button-primary app-btn-sm mt-3 disabled:opacity-50"
+                >
+                  {connectPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
+                    </>
                   )}
-                </div>
-                <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>
-              </AppListRow>
-            );
-          })}
-        </AppList>
-      )}
-      </AppFormSection>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {(openCashInvoices > 0 || openStripeInvoices > 0) && (
+            <p className="guard-pay-invoice-notice">
+              {openCashInvoices > 0 && (
+                <span>
+                  {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
+                </span>
+              )}
+              {openCashInvoices > 0 && openStripeInvoices > 0 ? ' ' : null}
+              {openStripeInvoices > 0 && (
+                <span>
+                  {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
+                </span>
+              )}
+              {' '}You can send another invoice when more jobs are ready to collect.
+            </p>
+          )}
+
+          <div className="guard-performance-stats guard-pay-stats" aria-label="Earnings summary">
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Total received</p>
+              <p className="guard-performance-stat-value">${alreadyPaid.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">Already paid to you</p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Bank</p>
+              <p className="guard-performance-stat-value">${breakdown.stripePaid.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">Online payouts</p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Cash</p>
+              <p className="guard-performance-stat-value">${breakdown.cashPaid.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">Pickup payouts</p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Total earned</p>
+              <p className="guard-performance-stat-value">${breakdown.totalEarnings.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">From all completed jobs</p>
+            </div>
+          </div>
+
+          {stripeConnected && stripeReady && (
+            <p className="guard-pay-bank-status">Bank account connected — online payouts enabled</p>
+          )}
+
+          <section className="guard-factors-section guard-pay-jobs-section">
+            <div className="guard-factors-header">
+              <h3 className="guard-factors-heading">Completed jobs ({sortedShifts.length})</h3>
+              <p className="guard-factors-subheading">
+                Each row shows what you earned and whether you&apos;ve been paid yet.
+              </p>
+            </div>
+
+            {sortedShifts.length === 0 ? (
+              <AppEmptyState icon={<Banknote className="w-5 h-5" />} title="No completed shifts yet">
+                Your earnings history will appear here after you complete jobs.
+              </AppEmptyState>
+            ) : (
+              <div className="guard-pay-jobs-list">
+                <AppList>
+                  {sortedShifts.map((job) => {
+                  const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
+                  const earned = getEstimatedGuardEarnings(job);
+                  return (
+                    <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="font-semibold text-sm">{job.title}</p>
+                        <p className="text-xs text-brand-text-muted mt-0.5">{job.clientName}</p>
+                        <p className="text-xs text-brand-text-muted mt-0.5">
+                          {formatShiftRange(job.startDate, job.endDate)}
+                        </p>
+                        <p className="text-xs font-medium text-brand-text mt-2">{pay.headline}</p>
+                        {pay.subtext && (
+                          <p className="text-xs text-brand-text-muted mt-0.5">{pay.subtext}</p>
+                        )}
+                      </div>
+                      <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>
+                    </AppListRow>
+                  );
+                  })}
+                </AppList>
+              </div>
+            )}
+          </section>
+        </div>
+      </section>
     </AppScreen>
   );
 }

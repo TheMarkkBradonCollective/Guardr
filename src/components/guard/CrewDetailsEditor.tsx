@@ -35,10 +35,10 @@ export function CrewDetailsEditor({
   if (!editable) {
     if (!crewName?.trim() && !crewDescription?.trim()) return null;
     return (
-      <div className="rounded-lg border border-brand-border bg-brand-surface/50 px-3 py-2.5 space-y-1">
+      <div className="crew-details-readonly">
         <p className="text-sm font-semibold text-brand-text">{displayName}</p>
         {crewDescription?.trim() && (
-          <p className="text-xs text-brand-text-muted leading-relaxed whitespace-pre-wrap">
+          <p className="text-xs text-brand-text-muted leading-relaxed whitespace-pre-wrap mt-1">
             {crewDescription.trim()}
           </p>
         )}
@@ -50,16 +50,8 @@ export function CrewDetailsEditor({
     name.trim() !== (crewName ?? '').trim() || description.trim() !== (crewDescription ?? '').trim();
 
   return (
-    <div className="rounded-lg border border-brand-primary/25 bg-brand-primary/8 px-3 py-3 space-y-2.5">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-          Crew name & details
-        </p>
-        <p className="text-xs text-brand-text-muted mt-0.5">
-          Clients see this on your crew roster and in the Teams directory.
-        </p>
-      </div>
-      <div className="space-y-2">
+    <div className="crew-details-editor">
+      <div className="space-y-2.5">
         <label className="block space-y-1">
           <span className="text-xs font-medium text-brand-text-muted">Crew name</span>
           <input
@@ -97,7 +89,7 @@ export function CrewDetailsEditor({
               }
             })();
           }}
-          className="app-button-primary app-btn-sm w-full"
+          className="app-button-primary app-btn-sm mt-3"
         >
           {saving ? 'Saving…' : 'Save crew details'}
         </button>
