@@ -74,7 +74,7 @@ export function getGovernmentIdSectionStatus(
     return { label, tone: 'warning' };
   }
   if (label === 'Not on file' || label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
-    return { label, tone: 'warning' };
+    return notListedOrOnFileStatus();
   }
   return { label, tone: 'default' };
 }

@@ -107,26 +107,35 @@ export function CredentialRowHeader({
 }
 
 /**
- * Per-row / per-section header action: staff always sees status; guards see Add only while upload is still needed.
+ * Per-row / per-section header action: one status pill in the header action slot.
+ * Guards see Add while upload is still needed; staff always sees the section status.
  */
 export function CredentialRowAction({
   staffMode = false,
   uploadStatus,
+  sectionStatus,
   canUpload,
   onAdd,
 }: {
   staffMode?: boolean;
   uploadStatus: CredentialListStatus;
+  sectionStatus?: CredentialSectionStatus;
   canUpload: boolean;
   onAdd: () => void;
 }) {
+  const badge = sectionStatus ? (
+    <CredentialSectionStatusBadge label={sectionStatus.label} tone={sectionStatus.tone} />
+  ) : (
+    <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
+  );
+
   if (staffMode || !credentialNeedsUploadAction(uploadStatus)) {
-    return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
+    return badge;
   }
   if (canUpload) {
     return <CredentialSectionAddButton onClick={onAdd} />;
   }
-  return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
+  return badge;
 }
 
 /** Consistent section-header action for credential uploads. */

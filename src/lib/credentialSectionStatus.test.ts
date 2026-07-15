@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 import type { SecurityGuard } from '../types';
 import { CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL } from './certStatus.ts';
 import {
+  getCoiSectionStatus,
+  getGovernmentIdSectionStatus,
   getGuardCardSectionStatus,
   getPtaUofSectionStatus,
   getThirtyTwoHourSectionStatus,
@@ -27,5 +29,13 @@ describe('credential section status tones', () => {
     assert.equal(getPtaUofSectionStatus(guard).tone, 'warning');
     assert.equal(getThirtyTwoHourSectionStatus(guard).label, CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL);
     assert.equal(getThirtyTwoHourSectionStatus(guard).tone, 'warning');
+  });
+
+  it('normalizes government ID not on file to the shared not-listed label', () => {
+    const guard = baseGuard();
+    const status = getGovernmentIdSectionStatus(guard);
+    assert.equal(status.label, CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL);
+    assert.equal(status.tone, 'warning');
+    assert.equal(getCoiSectionStatus(guard).label, CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL);
   });
 });
