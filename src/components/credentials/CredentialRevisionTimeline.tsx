@@ -3,6 +3,7 @@ import type { Certification } from '../../types';
 import { getCertificationRevisionTimeline } from '../../lib/certRevisionHistory';
 import { formatStateName } from '../../lib/states';
 import { WfBadge } from '../ui/wireframe';
+import { DocumentImageLightbox, DocumentImagePreview } from './DocumentImageLightbox';
 
 function formatRevisionDate(iso: string): string {
   const date = new Date(iso);
@@ -29,17 +30,18 @@ interface CredentialRevisionTimelineProps {
 export function CredentialRevisionTimeline({ cert }: CredentialRevisionTimelineProps) {
   const items = getCertificationRevisionTimeline(cert);
   const [expandedId, setExpandedId] = useState<string | null>(items[0]?.id ?? null);
+  const [lightbox, setLightbox] = useState<{ url: string; alt: string } | null>(null);
 
-  if (items.length <= 1 && !items[0]?.imageUrl) {
+  if (!items.length) {
     return null;
   }
 
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-sm font-semibold text-brand-text">Update history</p>
+        <p className="text-sm font-semibold text-brand-text">Credential records</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Newest first. Verified copies stay on file until a replacement is approved.
+          Newest first. Tap a row for details — tap any image for full size.
         </p>
       </div>
       <div className="space-y-2">
@@ -55,16 +57,31 @@ export function CredentialRevisionTimeline({ cert }: CredentialRevisionTimelineP
                 onClick={() => setExpandedId(expanded ? null : item.id)}
                 className="w-full px-4 py-3 text-left flex items-start gap-3 hover:bg-brand-bg-sec/80 transition-colors"
               >
+                {item.imageUrl ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightbox({ url: item.imageUrl!, alt: `${item.label} document` });
+                    }}
+                    className="shrink-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                    aria-label={`View full ${item.label} document`}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt=""
+                      className="w-11 h-11 rounded-lg object-cover border border-brand-border bg-brand-bg-sec cursor-zoom-in hover:opacity-90 transition-opacity"
+                    />
+                  </button>
+                ) : (
+                  <div className="w-11 h-11 rounded-lg shrink-0 border border-dashed border-brand-border bg-brand-bg-sec" />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-medium text-brand-text">{item.label}</p>
                     <WfBadge tone={statusTone(item.status)}>{item.status}</WfBadge>
-                    {item.isCurrentOnFile && (
-                      <WfBadge tone="primary">On file</WfBadge>
-                    )}
-                    {item.isPendingReview && (
-                      <WfBadge tone="warning">Awaiting review</WfBadge>
-                    )}
+                    {item.isCurrentOnFile && <WfBadge tone="primary">On file</WfBadge>}
+                    {item.isPendingReview && <WfBadge tone="warning">Awaiting review</WfBadge>}
                   </div>
                   <p className="text-xs text-brand-text-muted mt-1">{formatRevisionDate(item.recordedAt)}</p>
                   {item.number && (
@@ -80,10 +97,10 @@ export function CredentialRevisionTimeline({ cert }: CredentialRevisionTimelineP
                     </p>
                   )}
                   {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
+                    <DocumentImagePreview
+                      imageUrl={item.imageUrl}
                       alt={`${item.label} document`}
-                      className="w-full max-h-56 object-contain rounded-lg border border-brand-border bg-brand-bg-sec"
+                      onOpen={() => setLightbox({ url: item.imageUrl!, alt: `${item.label} document` })}
                     />
                   ) : (
                     <p className="text-xs text-brand-text-muted">No document image for this entry.</p>
@@ -120,6 +137,14 @@ export function CredentialRevisionTimeline({ cert }: CredentialRevisionTimelineP
           );
         })}
       </div>
+      {lightbox && (
+        <DocumentImageLightbox
+          open
+          imageUrl={lightbox.url}
+          alt={lightbox.alt}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { getCoiSectionStatus } from '../../lib/credentialSectionStatus';
 import {
@@ -70,14 +70,6 @@ export function GuardCoiItemCard({
       </button>
       <div className="app-cert-item-meta">
         <CoiCredentialStatusBadges guard={guard} />
-        <button
-          type="button"
-          onClick={() => setShowDetail(true)}
-          className="p-1 text-brand-text-muted hover:text-brand-text"
-          aria-label="View COI details"
-        >
-          <ChevronRight className="w-4 h-4 shrink-0" />
-        </button>
       </div>
     </div>
   ) : null;
