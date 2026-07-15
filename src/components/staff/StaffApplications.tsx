@@ -188,7 +188,7 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('open');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('pending');
   const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
@@ -365,7 +365,7 @@ export function StaffApplications({
                 onAdd={onAddGuard}
                 onCreated={(guardId) => {
                   setSearch('');
-                  setStatusFilter('open');
+                  setStatusFilter('pending');
                   setKindFilter('guard');
                   setActiveItemKey(`guard:${guardId}`);
                   onSelectionChange?.({ guardId, clientId: null });
@@ -377,7 +377,7 @@ export function StaffApplications({
                 onAdd={onAddClient}
                 onCreated={(clientId) => {
                   setSearch('');
-                  setStatusFilter('open');
+                  setStatusFilter('pending');
                   setKindFilter('client');
                   setActiveItemKey(`client:${clientId}`);
                   onSelectionChange?.({ guardId: null, clientId });
@@ -398,7 +398,6 @@ export function StaffApplications({
             activeId={statusFilter}
             onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
             tabs={[
-              { id: 'open', label: 'Open' },
               { id: 'pending', label: 'Pending review' },
               { id: 'all', label: 'All' },
             ]}
@@ -423,9 +422,7 @@ export function StaffApplications({
             ? 'No applications match your search.'
             : statusFilter === 'pending'
               ? 'No account applications waiting for review.'
-              : statusFilter === 'open'
-                ? 'No open account applications right now.'
-                : 'No account applications on file yet.'}
+              : 'No account applications on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
