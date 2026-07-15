@@ -34,8 +34,8 @@ export function GuardPreferencesScreen({
         />
       )}
 
-      {showTeamJoin && (
-        <section className="guard-pref-crew-section">
+      {showTeamJoin && onJoinTeamWithCode && (
+        <section className="guard-pref-crew-section guard-preferences-crew-card">
           <div className="guard-pref-crew-header">
             <div className="guard-pref-crew-icon-wrap" aria-hidden>
               <Users className="guard-pref-crew-icon" />
