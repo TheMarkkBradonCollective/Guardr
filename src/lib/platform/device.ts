@@ -52,8 +52,9 @@ export function isTouchDevice(): boolean {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
-/** True when running as installed PWA or future Capacitor shell */
+import { isAppExperience } from './appExperience';
+
+/** True when running as installed PWA or Capacitor shell */
 export function isNativeShell(): boolean {
-  if (typeof window === 'undefined') return false;
-  return isStandaloneDisplay() || !!(window as Window & { Capacitor?: unknown }).Capacitor;
+  return isAppExperience();
 }

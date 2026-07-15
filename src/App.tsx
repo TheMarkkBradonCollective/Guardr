@@ -221,7 +221,7 @@ import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
-import { isNativeShell } from './lib/platform/device';
+import { isAppExperience } from './lib/platform/appExperience';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -475,7 +475,9 @@ export default function App() {
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
-  const [publicGuideOpen, setPublicGuideOpen] = useState(() => readGuideFromWindow());
+  const [publicGuideOpen, setPublicGuideOpen] = useState(
+    () => !isAppExperience() && readGuideFromWindow()
+  );
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
@@ -1234,11 +1236,17 @@ export default function App() {
         : readGuideFromUrl(url);
 
     if (guide) {
-      setPublicGuideOpen(true);
-      setIsAuthView(false);
-      return;
+      if (isAppExperience()) {
+        setPublicGuideOpen(false);
+        syncGuidePage(false, true);
+      } else {
+        setPublicGuideOpen(true);
+        setIsAuthView(false);
+        return;
+      }
+    } else {
+      setPublicGuideOpen(false);
     }
-    setPublicGuideOpen(false);
 
     const user = currentUserRef.current;
     const strippedUrl = stripEphemeralQueryParams(url);
@@ -10155,7 +10163,7 @@ export default function App() {
   }
 
   if (!currentUser) {
-    if (publicGuideOpen) {
+    if (publicGuideOpen && !isAppExperience()) {
       return (
         <>
           <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
@@ -10177,7 +10185,7 @@ export default function App() {
             isAppLoading={loading}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
-            onOpenGuide={openPublicGuide}
+            onOpenGuide={isAppExperience() ? undefined : openPublicGuide}
             onAuthModeChange={setAuthViewMode}
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
@@ -10191,7 +10199,7 @@ export default function App() {
     }
     return (
       <>
-        {isNativeShell() ? (
+        {isAppExperience() ? (
           <AppHomeScreen
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
@@ -10199,7 +10207,6 @@ export default function App() {
               openAuthView(role ?? 'client', mode ?? 'sign-in');
             }}
             onOpenLegal={openLegalPage}
-            onOpenGuide={openPublicGuide}
           />
         ) : (
           <HomePage
