@@ -10,7 +10,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 import { CertPhotoRow } from './CertPhotoRow';
-import { CredentialRevisionTimeline } from './CredentialRevisionTimeline';
+import { CredentialRecordsList } from './CredentialRecordsList';
 
 export interface CertUpdatePayload {
   issuer: string;
@@ -314,7 +314,7 @@ export function CertDetailModal({
             </div>
           </div>
         ) : showRevisionList ? (
-          <CredentialRevisionTimeline cert={cert} />
+          <CredentialRecordsList items={revisionItems} />
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
             <p className="text-sm">No photo uploaded for this credential</p>

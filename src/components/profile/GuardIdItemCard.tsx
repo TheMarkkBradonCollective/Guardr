@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, IdCard } from 'lucide-react';
+import { IdCard } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
   formatIdSummaryLine,
@@ -45,14 +45,14 @@ export function GuardIdItemCard({
   const openInEditMode = canEdit && !hasOnFile;
 
   const detailModal =
-    showDetail && onSubmit ? (
+    showDetail && (onSubmit || staffMode) ? (
       <GuardIdDetailModal
         guard={guard}
         guardName={guardName}
-        canEdit={canEdit}
+        canEdit={canEdit && !!onSubmit}
         staffMode={staffMode}
         initialEditMode={openInEditMode}
-        onSubmit={onSubmit}
+        onSubmit={onSubmit ?? (async () => ({ ok: true }))}
         onClose={() => setShowDetail(false)}
       />
     ) : null;
@@ -91,14 +91,6 @@ export function GuardIdItemCard({
         {!guardIdVerificationPhotosComplete(guard) && (
           <span className="text-[10px] text-brand-text-muted">Photos incomplete</span>
         )}
-        <button
-          type="button"
-          onClick={() => setShowDetail(true)}
-          className="p-1 text-brand-text-muted hover:text-brand-text"
-          aria-label="View government ID details"
-        >
-          <ChevronRight className="w-4 h-4 shrink-0" />
-        </button>
       </div>
     </div>
   ) : null;
