@@ -132,8 +132,8 @@ export function GuardJobPreferencesPanel({
             <p className="guard-pref-hero-eyebrow">Job alerts</p>
             <h2 className="guard-pref-hero-title">Your alert profile</h2>
             <p className="guard-pref-hero-subtitle">
-              Turn on the job types you want. Complete onboarding once per type, then toggle alerts
-              anytime.
+              Turn on the job types you want. Complete the read-aloud onboarding once per type, then
+              toggle alerts anytime.
             </p>
           </div>
         </div>
