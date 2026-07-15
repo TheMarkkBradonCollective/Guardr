@@ -11,8 +11,9 @@ import {
 import { buildActivityFeed } from '../../lib/clientCoverage';
 import { buildMissionTimeline } from '../../lib/missionTracking';
 import { MissionTimeline } from '../mission/MissionTimeline';
-import { computeGuardPerformance, computeGuardSkillRatings, formatPerformanceScore } from '../../lib/guardPerformance';
+import { computeGuardPerformance, computeGuardSkillRatings } from '../../lib/guardPerformance';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { GuardRatingSection } from '../guard/GuardRatingSection';
 import { computeShiftDutySeconds, shiftDutyStartedAt } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -25,7 +26,6 @@ import {
   MapPin,
   MessageCircle,
   Shield,
-  Star,
 } from 'lucide-react';
 
 interface ClientActiveShiftProps {
@@ -74,14 +74,19 @@ export function ClientActiveShift({
     [request]
   );
 
+  const ratingRequests = useMemo(
+    () => [request, ...allLiveRequests],
+    [request, allLiveRequests]
+  );
+
   const guardPerformance = useMemo(
-    () => computeGuardPerformance(guard.id, [request, ...allLiveRequests]),
-    [guard.id, request, allLiveRequests]
+    () => computeGuardPerformance(guard.id, ratingRequests),
+    [guard.id, ratingRequests]
   );
 
   const skillRatings = useMemo(
-    () => computeGuardSkillRatings(guard, [request, ...allLiveRequests]).slice(0, 4),
-    [guard, request, allLiveRequests]
+    () => computeGuardSkillRatings(guard, ratingRequests),
+    [guard, ratingRequests]
   );
 
   useEffect(() => {
@@ -141,31 +146,9 @@ export function ClientActiveShift({
           <ProfileAvatar src={guard.avatar} name={guard.name} size="md" className="shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold truncate">{guard.name}</p>
-            <div className="flex items-center gap-2 text-xs text-brand-text-muted mt-0.5 flex-wrap">
+            <div className="mt-1">
               <GuardArmedStatusPill guard={guard} />
-              <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
-              <span>{guard.rating.toFixed(1)}</span>
-              {guardPerformance.overallScore > 0 && (
-                <>
-                  <span>·</span>
-                  <span>Security score {formatPerformanceScore(guardPerformance.overallScore)}</span>
-                </>
-              )}
-              <span>·</span>
-              <span>{guard.jobsCompleted} jobs</span>
             </div>
-            {skillRatings.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {skillRatings.map((skill) => (
-                  <span
-                    key={skill.skill}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-brand-bg-sec border border-brand-border"
-                  >
-                    {skill.skill} {skill.rating.toFixed(1)}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
           {onOpenJobChat && (
             <button
@@ -178,6 +161,14 @@ export function ClientActiveShift({
             </button>
           )}
         </div>
+
+        <GuardRatingSection
+          guard={guard}
+          requests={ratingRequests}
+          performance={guardPerformance}
+          skillRatings={skillRatings}
+          variant="compact"
+        />
 
         {phase === 'on-duty' && (
           <div className="text-center py-4 border-y border-brand-border bg-brand-primary/5">
