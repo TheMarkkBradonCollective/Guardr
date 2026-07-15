@@ -7,7 +7,7 @@ This guide explains how Guardr works: which page to open, where actions appear, 
 Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
-- **Guards** wait for application approval, upload credentials on the **activation screen**, become **active** after staff verify and manually activate, then apply for work, clock in and out, complete self-audits, submit reports, and collect pay.
+- **Guards** upload required credentials on the **activation screen** while their application is under review, become **active** after staff approve and verify credentials, then apply for work, clock in and out, complete self-audits, submit reports, and collect pay.
 - **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below.
 
 ### Where to open this guide
@@ -54,7 +54,7 @@ Guardr is a **California-aligned independent contractor technology marketplace**
 - Guards **self-select** — they apply directly; clients approve or decline.
 - Staff placement is for **dispute or safety situations only**.
 - **Self-audit photos** at shift start are **guard-submitted** (selfie, uniform, shoes) — clients review and confirm.
-- Guards upload credentials only after staff **approves the application**; guards browse the app only after staff **manually activates** the account.
+- Guards can upload credentials while **pending**; staff verify after application approval; guards browse the app only after staff **activate** the account.
 - Clients **approve guards** before a job becomes **Accepted**.
 - Card/Stripe is the primary payment path; payouts auto-release to Stripe Connect after completion unless a dispute holds them.
 
@@ -69,18 +69,19 @@ This section walks through Guardr from first sign-up to final payout — the sam
 | Who | What you do | What happens next |
 |-----|-------------|-------------------|
 | **Client** | Sign up → complete **Profile** → wait on **Home** ("Account pending approval") | Moderator+ approves from **Approvals → Profile approval** |
-| **Guard** | Sign up → land on **activation screen** ("Application under review") — **no uploads yet** | Moderator+ **approves application** (`pending` → `approved`) |
+| **Guard** | Sign up → land on **activation screen** ("Application under review") — upload five required credentials | Moderator+ **approves application** (`pending` → `approved`) |
 | **Staff** | Sign in with credentials provided by a Director or Founder | Full staff console opens per your role |
 
 ### Phase 2 — Guard becomes marketplace-eligible (manual, three steps)
 
 ```
-1. Moderator+ approves application     →  guard can upload credentials
-2. Administrator+ verifies each cred   →  ID, COI, guard card, PTA/UOF, 32-hr
-3. Administrator+ manually activates       →  guard gets Map / Jobs / Pay
+1. Guard uploads credentials while pending →  credentials attached to application
+2. Moderator+ approves application     →  `pending` → `approved`
+3. Administrator+ verifies each cred   →  ID, COI, guard card, PTA/UOF, 32-hr
+4. Account activates automatically     →  guard gets Map / Jobs / Pay
 ```
 
-Guards stay on the **activation screen** until step 3. The progress bar tracks all five required credentials after approval.
+Guards stay on the **activation screen** until activation. The progress bar tracks all five required credentials from sign-up.
 
 ### Phase 3 — A job gets posted and paid
 
@@ -269,20 +270,20 @@ GUARD (pending)                       MODERATOR+
   |                                     |
   | Sign up                             |
   | "Application under review"          |
-  | (no credential upload yet)          |
+  | Upload ID, COI, guard card, certs   |
   |------------------------------------>|
   |                                     | Approve application (pending → approved)
   |                                     |
 GUARD (approved)                      ADMINISTRATOR+
   |                                     |
-  | Upload ID, COI, guard card, certs   |
+  | Finish any missing credentials      |
   | Progress bar updates                |
   |------------------------------------>|
   |                                     | Verify each credential (no auto-activate)
   |                                     |
-GUARD (approved, all verified)        MODERATOR+
+GUARD (approved, all verified)        PLATFORM
   |                                     |
-  | "Awaiting account activation"       |
+  | Account activates automatically     |
   |------------------------------------>|
   |                                     | Manually activate account
   | Full app unlocks (active)           |
@@ -527,11 +528,11 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 
 1. Create a **Guard** account during sign-up.
 2. After sign-in you land on the **activation screen** with **Application under review**:
-   - You **cannot upload credentials yet** — wait for staff to approve your application.
+   - Upload government ID, COI, guard card, PTA/UOF, and 32-hour training while staff reviews your application.
    - **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **General guide** are blocked.
 3. When a **Moderator+ approves your application** (`pending` → `approved`):
-   - The screen unlocks credential uploads.
-   - Upload on the activation screen (you do not need **Profile**):
+   - Staff can verify the credentials you already uploaded.
+   - Continue completing any missing items on the activation screen:
      - Government ID (front, back, selfie, state, number, expiration).
      - Certificate of Insurance (COI).
      - BSIS guard card.
@@ -715,8 +716,8 @@ Moderators are the front line for account intake and field monitoring. You **app
 
 | Step | Your action | Guard status |
 |------|-------------|--------------|
-| 1 | **Slide to approve application** | `pending` → `approved` (guard can now upload creds) |
-| 2 | Wait for Administrator+ to verify all five credentials | Guard uploads on activation screen |
+| 1 | **Slide to approve application** | `pending` → `approved` (guard may already have credentials on file) |
+| 2 | Wait for Administrator+ to verify all five credentials | Guard may upload on activation screen while pending |
 | 3 | **Grant marketplace eligibility** / **Activate account** | `approved` → `active` (only when checklist is clear) |
 
 ---
@@ -957,7 +958,7 @@ This section describes each key part of the app — what it contains, what it is
 
 **Where:** Shown automatically after guard sign-in until account status is **active**
 
-Guards who are **pending** cannot upload credentials — they see **Application under review**. Guards who are **approved** (but not yet **active**) upload on this screen until staff activate the account.
+Guards who are **pending** see **Application under review** and can upload the five required credentials on that screen. Staff verify credentials after the application is approved. Guards who are **approved** (but not yet **active**) continue uploading here until staff activate the account.
 
 | Element | What it is |
 |---------|------------|
