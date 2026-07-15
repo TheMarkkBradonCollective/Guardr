@@ -52,6 +52,7 @@ import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { ClientViolationReportSheet, type ClientViolationReportInput } from './ClientViolationReportSheet';
 import { ReplacementRequestPanel } from './ReplacementRequestPanel';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
@@ -61,6 +62,11 @@ import {
   formatPerformanceScore,
 } from '../../lib/guardPerformance';
 import {
+  canClientReportViolation,
+  listClientViolationReports,
+} from '../../lib/clientViolations';
+import {
+  AlertTriangle,
   Award,
   Banknote,
   Check,
@@ -89,6 +95,7 @@ export interface ClientJobActionsPanelProps {
   onRequestEdit?: (requestId: string) => void;
   onUpdateStatus?: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview?: (requestId: string, rating: number, reviewText: string) => void;
+  onReportViolation?: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
@@ -134,6 +141,7 @@ export function ClientJobActionsPanel({
   onRequestEdit,
   onUpdateStatus,
   onAddReview,
+  onReportViolation,
   onConfirmSelfAudit,
   onRequestCashPayment,
   onApproveOvertime,
@@ -178,6 +186,7 @@ export function ClientJobActionsPanel({
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [violationOpen, setViolationOpen] = useState(false);
   const [replacementBusy, setReplacementBusy] = useState(false);
 
   const rankedApplicants = useMemo(
@@ -794,6 +803,22 @@ export function ClientJobActionsPanel({
             </button>
           </div>
         )}
+
+        {onReportViolation && canClientReportViolation(req) && (
+          <div className={`${req.status === 'completed' && hiredGuard && !req.ratingGiven && onAddReview ? 'pt-2' : 'border-t border-brand-border pt-3'} w-full`}>
+            <button
+              type="button"
+              onClick={() => setViolationOpen(true)}
+              className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              Report violation
+              {listClientViolationReports(req).length > 0
+                ? ` (${listClientViolationReports(req).length})`
+                : ''}
+            </button>
+          </div>
+        )}
       </div>
 
       <AppFormSheet
@@ -910,6 +935,16 @@ export function ClientJobActionsPanel({
           </button>
         </div>
       </AppFormSheet>
+
+      {onReportViolation && (
+        <ClientViolationReportSheet
+          open={violationOpen}
+          onClose={() => setViolationOpen(false)}
+          request={req}
+          hiredGuard={hiredGuard}
+          onSubmit={onReportViolation}
+        />
+      )}
     </>
   );
 }

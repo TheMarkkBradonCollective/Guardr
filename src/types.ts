@@ -1043,6 +1043,17 @@ export interface SecurityRequest {
   replacementRequest?: ReplacementRequest;
   /** Set when guard never clocked in after scheduled start. */
   noShow?: boolean;
+  /** Client-reported guard or job violations — affects guard performance when target is guard. */
+  clientViolationReports?: Array<{
+    id: string;
+    target: 'guard' | 'job';
+    category: string;
+    description: string;
+    reportedAt: string;
+    reportedByClientId: string;
+    reportedByClientName?: string;
+    guardId?: string;
+  }>;
   checkOutAudit?: {
     checkedAt: string;
     completed: boolean;

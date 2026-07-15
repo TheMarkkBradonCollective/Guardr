@@ -1,3 +1,4 @@
+import { countGuardViolationReports } from './clientViolations';
 import type { SecurityGuard, SecurityRequest, ShiftReport, JobType } from '../types';
 
 export interface GuardPerformanceMetrics {
@@ -401,8 +402,7 @@ export function getNextPerformanceTier(overallRating: number): PerformanceTier |
 export function computePerformanceViolations(
   guardId: string,
   guard: SecurityGuard,
-  requests: SecurityRequest[],
-  reports: ShiftReport[] = []
+  requests: SecurityRequest[]
 ): PerformanceViolation[] {
   const violations: PerformanceViolation[] = [];
 
@@ -418,9 +418,13 @@ export function computePerformanceViolations(
     violations.push({ id: 'failed-audit', label: 'Failed uniform audit', count: failedAudits });
   }
 
-  const incidents = reports.filter((r) => r.guardId === guardId && r.type === 'incident').length;
-  if (incidents > 0) {
-    violations.push({ id: 'incident', label: 'Incident report', count: incidents });
+  const clientReported = countGuardViolationReports(guardId, requests);
+  if (clientReported > 0) {
+    violations.push({
+      id: 'client-reported',
+      label: 'Client-reported violation',
+      count: clientReported,
+    });
   }
 
   return violations;
@@ -500,7 +504,7 @@ export function computeGuardPerformanceRating(
   const metrics = computeGuardPerformance(guard.id, requests, reports);
   const clientReviews = computeClientReviewStats(guard.id, requests);
   const factors = buildPerformanceFactors(guard.id, metrics, clientReviews, requests);
-  const violations = computePerformanceViolations(guard.id, guard, requests, reports);
+  const violations = computePerformanceViolations(guard.id, guard, requests);
 
   const overallRating = factors.reduce((sum, f) => sum + f.pointsEarned, 0);
   const tier = getPerformanceTier(overallRating);

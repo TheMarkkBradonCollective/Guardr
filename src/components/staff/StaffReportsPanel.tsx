@@ -5,6 +5,7 @@ import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { FileText } from 'lucide-react';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
+import { clientViolationCategoryLabel, listClientViolationReports } from '../../lib/clientViolations';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
@@ -62,10 +63,28 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                 )}
                 {listIncidentReportsForRequest(req).length > 0 && (
                   <div className="text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3 w-full space-y-3">
-                    <p className="text-brand-text-muted font-semibold text-xs">Incident report(s)</p>
+                    <p className="text-brand-text-muted font-semibold text-xs">Guard incident report(s)</p>
                     {buildIncidentReportViews([req], guards).map((view, idx) => (
                       <div key={view.id} className={idx > 0 ? 'pt-3 border-t border-red-500/20' : ''}>
                         <IncidentReportDetailView report={view} compact />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {listClientViolationReports(req).length > 0 && (
+                  <div className="text-sm bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 w-full space-y-2">
+                    <p className="text-brand-text-muted font-semibold text-xs">Client violation report(s)</p>
+                    {listClientViolationReports(req).map((violation) => (
+                      <div key={violation.id} className="text-sm leading-relaxed">
+                        <p className="font-semibold">
+                          {violation.target === 'guard' ? 'Guard' : 'Job'} ·{' '}
+                          {clientViolationCategoryLabel(violation.target, violation.category)}
+                        </p>
+                        <p className="text-xs text-brand-text-muted">
+                          {new Date(violation.reportedAt).toLocaleString()}
+                          {violation.reportedByClientName ? ` · ${violation.reportedByClientName}` : ''}
+                        </p>
+                        <p className="text-brand-text-muted mt-1">{violation.description}</p>
                       </div>
                     ))}
                   </div>
