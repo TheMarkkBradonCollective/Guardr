@@ -72,6 +72,7 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('map', guard), 'map');
     assert.equal(normalizeGuardTabForAccount('earnings', guard), 'earnings');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
+    assert.equal(normalizeGuardTabForAccount('activation', guard), 'map');
   });
 
   it('allows staff guards to use any tab', () => {

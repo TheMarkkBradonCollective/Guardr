@@ -104,7 +104,9 @@ export function normalizeGuardTabForAccount(
     if (resolved === 'settings') return 'settings';
     return 'activation';
   }
-  if (isGuardNavUnlocked(guard)) return resolved;
+  if (isGuardNavUnlocked(guard)) {
+    return resolved === 'activation' ? 'map' : resolved;
+  }
   if (resolved === 'settings') return 'settings';
   return 'activation';
 }

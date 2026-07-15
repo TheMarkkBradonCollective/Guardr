@@ -567,7 +567,7 @@ export default function App() {
     () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
-    () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'activation'
+    () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
   );
   const [staffSection, setStaffSectionState] = useState<StaffSection>(() => {
     if (initialRoute?.role !== 'staff') return 'overview';
@@ -2606,19 +2606,15 @@ export default function App() {
     sessionGuard ??
     (activeGuardId ? verifiedGuards.find((g) => g.id === activeGuardId) : undefined) ??
     ({} as SecurityGuard);
-  const resolvedGuardTab: GuardTab =
-    sessionGuard && !isGuardAccountActive(sessionGuard)
-      ? normalizeGuardTabForAccount(guardTab, sessionGuard)
-      : guardTab;
+  const resolvedGuardTab: GuardTab = normalizeGuardTabForAccount(guardTab, sessionGuard);
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;
     const guard = findGuardProfileForUser(currentUser, verifiedGuards);
-    if (!guard?.id || isGuardAccountActive(guard)) return;
+    if (!guard?.id) return;
     const normalizedTab = normalizeGuardTabForAccount(guardTab, guard);
-    if (normalizedTab !== guardTab) {
-      setGuardTabState(normalizedTab);
-    }
+    if (normalizedTab === guardTab) return;
+    setGuardTabState(normalizedTab);
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
