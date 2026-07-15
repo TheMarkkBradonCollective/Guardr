@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Certification,
   Client,
@@ -76,6 +76,7 @@ import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
 import { getGuardIdVerificationStatus } from '../lib/guardIdentityVerification';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
@@ -407,6 +408,13 @@ export function StaffDashboard({
   const [internalTeamId, setInternalTeamId] = useState<string | null>(null);
   const [internalCredentialItemId, setInternalCredentialItemId] = useState<string | null>(null);
   const [internalCrewJobId, setInternalCrewJobId] = useState<string | null>(null);
+  const [staffMessagesChrome, setStaffMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
+
+  useEffect(() => {
+    if (!isStaffMessagesSection(section)) {
+      setStaffMessagesChrome(EMPTY_MESSAGES_CHROME);
+    }
+  }, [section]);
 
   const selectedGuardId = controlledGuardId !== undefined ? controlledGuardId : internalGuardId;
   const selectedClientId = controlledClientId !== undefined ? controlledClientId : internalClientId;
@@ -783,6 +791,7 @@ export function StaffDashboard({
               onSelectedSupportTicketIdChange={onSelectedSupportTicketIdChange}
               initialJobChatRequestId={selectedJobChatRequestId}
               initialSupportTicketId={selectedSupportTicketId}
+              onMessagesChromeChange={setStaffMessagesChrome}
             />
           </div>
         ) : (
@@ -925,6 +934,8 @@ export function StaffDashboard({
     }
   };
 
+  const messagesChromeActive = isStaffMessagesSection(section);
+
   return (
     <StaffOpsLayout
       currentUser={currentUser}
@@ -937,8 +948,9 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
-      hideHeader={isStaffMessagesSection(section)}
       headerActions={headerActions}
+      headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
+      headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}

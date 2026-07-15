@@ -1,6 +1,7 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
+import { AppEmptyState } from '../ui/app/AppPrimitives';
 
 interface MessagesHubLayoutProps {
   header?: React.ReactNode;
@@ -22,11 +23,9 @@ export function MessagesHubEmptyDetail({
 }) {
   return (
     <div className="app-messages-empty-detail">
-      <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-35" strokeWidth={1.5} />
-      <p className="text-sm font-semibold">{emptyDetailTitle}</p>
-      <p className="text-xs text-brand-text-muted mt-1 max-w-[16rem] mx-auto leading-relaxed">
+      <AppEmptyState dashed icon={<MessageCircle className="w-5 h-5" />} title={emptyDetailTitle}>
         {emptyDetailHint}
-      </p>
+      </AppEmptyState>
     </div>
   );
 }

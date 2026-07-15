@@ -46,6 +46,8 @@ interface StaffOpsLayoutProps {
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
   headerActions?: React.ReactNode;
+  headerExtension?: React.ReactNode;
+  headerOverride?: React.ReactNode;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -87,6 +89,8 @@ export function StaffOpsLayout({
   onOpenLegal,
   hideHeader = false,
   headerActions,
+  headerExtension,
+  headerOverride,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
@@ -216,7 +220,11 @@ export function StaffOpsLayout({
       )}
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
-        {hideHeader ? (
+        {headerOverride ? (
+          <header className="staff-main-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
+            {headerOverride}
+          </header>
+        ) : hideHeader ? (
           <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
             <button
               type="button"
@@ -240,33 +248,42 @@ export function StaffOpsLayout({
             </div>
           </header>
         ) : (
-          <header className="staff-main-header shrink-0 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
-            <button
-              type="button"
-              className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
-                {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
-              </h1>
-              <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
+          <header
+            className={`staff-main-header shrink-0 border-b border-brand-border${
+              headerExtension ? ' staff-main-header--with-extension' : ''
+            }`}
+          >
+            <div className="flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 px-4 sm:px-5">
+              <button
+                type="button"
+                className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
+                  {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
+                </h1>
+                <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {headerActions}
+                <AccountMenu
+                  userName={currentUser.name}
+                  userSubtitle={ROLE_LABELS[currentUser.role]}
+                  avatarUrl={currentUser.avatar}
+                  onOpenProfile={() => navigate('profile')}
+                  onOpenSettings={() => navigate('preferences')}
+                  onSignOut={onSignOut}
+                  active={activeSection === 'profile' || activeSection === 'preferences'}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {headerActions}
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={ROLE_LABELS[currentUser.role]}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => navigate('profile')}
-                onOpenSettings={() => navigate('preferences')}
-                onSignOut={onSignOut}
-                active={activeSection === 'profile' || activeSection === 'preferences'}
-              />
-            </div>
+            {headerExtension ? (
+              <div className="staff-main-header-extension">{headerExtension}</div>
+            ) : null}
           </header>
         )}
 
