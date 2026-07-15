@@ -161,7 +161,14 @@ export function GuardEarningsPanel({
         </div>
 
         {(openCashInvoices > 0 || openStripeInvoices > 0) && (
-          <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 px-3 py-2 leading-relaxed">
+          <p
+            className="text-sm mt-4 rounded-xl px-3 py-2.5 leading-relaxed"
+            style={{
+              color: 'var(--status-warning)',
+              background: 'color-mix(in srgb, var(--status-warning) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)',
+            }}
+          >
             {openCashInvoices > 0 && (
               <span>
                 {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
@@ -199,7 +206,10 @@ export function GuardEarningsPanel({
       </AppFormSection>
 
       {stripeConnected && stripeReady && (
-        <p className="text-sm text-emerald-400/90 px-5 py-3 border-b border-brand-border">
+        <p
+          className="text-sm font-medium px-5 py-3 border-b border-brand-border"
+          style={{ color: 'var(--status-success)' }}
+        >
           Bank account connected — online payouts enabled
         </p>
       )}
