@@ -157,6 +157,49 @@ html.theme-grey {
   --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 26%, transparent);
 }
 
+/* ─── ROLE IDENTITY ──────────────────────────────────────────
+   Each workspace gets its own accent so the product feels purpose-built
+   per audience instead of one skin re-used everywhere. Buttons, active nav
+   states, focus rings, and "primary" badges all key off --brand-primary,
+   so overriding it here re-colors the whole role experience automatically —
+   including portaled UI (toasts, sheets, menus) since this is set on <html>.
+   Staff keeps the base sage brand color (no override needed below). ────── */
+html.theme-light[data-role-experience="client"] {
+  --brand-primary:       #2B5A8C;
+  --brand-primary-hover: #204569;
+  --brand-accent:        #2B5A8C;
+}
+html.theme-dark[data-role-experience="client"] {
+  --brand-primary:       #6FA6DA;
+  --brand-primary-hover: #5B90C4;
+  --brand-accent:        #6FA6DA;
+  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+}
+html.theme-grey[data-role-experience="client"] {
+  --brand-primary:       #5D96C9;
+  --brand-primary-hover: #4C81B3;
+  --brand-accent:        #5D96C9;
+  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 26%, var(--brand-border));
+}
+
+html.theme-light[data-role-experience="guard"] {
+  --brand-primary:       #A6521E;
+  --brand-primary-hover: #854016;
+  --brand-accent:        #A6521E;
+}
+html.theme-dark[data-role-experience="guard"] {
+  --brand-primary:       #E28E52;
+  --brand-primary-hover: #CC783E;
+  --brand-accent:        #E28E52;
+  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+}
+html.theme-grey[data-role-experience="guard"] {
+  --brand-primary:       #D6875A;
+  --brand-primary-hover: #C0714A;
+  --brand-accent:        #D6875A;
+  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 26%, var(--brand-border));
+}
+
 /* Legacy nested wrappers still work */
 .theme-dark  { color: inherit; }
 .theme-light { color: inherit; }
@@ -17252,5 +17295,372 @@ textarea:focus-visible {
 button:focus-visible:not(.app-button-primary):not(.app-button-outline):not(.app-button-danger),
 a:focus-visible {
   box-shadow: var(--focus-ring);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — 2026 DESIGN OVERHAUL
+   Replaces the old "unbox everything" flat-hairline system with real depth:
+   elevated cards, per-role accent identity, a genuine desktop dashboard grid,
+   distinct tablet density, and native-app-only chrome for the Capacitor shell.
+   Placed last on purpose — these rules intentionally win over earlier passes.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. METRIC TILES: real cards, not a hairline spreadsheet ────────────── */
+
+.app-metric-strip,
+.staff-shell .app-metric-strip,
+.client-home-screen .app-metric-strip {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.625rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+@media (min-width: 640px) {
+  .app-metric-strip--staff,
+  .staff-shell .app-metric-strip--staff {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-metric-strip--count-6.app-metric-strip--staff,
+  .staff-shell .app-metric-strip--count-6.app-metric-strip--staff {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
+.app-metric-cell,
+.staff-shell .app-metric-cell {
+  position: relative !important;
+  padding: 0.9375rem 1rem !important;
+  background: var(--brand-surface) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  border-left: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  text-align: left !important;
+  overflow: hidden;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease, background-color 0.16s ease;
+}
+
+.app-metric-cell::before,
+.staff-shell .app-metric-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: color-mix(in srgb, var(--brand-primary) 45%, transparent);
+  opacity: 0.55;
+}
+
+.app-metric-cell-accent,
+.staff-shell .app-metric-cell-accent {
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-surface)) !important;
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border)) !important;
+}
+
+.app-metric-cell-accent::before,
+.staff-shell .app-metric-cell-accent::before {
+  opacity: 1;
+}
+
+.app-metric-cell-clickable:hover,
+.staff-shell .app-metric-cell-clickable:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--brand-border)) !important;
+  box-shadow: var(--shadow-card) !important;
+  transform: translateY(-1px);
+}
+
+.app-metric-cell-clickable:active,
+.staff-shell .app-metric-cell-clickable:active {
+  transform: translateY(0);
+  opacity: 0.88;
+}
+
+.app-metric-cell-label,
+.staff-shell .app-metric-cell-label {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--brand-text-muted) !important;
+  margin: 0 0 0.3rem !important;
+}
+
+.app-metric-cell-value,
+.staff-shell .app-metric-cell-value {
+  font-size: 1.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.05 !important;
+  color: var(--brand-text) !important;
+}
+
+.app-metric-cell-sub,
+.staff-shell .app-metric-cell-sub {
+  font-size: 0.6875rem !important;
+  color: var(--brand-text-muted) !important;
+  margin-top: 0.2rem !important;
+  line-height: 1.35 !important;
+}
+
+body[data-form-factor="desktop"] .app-metric-cell-value {
+  font-size: 1.75rem !important;
+}
+
+/* ─── 2. STAFF OVERVIEW: restore real cards for widgets ──────────────────── */
+
+.staff-shell .staff-overview-chart-card,
+.staff-shell .staff-overview-feed-card,
+.staff-shell .staff-overview-visual-card,
+.staff-shell .overview-visual-card {
+  background: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 1.125rem 1.25rem !important;
+}
+
+.staff-shell .staff-overview-empty-card {
+  background: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 1.125rem 1.25rem !important;
+}
+
+.staff-shell .staff-payment-summary-grid,
+.staff-shell .staff-income-summary-grid {
+  background: var(--brand-surface) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden;
+}
+
+.staff-shell .staff-overview-focus-band,
+.staff-shell .staff-overview-focus-line-wrap {
+  border-bottom: none !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand-primary) 10%, transparent),
+    transparent 70%
+  ) !important;
+  border-radius: var(--radius-app-lg) !important;
+  padding: 1rem 1.125rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+/* ─── 3. DASHBOARD HERO + ZONES: more presence, less flatness ────────────── */
+
+.app-dashboard-hero {
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+
+.staff-overview-role-badge,
+.staff-shell .staff-overview-role-badge {
+  box-shadow: var(--shadow-sm);
+}
+
+.app-dashboard-zone-title,
+.staff-shell .app-dashboard-zone-title {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--brand-text-muted) !important;
+}
+
+.app-dashboard-zone-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin-right: 0.5rem;
+  border-radius: 999px;
+  background: var(--brand-primary);
+  vertical-align: middle;
+}
+
+/* ─── 4. DESKTOP: a real workspace, not a stretched phone screen ─────────── */
+
+body[data-form-factor="desktop"] .role-experience-guard .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-form-factor="desktop"] .role-experience-client .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+  max-width: 62rem !important;
+}
+
+body[data-form-factor="desktop"] .role-experience-guard .app-screen--wide,
+body[data-form-factor="desktop"] .role-experience-client .app-screen--wide,
+body[data-form-factor="desktop"] .role-experience-client .client-home-screen {
+  max-width: 78rem !important;
+}
+
+body[data-form-factor="desktop"] .client-content-shell {
+  max-width: min(1280px, 100%) !important;
+}
+
+body[data-form-factor="desktop"] .app-dashboard-split {
+  gap: 1.75rem !important;
+}
+
+body[data-form-factor="desktop"] .app-dashboard-zone-body,
+body[data-form-factor="desktop"] .app-dashboard-zone-head {
+  padding-inline: 0 !important;
+}
+
+body[data-form-factor="desktop"] .staff-main-content,
+body[data-form-factor="desktop"] .staff-overview {
+  padding-inline: 2rem !important;
+}
+
+/* Sidebar: subtle depth instead of a flat filled rectangle */
+body[data-form-factor="desktop"] .role-side-nav {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg-sec)),
+    var(--brand-bg-sec) 14rem
+  ) !important;
+  box-shadow: 1px 0 0 var(--brand-border), 4px 0 24px rgba(0, 0, 0, 0.03);
+}
+
+html.theme-dark body[data-form-factor="desktop"] .role-side-nav,
+html.theme-grey body[data-form-factor="desktop"] .role-side-nav {
+  box-shadow: 1px 0 0 var(--brand-border), 4px 0 28px rgba(0, 0, 0, 0.35);
+}
+
+body[data-form-factor="desktop"] .role-side-nav-item-active {
+  box-shadow: var(--shadow-sm);
+}
+
+/* Desktop header: soft shadow instead of a hard 1px line */
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header,
+body[data-form-factor="desktop"] .app-screen-header {
+  border-bottom: none !important;
+  box-shadow: 0 1px 0 var(--brand-border), 0 6px 20px rgba(0, 0, 0, 0.02);
+}
+
+html.theme-dark body[data-form-factor="desktop"] .app-screen-header,
+html.theme-grey body[data-form-factor="desktop"] .app-screen-header {
+  box-shadow: 0 1px 0 var(--brand-border), 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+/* Staff sidebar gets the same treatment as the client/guard sidebar */
+body[data-form-factor="desktop"] .staff-sidebar {
+  box-shadow: 1px 0 0 var(--brand-border), 4px 0 24px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── 5. TABLET: distinct density — airy 2-up grids, not a stretched phone ── */
+
+body[data-form-factor="tablet"] .app-dashboard-zone-body {
+  padding-inline: 1.5rem;
+}
+
+body[data-form-factor="tablet"] .staff-overview,
+body[data-form-factor="tablet"] .client-home-screen {
+  padding-inline: 0.25rem;
+}
+
+/* ─── 6. ROLE IDENTITY: reinforce accent beyond buttons ──────────────────── */
+
+.role-experience-client .role-side-nav-brand-accent,
+.role-experience-guard .role-side-nav-brand-accent {
+  color: var(--brand-primary);
+}
+
+.staff-overview-role-badge--owner {
+  background: linear-gradient(135deg, #caa24a, #a5792a) !important;
+  color: #1a1200 !important;
+  border-color: transparent !important;
+}
+
+/* ─── 7. NATIVE APP (Capacitor APK): its own chrome, not a mobile website ── */
+
+body.capacitor-native .bottom-nav-bar {
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: max(0.625rem, env(safe-area-inset-bottom));
+  margin-inline: auto;
+  max-width: calc(100% - 1.5rem);
+  border-radius: var(--radius-sheet);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
+  box-shadow: var(--shadow-float);
+  position: fixed;
+}
+
+body.capacitor-native .role-app-shell > nav.bottom-nav-bar {
+  position: static;
+}
+
+body.capacitor-native .role-app-shell {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+}
+
+body.capacitor-native .bottom-nav-inner {
+  padding-inline: 0.25rem;
+}
+
+body.capacitor-native .bottom-nav-item,
+body.capacitor-native .bottom-nav-center-map {
+  transition: transform 0.12s ease;
+}
+
+body.capacitor-native .bottom-nav-item:active,
+body.capacitor-native .bottom-nav-center-map:active {
+  transform: scale(0.9);
+}
+
+/* Native headers read as an app, not a browser tab — no hairline, more lift */
+body.capacitor-native .app-screen-header,
+body.capacitor-native .app-screen-header--compact {
+  border-bottom: none !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--brand-border) 60%, transparent);
+}
+
+body.capacitor-native .app-screen-header-title {
+  font-size: 1.375rem !important;
+  letter-spacing: -0.045em !important;
+}
+
+body.capacitor-native .app-item-card,
+body.capacitor-native .wf-list-card {
+  transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease !important;
+}
+
+body.capacitor-native button.app-item-card:active,
+body.capacitor-native a.app-item-card:active {
+  transform: scale(0.985) !important;
+}
+
+body.capacitor-native .app-button-primary:active,
+body.capacitor-native .app-button-outline:active,
+body.capacitor-native .staff-ops-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* ─── 8. CONSISTENT TOKEN COLORS (retire raw hex on meters/segments) ─────── */
+
+.overview-meter-fill-success,
+.overview-segment-success {
+  background: var(--status-success) !important;
+}
+
+.overview-meter-fill-warning,
+.overview-segment-warning {
+  background: var(--status-warning) !important;
+}
+
+.overview-meter-fill-info,
+.overview-segment-info {
+  background: var(--status-info) !important;
+}
+
+.overview-segment-bar,
+.overview-meter-track {
+  border-radius: 999px;
+  overflow: hidden;
 }
 
