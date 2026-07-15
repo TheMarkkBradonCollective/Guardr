@@ -232,13 +232,17 @@ export function GuardStandingCrewPanel({
     embedded ? null : <h2 className="app-section-title">{title}</h2>;
 
   const renderEmbeddedLayout = (hero: React.ReactNode, body: React.ReactNode) => (
-    <div className="crew-hub-tiered-layout">
-      <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card crew-hub-hero-card">
-        {hero}
-      </section>
-      {afterHero}
-      <div className="guard-rating-body crew-hub-team-body">{body}</div>
-    </div>
+    <>
+      <div className="guard-tiered-screen-pinned">
+        <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card guard-tier-hero-card">
+          {hero}
+        </section>
+      </div>
+      {afterHero ? <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div> : null}
+      <div className="guard-tiered-screen-scroll">
+        <div className="guard-rating-body crew-hub-team-body">{body}</div>
+      </div>
+    </>
   );
 
   const leadHero = (
@@ -289,10 +293,14 @@ export function GuardStandingCrewPanel({
   if (!trusted && pendingIncoming.length === 0) {
     return (
       <>
-        {embedded ? afterHero : null}
-        <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
-          When a trusted guard invites you to their standing crew, it will show up here.
-        </AppEmptyState>
+        {embedded && afterHero ? (
+          <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div>
+        ) : null}
+        <div className="guard-tiered-screen-scroll">
+          <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
+            When a trusted guard invites you to their standing crew, it will show up here.
+          </AppEmptyState>
+        </div>
       </>
     );
   }
@@ -553,8 +561,10 @@ export function GuardStandingCrewPanel({
   if (embedded) {
     return (
       <>
-        {afterHero}
-        <div className="crew-hub-team-body">{embeddedBody ?? bodyContent}</div>
+        {afterHero ? <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div> : null}
+        <div className="guard-tiered-screen-scroll">
+          <div className="crew-hub-team-body">{embeddedBody ?? bodyContent}</div>
+        </div>
       </>
     );
   }

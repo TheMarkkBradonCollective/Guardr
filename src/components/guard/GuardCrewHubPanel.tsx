@@ -239,13 +239,11 @@ export function GuardCrewHubPanel({
   }
 
   const tabBar = (
-    <div className="crew-hub-sticky-head">
-      <AppSegmentedControl<CrewHubTab>
-        options={tabOptions}
-        value={activeTab}
-        onChange={setActiveTab}
-      />
-    </div>
+    <AppSegmentedControl<CrewHubTab>
+      options={tabOptions}
+      value={activeTab}
+      onChange={setActiveTab}
+    />
   );
 
   const activeTabBody =
@@ -294,7 +292,7 @@ export function GuardCrewHubPanel({
   };
 
   return (
-    <AppScreen className="crew-hub-screen">
+    <AppScreen className="crew-hub-screen guard-tiered-screen">
       <GuardStandingCrewPanel {...standingCrewPanelProps} />
     </AppScreen>
   );

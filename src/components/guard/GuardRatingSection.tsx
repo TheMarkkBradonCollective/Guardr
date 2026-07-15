@@ -36,6 +36,8 @@ export interface GuardRatingSectionProps {
   skillRatings: GuardSkillRating[];
   /** full = guard performance screen; compact = live shift card */
   variant?: 'full' | 'compact';
+  /** Pin tier hero; scroll body content underneath */
+  pinnedLayout?: boolean;
   className?: string;
 }
 
@@ -229,6 +231,7 @@ export function GuardRatingSection({
   performance,
   skillRatings,
   variant = 'full',
+  pinnedLayout = false,
   className = '',
 }: GuardRatingSectionProps) {
   const clientReviews = useMemo(
@@ -289,98 +292,118 @@ export function GuardRatingSection({
     );
   }
 
+  const heroBlock = (
+    <div className={`guard-tier-hero ${tierHeroClass(rating.tier)}`}>
+      <div className="guard-tier-hero-glow" aria-hidden />
+      <TierMedal tier={rating.tier} size="lg" />
+      <p className="guard-tier-hero-eyebrow">Current level</p>
+      <h2 className="guard-tier-hero-name">{rating.tier.name}</h2>
+      <div className="guard-tier-hero-score-row">
+        <span className="guard-tier-hero-score-label">Overall rating</span>
+        <span className="guard-tier-hero-score-value">{formatOverallRating(rating.overallRating)}</span>
+        <Info className="guard-tier-hero-info" aria-label="Overall rating is the sum of your factor points out of 100" />
+      </div>
+      <TierProgressBar
+        overallRating={rating.overallRating}
+        tier={rating.tier}
+        nextTier={rating.nextTier}
+      />
+      <p className="guard-tier-hero-subtitle">
+        {clientReviews.count > 0
+          ? formatReviewCount(clientReviews.count)
+          : performance.jobsSampled > 0
+            ? formatShiftSampleCount(performance.jobsSampled)
+            : 'Building your performance profile'}
+      </p>
+    </div>
+  );
+
+  const bodyBlock = (
+    <div className="guard-rating-body">
+      {violationSummary && (
+        <ViolationsCard violations={rating.violations} summary={violationSummary} />
+      )}
+
+      {rating.factors.length > 0 && (
+        <section className="guard-factors-section">
+          <div className="guard-factors-header">
+            <h3 className="guard-factors-heading">Your rating factors</h3>
+            <p className="guard-factors-subheading">Points earned from recent shift behavior</p>
+          </div>
+          <div className="guard-factors-grid">
+            {rating.factors.map((factor) => (
+              <FactorCard key={factor.id} factor={factor} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {hasSkills && (
+        <section className="guard-skills-section">
+          <div className="guard-factors-header">
+            <h3 className="guard-factors-heading">Specialty ratings</h3>
+            <p className="guard-factors-subheading">Average scores by job type</p>
+          </div>
+          <div className="guard-skills-list">
+            {skillRatings.slice(0, 6).map((skill) => (
+              <RatingBarRow
+                key={skill.skill}
+                label={skill.skill}
+                score={skill.rating}
+                percent={rateToBarPercent(skill.rating)}
+                reviewCount={skill.reviewCount}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="guard-performance-stats" aria-label="Performance summary">
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Overall rating</p>
+          <p className="guard-performance-stat-value">
+            {rating.overallRating > 0 ? formatOverallRating(rating.overallRating) : '—'}
+          </p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Security score</p>
+          <p className="guard-performance-stat-value">
+            {overall > 0 ? formatPerformanceScore(overall) : '—'}
+          </p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Shifts completed</p>
+          <p className="guard-performance-stat-value">{guard.jobsCompleted}</p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Experience</p>
+          <p className="guard-performance-stat-value">
+            {guard.yearsExperience != null && guard.yearsExperience > 0
+              ? `${guard.yearsExperience}+ yrs`
+              : '—'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (pinnedLayout) {
+    return (
+      <>
+        <div className="guard-tiered-screen-pinned">
+          <section className={`guard-rating-section guard-rating-section-tiered guard-tier-hero-card ${className}`}>
+            {heroBlock}
+          </section>
+        </div>
+        <div className="guard-tiered-screen-scroll">{bodyBlock}</div>
+      </>
+    );
+  }
+
   return (
     <section className={`guard-rating-section guard-rating-section-tiered ${className}`}>
-      <div className={`guard-tier-hero ${tierHeroClass(rating.tier)}`}>
-        <div className="guard-tier-hero-glow" aria-hidden />
-        <TierMedal tier={rating.tier} size="lg" />
-        <p className="guard-tier-hero-eyebrow">Current level</p>
-        <h2 className="guard-tier-hero-name">{rating.tier.name}</h2>
-        <div className="guard-tier-hero-score-row">
-          <span className="guard-tier-hero-score-label">Overall rating</span>
-          <span className="guard-tier-hero-score-value">{formatOverallRating(rating.overallRating)}</span>
-          <Info className="guard-tier-hero-info" aria-label="Overall rating is the sum of your factor points out of 100" />
-        </div>
-        <TierProgressBar
-          overallRating={rating.overallRating}
-          tier={rating.tier}
-          nextTier={rating.nextTier}
-        />
-        <p className="guard-tier-hero-subtitle">
-          {clientReviews.count > 0
-            ? formatReviewCount(clientReviews.count)
-            : performance.jobsSampled > 0
-              ? formatShiftSampleCount(performance.jobsSampled)
-              : 'Building your performance profile'}
-        </p>
-      </div>
-
-      <div className="guard-rating-body">
-        {violationSummary && (
-          <ViolationsCard violations={rating.violations} summary={violationSummary} />
-        )}
-
-        {rating.factors.length > 0 && (
-          <section className="guard-factors-section">
-            <div className="guard-factors-header">
-              <h3 className="guard-factors-heading">Your rating factors</h3>
-              <p className="guard-factors-subheading">Points earned from recent shift behavior</p>
-            </div>
-            <div className="guard-factors-grid">
-              {rating.factors.map((factor) => (
-                <FactorCard key={factor.id} factor={factor} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {hasSkills && (
-          <section className="guard-skills-section">
-            <div className="guard-factors-header">
-              <h3 className="guard-factors-heading">Specialty ratings</h3>
-              <p className="guard-factors-subheading">Average scores by job type</p>
-            </div>
-            <div className="guard-skills-list">
-              {skillRatings.slice(0, 6).map((skill) => (
-                <RatingBarRow
-                  key={skill.skill}
-                  label={skill.skill}
-                  score={skill.rating}
-                  percent={rateToBarPercent(skill.rating)}
-                  reviewCount={skill.reviewCount}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="guard-performance-stats" aria-label="Performance summary">
-          <div className="guard-performance-stat">
-            <p className="guard-performance-stat-label">Overall rating</p>
-            <p className="guard-performance-stat-value">
-              {rating.overallRating > 0 ? formatOverallRating(rating.overallRating) : '—'}
-            </p>
-          </div>
-          <div className="guard-performance-stat">
-            <p className="guard-performance-stat-label">Security score</p>
-            <p className="guard-performance-stat-value">
-              {overall > 0 ? formatPerformanceScore(overall) : '—'}
-            </p>
-          </div>
-          <div className="guard-performance-stat">
-            <p className="guard-performance-stat-label">Shifts completed</p>
-            <p className="guard-performance-stat-value">{guard.jobsCompleted}</p>
-          </div>
-          <div className="guard-performance-stat">
-            <p className="guard-performance-stat-label">Experience</p>
-            <p className="guard-performance-stat-value">
-              {guard.yearsExperience != null && guard.yearsExperience > 0
-                ? `${guard.yearsExperience}+ yrs`
-                : '—'}
-            </p>
-          </div>
-        </div>
-      </div>
+      {heroBlock}
+      {bodyBlock}
     </section>
   );
 }
