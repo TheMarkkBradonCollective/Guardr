@@ -1,77 +1,51 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Client } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { Mail, Phone } from 'lucide-react';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
-import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
-import {
-  confirmApproveClientAccount,
-  confirmRestoreAccount,
-  confirmSuspendAccount,
-} from '../../lib/importantActionConfirm';
+import { confirmApproveClientAccount } from '../../lib/importantActionConfirm';
 
 interface StaffClientApplicationReviewPanelProps {
   client: Client;
-  canManage: boolean;
+  canReview: boolean;
   onApproveClient: (id: string) => void | Promise<void>;
   onRejectClient: (id: string) => void | Promise<void>;
-  onDeleteClient?: (id: string) => void | Promise<void>;
   onOpenClientProfile?: (clientId: string) => void;
 }
 
 export function StaffClientApplicationReviewPanel({
   client,
-  canManage,
+  canReview,
   onApproveClient,
   onRejectClient,
-  onDeleteClient,
   onOpenClientProfile,
 }: StaffClientApplicationReviewPanelProps) {
-  const [deleting, setDeleting] = useState(false);
   const accountStatus = getClientAccountStatus(client);
   const isPending = accountStatus === 'pending';
-  const isSuspended = accountStatus === 'suspended';
   const displayName = client.companyName || client.name;
-  const statusTone = isPending ? 'warning' : isSuspended ? 'danger' : 'success';
-
-  const handleDelete = async () => {
-    if (!onDeleteClient) return;
-    if (
-      !(await showAppConfirm({
-        title: 'Delete client account?',
-        message: `Delete client account for ${displayName}? This cannot be undone.`,
-        confirmLabel: 'Delete account',
-        tone: 'danger',
-      }))
-    ) {
-      return;
-    }
-    setDeleting(true);
-    try {
-      await onDeleteClient(client.id);
-    } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not delete client account.', { tone: 'error' });
-    } finally {
-      setDeleting(false);
-    }
-  };
+  const statusTone = isPending ? 'warning' : accountStatus === 'suspended' ? 'danger' : 'success';
 
   const handleApproveClient = async () => {
     if (!(await confirmApproveClientAccount(displayName))) return;
     onApproveClient(client.id);
   };
 
-  const handleSuspendClient = async () => {
-    if (!(await confirmSuspendAccount(displayName, 'client'))) return;
+  const handleDenyClient = async () => {
+    if (
+      !(await showAppConfirm({
+        title: 'Deny client application?',
+        message: `${displayName} will not be able to use the platform until restored by staff.`,
+        confirmLabel: 'Deny application',
+        cancelLabel: 'Keep reviewing',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     onRejectClient(client.id);
-  };
-
-  const handleRestoreClient = async () => {
-    if (!(await confirmRestoreAccount(displayName, 'client'))) return;
-    onApproveClient(client.id);
   };
 
   return (
@@ -113,39 +87,20 @@ export function StaffClientApplicationReviewPanel({
 
       <StaffClientApplicationSummary client={client} />
 
-      {canManage && (
+      {canReview && isPending && (
         <section className="staff-detail-section space-y-2">
-          <WfSectionHeader title="Account controls" className="mb-0" />
+          <WfSectionHeader title="Review actions" className="mb-0" />
           <div className="app-action-row--equal">
-            {isPending && (
-              <button type="button" onClick={() => void handleApproveClient()} className="app-button-primary app-btn-sm">
-                Approve client account
-              </button>
-            )}
-            {isSuspended && (
-              <button type="button" onClick={() => void handleRestoreClient()} className="app-button-primary app-btn-sm">
-                Restore client account
-              </button>
-            )}
-            {!isPending && !isSuspended && (
-              <button
-                type="button"
-                onClick={() => void handleSuspendClient()}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-              >
-                Suspend client account
-              </button>
-            )}
-            {onDeleteClient && (
-              <button
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={deleting}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-              >
-                {deleting ? 'Deleting…' : 'Delete account'}
-              </button>
-            )}
+            <button type="button" onClick={() => void handleApproveClient()} className="app-button-primary app-btn-sm">
+              Approve application
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDenyClient()}
+              className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+            >
+              Deny application
+            </button>
           </div>
         </section>
       )}

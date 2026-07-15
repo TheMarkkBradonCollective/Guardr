@@ -25,7 +25,6 @@ interface StaffApplicationsProps {
   canActivateGuardAccounts?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
-  canSuspend?: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onActivateGuardAccount?: (
     guardId: string,
@@ -33,8 +32,7 @@ interface StaffApplicationsProps {
   ) => void | Promise<void>;
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
-  onDeleteGuardAccount?: (guardId: string) => void | Promise<void>;
-  onDeleteClientAccount?: (clientId: string) => void | Promise<void>;
+  onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
   initialGuardId?: string | null;
@@ -133,13 +131,11 @@ export function StaffApplications({
   canActivateGuardAccounts = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
-  canSuspend = false,
   onApproveGuardAccount,
   onActivateGuardAccount,
   onApproveClient,
   onRejectClient,
-  onDeleteGuardAccount,
-  onDeleteClientAccount,
+  onRejectGuardApplication,
   onOpenGuardProfile,
   onOpenClientProfile,
   initialGuardId = null,
@@ -235,11 +231,12 @@ export function StaffApplications({
             <ApplicationReviewMeta item={feedItem} />
             <StaffGuardApplicationReviewPanel
               guard={guard}
-              canManage={canManageGuardAccounts}
-              canSuspend={canSuspend}
+              canReview={
+                canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts
+              }
               onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
               onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
-              onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
+              onRejectGuardApplication={onRejectGuardApplication}
               onOpenGuardProfile={onOpenGuardProfile}
             />
           </div>
@@ -261,10 +258,9 @@ export function StaffApplications({
           <ApplicationReviewMeta item={feedItem} />
           <StaffClientApplicationReviewPanel
             client={client}
-            canManage={canManageClientAccounts}
+            canReview={canManageClientAccounts}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
-            onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
             onOpenClientProfile={onOpenClientProfile}
           />
         </div>

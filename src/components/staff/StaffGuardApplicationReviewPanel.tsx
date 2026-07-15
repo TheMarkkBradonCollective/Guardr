@@ -7,8 +7,8 @@ import { getGuardUserStatus } from '../../lib/accountStatus';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
-import { showAppConfirm } from '../ui/AppConfirm';
 import { confirmApproveGuardProfile } from '../../lib/importantActionConfirm';
+import { promptRejectGuardApplicationNote } from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
   guardCanStaffActivateAccount,
@@ -17,27 +17,25 @@ import {
 
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
-  canManage: boolean;
-  canSuspend: boolean;
+  canReview: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onActivateGuardAccount?: (
     guardId: string,
     options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
   ) => void | Promise<void>;
-  onDeleteGuard?: (guardId: string) => void | Promise<void>;
+  onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
 }
 
 export function StaffGuardApplicationReviewPanel({
   guard,
-  canManage,
-  canSuspend,
+  canReview,
   onApproveGuardAccount,
   onActivateGuardAccount,
-  onDeleteGuard,
+  onRejectGuardApplication,
   onOpenGuardProfile,
 }: StaffGuardApplicationReviewPanelProps) {
-  const [deleting, setDeleting] = useState(false);
+  const [actionPending, setActionPending] = useState(false);
   const guardAccountStatus = getGuardUserStatus(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
 
@@ -51,25 +49,17 @@ export function StaffGuardApplicationReviewPanel({
     }
   };
 
-  const handleDeleteGuard = async () => {
-    if (!onDeleteGuard) return;
-    if (
-      !(await showAppConfirm({
-        title: 'Delete guard account?',
-        message: `Delete guard account for ${guard.name}? This cannot be undone.`,
-        confirmLabel: 'Delete account',
-        tone: 'danger',
-      }))
-    ) {
-      return;
-    }
-    setDeleting(true);
+  const handleDenyApplication = async () => {
+    if (!onRejectGuardApplication) return;
+    const reason = await promptRejectGuardApplicationNote();
+    if (reason === null) return;
+    setActionPending(true);
     try {
-      await onDeleteGuard(guard.id);
+      await onRejectGuardApplication(guard.id, reason);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not delete guard account.', { tone: 'error' });
+      showAppToast(err instanceof Error ? err.message : 'Could not deny application.', { tone: 'error' });
     } finally {
-      setDeleting(false);
+      setActionPending(false);
     }
   };
 
@@ -101,15 +91,15 @@ export function StaffGuardApplicationReviewPanel({
 
       <StaffGuardApplicationSummary guard={guard} />
 
-      {canManage && (
+      {canReview && (
         <section className="staff-detail-section space-y-3">
-          <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
+          <WfSectionHeader title="Review actions" className="!px-0 !mb-0" />
           <div className="staff-detail-actions">
             {guardAccountStatus === 'pending' && onApproveGuardAccount && (
               <button
                 type="button"
                 onClick={() => void handleApproveProfile()}
-                disabled={!guardCanStaffApproveProfile(guard)}
+                disabled={!guardCanStaffApproveProfile(guard) || actionPending}
                 className="app-button-primary app-btn-sm disabled:opacity-50"
                 title={
                   activationChecklist.staffApprovalBlockers.length > 0
@@ -118,6 +108,16 @@ export function StaffGuardApplicationReviewPanel({
                 }
               >
                 Approve application
+              </button>
+            )}
+            {guardAccountStatus === 'pending' && onRejectGuardApplication && (
+              <button
+                type="button"
+                onClick={() => void handleDenyApplication()}
+                disabled={actionPending}
+                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
+              >
+                Deny application
               </button>
             )}
             {guardAccountStatus === 'approved' && onActivateGuardAccount && (
@@ -136,7 +136,7 @@ export function StaffGuardApplicationReviewPanel({
                     }
                   })();
                 }}
-                disabled={!guardCanStaffActivateAccount(guard)}
+                disabled={!guardCanStaffActivateAccount(guard) || actionPending}
                 className="app-button-primary app-btn-sm disabled:opacity-50"
                 title={
                   guardCanStaffActivateAccount(guard)
@@ -146,16 +146,6 @@ export function StaffGuardApplicationReviewPanel({
                 }
               >
                 Grant marketplace eligibility
-              </button>
-            )}
-            {canSuspend && onDeleteGuard && (
-              <button
-                type="button"
-                onClick={() => void handleDeleteGuard()}
-                disabled={deleting}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-              >
-                {deleting ? 'Deleting…' : 'Delete account'}
               </button>
             )}
           </div>

@@ -590,13 +590,11 @@ export function StaffDashboard({
             canActivateGuardAccounts={canActivateApprovedGuards}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}
-            canSuspend={canSuspend}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
             onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
-            onDeleteGuardAccount={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
-            onDeleteClientAccount={canManageClientAccounts ? onDeleteClientAccount : undefined}
+            onRejectGuardApplication={onRejectGuardIdentityVerification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             initialGuardId={selectedGuardId}
