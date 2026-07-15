@@ -5,7 +5,7 @@ import { KeyRound } from 'lucide-react';
 interface TeamCodeJoinPanelProps {
   onJoin: (code: string) => void | Promise<void>;
   compact?: boolean;
-  variant?: 'default' | 'preferences';
+  variant?: 'default' | 'crew';
   hint?: string;
 }
 
@@ -31,34 +31,34 @@ export function TeamCodeJoinPanel({
     }
   };
 
-  const isPreferences = variant === 'preferences';
+  const isCrew = variant === 'crew';
 
   return (
     <form
       onSubmit={(e) => void handleSubmit(e)}
       className={
-        isPreferences
-          ? 'guard-pref-crew-form'
+        isCrew
+          ? 'crew-join-form'
           : `space-y-2 ${compact ? '' : 'rounded-lg border border-brand-border bg-brand-surface/60 px-3 py-3'}`
       }
     >
-      {!isPreferences && (
+      {!isCrew && (
         <div className="flex items-center gap-2">
           <KeyRound className="w-4 h-4 text-brand-primary shrink-0" />
           <p className="text-sm font-semibold text-brand-text">Join a crew with code</p>
         </div>
       )}
-      {!compact && !isPreferences && (
+      {!compact && !isCrew && (
         <p className="text-xs text-brand-text-muted leading-relaxed">{hint}</p>
       )}
-      <div className={isPreferences ? 'guard-pref-crew-input-row' : 'flex gap-2'}>
+      <div className={isCrew ? 'crew-join-form-fields' : 'flex gap-2'}>
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="CREW-XXXXXX"
-          className={`app-input flex-1 text-sm font-mono tracking-wide uppercase ${
-            isPreferences ? 'guard-pref-crew-input' : ''
+          className={`app-input text-sm font-mono tracking-wide uppercase ${
+            isCrew ? 'crew-join-input w-full' : 'flex-1'
           }`}
           autoCapitalize="characters"
           autoCorrect="off"
@@ -67,7 +67,9 @@ export function TeamCodeJoinPanel({
         <button
           type="submit"
           disabled={!normalizeTeamCode(code) || joining}
-          className={`app-button-primary shrink-0 ${isPreferences ? 'guard-pref-crew-submit' : 'app-btn-sm'}`}
+          className={`app-button-primary ${
+            isCrew ? 'crew-join-submit w-full app-btn-md' : 'shrink-0 app-btn-sm'
+          }`}
         >
           {joining ? 'Joining…' : 'Join crew'}
         </button>

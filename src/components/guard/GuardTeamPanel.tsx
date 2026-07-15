@@ -181,7 +181,7 @@ export function GuardTeamPanel({
 
       {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !!job.teamLeadId && (
         <p className="text-xs text-brand-text-muted">
-          This job has a coordinated crew. Enter the crew code in Settings or wait for a coordinator invite. To work this job independently, use Apply on the job card.
+          This job has a coordinated crew. Enter the crew code on the Crew page or wait for a coordinator invite. To work this job independently, use Apply on the job card.
         </p>
       )}
 
