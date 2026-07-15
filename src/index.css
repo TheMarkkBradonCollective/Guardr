@@ -17723,121 +17723,13 @@ body.capacitor-native .staff-ops-btn-primary:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   GUARDR — HOME + SIGN-IN UPGRADE
-   The marketing landing page now previews each workspace's role color
-   (client blue / guard amber — see --role-client-color / --role-guard-color)
-   before the visitor ever picks one, so the choice on the home page carries
-   straight through into sign-in and the live app instead of everything
-   being one uniform sage skin until after login. The sign-in screen's
-   desktop/tablet hero also grows from "logo floating in an empty color
-   rectangle" into an actual content panel per role.
+   GUARDR — SIGN-IN UPGRADE
+   Auth hero content panel improvements for tablet/desktop. Marketing pages
+   keep the company sage brand color — role accents apply only inside the
+   logged-in app (and app-shell auth), not on the public website.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─── 1. LANDING: role-tinted path cards (the "choose your side" cards) ──── */
-
-.landing-path-card-client {
-  border-color: color-mix(in srgb, var(--role-client-color) 38%, var(--brand-border)) !important;
-  background: color-mix(in srgb, var(--role-client-color) 9%, var(--brand-bg-sec)) !important;
-}
-
-.landing-path-card-client:hover {
-  border-color: color-mix(in srgb, var(--role-client-color) 55%, var(--brand-border)) !important;
-  background: color-mix(in srgb, var(--role-client-color) 15%, var(--brand-elevated)) !important;
-  box-shadow: var(--shadow-card) !important;
-}
-
-.landing-path-card-client .landing-path-card-icon,
-.landing-path-card-client .landing-path-card-eyebrow,
-.landing-path-card-client .landing-path-card-action {
-  color: var(--role-client-color) !important;
-}
-
-.landing-path-card-guard {
-  border-color: color-mix(in srgb, var(--role-guard-color) 30%, var(--brand-border)) !important;
-  background: color-mix(in srgb, var(--role-guard-color) 6%, var(--brand-bg-sec)) !important;
-}
-
-.landing-path-card-guard:hover {
-  border-color: color-mix(in srgb, var(--role-guard-color) 45%, var(--brand-border)) !important;
-  background: color-mix(in srgb, var(--role-guard-color) 12%, var(--brand-elevated)) !important;
-  box-shadow: var(--shadow-card) !important;
-}
-
-.landing-path-card-guard .landing-path-card-icon,
-.landing-path-card-guard .landing-path-card-action {
-  color: var(--role-guard-color) !important;
-}
-
-.landing-path-card {
-  box-shadow: var(--shadow-sm) !important;
-}
-
-/* ─── 2. LANDING: role-tinted CTAs everywhere a choice is made ──────────── */
-
-.landing-mobile-cta--client {
-  background: var(--role-client-color) !important;
-  color: #ffffff !important;
-}
-
-.landing-mobile-cta--guard {
-  border-color: var(--role-guard-color) !important;
-  color: var(--role-guard-color) !important;
-}
-
-.landing-final-actions .app-cta-dark {
-  background: var(--role-client-color) !important;
-}
-
-.landing-final-actions .app-cta-dark:hover:not(:disabled) {
-  background: var(--role-client-color-hover) !important;
-}
-
-.landing-final-actions .app-cta-outline-dark {
-  border-color: var(--role-guard-color) !important;
-  color: var(--role-guard-color) !important;
-}
-
-.landing-final-actions .app-cta-outline-dark:hover {
-  background: color-mix(in srgb, var(--role-guard-color) 12%, transparent) !important;
-  border-color: var(--role-guard-color) !important;
-}
-
-.landing-feature-column .landing-feature-cta.app-cta-dark {
-  background: var(--role-client-color) !important;
-}
-
-.landing-feature-column .landing-feature-cta.app-cta-dark:hover:not(:disabled) {
-  background: var(--role-client-color-hover) !important;
-}
-
-.landing-feature-column--guard .landing-feature-cta.app-button-primary {
-  background: var(--role-guard-color) !important;
-  border-color: var(--role-guard-color) !important;
-}
-
-.landing-feature-column--guard .landing-feature-cta.app-button-primary:hover:not(:disabled) {
-  background: var(--role-guard-color-hover) !important;
-}
-
-.landing-feature-icon--client {
-  background: color-mix(in srgb, var(--role-client-color) 10%, transparent) !important;
-  border-color: color-mix(in srgb, var(--role-client-color) 22%, transparent) !important;
-}
-
-.landing-feature-icon--client svg {
-  color: var(--role-client-color) !important;
-}
-
-.landing-feature-icon--guard {
-  background: color-mix(in srgb, var(--role-guard-color) 10%, transparent) !important;
-  border-color: color-mix(in srgb, var(--role-guard-color) 22%, transparent) !important;
-}
-
-.landing-feature-icon--guard svg {
-  color: var(--role-guard-color) !important;
-}
-
-/* ─── 3. LANDING: give the phone-mockup preview real depth ──────────────── */
+/* ─── 1. LANDING: give the phone-mockup preview real depth ──────────────── */
 
 .landing-preview-frame {
   box-shadow: var(--shadow-float) !important;

@@ -534,11 +534,14 @@ export default function App() {
     applyThemeToDocument(local);
   }, [currentUser?.id]);
 
-  // Each role gets its own accent identity (client/guard/staff) applied at the
-  // document root so it cascades to portaled UI (toasts, menus, sheets) too.
-  // Before sign-in, the auth screen previews the workspace the visitor picked.
+  // Role accent colors apply inside the logged-in app (and app-shell auth).
+  // The public website keeps the company sage brand throughout.
   useEffect(() => {
-    const role = currentUser ? appRoleForUser(currentUser) : isAuthView ? initialAuthRole : null;
+    const role = currentUser
+      ? appRoleForUser(currentUser)
+      : isAuthView && isAppExperience()
+        ? initialAuthRole
+        : null;
     if (role) {
       document.documentElement.dataset.roleExperience = role;
     } else {
