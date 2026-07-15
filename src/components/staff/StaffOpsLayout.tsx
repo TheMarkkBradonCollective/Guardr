@@ -6,7 +6,7 @@ import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AccountMenu } from '../layouts/AccountMenu';
-import { Logo } from '../Logo';
+import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
 import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 import {
   AlertTriangle,
@@ -145,8 +145,6 @@ export function StaffOpsLayout({
     setMobileNavOpen(false);
   };
 
-  const isDarkSidebar = themeMode === 'dark' || themeMode === 'grey';
-
   const sidebarPanel = (
     <>
       <button
@@ -158,28 +156,6 @@ export function StaffOpsLayout({
         <X className="w-5 h-5" />
       </button>
       <div className="staff-sidebar-inner">
-        <div className="staff-sidebar-brand">
-          <div className="flex items-center gap-2.5">
-            <Logo size={24} className="shrink-0" />
-            <span
-              className={`font-black text-xl tracking-[-0.04em] leading-none staff-sidebar-wordmark${
-                isDarkSidebar ? ' staff-sidebar-wordmark--on-dark' : ''
-              }`}
-            >
-              Guardr
-            </span>
-            {isDbConnected && (
-              <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
-            )}
-          </div>
-          <p
-            className={`text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5 staff-sidebar-role${
-              isDarkSidebar ? ' staff-sidebar-role--on-dark' : ''
-            }`}
-          >
-            {ROLE_LABELS[currentUser.role]}
-          </p>
-        </div>
         <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <StaffSidebarNav
             items={navItems}
@@ -205,56 +181,33 @@ export function StaffOpsLayout({
         dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
       }${mobileNavOpen && !dockedSidebar ? ' staff-shell--nav-open' : ''}`}
     >
-      {dockedSidebar ? (
-        <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
-      ) : (
-        mobileNavOpen && (
-          <>
-            <button
-              type="button"
-              className="staff-sidebar-backdrop"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="Close navigation"
-            />
-            <aside
-              className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--overlay staff-sidebar-open`}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Staff navigation"
-            >
-              {sidebarPanel}
-            </aside>
-          </>
-        )
-      )}
-
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
           <header className="staff-main-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
             {headerOverride}
           </header>
         ) : hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
-            <button
-              type="button"
-              className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2 shrink-0">
-              {headerActions}
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={ROLE_LABELS[currentUser.role]}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => navigate('profile')}
-                onOpenSettings={() => navigate('preferences')}
-                onSignOut={onSignOut}
-                active={activeSection === 'profile' || activeSection === 'preferences'}
-              />
-            </div>
+          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-end gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 px-4 sm:px-5 border-b border-brand-border">
+            {!dockedSidebar ? (
+              <button
+                type="button"
+                className="app-chrome-btn text-brand-text"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            ) : null}
+            {headerActions}
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={ROLE_LABELS[currentUser.role]}
+              avatarUrl={currentUser.avatar}
+              onOpenProfile={() => navigate('profile')}
+              onOpenSettings={() => navigate('preferences')}
+              onSignOut={onSignOut}
+              active={activeSection === 'profile' || activeSection === 'preferences'}
+            />
           </header>
         ) : (
           <header
@@ -262,22 +215,32 @@ export function StaffOpsLayout({
               headerExtension ? ' staff-main-header--with-extension' : ''
             }`}
           >
-            <div className="flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 px-4 sm:px-5">
-              <button
-                type="button"
-                className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+            <div className="flex items-start gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 px-4 sm:px-5">
               <div className="min-w-0 flex-1">
+                <AppHeaderBranding
+                  className="mb-1.5"
+                  trailing={
+                    isDbConnected ? (
+                      <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
+                    ) : null
+                  }
+                />
                 <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
                   {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
                 </h1>
                 <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                {!dockedSidebar ? (
+                  <button
+                    type="button"
+                    className="app-chrome-btn text-brand-text"
+                    onClick={() => setMobileNavOpen(true)}
+                    aria-label="Open menu"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                ) : null}
                 {headerActions}
                 <AccountMenu
                   userName={currentUser.name}
@@ -306,6 +269,29 @@ export function StaffOpsLayout({
           </div>
         </main>
       </div>
+
+      {dockedSidebar ? (
+        <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
+      ) : (
+        mobileNavOpen && (
+          <>
+            <button
+              type="button"
+              className="staff-sidebar-backdrop"
+              onClick={() => setMobileNavOpen(false)}
+              aria-label="Close navigation"
+            />
+            <aside
+              className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--overlay staff-sidebar-open`}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Staff navigation"
+            >
+              {sidebarPanel}
+            </aside>
+          </>
+        )
+      )}
     </div>
   );
 }

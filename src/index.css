@@ -335,24 +335,29 @@ html.theme-grey {
   width: 15.5rem;
   flex-shrink: 0;
   background: var(--brand-bg-sec);
-  border-right: 1px solid var(--brand-border);
+  border-left: 1px solid var(--brand-border);
   z-index: 50;
 }
 
-/* Mobile/tablet menu — full-screen overlay, fade only (no horizontal slide) */
+/* Mobile/tablet menu — right-side slide panel */
 .staff-shell--compact > .staff-sidebar--overlay {
   position: fixed !important;
-  inset: 0;
-  width: 100% !important;
-  max-width: 100% !important;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(18rem, 88vw) !important;
+  max-width: 88vw !important;
   z-index: 1100;
-  transform: none !important;
-  transition: opacity 0.16s ease-out;
-  box-shadow: none;
+  transform: translateX(100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.22);
+  border-left: 1px solid var(--brand-border);
+  border-right: none;
 }
 
 .staff-shell--compact > .staff-sidebar--overlay.staff-sidebar-open {
-  transform: none !important;
+  transform: translateX(0);
 }
 
 .staff-shell--compact > .staff-main {
@@ -419,7 +424,7 @@ html.theme-grey {
 .staff-sidebar-close {
   position: absolute;
   top: max(0.75rem, env(safe-area-inset-top, 0px));
-  right: 0.75rem;
+  left: 0.75rem;
   z-index: 2;
   padding: 0.5rem;
   color: var(--brand-text-muted);
@@ -16735,19 +16740,19 @@ html.theme-dark .app-chat-readonly-footer {
   height: 100%;
   overflow: hidden;
   background: var(--brand-bg-sec);
-  border-right: 1px solid var(--brand-border);
+  border-left: 1px solid var(--brand-border);
   padding: 0;
   z-index: 10;
 }
 
 html.theme-dark .role-side-nav {
   background: #0a0a0a;
-  border-right-color: #1a1a1a;
+  border-left-color: #1a1a1a;
 }
 
 html.theme-light .role-side-nav {
   background: #f8f9f8;
-  border-right-color: #e8ebe8;
+  border-left-color: #e8ebe8;
 }
 
 .role-side-nav--docked {
@@ -16762,14 +16767,22 @@ html.theme-light .role-side-nav {
 
 .role-app-shell--compact > .role-side-nav--overlay {
   position: fixed !important;
-  inset: 0;
-  width: 100% !important;
-  max-width: 100% !important;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(18rem, 88vw) !important;
+  max-width: 88vw !important;
   z-index: 1100;
-  transform: none !important;
-  transition: opacity 0.16s ease-out;
-  box-shadow: none;
+  transform: translateX(100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.22);
+  border-left: 1px solid var(--brand-border);
   border-right: none;
+}
+
+.role-side-nav--overlay.role-side-nav--open {
+  transform: translateX(0);
 }
 
 .role-side-nav-backdrop {
@@ -16786,7 +16799,7 @@ html.theme-light .role-side-nav {
 .role-side-nav-close {
   position: absolute;
   top: max(0.75rem, env(safe-area-inset-top, 0px));
-  right: 0.75rem;
+  left: 0.75rem;
   z-index: 2;
   padding: 0.5rem;
   color: var(--brand-text-muted);
@@ -16807,17 +16820,17 @@ html.theme-light .role-side-nav {
 
 .role-app-shell--docked {
   display: grid;
-  grid-template-columns: 15rem 1fr;
+  grid-template-columns: 1fr 15rem;
   grid-template-rows: auto 1fr;
 }
 
 .role-app-shell--docked .role-side-nav--docked {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 1 / span 2;
 }
 
 .role-app-shell--docked .role-main {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1 / span 2;
   min-height: 0;
 }
@@ -16827,10 +16840,10 @@ html.theme-light .role-side-nav {
   overflow: hidden;
 }
 
-/* ─── SIDEBAR BRAND AREA ─────────────────────────────────────────────────── */
+/* ─── SIDEBAR NAV ITEMS (overlay: room for close control) ───────────────── */
 
-.role-side-nav--overlay .role-side-nav-brand {
-  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
+.role-side-nav--overlay .role-side-nav-items {
+  padding-top: max(2.75rem, calc(env(safe-area-inset-top, 0px) + 2rem));
 }
 
 /* Hide bottom nav — clients and guards use sidebar navigation */
@@ -16862,6 +16875,16 @@ html.theme-dark .role-side-nav-brand {
 
 .role-side-nav-brand-accent {
   color: var(--brand-primary);
+}
+
+/* ─── APP HEADER BRANDING ────────────────────────────────────────────────── */
+
+.app-header-branding-name {
+  user-select: none;
+}
+
+.app-screen-header--map .app-header-branding {
+  display: none;
 }
 
 /* ─── SIDEBAR NAV ITEMS ──────────────────────────────────────────────────── */
@@ -18553,6 +18576,7 @@ textarea:focus-visible {
 
 .role-app-shell > *,
 .staff-shell > .staff-main,
+.staff-shell > .staff-sidebar,
 .page-shell > * {
   position: relative;
   z-index: 1;
@@ -19508,9 +19532,13 @@ textarea.uber-input {
   overflow: hidden !important;
 }
 
+.staff-shell--compact > .staff-sidebar--overlay .staff-sidebar-inner {
+  padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 2rem));
+}
+
 .staff-shell--compact > .staff-sidebar--overlay,
 .staff-shell--compact > .staff-sidebar--overlay.staff-sidebar-open {
-  animation: staff-nav-fade-in 0.16s ease-out;
+  animation: none;
 }
 
 @keyframes staff-nav-fade-in {

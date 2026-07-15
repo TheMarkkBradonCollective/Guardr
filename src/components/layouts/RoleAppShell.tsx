@@ -3,7 +3,6 @@ import { Menu, X } from 'lucide-react';
 import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavItem } from './BottomNavBar';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
-import { Logo } from '../Logo';
 import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 
 interface RoleAppShellProps {
@@ -73,13 +72,6 @@ export function RoleAppShell({
           <X className="w-5 h-5" />
         </button>
       ) : null}
-      <div className="role-side-nav-brand">
-        <Logo size={26} className="text-brand-primary shrink-0" />
-        <span className="role-side-nav-brand-name">
-          Guard<span className="role-side-nav-brand-accent">r</span>
-        </span>
-      </div>
-
       <nav className="role-side-nav-items" role="navigation">
         {allSideNavItems.map(({ id, label, icon: Icon, badge }) => {
           const active = activeNavId === id;
@@ -118,6 +110,47 @@ export function RoleAppShell({
         dockedSidebar ? 'role-app-shell--docked' : 'role-app-shell--compact'
       }${mobileNavOpen && !dockedSidebar ? ' role-app-shell--nav-open' : ''}`}
     >
+      <div className="role-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
+        {headerOverride ? (
+          <div className="app-screen-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
+            {headerOverride}
+          </div>
+        ) : !hideHeader ? (
+          <AppScreenHeader
+            title={title}
+            subtitle={subtitle}
+            locationLabel={locationLabel}
+            accountMenu={accountMenu}
+            right={headerRight}
+            extension={headerExtension}
+            onMenuClick={dockedSidebar ? undefined : () => setMobileNavOpen(true)}
+            hideAccountMenu={dockedSidebar}
+            className={isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : undefined}
+          />
+        ) : (
+          <header className="app-screen-header app-screen-header--compact shrink-0 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-end gap-2 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
+            {!dockedSidebar ? (
+              <button
+                type="button"
+                className="app-chrome-btn text-brand-text"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            ) : null}
+            {headerRight}
+            {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
+          </header>
+        )}
+
+        <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
+          <div className="h-full max-w-full min-w-0 overflow-hidden">
+            {children}
+          </div>
+        </main>
+      </div>
+
       {dockedSidebar ? (
         <aside className="role-side-nav role-side-nav--docked" aria-label="Main navigation">
           {sidebarPanel}
@@ -142,51 +175,6 @@ export function RoleAppShell({
           </>
         )
       )}
-
-      <div className="role-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
-        {headerOverride ? (
-          <div className="app-screen-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
-            {headerOverride}
-          </div>
-        ) : !hideHeader ? (
-          <AppScreenHeader
-            title={title}
-            subtitle={subtitle}
-            locationLabel={locationLabel}
-            accountMenu={accountMenu}
-            right={headerRight}
-            extension={headerExtension}
-            onMenuClick={dockedSidebar ? undefined : () => setMobileNavOpen(true)}
-            hideAccountMenu={dockedSidebar}
-            className={isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : undefined}
-          />
-        ) : (
-          <header className="app-screen-header app-screen-header--compact shrink-0 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between gap-2 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
-            {!dockedSidebar ? (
-              <button
-                type="button"
-                className="app-chrome-btn -ml-1 text-brand-text"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            ) : (
-              <span />
-            )}
-            <div className="flex items-center gap-2">
-              {headerRight}
-              {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
-            </div>
-          </header>
-        )}
-
-        <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
-          <div className="h-full max-w-full min-w-0 overflow-hidden">
-            {children}
-          </div>
-        </main>
-      </div>
     </div>
   );
 }
