@@ -256,6 +256,21 @@ export function GuardResumeEditor({
         </div>
       </section>
 
+      {credEditing && (
+        <GuardCredentialsPanel
+          guard={guard}
+          editing={credEditing}
+          staffMode={staffMode}
+          onAddCertification={onAddCertification}
+          onDeleteCertification={onDeleteCertification}
+          onAttachCertificationImage={onAttachCertificationImage}
+          onUpdateCertification={onUpdateCertification}
+          onSubmitIdentityVerification={onSubmitIdentityVerification}
+          onSaveInsurance={onSaveInsurance}
+          onReviewInsurance={onReviewInsurance}
+        />
+      )}
+
       <ExperienceSection
         title="Work experience"
         icon={Briefcase}
@@ -278,18 +293,20 @@ export function GuardResumeEditor({
         onAdd={() => setShowAddEdu(true)}
       />
 
-      <GuardCredentialsPanel
-        guard={guard}
-        editing={credEditing}
-        staffMode={staffMode}
-        onAddCertification={onAddCertification}
-        onDeleteCertification={onDeleteCertification}
-        onAttachCertificationImage={onAttachCertificationImage}
-        onUpdateCertification={onUpdateCertification}
-        onSubmitIdentityVerification={onSubmitIdentityVerification}
-        onSaveInsurance={onSaveInsurance}
-        onReviewInsurance={onReviewInsurance}
-      />
+      {!credEditing && (
+        <GuardCredentialsPanel
+          guard={guard}
+          editing={credEditing}
+          staffMode={staffMode}
+          onAddCertification={onAddCertification}
+          onDeleteCertification={onDeleteCertification}
+          onAttachCertificationImage={onAttachCertificationImage}
+          onUpdateCertification={onUpdateCertification}
+          onSubmitIdentityVerification={onSubmitIdentityVerification}
+          onSaveInsurance={onSaveInsurance}
+          onReviewInsurance={onReviewInsurance}
+        />
+      )}
 
       <GuardWeaponGearPanel
         guard={guard}

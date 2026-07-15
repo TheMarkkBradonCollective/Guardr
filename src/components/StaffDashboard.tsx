@@ -635,14 +635,7 @@ export function StaffDashboard({
             onReviewGuardInsurance={onReviewGuardInsurance}
             onUpdateCertification={onUpdateCertification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
-            onAddCredentialForGuard={
-              canManageGuardAccounts
-                ? (guardId) => {
-                    onStaffGuardEditChange?.(true);
-                    navigateSection('guards', { guardId });
-                  }
-                : undefined
-            }
+            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onItemIdChange={setSelectedCredentialItemId}
           />
         );

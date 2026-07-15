@@ -62,6 +62,22 @@ export const OPTIONAL_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
   'industry',
 ];
 
+/** Credential sections staff can add from the Credentials queue wizard. */
+export const STAFF_ADD_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
+  'guard-card',
+  'bsis-pta-uof',
+  'bsis-32-hour',
+  ...OPTIONAL_CREDENTIAL_SECTION_IDS,
+];
+
+export function getStaffAddableCredentialSections(): CredentialViewSection[] {
+  return STAFF_ADD_CREDENTIAL_SECTION_IDS.map((id) => ({
+    id,
+    ...SECTION_META[id],
+    certs: [],
+  }));
+}
+
 export function getOptionalCredentialSections(): CredentialViewSection[] {
   return OPTIONAL_CREDENTIAL_SECTION_IDS.map((id) => ({
     id,
