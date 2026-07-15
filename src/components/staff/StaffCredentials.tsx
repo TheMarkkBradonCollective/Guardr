@@ -160,7 +160,7 @@ export function StaffCredentials({
   onOpenGuardProfile,
   onAddCredentialForGuard,
 }: StaffCredentialsProps) {
-  const [filter, setFilter] = useState<CredentialFilter>('pending');
+  const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [coiModalOpen, setCoiModalOpen] = useState(false);
@@ -505,17 +505,17 @@ export function StaffCredentials({
           <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setFilter('pending')}
-            className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-          >
-            Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
-          </button>
-          <button
-            type="button"
             onClick={() => setFilter('all')}
             className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
           >
             All ({credentialFeed.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('pending')}
+            className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
+          >
+            Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
           </button>
         </div>
         </>
