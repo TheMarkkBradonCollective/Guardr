@@ -942,22 +942,30 @@ export function StaffDashboard({
             </p>
           </div>
         );
+      case 'audit-log':
+        return showFinance ? (
+          <StaffAuditLogPanel />
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Audit log</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              The platform audit log is limited to Director and Founder roles.
+            </p>
+          </div>
+        );
       case 'settings':
         return showSettings ? (
-          <div className="space-y-8">
-            <StaffSettingsPanel
-              currentUser={currentUser}
-              platformSettings={platformSettings}
-              onUpdatePlatformSettings={onUpdatePlatformSettings}
-              showStaffOnboard={canProposeStaff}
-              requiresDirectorApproval={requiresDirectorApproval}
-              onAddStaffProfile={onAddStaffProfile}
-              companyPublicDocuments={companyPublicDocuments}
-              onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
-              onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
-            />
-            <StaffAuditLogPanel />
-          </div>
+          <StaffSettingsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+            showStaffOnboard={canProposeStaff}
+            requiresDirectorApproval={requiresDirectorApproval}
+            onAddStaffProfile={onAddStaffProfile}
+            companyPublicDocuments={companyPublicDocuments}
+            onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
+            onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
+          />
         ) : (
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Settings</h2>
