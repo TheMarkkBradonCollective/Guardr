@@ -259,10 +259,6 @@ export function StaffGuardCrewsPanel({
         <>
           {!showStandingDetailOnly && (
             <>
-              <p className="text-sm text-brand-text-muted leading-relaxed max-w-2xl">
-                Persistent guard teams maintained by trusted guards. These crews exist independent
-                of any single job — the lead can assign them to multi-guard postings.
-              </p>
               <WfSearchBar
                 value={search}
                 onChange={setSearch}
@@ -409,11 +405,6 @@ export function StaffGuardCrewsPanel({
         <>
           {!showJobDetailOnly && (
             <>
-              <p className="text-sm text-brand-text-muted leading-relaxed max-w-2xl">
-                Coordinated guard crews on open and active multi-guard jobs. Review roster members, approve crew
-                slots, and open crew chat from Messages.
-              </p>
-
               <WfSearchBar
                 value={search}
                 onChange={setSearch}

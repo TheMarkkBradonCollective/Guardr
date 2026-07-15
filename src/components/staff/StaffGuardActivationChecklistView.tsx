@@ -72,10 +72,6 @@ export function StaffGuardActivationChecklistView({
     <section className="app-checklist-panel">
       <div>
         <p className="text-sm font-semibold">Application credentials</p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required items for this guard&apos;s application. Tap a submitted or verified item to view
-          the credential. Verify or reject from the Credentials tab.
-        </p>
       </div>
       <div className="app-checklist-steps mt-3">
         {steps.map((step, index) => (

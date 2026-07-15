@@ -85,10 +85,6 @@ export function StaffLegalCompliancePanel({
 
   return (
     <AppFormSection title="Marketplace agreements">
-      <p className="text-sm text-brand-text-muted mb-4 leading-relaxed">
-        Audit trail of who has accepted required legal documents. Acceptances are stored in the
-        database and only need to be completed once per user.
-      </p>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {(['all', 'missing', 'complete'] as const).map((value) => (
           <button

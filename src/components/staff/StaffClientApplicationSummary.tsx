@@ -52,9 +52,6 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
     <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-4">
       <div>
         <p className="text-sm font-semibold text-brand-text">Application details</p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Sign-up answers from the client registration form.
-        </p>
       </div>
 
       {(client.businessType || client.businessLicense || client.website || client.industries?.length) && (

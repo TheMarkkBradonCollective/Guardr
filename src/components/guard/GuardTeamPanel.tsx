@@ -111,13 +111,6 @@ export function GuardTeamPanel({
         />
       )}
 
-      {!trusted && !onTeam && job.status === 'open' && (
-        <p className="text-xs text-brand-text-muted">
-          Trusted guards coordinate crews from the Crew tab. To join an existing crew, use the Crew
-          tab or accept a coordinator invite.
-        </p>
-      )}
-
       {hasScheduleConflict && job.status === 'open' && !onTeam && (
         <p className="text-xs text-amber-500/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
           This shift overlaps another job on your schedule. You cannot join until those times are clear.

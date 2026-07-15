@@ -48,7 +48,6 @@ export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: S
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-brand-text mb-1">SLA & Operations</h2>
-        <p className="text-sm text-brand-text-muted">Platform health metrics updated in real time.</p>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard

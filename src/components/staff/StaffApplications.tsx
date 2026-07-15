@@ -376,11 +376,6 @@ export function StaffApplications({
     <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-applications">
       {!showDetailOnly && (
         <>
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            Guard and client sign-ups from first submission through approval and activation.
-            Credential verification happens in the Credentials tab.
-          </p>
-
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
             {canManageGuardAccounts && onAddGuard && (
               <StaffAddGuardForm

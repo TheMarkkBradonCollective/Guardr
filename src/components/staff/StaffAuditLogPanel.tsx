@@ -28,7 +28,6 @@ export function StaffAuditLogPanel() {
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
-      <p className="text-sm text-brand-text-muted">Immutable record of platform actions for compliance and dispute resolution.</p>
       {entries.length >= 200 && (
         <p className="text-xs text-brand-text-muted">
           Showing the 200 most recent entries. Older activity is still retained but not shown here.

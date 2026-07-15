@@ -46,10 +46,6 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
     <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-4">
       <div>
         <p className="text-sm font-semibold text-brand-text">Application details</p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Sign-up answers stay here whether the application is pending, approved, or declined.
-          Required credentials and their status are listed below.
-        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
