@@ -127,6 +127,9 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
   if (progress.complete) {
     return { label: 'On file — pending review', tone: 'warning' };
   }
+  if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
+    return { label: summary, tone: 'default' };
+  }
   if (summary === 'On file') {
     return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
   }
@@ -141,8 +144,8 @@ export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = 
   if (guardMeets32HourBlock(guard)) {
     return { label: 'On file — pending review', tone: 'warning' };
   }
-  if (summary === 'On file') {
-    return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
+    return { label: summary, tone: 'default' };
   }
   return { label: summary, tone: staffMode ? 'warning' : 'default' };
 }
