@@ -114,7 +114,7 @@ export function NavMenuPopover({
         aria-controls={menuId}
         aria-label="Open menu"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-[1.125rem] h-[1.125rem]" strokeWidth={1.75} />
       </button>
 
       {typeof document !== 'undefined' && panel ? createPortal(panel, document.body) : null}
