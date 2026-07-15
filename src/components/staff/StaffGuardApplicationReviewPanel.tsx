@@ -15,6 +15,7 @@ import {
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
+import { StaffApplicationCredentialViewModal } from './StaffApplicationCredentialViewModal';
 
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
@@ -26,7 +27,6 @@ interface StaffGuardApplicationReviewPanelProps {
   ) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
-  onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
 }
 
 export function StaffGuardApplicationReviewPanel({
@@ -36,9 +36,9 @@ export function StaffGuardApplicationReviewPanel({
   onActivateGuardAccount,
   onRejectGuardApplication,
   onOpenGuardProfile,
-  onOpenGuardCredential,
 }: StaffGuardApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
+  const [viewingCredentialItemId, setViewingCredentialItemId] = useState<string | null>(null);
   const guardAccountStatus = getGuardUserStatus(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
 
@@ -97,11 +97,15 @@ export function StaffGuardApplicationReviewPanel({
       {!guard.isStaff && (
         <StaffGuardActivationChecklistView
           guard={guard}
-          onViewCredential={
-            onOpenGuardCredential
-              ? (credentialItemId) => onOpenGuardCredential(guard.id, credentialItemId)
-              : undefined
-          }
+          onViewCredential={setViewingCredentialItemId}
+        />
+      )}
+
+      {viewingCredentialItemId && (
+        <StaffApplicationCredentialViewModal
+          guard={guard}
+          credentialItemId={viewingCredentialItemId}
+          onClose={() => setViewingCredentialItemId(null)}
         />
       )}
 

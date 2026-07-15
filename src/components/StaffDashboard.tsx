@@ -602,9 +602,6 @@ export function StaffDashboard({
             onRejectClient={onRejectClient}
             onRejectGuardApplication={onRejectGuardIdentityVerification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
-            onOpenGuardCredential={(guardId, credentialItemId) =>
-              navigateSection('credentials', { guardId, credentialItemId })
-            }
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}

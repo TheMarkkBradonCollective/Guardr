@@ -61,7 +61,7 @@ function ApplicationCredentialRow({
   );
 }
 
-/** Staff application view: required credentials with status only — open in Credentials to review. */
+/** Staff application view: required credentials with status — tap to preview in a popup. */
 export function StaffGuardActivationChecklistView({
   guard,
   onViewCredential,
@@ -74,7 +74,7 @@ export function StaffGuardActivationChecklistView({
         <p className="text-sm font-semibold">Application credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Required items for this guard&apos;s application. Tap a submitted or verified item to view
-          the document — verify or reject from the Credentials tab.
+          the credential. Verify or reject from the Credentials tab.
         </p>
       </div>
       <div className="app-checklist-steps mt-3">

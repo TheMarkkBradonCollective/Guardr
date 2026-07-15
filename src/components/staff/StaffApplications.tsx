@@ -46,7 +46,6 @@ interface StaffApplicationsProps {
   onRejectClient: (clientId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
-  onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
   onAddClient?: (input: StaffAddClientInput) => Promise<string>;
@@ -182,7 +181,6 @@ export function StaffApplications({
   onRejectClient,
   onRejectGuardApplication,
   onOpenGuardProfile,
-  onOpenGuardCredential,
   onOpenClientProfile,
   onAddGuard,
   onAddClient,
@@ -292,7 +290,6 @@ export function StaffApplications({
             onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
             onRejectGuardApplication={onRejectGuardApplication}
             onOpenGuardProfile={onOpenGuardProfile}
-            onOpenGuardCredential={onOpenGuardCredential}
           />
         </div>
       );
