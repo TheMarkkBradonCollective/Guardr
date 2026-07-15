@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, CheckCheck } from 'lucide-react';
 import type { UserNotification } from '../../types';
 import {
@@ -28,6 +29,33 @@ function formatWhen(iso: string): string {
   }
 }
 
+function usePanelPosition(open: boolean, triggerRef: React.RefObject<HTMLButtonElement | null>) {
+  const [position, setPosition] = useState({ top: 0, right: 16 });
+
+  const update = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      right: Math.max(16, window.innerWidth - rect.right),
+    });
+  }, [triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open, update]);
+
+  return position;
+}
+
 export function NotificationBellMenu({
   notifications,
   onMarkAllRead,
@@ -35,14 +63,18 @@ export function NotificationBellMenu({
   className = '',
 }: NotificationBellMenuProps) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const position = usePanelPosition(open, triggerRef);
   const unread = countUnreadNotifications(notifications);
   const sorted = sortNotificationsNewestFirst(notifications);
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -55,9 +87,81 @@ export function NotificationBellMenu({
     };
   }, [open]);
 
+  const panel = open ? (
+    <div
+      ref={panelRef}
+      className="notification-inbox-panel fixed z-[3000] w-[min(22rem,calc(100vw-2rem))] max-h-[min(28rem,70dvh)] flex flex-col rounded-lg border border-brand-border bg-brand-bg shadow-lg overflow-hidden"
+      style={{ top: position.top, right: position.right }}
+    >
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-brand-border bg-brand-surface">
+        <p className="text-sm font-black tracking-[-0.02em]">Notifications</p>
+        {unread > 0 && (
+          <button
+            type="button"
+            onClick={() => void onMarkAllRead()}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            Mark all read
+          </button>
+        )}
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        {sorted.length === 0 ? (
+          <p className="px-4 py-8 text-sm text-brand-text-muted text-center">No notifications yet.</p>
+        ) : (
+          <ul className="divide-y divide-brand-border">
+            {sorted.map((n) => {
+              const unreadRow = isNotificationUnread(n);
+              return (
+                <li key={n.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void onNotificationClick(n);
+                      setOpen(false);
+                    }}
+                    className={`notification-inbox-item w-full text-left px-4 py-3 transition-colors hover:bg-brand-primary/6 ${
+                      unreadRow ? 'notification-inbox-item--unread bg-brand-primary/10' : 'bg-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {unreadRow && (
+                        <span
+                          className="mt-1.5 w-2 h-2 shrink-0 rounded-full bg-brand-primary"
+                          aria-hidden
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`text-sm leading-snug ${
+                            unreadRow ? 'font-bold text-brand-text' : 'font-medium text-brand-text'
+                          }`}
+                        >
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed line-clamp-3">
+                          {n.body}
+                        </p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mt-1.5">
+                          {formatWhen(n.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div ref={rootRef} className={`relative ${className}`}>
+    <div className={`relative shrink-0 ${className}`}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="notification-bell-btn relative flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-text transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/8"
@@ -72,72 +176,7 @@ export function NotificationBellMenu({
         )}
       </button>
 
-      {open && (
-        <div className="notification-inbox-panel absolute right-0 top-[calc(100%+0.5rem)] z-[1300] w-[min(22rem,calc(100vw-2rem))] max-h-[min(28rem,70dvh)] flex flex-col rounded-lg border border-brand-border bg-brand-bg shadow-lg overflow-hidden">
-          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-brand-border bg-brand-surface">
-            <p className="text-sm font-black tracking-[-0.02em]">Notifications</p>
-            {unread > 0 && (
-              <button
-                type="button"
-                onClick={() => void onMarkAllRead()}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Mark all read
-              </button>
-            )}
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            {sorted.length === 0 ? (
-              <p className="px-4 py-8 text-sm text-brand-text-muted text-center">No notifications yet.</p>
-            ) : (
-              <ul className="divide-y divide-brand-border">
-                {sorted.map((n) => {
-                  const unreadRow = isNotificationUnread(n);
-                  return (
-                    <li key={n.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void onNotificationClick(n);
-                          setOpen(false);
-                        }}
-                        className={`notification-inbox-item w-full text-left px-4 py-3 transition-colors hover:bg-brand-primary/6 ${
-                          unreadRow ? 'notification-inbox-item--unread bg-brand-primary/10' : 'bg-transparent'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          {unreadRow && (
-                            <span
-                              className="mt-1.5 w-2 h-2 shrink-0 rounded-full bg-brand-primary"
-                              aria-hidden
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className={`text-sm leading-snug ${
-                                unreadRow ? 'font-bold text-brand-text' : 'font-medium text-brand-text'
-                              }`}
-                            >
-                              {n.title}
-                            </p>
-                            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed line-clamp-3">
-                              {n.body}
-                            </p>
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mt-1.5">
-                              {formatWhen(n.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
+      {typeof document !== 'undefined' && panel ? createPortal(panel, document.body) : null}
     </div>
   );
 }
