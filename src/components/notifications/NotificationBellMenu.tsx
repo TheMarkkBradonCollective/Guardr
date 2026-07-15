@@ -138,11 +138,11 @@ export function NotificationBellMenu({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="notification-bell-btn relative flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-text transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/8"
+        className="app-chrome-btn notification-bell-btn relative shrink-0 text-brand-text"
         aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
         aria-expanded={open}
       >
-        <Bell className="w-[1.125rem] h-[1.125rem]" strokeWidth={2} />
+        <Bell className="w-[1.125rem] h-[1.125rem]" strokeWidth={1.75} />
         {unread > 0 && (
           <span className="notification-bell-badge absolute -top-1 -right-1 min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-brand-primary text-[10px] font-black text-white flex items-center justify-center leading-none">
             {unread > 99 ? '99+' : unread}
