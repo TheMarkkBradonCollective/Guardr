@@ -197,6 +197,7 @@ import {
   markNotificationClicked,
   upsertNotification,
 } from './lib/notificationInbox';
+import { resolveNotificationDestination, remapNotificationUrlForUser } from './lib/notificationRouting';
 import { registerInboxPersistHandler } from './lib/inboxPersistBridge';
 import {
   appendInboxNotification,
@@ -1290,6 +1291,17 @@ export default function App() {
     }
 
     if (user && !routeMatchesUser(route, user)) {
+      if (options.source === 'deeplink') {
+        const remapped = remapNotificationUrlForUser(strippedUrl, user);
+        if (remapped && remapped !== strippedUrl) {
+          navigateFromLocation(remapped, { source: 'deeplink' });
+          return;
+        }
+        const fallback = defaultRouteForUser(user);
+        applyAppRouteRef.current(fallback);
+        syncAppRoute(fallback, true);
+        return;
+      }
       if (options.source === 'popstate') {
         const role = appRoleForUser(user);
         if (role) {
@@ -1426,15 +1438,29 @@ export default function App() {
       return;
     }
     const userId = currentUser.id;
+    const user = currentUser;
     registerInboxPersistHandler((input) => {
       if (input.userId !== userId) return;
       void (async () => {
-        const notification = await appendInboxNotification(input, isDbConnected);
+        const url =
+          input.url ??
+          resolveNotificationDestination(
+            {
+              type: input.type,
+              url: undefined,
+              requestId: input.requestId,
+              guardId: input.guardId,
+              ticketId: input.ticketId,
+            },
+            user
+          ) ??
+          undefined;
+        const notification = await appendInboxNotification({ ...input, url }, isDbConnected);
         setUserNotifications((prev) => upsertNotification(prev, notification));
       })();
     });
     return () => registerInboxPersistHandler(null);
-  }, [currentUser?.id, isDbConnected]);
+  }, [currentUser?.id, currentUser?.role, isDbConnected]);
 
   useEffect(() => {
     if (isDbConnected) return;
@@ -7690,8 +7716,9 @@ export default function App() {
     const next = markNotificationClicked(userNotifications, notification.id);
     setUserNotifications(next);
     await persistUserNotifications(next, currentUser.id, isDbConnected);
-    if (notification.url) {
-      navigateFromLocation(notification.url, { source: 'deeplink' });
+    const destination = resolveNotificationDestination(notification, currentUser);
+    if (destination) {
+      navigateFromLocation(destination, { source: 'deeplink' });
     }
   };
 

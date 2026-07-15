@@ -67,6 +67,29 @@ describe('resolveNotificationUrlForRole', () => {
     const url = resolveNotificationUrl('guard_pending_approval', { guardId: 'guard-1' });
     assert.equal(url, '/staff/guards?g=guard-1');
   });
+
+  it('deep-links guards to earnings on payout_ready', () => {
+    const url = resolveNotificationUrlForRole('payout_ready', 'guard');
+    assert.equal(url, '/guard/earnings');
+  });
+
+  it('deep-links job status updates to the correct role shell', () => {
+    assert.equal(
+      resolveNotificationUrlForRole('job_status_update', 'client', { requestId: 'job-1' }),
+      '/client/requests?jc=job-1'
+    );
+    assert.equal(
+      resolveNotificationUrlForRole('job_status_update', 'guard', { requestId: 'job-1' }),
+      '/guard/my-jobs?jc=job-1'
+    );
+  });
+
+  it('opens staff support tickets in the messages inbox', () => {
+    const url = resolveNotificationUrlForRole('support_ticket_status', 'administrator', {
+      ticketId: 'ticket-1',
+    });
+    assert.equal(url, '/staff/messages?st=ticket-1');
+  });
 });
 
 describe('missedCheckinDedupKey', () => {

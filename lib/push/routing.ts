@@ -104,8 +104,16 @@ export function resolveNotificationUrl(
     case 'support_ticket':
     case 'support_ticket_status':
       return options.ticketId
-        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
-        : '/staff/messages?mtab=support';
+        ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages';
+    case 'account_update':
+      return '/staff/settings';
+    case 'job_status_update':
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+    case 'payout_ready':
+      return '/guard/earnings';
     case 'dispute_update':
       return options.ticketId
         ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
@@ -278,17 +286,37 @@ export function resolveNotificationUrlForRole(
       }
       if (role === 'client') {
         return options.ticketId
-          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
-          : '/client/support';
+          ? `/client/messages?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/messages';
       }
       if (role === 'guard') {
         return options.ticketId
-          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
-          : '/guard/support';
+          ? `/guard/messages?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/messages';
       }
       return options.ticketId
-        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
-        : '/staff/messages?mtab=support';
+        ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages';
+    case 'account_update':
+      if (role === 'client') return '/client/settings';
+      if (role === 'guard') return '/guard/settings';
+      return '/staff/settings';
+    case 'job_status_update':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/requests';
+      }
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/my-jobs';
+      }
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+    case 'payout_ready':
+      return role === 'guard' ? '/guard/earnings' : '/staff/payments';
     case 'dispute_update':
       if (role === 'client') {
         return options.ticketId
