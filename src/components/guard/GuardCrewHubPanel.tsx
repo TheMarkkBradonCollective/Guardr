@@ -245,7 +245,7 @@ export function GuardCrewHubPanel({
       </div>
 
       {activeTab === 'team' && (
-        <div className="app-section-body pt-4 pb-8">
+        <div className="crew-hub-team-body">
           <GuardStandingCrewPanel
             guard={guard}
             members={standingCrewMembers}

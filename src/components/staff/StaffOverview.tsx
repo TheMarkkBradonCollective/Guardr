@@ -364,7 +364,7 @@ export function StaffOverview({
     config.showDirectorFinancials ? (
       <>
         <AppDashboardZone title="Company financials" actionLabel="Payments" onAction={() => onNavigate('payments')}>
-          <div className="staff-payment-summary-grid">
+          <div className="guard-performance-stats staff-payment-stats">
             {directorFinancialCells.map(({ label, value, sub, accent }) => (
               <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
             ))}
