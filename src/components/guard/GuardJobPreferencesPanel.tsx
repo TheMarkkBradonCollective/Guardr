@@ -230,7 +230,7 @@ export function GuardJobPreferencesPanel({
         <p className="guard-tier-hero-subtitle">
           {stats.active > 0
             ? `Receiving alerts for ${stats.active} job type${stats.active === 1 ? '' : 's'}`
-            : 'Turn on job types to start receiving matching alerts'}
+            : 'Complete read-aloud onboarding per type, then turn on alerts'}
         </p>
       </div>
 
@@ -241,8 +241,8 @@ export function GuardJobPreferencesPanel({
             <div>
               <p className="guard-pref-empty-banner-title">No alerts enabled yet</p>
               <p className="guard-pref-empty-banner-text">
-                Complete onboarding for a job type, then flip the switch to start receiving matching
-                jobs.
+                Complete read-aloud onboarding for a job type, then flip the switch to start
+                receiving matching jobs.
               </p>
             </div>
           </div>
