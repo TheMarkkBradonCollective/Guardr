@@ -51,9 +51,9 @@ import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
-  guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
+import { promptRevokeGuardApplicationNote } from '../../lib/staffDocumentReview';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
@@ -81,10 +81,7 @@ interface StaffGuardDetailPanelProps {
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (
-    guardId: string,
-    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
-  ) => void | Promise<void>;
+  onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (trusted: boolean) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
@@ -132,7 +129,7 @@ export function StaffGuardDetailPanel({
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
-  onActivateGuardAccount,
+  onRejectGuardApplication,
   onSetGuardTrusted,
   onDeleteGuard,
   onSubmitIdentityVerification,
@@ -170,6 +167,7 @@ export function StaffGuardDetailPanel({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const initialName = resolvePersonNameParts(guard);
@@ -296,6 +294,20 @@ export function StaffGuardDetailPanel({
       showAppToast(err instanceof Error ? err.message : 'Could not delete guard account.', { tone: 'error' });
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRevokeApplication = async () => {
+    if (!onRejectGuardApplication) return;
+    const reason = await promptRevokeGuardApplicationNote();
+    if (reason === null) return;
+    setRevoking(true);
+    try {
+      await onRejectGuardApplication(guard.id, reason);
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not revoke application.', { tone: 'error' });
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -597,19 +609,17 @@ export function StaffGuardDetailPanel({
                   {onOpenGuardApplication ? 'Review application' : 'Approve application'}
                 </button>
               )}
-              {guardAccountStatus === 'approved' && (
-                <span
-                  className="app-button-outline app-btn-sm opacity-50 cursor-default pointer-events-none inline-flex items-center"
-                  title={
-                    guardCanStaffActivateAccount(guard)
-                      ? 'Grant marketplace eligibility from Applications when ready'
-                      : activationChecklist.staffActivationBlockers.join(' · ') ||
-                        'All five credentials must be verified before marketplace eligibility'
-                  }
-                >
-                  Grant marketplace eligibility
-                </span>
-              )}
+              {(guardAccountStatus === 'pending' || guardAccountStatus === 'approved') &&
+                onRejectGuardApplication && (
+                  <button
+                    type="button"
+                    onClick={() => void handleRevokeApplication()}
+                    disabled={revoking}
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
+                  >
+                    {revoking ? 'Revoking…' : 'Revoke application'}
+                  </button>
+                )}
               {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
                 <button
                   type="button"

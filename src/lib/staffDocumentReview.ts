@@ -62,18 +62,23 @@ export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
 
 /** Full application rejection — blocks the guard account. Returns null if cancelled. */
 export async function promptRejectGuardApplicationNote(): Promise<string | null> {
+  return promptRevokeGuardApplicationNote();
+}
+
+/** Revoke or deny a guard application — blocks the guard account. Returns null if cancelled. */
+export async function promptRevokeGuardApplicationNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
-    title: 'Reject guard application?',
+    title: 'Revoke guard application?',
     message:
-      'They will be blocked from the platform and cannot resubmit ID documents or get their profile approved.',
-    confirmLabel: 'Reject application',
+      'They will be blocked from the platform and cannot resubmit credentials or get their profile approved.',
+    confirmLabel: 'Revoke application',
     cancelLabel: 'Keep reviewing',
     tone: 'danger',
   });
   if (!confirmed) return null;
 
   const reason = await showAppPrompt({
-    title: 'Rejection reason',
+    title: 'Revocation reason',
     message: 'This message is shown to the guard on their profile.',
     defaultValue: GUARD_APPLICATION_REJECT_DEFAULT_REASON,
     multiline: true,
