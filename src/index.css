@@ -15616,40 +15616,6 @@ html.theme-grey .landing-wordmark {
   margin-top: 0.15rem;
 }
 
-.guard-pref-onboarding-welcome {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  border-radius: var(--radius-app-lg);
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
-  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
-  padding: 0.9rem 1rem;
-}
-
-.guard-pref-onboarding-welcome-icon-wrap {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.65rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg-sec));
-  flex-shrink: 0;
-}
-
-.guard-pref-onboarding-welcome-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--brand-primary);
-}
-
-.guard-pref-onboarding-welcome-text {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--brand-text);
-}
-
 .guard-pref-onboarding-reader {
   border-radius: var(--radius-app-lg);
   border: 1px solid var(--brand-border);
