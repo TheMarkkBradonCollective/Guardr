@@ -8,6 +8,7 @@ import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { CertPhotoRow } from '../credentials/CertPhotoRow';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
+import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { showAppToast } from '../ui/AppToast';
 
 interface GuardCoiDetailModalProps {
@@ -19,6 +20,9 @@ interface GuardCoiDetailModalProps {
   initialEditMode?: boolean;
   onSave?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
   onReview?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 function formatDisplayDate(iso?: string): string {
@@ -37,10 +41,13 @@ export function GuardCoiDetailModal({
   initialEditMode = false,
   onSave,
   onReview,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: GuardCoiDetailModalProps) {
   const policy = guard.insurancePolicy;
   const status = policy ? resolveInsuranceStatus(policy) : 'not_submitted';
-  const [editing, setEditing] = useState(initialEditMode && canEdit && !!onSave);
+  const [editing, setEditing] = useState(initialEditMode && canEdit && !!onSave && !onEditFullPage);
   const [carrier, setCarrier] = useState(policy?.carrier ?? '');
   const [policyNumber, setPolicyNumber] = useState(policy?.policyNumber ?? '');
   const [generalLiabilityLimit, setGeneralLiabilityLimit] = useState(
@@ -143,14 +150,28 @@ export function GuardCoiDetailModal({
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {canEdit && onSave && !editing && (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </button>
+              onEditFullPage ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onEditFullPage();
+                    onClose();
+                  }}
+                  className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+              )
             )}
             <button
               type="button"
@@ -302,6 +323,8 @@ export function GuardCoiDetailModal({
                   </div>
                 )}
               </dl>
+
+              <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
             </>
           )}
 
