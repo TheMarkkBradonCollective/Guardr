@@ -258,6 +258,9 @@ interface StaffDashboardProps {
   onSelectedSupportTicketIdChange?: (id: string | null) => void;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
+  selectedTeamChatRequestId?: string | null;
+  onSelectedTeamChatRequestIdChange?: (id: string | null) => void;
+  initialStaffMessagesTab?: 'team' | 'jobs' | null;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
   companyPublicDocuments?: import('../lib/companyPlacard').CompanyPublicDocument[];
@@ -387,6 +390,9 @@ export function StaffDashboard({
   onSelectedSupportTicketIdChange,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
+  selectedTeamChatRequestId,
+  onSelectedTeamChatRequestIdChange,
+  initialStaffMessagesTab = null,
   onOpenLegal,
   legalAcceptances = [],
   companyPublicDocuments = [],
@@ -787,19 +793,22 @@ export function StaffDashboard({
               onDeleteSupportTicket={onDeleteSupportTicket}
               selectedJobChatRequestId={selectedJobChatRequestId}
               onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
+              selectedTeamChatRequestId={selectedTeamChatRequestId}
+              onSelectedTeamChatRequestIdChange={onSelectedTeamChatRequestIdChange}
               selectedSupportTicketId={selectedSupportTicketId}
               onSelectedSupportTicketIdChange={onSelectedSupportTicketIdChange}
               initialJobChatRequestId={selectedJobChatRequestId}
+              initialTeamChatRequestId={selectedTeamChatRequestId}
+              initialStaffMessagesTab={initialStaffMessagesTab}
               initialSupportTicketId={selectedSupportTicketId}
               onMessagesChromeChange={setStaffMessagesChrome}
             />
           </div>
         ) : (
           <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Settings</h2>
+            <h2 className="app-screen-title">Messages</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Platform settings are limited to Director and Founder roles. Ask your Director to update fees,
-              payment gates, or system-wide controls.
+              Messaging is not available for your account right now. Contact your Director if you need access.
             </p>
           </div>
         );
@@ -910,7 +919,15 @@ export function StaffDashboard({
             />
             <StaffAuditLogPanel />
           </div>
-        ) : null;
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Settings</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Platform settings are limited to Director and Founder roles. Ask your Director to update fees,
+              payment gates, or system-wide controls.
+            </p>
+          </div>
+        );
       case 'profile':
         return (
           <UserProfileScreen

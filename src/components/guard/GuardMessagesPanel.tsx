@@ -150,6 +150,18 @@ export function GuardMessagesPanel({
     setActiveView({ kind: 'team', requestId: initialTeamChatRequestId });
   }, [initialTeamChatRequestId]);
 
+  useEffect(() => {
+    if (!initialJobChatRequestId) return;
+    setActiveTab('jobs');
+    setActiveView({ kind: 'job', requestId: initialJobChatRequestId });
+  }, [initialJobChatRequestId]);
+
+  useEffect(() => {
+    if (!initialSupportTicketId) return;
+    setActiveTab('support');
+    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
+  }, [initialSupportTicketId]);
+
   const allJobs = useMemo(() => [...upcomingJobs, ...pastJobs], [upcomingJobs, pastJobs]);
   const jobById = useMemo(() => new Map(allJobs.map((j) => [j.id, j])), [allJobs]);
   const myTickets = useMemo(

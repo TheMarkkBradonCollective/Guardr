@@ -125,12 +125,10 @@ export function ClientMessagesPanel({
   });
 
   useEffect(() => {
-    if (!initialChatRequestId && !initialChatOpen) return;
+    if (!initialChatRequestId) return;
     setActiveTab('jobs');
-    if (initialChatOpen && initialChatRequestId) {
-      setActiveView({ kind: 'job', requestId: initialChatRequestId });
-    }
-  }, [initialChatRequestId, initialChatOpen]);
+    setActiveView({ kind: 'job', requestId: initialChatRequestId });
+  }, [initialChatRequestId]);
 
   useEffect(() => {
     if (!initialSupportTicketId) return;

@@ -19,8 +19,10 @@ import {
   Clock,
   Lock,
   CreditCard,
+  X,
   type LucideIcon,
 } from 'lucide-react';
+import { AppOverlaySheet } from './ui/motion/AppMotion';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
@@ -215,6 +217,10 @@ interface AuthPageProps {
   onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   isAppLoading?: boolean;
+  /** Full-page auth (browser) or bottom sheet over app home (PWA/APK). */
+  presentation?: 'page' | 'sheet';
+  /** Sheet visibility — only used when presentation is sheet. */
+  open?: boolean;
 }
 
 /** Lightweight person entry for the referredBy autocomplete */
@@ -251,7 +257,10 @@ export function AuthPage({
   onChangeTheme,
   isDbConnected = false,
   isAppLoading = false,
+  presentation = 'page',
+  open = true,
 }: AuthPageProps) {
+  const isSheet = presentation === 'sheet';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -638,84 +647,13 @@ export function AuthPage({
 
   const heroContent = AUTH_HERO_CONTENT[role];
 
-  return (
-    <div
-      className="page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience"
-      id="guardr-auth-root"
-    >
-      <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
-        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
-        <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="flex items-center gap-1.5 text-white/75 hover:text-white transition-colors text-sm font-semibold"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-          <div className="flex items-center gap-2 text-white">
-            <Logo size={26} className="text-white" />
-            <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
-          </div>
-          <div className="w-14 flex justify-end items-center gap-1">
-            {onChangeTheme && (
-              <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-            )}
-            {onOpenGuide && (
-              <button
-                type="button"
-                onClick={onOpenGuide}
-                className="inline-flex items-center gap-1 text-white/75 hover:text-white transition-colors text-xs font-semibold"
-                aria-label="Open general guide"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </header>
-        {/* Ambient glow in auth hero — tinted to the active role's color */}
-        <div className="absolute inset-0 pointer-events-none opacity-40">
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 45%, transparent) 0%, transparent 70%)' }}
-          />
-        </div>
-
-        {/* Decorative watermark — desktop only, pure texture behind the content */}
-        <heroContent.icon className="auth-hero-watermark" strokeWidth={1} aria-hidden="true" />
-
-        {/* Role-specific content — hidden on mobile, horizontal chips on tablet,
-            full panel on desktop (see .auth-hero-content in index.css) */}
-        <div className="auth-hero-content">
-          <span className="auth-hero-icon-badge shrink-0">
-            <heroContent.icon className="w-6 h-6" strokeWidth={1.75} />
-          </span>
-          <div className="auth-hero-headline-block">
-            <h2 className="auth-hero-headline">{heroContent.headline}</h2>
-            <p className="auth-hero-sub">{heroContent.sub}</p>
-          </div>
-          <ul className="auth-hero-feature-list" role="list">
-            {heroContent.features.map(({ icon: Icon, text }) => (
-              <li key={text} className="auth-hero-feature">
-                <span className="auth-hero-feature-icon">
-                  <Icon className="w-4 h-4" strokeWidth={1.75} />
-                </span>
-                <span className="auth-hero-feature-text">{text}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="auth-hero-trust-line">{heroContent.trustLine}</p>
-        </div>
-      </div>
-
-      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
-        <AppFlowSurface className="w-full max-w-md animate-fade-in">
-          <div className="mb-7">
+  const authFormBody = (
+    <>
+          <div className={isSheet ? 'mb-5' : 'mb-7'}>
             <p className="experience-badge">
               {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
             </p>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-[-0.04em] leading-tight mt-1">
+            <h1 className={`font-black tracking-[-0.04em] leading-tight mt-1 ${isSheet ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
               {isSignUp
                 ? role === 'guard'
                   ? 'Create your guard account'
@@ -749,6 +687,27 @@ export function AuthPage({
               Sign up
             </button>
           </div>
+
+          {!isSignUp && (
+            <div className="mb-6">
+              <p className="uber-label mb-3">Account type</p>
+              <div className="grid grid-cols-2 gap-3">
+                {ROLES.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => { setRole(id); setErrorMsg(''); onAuthRoleChange?.(id); }}
+                    className={`auth-role-card text-left w-full ${
+                      role === id ? 'auth-role-card-active' : 'hover:border-brand-primary/30'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
+                    <p className={`text-sm font-semibold ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-5">
             {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
@@ -1463,10 +1422,116 @@ export function AuthPage({
           </div>
 
           {onOpenLegal && (
-            <div className="mt-8 flex justify-center">
+            <div className={`flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
               <LegalFooterLinks onOpenLegal={onOpenLegal} />
             </div>
           )}
+    </>
+  );
+
+  if (isSheet) {
+    return (
+      <AppOverlaySheet
+        open={open}
+        onClose={onBackToHome}
+        panelClassName="auth-sheet-panel rounded-t-[1.35rem] max-h-[92dvh]"
+        ariaLabel={isSignUp ? 'Create account' : 'Sign in'}
+        zIndex={2200}
+      >
+        <div className="auth-sheet-grabber-wrap" aria-hidden="true">
+          <span className="auth-sheet-grabber" />
+        </div>
+        <header className="auth-sheet-header flex items-center justify-between gap-3 px-5 pb-3 pt-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <Logo size={22} className="text-brand-primary shrink-0" />
+            <span className="font-black text-base tracking-[-0.04em] truncate">
+              {isSignUp ? 'Create account' : 'Sign in'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onBackToHome}
+            className="auth-sheet-close flex h-9 w-9 items-center justify-center rounded-full border border-brand-border bg-brand-bg text-brand-text-muted hover:text-brand-text transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </header>
+        <div className="auth-sheet-scroll px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          {authFormBody}
+        </div>
+      </AppOverlaySheet>
+    );
+  }
+
+  return (
+    <div
+      className="page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience"
+      id="guardr-auth-root"
+    >
+      <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
+        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
+        <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBackToHome}
+            className="flex items-center gap-1.5 text-white/75 hover:text-white transition-colors text-sm font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="flex items-center gap-2 text-white">
+            <Logo size={26} className="text-white" />
+            <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
+          </div>
+          <div className="w-14 flex justify-end items-center gap-1">
+            {onChangeTheme && (
+              <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
+            )}
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                className="inline-flex items-center gap-1 text-white/75 hover:text-white transition-colors text-xs font-semibold"
+                aria-label="Open general guide"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </header>
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
+            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 45%, transparent) 0%, transparent 70%)' }}
+          />
+        </div>
+        <heroContent.icon className="auth-hero-watermark" strokeWidth={1} aria-hidden="true" />
+        <div className="auth-hero-content">
+          <span className="auth-hero-icon-badge shrink-0">
+            <heroContent.icon className="w-6 h-6" strokeWidth={1.75} />
+          </span>
+          <div className="auth-hero-headline-block">
+            <h2 className="auth-hero-headline">{heroContent.headline}</h2>
+            <p className="auth-hero-sub">{heroContent.sub}</p>
+          </div>
+          <ul className="auth-hero-feature-list" role="list">
+            {heroContent.features.map(({ icon: Icon, text }) => (
+              <li key={text} className="auth-hero-feature">
+                <span className="auth-hero-feature-icon">
+                  <Icon className="w-4 h-4" strokeWidth={1.75} />
+                </span>
+                <span className="auth-hero-feature-text">{text}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="auth-hero-trust-line">{heroContent.trustLine}</p>
+        </div>
+      </div>
+
+      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
+        <AppFlowSurface className="w-full max-w-md animate-fade-in">
+          {authFormBody}
         </AppFlowSurface>
       </div>
     </div>

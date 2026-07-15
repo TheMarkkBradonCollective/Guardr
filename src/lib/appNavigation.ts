@@ -35,6 +35,8 @@ export interface AppRoute {
   clientDirectGuardId?: string;
   /** Job chat thread — opens the conversation directly */
   jobChatRequestId?: string;
+  /** Team / crew chat thread (guard + staff) */
+  teamChatRequestId?: string;
   /** Support ticket — opens the thread directly */
   supportTicketId?: string;
   /** Support inbox tab when on support home */
@@ -169,6 +171,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const clientGuardId = searchParams.get('pg');
   const clientDirectGuardId = searchParams.get('dr');
   const jobChatRequestId = searchParams.get('jc');
+  const teamChatRequestId = searchParams.get('tc');
   const supportTicketId = searchParams.get('st');
   const supportSection = searchParams.get('sec');
   const supportMode = searchParams.get('sm');
@@ -186,7 +189,14 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffEdit === '1' || staffEdit === 'true') nested.staffEdit = true;
   if (clientGuardId) nested.clientGuardId = clientGuardId;
   if (clientDirectGuardId) nested.clientDirectGuardId = clientDirectGuardId;
-  if (jobChatRequestId) nested.jobChatRequestId = jobChatRequestId;
+  if (teamChatRequestId) nested.teamChatRequestId = teamChatRequestId;
+  if (jobChatRequestId) {
+    if (staffMessageTab === 'team') {
+      nested.teamChatRequestId = jobChatRequestId;
+    } else {
+      nested.jobChatRequestId = jobChatRequestId;
+    }
+  }
   if (supportTicketId) nested.supportTicketId = supportTicketId;
   if (supportSection === 'support' || supportSection === 'reports') nested.supportSection = supportSection;
   if (supportMode === 'compose' || supportMode === 'report') nested.supportMode = supportMode;
@@ -221,6 +231,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffEdit) params.set('edit', '1');
   if (route.clientGuardId) params.set('pg', route.clientGuardId);
   if (route.clientDirectGuardId) params.set('dr', route.clientDirectGuardId);
+  if (route.teamChatRequestId) params.set('tc', route.teamChatRequestId);
   if (route.jobChatRequestId) params.set('jc', route.jobChatRequestId);
   if (route.supportTicketId) params.set('st', route.supportTicketId);
   if (route.supportSection) params.set('sec', route.supportSection);
@@ -530,6 +541,7 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     clientGuardId: undefined,
     clientDirectGuardId: undefined,
     jobChatRequestId: undefined,
+    teamChatRequestId: undefined,
     supportTicketId: undefined,
     supportSection: undefined,
     supportMode: undefined,

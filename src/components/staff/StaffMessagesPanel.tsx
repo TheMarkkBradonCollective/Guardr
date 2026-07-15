@@ -77,9 +77,13 @@ interface StaffMessagesPanelProps {
   onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (requestId: string | null) => void;
+  selectedTeamChatRequestId?: string | null;
+  onSelectedTeamChatRequestIdChange?: (requestId: string | null) => void;
   selectedSupportTicketId?: string | null;
   onSelectedSupportTicketIdChange?: (ticketId: string | null) => void;
   initialJobChatRequestId?: string | null;
+  initialTeamChatRequestId?: string | null;
+  initialStaffMessagesTab?: 'team' | 'jobs' | null;
   initialSupportTicketId?: string | null;
   onDetailOpenChange?: (open: boolean) => void;
   onMessagesChromeChange?: (chrome: MessagesChrome) => void;
@@ -116,9 +120,13 @@ export function StaffMessagesPanel({
   onDeleteSupportTicket,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
+  selectedTeamChatRequestId,
+  onSelectedTeamChatRequestIdChange,
   selectedSupportTicketId,
   onSelectedSupportTicketIdChange,
   initialJobChatRequestId = null,
+  initialTeamChatRequestId = null,
+  initialStaffMessagesTab = null,
   initialSupportTicketId = null,
   onDetailOpenChange,
   onMessagesChromeChange,
@@ -126,16 +134,39 @@ export function StaffMessagesPanel({
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
+    if (initialTeamChatRequestId) return { kind: 'team', requestId: initialTeamChatRequestId };
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
     if (initialSupportTicketId)  return { kind: 'support', ticketId: initialSupportTicketId };
     return null;
   });
 
   const [activeTab, setActiveTab] = useState<InboxTab>(() => {
-    if (initialJobChatRequestId) return 'jobs';
+    if (initialStaffMessagesTab === 'jobs' || initialJobChatRequestId) return 'jobs';
     if (initialSupportTicketId)  return 'support';
     return 'team';
   });
+
+  useEffect(() => {
+    if (!initialTeamChatRequestId) return;
+    setActiveTab('team');
+    setSelection({ kind: 'team', requestId: initialTeamChatRequestId });
+    onSelectedTeamChatRequestIdChange?.(initialTeamChatRequestId);
+    onSelectedJobChatRequestIdChange?.(null);
+  }, [initialTeamChatRequestId, onSelectedTeamChatRequestIdChange, onSelectedJobChatRequestIdChange]);
+
+  useEffect(() => {
+    if (!initialJobChatRequestId) return;
+    setActiveTab('jobs');
+    setSelection({ kind: 'job', requestId: initialJobChatRequestId });
+    onSelectedJobChatRequestIdChange?.(initialJobChatRequestId);
+    onSelectedTeamChatRequestIdChange?.(null);
+  }, [initialJobChatRequestId, onSelectedJobChatRequestIdChange, onSelectedTeamChatRequestIdChange]);
+
+  useEffect(() => {
+    if (!initialSupportTicketId) return;
+    setActiveTab('support');
+    setSelection({ kind: 'support', ticketId: initialSupportTicketId });
+  }, [initialSupportTicketId]);
 
   const staffUpdatedAt = useMemo(() => {
     const sorted = sortedStaffMessages(staffMessages);
@@ -238,12 +269,16 @@ export function StaffMessagesPanel({
     onSelectedSupportTicketIdChange?.(null);
   };
 
+  const controlledTeamId =
+    selectedTeamChatRequestId ?? (selection?.kind === 'team' ? selection.requestId : null);
   const controlledJobId =
     selectedJobChatRequestId ?? (selection?.kind === 'job' ? selection.requestId : null);
   const controlledSupportId =
     selectedSupportTicketId ?? (selection?.kind === 'support' ? selection.ticketId : null);
   const effectiveSelection: StaffMessageSelection | null = controlledSupportId
     ? { kind: 'support', ticketId: controlledSupportId }
+    : controlledTeamId
+    ? { kind: 'team', requestId: controlledTeamId }
     : controlledJobId
     ? { kind: 'job', requestId: controlledJobId }
     : selection;
