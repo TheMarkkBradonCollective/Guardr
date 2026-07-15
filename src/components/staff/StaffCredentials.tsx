@@ -24,7 +24,8 @@ import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
-import { AppEmptyState, AppItemCardStack, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -64,10 +65,12 @@ interface StaffCredentialsProps {
 
 function CredentialFeedRow({
   item,
-  onReview,
+  isSelected,
+  onSelect,
 }: {
   item: ApprovalFeedItem;
-  onReview: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
 }) {
   const tone =
     item.status === 'pending' || item.status === 'in_review'
@@ -77,24 +80,27 @@ function CredentialFeedRow({
         : 'danger';
 
   return (
-    <div className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-      <div className="min-w-0 text-left w-full">
-        <p className="font-semibold text-sm truncate">{item.title}</p>
-        {item.subtitle && <p className="text-xs text-brand-text-muted mt-0.5 truncate">{item.subtitle}</p>}
-        <div className="mt-1.5 space-y-1">
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`app-feed-row w-full ${isSelected ? 'app-feed-row-selected' : ''}`}
+    >
+      <div className="app-feed-row-main">
+        <p className="app-feed-row-title truncate">{item.title}</p>
+        {item.subtitle && <p className="app-feed-row-subtitle truncate">{item.subtitle}</p>}
+        <div className="app-feed-row-meta">
           <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
           {item.submittedAt && (item.status === 'pending' || item.status === 'in_review') && (
-            <p className="text-[11px] text-brand-text-muted">
-              Submitted {formatApprovalTimestamp(item.submittedAt)}
-            </p>
+            <span className="text-[11px] text-brand-text-muted">
+              {formatApprovalTimestamp(item.submittedAt)}
+            </span>
           )}
         </div>
       </div>
-      <button type="button" onClick={onReview} className="app-button-outline app-btn-sm gap-1.5 w-fit">
-        <Eye className="w-3.5 h-3.5" />
-        Review
-      </button>
-    </div>
+      <span className="app-feed-row-action">
+        <Eye className="w-4 h-4 text-brand-text-muted" />
+      </span>
+    </button>
   );
 }
 
@@ -347,6 +353,12 @@ export function StaffCredentials({
     );
   };
 
+  const pendingCount = credentialFeed.filter(
+    (item) => item.status === 'pending' || item.status === 'in_review'
+  ).length;
+
+  const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
+
   if (!canVerifyCredentials) {
     return (
       <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="No access">
@@ -355,123 +367,137 @@ export function StaffCredentials({
     );
   }
 
-  if (activeItemId) {
-    const feedItem = findFeedItem(credentialFeed, activeItemId);
-    const context = resolveCredentialFeedContext(guards, activeItemId);
+  const renderCredentialDetail = (item: ApprovalFeedItem, options?: { onBack?: () => void }) => {
+    const feedItem = findFeedItem(credentialFeed, item.id) ?? item;
+    const context = resolveCredentialFeedContext(guards, item.id);
     if (!context) return null;
 
     const { guard } = context;
 
-    return (
-      <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in" data-tour="staff-credentials">
-        <AppSubScreenHeader
-          title={feedItem?.title ?? 'Credential review'}
-          onBack={() => openItem(null)}
-          backLabel="Credentials"
-        />
-        <div className="px-4 sm:px-5 pb-8 space-y-4">
-          <div className="staff-detail-pane space-y-4">
-            <CredentialReviewMeta item={feedItem} />
-            {onOpenGuardProfile && (
-              <button
-                type="button"
-                onClick={() => onOpenGuardProfile(guard.id)}
-                className="text-xs font-semibold text-brand-primary hover:underline"
-              >
-                View full guard profile →
-              </button>
-            )}
+    const detailBody = (
+      <div className="staff-detail-pane p-4 sm:p-5 space-y-4">
+        <CredentialReviewMeta item={feedItem} />
+        {onOpenGuardProfile && (
+          <button
+            type="button"
+            onClick={() => onOpenGuardProfile(guard.id)}
+            className="text-xs font-semibold text-brand-primary hover:underline"
+          >
+            View full guard profile →
+          </button>
+        )}
 
-            {context.kind === 'cert' && (
-              <div className="space-y-3">
-                <CertItemCard
-                  cert={context.cert}
-                  guardName={guard.name}
-                  staffMode
-                  onUpdate={
-                    onUpdateCertification
-                      ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
-                      : undefined
-                  }
-                />
-                {renderCertActions(guard, context.cert)}
-              </div>
-            )}
+        {context.kind === 'cert' && (
+          <div className="space-y-3">
+            <CertItemCard
+              cert={context.cert}
+              guardName={guard.name}
+              staffMode
+              onUpdate={
+                onUpdateCertification
+                  ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
+                  : undefined
+              }
+            />
+            {renderCertActions(guard, context.cert)}
+          </div>
+        )}
 
-            {context.kind === 'coi' && (
-              <div className="space-y-3">
-                <GuardCoiItemCard
-                  guard={guard}
-                  staffMode
-                  onReview={
-                    onReviewGuardInsurance
-                      ? async (status, rejectionReason) => {
-                          await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                        }
-                      : undefined
-                  }
-                />
-                <button
-                  type="button"
-                  onClick={() => setCoiModalOpen(true)}
-                  className="app-button-outline app-btn-sm gap-1.5 w-fit"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  Open COI document
-                </button>
-                {renderCoiActions(guard)}
-                {coiModalOpen && (
-                  <GuardCoiDetailModal
-                    guard={guard}
-                    onClose={() => setCoiModalOpen(false)}
-                    staffMode
-                    onReview={
-                      onReviewGuardInsurance
-                        ? async (status, rejectionReason) => {
-                            await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                          }
-                        : undefined
+        {context.kind === 'coi' && (
+          <div className="space-y-3">
+            <GuardCoiItemCard
+              guard={guard}
+              staffMode
+              onReview={
+                onReviewGuardInsurance
+                  ? async (status, rejectionReason) => {
+                      await onReviewGuardInsurance(guard.id, status, rejectionReason);
                     }
-                  />
-                )}
-              </div>
-            )}
-
-            {context.kind === 'gov-id' && (
-              <div className="space-y-3">
-                <GuardIdItemCard guard={guard} staffMode asCredentialSection />
-                {renderGovIdActions(guard)}
-                {renderGovIdUnverify(guard)}
-              </div>
+                  : undefined
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setCoiModalOpen(true)}
+              className="app-button-outline app-btn-sm gap-1.5 w-fit"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Open COI document
+            </button>
+            {renderCoiActions(guard)}
+            {coiModalOpen && (
+              <GuardCoiDetailModal
+                guard={guard}
+                onClose={() => setCoiModalOpen(false)}
+                staffMode
+                onReview={
+                  onReviewGuardInsurance
+                    ? async (status, rejectionReason) => {
+                        await onReviewGuardInsurance(guard.id, status, rejectionReason);
+                      }
+                    : undefined
+                }
+              />
             )}
           </div>
-        </div>
+        )}
+
+        {context.kind === 'gov-id' && (
+          <div className="space-y-3">
+            <GuardIdItemCard guard={guard} staffMode asCredentialSection />
+            {renderGovIdActions(guard)}
+            {renderGovIdUnverify(guard)}
+          </div>
+        )}
       </div>
     );
-  }
 
-  const pendingCount = credentialFeed.filter(
-    (item) => item.status === 'pending' || item.status === 'in_review'
-  ).length;
+    if (options?.onBack) {
+      return (
+        <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+          <AppSubScreenHeader
+            title={feedItem.title ?? 'Credential review'}
+            onBack={options.onBack}
+            backLabel="Credentials"
+          />
+          {detailBody}
+        </div>
+      );
+    }
+
+    return (
+      <div className="animate-fade-in">
+        <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/40">
+          <h2 className="text-base font-semibold truncate">{feedItem.title ?? 'Credential review'}</h2>
+          {feedItem.subtitle && (
+            <p className="text-xs text-brand-text-muted mt-0.5 truncate">{feedItem.subtitle}</p>
+          )}
+        </div>
+        {detailBody}
+      </div>
+    );
+  };
 
   return (
     <div className="animate-fade-in space-y-4" data-tour="staff-credentials">
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setFilter('pending')}
-          className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-        >
-          Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('all')}
-          className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
-        >
-          All ({credentialFeed.length})
-        </button>
-      </div>
+      {!showDetailOnly && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setFilter('pending')}
+            className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
+          >
+            Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
+          >
+            All ({credentialFeed.length})
+          </button>
+        </div>
+      )}
 
       {visibleFeed.length === 0 ? (
         <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="All clear">
@@ -480,11 +506,24 @@ export function StaffCredentials({
             : 'No credential submissions on file yet.'}
         </AppEmptyState>
       ) : (
-        <AppItemCardStack>
-          {visibleFeed.map((item) => (
-            <CredentialFeedRow key={item.id} item={item} onReview={() => openItem(item.id)} />
-          ))}
-        </AppItemCardStack>
+        <ListDetailLayout
+          items={visibleFeed}
+          selectedId={activeItemId}
+          onSelectId={openItem}
+          getItemId={(item) => item.id}
+          listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
+          detailClassName="staff-detail-pane"
+          mobilePresentation="page"
+          emptyDetail={
+            <div className="flex items-center justify-center h-full min-h-[40vh] p-8 text-center">
+              <p className="text-sm text-brand-text-muted">Select a credential to review</p>
+            </div>
+          }
+          renderItem={(item, isSelected, onSelect) => (
+            <CredentialFeedRow item={item} isSelected={isSelected} onSelect={onSelect} />
+          )}
+          renderDetail={(item, options) => renderCredentialDetail(item, options)}
+        />
       )}
     </div>
   );

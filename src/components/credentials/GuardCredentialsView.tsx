@@ -52,16 +52,18 @@ export function GuardCredentialsView({
   }
 
   return (
-    <div className={`guard-credentials-view space-y-5 ${className}`.trim()}>
+    <div className={`guard-credentials-view ${className}`.trim()}>
       {sections.map((section) => {
         const Icon = sectionIcon(section.id);
         return (
-          <section key={section.id} className="credential-view-section space-y-2">
+          <section key={section.id} className="credential-view-section">
             <div className="credential-view-section-header">
-              <div className="flex items-start gap-2">
-                <Icon className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" strokeWidth={1.75} />
+              <div className="flex items-start gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-brand-primary" strokeWidth={1.75} />
+                </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold leading-snug">{section.title}</h3>
+                  <h3>{section.title}</h3>
                   {section.subtitle && (
                     <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{section.subtitle}</p>
                   )}
@@ -69,7 +71,7 @@ export function GuardCredentialsView({
               </div>
               <span className="credential-view-section-count">{section.certs.length}</span>
             </div>
-            <div className="app-cert-item-stack !pt-0">
+            <div className="app-cert-item-stack !pt-0 !gap-2">
               {section.certs.length > 0 ? (
                 section.certs.map((cert) => (
                   <div key={cert.id} className="space-y-2">

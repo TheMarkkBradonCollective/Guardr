@@ -64,7 +64,7 @@ export function ListDetailLayout<T>({
   if (splitView) {
     return (
       <div className="tablet-split-panel">
-        <div className={listScrollClassName}>
+        <div className={`split-list-pane ${listScrollClassName}`}>
           <AppItemCardStack>
             {items.map((item) => {
               const id = getItemId(item);
@@ -77,8 +77,10 @@ export function ListDetailLayout<T>({
             })}
           </AppItemCardStack>
         </div>
-        <div className="min-h-0">
-          {selected ? renderDetail(selected) : emptyDetail}
+        <div className="split-detail-pane min-h-0">
+          <div className={`split-detail-pane-body ${detailClassName}`}>
+            {selected ? renderDetail(selected) : emptyDetail}
+          </div>
         </div>
       </div>
     );

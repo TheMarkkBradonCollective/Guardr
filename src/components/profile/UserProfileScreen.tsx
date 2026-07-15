@@ -5,6 +5,7 @@ import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQuali
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
 import { Camera, Save, User, X } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
+import { ProfileHero } from './ProfileHero';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
@@ -211,70 +212,70 @@ export function UserProfileScreen({
   if (isStaffAccount) {
     return (
       <AppScreen>
-        <section className="flex flex-col items-center text-center px-5 pt-8 pb-7 border-b border-brand-border">
-          <ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />
-          <h2 className="text-2xl font-black tracking-[-0.04em] leading-tight mt-4">{staffBadgeId || '—'}</h2>
-          <p className="text-sm text-brand-text-muted mt-1.5 font-semibold tracking-tight">Staff ID</p>
-          <p className="text-sm text-brand-text-muted mt-3 font-semibold tracking-tight">{roleLabel}</p>
-          <p className="text-xs text-brand-text-muted mt-0.5 font-medium">{currentUser.email}</p>
-        </section>
+        <ProfileHero
+          avatar={<ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />}
+          name={staffBadgeId || '—'}
+          subtitle="Staff ID"
+          email={currentUser.email}
+          badge={<span className="wf-badge wf-badge-primary">{roleLabel}</span>}
+        />
       </AppScreen>
     );
   }
 
   return (
     <AppScreen>
-      <section className="flex flex-col items-center text-center px-5 pt-8 pb-7 border-b border-brand-border">
-        <div className="relative mb-4">
-          <ProfileAvatar src={avatar} name={displayName} size="xl" />
-          <label
-            className={`absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-lg ${
-              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:opacity-90 transition-opacity'
-            }`}
-            title="Change profile photo"
-          >
-            <Camera className="w-4 h-4" />
-            <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
-          </label>
-        </div>
-        {photoError && <p className="text-xs text-red-500 mb-2">{photoError}</p>}
-        {avatar && !photoSaving && (
-          <button
-            type="button"
-            onClick={() => void handleRemovePhoto()}
-            disabled={photoSaving}
-            className="text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mb-3 disabled:opacity-50 transition-colors"
-          >
-            <X className="w-3 h-3" />
-            Remove photo
-          </button>
-        )}
-        {photoSaving && <p className="text-xs text-brand-text-muted mb-3">Saving photo…</p>}
-        <h2 className="text-2xl font-black tracking-[-0.04em] leading-tight">{displayName}</h2>
-        <p className="text-sm text-brand-text-muted mt-1.5 font-semibold tracking-tight">{roleLabel}</p>
-        <p className="text-xs text-brand-text-muted mt-0.5 font-medium">{currentUser.email}</p>
-      </section>
-
-      <div className="px-5 py-4 flex gap-2 border-b border-brand-border">
-        <button
-          type="button"
-          onClick={() => (editing ? void handleSave() : setEditing(true))}
-          disabled={saving}
-          className="app-button-primary disabled:opacity-50"
-        >
-          {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
-          {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-        </button>
-        {editing && (
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="app-button-outline app-btn-md"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
+      <ProfileHero
+        className="mt-4"
+        avatar={<ProfileAvatar src={avatar} name={displayName} size="xl" />}
+        name={displayName}
+        subtitle={roleLabel}
+        email={currentUser.email}
+        photoControls={
+          <>
+            <label
+              className={`absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-lg ${
+                photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:opacity-90 transition-opacity'
+              }`}
+              title="Change profile photo"
+            >
+              <Camera className="w-4 h-4" />
+              <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
+            </label>
+            {photoError && <p className="text-xs text-red-500 mt-2 text-center">{photoError}</p>}
+            {avatar && !photoSaving && (
+              <button
+                type="button"
+                onClick={() => void handleRemovePhoto()}
+                disabled={photoSaving}
+                className="mt-2 text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mx-auto disabled:opacity-50 transition-colors"
+              >
+                <X className="w-3 h-3" />
+                Remove photo
+              </button>
+            )}
+            {photoSaving && <p className="text-xs text-brand-text-muted mt-2 text-center">Saving photo…</p>}
+          </>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => (editing ? void handleSave() : setEditing(true))}
+              disabled={saving}
+              className="app-button-primary disabled:opacity-50"
+            >
+              {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
+              {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+            </button>
+            {editing && (
+              <button type="button" onClick={() => setEditing(false)} className="app-button-outline app-btn-md">
+                Cancel
+              </button>
+            )}
+          </>
+        }
+      />
 
       <AppFormSection title="Contact & account">
         <PersonNameFields
