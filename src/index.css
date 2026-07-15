@@ -13812,8 +13812,11 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   top: 0;
   z-index: 5;
   padding: 0.5rem 1rem 0;
-  background: color-mix(in srgb, var(--brand-bg) 92%, transparent);
-  backdrop-filter: blur(12px);
+  background: var(--brand-bg-sec);
+}
+
+.guard-crew-screen-card > .crew-hub-sticky-head {
+  margin-top: -0.25rem;
 }
 
 .crew-hub-sticky-head .app-segmented-control {
