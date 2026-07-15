@@ -158,35 +158,27 @@ function accountSignupApplicationItems(
   auditLog: AuditLogEntry[]
 ): ApprovalFeedItem[] {
   const guardItems = guardAccountItems(guards, auditLog)
-    .filter(
-      (item) =>
-        item.queue === 'guard-accounts' &&
-        (item.status === 'pending' || item.status === 'in_review' || item.status === 'approved')
-    )
+    .filter((item) => item.queue === 'guard-accounts' && belongsInApplicationFeed(item))
     .map((item) => ({ ...item, queue: 'applications' as const }));
 
   const clientItems = clientAccountItems(clients, auditLog)
-    .filter((item) => item.status === 'pending' || item.status === 'in_review')
+    .filter((item) => belongsInApplicationFeed(item))
     .map((item) => ({ ...item, queue: 'applications' as const }));
 
   return [...guardItems, ...clientItems];
 }
 
-/** Applications section — guard and client sign-ups (pending through approved/active). */
+function belongsInApplicationFeed(item: ApprovalFeedItem): boolean {
+  return item.status === 'pending' || item.status === 'in_review' || item.status === 'approved';
+}
+
+/** Applications section — account intake from pending sign-up through approved (pre-marketplace). */
 export function buildApplicationFeed(
   guards: SecurityGuard[],
   clients: Client[],
   auditLog: AuditLogEntry[] = []
 ): ApprovalFeedItem[] {
-  const guardItems = guardAccountItems(guards, auditLog).map((item) => ({
-    ...item,
-    queue: 'applications' as const,
-  }));
-  const clientItems = clientAccountItems(clients, auditLog).map((item) => ({
-    ...item,
-    queue: 'applications' as const,
-  }));
-  return [...guardItems, ...clientItems].sort(compareFeedItems);
+  return accountSignupApplicationItems(guards, clients, auditLog).sort(compareFeedItems);
 }
 
 export function isApplicationFeedItemPending(
@@ -195,6 +187,15 @@ export function isApplicationFeedItemPending(
   _clients: Client[]
 ): boolean {
   return item.status === 'pending' || item.status === 'in_review';
+}
+
+/** Open intake pipeline — pending sign-ups plus approved applications still activating. */
+export function isApplicationFeedItemOpen(
+  item: ApprovalFeedItem,
+  _guards: SecurityGuard[],
+  _clients: Client[]
+): boolean {
+  return belongsInApplicationFeed(item);
 }
 
 export function countPendingAccountSignupApplications(

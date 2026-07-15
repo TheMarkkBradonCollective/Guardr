@@ -8,6 +8,7 @@ import {
   buildApplicationFeed,
   formatApprovalTimestamp,
   isApplicationFeedItemPending,
+  isApplicationFeedItemOpen,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import { applicationFeedItemMatchesSearch } from '../../lib/credentialSearch';
@@ -23,7 +24,7 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 
 type ApplicationKind = 'guard' | 'client';
-type ApplicationFilter = 'pending' | 'all';
+type ApplicationFilter = 'open' | 'pending' | 'all';
 
 interface ApplicationListEntry {
   kind: ApplicationKind;
@@ -181,7 +182,7 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [filter, setFilter] = useState<ApplicationFilter>('pending');
+  const [filter, setFilter] = useState<ApplicationFilter>('open');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
     if (initialGuardId) return `guard:${initialGuardId}`;
@@ -243,11 +244,18 @@ export function StaffApplications({
     [applicationEntries, guards, clients]
   );
 
+  const openCount = useMemo(
+    () => applicationEntries.filter((entry) => isApplicationFeedItemOpen(entry.item, guards, clients)).length,
+    [applicationEntries, guards, clients]
+  );
+
   const visibleEntries = useMemo(() => {
     const scoped =
       filter === 'pending'
         ? applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients))
-        : applicationEntries;
+        : filter === 'open'
+          ? applicationEntries.filter((entry) => isApplicationFeedItemOpen(entry.item, guards, clients))
+          : applicationEntries;
     return scoped.filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
   }, [applicationEntries, filter, guards, clients, search]);
 
@@ -354,8 +362,8 @@ export function StaffApplications({
       {!showDetailOnly && (
         <>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            New guard and client sign-ups waiting for staff review before they can use the marketplace.
-            Job applications go straight to the client on each job.
+            Guard and client sign-ups from first submission through approval and activation.
+            Credential verification happens in the Credentials tab.
           </p>
 
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
@@ -364,7 +372,7 @@ export function StaffApplications({
                 onAdd={onAddGuard}
                 onCreated={(guardId) => {
                   setSearch('');
-                  setFilter('pending');
+                  setFilter('open');
                   setActiveItemKey(`guard:${guardId}`);
                   onSelectionChange?.({ guardId, clientId: null });
                 }}
@@ -375,7 +383,7 @@ export function StaffApplications({
                 onAdd={onAddClient}
                 onCreated={(clientId) => {
                   setSearch('');
-                  setFilter('pending');
+                  setFilter('open');
                   setActiveItemKey(`client:${clientId}`);
                   onSelectionChange?.({ guardId: null, clientId });
                 }}
@@ -393,10 +401,17 @@ export function StaffApplications({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => setFilter('open')}
+              className={`app-button-outline app-btn-sm ${filter === 'open' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              Open{openCount > 0 ? ` (${openCount})` : ''}
+            </button>
+            <button
+              type="button"
               onClick={() => setFilter('pending')}
               className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
             >
-              Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
+              Pending review{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </button>
             <button
               type="button"
@@ -415,7 +430,9 @@ export function StaffApplications({
             ? 'No applications match your search.'
             : filter === 'pending'
               ? 'No account applications waiting for review.'
-              : 'No account applications on file yet.'}
+              : filter === 'open'
+                ? 'No open account applications right now.'
+                : 'No account applications on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout

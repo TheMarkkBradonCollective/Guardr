@@ -6,6 +6,7 @@ import {
   buildApplicationFeed,
   countPendingAccountSignupApplications,
   countPendingCredentialApprovals,
+  isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
 } from './staffApprovalsFeed.ts';
 import { govIdApprovalItemId } from './guardCredentialSections.ts';
@@ -91,7 +92,27 @@ describe('buildApplicationFeed', () => {
     assert.ok(item);
     assert.equal(item?.status, 'approved');
     assert.equal(isApplicationFeedItemPending(item!, [approvedWithPendingCert], []), false);
+    assert.equal(isApplicationFeedItemOpen(item!, [approvedWithPendingCert], []), true);
     assert.equal(countPendingAccountSignupApplications([approvedWithPendingCert], []), 0);
+  });
+
+  it('excludes active marketplace guards from the applications feed', () => {
+    const feed = buildApplicationFeed(
+      [staffProvisionedGuard({ userStatus: 'active', verified: true })],
+      []
+    );
+    assert.equal(feed.find((item) => item.id === 'g-staff'), undefined);
+  });
+
+  it('includes approved client accounts in the applications feed', () => {
+    const feed = buildApplicationFeed(
+      [],
+      [staffProvisionedClient({ accountStatus: 'active', approved: true })]
+    );
+    const clientItem = feed.find((item) => item.id === 'c-staff');
+    assert.ok(clientItem);
+    assert.equal(clientItem?.status, 'approved');
+    assert.equal(isApplicationFeedItemOpen(clientItem!, [], []), true);
   });
 
   it('counts pending government ID in credential approvals', () => {
