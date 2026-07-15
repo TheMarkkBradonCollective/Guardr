@@ -111,8 +111,17 @@ export function computeGuardPerformance(
 }
 
 const SKILL_BY_JOB_TYPE: Partial<Record<JobType, string>> = {
+  'nightclub-bar': 'Nightlife Security',
+  'event-wedding': 'Wedding Security',
+  'event-concert': 'Concert Security',
+  'event-festival': 'Festival Security',
+  'event-corporate': 'Corporate Event Security',
+  'event-private': 'Private Event Security',
   event: 'Event Security',
   patrol: 'Patrol',
+  construction: 'Construction Security',
+  'fire-watch': 'Fire Watch',
+  'standing-guard': 'Standing Guard',
   'armed-escort': 'Armed Escort',
   bodyguard: 'Executive Protection',
   'asset-protection': 'Asset Protection',

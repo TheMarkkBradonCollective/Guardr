@@ -9,6 +9,7 @@ interface GuardPreferencesScreenProps {
   guard: SecurityGuard;
   standingCrewMembers?: GuardStandingCrewMember[];
   onSaveJobPreferences?: (preferences: JobType[]) => void | Promise<void>;
+  onCompleteJobTypeOnboarding?: (jobType: JobType) => void | Promise<void>;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
@@ -16,6 +17,7 @@ export function GuardPreferencesScreen({
   guard,
   standingCrewMembers = [],
   onSaveJobPreferences,
+  onCompleteJobTypeOnboarding,
   onJoinTeamWithCode,
 }: GuardPreferencesScreenProps) {
   const showTeamJoin =
@@ -23,9 +25,13 @@ export function GuardPreferencesScreen({
 
   return (
     <AppScreen>
-      {onSaveJobPreferences && (
+      {onSaveJobPreferences && onCompleteJobTypeOnboarding && (
         <AppFormSection title="Job alerts">
-          <GuardJobPreferencesPanel guard={guard} onChange={onSaveJobPreferences} />
+          <GuardJobPreferencesPanel
+            guard={guard}
+            onChange={onSaveJobPreferences}
+            onCompleteOnboarding={onCompleteJobTypeOnboarding}
+          />
         </AppFormSection>
       )}
 

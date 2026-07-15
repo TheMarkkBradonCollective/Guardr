@@ -97,7 +97,61 @@ export function serviceListingPlaceholders(serviceId: ClientServiceId): JobListi
         parkingInstructions: 'e.g. Valet, garage, or motorcade staging as directed',
         accessInstructions: 'e.g. Coordinate entry through client POC or venue security',
       };
-    case 'event':
+    case 'nightclub-bar':
+      return {
+        description: 'e.g. Nightlife security — ID checks, line control, and de-escalation inside the venue',
+        uniformRequirements: 'e.g. All-black professional attire suitable for a nightclub environment',
+        equipmentRequirements: 'e.g. Radio, flashlight, incident log',
+        siteInstructions: 'e.g. Review door policy, VIP areas, and manager escalation contacts',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-wedding':
+      return {
+        description: 'e.g. Wedding security — ceremony access, reception flow, and discreet guest support',
+        uniformRequirements: 'e.g. Professional black suit or venue-approved formal attire',
+        equipmentRequirements: 'e.g. Radio, guest list, flashlight',
+        siteInstructions: 'e.g. Confirm timeline, vendor access, and family/VIP seating plan',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-concert':
+      return {
+        description: 'e.g. Concert security — stage perimeter, crowd flow, and patron safety',
+        uniformRequirements: 'e.g. Event-appropriate black uniform or client-branded attire',
+        equipmentRequirements: 'e.g. Radio, flashlight, crowd coordination',
+        siteInstructions: 'e.g. Review stage layout, credentialing levels, and medical contacts',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-festival':
+      return {
+        description: 'e.g. Festival security — zone coverage, vendor rows, and pedestrian flow',
+        uniformRequirements: 'e.g. High-visibility or all-black uniform as directed by the promoter',
+        equipmentRequirements: 'e.g. Radio, flashlight, zone assignment map',
+        siteInstructions: 'e.g. Review assigned zone, radio channel, and incident escalation path',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-corporate':
+      return {
+        description: 'e.g. Corporate event — registration, VIP access, and professional guest support',
+        uniformRequirements: 'e.g. Business-professional black uniform or suit',
+        equipmentRequirements: 'e.g. Radio, badge scanner or guest list, flashlight',
+        siteInstructions: 'e.g. Confirm registration flow, speaker green room, and loading dock access',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-private':
+      return {
+        description: 'e.g. Private party security — residence access control and guest screening',
+        uniformRequirements: 'e.g. Discreet all-black attire appropriate for a private residence',
+        equipmentRequirements: 'e.g. Radio, guest list, flashlight',
+        siteInstructions: 'e.g. Confirm invite list, vendor arrivals, and homeowner preferences',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'event-other':
       return {
         description: 'e.g. Event security — crowd management, access control, VIP lane support',
         uniformRequirements: 'e.g. Event-appropriate black uniform or client-branded attire',

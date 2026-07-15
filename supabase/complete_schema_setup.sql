@@ -56,6 +56,7 @@ ALTER TABLE guards ADD CONSTRAINT guards_guard_card_status_check
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_weapon_gear JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_equipment_gear JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_preferences JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_onboarding JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';

@@ -15,7 +15,23 @@ export type {
   PricingMode,
 };
 
-export type JobType = 'event' | 'patrol' | 'armed-escort' | 'bodyguard' | 'asset-protection' | 'long-term' | 'other';
+export type JobType =
+  | 'patrol'
+  | 'construction'
+  | 'fire-watch'
+  | 'standing-guard'
+  | 'armed-escort'
+  | 'bodyguard'
+  | 'asset-protection'
+  | 'long-term'
+  | 'nightclub-bar'
+  | 'event-wedding'
+  | 'event-concert'
+  | 'event-festival'
+  | 'event-corporate'
+  | 'event-private'
+  | 'event'
+  | 'other';
 
 export type JobStatus =
   | 'draft'
@@ -417,6 +433,8 @@ export interface SecurityGuard {
   listedEquipmentGear?: GuardEquipmentGearId[];
   /** Job types the guard wants to be notified about (DoorDash-style preferences). */
   jobTypePreferences?: JobType[];
+  /** ISO timestamps when the guard completed onboarding for each job type. */
+  jobTypeOnboarding?: Partial<Record<JobType, string>>;
   backgroundChecked: boolean;
   verified: boolean;
   rating: number;

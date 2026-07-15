@@ -168,6 +168,7 @@ interface GuardDashboardProps {
   coworkerGuards?: SecurityGuard[];
   onAckPostOrders?: (requestId: string) => void | Promise<void>;
   onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
+  onCompleteJobTypeOnboarding?: (jobType: import('../types').JobType) => void | Promise<void>;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onStartEnRoute?: (requestId: string) => void | Promise<void>;
   onUpdateGuardLiveLocation?: (
@@ -292,6 +293,7 @@ export function GuardDashboard({
   onUpdateJobAudit,
   onAckPostOrders,
   onSaveJobPreferences,
+  onCompleteJobTypeOnboarding,
   onStartEnRoute,
   onUpdateGuardLiveLocation,
   onAcceptReplacementOffer,
@@ -1452,6 +1454,7 @@ export function GuardDashboard({
                   guard={guard}
                   standingCrewMembers={standingCrewMembers}
                   onSaveJobPreferences={onSaveJobPreferences}
+                  onCompleteJobTypeOnboarding={onCompleteJobTypeOnboarding}
                   onJoinTeamWithCode={
                     shouldOfferTeamCodeJoin(guard, standingCrewMembers)
                       ? onJoinTeamWithCode
