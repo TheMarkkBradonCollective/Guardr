@@ -317,40 +317,78 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
   return false;
 }
 
-/** Staff guard roster — only show "Pending approval" after the guard submits for review. */
-export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
-  if (isGuardCredentialExpiryRestricted(guard)) {
-    return GUARD_CREDENTIAL_RESTRICTED_LABEL;
+/** Staff guard roster — approved guards also show marketplace / restriction state. */
+export const GUARD_AWAITING_WORK_CREDENTIALS_LABEL = 'Pending';
+
+export type GuardRosterAccountBadge = {
+  label: string;
+  tone: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+};
+
+export function getGuardRosterAccountBadges(guard: SecurityGuard): GuardRosterAccountBadge[] {
+  if (guard.isStaff) {
+    const status = getGuardUserStatus(guard);
+    return [
+      {
+        label: GUARD_USER_STATUS_LABELS[status],
+        tone:
+          status === 'active'
+            ? 'success'
+            : status === 'suspended' || status === 'blocked'
+              ? 'danger'
+              : 'default',
+      },
+    ];
   }
+
   const status = getGuardUserStatus(guard);
-  if (status === 'active' || status === 'suspended' || status === 'blocked') {
-    return GUARD_USER_STATUS_LABELS[status];
-  }
-  if (isGuardAccountApproved(guard)) return GUARD_USER_STATUS_LABELS.approved;
+
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
     if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) {
-      return GUARD_USER_STATUS_LABELS.pending;
+      return [{ label: GUARD_USER_STATUS_LABELS.pending, tone: 'warning' }];
     }
-    return 'Application in progress';
+    return [{ label: 'Application in progress', tone: 'default' }];
   }
-  return GUARD_USER_STATUS_LABELS[status];
+
+  if (isGuardCredentialExpiryRestricted(guard)) {
+    return [
+      { label: GUARD_USER_STATUS_LABELS.approved, tone: 'primary' },
+      { label: GUARD_CREDENTIAL_RESTRICTED_LABEL, tone: 'danger' },
+    ];
+  }
+
+  if (status === 'active') {
+    return [
+      { label: GUARD_USER_STATUS_LABELS.approved, tone: 'primary' },
+      { label: GUARD_USER_STATUS_LABELS.active, tone: 'success' },
+    ];
+  }
+
+  if (status === 'approved') {
+    return [
+      { label: GUARD_USER_STATUS_LABELS.approved, tone: 'primary' },
+      { label: GUARD_AWAITING_WORK_CREDENTIALS_LABEL, tone: 'warning' },
+    ];
+  }
+
+  return [
+    {
+      label: GUARD_USER_STATUS_LABELS[status],
+      tone: status === 'suspended' || status === 'blocked' ? 'danger' : 'default',
+    },
+  ];
+}
+
+/** @deprecated Prefer getGuardRosterAccountBadges — primary label for legacy callers. */
+export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
+  return getGuardRosterAccountBadges(guard)[0]?.label ?? GUARD_USER_STATUS_LABELS.pending;
 }
 
 export function getGuardRosterAccountBadgeTone(
   guard: SecurityGuard
 ): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  if (isGuardCredentialExpiryRestricted(guard)) return 'danger';
-  const status = getGuardUserStatus(guard);
-  if (status === 'active') return 'success';
-  if (status === 'suspended' || status === 'blocked') return 'danger';
-  if (isGuardAccountApproved(guard)) return 'primary';
-  if (status === 'pending') {
-    const checklist = getGuardActivationChecklist(guard);
-    if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) return 'warning';
-    return 'default';
-  }
-  return 'default';
+  return getGuardRosterAccountBadges(guard)[0]?.tone ?? 'default';
 }
 
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {

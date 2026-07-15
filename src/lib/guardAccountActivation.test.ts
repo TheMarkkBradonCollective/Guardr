@@ -4,6 +4,7 @@ import type { SecurityGuard } from '../types';
 import {
   getGuardActivationChecklist,
   getApprovedGuardsAwaitingActivation,
+  getGuardRosterAccountBadges,
   getGuardRosterAccountLabel,
   getPendingGuardAccountReviews,
   guardActivationSummaryLabel,
@@ -184,12 +185,32 @@ describe('guard account activation gates', () => {
     assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
   });
 
-  it('shows Restricted roster label when credential expiry enforcement applied', () => {
+  it('shows Approved + Restricted roster badges when credential expiry enforcement applied', () => {
     const guard = baseGuard({
       userStatus: 'approved',
       credentialExpiryRestricted: true,
     });
-    assert.equal(getGuardRosterAccountLabel(guard), GUARD_CREDENTIAL_RESTRICTED_LABEL);
+    const badges = getGuardRosterAccountBadges(guard);
+    assert.equal(badges.length, 2);
+    assert.equal(badges[0]?.label, 'Approved');
+    assert.equal(badges[1]?.label, GUARD_CREDENTIAL_RESTRICTED_LABEL);
+    assert.equal(getGuardRosterAccountLabel(guard), 'Approved');
     assert.equal(guardActivationSummaryLabel(guard), 'Restricted — required credential expired');
+  });
+
+  it('shows Approved + Active roster badges for active guards', () => {
+    const guard = baseGuard({ userStatus: 'active', verified: true });
+    const badges = getGuardRosterAccountBadges(guard);
+    assert.equal(badges.length, 2);
+    assert.equal(badges[0]?.label, 'Approved');
+    assert.equal(badges[1]?.label, 'Active');
+  });
+
+  it('shows Approved + Pending roster badges for approved guards awaiting work credentials', () => {
+    const guard = baseGuard({ userStatus: 'approved', verified: true });
+    const badges = getGuardRosterAccountBadges(guard);
+    assert.equal(badges.length, 2);
+    assert.equal(badges[0]?.label, 'Approved');
+    assert.equal(badges[1]?.label, 'Pending');
   });
 });
