@@ -31,6 +31,7 @@ import {
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
+import { GuardArmedLevelBadge } from '../guard/GuardArmedLevelBadge';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -702,6 +703,9 @@ export function StaffGuardDetailPanel({
               <p className="text-sm">
                 Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
               </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <GuardArmedLevelBadge guard={guard} />
+              </div>
               <CertBadgeRow guard={guard} showCaBaseline />
             </section>
           )}

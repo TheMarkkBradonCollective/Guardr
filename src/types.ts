@@ -327,7 +327,7 @@ export interface JobServiceAgreement {
   body: string;
 }
 
-export type GuardWeaponGearId = 'oc-spray' | 'baton' | 'handcuffs' | 'taser' | 'firearm';
+export type GuardWeaponGearId = 'flashlight' | 'oc-spray' | 'baton' | 'handcuffs' | 'taser' | 'firearm';
 
 export interface SecurityGuard {
   id: string;

@@ -1764,7 +1764,7 @@ export default function App() {
           typeof g.has_reliable_transportation === 'boolean' ? g.has_reliable_transportation : undefined,
         isArmed: g.is_armed,
         listedWeaponGear: parseJsonStringArray(g.listed_weapon_gear).filter((value): value is GuardWeaponGearId =>
-          ['oc-spray', 'baton', 'handcuffs', 'taser', 'firearm'].includes(value)
+          ['flashlight', 'oc-spray', 'baton', 'handcuffs', 'taser', 'firearm'].includes(value)
         ),
         backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
