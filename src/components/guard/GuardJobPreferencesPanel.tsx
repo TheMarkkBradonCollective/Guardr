@@ -24,7 +24,7 @@ import {
   normalizeJobTypePreferences,
   type JobTypePreferenceOption,
 } from '../../lib/guardJobPreferences';
-import { isJobTypeOnboarded } from '../../lib/guardJobTypeOnboarding';
+import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
 import { AppSwitch } from '../ui/AppSwitch';
 import { JobTypeOnboardingSheet } from './JobTypeOnboardingSheet';
 
@@ -82,6 +82,7 @@ export function GuardJobPreferencesPanel({
   const selected = new Set(normalizeJobTypePreferences(guard.jobTypePreferences));
   const [onboardingType, setOnboardingType] = useState<JobType | null>(null);
   const [onboardingBusy, setOnboardingBusy] = useState(false);
+  const [welcomeExpanded, setWelcomeExpanded] = useState(false);
 
   const stats = useMemo(() => {
     const total = JOB_TYPE_PREFERENCE_OPTIONS.length;
@@ -131,10 +132,23 @@ export function GuardJobPreferencesPanel({
           <div className="guard-pref-hero-copy">
             <p className="guard-pref-hero-eyebrow">Job alerts</p>
             <h2 className="guard-pref-hero-title">Your alert profile</h2>
-            <p className="guard-pref-hero-subtitle">
-              Turn on the job types you want. Complete the read-aloud onboarding once per type, then
-              toggle alerts anytime.
-            </p>
+            <div className="guard-pref-hero-subtitle-block">
+              <p className="guard-pref-hero-subtitle">
+                Turn on the job types you want. Complete the read-aloud onboarding once per type, then
+                toggle alerts anytime.
+                {welcomeExpanded ? (
+                  <span className="guard-pref-hero-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
+                ) : null}
+              </p>
+              <button
+                type="button"
+                className="guard-pref-hero-read-more"
+                onClick={() => setWelcomeExpanded((open) => !open)}
+                aria-expanded={welcomeExpanded}
+              >
+                {welcomeExpanded ? 'Read less' : 'Read more'}
+              </button>
+            </div>
           </div>
         </div>
         <div className="guard-pref-stats" role="list">

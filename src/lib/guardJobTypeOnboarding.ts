@@ -379,7 +379,6 @@ export function jobTypeOnboardingContent(jobType: JobType): JobTypeOnboardingCon
 export function jobTypeOnboardingSpeechText(jobType: JobType): string {
   const content = JOB_TYPE_ONBOARDING[jobType];
   const sections = [
-    GENERAL_ONBOARDING_INTRO,
     content.title,
     content.summary,
     'What to expect.',
