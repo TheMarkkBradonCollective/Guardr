@@ -54,6 +54,7 @@ import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScre
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
 import { GuardPreferencesScreen } from './guard/GuardPreferencesScreen';
+import { GuardAvailabilityScreen } from './guard/GuardAvailabilityScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
@@ -63,7 +64,7 @@ import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -230,12 +231,12 @@ interface GuardDashboardProps {
   isDbConnected?: boolean;
 }
 
-export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance';
+export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
 const GUARD_PRIMARY_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
-const GUARD_SIDEBAR_TABS = new Set<GuardTab>(['preferences', 'performance']);
+const GUARD_SIDEBAR_TABS = new Set<GuardTab>(['preferences', 'performance', 'availability']);
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -251,6 +252,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   crew: 'Crew',
   preferences: 'Preferences',
   performance: 'Performance',
+  availability: 'Availability',
 };
 
 export function GuardDashboard({
@@ -1043,6 +1045,7 @@ export function GuardDashboard({
   ];
 
   const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
+    { id: 'availability', icon: CalendarDays, label: 'Availability' },
     { id: 'performance', icon: BarChart3, label: 'Performance' },
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
   ];
@@ -1055,7 +1058,7 @@ export function GuardDashboard({
     onOpenSettings: () => setTab('settings'),
     onSignOut,
     hideProfile: accountNeedsActivation,
-    active: activeTab === 'profile' || activeTab === 'settings' || activeTab === 'preferences' || activeTab === 'performance',
+    active: activeTab === 'profile' || activeTab === 'settings' || activeTab === 'preferences' || activeTab === 'performance' || activeTab === 'availability',
     extraLinks: accountNeedsActivation
       ? []
       : [
@@ -1428,7 +1431,16 @@ export function GuardDashboard({
                   themeMode={themeMode as 'dark' | 'light' | 'grey'}
                   onChangeTheme={onChangeTheme}
                   onOpenLegal={onOpenLegal}
+                  isDbConnected={isDbConnected}
                 />
+              </div>
+            </div>
+          )}
+
+          {tab === 'availability' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
+                <GuardAvailabilityScreen guard={guard} />
               </div>
             </div>
           )}
@@ -1438,9 +1450,7 @@ export function GuardDashboard({
               <div className="flex-1 overflow-y-auto">
                 <GuardPreferencesScreen
                   guard={guard}
-                  currentUser={currentUser}
                   standingCrewMembers={standingCrewMembers}
-                  isDbConnected={isDbConnected}
                   onSaveJobPreferences={onSaveJobPreferences}
                   onJoinTeamWithCode={
                     shouldOfferTeamCodeJoin(guard, standingCrewMembers)

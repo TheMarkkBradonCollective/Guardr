@@ -71,6 +71,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   team: 'crew',
   preferences: 'preferences',
   performance: 'performance',
+  availability: 'availability',
 };
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
@@ -87,6 +88,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   crew: 'crew',
   preferences: 'preferences',
   performance: 'performance',
+  availability: 'availability',
 };
 
 /** Guards need active status plus loaded credentials before non-activation tabs unlock. */

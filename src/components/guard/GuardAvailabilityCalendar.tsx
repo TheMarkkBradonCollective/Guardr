@@ -6,8 +6,11 @@ import {
   isInvalidAvailabilityWindow,
   loadAvailabilitySlots,
   saveAvailabilitySlots,
+  WEEK_DAY_ORDER,
+  WEEK_DAY_TAB_OPTIONS,
   type GuardAvailabilitySlot,
 } from '../../lib/guardAvailability';
+import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { showAppToast } from '../ui/AppToast';
 
 interface GuardAvailabilityCalendarProps {
@@ -15,6 +18,11 @@ interface GuardAvailabilityCalendarProps {
   slots?: GuardAvailabilitySlot[];
   onSave?: (slots: GuardAvailabilitySlot[]) => void | Promise<void>;
   readOnly?: boolean;
+}
+
+function defaultSelectedDay(): number {
+  const today = new Date().getDay();
+  return WEEK_DAY_ORDER.includes(today as (typeof WEEK_DAY_ORDER)[number]) ? today : 1;
 }
 
 export function GuardAvailabilityCalendar({
@@ -26,8 +34,11 @@ export function GuardAvailabilityCalendar({
   const [slots, setSlots] = useState<GuardAvailabilitySlot[]>(
     initialSlots?.length ? initialSlots : loadAvailabilitySlots(guardId) ?? defaultAvailabilitySlots(guardId)
   );
+  const [selectedDay, setSelectedDay] = useState<number>(defaultSelectedDay);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  const daySlots = slots.filter((slot) => slot.dayOfWeek === selectedDay);
 
   const updateSlot = (id: string, patch: Partial<GuardAvailabilitySlot>) => {
     setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -59,13 +70,12 @@ export function GuardAvailabilityCalendar({
   };
 
   const addSlot = () => {
-    const day = 1;
     setSlots((prev) => [
       ...prev,
       {
         id: `avail-${guardId}-${Date.now()}`,
         guardId,
-        dayOfWeek: day,
+        dayOfWeek: selectedDay,
         startTime: '09:00',
         endTime: '17:00',
         isAvailable: true,
@@ -86,13 +96,21 @@ export function GuardAvailabilityCalendar({
         <h3 className="text-base font-bold text-brand-text">Availability</h3>
       </div>
       <p className="text-sm text-brand-text-muted">Set when you are available for security work.</p>
-      {slots.length === 0 ? (
+
+      <AppSegmentedControl
+        options={WEEK_DAY_TAB_OPTIONS}
+        value={String(selectedDay)}
+        onChange={(id) => setSelectedDay(Number(id))}
+      />
+
+      {daySlots.length === 0 ? (
         <p className="text-sm text-brand-text-muted italic py-2">
-          No availability windows set — you may still be offered jobs any day. Add a slot below to limit which days you're contacted.
+          No availability on {dayLabel(selectedDay)} — add a time window below, or leave empty if you are not
+          available this day.
         </p>
       ) : (
         <div className="space-y-2">
-          {slots.map((slot) => {
+          {daySlots.map((slot) => {
             const invalidWindow = isInvalidAvailabilityWindow(slot);
             return (
               <div
@@ -101,16 +119,6 @@ export function GuardAvailabilityCalendar({
                   invalidWindow ? 'border-red-500/50' : 'border-brand-border'
                 }`}
               >
-                <select
-                  value={slot.dayOfWeek}
-                  disabled={readOnly}
-                  onChange={(e) => updateSlot(slot.id, { dayOfWeek: Number(e.target.value) })}
-                  className="uber-input text-sm w-24"
-                >
-                  {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-                    <option key={d} value={d}>{dayLabel(d)}</option>
-                  ))}
-                </select>
                 <input
                   type="time"
                   value={slot.startTime}
@@ -142,7 +150,7 @@ export function GuardAvailabilityCalendar({
                     type="button"
                     onClick={() => removeSlot(slot.id)}
                     className="p-1 text-brand-text-muted hover:text-red-500"
-                    aria-label={`Remove ${dayLabel(slot.dayOfWeek)} availability slot`}
+                    aria-label={`Remove ${dayLabel(selectedDay)} availability slot`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
