@@ -34,6 +34,9 @@ interface GuardStandingCrewPanelProps {
   onRemove?: (memberGuardId: string) => void | Promise<void>;
   onAcceptInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineInvite?: (inviteId: string) => void | Promise<void>;
+  onRequestCrewPlacement?: () => void | Promise<void>;
+  canRequestCrewPlacement?: boolean;
+  pendingCrewJoinRequest?: boolean;
 }
 
 function guardName(guards: SecurityGuard[], id: string): string {
@@ -74,9 +77,13 @@ export function GuardStandingCrewPanel({
   onRemove,
   onAcceptInvite,
   onDeclineInvite,
+  onRequestCrewPlacement,
+  canRequestCrewPlacement = false,
+  pendingCrewJoinRequest = false,
 }: GuardStandingCrewPanelProps) {
   const [search, setSearch] = useState('');
   const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [requestingPlacement, setRequestingPlacement] = useState(false);
   const embedded = variant === 'embedded';
 
   const active = useMemo(
@@ -114,6 +121,25 @@ export function GuardStandingCrewPanel({
     [members, guard.id]
   );
 
+  const leadsStandingCrew = useMemo(
+    () =>
+      members.some(
+        (m) =>
+          m.leadGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
+      ) || !!guard.standingCrewName?.trim(),
+    [members, guard.id, guard.standingCrewName]
+  );
+
+  const handleRequestPlacement = async () => {
+    if (!onRequestCrewPlacement) return;
+    setRequestingPlacement(true);
+    try {
+      await onRequestCrewPlacement();
+    } finally {
+      setRequestingPlacement(false);
+    }
+  };
+
   const handleInvite = async (memberId: string) => {
     if (!onInvite) return;
     setInvitingId(memberId);
@@ -136,6 +162,69 @@ export function GuardStandingCrewPanel({
       <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
         When a trusted guard invites you to their standing crew, it will show up here.
       </AppEmptyState>
+    );
+  }
+
+  if (trusted && isStandingTeamMember && !leadsStandingCrew) {
+    const leadMembership = members.find(
+      (m) =>
+        m.memberGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
+    );
+    const leadName = leadMembership
+      ? guardName(guards, leadMembership.leadGuardId)
+      : 'your crew lead';
+    return (
+      <div className={embedded ? 'space-y-5' : 'space-y-4'}>
+        {pendingIncoming.length > 0 && (
+          <section>
+            {sectionTitle('Invitations')}
+            <ul className="space-y-2">
+              {pendingIncoming.map((invite) => (
+                <li
+                  key={invite.id}
+                  className="rounded-lg border border-brand-primary/30 bg-brand-primary/8 px-3 py-3"
+                >
+                  <p className="text-sm font-semibold text-brand-text">
+                    {guardName(guards, invite.leadGuardId)} invited you
+                  </p>
+                  <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                    Join their standing team for future coordinated jobs.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      type="button"
+                      className="app-button-primary app-btn-sm"
+                      onClick={() => onAcceptInvite?.(invite.id)}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      className="app-button-outline app-btn-sm"
+                      onClick={() => onDeclineInvite?.(invite.id)}
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section>
+          {sectionTitle('Your crew')}
+          <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3">
+            <p className="text-sm font-semibold text-brand-text">
+              You are on {leadName}&apos;s standing crew
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              {leadMembership?.status === 'pending'
+                ? 'Accept the invitation above to join coordinated jobs with this crew.'
+                : 'Your coordinator can invite you to job crews. Team chat appears under Messages when you join a job crew.'}
+            </p>
+          </div>
+        </section>
+      </div>
     );
   }
 
@@ -180,6 +269,35 @@ export function GuardStandingCrewPanel({
 
       {trusted && (
         <>
+          {(canRequestCrewPlacement || pendingCrewJoinRequest) && (
+            <section>
+              {sectionTitle('Join a crew')}
+              <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
+                <p className="text-xs text-brand-text-muted leading-relaxed">
+                  Trusted guards cannot join with a crew code. If you prefer supporting another
+                  coordinator instead of leading your own team, request placement through Guardr
+                  staff.
+                </p>
+                {pendingCrewJoinRequest ? (
+                  <WfBadge tone="warning">Placement request pending staff review</WfBadge>
+                ) : (
+                  onRequestCrewPlacement && (
+                    <button
+                      type="button"
+                      className="app-button-primary app-btn-sm"
+                      disabled={requestingPlacement}
+                      onClick={() => void handleRequestPlacement()}
+                    >
+                      {requestingPlacement ? 'Submitting…' : 'Request crew placement'}
+                    </button>
+                  )
+                )}
+              </div>
+            </section>
+          )}
+
+          {leadsStandingCrew && (
+            <>
           {onUpdateStandingCrewProfile && (
             <section>
               {sectionTitle('Team profile')}
@@ -319,6 +437,8 @@ export function GuardStandingCrewPanel({
                 )}
               </div>
             </section>
+          )}
+            </>
           )}
         </>
       )}

@@ -509,6 +509,20 @@ export interface GuardStandingCrewMember {
   respondedAt?: string;
 }
 
+export type GuardCrewJoinRequestStatus = 'pending' | 'approved' | 'declined';
+
+/** Trusted guard asking staff to place them on an existing standing crew. */
+export interface GuardCrewJoinRequest {
+  id: string;
+  guardId: string;
+  status: GuardCrewJoinRequestStatus;
+  message?: string;
+  requestedAt: string;
+  resolvedAt?: string;
+  resolvedByStaffId?: string;
+  assignedLeadGuardId?: string;
+}
+
 /** In-app notification inbox row — unread until read/clicked. */
 export interface UserNotification {
   id: string;

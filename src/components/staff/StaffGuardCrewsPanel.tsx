@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GuardStandingCrewMember, SecurityGuard, SecurityRequest } from '../../types';
+import { GuardCrewJoinRequest, GuardStandingCrewMember, SecurityGuard, SecurityRequest } from '../../types';
 import {
   getStaffCrewListings,
   type StaffCrewListing,
@@ -9,6 +9,7 @@ import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewOutgoing,
 } from '../../lib/guardStandingCrew';
+import { getPendingCrewJoinRequests } from '../../lib/guardCrewJoinRequest';
 import { formatShiftRange } from '../../lib/dates';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
@@ -48,6 +49,7 @@ interface StaffGuardCrewsPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   standingCrewMembers?: GuardStandingCrewMember[];
+  crewJoinRequests?: GuardCrewJoinRequest[];
   canManage?: boolean;
   selectedJobId?: string | null;
   onSelectedJobIdChange?: (jobId: string | null) => void;
@@ -57,12 +59,18 @@ interface StaffGuardCrewsPanelProps {
   onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveCrewJoinRequest?: (
+    requestId: string,
+    assignedLeadGuardId: string
+  ) => void | Promise<void>;
+  onDeclineCrewJoinRequest?: (requestId: string) => void | Promise<void>;
 }
 
 export function StaffGuardCrewsPanel({
   requests,
   guards,
   standingCrewMembers = [],
+  crewJoinRequests = [],
   canManage = false,
   selectedJobId: controlledSelectedJobId,
   onSelectedJobIdChange,
@@ -72,11 +80,16 @@ export function StaffGuardCrewsPanel({
   onApproveCrewMember,
   onDenyCrewMember,
   onRemoveCrewMember,
+  onApproveCrewJoinRequest,
+  onDeclineCrewJoinRequest,
 }: StaffGuardCrewsPanelProps) {
   const [view, setView] = useState<CrewView>('standing');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CrewFilter>('all');
   const [selectedStandingLeadId, setSelectedStandingLeadId] = useState<string | null>(null);
+  const [selectedJoinRequestId, setSelectedJoinRequestId] = useState<string | null>(null);
+  const [assignLeadGuardId, setAssignLeadGuardId] = useState('');
+  const [resolvingRequestId, setResolvingRequestId] = useState<string | null>(null);
   const [internalSelectedJobId, setInternalSelectedJobId] = useState<string | null>(initialSelectedJobId);
   const isControlled = controlledSelectedJobId !== undefined;
   const selectedJobId = isControlled ? controlledSelectedJobId : internalSelectedJobId;
@@ -127,6 +140,22 @@ export function StaffGuardCrewsPanel({
       );
     });
   }, [trustedGuards, search]);
+
+  const pendingJoinRequests = useMemo(
+    () => getPendingCrewJoinRequests(crewJoinRequests),
+    [crewJoinRequests]
+  );
+
+  const assignableLeads = useMemo(
+    () =>
+      trustedGuards.filter((g) => {
+        if (!g.standingCrewName?.trim()) return false;
+        const activeMembers = getActiveStandingCrewMembers(standingCrewMembers, g.id);
+        const pendingMembers = getPendingStandingCrewOutgoing(standingCrewMembers, g.id);
+        return activeMembers.length > 0 || pendingMembers.length > 0 || !!g.standingCrewName?.trim();
+      }),
+    [trustedGuards, standingCrewMembers]
+  );
 
   const { showDetailOnly: showJobDetailOnly } = useSplitListDetail(selectedJobId, 'page');
   const { showDetailOnly: showStandingDetailOnly } = useSplitListDetail(selectedStandingLeadId, 'page');
@@ -257,6 +286,131 @@ export function StaffGuardCrewsPanel({
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
         <>
+          {pendingJoinRequests.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-brand-text">Crew placement requests</h2>
+                <WfBadge tone="warning">{pendingJoinRequests.length} pending</WfBadge>
+              </div>
+              <div className="space-y-2">
+                {pendingJoinRequests.map((request) => {
+                  const requester = guards.find((g) => g.id === request.guardId);
+                  if (!requester) return null;
+                  const isSelected = selectedJoinRequestId === request.id;
+                  return (
+                    <div
+                      key={request.id}
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <ProfileAvatar src={requester.avatar} name={requester.name} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-brand-text">{requester.name}</p>
+                          <p className="text-xs text-brand-text-muted">
+                            Trusted guard · {requester.badgeNumber ? `Badge ${requester.badgeNumber}` : 'No badge'}
+                          </p>
+                          {request.message && (
+                            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed whitespace-pre-wrap">
+                              {request.message}
+                            </p>
+                          )}
+                          <p className="text-xs text-brand-text-muted mt-1">
+                            Requested {new Date(request.requestedAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      {canManage && (onApproveCrewJoinRequest || onDeclineCrewJoinRequest) && (
+                        <div className="space-y-2">
+                          {isSelected ? (
+                            <>
+                              <label className="block text-xs font-semibold text-brand-text-muted">
+                                Assign to crew lead
+                              </label>
+                              <select
+                                value={assignLeadGuardId}
+                                onChange={(e) => setAssignLeadGuardId(e.target.value)}
+                                className="app-input w-full text-sm"
+                              >
+                                <option value="">Select a crew lead…</option>
+                                {assignableLeads
+                                  .filter((g) => g.id !== requester.id)
+                                  .map((lead) => (
+                                    <option key={lead.id} value={lead.id}>
+                                      {lead.standingCrewName || lead.name}
+                                    </option>
+                                  ))}
+                              </select>
+                              <div className="flex flex-wrap gap-2">
+                                {onApproveCrewJoinRequest && (
+                                  <button
+                                    type="button"
+                                    className="app-button-primary app-btn-sm"
+                                    disabled={!assignLeadGuardId || resolvingRequestId === request.id}
+                                    onClick={async () => {
+                                      if (!assignLeadGuardId) return;
+                                      setResolvingRequestId(request.id);
+                                      try {
+                                        await onApproveCrewJoinRequest(request.id, assignLeadGuardId);
+                                        setSelectedJoinRequestId(null);
+                                        setAssignLeadGuardId('');
+                                      } finally {
+                                        setResolvingRequestId(null);
+                                      }
+                                    }}
+                                  >
+                                    {resolvingRequestId === request.id ? 'Assigning…' : 'Assign to crew'}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="app-button-outline app-btn-sm"
+                                  onClick={() => {
+                                    setSelectedJoinRequestId(null);
+                                    setAssignLeadGuardId('');
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                                {onDeclineCrewJoinRequest && (
+                                  <button
+                                    type="button"
+                                    className="app-button-outline app-btn-sm text-red-400 border-red-500/30"
+                                    disabled={resolvingRequestId === request.id}
+                                    onClick={async () => {
+                                      setResolvingRequestId(request.id);
+                                      try {
+                                        await onDeclineCrewJoinRequest(request.id);
+                                      } finally {
+                                        setResolvingRequestId(null);
+                                      }
+                                    }}
+                                  >
+                                    Decline
+                                  </button>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className="app-button-outline app-btn-sm"
+                              onClick={() => {
+                                setSelectedJoinRequestId(request.id);
+                                setAssignLeadGuardId('');
+                              }}
+                            >
+                              Review request
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {!showStandingDetailOnly && (
             <>
               <WfSearchBar
