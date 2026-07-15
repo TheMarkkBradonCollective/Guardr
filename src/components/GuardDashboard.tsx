@@ -1400,6 +1400,11 @@ export function GuardDashboard({
                   canRequestCrewLead={canRequestLead}
                   pendingCrewLeadRequest={pendingCrewLeadRequest}
                   onDetailOpenChange={setCrewJobDetailOpen}
+                  onJoinTeamWithCode={
+                    shouldOfferTeamCodeJoin(guard, standingCrewMembers)
+                      ? onJoinTeamWithCode
+                      : undefined
+                  }
                 />
             </div>
           )}
@@ -1496,11 +1501,6 @@ export function GuardDashboard({
                 onChangeTheme={onChangeTheme}
                 onOpenLegal={onOpenLegal}
                 isDbConnected={isDbConnected}
-                onJoinTeamWithCode={
-                  shouldOfferTeamCodeJoin(guard, standingCrewMembers)
-                    ? onJoinTeamWithCode
-                    : undefined
-                }
               />
             </div>
           )}

@@ -28,6 +28,8 @@ interface GuardStandingCrewPanelProps {
   afterHero?: React.ReactNode;
   /** Replaces the default embedded body (e.g. Active tab job list). */
   embeddedBody?: React.ReactNode;
+  /** Rendered at the top of the scrollable crew body. */
+  scrollPrefix?: React.ReactNode;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
     crewDescription: string;
@@ -148,6 +150,7 @@ export function GuardStandingCrewPanel({
   variant = 'default',
   afterHero,
   embeddedBody,
+  scrollPrefix,
   onUpdateStandingCrewProfile,
   onInvite,
   onRemove,
@@ -240,7 +243,10 @@ export function GuardStandingCrewPanel({
       </div>
       {afterHero ? <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div> : null}
       <div className="guard-tiered-screen-scroll">
-        <div className="guard-rating-body crew-hub-team-body">{body}</div>
+        <div className="guard-rating-body crew-hub-team-body">
+          {scrollPrefix}
+          {body}
+        </div>
       </div>
     </>
   );
@@ -356,7 +362,7 @@ export function GuardStandingCrewPanel({
             <p className="text-xs text-brand-text-muted leading-relaxed">
               {leadMembership?.status === 'pending'
                 ? 'Accept the invitation above to join coordinated jobs with this crew.'
-                : 'Your coordinator can invite you to job crews. Use Settings → Join a crew when you have a job crew code.'}
+                : 'Your coordinator can invite you to job crews when a shift needs your team.'}
             </p>
           </div>
         </CrewSection>
@@ -420,7 +426,8 @@ export function GuardStandingCrewPanel({
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
                   staff. To join another coordinator&apos;s crew instead, use{' '}
-                  <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
+                  <span className="font-semibold text-brand-text">Join a crew</span> at the top of
+                  this page.
                 </p>
                 {pendingCrewLeadRequest ? (
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
@@ -546,8 +553,8 @@ export function GuardStandingCrewPanel({
       {!trusted && isStandingTeamMember && (
         <CrewSection title="Job crew codes">
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            When your coordinator shares a job crew code, enter it under{' '}
-            <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
+            When your coordinator shares a job crew code for a specific shift, they will send it
+            directly or post it in your crew chat.
           </p>
         </CrewSection>
       )}
@@ -563,7 +570,10 @@ export function GuardStandingCrewPanel({
       <>
         {afterHero ? <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div> : null}
         <div className="guard-tiered-screen-scroll">
-          <div className="crew-hub-team-body">{embeddedBody ?? bodyContent}</div>
+          <div className="crew-hub-team-body">
+            {scrollPrefix}
+            {embeddedBody ?? bodyContent}
+          </div>
         </div>
       </>
     );

@@ -6,6 +6,7 @@ import { getCrewDisplayName } from '../../lib/guardTeams';
 import { getPendingStandingCrewIncoming } from '../../lib/guardStandingCrew';
 import { GuardTeamPanel } from './GuardTeamPanel';
 import { GuardStandingCrewPanel } from './GuardStandingCrewPanel';
+import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import {
   AppEmptyState,
   AppItemCard,
@@ -47,6 +48,7 @@ interface GuardCrewHubPanelProps {
   canRequestCrewLead?: boolean;
   pendingCrewLeadRequest?: boolean;
   onDetailOpenChange?: (open: boolean) => void;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 function crewJobLabel(job: GuardJobView, guard: SecurityGuard, coworkerGuards: SecurityGuard[]): string {
@@ -176,6 +178,7 @@ export function GuardCrewHubPanel({
   canRequestCrewLead = false,
   pendingCrewLeadRequest = false,
   onDetailOpenChange,
+  onJoinTeamWithCode,
 }: GuardCrewHubPanelProps) {
   const pendingInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
@@ -281,6 +284,9 @@ export function GuardCrewHubPanel({
     variant: 'embedded' as const,
     afterHero: tabBar,
     embeddedBody: activeTabBody,
+    scrollPrefix: onJoinTeamWithCode ? (
+      <GuardCrewJoinSection onJoin={onJoinTeamWithCode} />
+    ) : undefined,
     onUpdateStandingCrewProfile,
     onInvite: onInviteStandingCrew,
     onRemove: onRemoveStandingCrew,
