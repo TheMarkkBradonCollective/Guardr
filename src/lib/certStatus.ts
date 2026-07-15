@@ -154,16 +154,24 @@ export function summarizeCredentialSlotStatuses(
   };
 }
 
-/** e.g. "2 missing · 1 expired · 3 on file" */
+/** e.g. "2 not listed or on file · 1 listed · 3 on file" */
 export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCounts): string {
+  const onFileCount = counts.onFile + counts.expired;
+  if (counts.missing > 0 && counts.listed === 0 && onFileCount === 0) {
+    return CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
+  }
+
   const segments: string[] = [];
   if (counts.missing > 0) {
-    segments.push(`${counts.missing} missing`);
+    segments.push(
+      counts.missing === 1
+        ? CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL
+        : `${counts.missing} ${CREDENTIAL_NOT_LISTED_OR_ON_FILE_COUNT_LABEL}`
+    );
   }
   if (counts.listed > 0) {
     segments.push(`${counts.listed} listed`);
   }
-  const onFileCount = counts.onFile + counts.expired;
   if (onFileCount > 0) {
     segments.push(`${onFileCount} on file`);
   }
