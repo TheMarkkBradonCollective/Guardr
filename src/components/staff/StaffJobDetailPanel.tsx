@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { rankGuardsForJob } from '../../lib/guardQualificationMatching';
+import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
+import { hasDirectorStaffOverride } from '../../lib/permissions';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { isGuardAccountActive } from '../../lib/guardAccountActivation';
 import {
@@ -72,6 +75,8 @@ export function StaffJobDetailPanel({
   const canAssign =
     canManageJobs &&
     onAssignGuard &&
+    staffRole &&
+    hasDirectorStaffOverride({ role: staffRole }) &&
     !req.assignedGuardId &&
     !awaitingClientGuard &&
     (req.status === 'open' || req.status === 'pending-review');
@@ -84,6 +89,13 @@ export function StaffJobDetailPanel({
   );
   const rankedApplicants = useMemo(
     () => (req.status === 'open' && !req.assignedGuardId ? rankApplicantGuards(req, guards) : []),
+    [req, guards]
+  );
+  const rankedMatchScores = useMemo(
+    () =>
+      req.status === 'open' && !req.assignedGuardId
+        ? rankGuardsForJob(req, guards, { applicantsOnly: true })
+        : [],
     [req, guards]
   );
 
@@ -152,7 +164,7 @@ export function StaffJobDetailPanel({
         }}
         onClose={() => setEditing(false)}
       />
-      {rankedApplicants.length > 0 && onApproveGuardApplication && (
+      {rankedApplicants.length > 0 && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
             Guard applications ({rankedApplicants.length})
@@ -161,76 +173,26 @@ export function StaffJobDetailPanel({
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
               <p className="text-sm font-medium text-amber-300">Awaiting client approval</p>
               <p className="text-xs text-brand-text-muted mt-1">
-                {pendingGuard.name} was sent to {req.clientName} for confirmation.
+                {pendingGuard.name} is waiting for {req.clientName} to confirm.
               </p>
             </div>
           ) : (
             <p className="text-xs text-brand-text-muted">
-              Review applicants — send the best fit to the client for approval.
+              Ranked for reference — clients approve guards directly. Staff no longer picks applicants.
             </p>
           )}
           <div className="space-y-2">
-            {rankedApplicants.map((guard, index) => {
-              const meets = guardMeetsJobRequirements(guard, req);
-              const isPending = req.pendingGuardId === guard.id;
-              const anotherPending = !!req.pendingGuardId && !isPending;
-              return (
-                <WfListCard
-                  key={guard.id}
-                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
-                  title={index === 0 ? `${guard.name} · Best fit` : guard.name}
-                  subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
-                  meta={
-                    <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
-                      {isPending
-                        ? 'Awaiting client approval'
-                        : meets
-                          ? 'Meets job requirements'
-                          : 'Missing required credentials'}
-                    </span>
-                  }
-                  action={
-                    <div className="flex flex-col gap-1.5 shrink-0">
-                      {isPending ? (
-                        onDenyGuardApplication && (
-                          <button
-                            type="button"
-                            onClick={() => onDenyGuardApplication(req.id, guard.id)}
-                            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-                          >
-                            Withdraw
-                          </button>
-                        )
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                          disabled={!meets || anotherPending}
-                          className="app-button-primary app-btn-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          Send to client
-                        </button>
-                      )}
-                      {!isPending && onDenyGuardApplication && (
-                        <button
-                          type="button"
-                          onClick={() => onDenyGuardApplication(req.id, guard.id)}
-                          className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-                        >
-                          Decline
-                        </button>
-                      )}
-                    </div>
-                  }
-                />
-              );
-            })}
+            {rankedMatchScores.map((score, index) => (
+              <GuardMatchScoreRow key={score.guard.id} score={score} rank={index + 1} />
+            ))}
           </div>
         </div>
       )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+            Director safety override
+          </p>
           <div className="app-action-row--equal">
             <select
               value={assignGuardId}

@@ -7,6 +7,14 @@ export function missedCheckinDedupKey(requestId: string, hourBucket: number): st
   return `missed_checkin:${requestId}:${hourBucket}`;
 }
 
+export function checkInEscalationDedupKey(
+  requestId: string,
+  dueBucket: number,
+  tier: 'alert' | 'staff' | 'escalate'
+): string {
+  return `checkin_esc:${requestId}:${dueBucket}:${tier}`;
+}
+
 export function companyPlacardExpiryDedupKey(
   documentType: string,
   tier: string,

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SessionUser } from '../../types';
+import type { JobType, SecurityGuard, SessionUser } from '../../types';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 import { LegalInfoCards } from '../legal/LegalInfoCards';
@@ -10,6 +10,7 @@ import type { ThemeMode } from '../../lib/platform/theme';
 import { appVersionLabel } from '../../lib/appVersion';
 import { isNativeShell } from '../../lib/platform/device';
 import { SITE_URL } from '../../lib/siteConfig';
+import { GuardJobPreferencesPanel } from '../guard/GuardJobPreferencesPanel';
 import { TeamCodeJoinPanel } from '../guard/TeamCodeJoinPanel';
 
 interface UserSettingsScreenProps {
@@ -19,6 +20,8 @@ interface UserSettingsScreenProps {
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
+  guard?: SecurityGuard | null;
+  onSaveJobPreferences?: (preferences: JobType[]) => void | Promise<void>;
 }
 
 export function UserSettingsScreen({
@@ -28,6 +31,8 @@ export function UserSettingsScreen({
   isDbConnected = false,
   onOpenLegal,
   onJoinTeamWithCode,
+  guard,
+  onSaveJobPreferences,
 }: UserSettingsScreenProps) {
   return (
     <AppScreen>
@@ -38,6 +43,15 @@ export function UserSettingsScreen({
             own, use Apply on the job listing.
           </p>
           <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
+        </AppFormSection>
+      )}
+
+      {currentUser.role === 'guard' && guard && onSaveJobPreferences && (
+        <AppFormSection title="Job preferences">
+          <GuardJobPreferencesPanel
+            guard={guard}
+            onChange={onSaveJobPreferences}
+          />
         </AppFormSection>
       )}
 

@@ -19,6 +19,7 @@ import { ClientInvoicePanel } from './client/ClientInvoicePanel';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
+import { ClientLocationsPanel } from './client/ClientLocationsPanel';
 import { ClientMapScreen } from './client/ClientMapScreen';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
@@ -36,6 +37,7 @@ export type ClientView =
   | 'reports'
   | 'requests'
   | 'guards'
+  | 'locations'
   | 'profile'
   | 'settings'
   | 'support'
@@ -78,6 +80,7 @@ interface ClientDashboardProps {
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
+  onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
   onSubmitPriceOffer?: (
     requestId: string,
     guardId: string,
@@ -93,6 +96,9 @@ interface ClientDashboardProps {
   teamLeadSettings?: PlatformSettings;
   favoriteGuardIds?: string[];
   onToggleFavoriteGuard?: (guardId: string) => void | Promise<void>;
+  clientLocations?: import('../types').ClientLocation[];
+  onSaveClientLocation?: (location: import('../types').ClientLocation) => void | Promise<void>;
+  clientRecord?: Client;
   paymentGates: ClientPaymentGates;
   feeConfig: PlatformFeeConfig;
   currentUser?: SessionUser;
@@ -161,12 +167,16 @@ export function ClientDashboard({
   onDenyTeamSlot,
   onApproveFullTeam,
   onDenyFullTeam,
+  onRequestReplacement,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
   crewSettings,
   teamLeadSettings,
   favoriteGuardIds = [],
   onToggleFavoriteGuard,
+  clientLocations = [],
+  onSaveClientLocation,
+  clientRecord,
   paymentGates,
   feeConfig,
   currentUser,
@@ -291,6 +301,9 @@ export function ClientDashboard({
         setSelectedGuard(null);
         navigate('guards');
         break;
+      case 'locations':
+        navigate('locations');
+        break;
       case 'messages':
         navigate('messages');
         break;
@@ -368,6 +381,7 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        onRequestReplacement={onRequestReplacement}
         feeConfig={feeConfig}
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}
@@ -388,12 +402,28 @@ export function ClientDashboard({
         feeConfig={feeConfig}
         guards={guards}
         favoriteGuardIds={favoriteGuardIds}
+        clientLocations={clientLocations}
+        clientId={clientId}
+        defaultAssignmentMode={clientRecord?.defaultAssignmentMode}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
           navigate('home');
         }}
       />
+    );
+  }
+
+  if (view === 'locations' && clientRecord && onSaveClientLocation) {
+    return page(
+      'locations',
+      <AppScreen>
+        <ClientLocationsPanel
+          client={clientRecord}
+          locations={clientLocations}
+          onSave={onSaveClientLocation}
+        />
+      </AppScreen>
     );
   }
 
@@ -563,6 +593,7 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        onRequestReplacement={onRequestReplacement}
         feeConfig={feeConfig}
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}

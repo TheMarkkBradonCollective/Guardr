@@ -1900,6 +1900,99 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-primary) 35%, transparent);
 }
 
+.guardr-live-guard-pin-inner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 6px color-mix(in srgb, #22c55e 35%, transparent);
+}
+
+.guard-armed-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.guard-armed-pill--unarmed {
+  background: color-mix(in srgb, #22c55e 18%, transparent);
+  color: #16a34a;
+}
+
+.guard-armed-pill--light-armed {
+  background: color-mix(in srgb, #eab308 18%, transparent);
+  color: #ca8a04;
+}
+
+.guard-armed-pill--armed {
+  background: color-mix(in srgb, #ef4444 18%, transparent);
+  color: #dc2626;
+}
+
+.mission-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mission-timeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  opacity: 0.45;
+}
+
+.mission-timeline-step--complete,
+.mission-timeline-step--active {
+  opacity: 1;
+}
+
+.mission-timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 0.35rem;
+  background: var(--brand-border);
+  flex-shrink: 0;
+}
+
+.mission-timeline-step--complete .mission-timeline-dot {
+  background: #22c55e;
+}
+
+.mission-timeline-step--active .mission-timeline-dot {
+  background: var(--brand-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+}
+
+.mission-timeline-step--incident .mission-timeline-dot {
+  background: #f59e0b;
+}
+
+.mission-timeline-step--emergency .mission-timeline-dot {
+  background: #ef4444;
+}
+
+.mission-timeline-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.mission-timeline-time {
+  font-size: 0.6875rem;
+  color: var(--brand-text-muted);
+  margin-top: 0.125rem;
+}
+
 .guardr-map-popup .leaflet-popup-content-wrapper {
   border-radius: 0.75rem;
   border: 1px solid var(--brand-border);

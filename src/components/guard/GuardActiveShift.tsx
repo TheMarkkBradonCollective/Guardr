@@ -23,6 +23,7 @@ import {
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
+import { MidShiftCheckInPanel } from './MidShiftCheckInPanel';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
 import {
   Coffee,
@@ -49,6 +50,14 @@ interface GuardActiveShiftProps {
   onStartBreak?: () => void;
   onEndBreak?: () => void;
   onOpenJobChat?: () => void;
+  onStartEnRoute?: () => void;
+  onMidShiftCheckIn?: (payload: {
+    selfie: string;
+    uniformVerified: boolean;
+    equipmentVerified: boolean;
+  }) => void | Promise<void>;
+  captureSelfie?: () => Promise<string | null>;
+  midShiftCheckInDue?: boolean;
 }
 
 function formatTimer(seconds: number): string {
@@ -60,6 +69,7 @@ function formatTimer(seconds: number): string {
 
 const PHASE_LABELS: Record<ShiftPhase, string> = {
   upcoming: 'Upcoming',
+  'en-route': 'En route',
   arrived: 'Arrived',
   'on-duty': 'On duty',
   complete: 'Complete',
@@ -82,6 +92,10 @@ export function GuardActiveShift({
   onStartBreak,
   onEndBreak,
   onOpenJobChat,
+  onStartEnRoute,
+  onMidShiftCheckIn,
+  captureSelfie,
+  midShiftCheckInDue = false,
 }: GuardActiveShiftProps) {
   const [now, setNow] = useState(() => new Date());
   const [dutySeconds, setDutySeconds] = useState(0);
@@ -107,7 +121,8 @@ export function GuardActiveShift({
   }, [phase, job.id, job.checkInAudit?.checkedAt]);
 
   const address = job.address || job.location;
-  const statusSteps: ShiftPhase[] = ['upcoming', 'arrived', 'on-duty', 'complete'];
+  const statusSteps: ShiftPhase[] = ['upcoming', 'en-route', 'arrived', 'on-duty', 'complete'];
+  const displaySteps = statusSteps.filter((s) => s !== 'complete');
   const currentIdx = statusSteps.indexOf(phase);
   const clockInOpen = canGuardClockIn(job, now);
   const clockOutOpen = canGuardClockOut(job, now);
@@ -152,11 +167,11 @@ export function GuardActiveShift({
         />
 
         <div className="segmented-control segmented-control-full">
-          {statusSteps.slice(0, 3).map((step) => {
+          {displaySteps.map((step) => {
             const stepIdx = statusSteps.indexOf(step);
             const isReached = stepIdx <= currentIdx;
             const isCurrent = step === phase;
-            const glowArrived = step === 'arrived' && (phase === 'arrived' || (phase === 'upcoming' && onSite));
+            const glowArrived = step === 'arrived' && (phase === 'arrived' || (phase === 'upcoming' && onSite) || phase === 'en-route' && onSite);
             return (
               <span
                 key={step}
@@ -211,6 +226,36 @@ export function GuardActiveShift({
 
         {(phase === 'on-duty' || phase === 'complete') && (
           <JobSelfAuditPhotosSection request={job} />
+        )}
+
+        {phase === 'upcoming' && onStartEnRoute && (
+          <button
+            type="button"
+            onClick={onStartEnRoute}
+            className="app-button-outline app-btn-md w-full gap-2"
+          >
+            <Navigation className="w-4 h-4" />
+            Start heading to site
+          </button>
+        )}
+
+        {phase === 'en-route' && (
+          <div className="space-y-3">
+            <p className="text-xs text-center text-brand-text-muted">
+              Share your location with the client while en route.
+            </p>
+            <SlideToConfirm
+              label={gpsRequired && !onSite ? 'Must be on site to arrive' : 'Slide to arrive on site'}
+              confirmedLabel="Arrived"
+              onConfirm={onArrived}
+              disabled={notOnSiteBlocked}
+              disabledHint={
+                notOnSiteBlocked
+                  ? 'GPS requires you to be within 150m of the site pin.'
+                  : 'Move within range of the site pin.'
+              }
+            />
+          </div>
         )}
 
         {phase === 'upcoming' && (
@@ -279,6 +324,14 @@ export function GuardActiveShift({
             <Clock className="w-3.5 h-3.5" />
             Clock-in open from {clockInOpensLabel} until job ends
           </p>
+        )}
+
+        {phase === 'on-duty' && midShiftCheckInDue && onMidShiftCheckIn && captureSelfie && (
+          <MidShiftCheckInPanel
+            lastCheckInAt={job.midShiftAudits?.[job.midShiftAudits.length - 1]?.checkedAt}
+            onSubmit={onMidShiftCheckIn}
+            captureSelfie={captureSelfie}
+          />
         )}
 
         {phase === 'on-duty' && (

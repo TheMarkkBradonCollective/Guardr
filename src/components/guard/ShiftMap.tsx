@@ -173,6 +173,13 @@ function MapViewportSaver() {
 
 type ShiftMapJob = GuardJobView | SecurityRequest;
 
+export interface LiveGuardPin {
+  requestId: string;
+  lat: number;
+  lng: number;
+  label?: string;
+}
+
 interface ShiftMapProps {
   jobs: ShiftMapJob[];
   selectedJobId: string | null;
@@ -188,6 +195,7 @@ interface ShiftMapProps {
   zoomRef?: React.MutableRefObject<MapZoomControls | null>;
   /** Resets route auto-fit when the selected job changes. */
   routeFitResetKey?: string;
+  liveGuardPins?: LiveGuardPin[];
 }
 
 function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff' | 'client'): number {
@@ -209,6 +217,7 @@ export function ShiftMap({
   getPinKind,
   zoomRef,
   routeFitResetKey = '',
+  liveGuardPins = [],
 }: ShiftMapProps) {
   const themeMode = useThemeMode();
   const userLocation = useUserLocation(true);
@@ -274,6 +283,13 @@ export function ShiftMap({
     iconAnchor: [10, 10],
   });
 
+  const liveGuardIcon = L.divIcon({
+    className: 'guardr-live-guard-pin',
+    html: `<div class="guardr-live-guard-pin-inner"></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+
   const handleRouteChange = (route: MapRouteSummary | null) => {
     onRouteLoadingChange?.(false);
     onRouteChange?.(route);
@@ -337,6 +353,15 @@ export function ShiftMap({
             fitResetKey={routeFitResetKey || selectedPin.job.id}
           />
         )}
+
+        {liveGuardPins.map((pin) => (
+          <Marker
+            key={`live-guard-${pin.requestId}`}
+            position={[pin.lat, pin.lng]}
+            alt={pin.label ?? 'Live guard location'}
+            icon={liveGuardIcon}
+          />
+        ))}
 
         {jobPins.map(({ job, coords }) => (
           <Marker

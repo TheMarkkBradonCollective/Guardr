@@ -106,14 +106,20 @@ const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   'admin.manage_platform_config',
 ];
 
-const DIRECTOR_PERMISSIONS: Permission[] = [
+const MANAGER_PERMISSIONS: Permission[] = [
   ...ADMINISTRATOR_PERMISSIONS,
-  'director.manage_administrators',
-  'director.manage_moderators',
+  'admin.manage_payouts',
+  'admin.manage_fees',
   'director.view_all_financial_data',
   'director.access_audit_logs',
-  'director.override_restrictions',
   'director.manage_company_operations',
+];
+
+const DIRECTOR_PERMISSIONS: Permission[] = [
+  ...MANAGER_PERMISSIONS,
+  'director.manage_administrators',
+  'director.manage_moderators',
+  'director.override_restrictions',
 ];
 
 const OWNER_PERMISSIONS: Permission[] = [
@@ -128,6 +134,7 @@ export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
   guard: GUARD_PERMISSIONS,
   moderator: MODERATOR_PERMISSIONS,
   administrator: ADMINISTRATOR_PERMISSIONS,
+  manager: MANAGER_PERMISSIONS,
   director: DIRECTOR_PERMISSIONS,
   owner: OWNER_PERMISSIONS,
 };
@@ -137,6 +144,7 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
   guard: 'Guard',
   moderator: 'Moderator',
   administrator: 'Administrator',
+  manager: 'Manager',
   director: 'Director',
   owner: 'Founder',
 };
@@ -146,17 +154,25 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   guard: 'Independent licensed security professionals.',
   moderator: 'Approves guard and client applications, monitors activity, and escalates issues.',
   administrator: 'Verifies credentials, reviews jobs and disputes, and manages daily operations.',
+  manager: 'Operations lead — payouts, fees, company jobs, and audit visibility below Director.',
   director: 'Executive platform operations and unrestricted staff-side access.',
   owner: 'Platform governance overseer — manages staff below the Founder tier.',
 };
 
-export const STAFF_ROLES_ORDERED: StaffRole[] = ['Moderator', 'Administrator', 'Director', 'Founder'];
+export const STAFF_ROLES_ORDERED: StaffRole[] = [
+  'Moderator',
+  'Administrator',
+  'Manager',
+  'Director',
+  'Founder',
+];
 
 const STAFF_ROLE_RANK: Record<StaffRole, number> = {
   Moderator: 1,
   Administrator: 2,
-  Director: 3,
-  Founder: 4,
+  Manager: 3,
+  Director: 4,
+  Founder: 5,
 };
 
 /** Legacy DB rows may still store Owner — normalize to Founder. */
@@ -164,6 +180,7 @@ export function normalizeStaffRole(staffRole?: string | null): StaffRole | undef
   if (!staffRole) return undefined;
   if (staffRole === 'Owner' || staffRole === 'Founder') return 'Founder';
   if (staffRole === 'Director') return 'Director';
+  if (staffRole === 'Manager') return 'Manager';
   if (staffRole === 'Administrator') return 'Administrator';
   if (staffRole === 'Moderator') return 'Moderator';
   return undefined;
@@ -178,8 +195,14 @@ export function platformStaffRank(role: PlatformRole): number | null {
   return staffRole ? staffRoleRank(staffRole) : null;
 }
 
-export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'director' | 'owner' {
-  return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
+export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'manager' | 'director' | 'owner' {
+  return (
+    role === 'moderator' ||
+    role === 'administrator' ||
+    role === 'manager' ||
+    role === 'director' ||
+    role === 'owner'
+  );
 }
 
 export function isDirector(user: Pick<SessionUser, 'role'>): boolean {
@@ -200,7 +223,7 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
 
 /** Director and Founder share executive payment and ops controls */
 export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
-  return user.role === 'director' || user.role === 'owner';
+  return user.role === 'manager' || user.role === 'director' || user.role === 'owner';
 }
 
 /** Director has unrestricted staff-side operational access; Founder inherits the same overrides */
@@ -398,6 +421,8 @@ export function staffRoleToPlatformRole(staffRole: StaffRole): PlatformRole {
       return 'owner';
     case 'Director':
       return 'director';
+    case 'Manager':
+      return 'manager';
     case 'Administrator':
       return 'administrator';
     case 'Moderator':
@@ -411,6 +436,8 @@ export function platformRoleToStaffRole(role: PlatformRole): StaffRole | null {
       return 'Founder';
     case 'director':
       return 'Director';
+    case 'manager':
+      return 'Manager';
     case 'administrator':
       return 'Administrator';
     case 'moderator':

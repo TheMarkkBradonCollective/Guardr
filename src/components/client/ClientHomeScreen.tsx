@@ -35,7 +35,7 @@ import {
   Radio,
 } from 'lucide-react';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map' | 'locations';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -53,6 +53,7 @@ interface ClientHomeScreenProps {
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string }[] = [
   { id: 'request', icon: Plus, label: 'Post job', sub: 'Open to guards' },
   { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes & licenses' },
+  { id: 'locations', icon: Map, label: 'My Locations', sub: 'Saved sites & risk' },
   { id: 'schedule', icon: Calendar, label: 'Schedule', sub: 'Plan ahead' },
   { id: 'recurring', icon: Building2, label: 'Multi-guard site', sub: 'Construction & events' },
   { id: 'reports', icon: FileText, label: 'Reports', sub: 'Activity & incidents' },

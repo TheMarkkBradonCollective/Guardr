@@ -9,6 +9,10 @@ import {
   inferClientShiftPhase,
 } from '../../lib/clientShift';
 import { buildActivityFeed } from '../../lib/clientCoverage';
+import { buildMissionTimeline } from '../../lib/missionTracking';
+import { MissionTimeline } from '../mission/MissionTimeline';
+import { computeGuardPerformance, computeGuardSkillRatings, formatPerformanceScore } from '../../lib/guardPerformance';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { computeShiftDutySeconds, shiftDutyStartedAt } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -65,6 +69,21 @@ export function ClientActiveShift({
     [request, guards]
   );
 
+  const missionTimeline = useMemo(
+    () => buildMissionTimeline(request, request.reports ?? []),
+    [request]
+  );
+
+  const guardPerformance = useMemo(
+    () => computeGuardPerformance(guard.id, [request, ...allLiveRequests]),
+    [guard.id, request, allLiveRequests]
+  );
+
+  const skillRatings = useMemo(
+    () => computeGuardSkillRatings(guard, [request, ...allLiveRequests]).slice(0, 4),
+    [guard, request, allLiveRequests]
+  );
+
   useEffect(() => {
     if (request.status !== 'in-progress') {
       setDutySeconds(0);
@@ -104,23 +123,49 @@ export function ClientActiveShift({
               key={step}
               className={`segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs ${
                 CLIENT_SHIFT_STEPS.indexOf(step) <= stepIdx ? 'segmented-control-btn-active' : ''
-              }`}
+              } ${step === phase ? 'segmented-control-btn-current' : ''}`}
             >
               {CLIENT_SHIFT_PHASE_LABELS[step]}
             </span>
           ))}
         </div>
 
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+            Mission status
+          </p>
+          <MissionTimeline items={missionTimeline} compact />
+        </section>
+
         <div className="flex items-center gap-3 p-3 border border-brand-border bg-brand-bg-sec">
           <ProfileAvatar src={guard.avatar} name={guard.name} size="md" className="shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold truncate">{guard.name}</p>
-            <div className="flex items-center gap-2 text-xs text-brand-text-muted mt-0.5">
+            <div className="flex items-center gap-2 text-xs text-brand-text-muted mt-0.5 flex-wrap">
+              <GuardArmedStatusPill guard={guard} />
               <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
               <span>{guard.rating.toFixed(1)}</span>
+              {guardPerformance.overallScore > 0 && (
+                <>
+                  <span>·</span>
+                  <span>Security score {formatPerformanceScore(guardPerformance.overallScore)}</span>
+                </>
+              )}
               <span>·</span>
               <span>{guard.jobsCompleted} jobs</span>
             </div>
+            {skillRatings.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {skillRatings.map((skill) => (
+                  <span
+                    key={skill.skill}
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-brand-bg-sec border border-brand-border"
+                  >
+                    {skill.skill} {skill.rating.toFixed(1)}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           {onOpenJobChat && (
             <button

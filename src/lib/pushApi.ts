@@ -167,6 +167,8 @@ export async function reportPushEvent(
     ticketId?: string;
     clientId?: string;
     priority?: 'normal' | 'high';
+    checkinEscalationTier?: 'alert' | 'staff' | 'escalate';
+    checkinDueBucket?: number;
     url?: string;
   }
 ): Promise<void> {

@@ -1,6 +1,7 @@
 import { SecurityGuard, SecurityRequest } from '../types';
-import { checkJobRequirements, guardCanApplyToJob } from './guardJobs';
+import { guardCanApplyToJob } from './guardJobs';
 import { toGuardJobView } from './guardJobView';
+import { rankGuardsForJob } from './guardQualificationMatching';
 
 export { guardCanApplyToJob };
 
@@ -18,15 +19,9 @@ export function getOpenJobsWithApplications(requests: SecurityRequest[]): Securi
     );
 }
 
-/** Open jobs where staff still picks an applicant (not awaiting client or already sent). */
-export function jobNeedsStaffApplicationReview(request: SecurityRequest): boolean {
-  return (
-    request.status === 'open' &&
-    !request.assignedGuardId &&
-    !request.pendingGuardId &&
-    !request.staffApprovedGuardAt &&
-    (request.applicants?.length ?? 0) > 0
-  );
+/** Open jobs no longer require staff to pick applicants — client or first-to-accept handles placement. */
+export function jobNeedsStaffApplicationReview(_request: SecurityRequest): boolean {
+  return false;
 }
 
 export function getJobsNeedingStaffApplicationReview(requests: SecurityRequest[]): SecurityRequest[] {
@@ -50,14 +45,7 @@ export function guardMeetsJobRequirements(guard: SecurityGuard, job: SecurityReq
   return guardCanApplyToJob(guard, toGuardJobView(job));
 }
 
-/** Sort applicants — verified/active credentials first, then rating, then experience */
+/** Sort applicants by smart qualification match score (rule-based, no AI). */
 export function rankApplicantGuards(job: SecurityRequest, guards: SecurityGuard[]): SecurityGuard[] {
-  const applicants = guards.filter((g) => guardHasApplied(job, g.id));
-  return [...applicants].sort((a, b) => {
-    const aMeets = guardMeetsJobRequirements(a, job) ? 1 : 0;
-    const bMeets = guardMeetsJobRequirements(b, job) ? 1 : 0;
-    if (bMeets !== aMeets) return bMeets - aMeets;
-    if (b.rating !== a.rating) return b.rating - a.rating;
-    return b.jobsCompleted - a.jobsCompleted;
-  });
+  return rankGuardsForJob(job, guards, { applicantsOnly: true }).map((s) => s.guard);
 }

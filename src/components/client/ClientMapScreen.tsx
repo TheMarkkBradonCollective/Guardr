@@ -15,7 +15,7 @@ import {
   type ClientMapStatusFilter,
 } from '../../lib/mapJobVisibility';
 import { MapPinFilterStepper } from '../map/MapPinFilterStepper';
-import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob } from '../../lib/clientShift';
+import { getClientLiveJobs, getClientTrackableJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob, isClientTrackableJob } from '../../lib/clientShift';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 import { ClientMapPostMenu } from './ClientMapBrowseDock';
 import type { ClientJobActionsBindings } from './clientJobActionsTypes';
@@ -34,6 +34,7 @@ interface ClientMapScreenProps extends ClientJobActionsBindings {
   onPostJob?: () => void;
   onRequestGuard?: () => void;
   onEditRequest?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
+  onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
   initialLiveJobId?: string | null;
   onLiveJobIdChange?: (requestId: string | null) => void;
 }
@@ -46,6 +47,7 @@ export function ClientMapScreen({
   onPostJob,
   onRequestGuard,
   onEditRequest,
+  onRequestReplacement,
   initialLiveJobId = null,
   onLiveJobIdChange,
   crewSettings,
@@ -54,6 +56,7 @@ export function ClientMapScreen({
 }: ClientMapScreenProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const clockedInJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
+  const trackableJobs = useMemo(() => getClientTrackableJobs(requests), [requests]);
   const primaryLiveJob = useMemo(() => getPrimaryClientLiveJob(requests), [requests]);
   const [selectedLiveJobId, setSelectedLiveJobId] = useState<string | null>(
     initialLiveJobId ?? primaryLiveJob?.id ?? null
@@ -69,13 +72,26 @@ export function ClientMapScreen({
 
   const activeLiveJob = useMemo(() => {
     if (selectedLiveJobId) {
-      return clockedInJobs.find((j) => j.id === selectedLiveJobId) ?? primaryLiveJob;
+      return trackableJobs.find((j) => j.id === selectedLiveJobId) ?? primaryLiveJob;
     }
-    return primaryLiveJob;
-  }, [clockedInJobs, selectedLiveJobId, primaryLiveJob]);
+    return trackableJobs[0] ?? primaryLiveJob;
+  }, [trackableJobs, selectedLiveJobId, primaryLiveJob]);
 
   const activeGuard = activeLiveJob ? guardForRequest(guards, activeLiveJob) : null;
-  const showShiftOverlay = !!activeLiveJob && !!activeGuard && isClientLiveJob(activeLiveJob);
+  const showShiftOverlay = !!activeLiveJob && !!activeGuard && isClientTrackableJob(activeLiveJob);
+
+  const liveGuardPins = useMemo(
+    () =>
+      trackableJobs
+        .filter((job) => job.guardLiveLocation)
+        .map((job) => ({
+          requestId: job.id,
+          lat: job.guardLiveLocation!.lat,
+          lng: job.guardLiveLocation!.lng,
+          label: guards.find((g) => g.id === job.assignedGuardId)?.name,
+        })),
+    [trackableJobs, guards]
+  );
 
   const browseJobs = useMemo(() => {
     if (!currentUser) return [];
@@ -87,7 +103,7 @@ export function ClientMapScreen({
     [browseJobs, mapStatusFilter]
   );
 
-  const mapJobs = showShiftOverlay ? clockedInJobs : filteredBrowseJobs;
+  const mapJobs = showShiftOverlay ? trackableJobs : filteredBrowseJobs;
 
   const selectedBrowseJob = useMemo(
     () => filteredBrowseJobs.find((j) => j.id === selectedBrowseJobId) ?? null,
@@ -148,7 +164,7 @@ export function ClientMapScreen({
         jobs={mapJobs}
         selectedJobId={showShiftOverlay ? activeLiveJob?.id ?? null : selectedBrowseJobId}
         onSelectJob={(id) => {
-          if (showShiftOverlay && id && clockedInJobs.some((j) => j.id === id)) {
+          if (showShiftOverlay && id && trackableJobs.some((j) => j.id === id)) {
             switchLiveJob(id);
             return;
           }
@@ -159,6 +175,7 @@ export function ClientMapScreen({
         onRouteChange={setRoute}
         onRouteLoadingChange={setRouteLoading}
         getPinKind={(job) => clientMapPinKind(job as SecurityRequest)}
+        liveGuardPins={liveGuardPins}
         zoomRef={mapZoomRef}
         routeFitResetKey={selectedBrowseJobId ?? ''}
       />
@@ -168,12 +185,16 @@ export function ClientMapScreen({
           request={activeLiveJob}
           guard={activeGuard}
           guards={guards}
-          allLiveRequests={clockedInJobs}
+          allLiveRequests={trackableJobs}
           onOpenJobChat={
             onOpenJobChat && currentUser ? () => onOpenJobChat(activeLiveJob.id) : undefined
           }
-          onSwitchJob={clockedInJobs.length > 1 ? switchLiveJob : undefined}
-          jobActions={mapActionProps}
+          onSwitchJob={trackableJobs.length > 1 ? switchLiveJob : undefined}
+          jobActions={{
+            ...mapActionProps,
+            onRequestReplacement,
+            allRequests: requests,
+          }}
         />
       )}
 

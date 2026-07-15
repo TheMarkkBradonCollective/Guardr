@@ -20,44 +20,21 @@ function job(partial: Partial<SecurityRequest> & Pick<SecurityRequest, 'id'>): S
 }
 
 describe('jobNeedsStaffApplicationReview', () => {
-  it('includes open jobs with applicants awaiting staff pick', () => {
-    assert.equal(jobNeedsStaffApplicationReview(job({ id: 'j1' })), true);
-  });
-
-  it('excludes jobs awaiting client confirmation', () => {
+  it('always returns false — clients handle guard placement', () => {
+    assert.equal(jobNeedsStaffApplicationReview(job({ id: 'j1' })), false);
     assert.equal(
       jobNeedsStaffApplicationReview(job({ id: 'j2', pendingGuardId: 'guard-1' })),
       false
     );
   });
-
-  it('excludes jobs already sent to client', () => {
-    assert.equal(
-      jobNeedsStaffApplicationReview(
-        job({ id: 'j3', staffApprovedGuardAt: '2026-07-14T00:00:00.000Z' })
-      ),
-      false
-    );
-  });
-
-  it('excludes assigned or closed jobs', () => {
-    assert.equal(
-      jobNeedsStaffApplicationReview(job({ id: 'j4', assignedGuardId: 'guard-1' })),
-      false
-    );
-    assert.equal(jobNeedsStaffApplicationReview(job({ id: 'j5', status: 'accepted' })), false);
-  });
 });
 
 describe('getJobsNeedingStaffApplicationReview', () => {
-  it('returns only staff-actionable application jobs', () => {
+  it('returns an empty list', () => {
     const requests = [
       job({ id: 'needs-review' }),
       job({ id: 'awaiting-client', pendingGuardId: 'guard-2' }),
-      job({ id: 'sent', staffApprovedGuardAt: '2026-07-14T00:00:00.000Z' }),
     ];
-    const result = getJobsNeedingStaffApplicationReview(requests);
-    assert.equal(result.length, 1);
-    assert.equal(result[0]?.id, 'needs-review');
+    assert.equal(getJobsNeedingStaffApplicationReview(requests).length, 0);
   });
 });

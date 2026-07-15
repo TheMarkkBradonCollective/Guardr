@@ -34,6 +34,23 @@ export type ReportType =
   | 'maintenance'
   | 'trespass';
 
+export type ReplacementReason = 'call-off' | 'no-show' | 'emergency' | 'other';
+export type ReplacementStatus = 'searching' | 'offering' | 'filled' | 'failed' | 'cancelled';
+
+export interface ReplacementRequest {
+  id: string;
+  requestedAt: string;
+  requestedBy: 'client' | 'system';
+  reason: ReplacementReason;
+  reasonNote?: string;
+  status: ReplacementStatus;
+  offeredGuardIds: string[];
+  acceptedGuardId?: string;
+  acceptedAt?: string;
+  previousGuardId?: string;
+  expiresAt?: string;
+}
+
 export interface ShiftReport {
   id: string;
   requestId: string;
@@ -46,10 +63,10 @@ export interface ShiftReport {
 }
 
 /** Platform user roles per Guardr spec */
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
-export type StaffRole = 'Founder' | 'Director' | 'Administrator' | 'Moderator';
+export type StaffRole = 'Founder' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
 
 export type CertCategory =
   | 'guard-card'
@@ -242,6 +259,9 @@ export interface Client {
 
   /** Guard IDs this client has favourited — shown first in the guard directory. */
   favoriteGuardIds?: string[];
+
+  /** Default guard placement mode for new job posts. */
+  defaultAssignmentMode?: AssignmentMode;
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
@@ -329,6 +349,42 @@ export interface JobServiceAgreement {
 
 export type GuardWeaponGearId = 'flashlight' | 'oc-spray' | 'baton' | 'handcuffs' | 'taser' | 'firearm';
 
+/** Non-weapon equipment badges shown on guard profiles. */
+export type GuardEquipmentGearId = 'body-cam' | 'walkie-talkie';
+
+export type LocationRiskLevel = 'low' | 'medium' | 'high';
+
+export type ClientLocationStatus = 'pending' | 'active' | 'rejected';
+
+export interface ClientLocation {
+  id: string;
+  clientId: string;
+  name: string;
+  address: string;
+  state?: string;
+  latitude?: number;
+  longitude?: number;
+  riskLevel: LocationRiskLevel;
+  status: ClientLocationStatus;
+  siteInstructions?: string;
+  createdAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
+export type AssignmentMode = 'client-approve' | 'first-to-accept';
+
+export interface DifferentialPayRates {
+  unarmed?: number;
+  lightArmed?: number;
+  armed?: number;
+}
+
+export interface PostOrdersAcknowledgment {
+  guardId: string;
+  acknowledgedAt: string;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -357,6 +413,10 @@ export interface SecurityGuard {
   isArmed: boolean;
   /** Gear/weapons the guard lists on their profile when BSIS requirements are met. */
   listedWeaponGear?: GuardWeaponGearId[];
+  /** Body cam, walkie-talkie, and other equipment badges. */
+  listedEquipmentGear?: GuardEquipmentGearId[];
+  /** Job types the guard wants to be notified about (DoorDash-style preferences). */
+  jobTypePreferences?: JobType[];
   backgroundChecked: boolean;
   verified: boolean;
   rating: number;
@@ -775,6 +835,24 @@ export interface SecurityRequest {
   operationalDetails?: JobOperationalDetails;
   startDate: string;
   endDate: string;
+  /** One-time shift vs ongoing recurring coverage */
+  scheduleType?: 'one-time' | 'recurring';
+  /** When scheduleType is recurring, optional end date for the series */
+  recurringEndDate?: string;
+  /** Days of week for recurring posts (0 = Sunday … 6 = Saturday) */
+  recurringDays?: number[];
+  /** How guards are placed: client approves applicants vs first qualified guard wins */
+  assignmentMode?: AssignmentMode;
+  /** Minimum years of field experience required to apply */
+  minYearsExperience?: number;
+  /** Saved client location used for this job */
+  clientLocationId?: string;
+  /** Location risk snapshot at post time */
+  locationRiskLevel?: LocationRiskLevel;
+  /** Tiered guard pay by armed status — overrides single guardPay when set */
+  tierPayRates?: DifferentialPayRates;
+  /** Guards who acknowledged post orders before clock-in */
+  postOrdersAcknowledgments?: PostOrdersAcknowledgment[];
   durationHours: number;
   /** Original scheduled duration before late clock-out billing adjustment */
   scheduledDurationHours?: number;
@@ -936,6 +1014,18 @@ export interface SecurityRequest {
     startedAt: string;
     endedAt?: string;
   }>;
+  /** Guard tapped "En route" or auto-inferred heading to site. */
+  enRouteAt?: string;
+  /** Live GPS pin shared during accepted / in-progress shifts. */
+  guardLiveLocation?: {
+    lat: number;
+    lng: number;
+    updatedAt: string;
+  };
+  /** Emergency / no-show replacement workflow (first-accept assignment). */
+  replacementRequest?: ReplacementRequest;
+  /** Set when guard never clocked in after scheduled start. */
+  noShow?: boolean;
   checkOutAudit?: {
     checkedAt: string;
     completed: boolean;

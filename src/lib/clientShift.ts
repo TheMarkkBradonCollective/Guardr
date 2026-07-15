@@ -10,6 +10,25 @@ export function isClientLiveJob(req: SecurityRequest): boolean {
   return req.status === CLOCKED_IN_STATUS && !!req.assignedGuardId;
 }
 
+/** Accepted or in-progress shifts the client can track on the map. */
+export function isClientTrackableJob(req: SecurityRequest): boolean {
+  return (
+    !!req.assignedGuardId &&
+    (req.status === 'accepted' || req.status === CLOCKED_IN_STATUS)
+  );
+}
+
+export function getClientTrackableJobs(requests: SecurityRequest[]): SecurityRequest[] {
+  return requests
+    .filter(isClientTrackableJob)
+    .sort((a, b) => {
+      if (a.status === b.status) {
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      }
+      return a.status === 'in-progress' ? -1 : 1;
+    });
+}
+
 export function getClientLiveJobs(requests: SecurityRequest[]): SecurityRequest[] {
   return requests
     .filter(isClientLiveJob)
@@ -31,6 +50,7 @@ export function inferClientShiftPhase(req: SecurityRequest): ClientShiftPhase {
   if (req.status === 'in-progress') return 'on-duty';
   if (req.status === 'accepted') {
     if (req.checkInAudit?.checkedAt) return 'on-site';
+    if (req.enRouteAt) return 'en-route';
     const startMs = new Date(req.startDate).getTime();
     const now = Date.now();
     if (startMs - now <= 60 * 60 * 1000) return 'en-route';

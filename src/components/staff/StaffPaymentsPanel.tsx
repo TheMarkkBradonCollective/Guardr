@@ -8,6 +8,8 @@ import {
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
 import { computeOperationalFinancials } from '../../lib/operationalFinancials';
+import { buildPayoutExportRows, downloadPayoutCsv } from '../../lib/payoutExport';
+import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
@@ -202,6 +204,16 @@ export function StaffPaymentsPanel({
           </p>
         )}
         <StaffPaymentSummary summary={summary} financials={financials} />
+        {canManagePayments && (
+          <button
+            type="button"
+            className="app-button-outline app-btn-sm gap-2 mt-4"
+            onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
+          >
+            <Download className="w-4 h-4" />
+            Export payouts CSV
+          </button>
+        )}
       </div>
 
       <div className="px-4 sm:px-5 space-y-8 pt-6">
