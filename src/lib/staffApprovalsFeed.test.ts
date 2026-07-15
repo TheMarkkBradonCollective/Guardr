@@ -5,7 +5,10 @@ import {
   APPLICATION_FEED_STATUS_LABELS,
   buildApplicationFeed,
   countPendingAccountSignupApplications,
+  countPendingCredentialApprovals,
+  isApplicationFeedItemPending,
 } from './staffApprovalsFeed.ts';
+import { govIdApprovalItemId } from './guardCredentialSections.ts';
 
 function staffProvisionedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   return {
@@ -61,5 +64,50 @@ describe('buildApplicationFeed', () => {
       [staffProvisionedClient()]
     );
     assert.equal(count, 2);
+  });
+
+  it('does not count approved guards awaiting credential verification as pending applications', () => {
+    const approvedWithPendingCert = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      certifications: [
+        {
+          id: 'cert-1',
+          catalogId: 'bsis-guard-card',
+          name: 'BSIS Guard Card',
+          issuer: 'BSIS',
+          number: 'GC-1',
+          state: 'CA',
+          issueDate: '2024-01-01',
+          status: 'pending',
+          imageUrl: 'card.jpg',
+          category: 'guard-card',
+          submittedByRole: 'guard',
+        },
+      ],
+    });
+    const feed = buildApplicationFeed([approvedWithPendingCert], []);
+    const item = feed.find((entry) => entry.id === 'g-staff');
+    assert.ok(item);
+    assert.equal(item?.status, 'approved');
+    assert.equal(isApplicationFeedItemPending(item!, [approvedWithPendingCert], []), false);
+    assert.equal(countPendingAccountSignupApplications([approvedWithPendingCert], []), 0);
+  });
+
+  it('counts pending government ID in credential approvals', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'pending',
+      idState: 'CA',
+      idNumber: 'ID-1',
+      idExpiryDate: '2099-12-31',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      idVerificationSubmittedAt: '2026-01-01T00:00:00.000Z',
+    });
+    assert.equal(countPendingCredentialApprovals([guard]), 1);
+    assert.equal(govIdApprovalItemId('g-staff'), 'gov-id-g-staff');
   });
 });

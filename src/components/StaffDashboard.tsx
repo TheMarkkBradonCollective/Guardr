@@ -77,7 +77,6 @@ import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
-import { getGuardIdVerificationStatus } from '../lib/guardIdentityVerification';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -528,9 +527,7 @@ export function StaffDashboard({
   const badges = useMemo(
     () => ({
       applications: stats.pendingAccountApplications,
-      credentials:
-        stats.pendingCertApprovals +
-        guards.filter((g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending').length,
+      credentials: stats.pendingCertApprovals,
       guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
       clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
