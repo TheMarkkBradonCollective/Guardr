@@ -95,6 +95,11 @@ export async function authorizePushEvent(
       if (session.platformRole === 'guard' && event.guardId === session.userId) return null;
       return 'Only staff or the applying guard can send application notifications';
 
+    case 'crew_lead_request':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard' && event.guardId === session.userId) return null;
+      return 'Only staff or the requesting guard can send crew lead requests';
+
     case 'guard_message':
       if (isStaffSession(session)) return null;
       if (session.platformRole === 'guard') return null;

@@ -2,6 +2,7 @@ import { GuardSpecialty, JobType, SecurityGuard, SecurityRequest, SessionUser } 
 import { isGuardAccountActive } from './guardAccountActivation';
 import { guardCanWorkFieldJobs } from './guardQualification';
 import { JOB_TYPE_LABELS } from './guardJobs';
+import { filterGuardsAvailableForJob } from './guardAvailability';
 
 // ─── Filter & Sort types ──────────────────────────────────────────────────────
 
@@ -166,6 +167,14 @@ export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
     .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
 }
 
+/** Browsable guards who are available for a specific job shift (weekly schedule + off days). */
+export function getBrowsableGuardsForJob(
+  guards: SecurityGuard[],
+  job: Pick<SecurityRequest, 'startDate' | 'endDate'>
+): SecurityGuard[] {
+  return filterGuardsAvailableForJob(getBrowsableGuards(guards), job);
+}
+
 /** Jobs that count as this client having worked with the guard before (rehire eligible). */
 const CLIENT_REHIRE_STATUSES: SecurityRequest['status'][] = [
   'accepted',
@@ -191,7 +200,8 @@ export function guardHasWorkedWithClient(
 export function getClientRehireableGuards(
   clientId: string,
   requests: SecurityRequest[],
-  guards: SecurityGuard[]
+  guards: SecurityGuard[],
+  job?: Pick<SecurityRequest, 'startDate' | 'endDate'>
 ): SecurityGuard[] {
   const guardIds = new Set(
     requests
@@ -203,9 +213,10 @@ export function getClientRehireableGuards(
       )
       .map((r) => r.assignedGuardId as string)
   );
-  return guards
+  const rehireable = guards
     .filter((g) => guardIds.has(g.id) && isGuardAccountActive(g))
     .sort((a, b) => a.name.localeCompare(b.name));
+  return job ? filterGuardsAvailableForJob(rehireable, job) : rehireable;
 }
 
 export function getGuardHistoryWithClient(

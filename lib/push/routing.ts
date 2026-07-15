@@ -87,6 +87,8 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
+    case 'crew_lead_request':
+      return '/staff/crews';
     case 'guard_pending_approval':
       return options.guardId
         ? `/staff/applications?g=${encodeURIComponent(options.guardId)}`
@@ -404,6 +406,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'assignment':
       return ['guard'];
     case 'guard_application':
+      return ['dispatch', 'admin'];
+    case 'crew_lead_request':
       return ['dispatch', 'admin'];
     case 'emergency_alert':
       return ['guard', 'client', 'dispatch', 'admin'];

@@ -79,6 +79,10 @@ import {
   shouldOfferTeamCodeJoin,
 } from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
+import {
+  canRequestCrewLead,
+  getPendingCrewLeadRequest,
+} from '../lib/guardCrewJoinRequest';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
@@ -155,6 +159,8 @@ interface GuardDashboardProps {
   onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
   onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
+  onRequestCrewLead?: () => void | Promise<void>;
+  crewJoinRequests?: import('../types').GuardCrewJoinRequest[];
   headerRight?: React.ReactNode;
   feeConfig?: import('../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
@@ -286,6 +292,8 @@ export function GuardDashboard({
   onRemoveStandingCrew,
   onAcceptStandingCrewInvite,
   onDeclineStandingCrewInvite,
+  onRequestCrewLead,
+  crewJoinRequests = [],
   headerRight,
   feeConfig,
   onSubmitPriceOffer,
@@ -604,6 +612,11 @@ export function GuardDashboard({
   const pendingStandingCrewInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
     [standingCrewMembers, guard.id]
+  );
+  const pendingCrewLeadRequest = !!getPendingCrewLeadRequest(crewJoinRequests, guard.id);
+  const canRequestLead = useMemo(
+    () => canRequestCrewLead(guard, standingCrewMembers, crewJoinRequests),
+    [guard, standingCrewMembers, crewJoinRequests]
   );
   const showCrewTab = trustedGuard || pendingStandingCrewInvites.length > 0;
 
@@ -1382,6 +1395,9 @@ export function GuardDashboard({
                   onRemoveStandingCrew={onRemoveStandingCrew}
                   onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
                   onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
+                  onRequestCrewLead={onRequestCrewLead}
+                  canRequestCrewLead={canRequestLead}
+                  pendingCrewLeadRequest={pendingCrewLeadRequest}
                   onDetailOpenChange={setCrewJobDetailOpen}
                   onJoinTeamWithCode={onJoinTeamWithCode}
                 />

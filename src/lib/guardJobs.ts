@@ -15,7 +15,7 @@ import { requirementLabel } from './certCatalog';
 import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import { guardHasValidInsurance, guardInsuranceBlockedMessage } from './guardInsurance';
 import { guardMeetsRateRequirement } from './guardMarketplace';
-import { guardCanAcceptJobType, jobTypePreferenceLabel } from './guardJobPreferences';
+import { guardCanAcceptJobType, guardMatchesJobPreferences, jobTypePreferenceLabel } from './guardJobPreferences';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -296,6 +296,7 @@ type GuardJobVisibility = Pick<
   | 'state'
   | 'startDate'
   | 'endDate'
+  | 'type'
   | 'minGuardQualification'
   | 'requiredCertifications'
   | 'armedRequired'
@@ -309,7 +310,7 @@ export function openMarketplaceJobIsGuardVisible(
   return isJobPaid(job);
 }
 
-/** Open jobs visible on a guard's map/list — field-ready guards can browse; apply checks are separate. */
+/** Open jobs visible on a guard's map/list — silently filtered by preferences and availability. */
 export function guardCanViewJob(
   guard: SecurityGuard,
   job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>
@@ -319,7 +320,13 @@ export function guardCanViewJob(
   if (job.status !== 'open') return false;
   if (!openMarketplaceJobIsGuardVisible(job)) return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
-  if (!guardIsAvailableForJob(guard.id, job)) return false;
+
+  const isDirectToMe = job.requestType === 'direct' && job.targetGuardId === guard.id;
+  if (!isDirectToMe) {
+    if (!guardMatchesJobPreferences(guard, job)) return false;
+    if (!guardIsAvailableForJob(guard.id, job)) return false;
+  }
+
   return true;
 }
 

@@ -53,6 +53,7 @@ interface StaffGuardsPanelProps {
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (guardId: string, trusted: boolean) => void | Promise<void>;
+  onMakeCrewLead?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,
@@ -108,6 +109,7 @@ export function StaffGuardsPanel({
   onApproveGuardAccount,
   onRejectGuardApplication,
   onSetGuardTrusted,
+  onMakeCrewLead,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -186,6 +188,7 @@ export function StaffGuardsPanel({
       onApproveGuardAccount,
       onRejectGuardApplication,
       onSetGuardTrusted: onSetGuardTrusted ? (trusted: boolean) => onSetGuardTrusted(guard.id, trusted) : undefined,
+      onMakeCrewLead: onMakeCrewLead ? () => onMakeCrewLead(guard.id) : undefined,
       onDeleteGuard,
       onSubmitIdentityVerification: onSubmitIdentityVerification
         ? (payload) => onSubmitIdentityVerification(guard.id, payload)

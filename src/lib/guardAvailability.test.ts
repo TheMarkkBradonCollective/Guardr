@@ -4,6 +4,7 @@ import {
   createDateOverride,
   createOffDayOverride,
   defaultAvailabilitySlots,
+  filterGuardsAvailableForJob,
   getEnabledWeekDays,
   guardIsAvailableForJob,
   isInvalidAvailabilityWindow,
@@ -130,6 +131,23 @@ describe('load/saveAvailabilitySlots (no localStorage in this test environment)'
 
   it('saveAvailabilitySlots does not throw', () => {
     assert.doesNotThrow(() => saveAvailabilitySlots('guard-1', defaultAvailabilitySlots('guard-1')));
+  });
+});
+
+describe('filterGuardsAvailableForJob', () => {
+  it('excludes guards when the shift falls outside default weekday availability', () => {
+    const guards = [{ id: 'guard-1' }, { id: 'guard-2' }];
+    const sundayJob = {
+      startDate: '2026-07-19T10:00:00',
+      endDate: '2026-07-19T14:00:00',
+    };
+    assert.equal(filterGuardsAvailableForJob(guards, sundayJob).length, 0);
+
+    const mondayJob = {
+      startDate: '2026-07-20T10:00:00',
+      endDate: '2026-07-20T14:00:00',
+    };
+    assert.equal(filterGuardsAvailableForJob(guards, mondayJob).length, 2);
   });
 });
 
