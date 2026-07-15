@@ -4844,6 +4844,20 @@ html.theme-light .staff-ops-btn-primary:hover {
   border-bottom: 1px solid var(--brand-border);
 }
 
+/* APK launch shell — black background with logo (PWA loading screen stays theme-based white). */
+body.capacitor-native .guardr-loading-screen {
+  background: #000000;
+  color: #f5f5f5;
+}
+
+body.capacitor-native .guardr-loading-caption {
+  color: color-mix(in srgb, #f5f5f5 72%, transparent);
+}
+
+body.capacitor-native .guardr-loading-version {
+  color: color-mix(in srgb, #f5f5f5 55%, transparent);
+}
+
 /* ─── LOADING SCREEN ───────────────────────────────────────── */
 .guardr-loading-screen {
   position: fixed;

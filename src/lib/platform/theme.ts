@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { applyThemeBranding } from './themeBranding';
 import { applyNativeThemeChrome } from './nativeThemeChrome';
 
@@ -18,8 +19,18 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
   grey: 'Shade',
 };
 
-/** Default — light matches the white app icon background and field-readable UI. */
+/** Default for PWA / web — white install icon and field-readable UI. */
 export const DEFAULT_THEME: ThemeMode = 'light';
+
+/** APK defaults to dark to match black launcher icon and splash. */
+export const DEFAULT_NATIVE_THEME: ThemeMode = 'dark';
+
+function defaultThemeForPlatform(): ThemeMode {
+  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+    return DEFAULT_NATIVE_THEME;
+  }
+  return DEFAULT_THEME;
+}
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 
@@ -42,7 +53,7 @@ export function loadTheme(userId?: string | null): ThemeMode {
   }
   const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
   if (isThemeMode(legacy)) return legacy;
-  return DEFAULT_THEME;
+  return defaultThemeForPlatform();
 }
 
 export function saveTheme(mode: ThemeMode, userId?: string | null): void {
@@ -72,5 +83,5 @@ export function readThemeFromDocument(): ThemeMode {
   for (const m of THEME_MODES) {
     if (document.documentElement.classList.contains(`theme-${m}`)) return m;
   }
-  return DEFAULT_THEME;
+  return defaultThemeForPlatform();
 }
