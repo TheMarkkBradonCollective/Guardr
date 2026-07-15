@@ -197,7 +197,7 @@ export function StaffCredentials({
   onEditGuardProfile,
   onAddCertification,
 }: StaffCredentialsProps) {
-  const [filter, setFilter] = useState<CredentialStatusFilter>('pending_upload');
+  const [filter, setFilter] = useState<CredentialStatusFilter>('pending_review');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -636,9 +636,9 @@ export function StaffCredentials({
             activeId={filter}
             onChange={(id) => setFilter(id as CredentialStatusFilter)}
             tabs={[
-              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
               { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
               { id: 'verified', label: 'Verified' },
+              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
               { id: 'all', label: 'All' },
             ]}
           />
