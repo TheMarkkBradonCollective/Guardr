@@ -108,6 +108,9 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
       return 'Upload government ID, COI, guard card, PTA/UOF, and 32-hour training before staff can approve your profile.';
     }
     if (isGuardAccountApproved(guard)) {
+      if (guard.credentialExpiryRestricted) {
+        return 'A required credential expired. Upload and verify the updated document to work jobs again.';
+      }
       return 'Your profile is approved — Guardr staff will grant marketplace eligibility so you can work jobs.';
     }
     return 'All five credentials are on file — awaiting profile approval by Guardr staff.';

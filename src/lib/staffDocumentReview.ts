@@ -38,6 +38,25 @@ export function buildCertUpdateRequestReason(certName: string, staffNote?: strin
   return `Staff requested an updated ${certName}. Upload a new document when ready — your current verified copy stays on file until the update is approved.`;
 }
 
+function formatExpiryDateLabel(expiryDate?: string): string | null {
+  if (!expiryDate?.trim()) return null;
+  const date = new Date(`${expiryDate.trim()}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return expiryDate.trim();
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Automatic update request when a verified credential expires. */
+export function buildAutoExpiryUpdateRequestReason(
+  credentialLabel: string,
+  expiryDate?: string
+): string {
+  const formattedExpiry = formatExpiryDateLabel(expiryDate);
+  if (formattedExpiry) {
+    return `${credentialLabel} expired on ${formattedExpiry}. Upload an updated document — your current verified copy stays on file until staff approves the replacement.`;
+  }
+  return `${credentialLabel} has expired. Upload an updated document — your current verified copy stays on file until staff approves the replacement.`;
+}
+
 export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
   'Your guard application was not approved. Contact Guardr support if you have questions.';
 

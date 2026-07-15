@@ -66,6 +66,9 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_selfie_url TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_submitted_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_expiry_restricted BOOLEAN NOT NULL DEFAULT FALSE;
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_id_verification_status_check;
 ALTER TABLE guards ADD CONSTRAINT guards_id_verification_status_check
@@ -1168,6 +1171,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_insurance_policies_guard_id
 
 COMMENT ON TABLE guard_insurance_policies IS
   'Guard general liability COI — required for marketplace profile approval and jobs';
+
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_request_note TEXT;
 
 -- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
 CREATE TABLE IF NOT EXISTS company_public_documents (

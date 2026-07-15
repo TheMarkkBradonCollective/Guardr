@@ -79,6 +79,11 @@ export function GuardIdItemCard({
             {formatIdSummaryLine(guard)}
           </p>
           <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
+          {guard.idUpdateRequestNote && (
+            <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-3">
+              {guard.idUpdateRequestNote}
+            </p>
+          )}
           {guard.idVerificationRejectionReason && (
             <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-2">
               {guard.idVerificationRejectionReason}
