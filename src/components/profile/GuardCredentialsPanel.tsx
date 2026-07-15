@@ -48,6 +48,7 @@ import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { GuardOptionalCredentialAddSheet } from '../guard/GuardOptionalCredentialAddSheet';
+import { StaffGuardCredentialAddWizard } from '../staff/StaffGuardCredentialAddWizard';
 import { WfSearchBar } from '../ui/wireframe';
 
 const CREDENTIAL_SECTIONS: {
@@ -126,6 +127,7 @@ export function GuardCredentialsPanel({
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
   const [optionalAddOpen, setOptionalAddOpen] = useState(false);
+  const [staffWizardOpen, setStaffWizardOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
@@ -404,13 +406,18 @@ export function GuardCredentialsPanel({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-brand-primary">
-            {editing ? 'Upload credentials' : 'Credentials'}
+            {editing ? 'Credentials' : 'Credentials'}
           </p>
+          {editing && staffMode && (
+            <p className="text-xs text-brand-text-muted leading-relaxed">
+              Upload or update credentials for this guard — same as adding work experience or education.
+            </p>
+          )}
         </div>
         {canUpload && onAddCertification && (
           <button
             type="button"
-            onClick={() => setOptionalAddOpen(true)}
+            onClick={() => (staffMode ? setStaffWizardOpen(true) : setOptionalAddOpen(true))}
             className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -426,7 +433,16 @@ export function GuardCredentialsPanel({
         className="max-w-md"
       />
 
-      {canUpload && onAddCertification && (
+      {canUpload && onAddCertification && staffMode && (
+        <StaffGuardCredentialAddWizard
+          guard={guard}
+          open={staffWizardOpen}
+          onClose={() => setStaffWizardOpen(false)}
+          onAddCertification={onAddCertification}
+        />
+      )}
+
+      {canUpload && onAddCertification && !staffMode && (
         <GuardOptionalCredentialAddSheet
           guard={guard}
           open={optionalAddOpen}
@@ -441,7 +457,7 @@ export function GuardCredentialsPanel({
         </p>
       )}
 
-      {!guard.isStaff && onSubmitIdentityVerification && (
+      {!guard.isStaff && (onSubmitIdentityVerification || (staffMode && onAddCertification)) && (
         <>
           <GuardIdItemCard
             guard={guard}
