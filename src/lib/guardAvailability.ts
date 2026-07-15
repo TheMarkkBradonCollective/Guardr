@@ -39,13 +39,14 @@ export interface GuardSearchFilters {
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_LABELS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_TAB_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 /** Monday-first order for the availability week row (Mon–Sun). */
 export const WEEK_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 
 export const WEEK_DAY_TAB_OPTIONS = WEEK_DAY_ORDER.map((day) => ({
   id: String(day),
-  label: DAY_LABELS[day] ?? '?',
+  label: DAY_TAB_LABELS[day] ?? '?',
 }));
 
 export function dayLabel(day: number): string {

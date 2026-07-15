@@ -30,9 +30,8 @@ import {
 } from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
-import { PostOrdersAckPanel } from './guard/PostOrdersAckPanel';
-import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
 import { GuardActiveShift } from './guard/GuardActiveShift';
+import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
 import { activeReplacementOffers } from '../lib/emergencyReplacement';
 import { useGuardLiveLocation } from '../lib/useGuardLiveLocation';
@@ -83,6 +82,8 @@ import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
+import { isPreShiftBriefingWindowOpen, canGuardStartEnRoute, enRouteBlockedMessage } from '../lib/preShiftBriefing';
+import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
@@ -483,7 +484,8 @@ export function GuardDashboard({
       activeShiftJob &&
       (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
       activePhase &&
-      activePhase !== 'complete';
+      activePhase !== 'complete' &&
+      (activePhase !== 'upcoming' || isPreShiftBriefingWindowOpen(activeShiftJob));
     if (onDutyOverlay) {
       return requests.filter(
         (j) =>
@@ -711,6 +713,19 @@ export function GuardDashboard({
 
   const handleStartEnRoute = () => {
     if (!activeShiftJob || !onStartEnRoute) return;
+    const blocked = enRouteBlockedMessage(activeShiftJob);
+    if (blocked) {
+      showAppToast(blocked, { tone: 'error' });
+      return;
+    }
+    if (!canGuardStartEnRoute(activeShiftJob)) {
+      showAppToast('Start heading unlocks 1 hour before your shift.', { tone: 'error' });
+      return;
+    }
+    if (jobRequiresPostOrdersAck(activeShiftJob, guard.id)) {
+      showAppToast('Acknowledge post orders in the briefing before heading to site.', { tone: 'error' });
+      return;
+    }
     updatePhase(activeShiftJob.id, 'en-route');
     void onStartEnRoute(activeShiftJob.id);
   };
@@ -1030,12 +1045,21 @@ export function GuardDashboard({
     );
   }
 
+  const showBriefingOverlay =
+    activeTab === 'map' &&
+    !!activeShiftJob &&
+    activeShiftJob.status === 'accepted' &&
+    activePhase === 'upcoming' &&
+    isPreShiftBriefingWindowOpen(activeShiftJob);
+
   const showShiftOverlay =
     activeTab === 'map' &&
     !!activeShiftJob &&
     (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
     activePhase &&
-    activePhase !== 'complete';
+    activePhase !== 'complete' &&
+    activePhase !== 'upcoming' &&
+    !showBriefingOverlay;
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -1145,15 +1169,15 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && activeShiftRequest &&
-        jobRequiresPostOrdersAck(activeShiftRequest, guard.id) && onAckPostOrders && (
-        <div className="absolute inset-x-4 top-24 z-[1003] map-browse-offset">
-          <PostOrdersAckPanel
-            job={activeShiftRequest}
-            guardId={guard.id}
-            onAcknowledge={() => onAckPostOrders(activeShiftRequest.id)}
-          />
-        </div>
+      {activeTab === 'map' && showBriefingOverlay && activeShiftJob && (
+        <GuardPreShiftBriefing
+          job={activeShiftJob}
+          guardId={guard.id}
+          onStartEnRoute={handleStartEnRoute}
+          onAckPostOrders={
+            onAckPostOrders ? () => onAckPostOrders(activeShiftJob.id) : undefined
+          }
+        />
       )}
 
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
@@ -1164,7 +1188,6 @@ export function GuardDashboard({
             userLocation ? isWithinSiteRadius(userLocation, activeShiftJob) : false
           }
           onArrived={handleArrived}
-          onStartEnRoute={onStartEnRoute ? handleStartEnRoute : undefined}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}
           onIncidentReport={() => setShowIncidentReport(true)}

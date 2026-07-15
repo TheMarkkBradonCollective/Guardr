@@ -140,6 +140,10 @@ export function resolveNotificationUrl(
       return '/guard/crew';
     case 'company_placard_expiry':
       return '/staff/settings';
+    case 'pre_shift_briefing':
+      return options.requestId
+        ? `/guard/map?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/map';
     case 'test':
       return '/';
     default:
@@ -358,6 +362,10 @@ export function resolveNotificationUrlForRole(
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
         : '/guard/my-jobs';
+    case 'pre_shift_briefing':
+      return options.requestId
+        ? `/guard/map?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/map';
     case 'team_chat_message':
       if (role === 'guard') {
         return options.requestId
@@ -428,6 +436,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'job_relisted':
       return ['client'];
     case 'job_schedule_changed':
+      return ['guard'];
+    case 'pre_shift_briefing':
       return ['guard'];
     case 'team_chat_message':
       return ['guard', 'dispatch', 'admin'];

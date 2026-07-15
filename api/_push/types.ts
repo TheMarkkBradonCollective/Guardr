@@ -35,6 +35,7 @@ export type PushNotificationType =
   | 'team_chat_message'
   | 'standing_crew_invite'
   | 'company_placard_expiry'
+  | 'pre_shift_briefing'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

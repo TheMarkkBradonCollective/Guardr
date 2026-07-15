@@ -362,6 +362,12 @@ import { evaluateCheckInEscalation, checkInEscalationDedupKey } from './lib/chec
 import { notifyOpenJobToGuards } from './lib/openJobNotifications';
 import { jobUsesFirstToAccept } from './lib/assignmentMode';
 import { appendPostOrdersAck, jobRequiresPostOrdersAck } from './lib/postOrdersAck';
+import {
+  canGuardStartEnRoute,
+  evaluatePreShiftBriefingReminder,
+  preShiftBriefingReminderCopy,
+  preShiftBriefingReminderDedupKey,
+} from './lib/preShiftBriefing';
 import { resolveGuardPayForJob } from './lib/differentialPay';
 import { approveClientLocation, rejectClientLocation } from './lib/clientLocations';
 import { isJobType, normalizeJobTypePreferences } from './lib/guardJobPreferences';
@@ -600,6 +606,7 @@ export default function App() {
   const [guardMessages, setGuardMessages] = useState<GuardMessage[]>(() => loadGuardMessagesFromStorage());
   const [clientMessages, setClientMessages] = useState<ClientMessage[]>(() => loadClientMessagesFromStorage());
   const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
+  const preShiftBriefingNotifiedRef = useRef<Set<string>>(new Set());
   const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
     loadGuardPayoutInvoicesFromStorage()
   );
@@ -2760,6 +2767,39 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [isDbConnected, currentUser?.id, requests, guards]);
+
+  useEffect(() => {
+    if (!isDbConnected || !currentUser || currentUser.role !== 'guard') return;
+
+    const tick = () => {
+      const now = Date.now();
+      for (const req of requests) {
+        if (req.assignedGuardId !== currentUser.id) continue;
+        const tier = evaluatePreShiftBriefingReminder(req, now);
+        if (!tier) continue;
+
+        const dedupKey = preShiftBriefingReminderDedupKey(req.id, currentUser.id, tier);
+        if (preShiftBriefingNotifiedRef.current.has(dedupKey)) continue;
+        preShiftBriefingNotifiedRef.current.add(dedupKey);
+
+        const copy = preShiftBriefingReminderCopy(tier, req.title);
+        void reportPushEvent(currentUser, {
+          type: 'pre_shift_briefing',
+          recipientUserId: currentUser.id,
+          requestId: req.id,
+          guardId: currentUser.id,
+          title: copy.title,
+          body: copy.body,
+          priority: copy.priority,
+          url: `/guard/map?jc=${encodeURIComponent(req.id)}`,
+        });
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 60_000);
+    return () => clearInterval(interval);
+  }, [isDbConnected, currentUser?.id, currentUser?.role, requests]);
 
   // Fallback when realtime reconnects after sleep / background tab
   useEffect(() => {
@@ -9654,6 +9694,8 @@ export default function App() {
   const handleStartEnRoute = async (requestId: string) => {
     const req = requests.find((r) => r.id === requestId);
     if (!req || req.assignedGuardId !== activeGuardId) return;
+    if (!canGuardStartEnRoute(req)) return;
+    if (jobRequiresPostOrdersAck(req, activeGuardId)) return;
     const enRouteAt = new Date().toISOString();
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, enRouteAt } : r))

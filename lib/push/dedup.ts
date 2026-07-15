@@ -32,6 +32,14 @@ export function companyPlacardMissingDedupKey(
   return `company_placard_missing:${documentType}:${weekBucket}:${userId}`;
 }
 
+export function preShiftBriefingReminderDedupKey(
+  requestId: string,
+  guardId: string,
+  tier: string
+): string {
+  return `pre_shift_briefing:${requestId}:${guardId}:${tier}`;
+}
+
 /**
  * Returns true when this notification was already sent for the dedup key.
  */

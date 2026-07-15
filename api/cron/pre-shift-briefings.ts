@@ -3,11 +3,8 @@
 
 // api/_push/dedup.ts
 var DEDUP_TTL_MS = 25 * 60 * 60 * 1e3;
-function companyPlacardExpiryDedupKey(documentType, tier, expiryDate, userId) {
-  return `company_placard_expiry:${documentType}:${tier}:${expiryDate}:${userId}`;
-}
-function companyPlacardMissingDedupKey(documentType, weekBucket, userId) {
-  return `company_placard_missing:${documentType}:${weekBucket}:${userId}`;
+function preShiftBriefingReminderDedupKey(requestId, guardId, tier) {
+  return `pre_shift_briefing:${requestId}:${guardId}:${tier}`;
 }
 async function claimNotificationDedup(db, dedupKey, notificationType) {
   const { data: existing } = await db.from("push_notification_dedup").select("id").eq("id", dedupKey).maybeSingle();
@@ -25,6 +22,349 @@ async function claimNotificationDedup(db, dedupKey, notificationType) {
 async function pruneStaleNotificationDedup(db) {
   const cutoff = new Date(Date.now() - DEDUP_TTL_MS).toISOString();
   await db.from("push_notification_dedup").delete().lt("created_at", cutoff);
+}
+
+// api/_push/eventDispatch.ts
+var EVENT_DEFAULTS = {
+  guard_checkin: (event) => ({
+    title: "Guard check-in",
+    body: event.guardName ? `${event.guardName} checked in${event.location ? ` at ${event.location}` : ""}` : "A guard completed a check-in"
+  }),
+  guard_clockout: (event) => ({
+    title: "Guard clock-out",
+    body: event.guardName ? `${event.guardName} clocked out${event.location ? ` at ${event.location}` : ""}` : "A guard clocked out"
+  }),
+  guard_arrived: (event) => ({
+    title: "Guard arrived on site",
+    body: event.guardName ? `${event.guardName} arrived${event.location ? ` at ${event.location}` : ""}` : "Your guard arrived on site"
+  }),
+  guard_left_site: (event) => ({
+    title: "Guard left job site",
+    body: event.guardName ? `${event.guardName} left the job site${event.location ? ` at ${event.location}` : ""}` : "A guard left the job site during an active shift"
+  }),
+  guard_break_start: (event) => ({
+    title: "Guard on break",
+    body: event.guardName ? `${event.guardName} started a break${event.location ? ` at ${event.location}` : ""}` : "A guard started a break"
+  }),
+  guard_break_end: (event) => ({
+    title: "Guard back on duty",
+    body: event.guardName ? `${event.guardName} ended break and is back on duty${event.location ? ` at ${event.location}` : ""}` : "A guard ended a break"
+  }),
+  missed_checkin: (event) => ({
+    title: "Missed check-in",
+    body: event.guardName ? `${event.guardName} missed an hourly check-in` : "A guard missed an hourly check-in"
+  }),
+  assignment: (event) => ({
+    title: "New assignment",
+    body: event.body ?? (event.location ? `You have a new assignment at ${event.location}` : "You have a new assignment update")
+  }),
+  emergency_alert: (event) => ({
+    title: "Emergency alert",
+    body: event.body || "Immediate attention required on an active shift"
+  }),
+  support_message: (event) => ({
+    title: "Support message",
+    body: event.body || "You have a new support message"
+  }),
+  job_chat_message: (event) => ({
+    title: "Job chat",
+    body: event.body || "New message on an active job"
+  }),
+  staff_message: (event) => ({
+    title: "Staff chat",
+    body: event.body || "New message from the Guardr team"
+  }),
+  guard_message: (event) => ({
+    title: "Guard chat",
+    body: event.body || "New message from another guard"
+  }),
+  client_message: (event) => ({
+    title: "Client chat",
+    body: event.body || "New message from another client"
+  }),
+  job_submitted: (event) => ({
+    title: "New job request",
+    body: event.body || "A client submitted a job awaiting staff review"
+  }),
+  guard_application: (event) => ({
+    title: "Guard application",
+    body: event.body || "A guard applied to an open job offer"
+  }),
+  guard_pending_approval: (event) => ({
+    title: "Guard pending approval",
+    body: event.body || "A guard account needs staff review"
+  }),
+  client_pending_approval: (event) => ({
+    title: "Client pending approval",
+    body: event.body || "A client account needs staff review"
+  }),
+  credential_pending: (event) => ({
+    title: "Credential review",
+    body: event.body || "A guard submitted credentials for review"
+  }),
+  payment_attention: (event) => ({
+    title: "Payment attention",
+    body: event.body || "A payment or payout needs staff action"
+  }),
+  client_cash_payment_requested: (event) => ({
+    title: "Client cash payment request",
+    body: event.body || "A client requested to pay in cash"
+  }),
+  guard_cash_payout_requested: (event) => ({
+    title: "Guard cash payout request",
+    body: event.body || "A guard requested cash payout"
+  }),
+  stripe_payment_complete: (event) => ({
+    title: "Stripe payment received",
+    body: event.body || "A card payment completed successfully"
+  }),
+  job_open_to_guards: (event) => ({
+    title: "New job on the map",
+    body: event.body || "A paid job is now open for guards"
+  }),
+  support_ticket: (event) => ({
+    title: "Support ticket",
+    body: event.body || "A new support ticket needs staff attention"
+  }),
+  support_ticket_status: (event) => ({
+    title: "Support update",
+    body: event.body || "Your support ticket status changed"
+  }),
+  dispute_update: (event) => ({
+    title: "Dispute update",
+    body: event.body || "A dispute needs your attention"
+  }),
+  guard_trusted_status: (event) => ({
+    title: event.title ?? "Trusted guard update",
+    body: event.body || "Your trusted guard status changed"
+  }),
+  client_trusted_status: (event) => ({
+    title: event.title ?? "Trusted client update",
+    body: event.body || "Your trusted client status changed"
+  }),
+  job_relisted: (event) => ({
+    title: "Job back on marketplace",
+    body: event.body || "A job was re-listed and is open for guards again"
+  }),
+  job_schedule_changed: (event) => ({
+    title: "Shift time changed",
+    body: event.body || "Your job schedule was updated"
+  }),
+  team_chat_message: (event) => ({
+    title: "Crew chat",
+    body: event.body || "New message in crew chat"
+  }),
+  company_placard_expiry: (event) => ({
+    title: event.title ?? "Company placard reminder",
+    body: event.body || "A company credential needs attention in Staff Settings"
+  }),
+  pre_shift_briefing: (event) => ({
+    title: event.title ?? "Shift briefing",
+    body: event.body || "Review your pre-shift briefing before heading to site"
+  })
+};
+function basePayload(event) {
+  const fallbackFn = EVENT_DEFAULTS[event.type];
+  const fallback = fallbackFn ? fallbackFn(event) : { title: "Guardr alert", body: event.body || "Operational update" };
+  return {
+    title: event.title ?? fallback.title,
+    body: event.body ?? fallback.body,
+    type: event.type,
+    guardId: event.guardId,
+    requestId: event.requestId,
+    ticketId: event.ticketId,
+    siteId: event.siteId,
+    url: event.url,
+    priority: event.type === "emergency_alert" ? "high" : event.priority ?? "normal",
+    excludeUserId: event.excludeUserId
+  };
+}
+async function loadJobParticipants(db, requestId) {
+  const { data } = await db.from("security_requests").select("client_id, assigned_guard_id").eq("id", requestId).maybeSingle();
+  return {
+    clientId: data?.client_id ?? null,
+    guardId: data?.assigned_guard_id ?? null
+  };
+}
+async function buildEventDispatchPayloads(db, event) {
+  const payload = basePayload(event);
+  if (event.type === "assignment") {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    if (event.guardId) {
+      return [{ ...payload, userId: event.guardId }];
+    }
+    return [{ ...payload, role: "guard" }];
+  }
+  if (event.type === "support_message" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "job_chat_message" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "emergency_alert" && event.requestId) {
+    const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (guardId) payloads.push({ ...payload, userId: guardId });
+    if (clientId) payloads.push({ ...payload, userId: clientId });
+    return payloads;
+  }
+  if (event.type === "missed_checkin" && event.requestId) {
+    const tier = event.checkinEscalationTier ?? "legacy";
+    const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+    if (tier === "alert") {
+      const payloads2 = [];
+      if (guardId) {
+        payloads2.push({
+          ...payload,
+          userId: guardId,
+          title: "Hourly check-in overdue",
+          body: event.location ? `Check in now \u2014 you are 5+ minutes past due at ${event.location}` : "Check in now \u2014 you are 5+ minutes past your hourly check-in",
+          priority: "high"
+        });
+      }
+      if (clientId) {
+        payloads2.push({
+          ...payload,
+          userId: clientId,
+          title: "Guard check-in overdue",
+          body: event.guardName ? `${event.guardName} is 5+ minutes past due for an hourly check-in${event.location ? ` at ${event.location}` : ""}` : "Your guard is overdue for an hourly check-in"
+        });
+      }
+      return payloads2;
+    }
+    if (tier === "staff") {
+      return [
+        {
+          ...payload,
+          role: "dispatch",
+          title: "Check-in overdue \u2014 staff alert",
+          body: event.guardName ? `${event.guardName} is 10+ minutes past due for hourly check-in${event.location ? ` at ${event.location}` : ""}` : "A guard is 10+ minutes past due for hourly check-in"
+        }
+      ];
+    }
+    if (tier === "escalate") {
+      const payloads2 = [
+        {
+          ...payload,
+          role: "dispatch",
+          title: "Check-in escalation",
+          body: event.guardName ? `ESCALATION: ${event.guardName} missed hourly check-in for 15+ minutes${event.location ? ` at ${event.location}` : ""}` : "ESCALATION: guard missed hourly check-in for 15+ minutes",
+          priority: "high"
+        }
+      ];
+      if (clientId) {
+        payloads2.push({
+          ...payload,
+          userId: clientId,
+          title: "Check-in escalation",
+          body: "Your guard has not completed a required hourly check-in. Guardr staff has been escalated.",
+          priority: "high"
+        });
+      }
+      return payloads2;
+    }
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (guardId) {
+      payloads.push({
+        ...payload,
+        userId: guardId,
+        title: "Missed check-in reminder",
+        body: event.location ? `You missed your hourly check-in at ${event.location}` : "You missed your hourly check-in \u2014 please check in now"
+      });
+    }
+    return payloads;
+  }
+  if (event.type === "support_ticket_status" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "company_placard_expiry" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "pre_shift_briefing") {
+    const userId = event.recipientUserId ?? event.guardId;
+    if (!userId) return [];
+    return [{ ...payload, userId }];
+  }
+  if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed") && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "team_chat_message") {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "job_submitted" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "job_open_to_guards") {
+    if (event.guardId || event.recipientUserId) {
+      const userId = event.recipientUserId ?? event.guardId;
+      if (!userId) return [];
+      return [
+        {
+          ...payload,
+          userId,
+          priority: event.priority ?? "high",
+          title: event.title ?? "Priority job for your crew",
+          body: event.body ?? "A new job matches your standing crew size \u2014 browse and apply early."
+        }
+      ];
+    }
+    return [{ ...payload, role: "guard" }];
+  }
+  if (event.type === "guard_application") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    } else if (event.clientId) {
+      payloads.push({ ...payload, userId: event.clientId });
+    }
+    return payloads;
+  }
+  if (event.type === "stripe_payment_complete" || event.type === "client_cash_payment_requested" || event.type === "guard_cash_payout_requested") {
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "support_ticket") {
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "dispute_update") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.guardId) payloads.push({ ...payload, userId: event.guardId });
+    if (event.clientId) payloads.push({ ...payload, userId: event.clientId });
+    else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
+    return payloads;
+  }
+  if (event.type === "staff_message" || event.type === "job_submitted" || event.type === "guard_pending_approval" || event.type === "client_pending_approval" || event.type === "credential_pending" || event.type === "payment_attention" || event.type === "support_message" && !event.recipientUserId || event.type === "job_chat_message" && !event.recipientUserId) {
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "guard_message") {
+    return [{ ...payload, role: "guard" }];
+  }
+  if (event.type === "client_message") {
+    return [{ ...payload, role: "client" }];
+  }
+  if (event.type === "guard_checkin" || event.type === "guard_clockout" || event.type === "guard_arrived" || event.type === "guard_break_start" || event.type === "guard_break_end" || event.type === "guard_left_site") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.requestId) {
+      const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+      if (clientId) payloads.push({ ...payload, userId: clientId });
+      if (event.type === "guard_left_site" && guardId) {
+        payloads.push({
+          ...payload,
+          userId: guardId,
+          title: "You left the job site",
+          body: event.location ? `You moved away from ${event.location} during your shift` : "You left the job site during your active shift"
+        });
+      }
+    } else if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    }
+    return payloads;
+  }
+  return [payload];
 }
 
 // api/_push/routing.ts
@@ -744,174 +1084,119 @@ function isPushConfigured() {
   return vapidReady || isFcmConfigured();
 }
 
-// api/_push/companyPlacardExpiry.ts
-var NOTIFICATION_TYPE = "company_placard_expiry";
-var SETTINGS_URL = "/staff/settings";
-var EXECUTIVE_ROLES = ["Founder", "Owner", "Director"];
-var PLACARD_CATALOG = [
-  { id: "business_entity_registration", title: "Business Entity Registration", required: true },
-  { id: "general_liability_insurance", title: "General Liability Insurance (COI)", required: true },
-  { id: "professional_liability_insurance", title: "Professional / E&O Liability Insurance", required: false },
-  { id: "workers_comp_insurance", title: "Workers' Compensation Insurance", required: false },
-  { id: "business_license", title: "City / County Business License", required: false }
+// api/_push/preShiftBriefings.ts
+var NOTIFICATION_TYPE = "pre_shift_briefing";
+var HOUR_MS = 60 * 60 * 1e3;
+var BRIEFING_UNLOCK_MS = 24 * HOUR_MS;
+var REMINDER_TIERS = [
+  { tier: "12h", msBeforeStart: 12 * HOUR_MS },
+  { tier: "6h", msBeforeStart: 6 * HOUR_MS },
+  { tier: "3h", msBeforeStart: 3 * HOUR_MS },
+  { tier: "1h", msBeforeStart: HOUR_MS },
+  { tier: "30m", msBeforeStart: 30 * 60 * 1e3 }
 ];
-function docHasContent(row) {
-  if (!row) return false;
-  return Boolean(
-    row.document_number?.trim() || row.issuer?.trim() || row.image_url?.trim() || row.expiry_date?.trim()
-  );
-}
-function daysUntilExpiry(expiryDate, now) {
-  const expiry = /* @__PURE__ */ new Date(`${expiryDate}T23:59:59`);
-  if (Number.isNaN(expiry.getTime())) return null;
-  return (expiry.getTime() - now.getTime()) / (1e3 * 60 * 60 * 24);
-}
-function expiryAlertTier(expiryDate, hasContent, required, now) {
-  if (!hasContent && required) return "missing";
-  if (!expiryDate?.trim()) return null;
-  const daysUntil = daysUntilExpiry(expiryDate, now);
-  if (daysUntil == null) return null;
-  if (daysUntil < 0) return "expired";
-  if (daysUntil <= 1) return "1";
-  if (daysUntil <= 7) return "7";
-  if (daysUntil <= 14) return "14";
-  if (daysUntil <= 30) return "30";
-  if (daysUntil <= 45) return "45";
+function activeReminderTier(msUntilStart) {
+  if (msUntilStart <= 0 || msUntilStart > BRIEFING_UNLOCK_MS) return null;
+  for (let i = 0; i < REMINDER_TIERS.length; i += 1) {
+    const { tier, msBeforeStart } = REMINDER_TIERS[i];
+    const lowerBound = i < REMINDER_TIERS.length - 1 ? REMINDER_TIERS[i + 1].msBeforeStart : 0;
+    if (msUntilStart <= msBeforeStart && msUntilStart > lowerBound) return tier;
+  }
   return null;
 }
-function formatDate(isoDate) {
-  const date = /* @__PURE__ */ new Date(`${isoDate}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return isoDate;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-function alertCopy(documentTitle, tier, expiryDate) {
-  const formattedExpiry = expiryDate ? formatDate(expiryDate) : void 0;
+function reminderCopy(tier, jobTitle) {
   switch (tier) {
-    case "missing":
+    case "12h":
       return {
-        title: "Company placard item needed",
-        body: `${documentTitle} is required for the public company placard but has not been uploaded yet.`,
+        title: "Shift briefing ready",
+        body: `Your briefing for "${jobTitle}" is available \u2014 review site details before you head out.`,
+        priority: "normal"
+      };
+    case "6h":
+      return {
+        title: "6 hours until shift",
+        body: `"${jobTitle}" starts in 6 hours. Open your shift briefing on the map.`,
+        priority: "normal"
+      };
+    case "3h":
+      return {
+        title: "3 hours until shift",
+        body: `"${jobTitle}" starts in 3 hours. Review post orders and site briefing.`,
+        priority: "normal"
+      };
+    case "1h":
+      return {
+        title: "1 hour until shift",
+        body: `"${jobTitle}" starts in 1 hour. Review your briefing, then start heading to site.`,
         priority: "high"
       };
-    case "expired":
+    case "30m":
       return {
-        title: "Company credential expired",
-        body: formattedExpiry ? `${documentTitle} expired on ${formattedExpiry}. Update it in Staff Settings.` : `${documentTitle} has expired. Update it in Staff Settings.`,
-        priority: "high"
-      };
-    case "1":
-      return {
-        title: "Company credential expires tomorrow",
-        body: formattedExpiry ? `${documentTitle} expires on ${formattedExpiry}.` : `${documentTitle} expires within 1 day.`,
-        priority: "high"
-      };
-    case "7":
-      return {
-        title: "Company credential expiring soon",
-        body: formattedExpiry ? `${documentTitle} expires on ${formattedExpiry} (within 7 days).` : `${documentTitle} expires within 7 days.`,
+        title: "30 minutes until shift",
+        body: `"${jobTitle}" starts in 30 minutes. Head to site when you're ready.`,
         priority: "high"
       };
     default:
       return {
-        title: "Company credential renewal reminder",
-        body: formattedExpiry ? `${documentTitle} expires on ${formattedExpiry}.` : `${documentTitle} is approaching its expiry date.`,
+        title: "Shift briefing",
+        body: `Review your briefing for "${jobTitle}".`,
         priority: "normal"
       };
   }
 }
-async function loadExecutiveUserIds(db) {
-  const ids = /* @__PURE__ */ new Set();
-  const { data: staffRows, error: staffErr } = await db.from("staff").select("id, staff_role, user_status").in("staff_role", EXECUTIVE_ROLES);
-  if (staffErr) throw new Error(staffErr.message);
-  for (const row of staffRows ?? []) {
-    if (row.user_status === "suspended" || row.user_status === "blocked") continue;
-    ids.add(String(row.id));
-  }
-  const { data: guardRows, error: guardErr } = await db.from("guards").select("id, staff_role, user_status, is_staff").eq("is_staff", true).in("staff_role", EXECUTIVE_ROLES);
-  if (guardErr) throw new Error(guardErr.message);
-  for (const row of guardRows ?? []) {
-    if (row.user_status === "suspended" || row.user_status === "blocked") continue;
-    ids.add(String(row.id));
-  }
-  return [...ids];
-}
-async function persistInboxNotification(db, userId, notificationId, title, body) {
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const { error } = await db.from("user_notifications").upsert(
-    {
-      id: notificationId,
-      user_id: userId,
-      type: NOTIFICATION_TYPE,
-      title,
-      body,
-      url: SETTINGS_URL,
-      metadata: { source: "company_placard_expiry_cron" },
-      created_at: now
-    },
-    { onConflict: "id" }
-  );
-  if (error) throw new Error(error.message);
-}
-async function scanAndNotifyCompanyPlacardExpiry(db) {
+async function scanAndNotifyPreShiftBriefings(db) {
   if (!isPushConfigured()) {
-    return { scanned: 0, executives: 0, notified: 0, skipped: 0, sent: 0, failed: 0 };
+    return { scanned: 0, notified: 0, skipped: 0, sent: 0, failed: 0 };
   }
   await pruneStaleNotificationDedup(db);
-  const executives = await loadExecutiveUserIds(db);
-  if (!executives.length) {
-    return { scanned: 0, executives: 0, notified: 0, skipped: 0, sent: 0, failed: 0 };
-  }
-  const { data: rows, error } = await db.from("company_public_documents").select("*");
-  if (error) {
-    if (error.code === "42P01") {
-      return { scanned: 0, executives: executives.length, notified: 0, skipped: 0, sent: 0, failed: 0 };
-    }
-    throw new Error(error.message);
-  }
-  const byType = /* @__PURE__ */ new Map();
-  for (const row of rows ?? []) {
-    byType.set(row.document_type, row);
-  }
-  const now = /* @__PURE__ */ new Date();
-  const weekBucket = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1e3));
+  const now = Date.now();
+  const { data: jobs, error } = await db.from("security_requests").select("id, title, start_date, assigned_guard_id, en_route_at, check_in_audit").eq("status", "accepted").not("assigned_guard_id", "is", null).gte("start_date", new Date(now - 15 * 60 * 1e3).toISOString()).lte("start_date", new Date(now + BRIEFING_UNLOCK_MS).toISOString());
+  if (error) throw new Error(error.message);
   let notified = 0;
   let skipped = 0;
   let sent = 0;
   let failed = 0;
-  let scanned = 0;
-  for (const catalogItem of PLACARD_CATALOG) {
-    const row = byType.get(catalogItem.id);
-    const hasContent = docHasContent(row);
-    const tier = expiryAlertTier(row?.expiry_date ?? void 0, hasContent, catalogItem.required, now);
-    if (!tier) continue;
-    scanned += 1;
-    const documentTitle = row?.title?.trim() || catalogItem.title;
-    const copy = alertCopy(documentTitle, tier, row?.expiry_date);
-    for (const userId of executives) {
-      const dedupKey = tier === "missing" ? companyPlacardMissingDedupKey(catalogItem.id, weekBucket, userId) : companyPlacardExpiryDedupKey(catalogItem.id, tier, row?.expiry_date ?? "none", userId);
-      const alreadySent = await claimNotificationDedup(db, dedupKey, NOTIFICATION_TYPE);
-      if (alreadySent) {
-        skipped += 1;
-        continue;
-      }
-      const notificationId = dedupKey.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 120);
-      await persistInboxNotification(db, userId, notificationId, copy.title, copy.body);
-      const result = await dispatchPushNotification(db, {
-        userId,
-        type: NOTIFICATION_TYPE,
-        title: copy.title,
-        body: copy.body,
-        url: SETTINGS_URL,
-        priority: copy.priority
-      });
+  for (const job of jobs ?? []) {
+    if (!job.assigned_guard_id || job.en_route_at || job.check_in_audit?.checkedAt) {
+      skipped += 1;
+      continue;
+    }
+    const startMs = new Date(job.start_date).getTime();
+    if (Number.isNaN(startMs)) {
+      skipped += 1;
+      continue;
+    }
+    const tier = activeReminderTier(startMs - now);
+    if (!tier) {
+      skipped += 1;
+      continue;
+    }
+    const dedupKey = preShiftBriefingReminderDedupKey(job.id, job.assigned_guard_id, tier);
+    const alreadySent = await claimNotificationDedup(db, dedupKey, NOTIFICATION_TYPE);
+    if (alreadySent) {
+      skipped += 1;
+      continue;
+    }
+    const copy = reminderCopy(tier, job.title);
+    const payloads = await buildEventDispatchPayloads(db, {
+      type: NOTIFICATION_TYPE,
+      recipientUserId: job.assigned_guard_id,
+      guardId: job.assigned_guard_id,
+      requestId: job.id,
+      title: copy.title,
+      body: copy.body,
+      priority: copy.priority,
+      url: `/guard/map?jc=${encodeURIComponent(job.id)}`
+    });
+    for (const payload of payloads) {
+      const result = await dispatchPushNotification(db, payload);
       sent += result.sent;
       failed += result.failed;
-      notified += 1;
     }
+    notified += 1;
   }
   return {
-    scanned,
-    executives: executives.length,
+    scanned: jobs?.length ?? 0,
     notified,
     skipped,
     sent,
@@ -919,7 +1204,7 @@ async function scanAndNotifyCompanyPlacardExpiry(db) {
   };
 }
 
-// api/_push/entries/company-placard-expiry.ts
+// api/_push/entries/pre-shift-briefings.ts
 async function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
@@ -942,11 +1227,11 @@ async function handler(req, res) {
     if (!db) {
       return res.status(503).json({ error: "Database is not configured" });
     }
-    const result = await scanAndNotifyCompanyPlacardExpiry(db);
+    const result = await scanAndNotifyPreShiftBriefings(db);
     return res.status(200).json({ ok: true, ...result });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Company placard expiry cron failed";
-    console.error("Company placard expiry cron error:", message, err);
+    const message = err instanceof Error ? err.message : "Pre-shift briefing cron failed";
+    console.error("Pre-shift briefing cron error:", message, err);
     return res.status(500).json({ error: message });
   }
 }
