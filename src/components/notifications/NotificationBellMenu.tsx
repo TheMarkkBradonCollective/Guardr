@@ -39,7 +39,7 @@ export function NotificationBellMenu({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const position = useFloatingPanelPosition(open, triggerRef, 'left', 352);
+  const position = useFloatingPanelPosition(open, triggerRef, 'right', 352);
   const unread = countUnreadNotifications(notifications);
   const sorted = sortNotificationsNewestFirst(notifications);
 
