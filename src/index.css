@@ -3818,20 +3818,17 @@ button.app-cert-item-interactive:hover {
   line-height: 1.5;
 }
 
-/* ─── ROLE EXPERIENCES (client vs guard shells — shared company brand) ─── */
-.role-experience-client,
-.role-experience-guard {
+/* ─── APP SHELL (shared company brand) ─────────────────────────────────── */
+.role-app-shell {
   --experience-accent: var(--brand-primary);
   --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
 }
 
-html.theme-dark .role-experience-client,
-html.theme-dark .role-experience-guard {
+html.theme-dark .role-app-shell {
   --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg));
 }
 
-.role-experience-client .bottom-nav-item[aria-current="page"]::before,
-.role-experience-guard .bottom-nav-item[aria-current="page"]::before {
+.role-app-shell .bottom-nav-item[aria-current="page"]::before {
   content: "";
   position: absolute;
   top: 0;
@@ -3843,19 +3840,19 @@ html.theme-dark .role-experience-guard {
   background: var(--brand-primary);
 }
 
-.role-experience-client .bottom-nav-item,
-.role-experience-guard .bottom-nav-item {
+.role-app-shell .bottom-nav-item,
+.role-app-shell .bottom-nav-item {
   position: relative;
   color: var(--brand-text-muted);
 }
 
-.role-experience-client .bottom-nav-item:hover,
-.role-experience-guard .bottom-nav-item:hover {
+.role-app-shell .bottom-nav-item:hover,
+.role-app-shell .bottom-nav-item:hover {
   color: var(--brand-text);
 }
 
-.role-experience-client .bottom-nav-item[aria-current="page"],
-.role-experience-guard .bottom-nav-item[aria-current="page"] {
+.role-app-shell .bottom-nav-item[aria-current="page"],
+.role-app-shell .bottom-nav-item[aria-current="page"] {
   color: var(--brand-primary);
 }
 
@@ -3874,10 +3871,6 @@ html.theme-dark .role-experience-guard {
   font-size: 0.5625rem;
   line-height: 1;
   font-weight: 800;
-}
-
-.app-screen-header.role-header-guard {
-  background: color-mix(in srgb, var(--brand-bg) 94%, var(--brand-primary));
 }
 
 /* ─── LANDING / MARKETING ─────────────────────────────────── */
@@ -3956,25 +3949,16 @@ html.theme-dark .role-experience-guard {
   color: var(--brand-primary);
 }
 
-.landing-path-card-client {
+.landing-path-card-client,
+.landing-path-card-guard {
   border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
   background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
 }
 
-.landing-path-card-client:hover {
+.landing-path-card-client:hover,
+.landing-path-card-guard:hover {
   background: color-mix(in srgb, var(--brand-primary) 16%, var(--brand-elevated));
   border-color: color-mix(in srgb, var(--brand-primary) 48%, var(--brand-border));
-  box-shadow: var(--shadow-card);
-}
-
-.landing-path-card-guard {
-  border-color: var(--brand-border);
-  background: color-mix(in srgb, var(--brand-text) 4%, var(--brand-bg-sec));
-}
-
-.landing-path-card-guard:hover {
-  border-color: color-mix(in srgb, var(--brand-primary) 20%, var(--brand-border));
-  background: var(--brand-elevated);
   box-shadow: var(--shadow-card);
 }
 
@@ -3994,14 +3978,12 @@ html.theme-dark .role-experience-guard {
 }
 
 /* ─── AUTH EXPERIENCE ─────────────────────────────────────── */
-.auth-experience-client .auth-hero,
-.auth-experience-guard .auth-hero {
+.auth-experience .auth-hero {
   background: var(--brand-chrome-deep);
 }
 /* Wave 2 override below sets a richer gradient on top of this base */
 
-.auth-experience-client .auth-hero-curve,
-.auth-experience-guard .auth-hero-curve {
+.auth-experience .auth-hero-curve {
   background: var(--brand-bg);
 }
 
@@ -4134,15 +4116,15 @@ html.theme-light .app-button-primary:hover {
   background: var(--brand-primary-hover);
 }
 
-.role-experience-client .app-screen-header:not(.app-screen-header--map),
-.role-experience-guard .app-screen-header:not(.app-screen-header--map) {
+.role-app-shell .app-screen-header:not(.app-screen-header--map),
+.role-app-shell .app-screen-header:not(.app-screen-header--map) {
   background: var(--uber-chrome-bg, var(--brand-bg-sec));
   color: var(--uber-chrome-text, var(--brand-text));
   border-bottom-color: var(--uber-chrome-border, var(--brand-border));
 }
 
-.role-experience-client .bottom-nav-bar,
-.role-experience-guard .bottom-nav-bar {
+.role-app-shell .bottom-nav-bar,
+.role-app-shell .bottom-nav-bar {
   background: var(--uber-chrome-bg, var(--brand-bg-sec));
   border-top-color: var(--uber-chrome-border, var(--brand-border));
 }
@@ -4153,27 +4135,27 @@ html.theme-light .app-button-primary:hover {
   border-radius: 0.5rem;
 }
 
-.role-experience-client .app-screen-header h1,
-.role-experience-guard .app-screen-header h1 {
+.role-app-shell .app-screen-header h1,
+.role-app-shell .app-screen-header h1 {
   font-size: 1.375rem;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.role-experience-client .app-screen-header:not(.app-screen-header--map) p,
-.role-experience-guard .app-screen-header:not(.app-screen-header--map) p,
-.role-experience-client .app-screen-header:not(.app-screen-header--map) button,
-.role-experience-guard .app-screen-header:not(.app-screen-header--map) button {
+.role-app-shell .app-screen-header:not(.app-screen-header--map) p,
+.role-app-shell .app-screen-header:not(.app-screen-header--map) p,
+.role-app-shell .app-screen-header:not(.app-screen-header--map) button,
+.role-app-shell .app-screen-header:not(.app-screen-header--map) button {
   color: var(--uber-chrome-muted);
 }
 
-.role-experience-client .app-screen-header:not(.app-screen-header--map) .border-brand-border,
-.role-experience-guard .app-screen-header:not(.app-screen-header--map) .border-brand-border {
+.role-app-shell .app-screen-header:not(.app-screen-header--map) .border-brand-border,
+.role-app-shell .app-screen-header:not(.app-screen-header--map) .border-brand-border {
   border-color: var(--uber-chrome-border);
 }
 
-.role-experience-client .bottom-nav-item[aria-current="page"]::before,
-.role-experience-guard .bottom-nav-item[aria-current="page"]::before {
+.role-app-shell .bottom-nav-item[aria-current="page"]::before,
+.role-app-shell .bottom-nav-item[aria-current="page"]::before {
   background: var(--brand-primary);
 }
 
@@ -4258,8 +4240,7 @@ html.theme-light .segmented-control-btn-active {
   color: var(--brand-accent-text);
 }
 
-.auth-experience-guard .auth-hero,
-.auth-experience-client .auth-hero {
+.auth-experience .auth-hero {
   background: linear-gradient(
     155deg,
     color-mix(in srgb, var(--brand-primary-hover) 90%, #000) 0%,
@@ -8037,8 +8018,7 @@ html.theme-dark .map-route-banner {
   }
   
   /* Auth page: bigger form on tablet */
-  .auth-experience-client .flex.flex-1.items-start,
-  .auth-experience-guard .flex.flex-1.items-start {
+  .auth-experience .flex.flex-1.items-start {
     padding-top: 3rem;
   }
   
@@ -8806,46 +8786,46 @@ html.theme-dark .app-item-card {
 }
 
 /* ─── ALL THEMES: BOTTOM NAV REFINEMENT ─────────────────── */
-.role-experience-client .bottom-nav-bar,
-.role-experience-guard .bottom-nav-bar {
+.role-app-shell .bottom-nav-bar,
+.role-app-shell .bottom-nav-bar {
   background: var(--brand-bg) !important;
   border-top-color: var(--brand-border) !important;
   box-shadow: var(--shadow-nav);
 }
 
-html.theme-light .role-experience-client .bottom-nav-bar,
-html.theme-light .role-experience-guard .bottom-nav-bar {
+html.theme-light .role-app-shell .bottom-nav-bar,
+html.theme-light .role-app-shell .bottom-nav-bar {
   background: var(--brand-bg) !important;
   border-top-color: var(--brand-border) !important;
 }
 
-html.theme-dark .role-experience-client .bottom-nav-bar,
-html.theme-dark .role-experience-guard .bottom-nav-bar {
+html.theme-dark .role-app-shell .bottom-nav-bar,
+html.theme-dark .role-app-shell .bottom-nav-bar {
   background: var(--brand-bg-sec) !important;
   border-top-color: var(--brand-border) !important;
 }
 
-html.theme-grey .role-experience-client .bottom-nav-bar,
-html.theme-grey .role-experience-guard .bottom-nav-bar {
+html.theme-grey .role-app-shell .bottom-nav-bar,
+html.theme-grey .role-app-shell .bottom-nav-bar {
   background: var(--brand-surface) !important;
   border-top-color: var(--brand-border) !important;
 }
 
 /* ─── EXPERIENCE-SPECIFIC NAV: SAGE-GREEN CHROME HEADER ── */
 /* Light mode: sage green header with white text (non-map screens) */
-html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map),
-html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) {
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map) {
   background: var(--brand-primary) !important;
   color: #ffffff !important;
 }
 
-html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map) h1,
-html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) h1 {
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map) h1,
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map) h1 {
   color: #ffffff !important;
 }
 
-html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map) p,
-html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) p {
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map) p,
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map) p {
   color: rgba(255, 255, 255, 0.75) !important;
 }
 
@@ -8871,8 +8851,7 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
 
 /* ─── AUTH PAGE: LARGER FORM ON DESKTOP ─────────────────── */
 @media (min-width: 768px) {
-  .auth-experience-client,
-  .auth-experience-guard {
+  .auth-experience {
     background: var(--brand-bg);
   }
   
@@ -9232,11 +9211,7 @@ input, select, textarea, button {
   flex-shrink: 0;
 }
 
-.landing-feature-icon--client {
-  background: var(--brand-bg-sec);
-  border: 1px solid var(--brand-border);
-}
-
+.landing-feature-icon--client,
 .landing-feature-icon--guard {
   background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);
@@ -9374,15 +9349,11 @@ input, select, textarea, button {
   letter-spacing: -0.01em;
 }
 
-.landing-mobile-cta--client {
+.landing-mobile-cta--client,
+.landing-mobile-cta--guard {
   background: var(--brand-primary);
   color: var(--brand-accent-text);
-}
-
-.landing-mobile-cta--guard {
-  background: transparent;
-  color: var(--brand-text);
-  border: 1.5px solid var(--brand-border);
+  border: none;
 }
 
 /* Product preview mock */
@@ -10173,26 +10144,17 @@ html.theme-grey .guardr-bottom-sheet-uber {
   transform: translateY(-1px) scale(0.995);
 }
 
-.landing-path-card-client {
+.landing-path-card-client,
+.landing-path-card-guard {
   background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
   border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
 }
 
-.landing-path-card-client:hover {
+.landing-path-card-client:hover,
+.landing-path-card-guard:hover {
   background: color-mix(in srgb, var(--brand-primary) 13%, var(--brand-bg-sec));
   border-color: color-mix(in srgb, var(--brand-primary) 50%, var(--brand-border));
   box-shadow: 0 12px 40px color-mix(in srgb, var(--brand-primary) 18%, transparent);
-}
-
-.landing-path-card-guard {
-  background: var(--brand-bg-sec);
-  border-color: var(--brand-border);
-}
-
-.landing-path-card-guard:hover {
-  background: var(--brand-elevated);
-  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.08);
 }
 
 /* ─── LANDING PAGE HERO: STRONGER VISUAL PULL ───────────────────────────── */
@@ -11885,8 +11847,7 @@ mark {
 ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Role chrome — use brand-chrome (sage-tinted) for header + bottom nav */
-.role-experience-client,
-.role-experience-guard {
+.role-app-shell {
   --uber-chrome-bg: var(--brand-chrome);
   --uber-chrome-deep: var(--brand-chrome-deep);
   --uber-chrome-text: var(--brand-chrome-text);
@@ -11895,8 +11856,7 @@ mark {
 }
 
 /* Light theme: use white chrome for clean contrast */
-html.theme-light .role-experience-client,
-html.theme-light .role-experience-guard {
+html.theme-light .role-app-shell {
   --uber-chrome-bg: var(--brand-surface);
   --uber-chrome-deep: var(--brand-elevated);
   --uber-chrome-text: var(--brand-text);
@@ -11905,36 +11865,36 @@ html.theme-light .role-experience-guard {
 }
 
 /* Override glass backdrop from the identity layer — let chrome bg show through */
-.role-experience-client .bottom-nav-bar,
-.role-experience-guard .bottom-nav-bar {
+.role-app-shell .bottom-nav-bar,
+.role-app-shell .bottom-nav-bar {
   background: color-mix(in srgb, var(--uber-chrome-bg) 95%, transparent) !important;
   backdrop-filter: blur(16px) !important;
   border-top-color: var(--uber-chrome-border) !important;
 }
 
 /* Override app-screen-header glass to use chrome bg */
-.role-experience-client .app-screen-header:not(.app-screen-header--map),
-.role-experience-guard .app-screen-header:not(.app-screen-header--map) {
+.role-app-shell .app-screen-header:not(.app-screen-header--map),
+.role-app-shell .app-screen-header:not(.app-screen-header--map) {
   background: color-mix(in srgb, var(--uber-chrome-bg) 96%, transparent) !important;
   backdrop-filter: blur(20px) saturate(1.15) !important;
   border-bottom-color: var(--uber-chrome-border) !important;
   color: var(--uber-chrome-text) !important;
 }
 
-.role-experience-client .app-screen-header h1,
-.role-experience-guard .app-screen-header h1 {
+.role-app-shell .app-screen-header h1,
+.role-app-shell .app-screen-header h1 {
   color: var(--uber-chrome-text) !important;
 }
 
 /* Active nav item stays brand-primary color */
-.role-experience-client .bottom-nav-item[aria-current="page"],
-.role-experience-guard .bottom-nav-item[aria-current="page"] {
+.role-app-shell .bottom-nav-item[aria-current="page"],
+.role-app-shell .bottom-nav-item[aria-current="page"] {
   color: var(--brand-primary) !important;
 }
 
 /* Center map button in active state */
-.role-experience-guard .bottom-nav-center-map-active .bottom-nav-center-map-icon,
-.role-experience-client .bottom-nav-center-map-active .bottom-nav-center-map-icon {
+.role-app-shell .bottom-nav-center-map-active .bottom-nav-center-map-icon,
+.role-app-shell .bottom-nav-center-map-active .bottom-nav-center-map-icon {
   background: var(--brand-primary) !important;
   color: var(--brand-accent-text) !important;
 }
@@ -11995,18 +11955,16 @@ h1, h2, h3, h4 {
   background: var(--brand-surface);
 }
 
-.landing-path-card-client {
+.landing-path-card-client,
+.landing-path-card-guard {
   border-left-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
 }
 
 .landing-path-card-guard:hover,
 .landing-path-card-client:hover {
   border-left-color: var(--brand-primary);
   background: var(--brand-elevated);
-}
-
-.landing-path-card-client {
-  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
 }
 
 /* ─── Landing hero & header ──────────────────────────────────────────────── */
@@ -12181,8 +12139,7 @@ h1, h2, h3, h4 {
 }
 
 /* ─── Auth — sage hero band, sharp handoff ───────────────────────────────── */
-.auth-experience-client .auth-hero,
-.auth-experience-guard .auth-hero {
+.auth-experience .auth-hero {
   background: linear-gradient(
     168deg,
     color-mix(in srgb, var(--brand-primary) 92%, #000000) 0%,
@@ -12191,8 +12148,7 @@ h1, h2, h3, h4 {
   );
 }
 
-html.theme-light .auth-experience-client .auth-hero,
-html.theme-light .auth-experience-guard .auth-hero {
+html.theme-light .auth-experience .auth-hero {
   background: linear-gradient(
     168deg,
     color-mix(in srgb, var(--brand-primary) 88%, #ffffff) 0%,
@@ -12201,15 +12157,12 @@ html.theme-light .auth-experience-guard .auth-hero {
   );
 }
 
-html.theme-light .auth-experience-client .auth-hero header,
-html.theme-light .auth-experience-guard .auth-hero header {
+html.theme-light .auth-experience .auth-hero header {
   color: var(--brand-text);
 }
 
-html.theme-light .auth-experience-client .auth-hero header button,
-html.theme-light .auth-experience-guard .auth-hero header button,
-html.theme-light .auth-experience-client .auth-hero .text-white,
-html.theme-light .auth-experience-guard .auth-hero .text-white {
+html.theme-light .auth-experience .auth-hero header button,
+html.theme-light .auth-experience .auth-hero .text-white {
   color: var(--brand-text) !important;
 }
 
@@ -12241,19 +12194,19 @@ html.theme-light .auth-experience-guard .auth-hero .text-white {
 }
 
 /* ─── App chrome — Uber black / clean white ──────────────────────────────── */
-html.theme-dark .role-experience-client .app-screen-header:not(.app-screen-header--map),
-html.theme-dark .role-experience-guard .app-screen-header:not(.app-screen-header--map),
-html.theme-dark .role-experience-client .bottom-nav-bar,
-html.theme-dark .role-experience-guard .bottom-nav-bar {
+html.theme-dark .role-app-shell .app-screen-header:not(.app-screen-header--map),
+html.theme-dark .role-app-shell .app-screen-header:not(.app-screen-header--map),
+html.theme-dark .role-app-shell .bottom-nav-bar,
+html.theme-dark .role-app-shell .bottom-nav-bar {
   background: #000000 !important;
   backdrop-filter: none !important;
   border-color: #1f1f1f !important;
 }
 
-html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map),
-html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map),
-html.theme-light .role-experience-client .bottom-nav-bar,
-html.theme-light .role-experience-guard .bottom-nav-bar {
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-app-shell .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-app-shell .bottom-nav-bar,
+html.theme-light .role-app-shell .bottom-nav-bar {
   background: #ffffff !important;
   backdrop-filter: none !important;
 }
@@ -13294,14 +13247,10 @@ html.theme-light .theme-toggle {
 
 /* ─── LANDING PAGE CTA BUTTONS: SHARP IDENTITY ──────────────────────────── */
 
-/* Client CTA — full sage-green fill */
-.landing-path-card-client .landing-path-card-action--accent {
-  font-weight: 900;
-  font-size: 0.9375rem;
-}
-
-/* Guard CTA — strong black */
-.landing-path-card-guard .landing-path-card-action {
+/* Path card CTAs — company brand */
+.landing-path-card-client .landing-path-card-action--accent,
+.landing-path-card-guard .landing-path-card-action,
+.landing-path-card-guard .landing-path-card-action--accent {
   font-weight: 900;
   font-size: 0.9375rem;
 }
@@ -14310,13 +14259,13 @@ body[data-form-factor="tablet"] .role-app-shell > .app-screen-header h1 {
 /* ─── APP SCREEN: constrain and center on larger screens ─────────────────── */
 
 /* Guard experience content shell on desktop */
-body[data-form-factor="desktop"] .role-experience-guard .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+body[data-form-factor="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
   max-width: 52rem;
   margin-inline: auto;
 }
 
 /* Wider content on desktop for list screens */
-body[data-form-factor="desktop"] .role-experience-guard .app-screen--wide {
+body[data-form-factor="desktop"] .role-app-shell .app-screen--wide {
   max-width: 68rem;
 }
 
@@ -14692,8 +14641,7 @@ body,
 
 .page-shell,
 .role-app-shell,
-.auth-experience-client,
-.auth-experience-guard {
+.auth-experience {
   overflow-x: clip;
   max-width: 100%;
 }
@@ -16039,8 +15987,7 @@ textarea.uber-input {
 }
 
 /* Auth experience */
-.auth-experience-client .auth-hero,
-.auth-experience-guard .auth-hero {
+.auth-experience .auth-hero {
   background: linear-gradient(
     155deg,
     color-mix(in srgb, var(--brand-primary-hover) 92%, #000) 0%,
@@ -17480,14 +17427,14 @@ body[data-form-factor="desktop"] .staff-detail-pane {
 
 /* ─── 4. DESKTOP: a real workspace, not a stretched phone screen ─────────── */
 
-body[data-form-factor="desktop"] .role-experience-guard .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
-body[data-form-factor="desktop"] .role-experience-client .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+body[data-form-factor="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-form-factor="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
   max-width: 62rem !important;
 }
 
-body[data-form-factor="desktop"] .role-experience-guard .app-screen--wide,
-body[data-form-factor="desktop"] .role-experience-client .app-screen--wide,
-body[data-form-factor="desktop"] .role-experience-client .client-home-screen {
+body[data-form-factor="desktop"] .role-app-shell .app-screen--wide,
+body[data-form-factor="desktop"] .role-app-shell .app-screen--wide,
+body[data-form-factor="desktop"] .role-app-shell .client-home-screen {
   max-width: 78rem !important;
 }
 
@@ -17558,8 +17505,8 @@ body[data-form-factor="tablet"] .client-home-screen {
 
 /* ─── 6. ROLE IDENTITY: reinforce accent beyond buttons ──────────────────── */
 
-.role-experience-client .role-side-nav-brand-accent,
-.role-experience-guard .role-side-nav-brand-accent {
+.role-app-shell .role-side-nav-brand-accent,
+.role-app-shell .role-side-nav-brand-accent {
   color: var(--brand-primary);
 }
 

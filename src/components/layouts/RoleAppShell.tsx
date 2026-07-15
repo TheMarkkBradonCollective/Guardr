@@ -24,7 +24,6 @@ interface RoleAppShellProps {
   headerOverride?: React.ReactNode;
   flatNav?: boolean;
   variant?: 'default' | 'dark';
-  experience?: 'client' | 'guard';
   centerNavId?: string;
 }
 
@@ -47,7 +46,6 @@ export function RoleAppShell({
   headerOverride,
   flatNav = false,
   variant = 'default',
-  experience,
   centerNavId = 'map',
 }: RoleAppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -66,9 +64,7 @@ export function RoleAppShell({
 
   return (
     <div
-      className={`role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text${
-        experience ? ` role-experience-${experience}` : ''
-      }`}
+      className="role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text"
     >
       {/* ── Desktop sidebar nav (hidden on mobile/tablet via CSS) ── */}
       <aside className="role-side-nav" aria-label="Main navigation">
@@ -123,9 +119,7 @@ export function RoleAppShell({
           accountMenu={accountMenu}
           right={headerRight}
           extension={headerExtension}
-          className={`${isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : ''}${
-            experience ? ` role-header-${experience}` : ''
-          }`}
+          className={isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : undefined}
         />
       ) : (
         <header className="app-screen-header app-screen-header--compact shrink-0 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-end gap-2 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">

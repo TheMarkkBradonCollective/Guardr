@@ -117,7 +117,6 @@ export function ClientAppLayout({
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
-      experience="client"
     >
       {children}
     </RoleAppShell>

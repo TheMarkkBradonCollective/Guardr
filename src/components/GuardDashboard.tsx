@@ -1520,7 +1520,6 @@ export function GuardDashboard({
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}
-      experience="guard"
     >
       <div className="relative h-full min-h-0">
         {visibleMainPanel}
