@@ -144,10 +144,14 @@ export function guardIdVerificationIsLocked(
 }
 
 export function guardIdVerificationCanEdit(
-  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'userStatus' | 'isStaff'>
+  guard: Pick<
+    SecurityGuard,
+    'idVerificationStatus' | 'userStatus' | 'isStaff' | 'idUpdateRequestedAt'
+  >
 ): boolean {
   if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') return false;
   const status = getGuardIdVerificationStatus(guard);
+  if (status === 'verified' && guard.idUpdateRequestedAt) return true;
   return status === 'not_submitted' || status === 'rejected';
 }
 

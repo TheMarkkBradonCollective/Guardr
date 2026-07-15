@@ -237,6 +237,8 @@ export function insurancePolicyFromRow(row: Record<string, unknown>): GuardInsur
     submittedAt: row.submitted_at ? String(row.submitted_at) : undefined,
     reviewedAt: row.reviewed_at ? String(row.reviewed_at) : undefined,
     reviewedBy: row.reviewed_by ? String(row.reviewed_by) : undefined,
+    updateRequestedAt: row.update_requested_at ? String(row.update_requested_at) : undefined,
+    updateRequestNote: row.update_request_note ? String(row.update_request_note) : undefined,
   };
 }
 
@@ -256,6 +258,8 @@ export function insurancePolicyToDbRow(
     submitted_at: policy.submittedAt ?? null,
     reviewed_at: policy.reviewedAt ?? null,
     reviewed_by: policy.reviewedBy ?? null,
+    update_requested_at: policy.updateRequestedAt ?? null,
+    update_request_note: policy.updateRequestNote ?? null,
     updated_at: new Date().toISOString(),
   };
 }

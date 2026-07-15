@@ -101,6 +101,10 @@ import {
   processGuardCredentialGraceBatch,
   syncGuardCredentialGraceState,
 } from './lib/guardCredentialGrace';
+import {
+  processGuardCredentialExpiryBatch,
+  syncGuardCredentialExpiryState,
+} from './lib/guardCredentialExpiryEnforcement';
 import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
 import {
   AddCertificationResult,
@@ -1783,6 +1787,8 @@ export default function App() {
         idVerificationSubmittedAt: g.id_verification_submitted_at ?? undefined,
         idVerificationReviewedAt: g.id_verification_reviewed_at ?? undefined,
         idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
+        idUpdateRequestedAt: g.id_update_requested_at ?? undefined,
+        idUpdateRequestNote: g.id_update_request_note ?? undefined,
         idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
         credentialGraceDeadline: g.credential_grace_deadline ?? undefined,
         credentialGraceMissing: Array.isArray(g.credential_grace_missing)
@@ -1790,6 +1796,7 @@ export default function App() {
           : undefined,
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
+        credentialExpiryRestricted: g.credential_expiry_restricted === true,
         trusted: g.trusted === true,
         standingCrewName: g.standing_crew_name?.trim() || undefined,
         standingCrewDescription: g.standing_crew_description?.trim() || undefined,
@@ -2410,13 +2417,16 @@ export default function App() {
   useEffect(() => {
     const tick = () => {
       setGuards((prev) => {
-        const next = processGuardCredentialGraceBatch(prev);
+        const afterGrace = processGuardCredentialGraceBatch(prev);
+        const expiryPatches = processGuardCredentialExpiryBatch(afterGrace);
+        const next = expiryPatches.map((patch) => patch.guard);
         let changed = false;
         for (let i = 0; i < prev.length; i++) {
           const before = prev[i];
           const after = next[i];
           if (before === after) continue;
           changed = true;
+          const patch = expiryPatches[i];
           if (isDbConnected) {
             beginLocalMutation();
             void supabase
@@ -2426,8 +2436,33 @@ export default function App() {
                 credential_grace_deadline: after.credentialGraceDeadline ?? null,
                 credential_grace_missing: after.credentialGraceMissing ?? null,
                 credential_grace_hours: after.credentialGraceHours ?? null,
+                id_update_requested_at: after.idUpdateRequestedAt ?? null,
+                id_update_request_note: after.idUpdateRequestNote ?? null,
+                credential_expiry_restricted: after.credentialExpiryRestricted ?? false,
               })
               .eq('id', after.id);
+            for (const certUpdate of patch.certUpdates) {
+              void updateCertificationRow(supabase, certUpdate.certId, {
+                update_requested_at: certUpdate.cert.updateRequestedAt ?? null,
+                update_request_note: certUpdate.cert.updateRequestNote ?? null,
+                revision_history: certUpdate.cert.revisionHistory ?? [],
+              });
+            }
+            if (
+              patch.insurancePolicy &&
+              patch.insurancePolicy !== before.insurancePolicy
+            ) {
+              void supabase
+                .from('guard_insurance_policies')
+                .update(insurancePolicyToDbRow(patch.insurancePolicy))
+                .eq('guard_id', after.id);
+            }
+          }
+          const actor = currentUserRef.current;
+          if (actor && patch.notifications.length > 0) {
+            for (const notification of patch.notifications) {
+              notifyAccountUpdate(actor, after.id, notification.title, notification.body);
+            }
           }
         }
         return changed ? next : prev;
@@ -2886,8 +2921,16 @@ export default function App() {
       rejectionReason: status === 'rejected' ? rejectionReason : undefined,
       reviewedAt,
       reviewedBy: status === 'pending' ? undefined : currentUser?.id,
+      updateRequestedAt: status === 'verified' ? undefined : guard.insurancePolicy.updateRequestedAt,
+      updateRequestNote: status === 'verified' ? undefined : guard.insurancePolicy.updateRequestNote,
     };
     const resolved = { ...nextPolicy, status: resolveInsuranceStatus(nextPolicy) };
+    const nextGuard = syncGuardCredentialExpiryState(
+      syncGuardCredentialGraceState({
+        ...guard,
+        insurancePolicy: resolved,
+      })
+    );
     if (isDbConnected) {
       await supabase
         .from('guard_insurance_policies')
@@ -2896,13 +2939,25 @@ export default function App() {
           rejection_reason: resolved.rejectionReason ?? null,
           reviewed_at: reviewedAt ?? null,
           reviewed_by: status === 'pending' ? null : currentUser?.id ?? null,
+          update_requested_at: resolved.updateRequestedAt ?? null,
+          update_request_note: resolved.updateRequestNote ?? null,
           updated_at: new Date().toISOString(),
         })
         .eq('guard_id', guardId);
+      if (
+        nextGuard.userStatus !== guard.userStatus ||
+        nextGuard.credentialExpiryRestricted !== guard.credentialExpiryRestricted
+      ) {
+        await supabase
+          .from('guards')
+          .update({
+            user_status: nextGuard.userStatus,
+            credential_expiry_restricted: nextGuard.credentialExpiryRestricted ?? false,
+          })
+          .eq('id', guardId);
+      }
     }
-    setGuards((prev) =>
-      prev.map((g) => (g.id === guardId ? { ...g, insurancePolicy: resolved } : g))
-    );
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? nextGuard : g)));
     if (status === 'verified') {
       appToast('Insurance verified.', 'success');
     } else if (status === 'rejected') {
@@ -3660,10 +3715,12 @@ export default function App() {
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;
-        return syncGuardCredentialGraceState({
-          ...g,
-          certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
-        });
+        return syncGuardCredentialExpiryState(
+          syncGuardCredentialGraceState({
+            ...g,
+            certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+          })
+        );
       })
     );
     if (isDbConnected) {
@@ -3685,32 +3742,44 @@ export default function App() {
         throw new Error(verifyResult.error);
       }
       const after = before
-        ? syncGuardCredentialGraceState({
-            ...before,
-            certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
-          })
+        ? syncGuardCredentialExpiryState(
+            syncGuardCredentialGraceState({
+              ...before,
+              certifications: before.certifications.map((c) => (c.id === certId ? nextCert : c)),
+            })
+          )
         : null;
-      if (
-        after &&
-        (after.credentialGraceDeadline !== before?.credentialGraceDeadline ||
+      if (after) {
+        const guardPatch: Record<string, unknown> = {};
+        if (
+          after.credentialGraceDeadline !== before?.credentialGraceDeadline ||
           JSON.stringify(after.credentialGraceMissing ?? []) !==
-            JSON.stringify(before?.credentialGraceMissing ?? []))
-      ) {
-        const graceResult = await updateGuardAccountRow(
-          supabase,
-          guardId,
-          {
-            credential_grace_deadline: after.credentialGraceDeadline ?? null,
-            credential_grace_missing: after.credentialGraceMissing ?? null,
-            credential_grace_hours: after.credentialGraceHours ?? null,
-          },
-          'activate'
-        );
-        if (graceResult.ok === false) {
-          setGuards((prev) =>
-            prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+            JSON.stringify(before?.credentialGraceMissing ?? [])
+        ) {
+          guardPatch.credential_grace_deadline = after.credentialGraceDeadline ?? null;
+          guardPatch.credential_grace_missing = after.credentialGraceMissing ?? null;
+          guardPatch.credential_grace_hours = after.credentialGraceHours ?? null;
+        }
+        if (
+          after.userStatus !== before?.userStatus ||
+          after.credentialExpiryRestricted !== before?.credentialExpiryRestricted
+        ) {
+          guardPatch.user_status = after.userStatus;
+          guardPatch.credential_expiry_restricted = after.credentialExpiryRestricted ?? false;
+        }
+        if (Object.keys(guardPatch).length > 0) {
+          const guardResult = await updateGuardAccountRow(
+            supabase,
+            guardId,
+            guardPatch,
+            'activate'
           );
-          throw new Error(graceResult.error);
+          if (guardResult.ok === false) {
+            setGuards((prev) =>
+              prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+            );
+            throw new Error(guardResult.error);
+          }
         }
       }
     }
@@ -4811,6 +4880,8 @@ export default function App() {
               idVerificationStatus: 'pending' as const,
               idVerificationSubmittedAt: submittedAt,
               idVerificationRejectionReason: undefined,
+              idUpdateRequestedAt: undefined,
+              idUpdateRequestNote: undefined,
               idSubmittedBy: 'guard' as const,
             }
           : g
@@ -4831,6 +4902,8 @@ export default function App() {
           id_verification_status: 'pending',
           id_verification_submitted_at: submittedAt,
           id_verification_rejection_reason: null,
+          id_update_requested_at: null,
+          id_update_request_note: null,
           id_submitted_by: 'guard',
         })
         .eq('id', guardId);
@@ -4866,18 +4939,17 @@ export default function App() {
 
     const reviewedAt = new Date().toISOString();
     const previous = { ...guard };
-    setGuards((prev) =>
-      prev.map((g) =>
-        g.id === guardId
-          ? {
-              ...g,
-              idVerificationStatus: 'verified' as const,
-              idVerificationReviewedAt: reviewedAt,
-              idVerificationRejectionReason: undefined,
-            }
-          : g
-      )
+    const nextGuard = syncGuardCredentialExpiryState(
+      syncGuardCredentialGraceState({
+        ...guard,
+        idVerificationStatus: 'verified' as const,
+        idVerificationReviewedAt: reviewedAt,
+        idVerificationRejectionReason: undefined,
+        idUpdateRequestedAt: undefined,
+        idUpdateRequestNote: undefined,
+      })
     );
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? nextGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
       const { error } = await supabase
@@ -4886,6 +4958,10 @@ export default function App() {
           id_verification_status: 'verified',
           id_verification_reviewed_at: reviewedAt,
           id_verification_rejection_reason: null,
+          id_update_requested_at: null,
+          id_update_request_note: null,
+          user_status: nextGuard.userStatus,
+          credential_expiry_restricted: nextGuard.credentialExpiryRestricted ?? false,
         })
         .eq('id', guardId);
       if (error) {

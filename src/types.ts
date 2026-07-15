@@ -303,6 +303,9 @@ export interface GuardInsurancePolicy {
   submittedAt?: string;
   reviewedAt?: string;
   reviewedBy?: string;
+  /** Staff or automation asked for an updated COI while the verified copy stays on file. */
+  updateRequestedAt?: string;
+  updateRequestNote?: string;
 }
 
 export interface JobServiceAgreement {
@@ -390,6 +393,9 @@ export interface SecurityGuard {
   idVerificationSubmittedAt?: string;
   idVerificationReviewedAt?: string;
   idVerificationRejectionReason?: string;
+  /** Automatic or staff update request while verified government ID stays on file. */
+  idUpdateRequestedAt?: string;
+  idUpdateRequestNote?: string;
   /** Who submitted government ID for approvals filtering */
   idSubmittedBy?: 'guard' | 'staff';
   /** Staff-granted deadline to upload optional credentials before account deactivation */
@@ -398,6 +404,8 @@ export interface SecurityGuard {
   credentialGraceMissing?: string[];
   /** Staff-granted grace window length in hours (set at activation) */
   credentialGraceHours?: number;
+  /** Marketplace access removed until expired required credentials are re-verified. */
+  credentialExpiryRestricted?: boolean;
   /**
    * Explicitly trusted by a Director or Founder.
    * Trusted guards skip Guardr applicant review on Stripe jobs and may coordinate crews.
