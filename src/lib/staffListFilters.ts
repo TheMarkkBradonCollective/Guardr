@@ -10,12 +10,11 @@ import {
 import type { ApprovalFeedItem } from './staffApprovalsFeed';
 import {
   CREDENTIAL_PENDING_UPLOAD_LABEL,
-  isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
   isCredentialFeedItemAwaitingStaffReview,
 } from './staffApprovalsFeed';
 
-export type ApplicationStatusFilter = 'open' | 'pending' | 'all';
+export type ApplicationStatusFilter = 'pending' | 'all';
 export type ApplicationKindFilter = 'all' | 'guard' | 'client';
 
 export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'all';
@@ -45,10 +44,7 @@ export function matchesApplicationStatusFilter(
   clients: Client[]
 ): boolean {
   if (filter === 'all') return true;
-  if (filter === 'pending') {
-    return isApplicationFeedItemPending(item, guards, clients);
-  }
-  return isApplicationFeedItemOpen(item, guards, clients);
+  return isApplicationFeedItemPending(item, guards, clients);
 }
 
 export function matchesApplicationKindFilter(
