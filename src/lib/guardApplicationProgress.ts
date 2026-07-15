@@ -1,5 +1,4 @@
 import { SecurityGuard } from '../types';
-import { isGuardAccountApproved } from './accountStatus';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import { guardInsuranceActivationDetail, guardInsuranceSubmitted } from './guardInsurance';
 import {
@@ -30,10 +29,9 @@ export function getGuardApplicationProgress(guard: SecurityGuard, state = 'CA'):
   const checklist = getGuardActivationChecklist(guard, state);
   const coi = guardInsuranceActivationDetail(guard);
   const qual = getQualificationProgress(guard, state);
-  const approved = isGuardAccountApproved(guard);
   const stepWeight = 100 / GUARD_APPLICATION_REQUIREMENT_COUNT;
 
-  const idDone = approved || guardHasVerifiedIdForWork(guard);
+  const idDone = guardHasVerifiedIdForWork(guard);
   const coiDone = coi.done;
   const cardDone = guardMeetsLevel1(guard, state);
   const ptaDone = guardMeetsPtaUofTraining(guard);

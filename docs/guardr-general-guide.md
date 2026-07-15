@@ -24,7 +24,7 @@ Use it as the operating manual for the whole app:
 | Role | Main pages |
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **General guide** |
-| **Guard (pending)** | **Activation screen** only — **Application under review**; no credential upload yet. Account menu → **Settings** (sign out). |
+| **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline. **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **General guide** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Settings**, and **General guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Messages**, **Incidents**, **General guide** |

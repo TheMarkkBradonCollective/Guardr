@@ -266,7 +266,7 @@ export function guardCanActivateAccount(guard: SecurityGuard, state = 'CA'): boo
   return getGuardActivationChecklist(guard, state).canActivate;
 }
 
-/** Pending → approved: staff reviews the application; credentials upload unlocks after approval. */
+/** Pending → approved: staff reviews the application; guards may upload credentials while pending. */
 export function guardCanStaffApproveProfile(guard: SecurityGuard, state = 'CA'): boolean {
   void state;
   if (guard.isStaff) return false;

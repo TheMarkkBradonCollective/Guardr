@@ -1,7 +1,7 @@
-import { isGuardAccountApproved } from './accountStatus';
+import { isGuardAccountPreActive } from './accountStatus';
 import type { SecurityGuard } from '../types';
 
-/** Guards upload credentials after staff approves their application; staff can always upload on behalf. */
+/** Guards upload activation credentials while pending or approved; staff can always upload on behalf. */
 export function canUploadGuardCredentials(
   editing: boolean,
   staffMode: boolean,
@@ -11,7 +11,7 @@ export function canUploadGuardCredentials(
   if (!Boolean((editing || staffMode) && onAddCertification)) return false;
   if (staffMode) return true;
   if (guard?.isStaff) return true;
-  return isGuardAccountApproved(guard ?? {});
+  return isGuardAccountPreActive(guard ?? {});
 }
 
 export function staffCredentialUploadLabel(staffMode: boolean, itemLabel: string): string {
