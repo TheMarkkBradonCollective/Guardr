@@ -1,460 +1,409 @@
-# Guardr Development Notes
+# Guardr Dev Notes
 
-**Project start:** Saturday, June 6, 2026  
+**Started:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, July 15, 2026  
-**Total commits:** 1,190 across 20+ active days
+**Commits so far:** 1,190  
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.45**
 
 ---
 
-## Time summary
-
-| Metric | Value |
-|--------|-------|
-| Calendar span | 39 days (Jun 6 → Jul 15) |
-| Active development days | 20+ days with commits |
-| Total project commits | 1,190 |
-| Current release | **v1.0.44** (web + PWA + APK) |
-| Production URL | [guardr.co](https://www.guardr.co) |
-
-_Times below come from git commit timestamps. They reflect when work was committed, not offline planning or testing without commits._
+This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 ---
 
-## Major platform milestones
+## The big picture (what mattered most)
 
-1. **Jun 6** — Project started; Guardr brand, Supabase, staff roles, self-audit foundation
-2. **Jun 7** — Uber-inspired redesign; Stripe payments; PWA and cross-platform base
-3. **Jun 8** — guardr.co live on Vercel
-4. **Jun 9** — Sidebar navigation, BSIS compliance engine, payments pipeline, realtime sync
-5. **Jun 10** — Job applications, self-audit and spot-check workflows
-6. **Jun 20** — Founder role (was Owner); messaging hub; director financial controls
-7. **Jun 22** — ID verification, profile approval flow, production-ready polish
-8. **Jun 23** — Full responsive overhaul; overtime/disputes; messenger v2; workflow guide
-9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
-10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, auto Stripe payout, marketplace eligibility framing
-11. **Jun 25 (PM)** — Ops hierarchy: two-step guard activation, Founder role, per-role guides, auth scroll fix, live SQL sync
-12. **Jun 26 – Jul 14** — Applications/Credentials overhaul, credential detail views, auto-activation, expiry enforcement, full UI redesign, PWA/APK branding split, production audit
-13. **Jul 15** — Production polish v1.0.43–44: CI fixes, investor demo accounts, unified system back button (website/PWA/APK)
+1. **Jun 6** — Kicked the project off. Guardr brand, Supabase, staff roles, self-audit foundation.
+2. **Jun 7** — Uber-style redesign, Stripe in, PWA + cross-platform base.
+3. **Jun 8** — **guardr.co** live on Vercel.
+4. **Jun 9** — Sidebar nav, BSIS compliance engine, payments pipeline, realtime sync.
+5. **Jun 10** — Job applications, self-audit and spot-check flows.
+6. **Jun 20** — Founder role (was Owner), messaging hub, director money controls.
+7. **Jun 22** — ID verification, approval flow, production polish pass.
+8. **Jun 23** — Full responsive overhaul, overtime/disputes, messenger v2, workflow guide.
+9. **Jun 24** — Guard favourites, direct requests, better client filtering.
+10. **Jun 25** — IC marketplace alignment: legal docs, COI, guards self-select jobs, Stripe auto-payout.
+11. **Jun 25 (night)** — Ops hierarchy locked in, Founder rename, per-role Guide, full SQL schema in one file.
+12. **Jun 26 – Jul 14** — Split Applications and Credentials, auto-activate guards, credential UX overhaul, full redesign, PWA white / APK black, production hardening for investor demo.
+13. **Jul 15** — Production audit, demo test accounts, system back button on website + PWA + APK, renamed everything to just **Guide**.
 
 ---
 
-## Saturday, June 6, 2026 — Project kickoff
+## Saturday, June 6, 2026 — Day one
 
-**Contributors:** Markeith White  
-**Activity:** 2:49 PM – 7:42 PM · 15 commits (4 PR merges)
+First real day on the build. 15 commits, 4 PR merges. Got Guardr named, wired Supabase, self-audit, themes, staff roles.
 
-| Time | Update |
-|------|--------|
-| 2:49 PM | Initial commit; Signature Security application initialized |
-| 3:15 PM | Supabase auth integration; staff role added |
-| 3:21 PM | Guard self-audit and compliance system |
+| Time | What shipped |
+|------|----------------|
+| 2:49 PM | Initial commit — Signature Security app started |
+| 3:15 PM | Supabase auth; staff role |
+| 3:21 PM | Guard self-audit + compliance |
 | 4:00 PM | Rebrand to **Guardr**; theme system |
-| 4:06 PM | Theme-based design variables |
-| 4:34 PM | Staff roles and admin onboarding |
-| 4:40 PM | Staff role system and landing UI |
-| 4:47 PM | Mock data pruned; migrations hardened |
-| 5:05 PM | Premium branding — "Guardr by Signature Security Specialist"; logo standalone mode; manifest sync; live ledger baseline cleared |
-| 5:14 PM | Footer and hero URL/branding corrections |
-| 6:32–7:42 PM | Merged 4 PRs: Uber-style design, guard/client split, full redesign, auth/data routing fixes |
+| 4:06 PM | Theme design variables |
+| 4:34 PM | Staff roles + admin onboarding |
+| 4:40 PM | Staff role system + landing UI |
+| 4:47 PM | Mock data cleaned up; migrations hardened |
+| 5:05 PM | Premium branding — "Guardr by Signature Security Specialist"; logo; manifest |
+| 5:14 PM | Footer + hero URL fixes |
+| 6:32–7:42 PM | Merged 4 PRs: Uber-style design, guard/client split, redesign, auth routing |
 
 ---
 
-## Sunday, June 7, 2026 — Major MVP build
+## Sunday, June 7, 2026 — MVP day
 
-**Contributors:** Cursor, Markeith White  
-**Activity:** 1:19 AM – 10:04 PM · 30 commits (3 PR merges)
+Big build day — 30 commits. Uber-inspired look, guard/client split, Stripe, PWA foundation.
 
-| Time | Update |
-|------|--------|
-| Early AM | Uber Base design styling; date/time shift scheduling |
-| Early AM | Guard and client split into separate full-screen experiences |
-| Early AM | Full Uber-inspired redesign (sage green theme); 3 themes (Dark, Light, Grey) |
-| 11:04 AM | MVP aligned to product spec; Uber Driver-style guard map experience |
-| 11:13 AM | User roles and permission-gated workflows |
-| 11:14 AM | All AI/Gemini integration removed |
-| 11:18 AM | Client SaaS operations dashboard rebuilt |
-| 11:21 AM | Staff Operations Command Center rebuilt |
-| 11:24 AM | Database schema reset (zero seed data) |
-| 11:27 AM | Cross-platform foundation: PWA, theme sync, offline queue |
-| 11:29 AM | Official Guardr logo assets added |
-| 12:12 PM | Phantom data fix — always sync from Supabase |
-| 12:24 PM | Profile screen and bottom nav for all roles |
-| 1:42 PM | Staff ops navigation restored; guard staff controls |
-| 3:11 PM | Certifications management on guard profile |
-| 3:42 PM | **Stripe Checkout and Connect** integrated |
-| 4:08 PM | Signup flow simplified (guard card auto-creates cert) |
-| 5:39 PM | Home CTAs updated; state-based guard licensing |
+| Time | What shipped |
+|------|----------------|
+| Early AM | Uber Base styling; shift scheduling |
+| Early AM | Guard and client as separate full-screen apps |
+| Early AM | Full Uber redesign (sage green); Dark / Light / Grey themes |
+| 11:04 AM | MVP to spec; Uber Driver-style guard map |
+| 11:13 AM | Roles + permission gates on workflows |
+| 11:14 AM | Removed all AI/Gemini stuff |
+| 11:18 AM | Client ops dashboard rebuilt |
+| 11:21 AM | Staff command center rebuilt |
+| 11:24 AM | DB schema reset — no seed data |
+| 11:27 AM | PWA, theme sync, offline queue |
+| 11:29 AM | Official Guardr logo assets |
+| 12:12 PM | Fixed phantom data — always sync from Supabase |
+| 12:24 PM | Profile + bottom nav all roles |
+| 1:42 PM | Staff ops nav; guard staff controls |
+| 3:11 PM | Certifications on guard profile |
+| 3:42 PM | **Stripe Checkout + Connect** |
+| 4:08 PM | Signup simplified — guard card auto-creates cert |
+| 5:39 PM | Home CTAs; state-based guard licensing |
 
 ---
 
-## Monday, June 8, 2026 — UI polish and deployment
+## Monday, June 8, 2026 — Deploy day
 
-**Contributors:** Cursor  
-**Activity:** 4:42 AM – 11:35 PM · 21 commits
+Got it on the real domain. 21 commits.
 
-| Time | Update |
-|------|--------|
-| 5:03 AM | Uber driver-style UI redesign; global theme applied app-wide |
-| 5:55 AM | Production domain configured: **guardr.co** |
-| 6:15 AM | Vercel deployment config and setup guide |
-| 6:56–7:19 AM | Vercel API fixes: Express → serverless routes, lazy-load Stripe/Supabase, diagnostic routes |
-| 7:52 AM | Stripe Connect platform setup clarified |
-| 9:10 AM | Guard mobile layout, staff shift mode, client guard profiles fixed |
-| 10:04 AM | Marketplace vs direct requests separated; full guard resume profiles |
-| 10:11 PM | Badge number removed from guard profiles |
-| 10:42 PM | BSIS guard cards vs training certs reworked (full CA catalog) |
+| Time | What shipped |
+|------|----------------|
+| 5:03 AM | Uber driver UI; theme app-wide |
+| 5:55 AM | **guardr.co** production domain |
+| 6:15 AM | Vercel config + setup guide |
+| 6:56–7:19 AM | Vercel API fixes — serverless routes, lazy Stripe/Supabase |
+| 7:52 AM | Stripe Connect platform setup |
+| 9:10 AM | Guard mobile layout, staff shift mode, client guard profiles |
+| 10:04 AM | Marketplace vs direct requests; full guard resumes |
+| 10:11 PM | Badge number off guard profiles |
+| 10:42 PM | BSIS guard cards vs training certs (full CA catalog) |
 | 11:35 PM | Blank screen crash fix |
 
 ---
 
-## Tuesday, June 9, 2026 — Navigation, BSIS, payments, wireframe UI
+## Tuesday, June 9, 2026 — Navigation + BSIS + wireframe
 
-**Contributors:** Cursor  
-**Activity:** 12:04 AM – 10:24 PM · 127 commits (9 PR merges)
+127 commits — one of the biggest days. Sidebar, compliance engine, payments, wireframe UI.
 
-| Time | Update |
-|------|--------|
-| 12:04 AM | Staff given full guard map/shift experience |
-| 12:04 AM | Sidebar navigation for all staff screens |
-| 12:04 AM | Support section (messaging staff, filing reports) |
-| 12:04 AM | Staff ops and guard shift unified into one dashboard |
-| 12:04 AM | Bottom nav replaced with sidebar for all roles |
-| 12:04 AM | "Dispatch" terminology removed app-wide |
-| 12:04 AM | Unapproved client request gates toggled then removed — platform made self-service |
+| Time | What shipped |
+|------|----------------|
+| 12:04 AM | Staff get full guard map/shift experience |
+| 12:04 AM | Sidebar nav all staff screens |
+| 12:04 AM | Support section — message staff, file reports |
+| 12:04 AM | Staff ops + guard shift unified |
+| 12:04 AM | Bottom nav → sidebar all roles |
+| 12:04 AM | "Dispatch" wording removed everywhere |
+| 12:04 AM | Self-service platform — dropped unapproved client gates |
 | 12:04 AM | Staff separated from field guards |
-| 12:04 AM | **Web Push notifications** for PWA added |
+| 12:04 AM | **Web Push** for PWA |
 | 12:04 AM | Vercel push API crash fixes |
-| 5:54 AM | BSIS qualification aligned to 2024 rules (8-hr PTA/UOF, 32-hr block for Level 2) |
-| 5:54 AM | Guards can add supplemental credentials |
+| 5:54 AM | BSIS 2024 rules — 8-hr PTA/UOF, 32-hr block |
+| 5:54 AM | Guards can add supplemental creds |
 | 5:54 AM | Maps center on user location |
-| 5:54 AM | Credential badges: on-file vs verification pills |
-| 5:54 AM | Duplicate cert/license numbers blocked system-wide |
-| 5:54 AM | Staff click-through profiles for guards and clients |
-| 5:54 AM | **Supabase realtime sync** across the app |
-| 5:54 AM | Profile photo upload for guards and clients |
-| 5:54 AM | Complete Supabase schema setup SQL |
-| 9:24 AM | Director-only cash payment workflow |
-| 9:24 AM | Staff Payments pipeline layout |
-| 9:24 AM | Cash-to-Stripe deposit step |
-| 9:24 AM | Paid jobs locked from edits; 15-min clock-in/out windows |
-| 9:24 AM | Staff Jobs tab added |
-| 9:24 AM | Guard earnings split: cash vs Stripe |
-| 12:38 PM | **Wireframe UI redesign** — bottom task bar, flat full-screen layout |
-| 12:38 PM | Healthcare wireframe design system applied |
-| 12:38 PM | Cards only for clickable entities (guards, clients, jobs, certs) |
-| 12:38 PM | Staff left sidebar with sage themes |
-| 12:38 PM | Grey theme renamed to **Shade** |
-| 12:38 PM | Guard nav: My Jobs vs map for available listings |
-| 12:38 PM | Inactive guards blocked from working |
-| 12:38 PM | Payments UX redesigned with plain-language flow |
-| 12:38 PM | Route persistence in URL (refresh stays on page) |
-| 12:38 PM | Credential cards open detail view with document photo |
-| 12:38 PM | Guardr marketing home page restored; separate security login |
-| 12:38 PM | Staff Overview redesigned as operations command center |
-| 12:38 PM | Directors can add staff, change roles, create jobs, assign guards |
-| 12:38 PM | "Shift" terminology replaced with "jobs" sitewide |
+| 5:54 AM | Credential badges — on-file vs verification |
+| 5:54 AM | Duplicate cert numbers blocked |
+| 5:54 AM | Staff click-through profiles |
+| 5:54 AM | **Supabase realtime** everywhere |
+| 5:54 AM | Profile photo upload |
+| 5:54 AM | `complete_schema_setup.sql` |
+| 9:24 AM | Director cash workflow; Payments pipeline |
+| 9:24 AM | Cash-to-Stripe deposit; paid jobs locked |
+| 9:24 AM | Staff Jobs tab; guard earnings split |
+| 12:38 PM | **Wireframe UI** — bottom task bar, flat layout |
+| 12:38 PM | Healthcare wireframe design system |
+| 12:38 PM | Cards only for clickable stuff |
+| 12:38 PM | Staff left sidebar, sage themes |
+| 12:38 PM | Grey theme → **Shade** |
+| 12:38 PM | Guard nav: My Jobs vs map |
+| 12:38 PM | Inactive guards blocked from work |
+| 12:38 PM | Payments UX plain language |
+| 12:38 PM | URL route persistence |
+| 12:38 PM | Credential cards → detail + photo |
+| 12:38 PM | Marketing home restored; separate login |
+| 12:38 PM | Staff Overview = ops command center |
+| 12:38 PM | Directors add staff, roles, jobs, assign guards |
+| 12:38 PM | "Shift" → "jobs" sitewide |
 
 ---
 
-## Wednesday, June 10, 2026 — Job workflows and audits
+## Wednesday, June 10, 2026 — Jobs + audits
 
-**Contributors:** Cursor  
-**Activity:** 12:13 AM – 11:58 PM · 33 commits
+33 commits. Job approvals, applications, self-audit flow.
 
-| Time | Update |
-|------|--------|
-| 12:13 AM | Job offer approvals in staff Approvals tab before client payment |
-| 12:45 AM | Guard job applications with staff approval workflow |
-| 12:54 AM | Executive-professional job listing details |
-| 12:56 AM | Uber-style map routing and offer detail cards |
-| 12:58 AM | Map tiles/routes follow app theme |
-| 1:05 AM | Job detail views flattened |
-| 1:19 AM | Job rehire restricted to previously worked guards |
-| 1:24 AM | Stripe payout blocked when guard requested cash |
-| 1:26 AM | Viewport locked — no horizontal scroll |
-| 1:35 AM | Title/location editable after payment; schedule locked |
-| 1:38 AM | **Self-audit flow**: staff upload, client confirm, guard can skip |
-| 1:54 AM | Visible staff action buttons for job edit and audit upload |
-| 2:18 AM | Overview metrics updated (active guard jobs) |
-| 2:33 AM | Self-audit photos in staff/guard job views |
-| 2:36 AM | Staff spot-check photo upload per job |
-| 2:47 AM | Clients can view and confirm staff spot checks |
-| 3:03 AM | Guardr home page copy restored |
-| 11:57 PM | Guard card only required to work; 8hr/32hr training recommended |
-
----
-
-## Thursday, June 11, 2026 — Credential polish
-
-**Contributors:** Cursor  
-**Activity:** 12:04 AM – 12:10 AM · 6 commits (3 PR merges)
-
-| Time | Update |
-|------|--------|
-| 12:04 AM | Credential photos locked after upload |
-| 12:06 AM | Issue date removed from credential forms |
-| 12:10 AM | Guards with valid guard card treated as Active for work |
-
-**No commits June 12–19 (9-day pause)**
+| Time | What shipped |
+|------|----------------|
+| 12:13 AM | Job offers need staff approval before client pays |
+| 12:45 AM | Guard job applications + staff approval |
+| 12:54 AM | Pro job listing details |
+| 12:56 AM | Uber-style map routing + offer cards |
+| 12:58 AM | Map tiles follow theme |
+| 1:05 AM | Job details flattened |
+| 1:19 AM | Rehire only guards who worked job before |
+| 1:24 AM | Stripe payout blocked if guard asked for cash |
+| 1:26 AM | No horizontal scroll |
+| 1:35 AM | Title/location editable after pay; schedule locked |
+| 1:38 AM | **Self-audit flow** — guard photos, client confirms |
+| 1:54 AM | Staff action buttons for edit + audit upload |
+| 2:18 AM | Overview metrics — active guard jobs |
+| 2:33 AM | Self-audit photos in staff/guard views |
+| 2:36 AM | Staff spot-check upload per job |
+| 2:47 AM | Clients confirm spot checks |
+| 3:03 AM | Home page copy restored |
+| 11:57 PM | Guard card required to work; 8hr/32hr recommended |
 
 ---
 
-## Saturday, June 20, 2026 — Payments and messaging return
+## Thursday, June 11, 2026
 
-**Contributors:** Cursor  
-**Activity:** 1:14 AM – 9:23 PM · 24 commits (11 PR merges)
+Quick 6 commits — credential photo locks, guard card = Active.
 
-| Time | Update |
-|------|--------|
-| 1:14 AM | Directors can record platform fee paid in cash |
-| 1:29 AM | Client cash payment separated from Stripe deposit in ledger |
-| 1:36 AM | Director overview financials and operations snapshot |
-| 4:24 AM | Manual coordinate entry + auto-geocode for job locations |
-| 4:41 AM | Complete schema setup updated with all columns |
-| 4:58 AM | Job edit save fixes (null uniform_requirements, title persistence) |
-| 5:34 AM | Spot checks limited to one per job |
-| 6:12 PM | **Owner role** added above Director |
-| 6:30 PM | Same-role staff moderation blocked across tiers |
-| 9:23 PM | **Messaging hub**, job chat, and notification controls |
+**Nothing committed Jun 12–19** — 9-day pause.
 
 ---
 
-## Sunday, June 21, 2026 — Auth tweak
+## Saturday, June 20, 2026 — Messaging is back
 
-**Contributors:** Cursor  
-**Activity:** 4:47 AM · 2 commits (1 PR merge)
+24 commits. Cash flows, Owner role (later Founder), messaging hub.
 
-| Time | Update |
-|------|--------|
-| 4:47 AM | Staff-provisioned accounts get default password with change prompt on first login |
+| Time | What shipped |
+|------|----------------|
+| 1:14 AM | Directors record platform fee in cash |
+| 1:29 AM | Client cash vs Stripe deposit split in ledger |
+| 1:36 AM | Director overview financials |
+| 4:24 AM | Manual coords + geocode for jobs |
+| 4:41 AM | Schema setup updated |
+| 4:58 AM | Job edit save fixes |
+| 5:34 AM | One spot check per job max |
+| 6:12 PM | **Owner role** above Director |
+| 6:30 PM | Same-tier staff can't moderate each other |
+| 9:23 PM | **Messaging hub**, job chat, notification controls |
+
+---
+
+## Sunday, June 21, 2026
+
+Staff-provisioned accounts get default password `#Qwerty12345` with change prompt on first login.
 
 ---
 
 ## Monday, June 22, 2026 — Production polish
 
-**Contributors:** Cursor  
-**Activity:** 1:26 AM – 11:31 PM · 163 commits (32 PR merges)
+163 commits — ID verification, approvals hub, bottom sheets, site briefings. This is when it started feeling like a real product.
 
-| Time | Update |
-|------|--------|
-| 1:26 AM | Staff can edit guard profiles and manage credentials |
-| 1:26 AM | First/middle/last name fields added |
-| 1:26 AM | Account approval workflow; signup duplication fix; staff delete |
-| 1:26 AM | **Guard ID verification**: front/back ID + identity selfie |
-| 1:26 AM | Verified ID + Guard Card required before activation |
-| 1:26 AM | Grandfather migration removed; guards start pending until staff activates |
-| 6:40 AM | Production polish: role-distinct UX, premium styling |
-| 6:40 AM | Push notifications aligned with SacramentoBuyNothing patterns |
-| 6:40 AM | Message threads open separately |
-| 6:40 AM | Staff approvals refactored into hub/queue/detail views |
-| 6:40 AM | Marketplace legal terms, privacy policy, positioning copy |
-| 6:40 AM | Full audit fixes + Uber-style design system |
-| 6:40 AM | Push API Vercel bundling fixes |
-| 6:40 AM | Uber-sharp design: flat edges, list rows, sage on black chrome |
-| 6:40 AM | Messages: live sync and contrast fixes |
-| 6:40 AM | Loading screen polish |
-| 6:40 AM | Terms and Privacy access across Guardr |
-| 6:40 AM | Staff team chat sync fixes |
-| 12:22 PM | ID verification repositioned on profiles |
-| 12:22 PM | Overview visual dashboard with Guardr sage chrome |
-| 12:22 PM | Staff can request clearer ID/credential photos |
-| 12:22 PM | ID reject/resubmit flow refined |
-| 12:22 PM | Click-to-view modal for ID photos |
-| 12:22 PM | Motorola walkie-talkie chirp for notifications |
-| 12:22 PM | Trusted badge shown to clients |
-| 12:22 PM | Staff accounts moved out of guards table into dedicated staff table |
-| 12:22 PM | BSIS Guard Card moved to its own profile section |
-| 12:22 PM | Motion transitions for page changes, modals, sheets |
-| 12:22 PM | Unified account menu across roles |
-| 12:22 PM | Categorized credential viewing |
-| 5:47 PM | Government ID expiration date and credential-style card UI |
-| 5:47 PM | Credential photo thumbnails on all cert cards |
-| 5:47 PM | Light theme readability improvements |
-| 5:47 PM | Profile approval vs account activation split |
-| 5:47 PM | 48-hour credential grace period |
-| 5:47 PM | Document photo proof required for all credentials |
-| 5:47 PM | Image save fixes: compression, realtime race blocking |
-| 5:47 PM | `complete_schema_setup.sql` one-shot database schema script |
-| 5:47 PM | Staff verify buttons on each 32-hour course cert |
-| 5:47 PM | Optional client site briefing fields (expanded to **150+ fields**) |
-| 5:47 PM | Support messages and reports split onto distinct views |
-| 5:47 PM | Smoking area briefing section |
-| 5:47 PM | Forms moved to bottom sheets |
-| 5:47 PM | Slide-to-confirm for claim/start/end shift |
-| 5:47 PM | Full site audit: TS errors, cert flows, UI polish |
+| Time | What shipped |
+|------|----------------|
+| 1:26 AM | Staff edit guard profiles + creds |
+| 1:26 AM | First/middle/last name fields |
+| 1:26 AM | Account approval workflow; signup dedup; staff delete |
+| 1:26 AM | **Guard ID verification** — front/back + selfie |
+| 1:26 AM | Verified ID + guard card before activation |
+| 6:40 AM | Production polish — role UX, premium styling |
+| 6:40 AM | Push notifications |
+| 6:40 AM | Message threads open separate |
+| 6:40 AM | Staff approvals → hub/queue/detail |
+| 6:40 AM | Legal terms, privacy, marketplace copy |
+| 6:40 AM | Full audit + Uber design system |
+| 6:40 AM | Push API Vercel bundling |
+| 6:40 AM | Flat edges, list rows, sage on black |
+| 6:40 AM | Messages live sync |
+| 12:22 PM | ID verification on profiles |
+| 12:22 PM | Overview dashboard sage chrome |
+| 12:22 PM | Staff request clearer ID photos |
+| 12:22 PM | ID reject/resubmit flow |
+| 12:22 PM | Click-to-view ID photos |
+| 12:22 PM | Walkie-talkie chirp on notifications |
+| 12:22 PM | Trusted badge for clients |
+| 12:22 PM | Staff table separate from guards |
+| 12:22 PM | BSIS guard card own section |
+| 12:22 PM | Motion on page changes, modals, sheets |
+| 12:22 PM | Unified account menu |
+| 5:47 PM | Gov ID expiry + credential cards |
+| 5:47 PM | Cert photo thumbnails |
+| 5:47 PM | Light theme readability |
+| 5:47 PM | Profile approval vs activation split |
+| 5:47 PM | 48-hour credential grace |
+| 5:47 PM | Photo proof required all creds |
+| 5:47 PM | Image compression + save fixes |
+| 5:47 PM | `complete_schema_setup.sql` one-shot |
+| 5:47 PM | Client site briefing — **150+ fields** |
+| 5:47 PM | Support vs reports split |
+| 5:47 PM | Bottom sheets for forms |
+| 5:47 PM | Slide to claim/start/end shift |
+| 5:47 PM | Full site audit — TS, certs, UI |
 
 ---
 
-## Tuesday, June 23, 2026 — Responsive overhaul, overtime, messenger
+## Tuesday, June 23, 2026 — Responsive + messenger
 
-**Contributors:** Cursor, Markeith White  
-**Activity:** 12:24 AM – 11:35 PM · 227 commits (80 PR merges)
+227 commits — biggest day on the repo. Uber mirror overhaul, overtime, messenger v2.
 
-| Time | Update |
-|------|--------|
-| 12:24 AM | Staff separated from guards table permanently |
-| 12:24 AM | M. White promoted to Owner |
-| 12:24 AM | Operations nav reorganized (Clients, Guards, Staff, chats) |
-| 12:24 AM | Credential UI unified (status badges, collapsible sections, Add buttons) |
-| 12:24 AM | Guard chat channel for all guards |
+| Time | What shipped |
+|------|----------------|
+| 12:24 AM | Staff permanently out of guards table |
+| 12:24 AM | M. White → Owner |
+| 12:24 AM | Ops nav: Clients, Guards, Staff, chats |
+| 12:24 AM | Credential UI unified |
+| 12:24 AM | Guard community chat |
 | 12:24 AM | Job chats simplified |
-| 12:24 AM | Push subscribe crash fixes + comprehensive staff alerts |
-| 12:24 AM | Client pay-in-cash request with staff approval |
-| 12:24 AM | Owner-configurable payment modes (cash, Stripe, both) |
-| 12:24 AM | Grace-period guards can claim shifts |
-| 12:24 AM | Staff-then-client guard approval flow |
-| 12:24 AM | In-app workflow guide added |
-| 12:24 AM | Job location simplified to address + optional coordinates |
-| 12:24 AM | **Uber design mirror overhaul** — Waves 1–3: full responsive mobile/tablet/desktop polish |
-| 12:24 AM | Sidebar theme switcher (light/grey/dark) |
-| 12:24 AM | Cash payment flows refined (Pay guard cash, bank collection) |
-| 12:24 AM | On-duty timer from persisted clock-in timestamp |
-| 12:24 AM | Route persistence and browser back navigation hardened |
-| 12:24 AM | Configurable platform fee models beyond flat $5/hr |
-| 3:20 PM | **Income summary on Staff Payments screen (PR #230)** — Markeith White |
-| 5:48 PM | Overtime billing for late guard clock-out |
-| 5:48 PM | Guard and client approval required before overtime billing |
-| 5:48 PM | 15-minute clock-out window removed |
-| 5:48 PM | Detailed incident reports (full 5W1H capture) |
-| 5:48 PM | Formal overtime dispute flow |
-| 5:48 PM | Guard break tracking; staff shift notifications; client break config |
-| 5:48 PM | Full support and dispute push notification coverage |
-| 5:48 PM | Home page redesigned (mobile, tablet, desktop) |
-| 5:48 PM | Messenger UI redesigned: split-pane, reactions, reply-to, read receipts, typing indicator |
-| 5:48 PM | Tabbed inbox + scrollable conversation list |
-| 5:48 PM | Enriched client sign-up intake form with staff approval detail view |
-| 5:48 PM | Explicit trusted flag for guards/clients (Director/Owner only) |
-| 5:48 PM | Interactive workflow guide with section hub and accordions |
-| 5:48 PM | Fund handling restricted to Directors and Owners |
-| 5:48 PM | Account/job/dispute actions restricted to Administrator+ |
+| 12:24 AM | Push subscribe crash fixes |
+| 12:24 AM | Client cash request + staff approval |
+| 12:24 AM | Owner payment modes (cash/Stripe/both) |
+| 12:24 AM | Grace-period guards can claim |
+| 12:24 AM | Staff-then-client guard approval |
+| 12:24 AM | In-app workflow guide |
+| 12:24 AM | **Uber design mirror** — mobile/tablet/desktop Waves 1–3 |
+| 12:24 AM | Sidebar theme switcher |
+| 12:24 AM | Cash flows refined |
+| 12:24 AM | On-duty timer from clock-in |
+| 12:24 AM | Browser back navigation hardened |
+| 12:24 AM | Configurable platform fees |
+| 3:20 PM | **Income summary on Staff Payments** — me (PR #230) |
+| 5:48 PM | Overtime billing late clock-out |
+| 5:48 PM | Guard + client approve overtime |
+| 5:48 PM | 15-min clock-out window removed |
+| 5:48 PM | Detailed incident reports (5W1H) |
+| 5:48 PM | Overtime dispute flow |
+| 5:48 PM | Break tracking; shift notifications |
+| 5:48 PM | Support + dispute push coverage |
+| 5:48 PM | Home page mobile/tablet/desktop |
+| 5:48 PM | Messenger v2 — split pane, reactions, receipts, typing |
+| 5:48 PM | Tabbed inbox |
+| 5:48 PM | Client signup intake + staff approval view |
+| 5:48 PM | Trusted flag (Director/Owner) |
+| 5:48 PM | Interactive workflow guide |
+| 5:48 PM | Money handling Directors/Owners only |
 
 ---
 
-## Wednesday, June 24, 2026 — Favourites, payments, polish
+## Wednesday, June 24, 2026
 
-**Contributors:** Cursor  
-**Activity:** 12:05 AM – 6:11 AM · 25 commits (5 PR merges)
+Favourites, direct requests, notifications, guard filtering. 25 commits.
 
-| Time | Update |
-|------|--------|
+| Time | What shipped |
+|------|----------------|
 | 12:05 AM | Client guard favourites |
-| 12:08 AM | Select favourite guard when creating a job |
-| 12:25 AM | Guard confirm/decline direct job requests |
-| 12:59 AM | Clients and guards can notify staff on signup/submissions |
-| 1:03 AM | Notify clients/guards when staff approves or declines |
-| 1:11 AM | Default map center changed from NYC to Los Angeles |
-| 1:19 AM | Client sign-up intake fields fix |
-| 1:51 AM | Schema updated: messenger, client intake, trusted flags |
-| 1:52 AM | Vercel build fix (missing markdown import) |
-| 5:22 AM | Guard roster badge order restored: Approved → Active → Background checked → Trusted |
-| 5:27 AM | All horizontal scroll removed — everything wraps |
+| 12:08 AM | Pick favourite guard on new job |
+| 12:25 AM | Guard confirm/decline direct requests |
+| 12:59 AM | Notify staff on signup/submissions |
+| 1:03 AM | Notify users when staff approves/declines |
+| 1:11 AM | Map default LA not NYC |
+| 1:19 AM | Client signup intake fix |
+| 1:51 AM | Schema: messenger, intake, trusted |
+| 5:22 AM | Guard roster badge order fixed |
+| 5:27 AM | No horizontal scroll anywhere |
 | 5:34 AM | Advanced guard filtering for clients |
-| 6:10 AM | Merged messenger UI, job coords badge, trusted flag polish branches |
 
 ---
 
-## Thursday, June 25, 2026 — IC marketplace alignment
+## Thursday, June 25, 2026 — IC marketplace
 
-**Contributors:** Cursor  
-**Activity:** 5:35 AM – 8:19 AM · 6 commits · PRs #295, #297
+Aligned the product with independent-contractor marketplace rules. Cash off, guards self-select, legal stack in.
 
-| Time | Update |
-|------|--------|
-| 5:35 AM | **Marketplace compliance (#295)** — ICA, Client Agreement, Guard Code of Conduct; versioned acceptance at signup |
-| 5:35 AM | COI upload workflow; guards need verified COI to apply to jobs |
-| 5:35 AM | Per-job service agreements recorded when guard is assigned |
-| 5:50 AM | **Reduce control signals (#297)** — guards self-select jobs; staff placement dispute/safety only |
-| 5:50 AM | Spot checks removed platform-wide |
-| 5:50 AM | Card/Stripe only; auto-release ~48h; staff manual release on dispute hold only |
-| 5:50 AM | Activation reframed as **marketplace eligibility** — staff still verify credentials |
-| 5:50 AM | 48h self-serve grace for optional PTA/32-hr; automated lockout on expiry |
+| Time | What shipped |
+|------|----------------|
+| 5:35 AM | ICA, Client Agreement, Guard Conduct — versioned at signup |
+| 5:35 AM | COI upload; verified COI to apply |
+| 5:35 AM | Per-job service agreements on assign |
+| 5:50 AM | Guards self-select; staff place only dispute/safety |
+| 5:50 AM | Spot checks removed |
+| 5:50 AM | Card/Stripe only; auto-release ~48h |
+| 5:50 AM | Marketplace eligibility framing |
+| 5:50 AM | 48h grace PTA/32-hr; lockout on expiry |
 | 5:50 AM | Cash disabled platform-wide |
-| 6:21 AM | `docs/guardr-general-guide.md` — **IC marketplace model** section; synced to Guide and Dev notes |
-| 7:36 AM | COI added to guard activation checklist and eligibility lead copy |
-| 8:15 AM | COI styled as credential row after Government ID (compact card + detail modal) |
+| 6:21 AM | Guide updated — IC marketplace section |
+| 7:36 AM | COI on activation checklist |
+| 8:15 AM | COI as credential row + detail modal |
+
+**Same night (PR #312):** Locked ops hierarchy — Moderator approves apps, Administrator+ verifies creds, Director money + team, Founder governance. Owner renamed to **Founder**. Auth scroll fix on desktop. Guide got the "whole app start to finish" section plus per-role filters. One SQL file for the whole schema. 105 tests passing.
 
 ---
 
-## Thursday, June 25, 2026 (PM) — Ops hierarchy & live-readiness pass
+## June 26 – July 14, 2026 — What I was pushing for before investor demo
 
-**Contributors:** Cursor · PR #312
+This stretch is me cleaning up everything that kept getting half-done. I'd mention stuff in one agent run and it'd get skipped — had to repeat a lot. Focus was: make the whole thing production-ready on website, PWA, and APK.
 
-| Update | Detail |
-|--------|--------|
-| **Two-step guard activation** | `pending` → Moderator+ approves application → `approved` → guard uploads creds → Administrator+ verifies → Administrator+ manually activates → `active`. No auto-activation on verify. |
-| **Role hierarchy** | Moderator: approve applications. Administrator+: verify credentials & activate. Director: finances + team. Founder (was Owner): platform governance. |
-| **Founder rename** | Owner → Founder across UI, permissions, API session auth, SQL + migration `20260625120000_rename_owner_to_founder.sql` |
-| **Auth scroll fix** | Login/signup form column scrolls on desktop side-by-side layout |
-| **Guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |
-| **Complete SQL** | `complete_schema_setup.sql` — single idempotent schema for the whole site |
-| **Tests** | 105 passing; production build verified |
+**Staff side**
+- Killed the old Approvals blob. Now it's **Applications** (account intake, job offers, staff-provisioned accounts) and **Credentials** (verify docs) as separate sidebar tabs.
+- Guards **auto-activate** when all five creds are verified — no more manual "grant eligibility" button.
+- Pending guards can upload creds during application review; staff see it in the Applications popup.
+- Expired creds → auto-request update + **Restricted** label on the account.
+- Credential views unified — lightbox images, full edit pages, staff wizard to add creds.
+- Roster badges show account state + what's still pending. Pulled armed-level badges off the UI.
+- Staff can edit their own profile (name, phone, bio, photo).
+- **Payment settings**, **Marketplace agreements**, and **Audit log** each got their own sidebar tab for Directors/Founders.
+- Role permissions reference lives in the **Guide** now.
 
----
+**Look and feel**
+- Full redesign pass on mobile, tablet, desktop, and APK — sage green back, bottom nav fixed, guards land on map not a blank screen.
+- PWA = white home-screen icons. APK = black splash and status bar.
+- APK sideload at `/download/guardr.apk` — Capacitor shell loads live site from guardr.co.
 
-## June 26 – July 14, 2026 — Applications, credentials, redesign & production hardening
-
-**Contributors:** Cursor  
-**Themes:** Staff Applications/Credentials split, guard auto-activation, credential UX overhaul, role experience redesign, PWA/APK, investor readiness
-
-| Update | Detail |
-|--------|--------|
-| **Applications panel** | Replaced monolithic Approvals hub with dedicated **Applications** sidebar tab (account intake, job offers, staff-provisioned accounts) |
-| **Credentials panel** | Separate **Credentials** tab for document verification queue |
-| **Auto-activation** | Guards auto-activate when Administrator+ verifies all five activation credentials — removed manual "Grant marketplace eligibility" step |
-| **Pending credential uploads** | Guards can upload activation credentials during application review; staff see uploads in Applications popup |
-| **Credential expiry** | Auto-request updates and **Restricted** label when government ID, COI, or certs expire |
-| **Credential detail views** | Unified credential records, lightbox images, view-full/edit pages, staff add-credential wizard |
-| **Guard roster badges** | Dual badges for account state + pending credential status; removed armed-level badges from UI |
-| **Staff profile editing** | Staff can edit own name, phone, bio, and photo at `/staff/profile` |
-| **Platform tabs** | **Payment settings**, **Marketplace agreements**, and **Audit log** moved to dedicated sidebar tabs (Director/Founder) |
-| **Role permissions in Guide** | Staff role permissions reference moved into Guide with `StaffRolesReference` component |
-| **Full redesign** | Role experience polish across mobile/tablet/desktop/APK — sage brand restored, bottom nav fixes, guard default map tab |
-| **PWA vs APK branding** | PWA white home-screen icons; APK black splash/status bar/icons |
-| **Android APK** | Sideload at `/download/guardr.apk`; Capacitor 7 shell loads live site from guardr.co |
-| **Investor demo SQL** | `supabase/investor_demo_accounts.sql` — testg@test.com, testc@test.com, tests@test.com |
+**Demo accounts**
+- SQL seed for investor walkthrough: `testg@test.com` (guard), `testc@test.com` (client), `tests@test.com` (staff) — password `#Qwerty12345`.
 
 ---
 
-## Wednesday, July 15, 2026 — Production audit & system back button (v1.0.43–44)
+## Wednesday, July 15, 2026 — Investor-ready push
 
-**Contributors:** Cursor
+Bringing this to investors — needed every workflow working, every button, every page, uploads, the whole thing. Ran through all the agents to make sure nothing I already asked for got skipped again.
 
-| Time / version | Update |
-|----------------|--------|
-| **v1.0.43** | Fixed 11 TypeScript CI errors; enlarged PWA install icons; investor demo accounts SQL; service worker cache bust |
-| **v1.0.44** | Unified **system back button** across website, PWA, and Android APK — hardware back, browser back, and overlay dismissal share one handler |
-| Guide + Dev notes | Renamed **General guide** → **Guide** everywhere; updated docs for Applications/Credentials, auto-activation, PWA/APK install, back navigation |
+**v1.0.43**
+- Fixed 11 TypeScript errors that were blocking CI.
+- PWA install icons were too small — bumped them.
+- Investor demo accounts SQL in repo.
+- Service worker cache bust.
 
-**System back button behavior:**
-- Closes confirm dialogs, sheets, and modals first
-- Then dismisses auth sheet, tutorial, password prompt, and in-app detail views
-- Then navigates history (tabs → sections → nested selections)
-- APK root screen minimizes app instead of force-closing
+**v1.0.44**
+- **System back button** — had to work on website, PWA, and APK (mobile, tablet, desktop). Hardware back on Android, browser back everywhere else. Closes dialogs and sheets first, then walks you back through pages. At the root on APK it minimizes instead of killing the app.
 
-**Testing at v1.0.44:** 234 unit tests, 3 E2E smoke tests, lint + build pass.
+**v1.0.45**
+- Renamed **General guide** → just **Guide** everywhere — that's what I wanted it called.
+- Synced Guide + these dev notes with how the app actually works now.
 
----
+**Test coverage at this point:** 234 unit tests, 3 E2E smoke tests, lint and build clean.
 
-## Summary at a glance
-
-| Date | Commits | Main themes |
-|------|---------|-------------|
-| **Jun 6** | 15 | App created, Guardr rebrand, Supabase, self-audit, themes, staff roles |
-| **Jun 7** | 30 | Uber redesign, role split, Stripe, PWA, cross-platform, certifications |
-| **Jun 8** | 21 | guardr.co deployment, Vercel API fixes, BSIS catalog |
-| **Jun 9** | 127 | Sidebar nav, BSIS compliance, payments pipeline, wireframe UI, realtime |
-| **Jun 10** | 33 | Job applications, self-audit/spot-checks, map routing |
-| **Jun 11** | 6 | Credential photo locks, guard card = Active |
-| **Jun 12–19** | 0 | _No commits — 9-day break_ |
-| **Jun 20** | 24 | Cash payments, Founder role, messaging hub |
-| **Jun 21** | 2 | Staff default password flow |
-| **Jun 22** | 163 | ID verification, approvals, production polish, site briefings, bottom sheets |
-| **Jun 23** | 227 | Responsive Uber overhaul, overtime/disputes, messenger redesign, workflow guide |
-| **Jun 24** | 25 | Favourites, direct job requests, notifications, guard filtering |
-| **Jun 25** | 6+ | IC marketplace compliance, control-signal reduction, COI checklist, ops hierarchy, Founder role, per-role guides |
-| **Jun 26 – Jul 14** | 300+ | Applications/Credentials split, auto-activation, credential UX, full redesign, PWA/APK, platform tabs |
-| **Jul 15** | 4 | Production audit v1.0.43–44, system back button, Guide/Dev notes sync |
+**Demo logins** (run `supabase/investor_demo_accounts.sql` if they're not in prod yet):
+- `testg@test.com` — active guard, all creds verified
+- `testc@test.com` — approved client
+- `tests@test.com` — staff Moderator
+- Password all: `#Qwerty12345`
 
 ---
 
-_Visible in the staff console under **Dev notes** (Director and Founder only). The operating manual is **Guide** in the sidebar (all staff) or account menu (clients/guards)._
+## Quick reference by date
+
+| Date | Commits | What happened |
+|------|---------|---------------|
+| **Jun 6** | 15 | App born — Guardr, Supabase, self-audit, themes |
+| **Jun 7** | 30 | Uber redesign, Stripe, PWA, certs |
+| **Jun 8** | 21 | guardr.co live |
+| **Jun 9** | 127 | Sidebar, BSIS, payments, wireframe UI |
+| **Jun 10** | 33 | Job apps, self-audit, map routing |
+| **Jun 11** | 6 | Credential locks |
+| **Jun 12–19** | 0 | Break |
+| **Jun 20** | 24 | Cash, Owner role, messaging |
+| **Jun 21** | 2 | Default staff password |
+| **Jun 22** | 163 | ID verify, approvals, polish, briefings |
+| **Jun 23** | 227 | Responsive overhaul, messenger, overtime |
+| **Jun 24** | 25 | Favourites, direct requests, filters |
+| **Jun 25** | 6+ | IC marketplace, Founder, Guide sections |
+| **Jun 26 – Jul 14** | 300+ | Applications/Credentials, redesign, PWA/APK |
+| **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
+
+---
+
+_You see this in staff under **Dev notes** (Director and Founder only). Everyone else uses **Guide** in the sidebar or account menu for how the app works._
