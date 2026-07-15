@@ -661,7 +661,7 @@ export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
   return credentialQueueFeed(guards).filter(isCredentialFeedItemAwaitingStaffReview).length;
 }
 
-/** Sidebar badge — pending upload + pending review (open credential queue). */
+/** Full open credential queue — pending upload plus pending review. */
 export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
   return countPendingCredentialUploads(guards) + countPendingCredentialReviews(guards);
 }

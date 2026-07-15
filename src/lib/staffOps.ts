@@ -956,6 +956,10 @@ export function countPendingCredentialApprovals(guards: SecurityGuard[]): number
   return countPendingCredentialFeedApprovals(guards);
 }
 
+export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
+  return countPendingCredentialFeedReviews(guards);
+}
+
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => !g.isStaff && isGuardAccountPending(g));
 }
