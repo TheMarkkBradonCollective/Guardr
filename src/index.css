@@ -15295,6 +15295,40 @@ html.theme-grey .landing-wordmark {
   cursor: not-allowed;
 }
 
+.guard-pref-tier-welcome-block {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+  margin: 0.65rem auto 0;
+}
+
+.guard-pref-tier-welcome-block .guard-tier-hero-subtitle {
+  margin-top: 0;
+}
+
+.guard-pref-tier-welcome {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.guard-pref-hero-read-more {
+  margin-top: 0.35rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.guard-pref-hero-read-more:hover {
+  color: #fff;
+}
+
 .guard-availability-screen {
   display: flex;
   flex-direction: column;
@@ -15536,40 +15570,6 @@ html.theme-grey .landing-wordmark {
 
 .guard-pref-onboarding-submit {
   margin-top: 0.15rem;
-}
-
-.guard-pref-onboarding-welcome {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  border-radius: var(--radius-app-lg);
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
-  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
-  padding: 0.9rem 1rem;
-}
-
-.guard-pref-onboarding-welcome-icon-wrap {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.65rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg-sec));
-  flex-shrink: 0;
-}
-
-.guard-pref-onboarding-welcome-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--brand-primary);
-}
-
-.guard-pref-onboarding-welcome-text {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--brand-text);
 }
 
 .guard-pref-onboarding-reader {

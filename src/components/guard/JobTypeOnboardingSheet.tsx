@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   CheckCircle2,
   ClipboardList,
-  Info,
   Pause,
   Play,
   Volume2,
@@ -10,7 +9,6 @@ import {
 } from 'lucide-react';
 import type { JobType } from '../../types';
 import {
-  GENERAL_ONBOARDING_INTRO,
   jobTypeOnboardingContent,
   jobTypeOnboardingRequiredMs,
   jobTypeOnboardingSpeechText,
@@ -77,13 +75,6 @@ export function JobTypeOnboardingSheet({
     >
       {content && jobType && (
         <div className="guard-pref-onboarding">
-          <div className="guard-pref-onboarding-welcome">
-            <div className="guard-pref-onboarding-welcome-icon-wrap" aria-hidden>
-              <Info className="guard-pref-onboarding-welcome-icon" />
-            </div>
-            <p className="guard-pref-onboarding-welcome-text">{GENERAL_ONBOARDING_INTRO}</p>
-          </div>
-
           <div className="guard-pref-onboarding-reader" aria-live="polite">
             <div className="guard-pref-onboarding-reader-top">
               <p className="guard-pref-onboarding-reader-label">Read-aloud briefing</p>

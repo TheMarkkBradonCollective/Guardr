@@ -25,7 +25,7 @@ import {
   normalizeJobTypePreferences,
   type JobTypePreferenceOption,
 } from '../../lib/guardJobPreferences';
-import { isJobTypeOnboarded } from '../../lib/guardJobTypeOnboarding';
+import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
 import { AppSwitch } from '../ui/AppSwitch';
 import { JobTypeOnboardingSheet } from './JobTypeOnboardingSheet';
 
@@ -155,6 +155,7 @@ export function GuardJobPreferencesPanel({
   const selected = new Set(normalizeJobTypePreferences(guard.jobTypePreferences));
   const [onboardingType, setOnboardingType] = useState<JobType | null>(null);
   const [onboardingBusy, setOnboardingBusy] = useState(false);
+  const [welcomeExpanded, setWelcomeExpanded] = useState(false);
 
   const stats = useMemo(() => {
     const total = JOB_TYPE_PREFERENCE_OPTIONS.length;
@@ -227,11 +228,24 @@ export function GuardJobPreferencesPanel({
             </span>
           </p>
         </div>
-        <p className="guard-tier-hero-subtitle">
-          {stats.active > 0
-            ? `Receiving alerts for ${stats.active} job type${stats.active === 1 ? '' : 's'}`
-            : 'Complete read-aloud onboarding per type, then turn on alerts'}
-        </p>
+        <div className="guard-pref-tier-welcome-block">
+          <p className="guard-tier-hero-subtitle">
+            {stats.active > 0
+              ? `Receiving alerts for ${stats.active} job type${stats.active === 1 ? '' : 's'}`
+              : 'Turn on job types you want. Complete read-aloud onboarding once per type.'}
+            {welcomeExpanded ? (
+              <span className="guard-pref-tier-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
+            ) : null}
+          </p>
+          <button
+            type="button"
+            className="guard-pref-hero-read-more"
+            onClick={() => setWelcomeExpanded((open) => !open)}
+            aria-expanded={welcomeExpanded}
+          >
+            {welcomeExpanded ? 'Read less' : 'Read more'}
+          </button>
+        </div>
       </div>
 
       <div className="guard-pref-body">
