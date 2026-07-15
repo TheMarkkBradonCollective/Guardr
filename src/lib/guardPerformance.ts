@@ -263,3 +263,260 @@ export function formatShiftSampleCount(count: number): string {
   if (count === 1) return '1 completed shift analyzed';
   return `${count} completed shifts analyzed`;
 }
+
+// ─── DoorDash-style tier & point-based rating ───────────────────────────────
+
+export type PerformanceFactorStatus = 'very-high' | 'high' | 'moderate' | 'low' | 'very-low';
+
+export interface PerformanceTier {
+  id: string;
+  name: string;
+  level: number;
+  /** Minimum overall rating (0–100) to reach this tier. */
+  threshold: number;
+}
+
+export interface PerformanceFactor {
+  id: string;
+  label: string;
+  /** 0–1 raw rate used for scoring. */
+  rate: number;
+  /** Display value, e.g. "93%". */
+  rateDisplay: string;
+  pointsEarned: number;
+  pointsMax: number;
+  status: PerformanceFactorStatus;
+  statusLabel: string;
+}
+
+export interface PerformanceViolation {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export interface GuardPerformanceRating {
+  /** Sum of factor points (0–100). */
+  overallRating: number;
+  tier: PerformanceTier;
+  nextTier: PerformanceTier | null;
+  pointsToNextTier: number;
+  factors: PerformanceFactor[];
+  violations: PerformanceViolation[];
+}
+
+/** Tier thresholds — mirrors DoorDash Rising / Professional / Elite progression. */
+export const PERFORMANCE_TIERS: PerformanceTier[] = [
+  { id: 'rising', name: 'Rising', level: 1, threshold: 60 },
+  { id: 'professional', name: 'Professional', level: 2, threshold: 75 },
+  { id: 'elite', name: 'Elite', level: 3, threshold: 85 },
+];
+
+const STARTING_TIER: PerformanceTier = {
+  id: 'starting',
+  name: 'Starting',
+  level: 0,
+  threshold: 0,
+};
+
+const FACTOR_WEIGHTS = {
+  acceptance: 30,
+  completion: 15,
+  onTime: 40,
+  quality: 10,
+  clientRating: 5,
+} as const;
+
+function factorStatus(rate: number): { status: PerformanceFactorStatus; statusLabel: string } {
+  if (rate >= 0.95) return { status: 'very-high', statusLabel: 'Very high' };
+  if (rate >= 0.85) return { status: 'high', statusLabel: 'High' };
+  if (rate >= 0.7) return { status: 'moderate', statusLabel: 'Moderate' };
+  if (rate >= 0.5) return { status: 'low', statusLabel: 'Low' };
+  return { status: 'very-low', statusLabel: 'Very low' };
+}
+
+function percentDisplay(rate: number): string {
+  return `${Math.round(Math.min(100, Math.max(0, rate * 100)))}%`;
+}
+
+function starDisplay(avg: number): string {
+  if (avg <= 0) return '—';
+  return `${avg.toFixed(1)} ★`;
+}
+
+function pointsFromRate(rate: number, max: number): number {
+  return Math.round(Math.min(max, Math.max(0, rate * max)));
+}
+
+function guardAssignedJobs(guardId: string, requests: SecurityRequest[]): SecurityRequest[] {
+  return requests.filter(
+    (r) =>
+      r.assignedGuardId === guardId &&
+      ['accepted', 'in-progress', 'completed', 'closed', 'cancelled'].includes(r.status)
+  );
+}
+
+function computeAcceptanceRate(guardId: string, requests: SecurityRequest[]): number {
+  const applications = requests.filter((r) => r.applicants?.includes(guardId));
+  if (!applications.length) {
+    const assigned = guardAssignedJobs(guardId, requests);
+    return assigned.length > 0 ? 1 : 0;
+  }
+  const accepted = applications.filter((r) => r.assignedGuardId === guardId);
+  return accepted.length / applications.length;
+}
+
+function computeCompletionRate(guardId: string, requests: SecurityRequest[]): number {
+  const assigned = guardAssignedJobs(guardId, requests);
+  if (!assigned.length) return 0;
+  const completed = assigned.filter((r) => r.status === 'completed' || r.status === 'closed');
+  return completed.length / assigned.length;
+}
+
+function computeQualityRate(metrics: GuardPerformanceMetrics): number {
+  if (metrics.jobsSampled <= 0) return 0;
+  return (metrics.uniformComplianceRate + metrics.checkInCompletionRate) / 2;
+}
+
+export function getPerformanceTier(overallRating: number): PerformanceTier {
+  if (overallRating >= 85) return PERFORMANCE_TIERS[2];
+  if (overallRating >= 75) return PERFORMANCE_TIERS[1];
+  if (overallRating >= 60) return PERFORMANCE_TIERS[0];
+  return STARTING_TIER;
+}
+
+export function getNextPerformanceTier(overallRating: number): PerformanceTier | null {
+  const next = PERFORMANCE_TIERS.find((t) => overallRating < t.threshold);
+  return next ?? null;
+}
+
+export function computePerformanceViolations(
+  guardId: string,
+  guard: SecurityGuard,
+  requests: SecurityRequest[],
+  reports: ShiftReport[] = []
+): PerformanceViolation[] {
+  const violations: PerformanceViolation[] = [];
+
+  const noShows = guardAssignedJobs(guardId, requests).filter(
+    (r) => (r as SecurityRequest & { noShow?: boolean }).noShow === true
+  ).length;
+  if (noShows > 0) {
+    violations.push({ id: 'no-show', label: 'No-show', count: noShows });
+  }
+
+  const failedAudits = guard.failedAudits ?? 0;
+  if (failedAudits > 0) {
+    violations.push({ id: 'failed-audit', label: 'Failed uniform audit', count: failedAudits });
+  }
+
+  const incidents = reports.filter((r) => r.guardId === guardId && r.type === 'incident').length;
+  if (incidents > 0) {
+    violations.push({ id: 'incident', label: 'Incident report', count: incidents });
+  }
+
+  return violations;
+}
+
+export function buildPerformanceFactors(
+  guardId: string,
+  metrics: GuardPerformanceMetrics,
+  clientReviews: ClientReviewStats,
+  requests: SecurityRequest[]
+): PerformanceFactor[] {
+  const acceptanceRate = computeAcceptanceRate(guardId, requests);
+  const completionRate = computeCompletionRate(guardId, requests);
+  const onTimeRate = metrics.jobsSampled > 0 ? metrics.onTimeRate : 0;
+  const qualityRate = computeQualityRate(metrics);
+  const clientRate = clientReviews.count > 0 ? clientReviews.average / 5 : 0;
+
+  const factors: PerformanceFactor[] = [
+    {
+      id: 'acceptance',
+      label: 'Acceptance rate',
+      rate: acceptanceRate,
+      rateDisplay: percentDisplay(acceptanceRate),
+      pointsEarned: pointsFromRate(acceptanceRate, FACTOR_WEIGHTS.acceptance),
+      pointsMax: FACTOR_WEIGHTS.acceptance,
+      ...factorStatus(acceptanceRate),
+    },
+    {
+      id: 'completion',
+      label: 'Completion rate',
+      rate: completionRate,
+      rateDisplay: percentDisplay(completionRate),
+      pointsEarned: pointsFromRate(completionRate, FACTOR_WEIGHTS.completion),
+      pointsMax: FACTOR_WEIGHTS.completion,
+      ...factorStatus(completionRate),
+    },
+    {
+      id: 'on-time',
+      label: 'On-time rate',
+      rate: onTimeRate,
+      rateDisplay: percentDisplay(onTimeRate),
+      pointsEarned: pointsFromRate(onTimeRate, FACTOR_WEIGHTS.onTime),
+      pointsMax: FACTOR_WEIGHTS.onTime,
+      ...factorStatus(onTimeRate),
+    },
+    {
+      id: 'quality',
+      label: 'Quality rate',
+      rate: qualityRate,
+      rateDisplay: percentDisplay(qualityRate),
+      pointsEarned: pointsFromRate(qualityRate, FACTOR_WEIGHTS.quality),
+      pointsMax: FACTOR_WEIGHTS.quality,
+      ...factorStatus(qualityRate),
+    },
+  ];
+
+  if (clientReviews.count > 0) {
+    factors.push({
+      id: 'client-rating',
+      label: 'Customer rating',
+      rate: clientRate,
+      rateDisplay: starDisplay(clientReviews.average),
+      pointsEarned: pointsFromRate(clientRate, FACTOR_WEIGHTS.clientRating),
+      pointsMax: FACTOR_WEIGHTS.clientRating,
+      ...factorStatus(clientRate),
+    });
+  }
+
+  return factors;
+}
+
+export function computeGuardPerformanceRating(
+  guard: SecurityGuard,
+  requests: SecurityRequest[],
+  reports: ShiftReport[] = []
+): GuardPerformanceRating {
+  const metrics = computeGuardPerformance(guard.id, requests, reports);
+  const clientReviews = computeClientReviewStats(guard.id, requests);
+  const factors = buildPerformanceFactors(guard.id, metrics, clientReviews, requests);
+  const violations = computePerformanceViolations(guard.id, guard, requests, reports);
+
+  const overallRating = factors.reduce((sum, f) => sum + f.pointsEarned, 0);
+  const tier = getPerformanceTier(overallRating);
+  const nextTier = getNextPerformanceTier(overallRating);
+  const pointsToNextTier = nextTier ? Math.max(0, nextTier.threshold - overallRating) : 0;
+
+  return {
+    overallRating,
+    tier,
+    nextTier,
+    pointsToNextTier,
+    factors,
+    violations,
+  };
+}
+
+export function formatOverallRating(score: number): string {
+  if (score <= 0) return '—';
+  return String(score);
+}
+
+export function formatViolationSummary(violations: PerformanceViolation[]): string {
+  const total = violations.reduce((sum, v) => sum + v.count, 0);
+  if (total <= 0) return '';
+  if (total === 1) return '1 contract violation';
+  return `${total} contract violations`;
+}

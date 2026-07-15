@@ -1,22 +1,28 @@
 import React, { useMemo } from 'react';
+import { AlertTriangle, Award, ChevronRight, Info, Shield } from 'lucide-react';
 import type { SecurityGuard, SecurityRequest } from '../../types';
 import {
   buildPerformanceBreakdown,
   computeClientReviewStats,
+  computeGuardPerformanceRating,
+  formatOverallRating,
   formatPerformanceScore,
   formatReviewCount,
   formatShiftSampleCount,
+  formatViolationSummary,
+  PERFORMANCE_TIERS,
   type GuardPerformanceMetrics,
   type GuardSkillRating,
+  type PerformanceFactor,
+  type PerformanceTier,
 } from '../../lib/guardPerformance';
-import { Star } from 'lucide-react';
 
 export interface GuardRatingSectionProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
   performance: GuardPerformanceMetrics;
   skillRatings: GuardSkillRating[];
-  /** full = guard profile; compact = live shift card */
+  /** full = guard performance screen; compact = live shift card */
   variant?: 'full' | 'compact';
   className?: string;
 }
@@ -27,19 +33,84 @@ function displayOverallScore(performance: GuardPerformanceMetrics, guard: Securi
   return 0;
 }
 
-function StarRow({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' }) {
-  const starClass = size === 'sm' ? 'w-3.5 h-3.5' : 'w-5 h-5';
-  const filled = Math.round(Math.min(5, Math.max(0, score)));
+function TierBadgeIcon({ tier, size = 'md' }: { tier: PerformanceTier; size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-12 h-12';
+  const iconSize = size === 'sm' ? 'w-4 h-4' : 'w-6 h-6';
+  const tierClass =
+    tier.level >= 3
+      ? 'guard-tier-badge-elite'
+      : tier.level >= 2
+        ? 'guard-tier-badge-professional'
+        : tier.level >= 1
+          ? 'guard-tier-badge-rising'
+          : 'guard-tier-badge-starting';
+
   return (
-    <div className="guard-rating-stars flex items-center" aria-hidden>
-      {[1, 2, 3, 4, 5].map((step) => (
-        <Star
-          key={step}
-          className={`${starClass} ${
-            step <= filled ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'
-          }`}
-        />
-      ))}
+    <div className={`guard-tier-badge ${sizeClass} ${tierClass}`} aria-hidden>
+      {tier.level >= 3 ? (
+        <Shield className={iconSize} />
+      ) : tier.level >= 2 ? (
+        <Award className={iconSize} />
+      ) : (
+        <Shield className={iconSize} />
+      )}
+    </div>
+  );
+}
+
+function TierProgressBar({
+  overallRating,
+  tier,
+  nextTier,
+}: {
+  overallRating: number;
+  tier: PerformanceTier;
+  nextTier: PerformanceTier | null;
+}) {
+  const maxScale = 100;
+  const fillPercent = Math.min(100, (overallRating / maxScale) * 100);
+
+  return (
+    <div className="guard-tier-progress">
+      <div className="guard-tier-progress-track" role="presentation">
+        <div className="guard-tier-progress-fill" style={{ width: `${fillPercent}%` }} />
+        {PERFORMANCE_TIERS.map((t) => {
+          const position = (t.threshold / maxScale) * 100;
+          const isActive = overallRating >= t.threshold;
+          const isCurrent = tier.id === t.id;
+          return (
+            <div
+              key={t.id}
+              className={`guard-tier-progress-marker ${isActive ? 'guard-tier-progress-marker-active' : ''} ${isCurrent ? 'guard-tier-progress-marker-current' : ''}`}
+              style={{ left: `${position}%` }}
+            >
+              <TierBadgeIcon tier={t} size="sm" />
+              <span className="guard-tier-progress-marker-label">{t.threshold}</span>
+            </div>
+          );
+        })}
+      </div>
+      {nextTier && (
+        <p className="guard-tier-progress-hint">
+          {nextTier.threshold - overallRating} points to {nextTier.name}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FactorCard({ factor }: { factor: PerformanceFactor }) {
+  return (
+    <div className="guard-factor-card">
+      <p className="guard-factor-card-label">{factor.label}</p>
+      <p className="guard-factor-card-rate">{factor.rateDisplay}</p>
+      <p className="guard-factor-card-points">
+        {factor.pointsEarned} of {factor.pointsMax} points
+      </p>
+      <p className={`guard-factor-card-status guard-factor-status-${factor.status}`}>
+        <span className="guard-factor-status-dot" aria-hidden />
+        {factor.statusLabel}
+      </p>
     </div>
   );
 }
@@ -88,13 +159,20 @@ export function GuardRatingSection({
     [guard.id, requests]
   );
 
+  const rating = useMemo(
+    () => computeGuardPerformanceRating(guard, requests),
+    [guard, requests]
+  );
+
   const overall = displayOverallScore(performance, guard);
   const breakdown = buildPerformanceBreakdown(performance, clientReviews);
   const hasSkills = skillRatings.length > 0;
   const hasBreakdown = breakdown.length > 0;
   const isCompact = variant === 'compact';
+  const violationSummary = formatViolationSummary(rating.violations);
+  const hasRatingData = rating.overallRating > 0 || performance.jobsSampled > 0;
 
-  if (overall <= 0 && !hasBreakdown && !hasSkills) {
+  if (!hasRatingData && !hasBreakdown && !hasSkills) {
     return (
       <section className={`guard-rating-section guard-rating-section-empty ${className}`}>
         <p className="text-sm text-brand-text-muted text-center py-3">
@@ -104,51 +182,80 @@ export function GuardRatingSection({
     );
   }
 
+  if (isCompact) {
+    return (
+      <section className={`guard-rating-section guard-rating-section-compact ${className}`}>
+        <div className="guard-rating-hero">
+          <TierBadgeIcon tier={rating.tier} size="sm" />
+          <div className="guard-rating-hero-meta">
+            <p className="guard-rating-hero-title">{rating.tier.name}</p>
+            <p className="guard-rating-hero-subtitle">
+              Overall rating {formatOverallRating(rating.overallRating)}
+              {overall > 0 && ` · Security score ${formatPerformanceScore(overall)}`}
+            </p>
+          </div>
+        </div>
+        {rating.factors.length > 0 && (
+          <div className="guard-rating-breakdown">
+            {rating.factors.slice(0, 3).map((factor) => (
+              <FactorCard key={factor.id} factor={factor} />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
+
   return (
-    <section className={`guard-rating-section ${isCompact ? 'guard-rating-section-compact' : ''} ${className}`}>
-      <div className="guard-rating-hero">
-        <div className="guard-rating-hero-score">
-          <span className="guard-rating-hero-number">{overall > 0 ? formatPerformanceScore(overall) : '—'}</span>
-          {overall > 0 && <StarRow score={overall} size={isCompact ? 'sm' : 'md'} />}
-        </div>
-        <div className="guard-rating-hero-meta">
-          <p className="guard-rating-hero-title">Security rating</p>
-          {clientReviews.count > 0 ? (
-            <p className="guard-rating-hero-subtitle">{formatReviewCount(clientReviews.count)}</p>
-          ) : performance.jobsSampled > 0 ? (
-            <p className="guard-rating-hero-subtitle">{formatShiftSampleCount(performance.jobsSampled)}</p>
-          ) : guard.rating > 0 ? (
-            <p className="guard-rating-hero-subtitle">Overall client rating {guard.rating.toFixed(1)}/5</p>
-          ) : null}
-        </div>
+    <section className={`guard-rating-section guard-rating-section-tiered ${className}`}>
+      <div className="guard-tier-hero">
+        <TierBadgeIcon tier={rating.tier} />
+        <h2 className="guard-tier-hero-name">{rating.tier.name}</h2>
+        <p className="guard-tier-hero-score">
+          Overall rating {formatOverallRating(rating.overallRating)}
+          <Info className="guard-tier-hero-info" aria-hidden />
+        </p>
+        <TierProgressBar
+          overallRating={rating.overallRating}
+          tier={rating.tier}
+          nextTier={rating.nextTier}
+        />
+        {clientReviews.count > 0 ? (
+          <p className="guard-tier-hero-subtitle">{formatReviewCount(clientReviews.count)}</p>
+        ) : performance.jobsSampled > 0 ? (
+          <p className="guard-tier-hero-subtitle">{formatShiftSampleCount(performance.jobsSampled)}</p>
+        ) : null}
       </div>
 
-      {hasBreakdown && (
-        <div className="guard-rating-breakdown">
-          {!isCompact && <p className="guard-rating-group-label">Performance</p>}
-          {breakdown.map((row) => (
-            <RatingBarRow
-              key={row.id}
-              label={row.label}
-              score={row.score}
-              percent={row.percent}
-              compact={isCompact}
-            />
-          ))}
+      {violationSummary && (
+        <button type="button" className="guard-violations-banner">
+          <AlertTriangle className="guard-violations-icon" aria-hidden />
+          <span className="guard-violations-text">{violationSummary}</span>
+          <ChevronRight className="guard-violations-chevron" aria-hidden />
+        </button>
+      )}
+
+      {rating.factors.length > 0 && (
+        <div className="guard-factors-section">
+          <h3 className="guard-factors-heading">Your rating factors</h3>
+          <div className="guard-factors-grid">
+            {rating.factors.map((factor) => (
+              <FactorCard key={factor.id} factor={factor} />
+            ))}
+          </div>
         </div>
       )}
 
       {hasSkills && (
         <div className="guard-rating-breakdown">
-          {!isCompact && <p className="guard-rating-group-label">Skills</p>}
-          {skillRatings.slice(0, isCompact ? 3 : 6).map((skill) => (
+          <p className="guard-rating-group-label">Skills</p>
+          {skillRatings.slice(0, 6).map((skill) => (
             <RatingBarRow
               key={skill.skill}
               label={skill.skill}
               score={skill.rating}
               percent={rateToBarPercent(skill.rating)}
               reviewCount={skill.reviewCount}
-              compact={isCompact}
             />
           ))}
         </div>
