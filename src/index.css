@@ -8727,6 +8727,299 @@ html.theme-grey .wf-badge-success {
   transition: width 0.35s ease;
 }
 
+/* ─── 50c. GUARD PERFORMANCE TIERS (DoorDash-style levels) ─── */
+.guard-rating-section-tiered {
+  padding: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+.guard-tier-hero {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--brand-primary) 92%, black),
+    var(--brand-primary)
+  );
+  color: #fff;
+  padding: 1.5rem 1.25rem 1.75rem;
+  text-align: center;
+  border-radius: var(--radius-app-lg) var(--radius-app-lg) 0 0;
+  position: relative;
+}
+
+.guard-tier-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1.25rem;
+  background: var(--brand-bg-sec);
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+
+.guard-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  margin: 0 auto 0.75rem;
+}
+
+.guard-tier-badge-rising {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.guard-tier-badge-professional {
+  background: rgba(255, 215, 100, 0.25);
+  border-color: rgba(255, 215, 100, 0.6);
+}
+
+.guard-tier-badge-elite {
+  background: rgba(200, 220, 255, 0.25);
+  border-color: rgba(200, 220, 255, 0.7);
+}
+
+.guard-tier-badge-starting {
+  opacity: 0.85;
+}
+
+.guard-tier-hero-name {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.guard-tier-hero-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0.5rem 0 1rem;
+  opacity: 0.95;
+}
+
+.guard-tier-hero-info {
+  width: 0.875rem;
+  height: 0.875rem;
+  opacity: 0.75;
+}
+
+.guard-tier-hero-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin: 0.75rem 0 0;
+  position: relative;
+  z-index: 1;
+}
+
+.guard-tier-progress {
+  position: relative;
+  z-index: 1;
+  padding: 0 0.25rem;
+}
+
+.guard-tier-progress-track {
+  position: relative;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 2.25rem 0.5rem 0.5rem;
+  overflow: visible;
+}
+
+.guard-tier-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #fff;
+  transition: width 0.4s ease;
+}
+
+.guard-tier-progress-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  opacity: 0.55;
+}
+
+.guard-tier-progress-marker-active {
+  opacity: 1;
+}
+
+.guard-tier-progress-marker-current .guard-tier-badge {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.guard-tier-progress-marker .guard-tier-badge {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+  border-width: 2px;
+}
+
+.guard-tier-progress-marker .guard-tier-badge svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.guard-tier-progress-marker-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0.125rem;
+}
+
+.guard-tier-progress-hint {
+  font-size: 0.6875rem;
+  opacity: 0.85;
+  margin: 0.5rem 0 0;
+}
+
+.guard-violations-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.875rem 1.125rem;
+  border: none;
+  border-bottom: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--status-warning) 8%, var(--brand-bg-sec));
+  color: var(--brand-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.guard-violations-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--status-warning);
+  flex-shrink: 0;
+}
+
+.guard-violations-text {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.guard-violations-chevron {
+  width: 1rem;
+  height: 1rem;
+  color: var(--brand-text-muted);
+  flex-shrink: 0;
+}
+
+.guard-factors-section {
+  padding: 1rem 1.125rem;
+}
+
+.guard-factors-heading {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 0 0.875rem;
+  color: var(--brand-text);
+}
+
+.guard-factors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.guard-factor-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.guard-factor-card-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--brand-text-muted);
+  margin: 0;
+}
+
+.guard-factor-card-rate {
+  font-size: 1.375rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.guard-factor-card-points {
+  font-size: 0.6875rem;
+  color: var(--brand-text-muted);
+  margin: 0;
+}
+
+.guard-factor-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0;
+}
+
+.guard-factor-status-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.guard-factor-status-very-high {
+  color: var(--status-success);
+}
+
+.guard-factor-status-high {
+  color: color-mix(in srgb, var(--status-success) 75%, var(--brand-text));
+}
+
+.guard-factor-status-moderate {
+  color: var(--status-warning);
+}
+
+.guard-factor-status-low,
+.guard-factor-status-very-low {
+  color: var(--status-danger);
+}
+
+.guard-rating-section-tiered .guard-rating-breakdown {
+  padding: 0 1.125rem 1rem;
+}
+
+.guard-rating-section-compact .guard-factors-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.guard-rating-section-compact .guard-factor-card {
+  padding: 0.5rem 0.625rem;
+}
+
+.guard-rating-section-compact .guard-factor-card-rate {
+  font-size: 1rem;
+}
+
+
 /* End Wave 2 — Full Responsive Uber Overhaul */
 
 /* ═══════════════════════════════════════════════════════════

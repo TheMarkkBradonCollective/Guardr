@@ -2,7 +2,9 @@ import React, { useMemo } from 'react';
 import type { SecurityGuard, SecurityRequest } from '../../types';
 import {
   computeGuardPerformance,
+  computeGuardPerformanceRating,
   computeGuardSkillRatings,
+  formatOverallRating,
   formatPerformanceScore,
 } from '../../lib/guardPerformance';
 import { GuardRatingSection } from './GuardRatingSection';
@@ -18,6 +20,10 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
     () => computeGuardPerformance(guard.id, requests),
     [guard.id, requests]
   );
+  const performanceRating = useMemo(
+    () => computeGuardPerformanceRating(guard, requests),
+    [guard, requests]
+  );
   const skillRatings = useMemo(
     () => computeGuardSkillRatings(guard, requests),
     [guard, requests]
@@ -25,10 +31,10 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
 
   return (
     <AppScreen>
-      <AppFormSection title="Your security rating">
+      <AppFormSection title="Your performance">
         <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-1">
-          DoorDash-style breakdown of client reviews, shift behavior, and specialty scores. Clients
-          see this on your profile when they browse or hire.
+          DoorDash-style rating with levels, factor breakdown, and tier progress. Clients see your
+          tier and factors when they browse or hire.
         </p>
         <GuardRatingSection
           guard={guard}
@@ -40,7 +46,11 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
       </AppFormSection>
 
       <AppMetricStrip className="mt-2">
-        <AppMetricCell label="Client rating" value={guard.rating > 0 ? guard.rating.toFixed(1) : '—'} />
+        <AppMetricCell label="Level" value={performanceRating.tier.name} />
+        <AppMetricCell
+          label="Overall rating"
+          value={performanceRating.overallRating > 0 ? formatOverallRating(performanceRating.overallRating) : '—'}
+        />
         <AppMetricCell
           label="Security score"
           value={performance.overallScore > 0 ? formatPerformanceScore(performance.overallScore) : '—'}
