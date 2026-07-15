@@ -32,9 +32,9 @@ Guardr is **not** an employer, staffing agency, or licensed security services pr
 | Payments | Stripe Connect (platform fee model) |
 | Hosting | Vercel |
 
-## guardr.co reference
+## Public guide
 
-Full platform details: **[docs/guardr.md](docs/guardr.md)** (domain, legal, stack, APIs, env vars, surfaces)
+User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is, how it works, getting started)
 
 ## Deploy to guardr.co
 
