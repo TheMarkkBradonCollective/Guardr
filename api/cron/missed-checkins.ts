@@ -343,11 +343,11 @@ function resolveNotificationUrl(type, options = {}) {
     case "job_submitted":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=job-offers";
     case "guard_application":
-      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=applications";
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
     case "guard_pending_approval":
-      return options.guardId ? `/staff/approvals?aq=guard-accounts&g=${encodeURIComponent(options.guardId)}` : "/staff/approvals?aq=guard-accounts";
+      return options.guardId ? `/staff/applications?g=${encodeURIComponent(options.guardId)}` : "/staff/applications";
     case "client_pending_approval":
-      return "/staff/approvals?aq=client-accounts";
+      return "/staff/applications";
     case "credential_pending":
       return options.guardId ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}` : "/staff/credentials";
     case "payment_attention":
@@ -484,7 +484,7 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
         return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
       }
       if (type === "guard_application") {
-        return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=applications";
+        return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
       }
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "guard_trusted_status":
