@@ -1,7 +1,6 @@
 import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
 import type { AuditLogEntry, AuditAction } from './auditLog';
-import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
-import { getClientAccountStatus } from './accountStatus';
+import { isSelfSubmittedGuardAccount, isSelfSubmittedClientAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
 import {
   coiApprovalItemId,
@@ -13,11 +12,10 @@ import {
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
-import { isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
-import { guardActivationSummaryLabel } from './guardAccountActivation';
+import { getClientAccountStatus, isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
+import { guardActivationSummaryLabel, guardBelongsInAccountApprovalsQueue } from './guardAccountActivation';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
-import { jobNeedsStaffApplicationReview } from './jobApplications';
 
 export type ApprovalFeedQueue = Exclude<ApprovalQueueId, 'accounts' | 'all'>;
 
@@ -146,34 +144,42 @@ function scheduleChangeItems(requests: SecurityRequest[], auditLog: AuditLogEntr
   return items;
 }
 
-function applicationItems(requests: SecurityRequest[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
-  return requests
-    .filter(jobNeedsStaffApplicationReview)
-    .map((req) => {
-      const audit = latestAudit(auditLog, req.id, ['job_approved']);
-      const actor = actorLabel(audit);
-      return {
-        id: req.id,
-        queue: 'applications',
-        title: req.title,
-        subtitle: `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}`,
-        status: 'pending' as const,
-        statusLabel: 'Needs review',
-        submittedAt: req.openedAt ?? req.startDate,
-        reviewedAt: undefined,
-        reviewedByName: actor.name,
-        reviewedByEmail: actor.email,
-        sortKey: new Date(req.openedAt ?? req.startDate).getTime(),
-      };
-    });
+function accountSignupApplicationItems(
+  guards: SecurityGuard[],
+  clients: Client[],
+  auditLog: AuditLogEntry[]
+): ApprovalFeedItem[] {
+  const guardItems = guardAccountItems(guards, auditLog)
+    .filter(
+      (item) =>
+        item.queue === 'guard-accounts' &&
+        (item.status === 'pending' || item.status === 'in_review' || item.status === 'approved')
+    )
+    .map((item) => ({ ...item, queue: 'applications' as const }));
+
+  const clientItems = clientAccountItems(clients, auditLog)
+    .filter((item) => item.status === 'pending' || item.status === 'in_review')
+    .map((item) => ({ ...item, queue: 'applications' as const }));
+
+  return [...guardItems, ...clientItems];
 }
 
-/** Applications queue only — job applicant review, not account approvals. */
+/** Applications section — guard and client sign-ups awaiting staff review or activation. */
 export function buildApplicationFeed(
-  requests: SecurityRequest[],
+  guards: SecurityGuard[],
+  clients: Client[],
   auditLog: AuditLogEntry[] = []
 ): ApprovalFeedItem[] {
-  return applicationItems(requests, auditLog).sort(compareFeedItems);
+  return accountSignupApplicationItems(guards, clients, auditLog).sort(compareFeedItems);
+}
+
+export function countPendingAccountSignupApplications(
+  guards: SecurityGuard[],
+  clients: Client[]
+): number {
+  const pendingGuards = guards.filter((g) => !g.isStaff && guardBelongsInAccountApprovalsQueue(g)).length;
+  const pendingClients = clients.filter(isSelfSubmittedClientAccount).length;
+  return pendingGuards + pendingClients;
 }
 
 function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
@@ -401,7 +407,7 @@ export function buildStaffApprovalsFeed(input: StaffApprovalsFeedInput): Approva
   const items = [
     ...jobOfferItems(input.requests, auditLog),
     ...scheduleChangeItems(input.requests, auditLog),
-    ...applicationItems(input.requests, auditLog),
+    ...accountSignupApplicationItems(input.guards, input.clients, auditLog),
     ...credentialItems(input.guards, auditLog),
     ...guardAccountItems(input.guards, auditLog),
     ...staffAccountItems(input.guards, auditLog),

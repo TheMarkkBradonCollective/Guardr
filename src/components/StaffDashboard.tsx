@@ -442,16 +442,16 @@ export function StaffDashboard({
 
   const navigateSection = (next: StaffSection, selection: StaffSectionSelection = {}) => {
     if (!isControlled) setInternalSection(next);
-    const nextGuardId = next === 'guards'
+    const nextGuardId = next === 'guards' || next === 'applications'
       ? selection.guardId !== undefined ? selection.guardId : selectedGuardId
       : null;
     const nextTeamId = next === 'team'
       ? selection.teamId !== undefined ? selection.teamId : selectedTeamId
       : null;
-    const nextClientId = next === 'clients'
+    const nextClientId = next === 'clients' || next === 'applications'
       ? selection.clientId !== undefined ? selection.clientId : selectedClientId
       : null;
-    const nextJobId = next === 'jobs' || next === 'applications'
+    const nextJobId = next === 'jobs'
       ? selection.jobId !== undefined ? selection.jobId : selectedJobId
       : null;
     const nextCredentialItemId = next === 'credentials'
@@ -518,7 +518,7 @@ export function StaffDashboard({
 
   const badges = useMemo(
     () => ({
-      applications: stats.pendingGuardApplicationJobs,
+      applications: stats.pendingAccountApplications,
       credentials:
         stats.pendingCertApprovals +
         guards.filter((g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending').length,
@@ -576,12 +576,36 @@ export function StaffDashboard({
       case 'applications':
         return (
           <StaffApplications
-            requests={requests}
             guards={guards}
-            onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : async () => {}}
-            onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
-            canReviewJobRequests={canReviewJobs}
-            initialJobId={selectedJobId}
+            clients={clients}
+            requests={requests}
+            standingCrewMembers={standingCrewMembers}
+            canApproveGuardAccounts={canApproveGuardAccounts}
+            canActivateGuardAccounts={canActivateApprovedGuards}
+            canManageGuardAccounts={canManageGuardAccounts}
+            canManageClientAccounts={canManageClientAccounts}
+            canVerifyCredentials={canVerifyGuardCredentials}
+            canSuspend={canSuspend}
+            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
+            onApproveClient={onApproveClient}
+            onRejectClient={onRejectClient}
+            onUpdateGuardUserStatus={onUpdateGuardUserStatus}
+            onApproveCert={onApproveCert}
+            onRejectCert={onRejectCert}
+            onDeleteGuardAccount={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
+            onDeleteClientAccount={canManageClientAccounts ? onDeleteClientAccount : undefined}
+            onOpenJob={openJob}
+            initialGuardId={selectedGuardId}
+            initialClientId={selectedClientId}
+            onSelectionChange={(selection) => {
+              setSelectedGuardId(selection.guardId ?? null);
+              setSelectedClientId(selection.clientId ?? null);
+              onSectionChange?.('applications', {
+                guardId: selection.guardId ?? null,
+                clientId: selection.clientId ?? null,
+              });
+            }}
           />
         );
       case 'credentials':

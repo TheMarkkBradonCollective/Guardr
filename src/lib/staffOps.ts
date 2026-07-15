@@ -15,7 +15,6 @@ import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLoca
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { getPendingInsuranceReviews } from './guardInsurance';
-import { countPendingGuardApplications, getJobsNeedingStaffApplicationReview } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
@@ -79,10 +78,9 @@ export function staffSectionFromApprovalQueue(queue?: ApprovalQueueId | null): S
     case 'credentials':
       return 'credentials';
     case 'guard-accounts':
-    case 'accounts':
-      return 'guards';
     case 'client-accounts':
-      return 'clients';
+    case 'accounts':
+      return 'applications';
     case 'staff-accounts':
       return 'team';
     case 'applications':
@@ -146,8 +144,7 @@ export interface PlatformStats {
   pendingJobApprovals: number;
   pendingScheduleChanges: number;
   pendingCertApprovals: number;
-  pendingGuardApplicationJobs: number;
-  pendingGuardApplications: number;
+  pendingAccountApplications: number;
   pendingClientAccounts: number;
   completedJobs: number;
 }
@@ -324,18 +321,15 @@ export function computePlatformStats(
   const pendingCertApprovals = pendingCerts + pendingInsuranceReviews;
   const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
-  const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
-  const pendingGuardApplicationJobs = getJobsNeedingStaffApplicationReview(requests).length;
-  const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
+  const pendingAccountApplications =
+    getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length + pendingClientAccounts;
   const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
   const pendingApprovals =
     pendingJobApprovals +
     pendingScheduleChanges +
     pendingCertApprovals +
-    pendingGuardApplicationJobs +
-    pendingGuardAccounts +
-    pendingClientAccounts +
+    pendingAccountApplications +
     pendingStaffAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
@@ -369,8 +363,7 @@ export function computePlatformStats(
     pendingJobApprovals,
     pendingScheduleChanges,
     pendingCertApprovals,
-    pendingGuardApplicationJobs,
-    pendingGuardApplications,
+    pendingAccountApplications,
     pendingClientAccounts,
     completedJobs,
   };
@@ -438,15 +431,12 @@ export function buildOverviewMetricCells(
               stats.pendingCertApprovals > 0
                 ? `${stats.pendingCertApprovals} credential${stats.pendingCertApprovals === 1 ? '' : 's'}`
                 : null,
-              stats.pendingGuardApplicationJobs > 0
-                ? `${stats.pendingGuardApplications} guard application${stats.pendingGuardApplications === 1 ? '' : 's'}`
-                : null,
-              stats.pendingClientAccounts > 0
-                ? `${stats.pendingClientAccounts} client sign-up${stats.pendingClientAccounts === 1 ? '' : 's'}`
+              stats.pendingAccountApplications > 0
+                ? `${stats.pendingAccountApplications} account application${stats.pendingAccountApplications === 1 ? '' : 's'}`
                 : null,
             ]
               .filter(Boolean)
-              .join(' · ') + ' across jobs, guards, clients, and applications',
+              .join(' · ') + ' across jobs, credentials, and applications',
       accent: stats.pendingApprovals > 0,
     },
     {
@@ -552,42 +542,18 @@ export function buildOverviewActionQueue(
     });
   }
 
-  if (stats.pendingGuardApplicationJobs > 0) {
+  if (stats.pendingAccountApplications > 0) {
     items.push({
-      id: 'guard-applications',
-      title: 'Review guard applications',
-      description: `${stats.pendingGuardApplications} applicant${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
-      count: stats.pendingGuardApplications,
+      id: 'account-applications',
+      title: 'Review account applications',
+      description: 'New guard and client sign-ups waiting for staff approval before activation',
+      count: stats.pendingAccountApplications,
       section: 'applications',
       tone: 'urgent',
     });
   }
 
-  const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
-  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
-  const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
-  const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
   const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
-  if (pendingGuardAccounts > 0) {
-    items.push({
-      id: 'pending-guard-accounts',
-      title: 'Approve guard profiles',
-      description: 'Review guard credentials and activate marketplace accounts',
-      count: pendingGuardAccounts,
-      section: 'guards',
-      tone: 'urgent',
-    });
-  }
-  if (pendingClientAccounts > 0) {
-    items.push({
-      id: 'pending-client-accounts',
-      title: 'Approve client sign-ups',
-      description: 'Review new client accounts before they can post jobs',
-      count: pendingClientAccounts,
-      section: 'clients',
-      tone: 'urgent',
-    });
-  }
   if (pendingStaffAccounts > 0) {
     items.push({
       id: 'pending-staff-accounts',
@@ -1014,15 +980,9 @@ export function resolveOverviewActionSelection(
   ctx: { requests: SecurityRequest[]; guards: SecurityGuard[]; clients: Client[] }
 ): OverviewNavigationSelection {
   switch (item.id) {
-    case 'guard-applications': {
-      const job = getJobsNeedingStaffApplicationReview(ctx.requests)[0];
-      return { jobId: job?.id ?? null };
-    }
-    case 'pending-guard-accounts': {
+    case 'account-applications': {
       const guard = getPendingGuardAccounts(ctx.guards)[0];
-      return { guardId: guard?.id ?? null };
-    }
-    case 'pending-client-accounts': {
+      if (guard) return { guardId: guard.id };
       const client = getPendingClientAccounts(ctx.clients)[0];
       return { clientId: client?.id ?? null };
     }

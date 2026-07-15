@@ -84,15 +84,14 @@ const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> =
   'pending-jobs': <Briefcase className="w-4 h-4" />,
   'pending-schedule-changes': <Briefcase className="w-4 h-4" />,
   'pending-certs': <ClipboardCheck className="w-4 h-4" />,
-  'guard-applications': <UserCheck className="w-4 h-4" />,
+  'account-applications': <UserCheck className="w-4 h-4" />,
   'open-marketplace': <Briefcase className="w-4 h-4" />,
   'active-guard-jobs': <Briefcase className="w-4 h-4" />,
   incidents: <AlertTriangle className="w-4 h-4" />,
   payments: <Shield className="w-4 h-4" />,
   support: <LifeBuoy className="w-4 h-4" />,
   'live-jobs': <MapPin className="w-4 h-4" />,
-  'pending-guard-accounts': <Shield className="w-4 h-4" />,
-  'pending-client-accounts': <UserCheck className="w-4 h-4" />,
+  'pending-staff-accounts': <Shield className="w-4 h-4" />,
   'jobs-missing-coords': <MapPin className="w-4 h-4" />,
 };
 

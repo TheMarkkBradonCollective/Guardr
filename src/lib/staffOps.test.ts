@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Client, SecurityRequest } from '../types';
+import type { Client, SecurityGuard } from '../types';
 import {
   normalizeStaffSection,
   resolveOverviewActionSelection,
@@ -15,45 +15,46 @@ describe('staff section routing', () => {
   it('maps legacy approval queues to owning sections', () => {
     assert.equal(staffSectionFromApprovalQueue('applications'), 'applications');
     assert.equal(staffSectionFromApprovalQueue('credentials'), 'credentials');
-    assert.equal(staffSectionFromApprovalQueue('guard-accounts'), 'guards');
-    assert.equal(staffSectionFromApprovalQueue('client-accounts'), 'clients');
+    assert.equal(staffSectionFromApprovalQueue('guard-accounts'), 'applications');
+    assert.equal(staffSectionFromApprovalQueue('client-accounts'), 'applications');
   });
 
-  it('deep-links application overview actions to the first reviewable job', () => {
-    const requests = [
+  it('deep-links account application overview actions to the first pending guard', () => {
+    const guards = [
       {
-        id: 'job-1',
-        status: 'open',
-        applicants: ['g1'],
-        assignedGuardId: undefined,
-        pendingGuardId: undefined,
-        staffApprovedGuardAt: undefined,
-      } as SecurityRequest,
+        id: 'guard-1',
+        name: 'Test Guard',
+        email: 'guard@test.com',
+        userStatus: 'pending',
+        mustChangePassword: false,
+        isStaff: false,
+        certifications: [],
+      } as SecurityGuard,
     ];
 
     const selection = resolveOverviewActionSelection(
       {
-        id: 'guard-applications',
+        id: 'account-applications',
         title: '',
         description: '',
         count: 1,
         section: 'applications',
         tone: 'urgent',
       },
-      { requests, guards: [], clients: [] }
+      { requests: [], guards, clients: [] }
     );
-    assert.equal(selection.jobId, 'job-1');
+    assert.equal(selection.guardId, 'guard-1');
   });
 
-  it('deep-links client overview actions to the first pending client', () => {
+  it('deep-links account application overview actions to the first pending client', () => {
     const clients = [{ id: 'client-1', accountStatus: 'pending', approved: false } as Client];
     const selection = resolveOverviewActionSelection(
       {
-        id: 'pending-client-accounts',
+        id: 'account-applications',
         title: '',
         description: '',
         count: 1,
-        section: 'clients',
+        section: 'applications',
         tone: 'urgent',
       },
       { requests: [], guards: [], clients }

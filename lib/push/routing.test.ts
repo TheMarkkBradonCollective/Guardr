@@ -58,14 +58,14 @@ describe('resolveNotificationUrlForRole', () => {
     assert.equal(url, '/guard/map?jc=job-1');
   });
 
-  it('deep-links staff to applications tab for guard applications', () => {
+  it('deep-links staff to jobs tab for guard job applications', () => {
     const url = resolveNotificationUrlForRole('guard_application', 'administrator', { requestId: 'job-1' });
-    assert.equal(url, '/staff/applications?j=job-1');
+    assert.equal(url, '/staff/jobs?j=job-1');
   });
 
-  it('deep-links staff to guards tab for pending guard accounts', () => {
+  it('deep-links staff to applications for pending guard accounts', () => {
     const url = resolveNotificationUrl('guard_pending_approval', { guardId: 'guard-1' });
-    assert.equal(url, '/staff/guards?g=guard-1');
+    assert.equal(url, '/staff/applications?g=guard-1');
   });
 
   it('deep-links guards to earnings on payout_ready', () => {
