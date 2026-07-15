@@ -347,7 +347,11 @@ export function StaffOverview({
       actionLabel={config.showDirectorFinancials ? 'Analytics' : undefined}
       onAction={config.showDirectorFinancials ? () => onNavigate('analytics') : undefined}
     >
-      <OverviewVisualGrid cards={platformPulseCards} columns={config.layout === 'compact' ? 2 : 3} />
+      <OverviewVisualGrid
+        cards={platformPulseCards}
+        columns={config.layout === 'compact' ? 2 : 3}
+        variant={config.layout === 'compact' ? 'full' : 'sidebar'}
+      />
     </AppDashboardZone>
   ) : null;
 
@@ -364,7 +368,7 @@ export function StaffOverview({
 
         {config.showOperationsSnapshot && (
           <AppDashboardZone title="Operations snapshot" actionLabel="Payments" onAction={() => onNavigate('payments')}>
-            <OverviewVisualGrid cards={operationsSnapshotCards} columns={3} />
+            <OverviewVisualGrid cards={operationsSnapshotCards} columns={3} variant="sidebar" />
           </AppDashboardZone>
         )}
       </>
