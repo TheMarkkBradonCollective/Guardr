@@ -8596,6 +8596,9 @@ html.theme-grey .wf-badge-success {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .guard-rating-section-compact {
@@ -9005,6 +9008,47 @@ html.theme-grey .wf-badge-success {
 
 .guard-rating-section-tiered .guard-rating-breakdown {
   padding: 0 1.125rem 1rem;
+}
+
+.guard-performance-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  border-top: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+.guard-performance-stat {
+  padding: 0.875rem 1rem;
+  border-right: 1px solid var(--brand-border);
+  border-bottom: 1px solid var(--brand-border);
+  min-width: 0;
+}
+
+.guard-performance-stat:nth-child(2n) {
+  border-right: none;
+}
+
+.guard-performance-stat:nth-last-child(-n+2) {
+  border-bottom: none;
+}
+
+.guard-performance-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+  margin: 0 0 0.25rem;
+}
+
+.guard-performance-stat-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  margin: 0;
+  line-height: 1.2;
 }
 
 .guard-rating-section-compact .guard-factors-grid {

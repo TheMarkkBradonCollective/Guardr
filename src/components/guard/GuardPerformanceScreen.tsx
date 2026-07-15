@@ -2,13 +2,10 @@ import React, { useMemo } from 'react';
 import type { SecurityGuard, SecurityRequest } from '../../types';
 import {
   computeGuardPerformance,
-  computeGuardPerformanceRating,
   computeGuardSkillRatings,
-  formatOverallRating,
-  formatPerformanceScore,
 } from '../../lib/guardPerformance';
 import { GuardRatingSection } from './GuardRatingSection';
-import { AppFormSection, AppMetricStrip, AppMetricCell, AppScreen } from '../ui/app/AppPrimitives';
+import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 
 interface GuardPerformanceScreenProps {
   guard: SecurityGuard;
@@ -19,10 +16,6 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
   const performance = useMemo(
     () => computeGuardPerformance(guard.id, requests),
     [guard.id, requests]
-  );
-  const performanceRating = useMemo(
-    () => computeGuardPerformanceRating(guard, requests),
-    [guard, requests]
   );
   const skillRatings = useMemo(
     () => computeGuardSkillRatings(guard, requests),
@@ -44,22 +37,6 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
           variant="full"
         />
       </AppFormSection>
-
-      <AppMetricStrip className="mt-2">
-        <AppMetricCell label="Level" value={performanceRating.tier.name} />
-        <AppMetricCell
-          label="Overall rating"
-          value={performanceRating.overallRating > 0 ? formatOverallRating(performanceRating.overallRating) : '—'}
-        />
-        <AppMetricCell
-          label="Security score"
-          value={performance.overallScore > 0 ? formatPerformanceScore(performance.overallScore) : '—'}
-        />
-        <AppMetricCell label="Shifts completed" value={String(guard.jobsCompleted)} />
-        {guard.yearsExperience != null && guard.yearsExperience > 0 && (
-          <AppMetricCell label="Experience" value={`${guard.yearsExperience}+ yrs`} />
-        )}
-      </AppMetricStrip>
     </AppScreen>
   );
 }

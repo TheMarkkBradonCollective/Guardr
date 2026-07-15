@@ -260,6 +260,33 @@ export function GuardRatingSection({
           ))}
         </div>
       )}
+
+      <div className="guard-performance-stats" aria-label="Performance summary">
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Overall rating</p>
+          <p className="guard-performance-stat-value">
+            {rating.overallRating > 0 ? formatOverallRating(rating.overallRating) : '—'}
+          </p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Security score</p>
+          <p className="guard-performance-stat-value">
+            {overall > 0 ? formatPerformanceScore(overall) : '—'}
+          </p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Shifts completed</p>
+          <p className="guard-performance-stat-value">{guard.jobsCompleted}</p>
+        </div>
+        <div className="guard-performance-stat">
+          <p className="guard-performance-stat-label">Experience</p>
+          <p className="guard-performance-stat-value">
+            {guard.yearsExperience != null && guard.yearsExperience > 0
+              ? `${guard.yearsExperience}+ yrs`
+              : '—'}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
