@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar, TrendingUp } from 'lucide-react';
+import { Calendar, Plus, Trash2, TrendingUp } from 'lucide-react';
 import {
   dayLabel,
   dayLabelFull,
@@ -8,9 +8,8 @@ import {
   isInvalidAvailabilityWindow,
   isWeekDayEnabled,
   loadGuardAvailabilitySchedule,
-  normalizeWeeklySlotsToOnePerDay,
   saveGuardAvailabilitySchedule,
-  slotForWeekDay,
+  slotsForWeekDay,
   toggleWeekDay,
   WEEK_DAY_ORDER,
   type GuardAvailabilitySchedule,
@@ -37,14 +36,9 @@ export function GuardAvailabilityCalendar({
   onSave,
   readOnly = false,
 }: GuardAvailabilityCalendarProps) {
-  const [schedule, setSchedule] = useState<GuardAvailabilitySchedule>(() => {
-    const loaded =
-      initialSchedule ?? loadGuardAvailabilitySchedule(guardId) ?? defaultAvailabilitySchedule(guardId);
-    return {
-      ...loaded,
-      weeklySlots: normalizeWeeklySlotsToOnePerDay(loaded.weeklySlots),
-    };
-  });
+  const [schedule, setSchedule] = useState<GuardAvailabilitySchedule>(
+    initialSchedule ?? loadGuardAvailabilitySchedule(guardId) ?? defaultAvailabilitySchedule(guardId)
+  );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -60,10 +54,7 @@ export function GuardAvailabilityCalendar({
   const enabledPercent = Math.round((enabledDays.length / WEEK_DAY_ORDER.length) * 100);
 
   const updateSchedule = (next: GuardAvailabilitySchedule) => {
-    setSchedule({
-      ...next,
-      weeklySlots: normalizeWeeklySlotsToOnePerDay(next.weeklySlots),
-    });
+    setSchedule(next);
     setDirty(true);
   };
 
@@ -101,6 +92,32 @@ export function GuardAvailabilityCalendar({
     } finally {
       setSaving(false);
     }
+  };
+
+  const addSlot = (day: number) => {
+    updateSchedule({
+      ...schedule,
+      weeklySlots: [
+        ...schedule.weeklySlots,
+        {
+          id: `avail-${guardId}-${Date.now()}`,
+          guardId,
+          dayOfWeek: day,
+          startTime: '09:00',
+          endTime: '17:00',
+          isAvailable: true,
+        },
+      ],
+    });
+  };
+
+  const removeSlot = (day: number, id: string) => {
+    const remaining = schedule.weeklySlots.filter((slot) => slot.id !== id);
+    const stillEnabled = remaining.some((slot) => slot.dayOfWeek === day && slot.isAvailable);
+    updateSchedule({
+      ...schedule,
+      weeklySlots: stillEnabled ? remaining : toggleWeekDay(remaining, guardId, day, false),
+    });
   };
 
   return (
@@ -144,7 +161,7 @@ export function GuardAvailabilityCalendar({
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Select your days</h3>
             <p className="guard-factors-subheading">
-              Tap to multi-select. Set one time range for each day you enable.
+              Tap to multi-select. A card appears below for each day you enable.
             </p>
           </div>
 
@@ -183,13 +200,13 @@ export function GuardAvailabilityCalendar({
         ) : (
           <div className="availability-day-cards">
             {enabledDays.map((day) => {
-              const slot = slotForWeekDay(schedule.weeklySlots, day);
-              const invalidWindow = slot ? isInvalidAvailabilityWindow(slot) : false;
+              const daySlots = slotsForWeekDay(schedule.weeklySlots, day);
+              const hasInvalid = daySlots.some(isInvalidAvailabilityWindow);
               return (
                 <article
                   key={day}
                   className={`guard-factor-card availability-day-card ${
-                    invalidWindow ? 'guard-factor-card-low' : 'guard-factor-card-very-high'
+                    hasInvalid ? 'guard-factor-card-low' : 'guard-factor-card-very-high'
                   }`}
                 >
                   <div className="availability-day-card-head">
@@ -204,37 +221,62 @@ export function GuardAvailabilityCalendar({
                       </button>
                     )}
                   </div>
-                  {slot && (
-                    <div className="availability-day-card-slots">
-                      <div
-                        className={`availability-slot-row ${invalidWindow ? 'availability-slot-row-invalid' : ''}`}
-                      >
-                        <input
-                          type="time"
-                          value={slot.startTime}
-                          disabled={readOnly}
-                          onChange={(e) => updateSlot(slot.id, { startTime: e.target.value })}
-                          aria-invalid={invalidWindow}
-                          className="uber-input text-sm w-28"
-                        />
-                        <span className="text-brand-text-muted text-sm">to</span>
-                        <input
-                          type="time"
-                          value={slot.endTime}
-                          disabled={readOnly}
-                          onChange={(e) => updateSlot(slot.id, { endTime: e.target.value })}
-                          aria-invalid={invalidWindow}
-                          className="uber-input text-sm w-28"
-                        />
-                        {invalidWindow && (
-                          <p className="availability-slot-error">End time must be after start time.</p>
-                        )}
-                      </div>
+                  <div className="availability-day-card-slots">
+                    {daySlots.map((slot) => {
+                      const invalidWindow = isInvalidAvailabilityWindow(slot);
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`availability-slot-row ${invalidWindow ? 'availability-slot-row-invalid' : ''}`}
+                        >
+                          <input
+                            type="time"
+                            value={slot.startTime}
+                            disabled={readOnly}
+                            onChange={(e) => updateSlot(slot.id, { startTime: e.target.value })}
+                            aria-invalid={invalidWindow}
+                            className="uber-input text-sm w-28"
+                          />
+                          <span className="text-brand-text-muted text-sm">to</span>
+                          <input
+                            type="time"
+                            value={slot.endTime}
+                            disabled={readOnly}
+                            onChange={(e) => updateSlot(slot.id, { endTime: e.target.value })}
+                            aria-invalid={invalidWindow}
+                            className="uber-input text-sm w-28"
+                          />
+                          {!readOnly && daySlots.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeSlot(day, slot.id)}
+                              className="availability-slot-remove"
+                              aria-label={`Remove ${dayLabel(day)} availability slot`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {invalidWindow && (
+                            <p className="availability-slot-error">End time must be after start time.</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {!readOnly && (
+                    <div className="availability-day-card-actions">
+                      <span className="availability-window-count">
+                        {daySlots.length} window{daySlots.length === 1 ? '' : 's'}
+                      </span>
+                      <button type="button" onClick={() => addSlot(day)} className="availability-add-slot">
+                        <Plus className="w-4 h-4" />
+                        Add another window
+                      </button>
                     </div>
                   )}
                   <div className="guard-factor-card-footer availability-day-card-footer">
                     <span className="guard-factor-card-points">
-                      {slot ? `${slot.startTime}–${slot.endTime}` : '—'}
+                      {daySlots.map((slot) => `${slot.startTime}–${slot.endTime}`).join(', ')}
                     </span>
                     <span className="guard-factor-card-status guard-factor-status-very-high">
                       <span className="guard-factor-status-dot" />

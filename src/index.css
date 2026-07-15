@@ -15094,6 +15094,25 @@ html.theme-grey .landing-wordmark {
   margin-top: 0.15rem;
 }
 
+.availability-day-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.availability-window-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-text-muted);
+  white-space: nowrap;
+}
+
+.availability-add-slot {
+  margin-left: auto;
+}
+
 .availability-body {
   padding-top: 0.25rem;
 }
