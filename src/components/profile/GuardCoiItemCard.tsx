@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { getCoiSectionStatus } from '../../lib/credentialSectionStatus';
 import {
@@ -23,6 +23,9 @@ interface GuardCoiItemCardProps {
   staffMode?: boolean;
   onSave?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
   onReview?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 export function GuardCoiItemCard({
@@ -31,6 +34,9 @@ export function GuardCoiItemCard({
   staffMode = false,
   onSave,
   onReview,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: GuardCoiItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -45,11 +51,31 @@ export function GuardCoiItemCard({
     ? `#${policy.policyNumber.trim()}`
     : formatCoiSummaryLine(policy);
 
+  const openDetail = () => {
+    if (!hasOnFile && onEditFullPage) {
+      onEditFullPage();
+      return;
+    }
+    setShowDetail(true);
+  };
+
+  const openAdd = () => {
+    if (onEditFullPage) {
+      onEditFullPage();
+      return;
+    }
+    if (hasOnFile) {
+      openDetail();
+      return;
+    }
+    setShowUpload(true);
+  };
+
   const cardBody = hasOnFile ? (
     <div className="app-cert-item">
       <button
         type="button"
-        onClick={() => setShowDetail(true)}
+        onClick={openDetail}
         className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${docUrl ? ' flex gap-3' : ''}`}
       >
         {docUrl && (
@@ -70,14 +96,6 @@ export function GuardCoiItemCard({
       </button>
       <div className="app-cert-item-meta">
         <CoiCredentialStatusBadges guard={guard} />
-        <button
-          type="button"
-          onClick={() => setShowDetail(true)}
-          className="p-1 text-brand-text-muted hover:text-brand-text"
-          aria-label="View COI details"
-        >
-          <ChevronRight className="w-4 h-4 shrink-0" />
-        </button>
       </div>
     </div>
   ) : null;
@@ -91,6 +109,9 @@ export function GuardCoiItemCard({
         staffMode={staffMode}
         onSave={onSave}
         onReview={onReview}
+        onViewFull={onViewFull}
+        viewFullLabel={viewFullLabel}
+        onEditFullPage={onEditFullPage}
         onClose={() => setShowDetail(false)}
       />
     ) : null;
@@ -127,7 +148,7 @@ export function GuardCoiItemCard({
               staffMode={staffMode}
               uploadStatus={uploadStatus}
               canUpload={canEdit}
-              onAdd={() => (hasOnFile ? setShowDetail(true) : setShowUpload(true))}
+              onAdd={openAdd}
             />
           ) : undefined
         }

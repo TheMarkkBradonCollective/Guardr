@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, Eye, RefreshCw, ShieldCheck, X } from 'lucide-react';
+import { Check, ChevronRight, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -23,7 +23,6 @@ import { resolveInsuranceStatus } from '../../lib/guardInsurance';
 import { promptStaffCredentialUpdateNote, promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
 import { CertItemCard } from '../credentials/CertItemCard';
-import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -66,6 +65,8 @@ interface StaffCredentialsProps {
     payload: CertUpdatePayload
   ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
+  onAddCredentialForGuard?: (guardId: string) => void;
+  onEditGuardProfile?: (guardId: string) => void;
   onAddCertification?: (
     guardId: string,
     cert: Partial<Certification>
@@ -177,12 +178,13 @@ export function StaffCredentials({
   onReviewGuardInsurance,
   onUpdateCertification,
   onOpenGuardProfile,
+  onAddCredentialForGuard,
+  onEditGuardProfile,
   onAddCertification,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
-  const [coiModalOpen, setCoiModalOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
   const [pendingFocusGuardId, setPendingFocusGuardId] = useState<string | null>(null);
 
@@ -485,6 +487,9 @@ export function StaffCredentials({
                   ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
                   : undefined
               }
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+              }
             />
             {renderCertActions(guard, context.cert)}
           </div>
@@ -502,36 +507,24 @@ export function StaffCredentials({
                     }
                   : undefined
               }
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+              }
             />
-            <button
-              type="button"
-              onClick={() => setCoiModalOpen(true)}
-              className="app-button-outline app-btn-sm gap-1.5 w-fit"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Open COI document
-            </button>
             {renderCoiActions(guard)}
-            {coiModalOpen && (
-              <GuardCoiDetailModal
-                guard={guard}
-                onClose={() => setCoiModalOpen(false)}
-                staffMode
-                onReview={
-                  onReviewGuardInsurance
-                    ? async (status, rejectionReason) => {
-                        await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                      }
-                    : undefined
-                }
-              />
-            )}
           </div>
         )}
 
         {context.kind === 'gov-id' && (
           <div className="space-y-3">
-            <GuardIdItemCard guard={guard} staffMode asCredentialSection />
+            <GuardIdItemCard
+              guard={guard}
+              staffMode
+              asCredentialSection
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+              }
+            />
             {renderGovIdActions(guard)}
             {renderGovIdUpdateRequest(guard)}
           </div>

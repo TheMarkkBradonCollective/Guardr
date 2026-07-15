@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Lock, Trash2 } from 'lucide-react';
+import { Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
@@ -26,6 +26,9 @@ interface CertItemCardProps {
   showCategory?: boolean;
   compact?: boolean;
   guardName?: string;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 /** Individual license or certificate — clickable to view full details and document photo. */
@@ -41,6 +44,9 @@ export function CertItemCard({
   showCategory = true,
   compact = false,
   guardName,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
@@ -57,12 +63,20 @@ export function CertItemCard({
     ? 'w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
 
+  const openDetail = () => {
+    if (openInEditMode && onEditFullPage) {
+      onEditFullPage();
+      return;
+    }
+    setShowDetail(true);
+  };
+
   return (
     <>
       <div className={`app-cert-item ${compact ? 'app-cert-item-compact' : ''}`}>
         <button
           type="button"
-          onClick={() => setShowDetail(true)}
+          onClick={openDetail}
           className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3`}
         >
           {cert.imageUrl ? (
@@ -72,7 +86,7 @@ export function CertItemCard({
               className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
               aria-hidden
             >
-              <ChevronRight className="w-4 h-4 opacity-40" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">No photo</span>
             </div>
           )}
           <div className="min-w-0 flex-1">
@@ -113,15 +127,6 @@ export function CertItemCard({
               <Trash2 className="w-3 h-3" />
               Delete
             </button>
-          ) : !editing ? (
-            <button
-              type="button"
-              onClick={() => setShowDetail(true)}
-              className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec transition-colors"
-              aria-label="View credential details"
-            >
-              <ChevronRight className="w-4 h-4 shrink-0" />
-            </button>
           ) : null}
         </div>
       </div>
@@ -134,6 +139,9 @@ export function CertItemCard({
           staffMode={staffMode}
           initialEditMode={openInEditMode}
           onSubmit={onUpdate}
+          onViewFull={onViewFull}
+          viewFullLabel={viewFullLabel}
+          onEditFullPage={onEditFullPage}
           onClose={() => setShowDetail(false)}
         />
       )}

@@ -5,6 +5,7 @@ import { getGuardCardSectionStatus } from '../../lib/credentialSectionStatus';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { certOverlayProps, type CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 import { CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
@@ -29,6 +30,7 @@ interface GuardCardPanelProps {
   renderCertActions?: (cert: Certification) => React.ReactNode;
   /** Activation gate — open upload sheet only (no credential preview list). */
   activationFormOnly?: { open: boolean; onClose: () => void };
+  certOverlayNav?: CertOverlayNavigation;
 }
 
 export function GuardCardPanel({
@@ -41,6 +43,7 @@ export function GuardCardPanel({
   staffMode = false,
   renderCertActions,
   activationFormOnly,
+  certOverlayNav,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
@@ -122,6 +125,8 @@ export function GuardCardPanel({
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
+  const credentialViewFullLabel = certOverlayNav?.onViewFull ? 'View full in Credentials →' : undefined;
+
   const certCardProps = (cert: Certification) => ({
     onDelete: onDeleteCertification ? () => handleDelete(cert.id) : undefined,
     onAttachImage: onAttachCertificationImage
@@ -133,6 +138,8 @@ export function GuardCardPanel({
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
       : undefined,
     guardName: guard.name,
+    viewFullLabel: credentialViewFullLabel,
+    ...certOverlayProps(certOverlayNav, cert.id),
   });
 
   const uploadForm = (

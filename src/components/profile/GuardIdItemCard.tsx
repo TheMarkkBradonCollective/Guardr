@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, IdCard } from 'lucide-react';
+import { IdCard } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
   formatIdSummaryLine,
@@ -26,6 +26,9 @@ interface GuardIdItemCardProps {
   /** Section layout matching PTA/UOF and 32-hour blocks. */
   asCredentialSection?: boolean;
   onSubmit?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
+  onViewFull?: () => void;
+  viewFullLabel?: string;
+  onEditFullPage?: () => void;
 }
 
 /** Government ID — tap to view details; edit from the detail modal. */
@@ -36,6 +39,9 @@ export function GuardIdItemCard({
   guardName,
   asCredentialSection = false,
   onSubmit,
+  onViewFull,
+  viewFullLabel,
+  onEditFullPage,
 }: GuardIdItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const hasOnFile = guardHasGovernmentIdOnFile(guard);
@@ -44,15 +50,26 @@ export function GuardIdItemCard({
   const sectionStatus = getGovernmentIdSectionStatus(guard, staffMode);
   const openInEditMode = canEdit && !hasOnFile;
 
+  const openDetail = () => {
+    if (openInEditMode && onEditFullPage) {
+      onEditFullPage();
+      return;
+    }
+    setShowDetail(true);
+  };
+
   const detailModal =
-    showDetail && onSubmit ? (
+    showDetail && (onSubmit || staffMode) ? (
       <GuardIdDetailModal
         guard={guard}
         guardName={guardName}
-        canEdit={canEdit}
+        canEdit={canEdit && !!onSubmit}
         staffMode={staffMode}
         initialEditMode={openInEditMode}
-        onSubmit={onSubmit}
+        onSubmit={onSubmit ?? (async () => ({ ok: true }))}
+        onViewFull={onViewFull}
+        viewFullLabel={viewFullLabel}
+        onEditFullPage={onEditFullPage}
         onClose={() => setShowDetail(false)}
       />
     ) : null;
@@ -61,7 +78,7 @@ export function GuardIdItemCard({
     <div className="app-cert-item">
       <button
         type="button"
-        onClick={() => setShowDetail(true)}
+        onClick={openDetail}
         className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${guard.idFrontUrl ? ' flex gap-3' : ''}`}
       >
         {guard.idFrontUrl && (
@@ -96,14 +113,6 @@ export function GuardIdItemCard({
         {!guardIdVerificationPhotosComplete(guard) && (
           <span className="text-[10px] text-brand-text-muted">Photos incomplete</span>
         )}
-        <button
-          type="button"
-          onClick={() => setShowDetail(true)}
-          className="p-1 text-brand-text-muted hover:text-brand-text"
-          aria-label="View government ID details"
-        >
-          <ChevronRight className="w-4 h-4 shrink-0" />
-        </button>
       </div>
     </div>
   ) : null;
@@ -132,7 +141,7 @@ export function GuardIdItemCard({
                 staffMode={staffMode}
                 uploadStatus={uploadStatus}
                 canUpload={canEdit}
-                onAdd={() => setShowDetail(true)}
+                onAdd={openDetail}
               />
             ) : undefined
           }
@@ -161,7 +170,7 @@ export function GuardIdItemCard({
         <div className="app-list-subrow">
           <button
             type="button"
-            onClick={() => setShowDetail(true)}
+            onClick={openDetail}
             className="flex items-start justify-between gap-3 w-full text-left"
           >
             <p className="text-sm font-semibold text-brand-text-muted">Government ID</p>

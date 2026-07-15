@@ -4,21 +4,8 @@ import type {
   CertificationRevision,
   CertificationRevisionEvent,
 } from '../types';
-
-export interface CertificationRevisionDisplayItem {
-  id: string;
-  recordedAt: string;
-  label: string;
-  status: 'verified' | 'pending' | 'rejected';
-  issuer?: string;
-  number?: string;
-  state?: string;
-  expiryDate?: string;
-  imageUrl?: string;
-  note?: string;
-  isCurrentOnFile?: boolean;
-  isPendingReview?: boolean;
-}
+import type { CredentialRecordDisplayItem } from './credentialRecords';
+import { formatStateName } from './states';
 
 const REVISION_EVENT_LABELS: Record<CertificationRevisionEvent, string> = {
   submitted: 'Submitted',
@@ -96,8 +83,57 @@ export function pendingUpdateFromPayload(payload: {
   };
 }
 
-function revisionToDisplayItem(revision: CertificationRevision): CertificationRevisionDisplayItem {
+function certRecordDetails(item: {
+  issuer?: string;
+  number?: string;
+  state?: string;
+  expiryDate?: string;
+}): CredentialRecordDisplayItem['details'] {
+  const details = [
+    item.issuer ? { label: 'Issuing organization', value: item.issuer } : null,
+    item.number ? { label: 'License / cert number', value: item.number } : null,
+    item.state ? { label: 'State', value: formatStateName(item.state) } : null,
+    item.expiryDate
+      ? {
+          label: 'Expiration date',
+          value: new Date(`${item.expiryDate}T12:00:00`).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        }
+      : null,
+  ].filter((row): row is { label: string; value: string } => Boolean(row));
+
+  return details.length ? details : undefined;
+}
+
+function certRecordFromParts(parts: {
+  id: string;
+  recordedAt: string;
+  label: string;
+  status: CredentialRecordDisplayItem['status'];
+  issuer?: string;
+  number?: string;
+  state?: string;
+  expiryDate?: string;
+  imageUrl?: string;
+  note?: string;
+  isCurrentOnFile?: boolean;
+  isPendingReview?: boolean;
+}): CredentialRecordDisplayItem {
+  const imageUrl = parts.imageUrl?.trim();
+  const { issuer, state, expiryDate, imageUrl: _imageUrl, ...rest } = parts;
   return {
+    ...rest,
+    thumbnailUrl: imageUrl,
+    details: certRecordDetails({ issuer, number: parts.number, state, expiryDate }),
+    images: imageUrl ? [{ id: `${parts.id}-image`, label: parts.label, url: imageUrl }] : undefined,
+  };
+}
+
+function revisionToDisplayItem(revision: CertificationRevision): CredentialRecordDisplayItem {
+  return certRecordFromParts({
     id: revision.id,
     recordedAt: revision.recordedAt,
     label: REVISION_EVENT_LABELS[revision.event],
@@ -108,29 +144,29 @@ function revisionToDisplayItem(revision: CertificationRevision): CertificationRe
     expiryDate: revision.expiryDate,
     imageUrl: revision.imageUrl,
     note: revision.note,
-  };
+  });
 }
 
 /** Newest-first timeline for credential detail views. */
-export function getCertificationRevisionTimeline(
-  cert: Certification
-): CertificationRevisionDisplayItem[] {
-  const items: CertificationRevisionDisplayItem[] = [];
+export function getCertificationRevisionTimeline(cert: Certification): CredentialRecordDisplayItem[] {
+  const items: CredentialRecordDisplayItem[] = [];
 
   if (cert.pendingUpdate) {
-    items.push({
-      id: `pending-${cert.id}`,
-      recordedAt: cert.pendingUpdate.submittedAt,
-      label: 'Update submitted',
-      status: cert.pendingUpdate.status,
-      issuer: cert.pendingUpdate.issuer,
-      number: cert.pendingUpdate.number,
-      state: cert.pendingUpdate.state,
-      expiryDate: cert.pendingUpdate.expiryDate,
-      imageUrl: cert.pendingUpdate.imageUrl,
-      note: cert.pendingUpdate.rejectionReason,
-      isPendingReview: cert.pendingUpdate.status === 'pending',
-    });
+    items.push(
+      certRecordFromParts({
+        id: `pending-${cert.id}`,
+        recordedAt: cert.pendingUpdate.submittedAt,
+        label: 'Update submitted',
+        status: cert.pendingUpdate.status,
+        issuer: cert.pendingUpdate.issuer,
+        number: cert.pendingUpdate.number,
+        state: cert.pendingUpdate.state,
+        expiryDate: cert.pendingUpdate.expiryDate,
+        imageUrl: cert.pendingUpdate.imageUrl,
+        note: cert.pendingUpdate.rejectionReason,
+        isPendingReview: cert.pendingUpdate.status === 'pending',
+      })
+    );
   }
 
   if (cert.updateRequestedAt && !cert.pendingUpdate) {
@@ -144,19 +180,21 @@ export function getCertificationRevisionTimeline(
   }
 
   if (cert.status === 'verified' || cert.imageUrl || cert.issuer || cert.number) {
-    items.push({
-      id: `current-${cert.id}`,
-      recordedAt: cert.updateRequestedAt ?? cert.issueDate,
-      label: cert.status === 'verified' ? 'Current on file' : 'Current submission',
-      status: cert.status,
-      issuer: cert.issuer,
-      number: cert.number,
-      state: cert.state,
-      expiryDate: cert.expiryDate,
-      imageUrl: cert.imageUrl,
-      note: cert.rejectionReason,
-      isCurrentOnFile: cert.status === 'verified',
-    });
+    items.push(
+      certRecordFromParts({
+        id: `current-${cert.id}`,
+        recordedAt: cert.updateRequestedAt ?? cert.issueDate,
+        label: cert.status === 'verified' ? 'Current on file' : 'Current submission',
+        status: cert.status,
+        issuer: cert.issuer,
+        number: cert.number,
+        state: cert.state,
+        expiryDate: cert.expiryDate,
+        imageUrl: cert.imageUrl,
+        note: cert.rejectionReason,
+        isCurrentOnFile: cert.status === 'verified',
+      })
+    );
   }
 
   const historyItems = [...(cert.revisionHistory ?? [])]
