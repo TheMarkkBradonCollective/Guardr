@@ -1399,7 +1399,6 @@ export function GuardDashboard({
                   canRequestCrewLead={canRequestLead}
                   pendingCrewLeadRequest={pendingCrewLeadRequest}
                   onDetailOpenChange={setCrewJobDetailOpen}
-                  onJoinTeamWithCode={onJoinTeamWithCode}
                 />
             </div>
           )}
@@ -1489,16 +1488,19 @@ export function GuardDashboard({
           )}
 
           {tab === 'settings' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto">
-                <UserSettingsScreen
-                  currentUser={currentUser}
-                  themeMode={themeMode as 'dark' | 'light' | 'grey'}
-                  onChangeTheme={onChangeTheme}
-                  onOpenLegal={onOpenLegal}
-                  isDbConnected={isDbConnected}
-                />
-              </div>
+            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0">
+              <UserSettingsScreen
+                currentUser={currentUser}
+                themeMode={themeMode as 'dark' | 'light' | 'grey'}
+                onChangeTheme={onChangeTheme}
+                onOpenLegal={onOpenLegal}
+                isDbConnected={isDbConnected}
+                onJoinTeamWithCode={
+                  shouldOfferTeamCodeJoin(guard, standingCrewMembers)
+                    ? onJoinTeamWithCode
+                    : undefined
+                }
+              />
             </div>
           )}
 
@@ -1511,20 +1513,12 @@ export function GuardDashboard({
           )}
 
           {tab === 'preferences' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto">
-                <GuardPreferencesScreen
-                  guard={guard}
-                  standingCrewMembers={standingCrewMembers}
-                  onSaveJobPreferences={onSaveJobPreferences}
-                  onCompleteJobTypeOnboarding={onCompleteJobTypeOnboarding}
-                  onJoinTeamWithCode={
-                    shouldOfferTeamCodeJoin(guard, standingCrewMembers)
-                      ? onJoinTeamWithCode
-                      : undefined
-                  }
-                />
-              </div>
+            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0">
+              <GuardPreferencesScreen
+                guard={guard}
+                onSaveJobPreferences={onSaveJobPreferences}
+                onCompleteJobTypeOnboarding={onCompleteJobTypeOnboarding}
+              />
             </div>
           )}
 

@@ -16,7 +16,6 @@ import { getStandingCrewDisplayName } from '../../lib/guardTeams';
 import type { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { TeamCodeShareBlock } from './TeamCodeShareBlock';
-import { TeamCodeJoinPanel } from './TeamCodeJoinPanel';
 
 interface GuardStandingCrewPanelProps {
   guard: SecurityGuard;
@@ -25,7 +24,6 @@ interface GuardStandingCrewPanelProps {
   trusted: boolean;
   coordinatingJobs?: GuardJobView[];
   variant?: 'default' | 'embedded';
-  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
     crewDescription: string;
@@ -71,7 +69,6 @@ export function GuardStandingCrewPanel({
   trusted,
   coordinatingJobs = [],
   variant = 'default',
-  onJoinTeamWithCode,
   onUpdateStandingCrewProfile,
   onInvite,
   onRemove,
@@ -220,16 +217,8 @@ export function GuardStandingCrewPanel({
             <p className="text-xs text-brand-text-muted leading-relaxed">
               {leadMembership?.status === 'pending'
                 ? 'Accept the invitation above to join coordinated jobs with this crew.'
-                : 'Your coordinator can invite you to job crews. Team chat appears under Messages when you join a job crew.'}
+                : 'Your coordinator can invite you to job crews. Use Settings → Join a crew when you have a job crew code.'}
             </p>
-            {onJoinTeamWithCode && (
-              <>
-                <p className="text-xs text-brand-text-muted leading-relaxed">
-                  Enter a crew code from your coordinator to join their roster on a specific job.
-                </p>
-                <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
-              </>
-            )}
           </div>
         </section>
       </div>
@@ -283,8 +272,8 @@ export function GuardStandingCrewPanel({
               <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
-                  staff. You can only be on one standing crew at a time — leave any current crew
-                  before leading your own.
+                  staff. To join another coordinator&apos;s crew instead, use{' '}
+                  <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
                 </p>
                 {pendingCrewLeadRequest ? (
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
@@ -304,16 +293,6 @@ export function GuardStandingCrewPanel({
             </section>
           )}
 
-          {!isStandingTeamMember && onJoinTeamWithCode && (
-            <section>
-              {sectionTitle('Join another crew')}
-              <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
-                Enter a crew code from a coordinator to join their standing crew on a job. You can
-                only be on one standing crew at a time.
-              </p>
-              <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
-            </section>
-          )}
         </>
       )}
 
@@ -462,13 +441,13 @@ export function GuardStandingCrewPanel({
             </>
           )}
 
-      {!trusted && isStandingTeamMember && onJoinTeamWithCode && (
+      {!trusted && isStandingTeamMember && (
         <section>
-          {sectionTitle('Join a job crew')}
-          <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
-            Enter a crew code from your coordinator to join their roster on a specific job.
+          {sectionTitle('Job crew codes')}
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            When your coordinator shares a job crew code, enter it under{' '}
+            <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
           </p>
-          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
         </section>
       )}
     </div>
