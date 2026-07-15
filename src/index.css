@@ -9056,7 +9056,6 @@ html.theme-grey .wf-badge-success {
   line-height: 1.05;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
-}
 
 .guard-tier-hero-score-row {
   position: relative;
@@ -15506,6 +15505,7 @@ html.theme-grey .landing-wordmark {
   margin-right: 1rem;
 }
 
+<<<<<<< HEAD
 .guard-settings-crew-wrap {
   margin: 0 1rem;
 }
@@ -15516,6 +15516,8 @@ html.theme-grey .landing-wordmark {
     0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
+=======
+>>>>>>> eebfd9fddb37f448b079c5a77bd770d23d00390b
 .guard-pref-hero-medal-ring {
   position: relative;
   z-index: 2;
