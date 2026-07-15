@@ -10,6 +10,7 @@ import {
 import {
   isCredentialFeedItemOpen,
   isCredentialFeedItemPendingUpload,
+  isCredentialFeedItemVerified,
   matchesApplicationKindFilter,
   matchesClientRosterFilter,
   matchesCredentialStatusFilter,
@@ -18,7 +19,7 @@ import {
 } from './staffListFilters';
 
 describe('staffListFilters', () => {
-  it('splits credential open items into review and upload tabs', () => {
+  it('splits credential items into upload, review, and verified tabs', () => {
     const guard = {
       id: 'g-1',
       name: 'Guard',
@@ -54,7 +55,41 @@ describe('staffListFilters', () => {
       feed.filter((item) => matchesCredentialStatusFilter(item, 'pending_review')).length,
       1
     );
-    assert.equal(feed.filter((item) => matchesCredentialStatusFilter(item, 'open')).length, feed.length);
+    assert.equal(feed.filter((item) => matchesCredentialStatusFilter(item, 'verified')).length, 0);
+  });
+
+  it('counts verified credentials in the verified tab', () => {
+    const guard = {
+      id: 'g-2',
+      name: 'Verified Guard',
+      email: 'v@test.com',
+      userStatus: 'active',
+      verified: true,
+      mustChangePassword: false,
+      isStaff: false,
+      certifications: [
+        {
+          id: 'cert-1',
+          catalogId: 'bsis-guard-card',
+          name: 'BSIS Guard Card',
+          issuer: 'BSIS',
+          number: 'GC-1',
+          state: 'CA',
+          issueDate: '2024-01-01',
+          status: 'verified',
+          imageUrl: 'card.jpg',
+          category: 'guard-card',
+          submittedByRole: 'guard',
+        },
+      ],
+    } as SecurityGuard;
+
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+
+    assert.equal(feed.filter((item) => matchesCredentialStatusFilter(item, 'verified')).length, 1);
+    assert.ok(feed.every((item) => isCredentialFeedItemVerified(item)));
   });
 
   it('filters application kinds', () => {
