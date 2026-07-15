@@ -32,6 +32,7 @@ export interface GuardJobDetailViewProps {
     message?: string;
   }) => void | Promise<void>;
   onAcceptPriceOffer?: (offerId: string) => void | Promise<void>;
+  onViewBriefing?: (jobId: string) => void;
 }
 
 /** One job detail surface — Jobs list and map card share this. */
@@ -55,6 +56,7 @@ export function GuardJobDetailView({
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
+  onViewBriefing,
 }: GuardJobDetailViewProps) {
   if (job.status === 'open') {
     return (
@@ -102,6 +104,7 @@ export function GuardJobDetailView({
       }
       onAcceptInvite={onAcceptInvite ? () => void onAcceptInvite() : undefined}
       onDeclineInvite={onDeclineInvite ? () => void onDeclineInvite() : undefined}
+      onViewBriefing={onViewBriefing}
     />
   );
 }

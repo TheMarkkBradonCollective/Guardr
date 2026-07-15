@@ -76,6 +76,7 @@ interface GuardMyJobsPanelProps {
     }
   ) => void | Promise<void>;
   onAcceptPriceOffer?: (jobId: string, offerId: string) => void | Promise<void>;
+  onViewBriefing?: (jobId: string) => void;
 }
 
 function JobRow({
@@ -148,6 +149,7 @@ export function GuardMyJobsPanel({
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
+  onViewBriefing,
 }: GuardMyJobsPanelProps) {
   const [internalTab, setInternalTab] = useState<GuardJobsBrowseTab>('available');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
@@ -224,6 +226,7 @@ export function GuardMyJobsPanel({
           onOpenMessages={onOpenMessages}
           onApproveOvertime={onApproveOvertime}
           onClose={() => updateSelectedId(null)}
+          onViewBriefing={onViewBriefing}
           {...detailHandlers(selectedJob)}
         />
       </AppScreen>

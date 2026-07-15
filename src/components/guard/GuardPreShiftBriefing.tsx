@@ -12,13 +12,16 @@ import {
   formatCountdown,
   msUntilEnRouteUnlock,
 } from '../../lib/preShiftBriefing';
-import { Clock, DollarSign, FileText, Navigation } from 'lucide-react';
+import { Clock, DollarSign, FileText, Navigation, X } from 'lucide-react';
 
 interface GuardPreShiftBriefingProps {
   job: GuardJobView;
   guardId: string;
   onStartEnRoute: () => void | Promise<void>;
   onAckPostOrders?: () => void | Promise<void>;
+  onClose?: () => void;
+  /** Use fixed positioning when opened from Jobs or map job detail. */
+  layout?: 'map-sheet' | 'modal';
 }
 
 export function GuardPreShiftBriefing({
@@ -26,6 +29,8 @@ export function GuardPreShiftBriefing({
   guardId,
   onStartEnRoute,
   onAckPostOrders,
+  onClose,
+  layout = 'map-sheet',
 }: GuardPreShiftBriefingProps) {
   const [now, setNow] = useState(() => new Date());
 
@@ -47,8 +52,13 @@ export function GuardPreShiftBriefing({
       ? 'Acknowledge post orders below before heading to site.'
       : enRouteBlocked ?? 'Review the briefing, then start heading when the slide unlocks.';
 
+  const sheetClassName =
+    layout === 'modal'
+      ? 'relative w-full max-h-[92vh] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden'
+      : 'absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden';
+
   return (
-    <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
+    <div className={sheetClassName}>
       <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
@@ -58,7 +68,17 @@ export function GuardPreShiftBriefing({
             <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
             <p className="text-sm text-brand-text-muted mt-1 truncate">{job.clientName}</p>
           </div>
-          <div className="shrink-0 text-right">
+          <div className="shrink-0 text-right space-y-1">
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="ml-auto p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec"
+                aria-label="Close briefing"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
             <p className="text-xs text-brand-text-muted flex items-center justify-end gap-1">
               <DollarSign className="w-3.5 h-3.5" />
               Your pay

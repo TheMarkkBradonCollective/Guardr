@@ -408,6 +408,7 @@ export function GuardDashboard({
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState(false);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
+  const [manualBriefingJobId, setManualBriefingJobId] = useState<string | null>(null);
 
   const browseJobLists = useMemo(
     () => getGuardBrowseJobLists(guard.id, requests),
@@ -435,6 +436,22 @@ export function GuardDashboard({
     if (onDuty) return onDuty;
     return assignedJobs.find((r) => r.status === 'accepted') ?? null;
   }, [assignedJobs]);
+
+  const manualBriefingJob = useMemo(
+    () =>
+      manualBriefingJobId
+        ? requests.find((r) => r.id === manualBriefingJobId && r.assignedGuardId === guard.id) ?? null
+        : null,
+    [manualBriefingJobId, requests, guard.id]
+  );
+
+  const openBriefingForJob = useCallback((jobId: string) => {
+    setManualBriefingJobId(jobId);
+  }, []);
+
+  const closeManualBriefing = useCallback(() => {
+    setManualBriefingJobId(null);
+  }, []);
 
   const activePhase: ShiftPhase | null = useMemo(() => {
     if (!activeShiftJob) return null;
@@ -711,23 +728,28 @@ export function GuardDashboard({
     onGuardArrived?.(activeShiftJob.id);
   };
 
-  const handleStartEnRoute = () => {
-    if (!activeShiftJob || !onStartEnRoute) return;
-    const blocked = enRouteBlockedMessage(activeShiftJob);
+  const handleStartEnRoute = (jobId?: string) => {
+    const targetJob = jobId
+      ? requests.find((r) => r.id === jobId && r.assignedGuardId === guard.id)
+      : activeShiftJob;
+    if (!targetJob || !onStartEnRoute) return;
+    const blocked = enRouteBlockedMessage(targetJob);
     if (blocked) {
       showAppToast(blocked, { tone: 'error' });
       return;
     }
-    if (!canGuardStartEnRoute(activeShiftJob)) {
+    if (!canGuardStartEnRoute(targetJob)) {
       showAppToast('Start heading unlocks 1 hour before your shift.', { tone: 'error' });
       return;
     }
-    if (jobRequiresPostOrdersAck(activeShiftJob, guard.id)) {
+    if (jobRequiresPostOrdersAck(targetJob, guard.id)) {
       showAppToast('Acknowledge post orders in the briefing before heading to site.', { tone: 'error' });
       return;
     }
-    updatePhase(activeShiftJob.id, 'en-route');
-    void onStartEnRoute(activeShiftJob.id);
+    updatePhase(targetJob.id, 'en-route');
+    setManualBriefingJobId(null);
+    if (jobId && tab !== 'map') setTab('map');
+    void onStartEnRoute(targetJob.id);
   };
 
   const handleMidShiftCheckIn = async (payload: {
@@ -1173,7 +1195,7 @@ export function GuardDashboard({
         <GuardPreShiftBriefing
           job={activeShiftJob}
           guardId={guard.id}
-          onStartEnRoute={handleStartEnRoute}
+          onStartEnRoute={() => handleStartEnRoute(activeShiftJob.id)}
           onAckPostOrders={
             onAckPostOrders ? () => onAckPostOrders(activeShiftJob.id) : undefined
           }
@@ -1265,6 +1287,7 @@ export function GuardDashboard({
               onOpenMessages={openMessagesForJob}
               onApproveOvertime={onApproveOvertime}
               onClose={() => handleGuardSelectedJobChange(null)}
+              onViewBriefing={openBriefingForJob}
               feeConfig={feeConfig}
               onSubmitPriceOffer={
                 onSubmitPriceOffer
@@ -1335,6 +1358,7 @@ export function GuardDashboard({
                 feeConfig={feeConfig}
                 onSubmitPriceOffer={onSubmitPriceOffer}
                 onAcceptPriceOffer={onAcceptPriceOffer}
+                onViewBriefing={openBriefingForJob}
               />
             </div>
           )}
@@ -1636,6 +1660,29 @@ export function GuardDashboard({
             showAppToast('Activity logged', { tone: 'success' });
           }}
         />
+      )}
+
+      {manualBriefingJob && (
+        <div className="fixed inset-0 z-[2000] flex flex-col justify-end pointer-events-auto">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            onClick={closeManualBriefing}
+            aria-label="Close briefing"
+          />
+          <div className="relative z-[1] w-full">
+            <GuardPreShiftBriefing
+              layout="modal"
+              job={manualBriefingJob}
+              guardId={guard.id}
+              onClose={closeManualBriefing}
+              onStartEnRoute={() => handleStartEnRoute(manualBriefingJob.id)}
+              onAckPostOrders={
+                onAckPostOrders ? () => onAckPostOrders(manualBriefingJob.id) : undefined
+              }
+            />
+          </div>
+        </div>
       )}
     </>
   );

@@ -148,6 +148,16 @@ export function formatCountdown(ms: number): string {
   return `${hours}h ${minutes}m`;
 }
 
+/** Accepted, assigned shifts within the 24h pre-shift briefing window. */
+export function guardCanOpenPreShiftBriefing(
+  req: BriefingJob & { assignedGuardId: string | null },
+  guardId: string,
+  nowMs: number = Date.now()
+): boolean {
+  if (req.status !== 'accepted' || req.assignedGuardId !== guardId) return false;
+  return isPreShiftBriefingWindowOpen(req, nowMs);
+}
+
 export function enRouteBlockedMessage(req: BriefingJob, nowMs: number = Date.now()): string | null {
   if (req.enRouteAt) return 'You are already en route.';
   if (!isPreShiftBriefingWindowOpen(req, nowMs)) {

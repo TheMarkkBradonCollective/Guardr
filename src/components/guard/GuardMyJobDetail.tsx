@@ -7,6 +7,8 @@ import { canGuardApproveOvertime } from '../../lib/shiftBilling';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { GuardJobCard } from './GuardJobCard';
+import { ViewPreShiftBriefingButton } from './ViewPreShiftBriefingButton';
+import { guardCanOpenPreShiftBriefing } from '../../lib/preShiftBriefing';
 import { CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
 
 export interface GuardMyJobDetailProps {
@@ -26,6 +28,7 @@ export interface GuardMyJobDetailProps {
   ) => void | Promise<void>;
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
+  onViewBriefing?: (jobId: string) => void;
 }
 
 export function GuardMyJobDetail({
@@ -42,6 +45,7 @@ export function GuardMyJobDetail({
   onUpdateCrewProfile,
   onAcceptInvite,
   onDeclineInvite,
+  onViewBriefing,
 }: GuardMyJobDetailProps) {
   const [overtimeApproveId, setOvertimeApproveId] = useState<string | null>(null);
   const chatEligible = isJobChatEligible(job);
@@ -49,6 +53,7 @@ export function GuardMyJobDetail({
   const jobAsRequest = job as unknown as SecurityRequest;
   const jobIncidents = buildIncidentReportViews([jobAsRequest], [guard]);
   const hasIncidents = listIncidentReportsForRequest(jobAsRequest).length > 0;
+  const showViewBriefing = guardCanOpenPreShiftBriefing(job, guard.id) && !!onViewBriefing;
 
   return (
     <div className="px-5 pb-8 space-y-4">
@@ -88,6 +93,9 @@ export function GuardMyJobDetail({
             : undefined
         }
       />
+      {showViewBriefing && (
+        <ViewPreShiftBriefingButton onClick={() => onViewBriefing!(job.id)} />
+      )}
       {hasIncidents && (
         <div className="space-y-3">
           <p className="text-sm font-semibold">Incident reports filed</p>
