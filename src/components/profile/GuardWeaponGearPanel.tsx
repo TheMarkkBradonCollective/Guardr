@@ -4,11 +4,7 @@ import {
   GUARD_WEAPON_GEAR_RULES,
   getClientVisibleListedWeaponGear,
   getEligibleWeaponGear,
-  getGuardArmedDisplayLevel,
-  guardArmedDisplayLevelIndicator,
-  guardArmedDisplayLevelLabel,
   guardMeetsWeaponGearRequirements,
-  shouldShowGuardArmedDisplayLevel,
 } from '../../lib/guardWeaponGear';
 import { Shield } from 'lucide-react';
 
@@ -30,8 +26,6 @@ export function GuardWeaponGearPanel({
   const visibleListed = GUARD_WEAPON_GEAR_RULES.filter(
     (rule) => selected.includes(rule.id) && eligibleIds.has(rule.id)
   );
-  const showArmedLevel = shouldShowGuardArmedDisplayLevel(guard);
-  const armedLevel = getGuardArmedDisplayLevel(guard);
 
   const toggle = (id: GuardWeaponGearId) => {
     if (!guardMeetsWeaponGearRequirements(guard, id)) return;
@@ -51,15 +45,8 @@ export function GuardWeaponGearPanel({
         </p>
         <p className="text-xs text-brand-text-muted leading-relaxed">
           List gear on your profile once Guardr has verified the California BSIS credentials for each item.
-          Your armed status is shown to clients after your profile is approved.
         </p>
       </div>
-
-      {showArmedLevel && (
-        <p className="text-xs font-medium text-brand-text">
-          Profile status: {guardArmedDisplayLevelIndicator(armedLevel)} {guardArmedDisplayLevelLabel(armedLevel)}
-        </p>
-      )}
 
       {editing ? (
         <ul className="space-y-2">

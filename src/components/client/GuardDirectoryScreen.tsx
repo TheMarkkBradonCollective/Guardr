@@ -20,7 +20,6 @@ import { getActiveStandingCrewMembers } from '../../lib/guardStandingCrew';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { GuardArmedLevelBadge } from '../guard/GuardArmedLevelBadge';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack, AppEmptyState, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -701,7 +700,6 @@ export function GuardDirectoryScreen({
                         <div className="flex items-center gap-2 text-sm text-brand-text-muted flex-wrap">
                           {guard.isStaff && <WfBadge tone="primary">Staff</WfBadge>}
                           {isGuardProfileApproved(guard) && <WfBadge tone="success">{GUARD_APPROVED_BADGE_LABEL}</WfBadge>}
-                          <GuardArmedLevelBadge guard={guard} />
                           {workedBefore && <WfBadge tone="primary">Worked with before</WfBadge>}
                           <span className="inline-flex items-center gap-1">
                             <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />

@@ -4,10 +4,8 @@ import type { SecurityGuard } from '../types';
 import {
   getClientVisibleListedWeaponGear,
   getEligibleWeaponGear,
-  getGuardArmedDisplayLevel,
   guardMeetsWeaponGearRequirements,
   GUARD_WEAPON_GEAR_RULES,
-  shouldShowGuardArmedDisplayLevel,
 } from './guardWeaponGear.ts';
 
 function guardWithCerts(
@@ -80,52 +78,5 @@ describe('guard weapon gear eligibility', () => {
       visible.map((rule) => rule.id),
       ['baton', 'handcuffs']
     );
-  });
-});
-
-describe('guard armed display level', () => {
-  const guardCard = verifiedCert('bsis-guard-card', 'guard-card');
-  const firearmCerts = [
-    guardCard,
-    verifiedCert('bsis-exposed-firearm', 'bsis-permit'),
-    verifiedCert('bsis-firearms-training'),
-    verifiedCert('bsis-firearms-qualification'),
-  ];
-  const batonCerts = [
-    guardCard,
-    verifiedCert('bsis-baton', 'bsis-permit'),
-    verifiedCert('bsis-baton-training'),
-  ];
-
-  it('returns unarmed when only client-approved gear is listed', () => {
-    const guard = guardWithCerts([guardCard], {
-      listedWeaponGear: ['handcuffs', 'flashlight'],
-      verified: true,
-    });
-    assert.equal(getGuardArmedDisplayLevel(guard), 'unarmed');
-  });
-
-  it('returns light-armed when baton is listed and verified', () => {
-    const guard = guardWithCerts(batonCerts, {
-      listedWeaponGear: ['baton'],
-      verified: true,
-    });
-    assert.equal(getGuardArmedDisplayLevel(guard), 'light-armed');
-  });
-
-  it('returns armed when firearm is listed and verified', () => {
-    const guard = guardWithCerts(firearmCerts, {
-      listedWeaponGear: ['firearm', 'baton'],
-      verified: true,
-    });
-    assert.equal(getGuardArmedDisplayLevel(guard), 'armed');
-  });
-
-  it('only shows level when profile is approved with verified guard card', () => {
-    const guard = guardWithCerts([guardCard], { verified: false });
-    assert.equal(shouldShowGuardArmedDisplayLevel(guard), false);
-
-    const approved = guardWithCerts([guardCard], { verified: true });
-    assert.equal(shouldShowGuardArmedDisplayLevel(approved), true);
   });
 });

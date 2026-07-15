@@ -17,7 +17,6 @@ import {
 } from '../../lib/guardResume';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { GuardArmedLevelBadge } from '../guard/GuardArmedLevelBadge';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
 import { GuardWeaponGearClientSection } from '../profile/GuardWeaponGearPanel';
 import { formatShiftRange } from '../../lib/dates';
@@ -152,9 +151,6 @@ export function GuardProfileScreen({
                       {GUARD_APPROVED_BADGE_LABEL}
                     </p>
                   )}
-                  <div className="mt-3">
-                    <GuardArmedLevelBadge guard={guard} />
-                  </div>
                   {isGuardTrusted(guard) && (
                     <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
                       <Check className="w-4 h-4" />
