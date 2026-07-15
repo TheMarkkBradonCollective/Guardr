@@ -18296,36 +18296,7 @@ body.capacitor-native .landing-app-download-btn:active {
   opacity: 0.85;
 }
 
-body.capacitor-native .app-home-screen .app-role-picker {
+body.capacitor-native .app-home-screen .landing-path-grid {
   gap: 0.75rem;
-}
-
-.app-role-picker-card {
-  gap: 0.875rem;
-}
-
-.app-role-picker-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--brand-text) 8%, transparent);
-  color: var(--brand-text-muted);
-  flex-shrink: 0;
-}
-
-.app-role-picker-icon--client {
-  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
-  color: var(--brand-primary);
-}
-
-.auth-experience-app .auth-form-scroll {
-  background: var(--brand-bg);
-}
-
-.auth-app-header {
-  z-index: 20;
 }
 
