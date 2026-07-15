@@ -13,6 +13,7 @@ import {
   getCredentialVerificationBadgeClass,
   getCredentialVerificationLabel,
 } from '../../lib/certStatus';
+import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
 import {
   getCoiCredentialUploadBadgeClass,
   getCoiCredentialUploadLabel,
@@ -64,9 +65,23 @@ export function CredentialStatusBadges({
   staffMode?: boolean;
 }) {
   const verified = cert.status === 'verified';
+  const updateRequested = Boolean(cert.updateRequestedAt && !cert.pendingUpdate);
+  const updatePendingReview = certHasPendingUpdate(cert);
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
+      {updatePendingReview && (
+        <Badge
+          label="Update pending review"
+          className="bg-amber-500/15 text-amber-400 border-amber-500/30"
+        />
+      )}
+      {updateRequested && (
+        <Badge
+          label="Update requested"
+          className="bg-brand-primary/15 text-brand-primary border-brand-primary/30"
+        />
+      )}
       {showUpload && !verified && <CredentialUploadBadge cert={cert} staffMode={staffMode} />}
       {showVerification && <CredentialVerificationBadge cert={cert} />}
     </div>

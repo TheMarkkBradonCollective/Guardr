@@ -61,6 +61,38 @@ export type CertCategory =
   | 'security-advanced'
   | 'industry';
 
+export type CertificationRevisionEvent =
+  | 'submitted'
+  | 'verified'
+  | 'rejected'
+  | 'update_requested'
+  | 'update_submitted'
+  | 'superseded';
+
+export interface CertificationRevision {
+  id: string;
+  recordedAt: string;
+  event: CertificationRevisionEvent;
+  status: 'verified' | 'pending' | 'rejected';
+  issuer?: string;
+  number?: string;
+  state?: string;
+  expiryDate?: string;
+  imageUrl?: string;
+  note?: string;
+}
+
+export interface CertificationPendingUpdate {
+  submittedAt: string;
+  issuer: string;
+  number: string;
+  state?: string;
+  expiryDate?: string;
+  imageUrl?: string;
+  status: 'pending' | 'rejected';
+  rejectionReason?: string;
+}
+
 export interface Certification {
   id: string;
   name: string;
@@ -81,6 +113,13 @@ export interface Certification {
   rejectionReason?: string;
   /** Who uploaded this credential for approvals filtering */
   submittedByRole?: 'guard' | 'staff';
+  /** Staff asked the guard to upload a new version — current verified copy stays on file. */
+  updateRequestedAt?: string;
+  updateRequestNote?: string;
+  /** Guard-submitted replacement awaiting staff review while verified copy remains active. */
+  pendingUpdate?: CertificationPendingUpdate;
+  /** Prior versions and review events, newest events appended by handlers. */
+  revisionHistory?: CertificationRevision[];
 }
 
 export interface Experience {

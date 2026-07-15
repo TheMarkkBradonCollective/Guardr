@@ -3,7 +3,14 @@ import { certDatabaseErrorMessage } from './certImagePolicy';
 
 type CertRow = Record<string, unknown>;
 
-const OPTIONAL_CERT_COLUMNS = ['submitted_by_role', 'rejection_reason'] as const;
+const OPTIONAL_CERT_COLUMNS = [
+  'submitted_by_role',
+  'rejection_reason',
+  'revision_history',
+  'pending_update',
+  'update_requested_at',
+  'update_request_note',
+] as const;
 
 function parseMissingColumn(message?: string): string | null {
   if (!message) return null;

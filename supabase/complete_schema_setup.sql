@@ -273,6 +273,10 @@ ALTER TABLE certifications ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS submitted_by_role TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS pending_update JSONB;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS update_request_note TEXT;
 
 -- Cert expiry is optional — app no longer collects cert expiry (COI and government ID keep their own).
 ALTER TABLE certifications ALTER COLUMN expiry_date DROP NOT NULL;
