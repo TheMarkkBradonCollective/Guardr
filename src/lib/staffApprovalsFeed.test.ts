@@ -4,8 +4,10 @@ import type { Client, SecurityGuard } from '../types';
 import {
   APPLICATION_FEED_STATUS_LABELS,
   buildApplicationFeed,
+  buildStaffApprovalsFeed,
   countPendingAccountSignupApplications,
   countPendingCredentialApprovals,
+  CREDENTIAL_PENDING_UPLOAD_LABEL,
   isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
 } from './staffApprovalsFeed.ts';
@@ -115,7 +117,7 @@ describe('buildApplicationFeed', () => {
     assert.equal(isApplicationFeedItemOpen(clientItem!, [], []), true);
   });
 
-  it('counts pending government ID in credential approvals', () => {
+  it('counts pending government ID and other missing activation credentials', () => {
     const guard = staffProvisionedGuard({
       userStatus: 'approved',
       verified: true,
@@ -128,7 +130,54 @@ describe('buildApplicationFeed', () => {
       idSelfieUrl: 'selfie.jpg',
       idVerificationSubmittedAt: '2026-01-01T00:00:00.000Z',
     });
-    assert.equal(countPendingCredentialApprovals([guard]), 1);
-    assert.equal(govIdApprovalItemId('g-staff'), 'gov-id-g-staff');
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+    const govId = feed.find((item) => item.id === govIdApprovalItemId('g-staff'));
+
+    assert.equal(countPendingCredentialApprovals([guard]), 5);
+    assert.equal(govId?.statusLabel, 'Pending review');
+    assert.equal(
+      feed.filter((item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL).length,
+      4
+    );
+  });
+
+  it('includes required activation credentials awaiting guard upload in the credentials feed', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'pending',
+      mustChangePassword: true,
+    });
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+
+    assert.equal(feed.length, 5);
+    assert.ok(feed.every((item) => item.status === 'pending'));
+    assert.ok(feed.every((item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL));
+    assert.equal(countPendingCredentialApprovals([guard]), 5);
+    assert.ok(feed.some((item) => item.id === govIdApprovalItemId('g-staff')));
+    assert.ok(feed.some((item) => item.title.includes('BSIS Guard Card')));
+  });
+
+  it('does not duplicate pending upload rows when a credential is already submitted for review', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'pending',
+      idState: 'CA',
+      idNumber: 'ID-1',
+      idExpiryDate: '2099-12-31',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      idVerificationSubmittedAt: '2026-01-01T00:00:00.000Z',
+    });
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials' && item.id === govIdApprovalItemId('g-staff')
+    );
+
+    assert.equal(feed.length, 1);
+    assert.equal(feed[0]?.statusLabel, 'Pending review');
   });
 });

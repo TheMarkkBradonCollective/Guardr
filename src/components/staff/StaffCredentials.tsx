@@ -529,6 +529,35 @@ export function StaffCredentials({
             {renderGovIdUpdateRequest(guard)}
           </div>
         )}
+
+        {context.kind === 'activation-pending' && (
+          <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title={`${context.label} not submitted`}>
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              This required activation credential has not been uploaded yet. The guard can add it from their
+              profile after signing in, or staff can add it from the guard profile.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {onOpenGuardProfile && (
+                <button
+                  type="button"
+                  onClick={() => onOpenGuardProfile(guard.id)}
+                  className="app-button-outline app-btn-sm"
+                >
+                  View guard profile
+                </button>
+              )}
+              {onEditGuardProfile && (
+                <button
+                  type="button"
+                  onClick={() => onEditGuardProfile(guard.id)}
+                  className="app-button-outline app-btn-sm"
+                >
+                  Open guard credentials
+                </button>
+              )}
+            </div>
+          </AppEmptyState>
+        )}
       </div>
     );
 
