@@ -7,6 +7,8 @@ import {
   filterApprovalsFeedByQueue,
   findFeedItem,
   formatApprovalTimestamp,
+  countPendingCredentialReviews,
+  countPendingCredentialUploads,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
   credentialFeedThumbnailUrl,
@@ -482,6 +484,15 @@ export function StaffCredentials({
     );
   };
 
+  const pendingUploadCount = useMemo(
+    () => countPendingCredentialUploads(guards),
+    [guards]
+  );
+  const pendingReviewCount = useMemo(
+    () => countPendingCredentialReviews(guards),
+    [guards]
+  );
+
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
 
   if (!canVerifyCredentials) {
@@ -625,8 +636,8 @@ export function StaffCredentials({
             activeId={filter}
             onChange={(id) => setFilter(id as CredentialStatusFilter)}
             tabs={[
-              { id: 'pending_upload', label: 'Pending upload' },
-              { id: 'pending_review', label: 'Pending review' },
+              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+              { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
               { id: 'verified', label: 'Verified' },
               { id: 'all', label: 'All' },
             ]}

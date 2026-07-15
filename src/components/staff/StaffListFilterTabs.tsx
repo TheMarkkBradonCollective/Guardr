@@ -3,6 +3,12 @@ import React from 'react';
 export interface StaffListFilterTab {
   id: string;
   label: string;
+  count?: number;
+}
+
+export function formatStaffListFilterTabLabel(tab: StaffListFilterTab): string {
+  if (tab.count === undefined || tab.count <= 0) return tab.label;
+  return `${tab.label} (${tab.count})`;
 }
 
 interface StaffListFilterTabsProps {
@@ -38,7 +44,7 @@ export function StaffListFilterTabs({
             activeId === tab.id ? '!border-brand-primary !text-brand-primary' : ''
           }`}
         >
-          {tab.label}
+          {formatStaffListFilterTabLabel(tab)}
         </button>
       ))}
     </div>

@@ -642,20 +642,28 @@ export function isCredentialFeedItemAwaitingStaffReview(item: ApprovalFeedItem):
   return item.statusLabel !== CREDENTIAL_PENDING_UPLOAD_LABEL;
 }
 
-/** Pending credential queue count — matches the Credentials tab pending filter. */
-export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
-  return countPendingInFeedByQueue(
+function credentialQueueFeed(guards: SecurityGuard[]): ApprovalFeedItem[] {
+  return filterApprovalsFeedByQueue(
     buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
     'credentials'
   );
 }
 
-/** Credentials submitted and awaiting staff review — drives overview attention metrics. */
+/** Activation slots awaiting guard upload — Credentials “Pending upload” tab. */
+export function countPendingCredentialUploads(guards: SecurityGuard[]): number {
+  return credentialQueueFeed(guards).filter(
+    (item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL
+  ).length;
+}
+
+/** Credentials submitted and awaiting staff review — Credentials “Pending review” tab. */
 export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
-  return filterApprovalsFeedByQueue(
-    buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
-    'credentials'
-  ).filter(isCredentialFeedItemAwaitingStaffReview).length;
+  return credentialQueueFeed(guards).filter(isCredentialFeedItemAwaitingStaffReview).length;
+}
+
+/** Sidebar badge — pending upload + pending review (open credential queue). */
+export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
+  return countPendingCredentialUploads(guards) + countPendingCredentialReviews(guards);
 }
 
 function guardIdForCredentialFeedItem(item: ApprovalFeedItem, guards: SecurityGuard[]): string | null {
