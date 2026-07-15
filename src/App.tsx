@@ -534,21 +534,6 @@ export default function App() {
     applyThemeToDocument(local);
   }, [currentUser?.id]);
 
-  // Role accent colors apply inside the logged-in app (and app-shell auth).
-  // The public website keeps the company sage brand throughout.
-  useEffect(() => {
-    const role = currentUser
-      ? appRoleForUser(currentUser)
-      : isAuthView && isAppExperience()
-        ? initialAuthRole
-        : null;
-    if (role) {
-      document.documentElement.dataset.roleExperience = role;
-    } else {
-      delete document.documentElement.dataset.roleExperience;
-    }
-  }, [currentUser?.id, currentUser?.role, isAuthView, initialAuthRole]);
-
   // ── DB state ───────────────────────────────────────────────
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
   const guardsRef = useRef(guards);

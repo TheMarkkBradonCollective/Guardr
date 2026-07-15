@@ -95,10 +95,8 @@ html.theme-light {
   --shadow-nav:          0 -1px 0 rgba(0, 0, 0, 0.06), 0 -8px 24px rgba(0, 0, 0, 0.04);
   --radius-card:         14px;
   --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 22%, transparent);
-  /* Standalone role-preview colors — used on marketing/auth screens before a
-     role is "active" via data-role-experience (see ROLE IDENTITY below), so
-     the landing page and sign-in flow can already preview each workspace's
-     color before the visitor commits to one. */
+  /* Standalone role-preview colors — scoped to logged-in role shells only
+     (see .role-experience-* below). Public website + auth keep company sage. */
   --role-client-color:       #2B5A8C;
   --role-client-color-hover: #204569;
   --role-guard-color:        #A6521E;
@@ -173,37 +171,32 @@ html.theme-grey {
   --role-guard-color-hover:  #C0714A;
 }
 
-/* ─── ROLE IDENTITY ──────────────────────────────────────────
-   Each workspace gets its own accent so the product feels purpose-built
-   per audience instead of one skin re-used everywhere. Buttons, active nav
-   states, focus rings, and "primary" badges all key off --brand-primary,
-   so overriding it here re-colors the whole role experience automatically —
-   including portaled UI (toasts, sheets, menus) since this is set on <html>.
-   Staff keeps the base sage brand color (no override needed below). ────── */
-html.theme-light[data-role-experience="client"] {
-  --brand-primary:       var(--role-client-color);
-  --brand-primary-hover: var(--role-client-color-hover);
-  --brand-accent:        var(--role-client-color);
-}
-html.theme-dark[data-role-experience="client"],
-html.theme-grey[data-role-experience="client"] {
-  --brand-primary:       var(--role-client-color);
-  --brand-primary-hover: var(--role-client-color-hover);
-  --brand-accent:        var(--role-client-color);
-  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+/* ─── ROLE IDENTITY (logged-in app shells only) ───────────────────────────
+   Role accents are scoped to .role-experience-* wrappers inside the product.
+   Public marketing pages and auth always keep the company sage brand. ─── */
+
+html.theme-light .landing-page,
+html.theme-light .app-home-screen,
+html.theme-light #guardr-auth-root {
+  --brand-primary: #5E7B61;
+  --brand-primary-hover: #4A6B4E;
+  --brand-accent: #5E7B61;
 }
 
-html.theme-light[data-role-experience="guard"] {
-  --brand-primary:       var(--role-guard-color);
-  --brand-primary-hover: var(--role-guard-color-hover);
-  --brand-accent:        var(--role-guard-color);
+html.theme-dark .landing-page,
+html.theme-dark .app-home-screen,
+html.theme-dark #guardr-auth-root {
+  --brand-primary: #6B8F6E;
+  --brand-primary-hover: #5A7A5D;
+  --brand-accent: #6B8F6E;
 }
-html.theme-dark[data-role-experience="guard"],
-html.theme-grey[data-role-experience="guard"] {
-  --brand-primary:       var(--role-guard-color);
-  --brand-primary-hover: var(--role-guard-color-hover);
-  --brand-accent:        var(--role-guard-color);
-  --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+
+html.theme-grey .landing-page,
+html.theme-grey .app-home-screen,
+html.theme-grey #guardr-auth-root {
+  --brand-primary: #7EA383;
+  --brand-primary-hover: #6E9273;
+  --brand-accent: #7EA383;
 }
 
 /* Legacy nested wrappers still work */
@@ -3869,18 +3862,27 @@ button.app-cert-item-interactive:hover {
 
 /* ─── ROLE EXPERIENCES (client vs guard) ───────────────────── */
 .role-experience-client {
-  --experience-accent: var(--brand-primary);
-  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+  --brand-primary: var(--role-client-color);
+  --brand-primary-hover: var(--role-client-color-hover);
+  --brand-accent: var(--role-client-color);
+  --experience-accent: var(--role-client-color);
+  --experience-accent-soft: color-mix(in srgb, var(--role-client-color) 12%, var(--brand-bg));
 }
 
 .role-experience-guard {
-  --experience-accent: var(--brand-primary);
-  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+  --brand-primary: var(--role-guard-color);
+  --brand-primary-hover: var(--role-guard-color-hover);
+  --brand-accent: var(--role-guard-color);
+  --experience-accent: var(--role-guard-color);
+  --experience-accent-soft: color-mix(in srgb, var(--role-guard-color) 12%, var(--brand-bg));
 }
 
 html.theme-dark .role-experience-client {
-  --experience-accent: var(--brand-primary);
-  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg));
+  --experience-accent-soft: color-mix(in srgb, var(--role-client-color) 14%, var(--brand-bg));
+}
+
+html.theme-dark .role-experience-guard {
+  --experience-accent-soft: color-mix(in srgb, var(--role-guard-color) 14%, var(--brand-bg));
 }
 
 .role-experience-client .bottom-nav-item[aria-current="page"]::before,
@@ -15940,11 +15942,11 @@ textarea:focus-visible {
 }
 
 .role-experience-client .app-screen {
-  --experience-accent: var(--brand-primary);
+  --experience-accent: var(--role-client-color);
 }
 
 .role-experience-guard .app-screen {
-  --experience-accent: var(--brand-primary);
+  --experience-accent: var(--role-guard-color);
 }
 
 /* ─── Form system (app-input + uber-input unified) ─────────────────────── */
