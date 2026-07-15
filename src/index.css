@@ -95,12 +95,6 @@ html.theme-light {
   --shadow-nav:          0 -1px 0 rgba(0, 0, 0, 0.06), 0 -8px 24px rgba(0, 0, 0, 0.04);
   --radius-card:         14px;
   --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 22%, transparent);
-  /* Standalone role-preview colors — scoped to logged-in role shells only
-     (see .role-experience-* below). Public website + auth keep company sage. */
-  --role-client-color:       #2B5A8C;
-  --role-client-color-hover: #204569;
-  --role-guard-color:        #A6521E;
-  --role-guard-color-hover:  #854016;
 }
 
 html.theme-dark {
@@ -131,10 +125,6 @@ html.theme-dark {
   --shadow-nav:          0 -1px 0 rgba(255, 255, 255, 0.06), 0 -8px 28px rgba(0, 0, 0, 0.32);
   --radius-card:         14px;
   --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 28%, transparent);
-  --role-client-color:       #6FA6DA;
-  --role-client-color-hover: #5B90C4;
-  --role-guard-color:        #E28E52;
-  --role-guard-color-hover:  #CC783E;
 }
 
 html.theme-grey {
@@ -165,38 +155,6 @@ html.theme-grey {
   --shadow-nav:          0 -1px 0 rgba(255, 255, 255, 0.05), 0 -8px 28px rgba(0, 0, 0, 0.26);
   --radius-card:         14px;
   --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 26%, transparent);
-  --role-client-color:       #5D96C9;
-  --role-client-color-hover: #4C81B3;
-  --role-guard-color:        #D6875A;
-  --role-guard-color-hover:  #C0714A;
-}
-
-/* ─── ROLE IDENTITY (logged-in app shells only) ───────────────────────────
-   Role accents are scoped to .role-experience-* wrappers inside the product.
-   Public marketing pages and auth always keep the company sage brand. ─── */
-
-html.theme-light .landing-page,
-html.theme-light .app-home-screen,
-html.theme-light #guardr-auth-root {
-  --brand-primary: #5E7B61;
-  --brand-primary-hover: #4A6B4E;
-  --brand-accent: #5E7B61;
-}
-
-html.theme-dark .landing-page,
-html.theme-dark .app-home-screen,
-html.theme-dark #guardr-auth-root {
-  --brand-primary: #6B8F6E;
-  --brand-primary-hover: #5A7A5D;
-  --brand-accent: #6B8F6E;
-}
-
-html.theme-grey .landing-page,
-html.theme-grey .app-home-screen,
-html.theme-grey #guardr-auth-root {
-  --brand-primary: #7EA383;
-  --brand-primary-hover: #6E9273;
-  --brand-accent: #7EA383;
 }
 
 /* Legacy nested wrappers still work */
@@ -3860,29 +3818,16 @@ button.app-cert-item-interactive:hover {
   line-height: 1.5;
 }
 
-/* ─── ROLE EXPERIENCES (client vs guard) ───────────────────── */
-.role-experience-client {
-  --brand-primary: var(--role-client-color);
-  --brand-primary-hover: var(--role-client-color-hover);
-  --brand-accent: var(--role-client-color);
-  --experience-accent: var(--role-client-color);
-  --experience-accent-soft: color-mix(in srgb, var(--role-client-color) 12%, var(--brand-bg));
-}
-
+/* ─── ROLE EXPERIENCES (client vs guard shells — shared company brand) ─── */
+.role-experience-client,
 .role-experience-guard {
-  --brand-primary: var(--role-guard-color);
-  --brand-primary-hover: var(--role-guard-color-hover);
-  --brand-accent: var(--role-guard-color);
-  --experience-accent: var(--role-guard-color);
-  --experience-accent-soft: color-mix(in srgb, var(--role-guard-color) 12%, var(--brand-bg));
+  --experience-accent: var(--brand-primary);
+  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
 }
 
-html.theme-dark .role-experience-client {
-  --experience-accent-soft: color-mix(in srgb, var(--role-client-color) 14%, var(--brand-bg));
-}
-
+html.theme-dark .role-experience-client,
 html.theme-dark .role-experience-guard {
-  --experience-accent-soft: color-mix(in srgb, var(--role-guard-color) 14%, var(--brand-bg));
+  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg));
 }
 
 .role-experience-client .bottom-nav-item[aria-current="page"]::before,
@@ -4071,11 +4016,6 @@ html.theme-dark .role-experience-guard {
   border-color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg));
   box-shadow: 0 4px 20px color-mix(in srgb, var(--brand-primary) 15%, transparent);
-}
-
-.auth-experience-client .auth-role-card-active {
-  border-color: var(--experience-accent);
-  background: color-mix(in srgb, var(--experience-accent) 6%, var(--brand-bg));
 }
 
 .experience-badge {
@@ -15939,14 +15879,6 @@ textarea:focus-visible {
 .page-shell > * {
   position: relative;
   z-index: 1;
-}
-
-.role-experience-client .app-screen {
-  --experience-accent: var(--role-client-color);
-}
-
-.role-experience-guard .app-screen {
-  --experience-accent: var(--role-guard-color);
 }
 
 /* ─── Form system (app-input + uber-input unified) ─────────────────────── */
