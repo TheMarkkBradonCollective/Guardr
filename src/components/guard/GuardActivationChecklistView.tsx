@@ -89,7 +89,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-base font-black tracking-tight">{approved ? 'Awaiting marketplace eligibility' : 'Your application'}</p>
+      <p className="text-base font-black tracking-tight">{approved ? 'Activation checklist' : 'Your application'}</p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || guardHasVerifiedIdForWork(guard)}
@@ -117,7 +117,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           detail={
             guardMeetsLevel1(guard)
               ? approved
-                ? 'Valid guard card on file — staff can grant marketplace eligibility'
+                ? 'Valid guard card on file — account activates once all credentials are verified'
                 : 'Valid guard card on file — staff will verify at activation'
               : checklist.guardCardSubmitted
                 ? approved
@@ -160,8 +160,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       )}
       {approved && !guardMeetsLevel1(guard) && (
         <p className="text-xs text-brand-primary font-bold pt-3 border-t border-brand-border mt-3 tracking-tight">
-          Upload your guard card, COI, and required certs with document photos in Credentials so staff can grant
-          marketplace eligibility.
+          Upload your guard card, COI, and required certs with document photos in Credentials. Your account
+          activates automatically once staff verify all five items.
         </p>
       )}
     </div>

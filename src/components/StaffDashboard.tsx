@@ -29,7 +29,6 @@ import {
   canManageCompanyOperations,
   canManageGuards,
   canApproveGuards,
-  canActivateGuardAccounts,
   canVerifyCredentials,
   canManageStaffAccounts,
   canProposeStaffAccounts,
@@ -126,10 +125,6 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
-  onActivateGuardAccount?: (
-    guardId: string,
-    options?: import('../lib/guardMissingCredentials').ActivateGuardAccountOptions
-  ) => Promise<void>;
   onSetGuardTrusted?: (guardId: string, trusted: boolean) => Promise<void>;
   onSetClientTrusted?: (clientId: string, trusted: boolean) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
@@ -300,7 +295,6 @@ export function StaffDashboard({
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
-  onActivateGuardAccount,
   onSetGuardTrusted,
   onSetClientTrusted,
   onDeleteGuardAccount,
@@ -500,7 +494,6 @@ export function StaffDashboard({
   const canApproveStaff = canApproveStaffAccounts(currentUser);
   const requiresDirectorApproval = canProposeStaff && !canApproveStaff;
   const canApproveGuardAccounts = canApproveGuards(currentUser);
-  const canActivateApprovedGuards = canActivateGuardAccounts(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
@@ -593,11 +586,9 @@ export function StaffDashboard({
             guards={guards}
             clients={clients}
             canApproveGuardAccounts={canApproveGuardAccounts}
-            canActivateGuardAccounts={canActivateApprovedGuards}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onRejectGuardApplication={onRejectGuardIdentityVerification}

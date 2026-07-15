@@ -116,7 +116,7 @@ describe('guard account activation gates', () => {
     );
   });
 
-  it('blocks marketplace eligibility until all five credentials are verified', () => {
+  it('blocks automatic activation until all five credentials are verified', () => {
     const guard = fullyVerifiedGuard({
       userStatus: 'approved',
       certifications: fullyVerifiedGuard().certifications.filter(
@@ -180,12 +180,12 @@ describe('guard account activation gates', () => {
     assert.equal(getPendingGuardAccountReviews([guard]).length, 1);
   });
 
-  it('excludes approved guards from activation queue until credentials are submitted or verified', () => {
+  it('includes approved guards in activation queue while credentials remain unverified', () => {
     const guard = baseGuard({ userStatus: 'approved', certifications: [] });
-    assert.equal(getApprovedGuardsAwaitingActivation([guard]).length, 0);
+    assert.equal(getApprovedGuardsAwaitingActivation([guard]).length, 1);
 
     const ready = fullyVerifiedGuard({ userStatus: 'approved' });
-    assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
+    assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 0);
   });
 
   it('shows Approved + Restricted + pending credentials when expiry restricted', () => {

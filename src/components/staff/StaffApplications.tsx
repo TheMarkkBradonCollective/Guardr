@@ -34,14 +34,9 @@ interface StaffApplicationsProps {
   guards: SecurityGuard[];
   clients: Client[];
   canApproveGuardAccounts?: boolean;
-  canActivateGuardAccounts?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (
-    guardId: string,
-    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
-  ) => void | Promise<void>;
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
@@ -172,11 +167,9 @@ export function StaffApplications({
   guards,
   clients,
   canApproveGuardAccounts = false,
-  canActivateGuardAccounts = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
   onApproveGuardAccount,
-  onActivateGuardAccount,
   onApproveClient,
   onRejectClient,
   onRejectGuardApplication,
@@ -243,8 +236,7 @@ export function StaffApplications({
   }, [activeItemKey, feedByKey, onSelectionChange]);
 
   const canReview =
-    (canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts) ||
-    canManageClientAccounts;
+    (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
 
   const pendingCount = useMemo(
     () => applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients)).length,
@@ -283,11 +275,8 @@ export function StaffApplications({
           <ApplicationReviewMeta item={feedItem} />
           <StaffGuardApplicationReviewPanel
             guard={guard}
-            canReview={
-              canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts
-            }
+            canReview={canApproveGuardAccounts || canManageGuardAccounts}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
             onRejectGuardApplication={onRejectGuardApplication}
             onOpenGuardProfile={onOpenGuardProfile}
           />
