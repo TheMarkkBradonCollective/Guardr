@@ -29,6 +29,10 @@ import {
   guardHasValidInsurance,
 } from './guardInsurance';
 import {
+  GUARD_CREDENTIAL_RESTRICTED_LABEL,
+  isGuardCredentialExpiryRestricted,
+} from './guardCredentialExpiryEnforcement';
+import {
   getGuardUserStatus,
   isGuardAccountApproved,
   isGuardAccountPending,
@@ -315,6 +319,9 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
 
 /** Staff guard roster — only show "Pending approval" after the guard submits for review. */
 export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
+  if (isGuardCredentialExpiryRestricted(guard)) {
+    return GUARD_CREDENTIAL_RESTRICTED_LABEL;
+  }
   const status = getGuardUserStatus(guard);
   if (status === 'active' || status === 'suspended' || status === 'blocked') {
     return GUARD_USER_STATUS_LABELS[status];
@@ -333,6 +340,7 @@ export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
 export function getGuardRosterAccountBadgeTone(
   guard: SecurityGuard
 ): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+  if (isGuardCredentialExpiryRestricted(guard)) return 'danger';
   const status = getGuardUserStatus(guard);
   if (status === 'active') return 'success';
   if (status === 'suspended' || status === 'blocked') return 'danger';
@@ -353,6 +361,9 @@ export function getPendingGuardsMissingActivationRequirements(guards: SecurityGu
 }
 
 export function guardActivationSummaryLabel(guard: SecurityGuard): string {
+  if (isGuardCredentialExpiryRestricted(guard)) {
+    return 'Restricted — required credential expired';
+  }
   const checklist = getGuardActivationChecklist(guard);
   if (isGuardAccountApproved(guard)) {
     if (!checklist.canStaffActivate) {

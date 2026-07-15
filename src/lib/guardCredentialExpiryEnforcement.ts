@@ -353,3 +353,20 @@ export function guardHasExpiredIdUpdatePending(
 ): boolean {
   return Boolean(guard.idUpdateRequestedAt) && guardHasExpiredIdOnFile(guard);
 }
+
+/** Shown in staff roster, guard dashboard, and approvals when expiry enforcement downgraded the account. */
+export const GUARD_CREDENTIAL_RESTRICTED_LABEL = 'Restricted';
+
+export function isGuardCredentialExpiryRestricted(
+  guard: Pick<SecurityGuard, 'credentialExpiryRestricted' | 'isStaff'>
+): boolean {
+  return Boolean(!guard.isStaff && guard.credentialExpiryRestricted);
+}
+
+export function guardCredentialRestrictedDetail(
+  guard: Pick<SecurityGuard, 'credentialExpiryRestricted' | 'isStaff'>
+): string {
+  return isGuardCredentialExpiryRestricted(guard)
+    ? 'A required credential expired. Upload and verify an updated document to work jobs again.'
+    : '';
+}

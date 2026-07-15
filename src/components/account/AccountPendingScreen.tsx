@@ -2,7 +2,11 @@ import React from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardApplicationProgress } from '../../lib/guardApplicationProgress';
-import { Clock, Check, User } from 'lucide-react';
+import {
+  guardCredentialRestrictedDetail,
+  isGuardCredentialExpiryRestricted,
+} from '../../lib/guardCredentialExpiryEnforcement';
+import { AlertTriangle, Clock, Check, User } from 'lucide-react';
 import { GuardActivationUploadChecklist } from '../guard/GuardActivationUploadChecklist';
 import {
   type GuardIdentityVerificationPayload,
@@ -50,22 +54,31 @@ export function AccountPendingScreen({
 }: AccountPendingScreenProps) {
   const isGuard = role === 'guard';
   const approved = isGuard && guard ? isGuardAccountApproved(guard) : false;
+  const restricted = isGuard && guard ? isGuardCredentialExpiryRestricted(guard) : false;
   const applicationProgress = isGuard && guard ? getGuardApplicationProgress(guard) : null;
 
   const title = isGuard
-    ? approved
-      ? 'Upload activation credentials'
-      : 'Application under review'
+    ? restricted
+      ? 'Account restricted'
+      : approved
+        ? 'Upload activation credentials'
+        : 'Application under review'
     : 'Account pending approval';
 
-  const subtitle = isGuard && applicationProgress
+  const subtitle = isGuard && restricted
+    ? guardCredentialRestrictedDetail(guard!)
+    : isGuard && applicationProgress
     ? guardActivationSubtitle(approved, applicationProgress.percent)
     : 'Your account is pending staff approval.';
 
   return (
     <AppScreen className="flex flex-col min-h-full overflow-y-auto overscroll-contain">
       <div className="px-5 pt-8 pb-6 border-b border-brand-border shrink-0 text-center">
-        {isGuard && approved ? (
+        {isGuard && restricted ? (
+          <span className="w-14 h-14 rounded-full border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mx-auto mb-5">
+            <AlertTriangle className="w-7 h-7 text-red-500" />
+          </span>
+        ) : isGuard && approved ? (
           <span className="w-14 h-14 rounded-full bg-brand-primary flex items-center justify-center mx-auto mb-5 shadow-[0_4px_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
             <Check className="w-7 h-7 text-white" strokeWidth={2.5} />
           </span>
@@ -75,7 +88,7 @@ export function AccountPendingScreen({
           </span>
         )}
         <p className="text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
-          Marketplace eligibility
+          {restricted ? 'Credential expired' : 'Marketplace eligibility'}
         </p>
         <h1 className="text-2xl font-black tracking-tight text-brand-text">{title}</h1>
         <p className="text-sm text-brand-text-muted mt-2 leading-relaxed text-left font-medium">{subtitle}</p>

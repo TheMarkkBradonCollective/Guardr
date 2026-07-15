@@ -77,6 +77,7 @@ import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
+import { isGuardCredentialExpiryRestricted } from '../lib/guardCredentialExpiryEnforcement';
 import { isGuardAccountActive } from '../lib/guardAccountActivation';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardMessagesPanel } from './guard/GuardMessagesPanel';
@@ -920,6 +921,7 @@ export function GuardDashboard({
   };
 
   const userStatus = getGuardUserStatus(guard);
+  const credentialRestricted = isGuardCredentialExpiryRestricted(guard);
   const accountNeedsActivation = !isGuardAccountActive(guard);
   const showPendingGate =
     accountNeedsActivation && !GUARD_ACTIVATION_ALLOWED_TABS.includes(tab);
@@ -1489,9 +1491,11 @@ export function GuardDashboard({
   }
 
   const guardScreenTitle = showPendingGate
-    ? userStatus === 'approved'
-      ? 'Awaiting activation'
-      : 'Complete application'
+    ? credentialRestricted
+      ? 'Account restricted'
+      : userStatus === 'approved'
+        ? 'Awaiting activation'
+        : 'Complete application'
     : tab === 'messages' && supportMode === 'compose'
       ? 'Contact support'
       : tab === 'messages' && supportMode === 'report'
@@ -1500,7 +1504,9 @@ export function GuardDashboard({
   const guardHeaderStatus =
     activeShiftJob?.status === 'in-progress'
       ? `On shift · ${activeShiftJob.siteName || activeShiftJob.location}`
-      : accountNeedsActivation
+      : credentialRestricted
+        ? 'Restricted — upload and verify expired credentials'
+        : accountNeedsActivation
         ? userStatus === 'approved'
           ? 'Awaiting account activation'
           : 'Activation in review'
