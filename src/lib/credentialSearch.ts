@@ -27,3 +27,23 @@ export function approvalFeedItemMatchesSearch(
     item.statusLabel.toLowerCase().includes(normalized)
   );
 }
+
+export function applicationFeedItemMatchesSearch(
+  item: {
+    title: string;
+    subtitle: string;
+    statusLabel: string;
+    reviewedByName?: string;
+    reviewedByEmail?: string;
+  },
+  query: string
+): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+
+  return (
+    approvalFeedItemMatchesSearch(item, query) ||
+    (item.reviewedByName ?? '').toLowerCase().includes(normalized) ||
+    (item.reviewedByEmail ?? '').toLowerCase().includes(normalized)
+  );
+}

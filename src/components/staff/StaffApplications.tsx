@@ -6,17 +6,29 @@ import {
 import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildApplicationFeed,
-  findFeedItem,
   formatApprovalTimestamp,
+  isApplicationFeedItemPending,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
-import { AppEmptyState, AppItemCardStack, AppSubScreenHeader } from '../ui/app/AppPrimitives';
-import { WfBadge } from '../ui/wireframe';
-import { Building2, Eye, Shield, UserCheck } from 'lucide-react';
+import { applicationFeedItemMatchesSearch } from '../../lib/credentialSearch';
+import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
+import { WfBadge, WfSearchBar } from '../ui/wireframe';
+import { Building2, ChevronRight, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
+import { StaffAddGuardForm } from './StaffAddGuardForm';
+import type { StaffAddGuardInput } from './StaffAddGuardForm';
+import { StaffAddClientForm } from './StaffAddClientForm';
+import type { StaffAddClientInput } from './StaffAddClientForm';
 
 type ApplicationKind = 'guard' | 'client';
+type ApplicationFilter = 'pending' | 'all';
+
+interface ApplicationListEntry {
+  kind: ApplicationKind;
+  item: ApprovalFeedItem;
+}
 
 interface StaffApplicationsProps {
   guards: SecurityGuard[];
@@ -35,6 +47,8 @@ interface StaffApplicationsProps {
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
+  onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
+  onAddClient?: (input: StaffAddClientInput) => Promise<string>;
   initialGuardId?: string | null;
   initialClientId?: string | null;
   onSelectionChange?: (selection: { guardId?: string | null; clientId?: string | null }) => void;
@@ -50,75 +64,105 @@ function resolveApplicationKind(
   return 'guard';
 }
 
+function applicationListKey(entry: ApplicationListEntry): string {
+  return `${entry.kind}:${entry.item.id}`;
+}
+
 function ApplicationFeedRow({
-  item,
-  kind,
-  onViewDetails,
+  entry,
+  isSelected,
+  onSelect,
 }: {
-  item: ApprovalFeedItem;
-  kind: ApplicationKind;
-  onViewDetails: () => void;
+  entry: ApplicationListEntry;
+  isSelected: boolean;
+  onSelect: () => void;
 }) {
+  const { item, kind } = entry;
   const tone =
     item.status === 'pending' || item.status === 'in_review'
       ? 'warning'
       : item.status === 'approved' || item.status === 'active'
         ? 'success'
         : 'danger';
+  const pending = item.status === 'pending' || item.status === 'in_review';
 
   return (
-    <div className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-      <div className="min-w-0 text-left w-full">
-        <div className="flex items-center gap-2 min-w-0">
-          <WfBadge tone={kind === 'guard' ? 'primary' : 'default'}>
-            {kind === 'guard' ? 'Guard' : 'Client'}
-          </WfBadge>
-          <p className="font-semibold text-sm truncate">{item.title}</p>
+    <AppItemCard onClick={onSelect} className={isSelected ? 'app-item-card-selected' : ''}>
+      <div className="flex items-start gap-3 w-full text-left">
+        <span
+          className={`staff-overview-action-icon ${
+            pending ? 'staff-overview-action-icon-urgent' : ''
+          }`}
+        >
+          {kind === 'guard' ? <Shield className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <WfBadge tone={kind === 'guard' ? 'primary' : 'default'}>
+              {kind === 'guard' ? 'Guard' : 'Client'}
+            </WfBadge>
+            <p className="text-sm font-semibold truncate">{item.title}</p>
+          </div>
+          {item.subtitle && <p className="text-xs text-brand-text-muted mt-1 truncate">{item.subtitle}</p>}
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
+            {item.submittedAt && pending && (
+              <span className="text-[11px] text-brand-text-muted">
+                Submitted {formatApprovalTimestamp(item.submittedAt)}
+              </span>
+            )}
+            {item.reviewedAt && !pending && (
+              <span className="text-[11px] text-brand-text-muted">
+                {item.status === 'active' ? 'Activated' : 'Reviewed'}{' '}
+                {formatApprovalTimestamp(item.reviewedAt)}
+              </span>
+            )}
+          </div>
         </div>
-        {item.subtitle && <p className="text-xs text-brand-text-muted mt-0.5 truncate">{item.subtitle}</p>}
-        <div className="mt-1.5 space-y-1">
-          <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
-          {item.submittedAt && (item.status === 'pending' || item.status === 'in_review' || item.status === 'approved') && (
-            <p className="text-[11px] text-brand-text-muted">
-              Submitted {formatApprovalTimestamp(item.submittedAt)}
-            </p>
-          )}
-        </div>
+        <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" />
       </div>
-      <button type="button" onClick={onViewDetails} className="app-button-outline app-btn-sm gap-1.5 w-fit">
-        <Eye className="w-3.5 h-3.5" />
-        Review application
-      </button>
-    </div>
+    </AppItemCard>
   );
 }
 
 function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
   if (!item) return null;
+
   const reviewer = item.reviewedByName || item.reviewedByEmail;
+  const pending = item.status === 'pending' || item.status === 'in_review';
+  const approved = item.status === 'approved' || item.status === 'active';
+  const denied = item.status === 'denied';
+
   return (
-    <div className="rounded-lg border border-brand-border bg-brand-bg-sec/40 px-3 py-2.5 text-xs space-y-1">
+    <div className="app-list-subrow text-xs space-y-2 !pt-0">
       <p>
-        <span className="font-semibold text-brand-text">Status: </span>
-        {item.statusLabel}
+        <span className="detail-field-label !mb-0">Status</span>
+        <span className="text-sm font-medium">{item.statusLabel}</span>
       </p>
       {item.submittedAt && (
         <p>
-          <span className="font-semibold text-brand-text">Submitted: </span>
-          {formatApprovalTimestamp(item.submittedAt)}
+          <span className="detail-field-label !mb-0">Submitted</span>
+          <span className="text-sm">{formatApprovalTimestamp(item.submittedAt)}</span>
         </p>
       )}
-      {item.reviewedAt && (
+      {item.reviewedAt && !pending && (
         <p>
-          <span className="font-semibold text-brand-text">Reviewed: </span>
-          {formatApprovalTimestamp(item.reviewedAt)}
+          <span className="detail-field-label !mb-0">
+            {item.status === 'active' ? 'Activated' : approved ? 'Approved' : denied ? 'Reviewed' : 'Reviewed'}
+          </span>
+          <span className="text-sm">{formatApprovalTimestamp(item.reviewedAt)}</span>
         </p>
       )}
-      {reviewer && (
+      {reviewer && !pending && (
         <p>
-          <span className="font-semibold text-brand-text">By: </span>
-          {reviewer}
+          <span className="detail-field-label !mb-0">
+            {item.status === 'active' ? 'Activated by' : approved ? 'Approved by' : 'Reviewed by'}
+          </span>
+          <span className="text-sm">{item.reviewedByEmail || reviewer}</span>
         </p>
+      )}
+      {!reviewer && !pending && approved && (
+        <p className="text-sm text-brand-text-muted">Approver details are not on file for this application.</p>
       )}
     </div>
   );
@@ -138,16 +182,17 @@ export function StaffApplications({
   onRejectGuardApplication,
   onOpenGuardProfile,
   onOpenClientProfile,
+  onAddGuard,
+  onAddClient,
   initialGuardId = null,
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [activeSelection, setActiveSelection] = useState<{
-    kind: ApplicationKind;
-    id: string;
-  } | null>(() => {
-    if (initialGuardId) return { kind: 'guard', id: initialGuardId };
-    if (initialClientId) return { kind: 'client', id: initialClientId };
+  const [filter, setFilter] = useState<ApplicationFilter>('pending');
+  const [search, setSearch] = useState('');
+  const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
+    if (initialGuardId) return `guard:${initialGuardId}`;
+    if (initialClientId) return `client:${initialClientId}`;
     return null;
   });
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -162,45 +207,149 @@ export function StaffApplications({
     };
   }, [guards, clients]);
 
-  useEffect(() => {
-    if (initialGuardId) setActiveSelection({ kind: 'guard', id: initialGuardId });
-    else if (initialClientId) setActiveSelection({ kind: 'client', id: initialClientId });
-  }, [initialGuardId, initialClientId]);
-
   const applicationFeed = useMemo(
     () => buildApplicationFeed(guards, clients, auditLog),
     [guards, clients, auditLog]
   );
 
-  const feedById = useMemo(() => {
-    const map = new Map<string, { item: ApprovalFeedItem; kind: ApplicationKind }>();
-    for (const item of applicationFeed) {
-      map.set(item.id, {
-        item,
+  const applicationEntries = useMemo(
+    () =>
+      applicationFeed.map((item) => ({
         kind: resolveApplicationKind(item, guards, clients),
-      });
+        item,
+      })),
+    [applicationFeed, guards, clients]
+  );
+
+  const feedByKey = useMemo(() => {
+    const map = new Map<string, ApplicationListEntry>();
+    for (const entry of applicationEntries) {
+      map.set(applicationListKey(entry), entry);
     }
     return map;
-  }, [applicationFeed, guards, clients]);
+  }, [applicationEntries]);
 
   useEffect(() => {
-    if (!activeSelection) return;
-    if (!feedById.has(activeSelection.id)) {
-      setActiveSelection(null);
+    if (initialGuardId) setActiveItemKey(`guard:${initialGuardId}`);
+    else if (initialClientId) setActiveItemKey(`client:${initialClientId}`);
+  }, [initialGuardId, initialClientId]);
+
+  useEffect(() => {
+    if (!activeItemKey) return;
+    if (!feedByKey.has(activeItemKey)) {
+      setActiveItemKey(null);
       onSelectionChange?.({ guardId: null, clientId: null });
     }
-  }, [activeSelection, feedById, onSelectionChange]);
+  }, [activeItemKey, feedByKey, onSelectionChange]);
 
   const canReview =
     (canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts) ||
     canManageClientAccounts;
 
-  const setSelection = (next: { kind: ApplicationKind; id: string } | null) => {
-    setActiveSelection(next);
+  const pendingCount = useMemo(
+    () => applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients)).length,
+    [applicationEntries, guards, clients]
+  );
+
+  const visibleEntries = useMemo(() => {
+    const scoped =
+      filter === 'pending'
+        ? applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients))
+        : applicationEntries;
+    return scoped.filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
+  }, [applicationEntries, filter, guards, clients, search]);
+
+  const { showDetailOnly } = useSplitListDetail(activeItemKey, 'page');
+
+  const setSelection = (entry: ApplicationListEntry | null) => {
+    const key = entry ? applicationListKey(entry) : null;
+    setActiveItemKey(key);
     onSelectionChange?.({
-      guardId: next?.kind === 'guard' ? next.id : null,
-      clientId: next?.kind === 'client' ? next.id : null,
+      guardId: entry?.kind === 'guard' ? entry.item.id : null,
+      clientId: entry?.kind === 'client' ? entry.item.id : null,
     });
+  };
+
+  const renderApplicationDetail = (entry: ApplicationListEntry, options?: { onBack?: () => void }) => {
+    const feedItem = entry.item;
+    const { kind } = entry;
+
+    if (kind === 'guard') {
+      const guard = guards.find((g) => g.id === entry.item.id);
+      if (!guard) return null;
+
+      const detailBody = (
+        <div className="staff-detail-pane space-y-4">
+          <ApplicationReviewMeta item={feedItem} />
+          <StaffGuardApplicationReviewPanel
+            guard={guard}
+            canReview={
+              canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts
+            }
+            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
+            onRejectGuardApplication={onRejectGuardApplication}
+            onOpenGuardProfile={onOpenGuardProfile}
+          />
+        </div>
+      );
+
+      if (options?.onBack) {
+        return (
+          <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+            <AppSubScreenHeader title={guard.name} onBack={options.onBack} backLabel="Applications" />
+            {detailBody}
+          </div>
+        );
+      }
+
+      return (
+        <div className="animate-fade-in">
+          <div className="app-dashboard-zone-head !px-0 !mb-3">
+            <h2 className="app-dashboard-zone-title truncate">{guard.name}</h2>
+          </div>
+          {detailBody}
+        </div>
+      );
+    }
+
+    const client = clients.find((c) => c.id === entry.item.id);
+    if (!client) return null;
+
+    const detailBody = (
+      <div className="staff-detail-pane space-y-4">
+        <ApplicationReviewMeta item={feedItem} />
+        <StaffClientApplicationReviewPanel
+          client={client}
+          canReview={canManageClientAccounts}
+          onApproveClient={onApproveClient}
+          onRejectClient={onRejectClient}
+          onOpenClientProfile={onOpenClientProfile}
+        />
+      </div>
+    );
+
+    if (options?.onBack) {
+      return (
+        <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+          <AppSubScreenHeader
+            title={client.companyName || client.name}
+            onBack={options.onBack}
+            backLabel="Applications"
+          />
+          {detailBody}
+        </div>
+      );
+    }
+
+    return (
+      <div className="animate-fade-in">
+        <div className="app-dashboard-zone-head !px-0 !mb-3">
+          <h2 className="app-dashboard-zone-title truncate">{client.companyName || client.name}</h2>
+        </div>
+        {detailBody}
+      </div>
+    );
   };
 
   if (!canReview) {
@@ -211,107 +360,100 @@ export function StaffApplications({
     );
   }
 
-  if (activeSelection) {
-    const entry = feedById.get(activeSelection.id);
-    const feedItem = entry?.item ?? findFeedItem(applicationFeed, activeSelection.id);
-    const kind = entry?.kind ?? activeSelection.kind;
-
-    if (kind === 'guard') {
-      const guard = guards.find((g) => g.id === activeSelection.id);
-      if (!guard) return null;
-
-      return (
-        <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in" data-tour="staff-applications">
-          <AppSubScreenHeader
-            title={guard.name}
-            onBack={() => setSelection(null)}
-            backLabel="Applications"
-          />
-          <div className="px-4 sm:px-5 pb-8 space-y-4">
-            <ApplicationReviewMeta item={feedItem} />
-            <StaffGuardApplicationReviewPanel
-              guard={guard}
-              canReview={
-                canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts
-              }
-              onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-              onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
-              onRejectGuardApplication={onRejectGuardApplication}
-              onOpenGuardProfile={onOpenGuardProfile}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    const client = clients.find((c) => c.id === activeSelection.id);
-    if (!client) return null;
-
-    return (
-      <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in" data-tour="staff-applications">
-        <AppSubScreenHeader
-          title={client.companyName || client.name}
-          onBack={() => setSelection(null)}
-          backLabel="Applications"
-        />
-        <div className="px-4 sm:px-5 pb-8 space-y-4">
-          <ApplicationReviewMeta item={feedItem} />
-          <StaffClientApplicationReviewPanel
-            client={client}
-            canReview={canManageClientAccounts}
-            onApproveClient={onApproveClient}
-            onRejectClient={onRejectClient}
-            onOpenClientProfile={onOpenClientProfile}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  const pendingGuardCount = applicationFeed.filter((item) => resolveApplicationKind(item, guards, clients) === 'guard').length;
-  const pendingClientCount = applicationFeed.filter((item) => resolveApplicationKind(item, guards, clients) === 'client').length;
-
   return (
     <div className="animate-fade-in space-y-4" data-tour="staff-applications">
-      <p className="text-sm text-brand-text-muted leading-relaxed">
-        New guard and client sign-ups waiting for staff review before they can use the marketplace.
-        Job applications go straight to the client on each job.
-      </p>
-
-      {applicationFeed.length === 0 ? (
-        <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
-          No account applications waiting for review.
-        </AppEmptyState>
-      ) : (
+      {!showDetailOnly && (
         <>
-          <div className="flex flex-wrap gap-2 text-xs text-brand-text-muted">
-            {pendingGuardCount > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5" />
-                {pendingGuardCount} guard{pendingGuardCount === 1 ? '' : 's'}
-              </span>
+          <p className="text-sm text-brand-text-muted leading-relaxed">
+            New guard and client sign-ups waiting for staff review before they can use the marketplace.
+            Job applications go straight to the client on each job.
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
+            {canManageGuardAccounts && onAddGuard && (
+              <StaffAddGuardForm
+                onAdd={onAddGuard}
+                onCreated={(guardId) => {
+                  setSearch('');
+                  setFilter('pending');
+                  setActiveItemKey(`guard:${guardId}`);
+                  onSelectionChange?.({ guardId, clientId: null });
+                }}
+              />
             )}
-            {pendingClientCount > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                {pendingClientCount} client{pendingClientCount === 1 ? '' : 's'}
-              </span>
+            {canManageClientAccounts && onAddClient && (
+              <StaffAddClientForm
+                onAdd={onAddClient}
+                onCreated={(clientId) => {
+                  setSearch('');
+                  setFilter('pending');
+                  setActiveItemKey(`client:${clientId}`);
+                  onSelectionChange?.({ guardId: null, clientId });
+                }}
+              />
             )}
           </div>
-          <AppItemCardStack>
-            {applicationFeed.map((item) => {
-              const kind = resolveApplicationKind(item, guards, clients);
-              return (
-                <ApplicationFeedRow
-                  key={`${kind}-${item.id}`}
-                  item={item}
-                  kind={kind}
-                  onViewDetails={() => setSelection({ kind, id: item.id })}
-                />
-              );
-            })}
-          </AppItemCardStack>
+
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search applications..."
+            className="max-w-md"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setFilter('pending')}
+              className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('all')}
+              className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              All ({applicationEntries.length})
+            </button>
+          </div>
         </>
+      )}
+
+      {visibleEntries.length === 0 ? (
+        <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
+          {search.trim()
+            ? 'No applications match your search.'
+            : filter === 'pending'
+              ? 'No account applications waiting for review.'
+              : 'No account applications on file yet.'}
+        </AppEmptyState>
+      ) : (
+        <ListDetailLayout
+          items={visibleEntries}
+          selectedId={activeItemKey}
+          onSelectId={(key) => {
+            if (!key) {
+              setSelection(null);
+              return;
+            }
+            setSelection(feedByKey.get(key) ?? null);
+          }}
+          getItemId={applicationListKey}
+          listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
+          detailClassName="staff-detail-pane"
+          mobilePresentation="page"
+          autoSelectFirst={false}
+          emptyDetail={
+            <div className="flex items-center justify-center h-full min-h-[40vh] p-8 text-center">
+              <p className="text-sm text-brand-text-muted">Select an application to review</p>
+            </div>
+          }
+          renderItem={(entry, isSelected, onSelect) => (
+            <ApplicationFeedRow entry={entry} isSelected={isSelected} onSelect={onSelect} />
+          )}
+          renderDetail={(entry, options) => renderApplicationDetail(entry, options)}
+        />
       )}
     </div>
   );
