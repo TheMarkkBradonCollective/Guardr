@@ -303,6 +303,8 @@ function resolveNotificationUrl(type, options = {}) {
       return "/guard/crew";
     case "company_placard_expiry":
       return "/staff/settings";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
     case "test":
       return "/";
     default:
@@ -427,6 +429,8 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
     case "job_schedule_changed":
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
     case "team_chat_message":
       if (role === "guard") {
         return options.requestId ? `/guard/messages?tc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
@@ -492,6 +496,8 @@ function rolesForNotificationType(type) {
     case "job_relisted":
       return ["client"];
     case "job_schedule_changed":
+      return ["guard"];
+    case "pre_shift_briefing":
       return ["guard"];
     case "team_chat_message":
       return ["guard", "dispatch", "admin"];

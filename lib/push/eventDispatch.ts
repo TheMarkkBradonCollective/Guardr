@@ -17,6 +17,7 @@ export interface PushEventInput {
   priority?: 'normal' | 'high';
   checkinEscalationTier?: 'alert' | 'staff' | 'escalate';
   checkinDueBucket?: number;
+  url?: string;
 }
 
 const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string; body: string }> = {
@@ -181,6 +182,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: event.title ?? 'Company placard reminder',
     body: event.body || 'A company credential needs attention in Staff Settings',
   }),
+  pre_shift_briefing: (event) => ({
+    title: event.title ?? 'Shift briefing',
+    body: event.body || 'Review your pre-shift briefing before heading to site',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -197,6 +202,7 @@ function basePayload(event: PushEventInput): PushSendPayload {
     requestId: event.requestId,
     ticketId: event.ticketId,
     siteId: event.siteId,
+    url: event.url,
     priority: event.type === 'emergency_alert' ? 'high' : event.priority ?? 'normal',
     excludeUserId: event.excludeUserId,
   };
@@ -354,6 +360,12 @@ export async function buildEventDispatchPayloads(
 
   if (event.type === 'company_placard_expiry' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'pre_shift_briefing') {
+    const userId = event.recipientUserId ?? event.guardId;
+    if (!userId) return [];
+    return [{ ...payload, userId }];
   }
 
   if (event.type === 'job_status_update') {

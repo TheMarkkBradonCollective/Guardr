@@ -157,6 +157,10 @@ var EVENT_DEFAULTS = {
   company_placard_expiry: (event) => ({
     title: event.title ?? "Company placard reminder",
     body: event.body || "A company credential needs attention in Staff Settings"
+  }),
+  pre_shift_briefing: (event) => ({
+    title: event.title ?? "Shift briefing",
+    body: event.body || "Review your pre-shift briefing before heading to site"
   })
 };
 function basePayload(event) {
@@ -170,6 +174,7 @@ function basePayload(event) {
     requestId: event.requestId,
     ticketId: event.ticketId,
     siteId: event.siteId,
+    url: event.url,
     priority: event.type === "emergency_alert" ? "high" : event.priority ?? "normal",
     excludeUserId: event.excludeUserId
   };
@@ -276,6 +281,11 @@ async function buildEventDispatchPayloads(db, event) {
   }
   if (event.type === "company_placard_expiry" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "pre_shift_briefing") {
+    const userId = event.recipientUserId ?? event.guardId;
+    if (!userId) return [];
+    return [{ ...payload, userId }];
   }
   if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed") && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
@@ -438,6 +448,8 @@ function resolveNotificationUrl(type, options = {}) {
       return "/guard/crew";
     case "company_placard_expiry":
       return "/staff/settings";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
     case "test":
       return "/";
     default:
@@ -562,6 +574,8 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
     case "job_schedule_changed":
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
     case "team_chat_message":
       if (role === "guard") {
         return options.requestId ? `/guard/messages?tc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
@@ -627,6 +641,8 @@ function rolesForNotificationType(type) {
     case "job_relisted":
       return ["client"];
     case "job_schedule_changed":
+      return ["guard"];
+    case "pre_shift_briefing":
       return ["guard"];
     case "team_chat_message":
       return ["guard", "dispatch", "admin"];
