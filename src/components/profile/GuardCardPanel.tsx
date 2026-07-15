@@ -6,7 +6,7 @@ import { getGuardLicenses } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { certOverlayProps, type CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
-import { CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { Shield } from 'lucide-react';
@@ -217,17 +217,12 @@ export function GuardCardPanel({
               BSIS Guard Card
             </p>
           }
-          subtitle={
-            <>
-              <div className="mt-2">
-                <CredentialSectionStatusDisplay status={sectionStatus} />
-              </div>
-            </>
-          }
+          subtitle={undefined}
           action={
             <CredentialRowAction
               staffMode={staffMode}
               uploadStatus={guardCardUploadStatus}
+              sectionStatus={sectionStatus}
               canUpload={canUpload}
               onAdd={() => setShowForm(true)}
             />

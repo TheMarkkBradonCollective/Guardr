@@ -10,7 +10,7 @@ import {
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { getGovernmentIdSectionStatus } from '../../lib/credentialSectionStatus';
-import { CredentialListStatusBadge, CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import { CredentialListStatusBadge, CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
 import type {
@@ -128,18 +128,13 @@ export function GuardIdItemCard({
               Government ID
             </p>
           }
-          subtitle={
-            <>
-              <div className="mt-2">
-                <CredentialSectionStatusDisplay status={sectionStatus} />
-              </div>
-            </>
-          }
+          subtitle={undefined}
           action={
             (canEdit || staffMode) ? (
               <CredentialRowAction
                 staffMode={staffMode}
                 uploadStatus={uploadStatus}
+                sectionStatus={sectionStatus}
                 canUpload={canEdit}
                 onAdd={openDetail}
               />

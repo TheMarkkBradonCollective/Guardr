@@ -11,7 +11,6 @@ import {
 import {
   CredentialRowAction,
   CredentialRowHeader,
-  CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardCoiDetailModal } from './GuardCoiDetailModal';
@@ -137,16 +136,13 @@ export function GuardCoiItemCard({
             Certificate of Insurance (COI)
           </p>
         }
-        subtitle={
-          <div className="mt-2">
-            <CredentialSectionStatusDisplay status={sectionStatus} />
-          </div>
-        }
+        subtitle={undefined}
         action={
           canEdit || staffMode ? (
             <CredentialRowAction
               staffMode={staffMode}
               uploadStatus={uploadStatus}
+              sectionStatus={sectionStatus}
               canUpload={canEdit}
               onAdd={openAdd}
             />

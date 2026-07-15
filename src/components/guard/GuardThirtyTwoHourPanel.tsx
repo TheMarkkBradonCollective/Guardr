@@ -16,7 +16,6 @@ import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/
 import {
   CredentialRowAction,
   CredentialRowHeader,
-  CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import { CredentialGracePeriodStatusBar } from '../credentials/CredentialGracePeriodStatusBar';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
@@ -388,8 +387,7 @@ export function GuardThirtyTwoHourPanel({
           </p>
         }
         subtitle={
-          <div className="mt-2 space-y-2">
-            <CredentialSectionStatusDisplay status={sectionStatus} />
+          <div className="mt-2">
             <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
           </div>
         }
@@ -397,6 +395,7 @@ export function GuardThirtyTwoHourPanel({
           <CredentialRowAction
             staffMode={staffMode}
             uploadStatus={sectionUploadStatus}
+            sectionStatus={sectionStatus}
             canUpload={canUpload}
             onAdd={openAddFlow}
           />
