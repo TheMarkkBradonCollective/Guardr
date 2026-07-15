@@ -25,11 +25,27 @@ export function AppHomeScreen({
 
   return (
     <div
-      className={`app-welcome page-shell min-h-[100dvh] flex flex-col overflow-hidden bg-brand-bg text-brand-text ${
+      className={`app-welcome page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden text-brand-text ${
         authSheetOpen ? 'app-welcome--dimmed' : ''
       }`}
     >
-      <header className="app-welcome-header shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 relative z-10">
+      <div className="app-welcome-backdrop" aria-hidden="true">
+        <div className="app-welcome-backdrop-grid" />
+        <div className="app-welcome-backdrop-glow" />
+        <div className="app-welcome-backdrop-pins">
+          <span className="app-welcome-pin app-welcome-pin--a">
+            <MapPin className="w-3.5 h-3.5" />
+          </span>
+          <span className="app-welcome-pin app-welcome-pin--b">
+            <Radio className="w-3 h-3" />
+          </span>
+          <span className="app-welcome-pin app-welcome-pin--c">
+            <Shield className="w-3 h-3" />
+          </span>
+        </div>
+      </div>
+
+      <header className="app-welcome-header shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 relative z-[2]">
         <div className="flex items-center gap-2.5 min-w-0">
           <Logo size={26} className="text-brand-primary shrink-0" />
           <span className="font-black text-lg tracking-[-0.05em] leading-none text-brand-text">
@@ -39,24 +55,8 @@ export function AppHomeScreen({
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
       </header>
 
-      <main className="app-welcome-main flex-1 min-h-0 flex flex-col relative">
-        <div className="app-welcome-visual" aria-hidden="true">
-          <div className="app-welcome-visual-grid" />
-          <div className="app-welcome-visual-glow" />
-          <div className="app-welcome-visual-pins">
-            <span className="app-welcome-pin app-welcome-pin--a">
-              <MapPin className="w-3.5 h-3.5" />
-            </span>
-            <span className="app-welcome-pin app-welcome-pin--b">
-              <Radio className="w-3 h-3" />
-            </span>
-            <span className="app-welcome-pin app-welcome-pin--c">
-              <Shield className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
-
-        <div className="app-welcome-copy relative z-[1] flex-1 flex flex-col justify-end px-5 pb-4">
+      <main className="app-welcome-main relative z-[1] flex-1 min-h-0 flex flex-col justify-between px-5">
+        <div className="app-welcome-hero pt-2 sm:pt-6">
           <p className="app-welcome-eyebrow">California security marketplace</p>
           <h1 className="app-welcome-headline">
             Coverage on demand.
@@ -67,7 +67,7 @@ export function AppHomeScreen({
           </p>
         </div>
 
-        <div className="app-welcome-dock relative z-[1] shrink-0 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+        <div className="app-welcome-dock shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <p className="app-welcome-role-label">Sign in as</p>
           <div className="app-welcome-role-toggle" role="group" aria-label="Account type">
             <button
@@ -99,7 +99,7 @@ export function AppHomeScreen({
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          <div className="app-welcome-signup-row mt-4 text-center">
+          <div className="app-welcome-signup-row mt-3 text-center">
             <span className="text-xs text-brand-text-muted">New here?</span>
             <button
               type="button"
@@ -109,12 +109,12 @@ export function AppHomeScreen({
               Create {signInRole === 'guard' ? 'guard' : 'client'} account
             </button>
           </div>
+
+          <div className="app-welcome-legal mt-4 pt-3 border-t border-brand-border/50">
+            <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
+          </div>
         </div>
       </main>
-
-      <footer className="app-welcome-footer shrink-0 px-5 pb-3 pt-1 border-t border-brand-border/40 relative z-10">
-        <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-      </footer>
     </div>
   );
 }
