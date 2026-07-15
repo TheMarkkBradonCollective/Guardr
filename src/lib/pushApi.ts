@@ -150,6 +150,7 @@ export type PushEventType =
   | 'payout_ready'
   | 'standing_crew_invite'
   | 'company_placard_expiry'
+  | 'pre_shift_briefing'
   | 'test';
 
 export async function reportPushEvent(

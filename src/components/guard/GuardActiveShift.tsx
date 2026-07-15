@@ -50,7 +50,6 @@ interface GuardActiveShiftProps {
   onStartBreak?: () => void;
   onEndBreak?: () => void;
   onOpenJobChat?: () => void;
-  onStartEnRoute?: () => void;
   onMidShiftCheckIn?: (payload: {
     selfie: string;
     uniformVerified: boolean;
@@ -92,7 +91,6 @@ export function GuardActiveShift({
   onStartBreak,
   onEndBreak,
   onOpenJobChat,
-  onStartEnRoute,
   onMidShiftCheckIn,
   captureSelfie,
   midShiftCheckInDue = false,
@@ -226,17 +224,6 @@ export function GuardActiveShift({
 
         {(phase === 'on-duty' || phase === 'complete') && (
           <JobSelfAuditPhotosSection request={job} />
-        )}
-
-        {phase === 'upcoming' && onStartEnRoute && (
-          <button
-            type="button"
-            onClick={onStartEnRoute}
-            className="app-button-outline app-btn-md w-full gap-2"
-          >
-            <Navigation className="w-4 h-4" />
-            Start heading to site
-          </button>
         )}
 
         {phase === 'en-route' && (

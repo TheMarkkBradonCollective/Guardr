@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/company-placard-expiry",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/pre-shift-briefings",
+      "schedule": "*/5 * * * *"
     }
   ],
   "functions": {
@@ -33,6 +37,9 @@
       "maxDuration": 30
     },
     "api/cron/company-placard-expiry.ts": {
+      "maxDuration": 30
+    },
+    "api/cron/pre-shift-briefings.ts": {
       "maxDuration": 30
     }
   },

@@ -38,6 +38,7 @@ export type PushNotificationType =
   | 'job_status_update'
   | 'payout_ready'
   | 'company_placard_expiry'
+  | 'pre_shift_briefing'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

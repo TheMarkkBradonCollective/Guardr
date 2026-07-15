@@ -8,6 +8,7 @@ const routes = [
   { entry: 'api/_push/entries/send.ts', outfile: 'api/push/send.ts' },
   { entry: 'api/_push/entries/missed-checkins.ts', outfile: 'api/cron/missed-checkins.ts' },
   { entry: 'api/_push/entries/company-placard-expiry.ts', outfile: 'api/cron/company-placard-expiry.ts' },
+  { entry: 'api/_push/entries/pre-shift-briefings.ts', outfile: 'api/cron/pre-shift-briefings.ts' },
 ];
 
 for (const route of routes) {

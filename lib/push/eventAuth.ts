@@ -240,6 +240,20 @@ export async function authorizePushEvent(
       }
       return 'Not authorized to send schedule change notifications for this job';
 
+    case 'pre_shift_briefing':
+      if (isStaffSession(session)) return null;
+      if (
+        session.platformRole === 'guard' &&
+        event.recipientUserId === session.userId &&
+        event.guardId === session.userId
+      ) {
+        return null;
+      }
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Not authorized to send pre-shift briefing reminders for this job';
+
     case 'team_chat_message':
       if (isStaffSession(session)) return null;
       if (event.recipientUserId && event.recipientUserId === session.userId) return null;
