@@ -15208,6 +15208,35 @@ html.theme-grey .landing-wordmark {
   color: var(--brand-text-muted);
 }
 
+.guard-pref-hero-subtitle-block {
+  margin-top: 0.45rem;
+}
+
+.guard-pref-hero-subtitle-block .guard-pref-hero-subtitle {
+  margin-top: 0;
+}
+
+.guard-pref-hero-welcome {
+  color: var(--brand-text);
+}
+
+.guard-pref-hero-read-more {
+  margin-top: 0.35rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.guard-pref-hero-read-more:hover {
+  color: color-mix(in srgb, var(--brand-primary) 80%, var(--brand-text));
+}
+
 .guard-pref-stats {
   position: relative;
   display: grid;

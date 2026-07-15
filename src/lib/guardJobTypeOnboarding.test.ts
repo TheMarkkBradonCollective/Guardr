@@ -10,11 +10,12 @@ import {
 import type { JobType } from '../types.ts';
 
 describe('jobTypeOnboardingSpeechText', () => {
-  it('includes the general intro and both briefing sections', () => {
+  it('includes both briefing sections for the job type', () => {
     const text = jobTypeOnboardingSpeechText('patrol');
-    assert.match(text, /Welcome to Guardr/i);
+    assert.match(text, /Patrol/i);
     assert.match(text, /What to expect/i);
     assert.match(text, /Before accepting/i);
+    assert.doesNotMatch(text, /Welcome to Guardr/i);
   });
 });
 
