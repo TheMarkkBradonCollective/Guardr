@@ -44,7 +44,7 @@ export function ProfileAvatar({
 
   return (
     <div
-      className={`${sizeClass} ${roundedClass} shrink-0 bg-brand-primary text-brand-accent-text flex items-center justify-center font-bold ring-2 ring-brand-primary/20 ${className}`}
+      className={`${sizeClass} ${roundedClass} shrink-0 bg-brand-primary text-brand-accent-text flex items-center justify-center font-bold border-2 border-brand-primary/20 box-border ${className}`}
       aria-hidden
     >
       {initials}

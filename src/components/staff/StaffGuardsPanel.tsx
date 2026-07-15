@@ -147,8 +147,8 @@ export function StaffGuardsPanel({
     () => roster.filter((g) => matchesGuardRosterFilter(g, 'pending')).length,
     [roster]
   );
-  const activatingGuardCount = useMemo(
-    () => roster.filter((g) => matchesGuardRosterFilter(g, 'activating')).length,
+  const activatedGuardCount = useMemo(
+    () => roster.filter((g) => matchesGuardRosterFilter(g, 'activated')).length,
     [roster]
   );
   const activeGuardCount = useMemo(
@@ -255,7 +255,7 @@ export function StaffGuardsPanel({
             onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
             tabs={[
               { id: 'pending', label: 'Pending review', count: pendingGuardCount },
-              { id: 'activating', label: 'Activating', count: activatingGuardCount },
+              { id: 'activated', label: 'Activated', count: activatedGuardCount },
               { id: 'active', label: 'Active', count: activeGuardCount },
               { id: 'all', label: 'All', count: roster.length, alwaysShowCount: true },
             ]}

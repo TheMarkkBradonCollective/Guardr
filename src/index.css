@@ -16852,17 +16852,28 @@ textarea.uber-input {
 
 .staff-shell .staff-roster-panel .app-item-card-stack,
 .staff-shell .staff-roster-panel .split-list-pane {
-  margin-inline: calc(-1 * max(1rem, env(safe-area-inset-left, 0px))) calc(-1 * max(1rem, env(safe-area-inset-right, 0px)));
-  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
   overflow: visible !important;
 }
 
-@media (min-width: 640px) {
-  .staff-shell .staff-roster-panel .app-item-card-stack,
-  .staff-shell .staff-roster-panel .split-list-pane {
-    margin-inline: calc(-1 * max(1.25rem, env(safe-area-inset-left, 0px))) calc(-1 * max(1.25rem, env(safe-area-inset-right, 0px)));
-    padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
-  }
+.staff-shell .staff-list-filter-tabs {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-inline: 2px;
+  margin-inline: -2px;
+}
+
+.staff-shell .staff-list-filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.staff-shell .staff-main-content--padded > div {
+  overflow-x: visible !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .staff-shell .staff-main-content--bleed {
