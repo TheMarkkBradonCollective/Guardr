@@ -8,6 +8,7 @@ on:
       - 'android/**'
       - 'capacitor.config.ts'
       - 'scripts/build-android-apk.mjs'
+      - 'scripts/write-google-services.mjs'
       - 'src/**'
       - 'public/**'
       - 'package.json'
