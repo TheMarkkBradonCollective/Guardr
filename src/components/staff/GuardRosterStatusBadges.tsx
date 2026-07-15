@@ -1,10 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
-import {
-  getGuardRosterAccountBadgeTone,
-  getGuardRosterAccountLabel,
-} from '../../lib/guardAccountActivation';
-import { getGuardUserStatus, type GuardUserStatus } from '../../lib/accountStatus';
+import { getGuardRosterAccountBadges } from '../../lib/guardAccountActivation';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import {
   GUARD_TRUSTED_BADGE_LABEL,
   isGuardProfileApproved,
@@ -17,7 +14,7 @@ import {
 } from '../../lib/guardCredentialExpiryEnforcement';
 import { WfBadge } from '../ui/wireframe';
 
-/** Staff guard list — one primary account status badge (pending / approved / active / suspended / blocked). */
+/** Staff guard list — account status badges (e.g. Approved + Active / Pending / Restricted). */
 export function GuardRosterStatusBadges({
   guard,
   className,
@@ -34,13 +31,16 @@ export function GuardRosterStatusBadges({
   const isApproved = isGuardProfileApproved(guard);
   const showTrustedBadge =
     showTrusted && isGuardTrusted(guard) && isApproved && status === 'active';
+  const accountBadges = getGuardRosterAccountBadges(guard);
 
   return (
     <div className={`flex flex-col items-start gap-1.5 ${className ?? ''}`.trim()}>
       <div className="flex flex-wrap items-center gap-1.5">
-        <WfBadge tone={getGuardRosterAccountBadgeTone(guard)}>
-          {getGuardRosterAccountLabel(guard)}
-        </WfBadge>
+        {accountBadges.map((badge) => (
+          <WfBadge key={badge.label} tone={badge.tone}>
+            {badge.label}
+          </WfBadge>
+        ))}
         {showTrustedBadge && <WfBadge tone="primary">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
       </div>
       {restricted && restrictedDetail && (
@@ -59,7 +59,7 @@ export function GuardRosterStatusBadges({
 
 export function guardRosterSortRank(guard: SecurityGuard): number {
   const status = getGuardUserStatus(guard);
-  const statusRank: Record<GuardUserStatus, number> = {
+  const statusRank: Record<typeof status, number> = {
     pending: 0,
     approved: 1,
     active: 2,
