@@ -92,7 +92,7 @@ describe('staff section routing', () => {
     ];
 
     const stats = computePlatformStats(guards, [], []);
-    assert.equal(stats.pendingCertApprovals, 1);
+    assert.equal(stats.pendingCertApprovals, 5);
     assert.equal(stats.pendingAccountApplications, 0);
 
     const selection = resolveOverviewActionSelection(
@@ -100,7 +100,7 @@ describe('staff section routing', () => {
         id: 'pending-certs',
         title: '',
         description: '',
-        count: 1,
+        count: 5,
         section: 'credentials',
         tone: 'urgent',
       },

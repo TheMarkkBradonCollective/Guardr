@@ -4,18 +4,25 @@ import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGua
 import { certDisplayName } from './certCatalog';
 import { certHasPendingUpdate } from './certRevisionHistory';
 import {
+  activationCredentialItemId,
   coiApprovalItemId,
   govIdApprovalItemId,
   guardIdFromCoiApprovalItemId,
   guardIdFromGovIdApprovalItemId,
   isCoiApprovalItemId,
   isGovIdApprovalItemId,
+  parseActivationCredentialItemId,
+  type ActivationCredentialKey,
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
 import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
+import {
+  getGuardApplicationCredentialSteps,
+  type GuardApplicationCredentialStep,
+} from './guardApplicationCredentialSteps';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
 
@@ -53,6 +60,8 @@ export const APPLICATION_FEED_STATUS_LABELS = {
   suspended: 'Suspended',
   clientNotApproved: 'Not approved',
 } as const;
+
+export const CREDENTIAL_PENDING_UPLOAD_LABEL = 'Pending upload';
 
 function latestAudit(
   auditLog: AuditLogEntry[],
@@ -207,11 +216,52 @@ export function countPendingAccountSignupApplications(
   return pendingGuards + pendingClients;
 }
 
+function guardBelongsInCredentialActivationQueue(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return false;
+  const status = getGuardUserStatus(guard);
+  return status === 'pending' || status === 'approved';
+}
+
+function missingActivationCredentialItemId(
+  guardId: string,
+  step: GuardApplicationCredentialStep
+): string {
+  if (step.key === 'gov-id') return govIdApprovalItemId(guardId);
+  if (step.key === 'coi') return coiApprovalItemId(guardId);
+  return activationCredentialItemId(guardId, step.key);
+}
+
+function appendMissingActivationCredentialItems(
+  guard: SecurityGuard,
+  items: ApprovalFeedItem[],
+  existingIds: Set<string>
+): void {
+  if (!guardBelongsInCredentialActivationQueue(guard)) return;
+
+  for (const step of getGuardApplicationCredentialSteps(guard)) {
+    if (step.status !== 'pending') continue;
+    const itemId = missingActivationCredentialItemId(guard.id, step);
+    if (existingIds.has(itemId)) continue;
+
+    items.push({
+      id: itemId,
+      queue: 'credentials',
+      title: `${guard.name} — ${step.label}`,
+      subtitle: 'Awaiting guard upload',
+      status: 'pending',
+      statusLabel: CREDENTIAL_PENDING_UPLOAD_LABEL,
+      sortKey: 0,
+    });
+    existingIds.add(itemId);
+  }
+}
+
 function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   const items: ApprovalFeedItem[] = [];
 
   for (const guard of guards) {
     if (guard.isStaff) continue;
+    const guardItemIds = new Set<string>();
 
     for (const cert of guard.certifications) {
       if (cert.submittedByRole === 'staff') continue;
@@ -252,6 +302,7 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
         reviewedByEmail: actor.email,
         sortKey: new Date(actor.at ?? cert.issueDate).getTime(),
       });
+      guardItemIds.add(cert.id);
     }
 
     const policy = guard.insurancePolicy;
@@ -279,6 +330,7 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
         reviewedByEmail: policy.reviewedBy,
         sortKey: new Date(policy.reviewedAt ?? policy.submittedAt ?? 0).getTime() || Date.now(),
       });
+      guardItemIds.add(coiApprovalItemId(guard.id));
     }
 
     const idStatus = getGuardIdVerificationStatus(guard);
@@ -304,7 +356,10 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
           guard.idVerificationReviewedAt ?? guard.idVerificationSubmittedAt ?? 0
         ).getTime() || Date.now(),
       });
+      guardItemIds.add(govIdApprovalItemId(guard.id));
     }
+
+    appendMissingActivationCredentialItems(guard, items, guardItemIds);
   }
 
   return items;
@@ -492,6 +547,7 @@ export function resolveApprovalFocusItemId(
     if (item.queue === 'credentials') {
       if (item.id === coiApprovalItemId(guardId)) return true;
       if (item.id === govIdApprovalItemId(guardId)) return true;
+      if (parseActivationCredentialItemId(item.id)?.guardId === guardId) return true;
       return guard?.certifications.some((cert) => cert.id === item.id) ?? false;
     }
     return false;
@@ -510,7 +566,19 @@ export function findFeedItem(feed: ApprovalFeedItem[], id: string): ApprovalFeed
 export type CredentialFeedContext =
   | { kind: 'cert'; guard: SecurityGuard; cert: Certification }
   | { kind: 'coi'; guard: SecurityGuard }
-  | { kind: 'gov-id'; guard: SecurityGuard };
+  | { kind: 'gov-id'; guard: SecurityGuard }
+  | {
+      kind: 'activation-pending';
+      guard: SecurityGuard;
+      stepKey: ActivationCredentialKey;
+      label: string;
+    };
+
+const ACTIVATION_STEP_LABELS: Record<ActivationCredentialKey, string> = {
+  'guard-card': 'BSIS Guard Card',
+  'pta-uof': 'PTA/UOF training',
+  '32-hour': '32-hour BSIS block',
+};
 
 /** Resolve a credentials-queue feed item to its guard and credential kind. */
 export function resolveCredentialFeedContext(
@@ -526,6 +594,17 @@ export function resolveCredentialFeedContext(
     const guardId = guardIdFromGovIdApprovalItemId(itemId);
     const guard = guards.find((g) => g.id === guardId);
     return guard ? { kind: 'gov-id', guard } : null;
+  }
+  const activation = parseActivationCredentialItemId(itemId);
+  if (activation) {
+    const guard = guards.find((g) => g.id === activation.guardId);
+    if (!guard) return null;
+    return {
+      kind: 'activation-pending',
+      guard,
+      stepKey: activation.key,
+      label: ACTIVATION_STEP_LABELS[activation.key],
+    };
   }
   for (const guard of guards) {
     const cert = guard.certifications.find((c) => c.id === itemId);
@@ -567,6 +646,8 @@ export function countPendingCredentialApprovals(guards: SecurityGuard[]): number
 function guardIdForCredentialFeedItem(item: ApprovalFeedItem, guards: SecurityGuard[]): string | null {
   if (isCoiApprovalItemId(item.id)) return guardIdFromCoiApprovalItemId(item.id);
   if (isGovIdApprovalItemId(item.id)) return guardIdFromGovIdApprovalItemId(item.id);
+  const activation = parseActivationCredentialItemId(item.id);
+  if (activation) return activation.guardId;
   return guards.find((guard) => guard.certifications.some((cert) => cert.id === item.id))?.id ?? null;
 }
 

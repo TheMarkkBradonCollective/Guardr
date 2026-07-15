@@ -313,6 +313,33 @@ export function govIdApprovalItemId(guardId: string): string {
   return `gov-id-${guardId}`;
 }
 
+export type ActivationCredentialKey = 'guard-card' | 'pta-uof' | '32-hour';
+
+export function activationCredentialItemId(guardId: string, key: ActivationCredentialKey): string {
+  return `activation-${key}-${guardId}`;
+}
+
+export function isActivationCredentialItemId(itemId: string): boolean {
+  return itemId.startsWith('activation-');
+}
+
+const ACTIVATION_CREDENTIAL_PREFIXES: { key: ActivationCredentialKey; prefix: string }[] = [
+  { key: 'guard-card', prefix: 'activation-guard-card-' },
+  { key: 'pta-uof', prefix: 'activation-pta-uof-' },
+  { key: '32-hour', prefix: 'activation-32-hour-' },
+];
+
+export function parseActivationCredentialItemId(
+  itemId: string
+): { guardId: string; key: ActivationCredentialKey } | null {
+  for (const entry of ACTIVATION_CREDENTIAL_PREFIXES) {
+    if (itemId.startsWith(entry.prefix)) {
+      return { guardId: itemId.slice(entry.prefix.length), key: entry.key };
+    }
+  }
+  return null;
+}
+
 export function isGovIdApprovalItemId(itemId: string): boolean {
   return itemId.startsWith('gov-id-');
 }
