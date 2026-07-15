@@ -18912,12 +18912,18 @@ textarea.uber-input {
 }
 
 .staff-shell .staff-list-filter-tabs {
+  display: flex;
+  flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-inline: 2px;
   margin-inline: -2px;
+}
+
+.staff-shell .staff-list-filter-tabs > button {
+  flex-shrink: 0;
 }
 
 .staff-shell .staff-list-filter-tabs::-webkit-scrollbar {

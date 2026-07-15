@@ -29,7 +29,7 @@ export function StaffListFilterTabs({
 }: StaffListFilterTabsProps) {
   return (
     <div
-      className={`flex flex-wrap gap-2 staff-list-filter-tabs ${className}`.trim()}
+      className={`flex flex-nowrap gap-2 staff-list-filter-tabs ${className}`.trim()}
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -40,7 +40,7 @@ export function StaffListFilterTabs({
           role="tab"
           aria-selected={activeId === tab.id}
           onClick={() => onChange(tab.id)}
-          className={`app-button-outline app-btn-sm ${
+          className={`app-button-outline app-btn-sm shrink-0 whitespace-nowrap ${
             activeId === tab.id ? '!border-brand-primary !text-brand-primary' : ''
           }`}
         >
