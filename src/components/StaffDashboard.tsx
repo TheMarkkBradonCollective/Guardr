@@ -708,6 +708,10 @@ export function StaffDashboard({
             onStaffEditChange={onStaffGuardEditChange}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
+            onOpenGuardApplication={(guardId) => navigateSection('applications', { guardId })}
+            onOpenGuardCredential={(guardId, credentialItemId) =>
+              navigateSection('credentials', { guardId, credentialItemId })
+            }
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
           />
         );
