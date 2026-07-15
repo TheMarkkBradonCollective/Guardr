@@ -1,6 +1,6 @@
 import React from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
-import { isGuardAccountApproved } from '../../lib/accountStatus';
+import { isGuardAccountApproved, isGuardAccountPending, isGuardAccountPreActive } from '../../lib/accountStatus';
 import { getGuardApplicationProgress } from '../../lib/guardApplicationProgress';
 import {
   guardCredentialRestrictedDetail,
@@ -33,7 +33,7 @@ interface AccountPendingScreenProps {
 
 function guardActivationSubtitle(approved: boolean, percent: number): string {
   if (!approved) {
-    return 'Your application is with Guardr staff. Once approved, you can upload credentials for marketplace eligibility.';
+    return 'Your application is with Guardr staff. Upload the five required credentials below now — they are added to your application for review.';
   }
   if (percent >= 100) {
     return 'All requirements are in — Guardr staff will manually activate your account when ready.';
@@ -54,6 +54,9 @@ export function AccountPendingScreen({
 }: AccountPendingScreenProps) {
   const isGuard = role === 'guard';
   const approved = isGuard && guard ? isGuardAccountApproved(guard) : false;
+  const pending = isGuard && guard ? isGuardAccountPending(guard) : false;
+  const canUploadCredentials =
+    isGuard && guard ? isGuardAccountPreActive(guard) && !isGuardCredentialExpiryRestricted(guard) : false;
   const restricted = isGuard && guard ? isGuardCredentialExpiryRestricted(guard) : false;
   const applicationProgress = isGuard && guard ? getGuardApplicationProgress(guard) : null;
 
@@ -120,7 +123,7 @@ export function AccountPendingScreen({
         )}
       </div>
 
-      {isGuard && guard && approved && onSubmitIdentityVerification && (
+      {isGuard && guard && canUploadCredentials && onSubmitIdentityVerification && (
         <div className="px-5 py-6">
           <GuardActivationUploadChecklist
             guard={guard}
@@ -134,12 +137,11 @@ export function AccountPendingScreen({
         </div>
       )}
 
-      {isGuard && guard && !approved && (
+      {isGuard && guard && pending && !canUploadCredentials && (
         <div className="px-5 py-6 text-sm text-brand-text-muted leading-relaxed">
           <p>
-            Guardr staff reviews new guard applications before credential uploads open. You will be
-            notified when your application is approved — then return here to upload government ID, COI,
-            guard card, PTA/UOF, and 32-hour training.
+            Your account is restricted until expired credentials are updated. Contact Guardr support if
+            you need help.
           </p>
         </div>
       )}

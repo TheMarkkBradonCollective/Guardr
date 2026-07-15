@@ -1,8 +1,9 @@
 import { Check, Plus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
-import { isGuardAccountApproved } from '../../lib/accountStatus';
+import { isGuardAccountApproved, isGuardAccountPending } from '../../lib/accountStatus';
 import { getGuardActivationChecklist, getGuardCardCertifications } from '../../lib/guardAccountActivation';
+import { guardHasSubmittedItemsForStaffReview } from '../../lib/approvalSubmissions';
 import {
   guardCoiCanGuardEdit,
   guardInsuranceActivationDetail,
@@ -117,7 +118,6 @@ export function GuardActivationUploadChecklist({
 }: GuardActivationUploadChecklistProps) {
   const [openUpload, setOpenUpload] = useState<UploadKind | null>(null);
   const checklist = getGuardActivationChecklist(guard);
-  const approved = isGuardAccountApproved(guard);
   const coi = guardInsuranceActivationDetail(guard);
 
   const closeUpload = () => setOpenUpload(null);
@@ -128,7 +128,7 @@ export function GuardActivationUploadChecklist({
     return () => endActivationUploadSession();
   }, [openUpload]);
 
-  const idDone = approved || guardHasVerifiedIdForWork(guard) || checklist.idSubmitted;
+  const idDone = guardHasVerifiedIdForWork(guard) || checklist.idSubmitted;
   const idCanUpload = !!onSubmitIdentityVerification && guardIdVerificationCanEdit(guard);
   const idAction = guardIdVerificationResubmitPending(guard)
     ? 'Resubmit government ID'
@@ -220,9 +220,15 @@ export function GuardActivationUploadChecklist({
             </div>
           </div>
         </div>
-        {!approved && checklist.canStaffApprove && (
+        {isGuardAccountPending(guard) && (
+          <p className="text-xs text-brand-text-muted pt-3 border-t border-brand-border mt-3 leading-relaxed">
+            Upload these credentials now — they are attached to your application. Staff verification
+            begins after your application is approved.
+          </p>
+        )}
+        {isGuardAccountApproved(guard) && guardHasSubmittedItemsForStaffReview(guard) && (
           <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
-            Staff is reviewing your credentials. Verified and pending items are locked until review finishes.
+            Staff is reviewing your credentials. Submitted items are locked until review finishes.
           </p>
         )}
       </div>
