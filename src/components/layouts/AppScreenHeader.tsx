@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Menu } from 'lucide-react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 
 interface AppScreenHeaderProps {
@@ -10,6 +10,8 @@ interface AppScreenHeaderProps {
   right?: React.ReactNode;
   extension?: React.ReactNode;
   className?: string;
+  onMenuClick?: () => void;
+  hideAccountMenu?: boolean;
 }
 
 export function AppScreenHeader({
@@ -20,6 +22,8 @@ export function AppScreenHeader({
   right,
   extension,
   className = '',
+  onMenuClick,
+  hideAccountMenu = false,
 }: AppScreenHeaderProps) {
   const showLocation = !!locationLabel;
 
@@ -28,6 +32,16 @@ export function AppScreenHeader({
       className={`app-screen-header shrink-0 border-b border-brand-border bg-brand-surface/88 backdrop-blur-xl backdrop-saturate-150 transition-colors ${extension ? 'app-screen-header--with-extension' : ''} ${className}`}
     >
       <div className="app-screen-header-row px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3">
+        {onMenuClick ? (
+          <button
+            type="button"
+            className="app-chrome-btn -ml-1 text-brand-text shrink-0"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        ) : null}
         <div className="min-w-0 flex-1 flex items-center gap-3">
           <div className="min-w-0">
             {showLocation ? (
@@ -48,7 +62,7 @@ export function AppScreenHeader({
 
         <div className="shrink-0 flex items-center gap-2">
           {right}
-          <AccountMenu {...accountMenu} />
+          {!hideAccountMenu ? <AccountMenu {...accountMenu} /> : null}
         </div>
       </div>
 
