@@ -11,6 +11,7 @@ import { requirementLabel } from './certCatalog';
 import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import { guardHasValidInsurance, guardInsuranceBlockedMessage } from './guardInsurance';
 import { guardMeetsRateRequirement } from './guardMarketplace';
+import { guardCanAcceptJobType, jobTypePreferenceLabel } from './guardJobPreferences';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -22,13 +23,21 @@ import {
 } from './guardQualification';
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  'nightclub-bar': 'Nightclub & bar',
+  'event-wedding': 'Event venue — wedding',
+  'event-concert': 'Event venue — concert',
+  'event-festival': 'Event venue — festival',
+  'event-corporate': 'Event venue — corporate',
+  'event-private': 'Event venue — private party',
   event: 'Event security',
   patrol: 'Patrol',
+  construction: 'Construction site',
+  'fire-watch': 'Fire watch',
+  'standing-guard': 'Standing guard',
   'armed-escort': 'Armed escort',
-  bodyguard: 'Bodyguard / close protection',
-  'asset-protection': 'Asset protection',
-  'long-term': 'Long-term post',
-  other: 'Other',
+  bodyguard: 'Executive protection',
+  'asset-protection': 'Property security',
+  other: 'Custom request',
 };
 
 export const JOB_CATEGORIES = [
@@ -60,19 +69,31 @@ type GuardJobLike = Pick<
 export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId): boolean {
   switch (categoryId) {
     case 'event':
-      return job.type === 'event';
+      return (
+        job.type === 'event' ||
+        job.type === 'event-wedding' ||
+        job.type === 'event-corporate' ||
+        job.type === 'event-private'
+      );
     case 'construction':
-      return job.type === 'long-term' || job.type === 'other' || job.title.toLowerCase().includes('construction');
+      return job.type === 'construction' || job.title.toLowerCase().includes('construction');
     case 'fire-watch':
-      return job.title.toLowerCase().includes('fire') || job.type === 'patrol';
+      return job.type === 'fire-watch' || job.title.toLowerCase().includes('fire');
     case 'standing':
-      return job.type === 'bodyguard' || job.type === 'asset-protection';
+      return job.type === 'standing-guard' || job.type === 'bodyguard' || job.type === 'asset-protection';
     case 'patrol':
       return job.type === 'patrol';
     case 'concert':
-      return job.type === 'event' && (job.title.toLowerCase().includes('concert') || job.title.toLowerCase().includes('festival') || job.title.toLowerCase().includes('music'));
+      return (
+        job.type === 'event-concert' ||
+        job.type === 'event-festival' ||
+        (job.type === 'event' &&
+          (job.title.toLowerCase().includes('concert') ||
+            job.title.toLowerCase().includes('festival') ||
+            job.title.toLowerCase().includes('music')))
+      );
     case 'apartment':
-      return job.type === 'long-term' || job.title.toLowerCase().includes('apartment') || job.title.toLowerCase().includes('residential');
+      return job.title.toLowerCase().includes('apartment') || job.title.toLowerCase().includes('residential');
     default:
       return true;
   }
@@ -189,6 +210,15 @@ export function checkJobRequirements(
       label: insuranceMessage ?? 'Verified general liability insurance on file',
       met: false,
     });
+    canAccept = false;
+  }
+
+  const onboardedForType = guardCanAcceptJobType(guard, job.type);
+  checks.push({
+    label: `${jobTypePreferenceLabel(job.type)} onboarding completed`,
+    met: onboardedForType,
+  });
+  if (!onboardedForType) {
     canAccept = false;
   }
 

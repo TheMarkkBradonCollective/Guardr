@@ -9,6 +9,7 @@ import {
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
+import { clientServiceGroups } from '../../lib/clientServiceGroups';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
@@ -230,22 +231,29 @@ export function DirectGuardRequestFlow({
         {step === 1 && (
           <div className="space-y-3">
             <h2 className="text-xl font-bold">What do you need?</h2>
-            <div className="grid gap-2">
-              {CLIENT_SERVICE_OPTIONS.filter((o) => o.id !== 'custom').map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => selectService(opt.id)}
-                  className={`wf-list-card transition-all ${
-                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
-                  }`}
-                >
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm">{opt.label}</p>
-                    <p className="text-xs text-brand-text-muted">{opt.description}</p>
+            <div className="space-y-4">
+              {clientServiceGroups().map((group) => (
+                <div key={group.label} className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">{group.label}</p>
+                  <div className="grid gap-2">
+                    {group.options.filter((opt) => opt.id !== 'custom').map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => selectService(opt.id)}
+                        className={`wf-list-card transition-all ${
+                          serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
+                        }`}
+                      >
+                        <span className="text-2xl">{opt.emoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm">{opt.label}</p>
+                          <p className="text-xs text-brand-text-muted">{opt.description}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
             <div>

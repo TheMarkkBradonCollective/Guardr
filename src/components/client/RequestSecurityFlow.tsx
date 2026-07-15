@@ -12,6 +12,7 @@ import {
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
+import { clientServiceGroups } from '../../lib/clientServiceGroups';
 import { ASSIGNMENT_MODE_OPTIONS } from '../../lib/assignmentMode';
 import { activeClientLocations } from '../../lib/clientLocations';
 import type { AssignmentMode, ClientLocation, DifferentialPayRates } from '../../types';
@@ -305,25 +306,32 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">What do you need?</h2>
             </div>
-            <div className="grid grid-cols-1 gap-2">
-              {CLIENT_SERVICE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => selectService(opt.id)}
-                  className={`wf-list-card transition-all ${
-                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/8' : ''
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-lg bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0 text-brand-primary">
-                    <span className="text-lg leading-none">{opt.emoji}</span>
+            <div className="space-y-5">
+              {clientServiceGroups().map((group) => (
+                <div key={group.label} className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">{group.label}</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {group.options.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => selectService(opt.id)}
+                        className={`wf-list-card transition-all ${
+                          serviceId === opt.id ? '!border-brand-primary bg-brand-primary/8' : ''
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0 text-brand-primary">
+                          <span className="text-lg leading-none">{opt.emoji}</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[0.9375rem] tracking-tight">{opt.label}</p>
+                          <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{opt.description}</p>
+                        </div>
+                        {serviceId === opt.id && <Check className="w-5 h-5 text-brand-primary shrink-0" />}
+                      </button>
+                    ))}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-[0.9375rem] tracking-tight">{opt.label}</p>
-                    <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{opt.description}</p>
-                  </div>
-                  {serviceId === opt.id && <Check className="w-5 h-5 text-brand-primary shrink-0" />}
-                </button>
+                </div>
               ))}
             </div>
             <div>

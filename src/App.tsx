@@ -359,7 +359,8 @@ import { jobUsesFirstToAccept } from './lib/assignmentMode';
 import { appendPostOrdersAck, jobRequiresPostOrdersAck } from './lib/postOrdersAck';
 import { resolveGuardPayForJob } from './lib/differentialPay';
 import { approveClientLocation, rejectClientLocation } from './lib/clientLocations';
-import { normalizeJobTypePreferences } from './lib/guardJobPreferences';
+import { isJobType, normalizeJobTypePreferences } from './lib/guardJobPreferences';
+import { normalizeJobTypeOnboarding } from './lib/guardJobTypeOnboarding';
 import { normalizeListedEquipmentGear } from './lib/guardEquipmentGear';
 import {
   notifyAccountUpdate,
@@ -1808,9 +1809,13 @@ export default function App() {
         listedEquipmentGear: parseJsonStringArray(g.listed_equipment_gear).filter(
           (value): value is GuardEquipmentGearId => value === 'body-cam' || value === 'walkie-talkie'
         ),
-        jobTypePreferences: parseJsonStringArray(g.job_type_preferences).filter(
-          (value): value is JobType =>
-            ['event', 'patrol', 'armed-escort', 'bodyguard', 'asset-protection', 'long-term', 'other'].includes(value)
+        jobTypePreferences: parseJsonStringArray(g.job_type_preferences).filter((value): value is JobType =>
+          isJobType(value)
+        ),
+        jobTypeOnboarding: normalizeJobTypeOnboarding(
+          typeof g.job_type_onboarding === 'object' && g.job_type_onboarding !== null
+            ? (g.job_type_onboarding as Record<string, string>)
+            : undefined
         ),
         backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
@@ -5099,6 +5104,30 @@ export default function App() {
       await supabase
         .from('guards')
         .update({ job_type_preferences: normalized })
+        .eq('id', guardId);
+    }
+  };
+
+  const handleCompleteGuardJobTypeOnboarding = async (guardId: string, jobType: JobType) => {
+    const completedAt = new Date().toISOString();
+    let nextOnboarding: Partial<Record<JobType, string>> | undefined;
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        nextOnboarding = {
+          ...(g.jobTypeOnboarding ?? {}),
+          [jobType]: completedAt,
+        };
+        return {
+          ...g,
+          jobTypeOnboarding: nextOnboarding,
+        };
+      })
+    );
+    if (isDbConnected && nextOnboarding) {
+      await supabase
+        .from('guards')
+        .update({ job_type_onboarding: nextOnboarding })
         .eq('id', guardId);
     }
   };
@@ -11218,6 +11247,9 @@ export default function App() {
           onUpdateJobAudit={handleUpdateJobAudit}
           onAckPostOrders={handleAckPostOrders}
           onSaveJobPreferences={(prefs) => handleSaveGuardJobPreferences(activeGuardId, prefs)}
+          onCompleteJobTypeOnboarding={(jobType) =>
+            handleCompleteGuardJobTypeOnboarding(activeGuardId, jobType)
+          }
           onStartEnRoute={handleStartEnRoute}
           onUpdateGuardLiveLocation={handleUpdateGuardLiveLocation}
           onAcceptReplacementOffer={(requestId) =>

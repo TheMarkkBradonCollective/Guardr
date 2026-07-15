@@ -31,8 +31,10 @@ export function UserSettingsScreen({
       {currentUser.role === 'guard' && (
         <AppFormSection title="Work preferences">
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Job alerts, push notifications, availability, and crew codes live under{' '}
-            <span className="font-semibold text-brand-text">Preferences</span> in the sidebar.
+            Job alerts and crew codes live under{' '}
+            <span className="font-semibold text-brand-text">Preferences</span> in the sidebar. Weekly
+            availability is under{' '}
+            <span className="font-semibold text-brand-text">Availability</span>.
           </p>
         </AppFormSection>
       )}
@@ -41,11 +43,9 @@ export function UserSettingsScreen({
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
       </AppFormSection>
 
-      {currentUser.role !== 'guard' && (
-        <section className="border-b border-brand-border">
-          <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
-        </section>
-      )}
+      <section className="border-b border-brand-border">
+        <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
+      </section>
 
       {onOpenLegal && (
         <AppFormSection title="Legal">
