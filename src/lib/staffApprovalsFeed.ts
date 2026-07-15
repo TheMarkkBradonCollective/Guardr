@@ -1,6 +1,6 @@
 import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
 import type { AuditLogEntry, AuditAction } from './auditLog';
-import { isSelfSubmittedGuardAccount, isSelfSubmittedClientAccount } from './approvalSubmissions';
+import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
 import { certHasPendingUpdate } from './certRevisionHistory';
 import {
@@ -13,7 +13,7 @@ import {
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
-import { getClientAccountStatus, isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
+import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel, guardBelongsInAccountApprovalsQueue } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 import type { ApprovalQueueId } from './staffOps';
@@ -44,9 +44,15 @@ export interface StaffApprovalsFeedInput {
   auditLog?: AuditLogEntry[];
 }
 
-function isSelfSignupClient(client: Client): boolean {
-  return !client.mustChangePassword;
-}
+export const APPLICATION_FEED_STATUS_LABELS = {
+  pending: 'Pending application',
+  approved: 'Application approved',
+  active: 'Active on marketplace',
+  restricted: 'Restricted',
+  blocked: 'Blocked',
+  suspended: 'Suspended',
+  clientNotApproved: 'Not approved',
+} as const;
 
 function latestAudit(
   auditLog: AuditLogEntry[],
@@ -201,7 +207,7 @@ export function countPendingAccountSignupApplications(
   clients: Client[]
 ): number {
   const pendingGuards = guards.filter((g) => !g.isStaff && guardBelongsInAccountApprovalsQueue(g)).length;
-  const pendingClients = clients.filter(isSelfSubmittedClientAccount).length;
+  const pendingClients = clients.filter(isClientAccountPending).length;
   return pendingGuards + pendingClients;
 }
 
@@ -311,7 +317,7 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
 
 function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return guards
-    .filter((g) => !g.isStaff && isSelfSubmittedGuardAccount(g))
+    .filter((g) => isFieldGuardAccount(g))
     .map((guard) => {
       const userStatus = getGuardUserStatus(guard);
       const approvedProfile = isGuardAccountApproved(guard);
@@ -322,19 +328,24 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
       const actor = actorLabel(active ? activationAudit ?? profileAudit : profileAudit);
 
       let status: ApprovalFeedStatus = 'pending';
-      let statusLabel = guardActivationSummaryLabel(guard);
+      let statusLabel = APPLICATION_FEED_STATUS_LABELS.pending;
       if (isGuardCredentialExpiryRestricted(guard)) {
         status = 'denied';
-        statusLabel = 'Restricted';
+        statusLabel = APPLICATION_FEED_STATUS_LABELS.restricted;
       } else if (active) {
         status = 'active';
-        statusLabel = 'Active on marketplace';
+        statusLabel = APPLICATION_FEED_STATUS_LABELS.active;
       } else if (approvedProfile) {
         status = 'approved';
-        statusLabel = 'Profile approved';
+        statusLabel = APPLICATION_FEED_STATUS_LABELS.approved;
       } else if (userStatus === 'suspended' || userStatus === 'blocked') {
         status = 'denied';
-        statusLabel = userStatus === 'blocked' ? 'Blocked' : 'Suspended';
+        statusLabel =
+          userStatus === 'blocked'
+            ? APPLICATION_FEED_STATUS_LABELS.blocked
+            : APPLICATION_FEED_STATUS_LABELS.suspended;
+      } else if (!pending) {
+        statusLabel = guardActivationSummaryLabel(guard);
       }
 
       return {
@@ -404,7 +415,7 @@ function staffAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
 
 function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return clients
-    .filter(isSelfSignupClient)
+    .filter(belongsInClientApplicationFeed)
     .map((client) => {
       const accountStatus = getClientAccountStatus(client);
       const audit = latestAudit(auditLog, client.id, ['client_approved']);
@@ -424,10 +435,10 @@ function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): Appro
         status,
         statusLabel:
           accountStatus === 'pending'
-            ? 'Pending approval'
+            ? APPLICATION_FEED_STATUS_LABELS.pending
             : accountStatus === 'active'
-              ? 'Approved'
-              : 'Not approved',
+              ? APPLICATION_FEED_STATUS_LABELS.approved
+              : APPLICATION_FEED_STATUS_LABELS.clientNotApproved,
         submittedAt: client.createdAt,
         reviewedAt: actor.at,
         reviewedByName: actor.name,

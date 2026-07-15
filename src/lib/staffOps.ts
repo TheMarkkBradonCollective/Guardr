@@ -7,8 +7,8 @@ import {
   listIncidentReportsForRequest,
   requestHasOpenIncident,
 } from './incidentReports';
+import { isClientAccountPending } from './accountStatus';
 import {
-  isSelfSubmittedClientAccount,
   isUserSubmittedPendingCert,
 } from './approvalSubmissions';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
@@ -964,7 +964,7 @@ export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {
-  return clients.filter((c) => isSelfSubmittedClientAccount(c));
+  return clients.filter((c) => isClientAccountPending(c));
 }
 
 export interface OverviewNavigationSelection {

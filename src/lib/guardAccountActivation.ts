@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { isSelfSubmittedGuardAccount, guardHasSubmittedItemsForStaffReview } from './approvalSubmissions';
+import { guardHasSubmittedItemsForStaffReview } from './approvalSubmissions';
 import { certHasDocumentProof } from './certImagePolicy';
 import { resolveCertCatalogId } from './certCatalog';
 import { getGuardMissingGraceCredentialLabels, getGuardMissingWorkCredentialLabels } from './guardMissingCredentials';
@@ -292,7 +292,7 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
 
 export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountApproved(g) || !isSelfSubmittedGuardAccount(g)) return false;
+    if (g.isStaff || !isGuardAccountApproved(g)) return false;
     const checklist = getGuardActivationChecklist(g);
     return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffActivate;
   });
@@ -301,14 +301,14 @@ export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): Se
 /** Pending sign-ups with credentials submitted for staff review, or ready to approve. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
+    if (g.isStaff || !isGuardAccountPending(g)) return false;
     const checklist = getGuardActivationChecklist(g);
     return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffApprove;
   });
 }
 
 export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boolean {
-  if (guard.isStaff || !isSelfSubmittedGuardAccount(guard)) return false;
+  if (guard.isStaff) return false;
   const checklist = getGuardActivationChecklist(guard);
   if (isGuardAccountPending(guard)) {
     return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove;
@@ -447,7 +447,7 @@ export function getGuardRosterAccountBadgeTone(
 
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountApproved(g) || !isSelfSubmittedGuardAccount(g)) return false;
+    if (g.isStaff || !isGuardAccountApproved(g)) return false;
     return buildCredentialActivationBlockers(g).length > 0;
   });
 }
