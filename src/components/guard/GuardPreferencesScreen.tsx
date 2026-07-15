@@ -34,7 +34,7 @@ export function GuardPreferencesScreen({
         />
       )}
 
-      {showTeamJoin && (
+      {showTeamJoin && onJoinTeamWithCode && (
         <section className="guard-pref-crew-section guard-preferences-crew-card">
           <div className="guard-pref-crew-header">
             <div className="guard-pref-crew-icon-wrap" aria-hidden>
@@ -43,8 +43,8 @@ export function GuardPreferencesScreen({
             <div>
               <h3 className="guard-pref-crew-title">Join a crew</h3>
               <p className="guard-pref-crew-desc">
-                Crew codes are for joining an existing coordinated crew when you are not already on a
-                standing crew. You can only be on one standing crew at a time.
+                Crew codes are only for joining an existing coordinated crew. To apply for a job on
+                your own, use Apply on the job listing.
               </p>
             </div>
           </div>
