@@ -33,6 +33,7 @@ import { LEGAL_DISCLAIMER_SHORT } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME } from '../lib/siteConfig';
 import { CompanyPublicPlacard } from './public/CompanyPublicPlacard';
 import type { CompanyPublicDocument } from '../lib/companyPlacard';
+import { LandingAppDownloads } from './landing/LandingAppDownloads';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -270,6 +271,10 @@ export function HomePage({
                 <BookOpen className="w-4 h-4" />
               </button>
             )}
+            <a href="#get-app" className="landing-header-link inline-flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5" />
+              {isMobile ? <span className="sr-only">Get app</span> : 'Get app'}
+            </a>
             {!isMobile && (
               <>
                 <button
@@ -387,6 +392,7 @@ export function HomePage({
               className="landing-hero-actions"
             >
               <LandingPathCards onNavigateToAuth={onNavigateToAuth} layout={formFactor} />
+              <LandingAppDownloads formFactor={formFactor} variant="hero" id="get-app" />
               <button
                 type="button"
                 onClick={() => onNavigateToAuth(undefined, 'sign-in')}
@@ -636,6 +642,7 @@ export function HomePage({
                 I&apos;m a guard
               </button>
             </div>
+            <LandingAppDownloads formFactor={formFactor} variant="cta" />
             <button
               type="button"
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
