@@ -107,7 +107,13 @@ import {
   processGuardCredentialExpiryBatch,
   syncGuardCredentialExpiryState,
 } from './lib/guardCredentialExpiryEnforcement';
-import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
+import { useSystemBackButtonBootstrap } from './lib/useSystemBackButton';
+import {
+  consumeOverlayPopState,
+  registerSystemBackHandler,
+} from './lib/systemBackButton';
+import { closeTopmostDialog } from './components/ui/motion/AppMotion';
+import { dismissAppConfirm } from './components/ui/AppConfirm';
 import {
   AddCertificationResult,
   normalizeCertNumber,
@@ -264,6 +270,7 @@ import {
   loadTutorialState,
   restartTutorial,
   retreatTutorialStep,
+  shouldOfferTutorialPrompt,
   startTutorialSession,
   updateTutorialDemoData,
   type TutorialPersistedState,
@@ -1377,7 +1384,15 @@ export default function App() {
     }
   };
 
-  useNativeBackButtonBootstrap(!!currentUser);
+  useSystemBackButtonBootstrap(!!currentUser);
+
+  useEffect(() => {
+    return registerSystemBackHandler(() => {
+      if (closeTopmostDialog()) return true;
+      if (dismissAppConfirm()) return true;
+      return false;
+    });
+  }, []);
 
   useLayoutEffect(() => {
     const url = window.location.pathname + window.location.search;
@@ -1405,6 +1420,7 @@ export default function App() {
     navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
 
     const onPopState = (event: PopStateEvent) => {
+      if (consumeOverlayPopState()) return;
       navigateFromLocation(window.location.pathname + window.location.search, {
         source: 'popstate',
         event,
@@ -2745,6 +2761,60 @@ export default function App() {
   const handleDismissPasswordChange = () => {
     setPasswordChangePromptOpen(false);
   };
+
+  useEffect(() => {
+    return registerSystemBackHandler(() => {
+      if (passwordChangePromptOpen) {
+        handleDismissPasswordChange();
+        return true;
+      }
+
+      if (currentUser && tutorialState && isTutorialActive(tutorialState)) {
+        if (tutorialState.session && tutorialState.session.stepIndex > 0) {
+          setTutorialState(retreatTutorialStep(currentUser.id, tutorialState));
+        } else {
+          setTutorialState(endTutorial(currentUser.id));
+        }
+        return true;
+      }
+
+      const tour = currentUser ? getTourForRole(currentUser.role) : null;
+      if (currentUser && tutorialState && tour && shouldOfferTutorialPrompt(tutorialState, tour)) {
+        setTutorialState(declineTutorial(currentUser.id));
+        return true;
+      }
+
+      if (clientRequestsSelectedId) {
+        setClientRequestsSelectedIdState(null);
+        return true;
+      }
+
+      if (clientMessagesDetailOpen) {
+        setClientMessagesDetailOpen(false);
+        return true;
+      }
+
+      if (clientTeamDetailOpen) {
+        setClientTeamDetailOpen(false);
+        return true;
+      }
+
+      if (isAuthView && isAppExperience()) {
+        closeAuthView();
+        return true;
+      }
+
+      return false;
+    });
+  }, [
+    passwordChangePromptOpen,
+    currentUser,
+    tutorialState,
+    clientRequestsSelectedId,
+    clientMessagesDetailOpen,
+    clientTeamDetailOpen,
+    isAuthView,
+  ]);
 
   const handleChangeAccountPassword = async (newPassword: string) => {
     if (!currentUser) return;

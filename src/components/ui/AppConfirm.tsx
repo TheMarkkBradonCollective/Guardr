@@ -54,6 +54,16 @@ function dismissCurrent(value: boolean | string | null) {
   }
 }
 
+export function dismissAppConfirm(value: boolean | string | null = false): boolean {
+  if (!activeRequest) return false;
+  dismissCurrent(value);
+  return true;
+}
+
+export function isAppConfirmActive(): boolean {
+  return activeRequest != null;
+}
+
 export function showAppConfirm(options: AppConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     if (activeRequest) {

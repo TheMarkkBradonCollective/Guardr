@@ -529,6 +529,27 @@ export function defaultRouteForRole(
 }
 
 /** Clear nested selection params while keeping the top-level section/view. */
+export function routeHasNestedSelection(route: AppRoute): boolean {
+  return Boolean(
+    route.staffGuardId ||
+      route.staffClientId ||
+      route.staffJobId ||
+      route.staffCredentialItemId ||
+      route.staffTeamId ||
+      route.staffEdit ||
+      route.clientGuardId ||
+      route.clientDirectGuardId ||
+      route.jobChatRequestId ||
+      route.teamChatRequestId ||
+      route.supportTicketId ||
+      route.supportMode ||
+      route.staffApprovalQueue ||
+      route.openJobChat ||
+      route.authView
+  );
+}
+
+/** Clear nested selection params while keeping the top-level section/view. */
 export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
   return {
     ...route,

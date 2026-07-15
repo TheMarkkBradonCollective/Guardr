@@ -1,7 +1,20 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
-import { normalizeGuardTabForAccount } from './appNavigation';
+import {
+  normalizeGuardTabForAccount,
+  routeHasNestedSelection,
+  routeWithoutNestedSelection,
+  type AppRoute,
+} from './appNavigation';
+
+describe('routeHasNestedSelection', () => {
+  it('detects nested route params', () => {
+    const route: AppRoute = { role: 'staff', staffSection: 'guards', staffGuardId: 'g1' };
+    assert.equal(routeHasNestedSelection(route), true);
+    assert.equal(routeHasNestedSelection(routeWithoutNestedSelection(route)), false);
+  });
+});
 
 function fullyActiveGuard(): SecurityGuard {
   return {

@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { AnimatePresence, motion, MotionConfig, type Transition, type Variants } from 'motion/react';
+import { pushOverlayBackHistory } from '../../../lib/systemBackButton';
 
 /** Wrap app shells to respect prefers-reduced-motion */
 export function AppMotionProvider({ children }: { children: React.ReactNode }) {
@@ -14,26 +15,49 @@ export function AppMotionProvider({ children }: { children: React.ReactNode }) {
  * independent `window` keydown listener, so a single Escape press with two
  * dialogs stacked (e.g. a confirm prompt over a detail sheet) closes both.
  */
-const openDialogStack: symbol[] = [];
+interface DialogEntry {
+  token: symbol;
+  onClose: () => void;
+}
 
-/** Registers this dialog while `active`; its `onClose` only fires on Escape when it's topmost. */
+const openDialogStack: DialogEntry[] = [];
+
+/** Close the topmost modal/sheet/drawer — used by system back button. */
+export function closeTopmostDialog(): boolean {
+  const top = openDialogStack[openDialogStack.length - 1];
+  if (!top) return false;
+  top.onClose();
+  return true;
+}
+
+/** Registers this dialog while `active`; Escape and system back close only when topmost. */
 function useTopmostEscapeClose(active: boolean, onClose: () => void) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!active) return;
     const token = Symbol('dialog');
-    openDialogStack.push(token);
+    const entry: DialogEntry = {
+      token,
+      onClose: () => onCloseRef.current(),
+    };
+    openDialogStack.push(entry);
+    const releaseOverlayHistory = pushOverlayBackHistory(() => onCloseRef.current());
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && openDialogStack[openDialogStack.length - 1] === token) {
-        onClose();
+      if (e.key === 'Escape' && openDialogStack[openDialogStack.length - 1]?.token === token) {
+        onCloseRef.current();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      const idx = openDialogStack.indexOf(token);
+      const idx = openDialogStack.findIndex((item) => item.token === token);
       if (idx !== -1) openDialogStack.splice(idx, 1);
       window.removeEventListener('keydown', onKey);
+      releaseOverlayHistory();
     };
-  }, [active, onClose]);
+  }, [active]);
 }
 
 /**
