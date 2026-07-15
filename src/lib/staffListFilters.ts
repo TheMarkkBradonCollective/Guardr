@@ -18,7 +18,7 @@ import {
 export type ApplicationStatusFilter = 'open' | 'pending' | 'all';
 export type ApplicationKindFilter = 'all' | 'guard' | 'client';
 
-export type CredentialStatusFilter = 'open' | 'pending_review' | 'pending_upload' | 'all';
+export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'all';
 
 export type GuardRosterFilter = 'pending' | 'activating' | 'active' | 'all';
 
@@ -32,6 +32,10 @@ export function isCredentialFeedItemOpen(item: ApprovalFeedItem): boolean {
 
 export function isCredentialFeedItemPendingUpload(item: ApprovalFeedItem): boolean {
   return isCredentialFeedItemOpen(item) && item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL;
+}
+
+export function isCredentialFeedItemVerified(item: ApprovalFeedItem): boolean {
+  return item.status === 'approved' || item.status === 'active';
 }
 
 export function matchesApplicationStatusFilter(
@@ -62,12 +66,12 @@ export function matchesCredentialStatusFilter(
   switch (filter) {
     case 'all':
       return true;
-    case 'open':
-      return isCredentialFeedItemOpen(item);
     case 'pending_review':
       return isCredentialFeedItemAwaitingStaffReview(item);
     case 'pending_upload':
       return isCredentialFeedItemPendingUpload(item);
+    case 'verified':
+      return isCredentialFeedItemVerified(item);
   }
 }
 
