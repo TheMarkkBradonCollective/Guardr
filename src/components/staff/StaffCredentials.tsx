@@ -107,14 +107,18 @@ function CredentialFeedRow({
           <img
             src={thumbnailUrl}
             alt={item.title}
-            className={`w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec ${
-              pending ? 'ring-2 ring-amber-500/35' : ''
+            className={`w-11 h-11 rounded-lg object-cover shrink-0 box-border bg-brand-bg-sec ${
+              pending
+                ? 'border-2 border-amber-500/50'
+                : 'border border-brand-border'
             }`}
           />
         ) : (
           <span
-            className={`w-11 h-11 rounded-lg shrink-0 border border-dashed border-brand-border bg-brand-bg-sec ${
-              pending ? 'ring-2 ring-amber-500/35' : ''
+            className={`w-11 h-11 rounded-lg shrink-0 box-border bg-brand-bg-sec ${
+              pending
+                ? 'border-2 border-dashed border-amber-500/50'
+                : 'border border-dashed border-brand-border'
             }`}
             aria-hidden
           />
@@ -591,7 +595,7 @@ export function StaffCredentials({
   };
 
   return (
-    <div className="animate-fade-in space-y-4" data-tour="staff-credentials">
+    <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-credentials">
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

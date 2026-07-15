@@ -373,7 +373,7 @@ export function StaffApplications({
   }
 
   return (
-    <div className="animate-fade-in space-y-4" data-tour="staff-applications">
+    <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-applications">
       {!showDetailOnly && (
         <>
           <p className="text-sm text-brand-text-muted leading-relaxed">

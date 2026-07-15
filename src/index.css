@@ -14818,7 +14818,7 @@ body,
 .app-item-card-stack {
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ─── Text: always truncate on single-line elements ────────────────────── */
@@ -16773,6 +16773,21 @@ textarea.uber-input {
     padding-bottom: 1.25rem;
     padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+.staff-shell .staff-roster-panel .app-item-card-stack,
+.staff-shell .staff-roster-panel .split-list-pane {
+  margin-inline: calc(-1 * max(1rem, env(safe-area-inset-left, 0px))) calc(-1 * max(1rem, env(safe-area-inset-right, 0px)));
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  overflow: visible !important;
+}
+
+@media (min-width: 640px) {
+  .staff-shell .staff-roster-panel .app-item-card-stack,
+  .staff-shell .staff-roster-panel .split-list-pane {
+    margin-inline: calc(-1 * max(1.25rem, env(safe-area-inset-left, 0px))) calc(-1 * max(1.25rem, env(safe-area-inset-right, 0px)));
+    padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
   }
 }
 
