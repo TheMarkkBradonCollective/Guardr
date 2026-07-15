@@ -142,7 +142,7 @@ export function ClientHomeScreen({
   ) : undefined;
 
   return (
-    <AppScreen className="client-home-screen role-experience-client">
+    <AppScreen className="client-home-screen">
       <AppDashboardHero
         kicker={`${todayLabel} · ${companyName}`}
         title={timeGreeting()}

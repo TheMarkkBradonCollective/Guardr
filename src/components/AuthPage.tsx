@@ -640,7 +640,7 @@ export function AuthPage({
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience-${role}`}
+      className="page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience"
       id="guardr-auth-root"
     >
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
