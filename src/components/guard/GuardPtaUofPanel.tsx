@@ -10,10 +10,10 @@ import {
   LEGACY_PTA_ID,
   LEGACY_UOF_ID,
   PTA_UOF_SEPARATE_PART_COUNT,
-  PTA_UOF_UPLOAD_GUIDANCE,
-  computePtaUofProgress,
+  getPtaUofCatalogEntries,
+  isPtaUofCatalogId,
 } from '../../lib/guardQualification';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronRight } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialRowAction,
@@ -61,6 +61,13 @@ function certsForSecondPart(guard: SecurityGuard): Certification[] {
   });
 }
 
+function allPtaUofCerts(guard: SecurityGuard): Certification[] {
+  return guard.certifications.filter((cert) => {
+    if (cert.status === 'rejected') return false;
+    return isPtaUofCatalogId(resolveCertCatalogId(cert));
+  });
+}
+
 function defaultPtaUofUploadPath(guard: SecurityGuard): CredentialUploadPath {
   return certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID).length > 0 ? 'combined' : 'individual';
 }
@@ -77,13 +84,14 @@ export function GuardPtaUofPanel({
   activationFormOnly,
   certOverlayNav,
 }: GuardPtaUofPanelProps) {
-  const progress = computePtaUofProgress(guard);
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
   const combinedEntry = getCertCatalogEntry(BSIS_PTA_UOF_COMBINED_ID);
   const ptaEntry = getCertCatalogEntry(LEGACY_PTA_ID);
   const uofEntry = getCertCatalogEntry(LEGACY_UOF_ID);
+  const catalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
+  const [showAddPicker, setShowAddPicker] = useState(false);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -96,17 +104,21 @@ export function GuardPtaUofPanel({
   );
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
+  const listedCerts = useMemo(() => allPtaUofCerts(guard), [guard]);
 
   const hasAnyCerts = combinedCerts.length > 0 || ptaCerts.length > 0 || secondPartCerts.length > 0;
   const effectivePath: CredentialUploadPath = hasAnyCerts
-    ? (combinedCerts.length > 0 ? 'combined' : 'individual')
+    ? combinedCerts.length > 0
+      ? 'combined'
+      : 'individual'
     : uploadPath;
 
-
   const sectionStatus = getPtaUofSectionStatus(guard, staffMode);
+  const sectionUploadStatus = listedCerts.length > 0 ? 'on-file' : getCourseUploadStatus(guard, LEGACY_PTA_ID);
 
   const resetForm = () => {
     setAddingCatalogId(null);
+    setShowAddPicker(false);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -116,6 +128,16 @@ export function GuardPtaUofPanel({
 
   const startAdd = (catalogId: string) => {
     setAddingCatalogId(catalogId);
+    setShowAddPicker(false);
+    setIssuer('');
+    setNumber('');
+    setImageUrl(undefined);
+    setFormError('');
+  };
+
+  const openAddFlow = () => {
+    setShowAddPicker(true);
+    setAddingCatalogId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -270,6 +292,7 @@ export function GuardPtaUofPanel({
           type="button"
           onClick={() => {
             setAddingCatalogId(null);
+            setShowAddPicker(true);
             setIssuer('');
             setNumber('');
             setImageUrl(undefined);
@@ -290,18 +313,26 @@ export function GuardPtaUofPanel({
     </form>
   ) : null;
 
-  const uploadSheet = (
-    <AppFormSheet
-      open={
-        (activationFormOnly?.open ?? false) ||
-        Boolean(addingCatalogId && (editing || staffMode))
-      }
-      onClose={resetForm}
-      title="Upload PTA/UOF credential"
-      subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
-    >
-      {certUploadForm}
-    </AppFormSheet>
+  const catalogPicker = (
+    <ul className="space-y-2">
+      {catalogOptions.map((entry) => (
+        <li key={entry.id}>
+          <button
+            type="button"
+            onClick={() => startAdd(entry.id)}
+            className="w-full flex items-center gap-3 rounded-xl border border-brand-border bg-brand-surface px-4 py-3 text-left hover:border-brand-primary/40 transition-colors"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-brand-text">{entry.name}</p>
+              {entry.description && (
+                <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{entry.description}</p>
+              )}
+            </div>
+            <ChevronRight className="w-4 h-4 shrink-0 text-brand-text-muted" />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 
   if (activationFormOnly) {
@@ -360,88 +391,52 @@ export function GuardPtaUofPanel({
   }
 
   return (
-    <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
-      <div>
-        <p className="uber-label flex items-center gap-2 flex-wrap">
-          <BookOpen className="w-4 h-4" strokeWidth={1.5} />
-          Power to Arrest &amp; Appropriate Use of Force
-        </p>
-        <div className="mt-2 space-y-2">
-          <CredentialSectionStatusDisplay status={sectionStatus} />
-          <CredentialGracePeriodStatusBar guard={guard} kind="pta-uof" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-end text-xs">
-          <span className="text-brand-text-muted">{progress.progressPercent}%</span>
-        </div>
-        <div className="app-medication-progress">
-          <div
-            className="app-medication-progress-fill"
-            style={{ width: `${progress.progressPercent}%` }}
+    <section className="app-form-section space-y-3 pb-5 border-b border-brand-border">
+      <CredentialRowHeader
+        rawTitle
+        title={
+          <p className="uber-label flex items-center gap-2 flex-wrap">
+            <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
+            Power to Arrest &amp; Appropriate Use of Force
+          </p>
+        }
+        subtitle={
+          <div className="mt-2 space-y-2">
+            <CredentialSectionStatusDisplay status={sectionStatus} />
+            <CredentialGracePeriodStatusBar guard={guard} kind="pta-uof" />
+          </div>
+        }
+        action={
+          <CredentialRowAction
+            staffMode={staffMode}
+            uploadStatus={sectionUploadStatus}
+            canUpload={canUpload}
+            onAdd={openAddFlow}
           />
-        </div>
-      </div>
+        }
+      />
 
-      {!hasAnyCerts && (
-        <CredentialPathToggle
-          value={uploadPath}
-          onChange={setUploadPath}
-          combinedLabel="Combined certificate"
-          individualLabel="Individual parts"
-        />
-      )}
-
-      {effectivePath === 'combined' ? (
-        <div className="border-t border-brand-border pt-3 space-y-3">
-          <CredentialRowHeader
-            rawTitle
-            title={
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-                Combined 8-hour certificate
-              </span>
-            }
-            action={
-              <CredentialRowAction
-                staffMode={staffMode}
-                uploadStatus={getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID)}
-                canUpload={canUpload}
-                onAdd={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
-              />
-            }
-          />
-          {combinedCerts.length > 0 ? (
-            <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
-          ) : (
-            <p className="text-xs text-brand-text-muted py-2">
-              {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
-            </p>
-          )}
+      {listedCerts.length === 0 ? (
+        <div className="border-t border-brand-border py-3">
+          <p className="text-xs text-brand-text-muted">
+            No PTA/UOF training on file yet.
+            {combinedEntry?.description ? ` ${combinedEntry.description}` : ''}
+          </p>
         </div>
       ) : (
-        <div className="border-t border-brand-border pt-3 space-y-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Individual parts ({PTA_UOF_SEPARATE_PART_COUNT} required)
-          </p>
-          {renderPartRow({
-            catalogId: LEGACY_PTA_ID,
-            label: ptaEntry?.name ?? 'Power to Arrest',
-            subtitle: ptaEntry?.description,
-            uploaded: ptaCerts,
-          })}
-          {renderPartRow({
-            catalogId: LEGACY_UOF_ID,
-            label: uofEntry?.name ?? 'Appropriate Use of Force',
-            subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
-            uploaded: secondPartCerts,
-            alternateCatalogId: BSIS_WMD_AWARENESS_ID,
-            alternateLabel: 'Upload WMD Awareness instead',
-          })}
+        <div className="app-cert-item-stack border-t border-brand-border">
+          {listedCerts.map((cert) => renderCertRow(cert))}
         </div>
       )}
 
-      {uploadSheet}
+      <AppFormSheet
+        open={showAddPicker || Boolean(addingCatalogId)}
+        onClose={resetForm}
+        title="Add PTA/UOF credential"
+        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : 'Choose which certificate to upload'}
+      >
+        {addingCatalogId ? certUploadForm : catalogPicker}
+      </AppFormSheet>
     </section>
   );
 }
