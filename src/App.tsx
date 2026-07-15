@@ -996,7 +996,7 @@ export default function App() {
   const setStaffSection = (section: StaffSection, selection: StaffSectionSelection = {}) => {
     const normalizedSection = isStaffMessagesSection(section) ? 'messages' : section;
     setStaffSectionState(normalizedSection);
-    const nextJobId = normalizedSection === 'jobs' || normalizedSection === 'applications'
+    const nextJobId = normalizedSection === 'jobs'
       ? selection.jobId !== undefined ? selection.jobId ?? undefined : staffJobId ?? undefined
       : undefined;
     const nextCredentialItemId = normalizedSection === 'credentials'
@@ -1004,14 +1004,14 @@ export default function App() {
         ? selection.credentialItemId ?? undefined
         : staffCredentialItemId ?? undefined
       : undefined;
-    const nextGuardId = normalizedSection === 'guards'
+    const nextGuardId = normalizedSection === 'guards' || normalizedSection === 'applications'
       ? selection.guardId !== undefined ? selection.guardId ?? undefined : staffGuardId ?? undefined
       : normalizedSection === 'credentials' && !nextCredentialItemId
         ? selection.guardId !== undefined
           ? selection.guardId ?? undefined
           : staffGuardId ?? undefined
         : undefined;
-    const nextClientId = normalizedSection === 'clients'
+    const nextClientId = normalizedSection === 'clients' || normalizedSection === 'applications'
       ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
       : undefined;
     const nextTeamId = normalizedSection === 'team'

@@ -144,14 +144,11 @@ function canActOnOverviewAction(role: PlatformRole, item: OverviewActionItem): b
       return canReviewCertifications({ role });
     case 'pending-jobs':
     case 'pending-schedule-changes':
-    case 'guard-applications':
       return canReviewJobRequests({ role });
-    case 'pending-guard-accounts':
-      return canManageGuards({ role });
+    case 'account-applications':
+      return canManageGuards({ role }) || canManageClients({ role });
     case 'pending-staff-accounts':
       return canApproveStaffAccounts({ role });
-    case 'pending-client-accounts':
-      return canManageClients({ role });
     default:
       return true;
   }

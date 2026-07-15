@@ -85,14 +85,14 @@ export function resolveNotificationUrl(
         : '/staff/jobs';
     case 'guard_application':
       return options.requestId
-        ? `/staff/applications?j=${encodeURIComponent(options.requestId)}`
-        : '/staff/applications';
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
     case 'guard_pending_approval':
       return options.guardId
-        ? `/staff/guards?g=${encodeURIComponent(options.guardId)}`
-        : '/staff/guards';
+        ? `/staff/applications?g=${encodeURIComponent(options.guardId)}`
+        : '/staff/applications';
     case 'client_pending_approval':
-      return '/staff/clients';
+      return '/staff/applications';
     case 'credential_pending':
       return options.guardId
         ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}`
@@ -312,8 +312,8 @@ export function resolveNotificationUrlForRole(
       }
       if (type === 'guard_application') {
         return options.requestId
-          ? `/staff/applications?j=${encodeURIComponent(options.requestId)}`
-          : '/staff/applications';
+          ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+          : '/staff/jobs';
       }
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
