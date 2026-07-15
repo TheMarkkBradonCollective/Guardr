@@ -40,23 +40,7 @@ jobs:
         run: npm run generate:download-version
 
       - name: Write Firebase google-services.json
-        run: |
-          if [ -z "${GOOGLE_SERVICES_JSON:-}" ]; then
-            echo "::warning::GOOGLE_SERVICES_JSON secret is not set — APK push toggle will be disabled."
-            echo "Add the full google-services.json from Firebase as a GitHub Actions secret to enable native push."
-            exit 0
-          fi
-          printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
-          node -e "
-            const fs = require('fs');
-            const json = JSON.parse(fs.readFileSync('android/app/google-services.json', 'utf8'));
-            const pkg = json.client?.[0]?.client_info?.android_client_info?.package_name;
-            if (pkg !== 'com.signaturesecurity.guardr') {
-              console.error('::error::google-services.json package_name must be com.signaturesecurity.guardr, got', pkg);
-              process.exit(1);
-            }
-            console.log('Firebase config OK for', pkg);
-          "
+        run: node scripts/write-google-services.mjs
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
