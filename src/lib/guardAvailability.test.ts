@@ -10,8 +10,10 @@ import {
   isInvalidAvailabilityWindow,
   isWeekDayEnabled,
   loadAvailabilitySlots,
+  normalizeWeeklySlotsToOnePerDay,
   prunePastDateOverrides,
   saveAvailabilitySlots,
+  slotForWeekDay,
   toggleWeekDay,
   windowsForDate,
 } from './guardAvailability.ts';
@@ -148,6 +150,35 @@ describe('filterGuardsAvailableForJob', () => {
       endDate: '2026-07-20T14:00:00',
     };
     assert.equal(filterGuardsAvailableForJob(guards, mondayJob).length, 2);
+  });
+});
+
+describe('normalizeWeeklySlotsToOnePerDay', () => {
+  it('keeps only one slot per weekday', () => {
+    const slots = [
+      ...defaultAvailabilitySlots('guard-1'),
+      {
+        id: 'dup-mon',
+        guardId: 'guard-1',
+        dayOfWeek: 1,
+        startTime: '12:00',
+        endTime: '20:00',
+        isAvailable: true,
+      },
+    ];
+    const normalized = normalizeWeeklySlotsToOnePerDay(slots);
+    const mondaySlots = normalized.filter((slot) => slot.dayOfWeek === 1);
+    assert.equal(mondaySlots.length, 1);
+    assert.equal(mondaySlots[0].startTime, '08:00');
+  });
+});
+
+describe('slotForWeekDay', () => {
+  it('returns the available slot for a weekday', () => {
+    const slots = defaultAvailabilitySlots('guard-1');
+    const monday = slotForWeekDay(slots, 1);
+    assert.ok(monday);
+    assert.equal(monday?.dayOfWeek, 1);
   });
 });
 
