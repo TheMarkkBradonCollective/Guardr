@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, CheckCheck } from 'lucide-react';
 import type { UserNotification } from '../../types';
@@ -7,6 +7,7 @@ import {
   isNotificationUnread,
   sortNotificationsNewestFirst,
 } from '../../lib/notificationInbox';
+import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
 
 interface NotificationBellMenuProps {
   notifications: UserNotification[];
@@ -29,33 +30,6 @@ function formatWhen(iso: string): string {
   }
 }
 
-function usePanelPosition(open: boolean, triggerRef: React.RefObject<HTMLButtonElement | null>) {
-  const [position, setPosition] = useState({ top: 0, right: 16 });
-
-  const update = useCallback(() => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-    const rect = trigger.getBoundingClientRect();
-    setPosition({
-      top: rect.bottom + 8,
-      right: Math.max(16, window.innerWidth - rect.right),
-    });
-  }, [triggerRef]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    update();
-    window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
-    return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('scroll', update, true);
-    };
-  }, [open, update]);
-
-  return position;
-}
-
 export function NotificationBellMenu({
   notifications,
   onMarkAllRead,
@@ -65,7 +39,7 @@ export function NotificationBellMenu({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const position = usePanelPosition(open, triggerRef);
+  const position = useFloatingPanelPosition(open, triggerRef, 'left', 352);
   const unread = countUnreadNotifications(notifications);
   const sorted = sortNotificationsNewestFirst(notifications);
 
@@ -91,7 +65,7 @@ export function NotificationBellMenu({
     <div
       ref={panelRef}
       className="notification-inbox-panel fixed z-[3000] w-[min(22rem,calc(100vw-2rem))] max-h-[min(28rem,70dvh)] flex flex-col rounded-lg border border-brand-border bg-brand-bg shadow-lg overflow-hidden"
-      style={{ top: position.top, right: position.right }}
+      style={{ top: position.top, left: position.left, right: position.right }}
     >
       <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-brand-border bg-brand-surface">
         <p className="text-sm font-black tracking-[-0.02em]">Notifications</p>

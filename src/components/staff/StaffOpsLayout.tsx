@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
+import { getStaffNavAccessNotice } from '../../lib/staffNavAccess';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { AccountMenu } from '../layouts/AccountMenu';
+import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
+import { NavMenuPopover } from '../layouts/NavMenuPopover';
+import { AccountMenu } from '../layouts/AccountMenu';
+import { showAppAlert } from '../ui/AppConfirm';
 import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 import {
   AlertTriangle,
@@ -20,7 +24,6 @@ import {
   DollarSign,
   LayoutDashboard,
   Map,
-  Menu,
   MessagesSquare,
   Scale,
   Settings,
@@ -30,7 +33,6 @@ import {
   UserCheck,
   Users,
   UsersRound,
-  X,
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -98,17 +100,7 @@ export function StaffOpsLayout({
   headerExtension,
   headerOverride,
 }: StaffOpsLayoutProps) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
-
-  useEffect(() => {
-    if (!mobileNavOpen || dockedSidebar) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [mobileNavOpen, dockedSidebar]);
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -140,46 +132,74 @@ export function StaffOpsLayout({
     { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];
 
-  const navigate = (section: StaffSection) => {
-    onNavigate(section);
-    setMobileNavOpen(false);
+  const accessFlags = { showFinance, showSettings, showDisputes };
+  const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
+  const screenTitle = SECTION_TITLES[navHighlight];
+
+  const accountMenu = {
+    userName: currentUser.name,
+    userSubtitle: ROLE_LABELS[currentUser.role],
+    avatarUrl: currentUser.avatar,
+    onOpenProfile: () => onNavigate('profile'),
+    onOpenSettings: () => onNavigate('preferences'),
+    onSignOut,
+    active: activeSection === 'profile' || activeSection === 'preferences',
   };
 
+  const popoverItems = useMemo(
+    () =>
+      navItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        badge: item.badge,
+      })),
+    [navItems],
+  );
+
+  const handlePopoverNavigate = (id: string) => {
+    const section = id as StaffSection;
+    const notice = getStaffNavAccessNotice(section, accessFlags);
+    if (notice) {
+      void showAppAlert({ title: notice.title, message: notice.message, tone: 'warning' });
+      return;
+    }
+    onNavigate(section);
+  };
+
+  const navMenu = !dockedSidebar ? (
+    <NavMenuPopover items={popoverItems} activeId={navHighlight} onNavigate={handlePopoverNavigate} />
+  ) : null;
+
+  const brandingTrailing = isDbConnected ? (
+    <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
+  ) : null;
+
   const sidebarPanel = (
-    <>
-      <button
-        type="button"
-        className="staff-sidebar-close"
-        onClick={() => setMobileNavOpen(false)}
-        aria-label="Close menu"
-      >
-        <X className="w-5 h-5" />
-      </button>
-      <div className="staff-sidebar-inner">
-        <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <StaffSidebarNav
-            items={navItems}
-            activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
-            onNavigate={navigate}
-            showFinance={showFinance}
-            showSettings={showSettings}
-            showDisputes={showDisputes}
-          />
-        </div>
-        <div className="staff-sidebar-footer">
-          {onOpenLegal && (
-            <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-          )}
-        </div>
+    <div className="staff-sidebar-inner">
+      <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <StaffSidebarNav
+          items={navItems}
+          activeSection={navHighlight}
+          onNavigate={onNavigate}
+          showFinance={showFinance}
+          showSettings={showSettings}
+          showDisputes={showDisputes}
+        />
       </div>
-    </>
+      <div className="staff-sidebar-footer">
+        {onOpenLegal && (
+          <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
+        )}
+      </div>
+    </div>
   );
 
   return (
     <div
       className={`staff-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
         dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
-      }${mobileNavOpen && !dockedSidebar ? ' staff-shell--nav-open' : ''}`}
+      }`}
     >
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
@@ -187,76 +207,28 @@ export function StaffOpsLayout({
             {headerOverride}
           </header>
         ) : hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-end gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 px-4 sm:px-5 border-b border-brand-border">
-            {!dockedSidebar ? (
-              <button
-                type="button"
-                className="app-chrome-btn text-brand-text"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            ) : null}
-            {headerActions}
-            <AccountMenu
-              userName={currentUser.name}
-              userSubtitle={ROLE_LABELS[currentUser.role]}
-              avatarUrl={currentUser.avatar}
-              onOpenProfile={() => navigate('profile')}
-              onOpenSettings={() => navigate('preferences')}
-              onSignOut={onSignOut}
-              active={activeSection === 'profile' || activeSection === 'preferences'}
-            />
-          </header>
-        ) : (
-          <header
-            className={`staff-main-header shrink-0 border-b border-brand-border${
-              headerExtension ? ' staff-main-header--with-extension' : ''
-            }`}
-          >
-            <div className="flex items-start gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 px-4 sm:px-5">
-              <div className="min-w-0 flex-1">
-                <AppHeaderBranding
-                  className="mb-1.5"
-                  trailing={
-                    isDbConnected ? (
-                      <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
-                    ) : null
-                  }
-                />
-                <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
-                  {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
-                </h1>
-                <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 pt-0.5">
-                {!dockedSidebar ? (
-                  <button
-                    type="button"
-                    className="app-chrome-btn text-brand-text"
-                    onClick={() => setMobileNavOpen(true)}
-                    aria-label="Open menu"
-                  >
-                    <Menu className="w-5 h-5" />
-                  </button>
-                ) : null}
-                {headerActions}
-                <AccountMenu
-                  userName={currentUser.name}
-                  userSubtitle={ROLE_LABELS[currentUser.role]}
-                  avatarUrl={currentUser.avatar}
-                  onOpenProfile={() => navigate('profile')}
-                  onOpenSettings={() => navigate('preferences')}
-                  onSignOut={onSignOut}
-                  active={activeSection === 'profile' || activeSection === 'preferences'}
-                />
+          <header className="staff-main-header staff-main-header-compact shrink-0 border-b border-brand-border">
+            <div className="flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
+              <AppHeaderBranding trailing={brandingTrailing} />
+            </div>
+            <div className="px-4 pb-2.5 flex items-center gap-2 min-h-[2.75rem]">
+              <div className="shrink-0 flex items-center">{headerActions}</div>
+              <div className="flex-1 min-w-0" aria-hidden />
+              <div className="shrink-0 flex items-center gap-1.5">
+                {navMenu}
+                <AccountMenu {...accountMenu} />
               </div>
             </div>
-            {headerExtension ? (
-              <div className="staff-main-header-extension">{headerExtension}</div>
-            ) : null}
           </header>
+        ) : (
+          <AppScreenHeader
+            title={screenTitle}
+            accountMenu={accountMenu}
+            notifications={headerActions}
+            navMenu={navMenu}
+            extension={headerExtension}
+            brandingTrailing={brandingTrailing}
+          />
         )}
 
         <main
@@ -272,26 +244,7 @@ export function StaffOpsLayout({
 
       {dockedSidebar ? (
         <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
-      ) : (
-        mobileNavOpen && (
-          <>
-            <button
-              type="button"
-              className="staff-sidebar-backdrop"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="Close navigation"
-            />
-            <aside
-              className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--overlay staff-sidebar-open`}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Staff navigation"
-            >
-              {sidebarPanel}
-            </aside>
-          </>
-        )
-      )}
+      ) : null}
     </div>
   );
 }

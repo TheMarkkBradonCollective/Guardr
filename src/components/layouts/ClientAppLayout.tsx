@@ -68,7 +68,6 @@ export function ClientAppLayout({
   headerRight,
   messagesChrome = EMPTY_MESSAGES_CHROME,
 }: ClientAppLayoutProps) {
-  const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map';
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
@@ -100,8 +99,7 @@ export function ClientAppLayout({
   return (
     <RoleAppShell
       title={screenTitle}
-      locationLabel={clientLabel}
-      headerRight={headerRight}
+      notifications={headerRight}
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={{

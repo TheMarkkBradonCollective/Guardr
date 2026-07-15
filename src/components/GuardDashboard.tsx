@@ -1765,9 +1765,8 @@ export function GuardDashboard({
   return (
     <RoleAppShell
       title={guardScreenTitle}
-      locationLabel={guardHeaderStatus}
       hideHeader={shellHideHeader}
-      headerRight={headerRight}
+      notifications={headerRight}
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}

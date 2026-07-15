@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, LogOut, LucideIcon, Settings, User } from 'lucide-react';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
 
 export interface AccountMenuLink {
   label: string;
@@ -25,33 +26,6 @@ export interface AccountMenuProps {
   footer?: React.ReactNode;
 }
 
-function useMenuPosition(open: boolean, triggerRef: React.RefObject<HTMLButtonElement | null>) {
-  const [position, setPosition] = useState({ top: 0, right: 16 });
-
-  const update = useCallback(() => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-    const rect = trigger.getBoundingClientRect();
-    setPosition({
-      top: rect.bottom + 8,
-      right: Math.max(16, window.innerWidth - rect.right),
-    });
-  }, [triggerRef]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    update();
-    window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
-    return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('scroll', update, true);
-    };
-  }, [open, update]);
-
-  return position;
-}
-
 export function AccountMenu({
   userName,
   userSubtitle,
@@ -68,7 +42,7 @@ export function AccountMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
-  const position = useMenuPosition(open, triggerRef);
+  const position = useFloatingPanelPosition(open, triggerRef, 'right', 288);
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +87,7 @@ export function AccountMenu({
       id={menuId}
       role="menu"
       className="account-menu-panel fixed z-[3000] w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
-      style={{ top: position.top, right: position.right }}
+      style={{ top: position.top, left: position.left, right: position.right }}
     >
       <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
         <p className="font-bold text-sm truncate tracking-tight">{userName}</p>
