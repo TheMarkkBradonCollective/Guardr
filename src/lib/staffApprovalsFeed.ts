@@ -254,32 +254,31 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
     }
 
     const policy = guard.insurancePolicy;
-    if (!policy || policy.status === 'not_submitted') continue;
-
-    const pending = policy.status === 'pending';
-    items.push({
-      id: coiApprovalItemId(guard.id),
-      queue: 'credentials',
-      title: `${guard.name} — Certificate of Insurance`,
-      subtitle: formatCoiSummaryLine(policy),
-      status:
-        policy.status === 'verified'
-          ? 'approved'
-          : policy.status === 'rejected'
-            ? 'denied'
-            : 'pending',
-      statusLabel:
-        policy.status === 'verified'
-          ? 'Verified'
-          : policy.status === 'rejected'
-            ? 'Rejected'
-            : 'Pending review',
-      submittedAt: policy.submittedAt,
-      reviewedAt: policy.reviewedAt,
-      reviewedByName: policy.reviewedBy,
-      reviewedByEmail: policy.reviewedBy,
-      sortKey: new Date(policy.reviewedAt ?? policy.submittedAt ?? 0).getTime() || Date.now(),
-    });
+    if (policy && policy.status !== 'not_submitted') {
+      items.push({
+        id: coiApprovalItemId(guard.id),
+        queue: 'credentials',
+        title: `${guard.name} — Certificate of Insurance`,
+        subtitle: formatCoiSummaryLine(policy),
+        status:
+          policy.status === 'verified'
+            ? 'approved'
+            : policy.status === 'rejected'
+              ? 'denied'
+              : 'pending',
+        statusLabel:
+          policy.status === 'verified'
+            ? 'Verified'
+            : policy.status === 'rejected'
+              ? 'Rejected'
+              : 'Pending review',
+        submittedAt: policy.submittedAt,
+        reviewedAt: policy.reviewedAt,
+        reviewedByName: policy.reviewedBy,
+        reviewedByEmail: policy.reviewedBy,
+        sortKey: new Date(policy.reviewedAt ?? policy.submittedAt ?? 0).getTime() || Date.now(),
+      });
+    }
 
     const idStatus = getGuardIdVerificationStatus(guard);
     if (idStatus !== 'not_submitted') {
@@ -554,4 +553,33 @@ export function formatApprovalTimestamp(iso?: string): string {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+/** Pending credential queue count — matches the Credentials tab pending filter. */
+export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
+  return countPendingInFeedByQueue(
+    buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
+    'credentials'
+  );
+}
+
+function guardIdForCredentialFeedItem(item: ApprovalFeedItem, guards: SecurityGuard[]): string | null {
+  if (isCoiApprovalItemId(item.id)) return guardIdFromCoiApprovalItemId(item.id);
+  if (isGovIdApprovalItemId(item.id)) return guardIdFromGovIdApprovalItemId(item.id);
+  return guards.find((guard) => guard.certifications.some((cert) => cert.id === item.id))?.id ?? null;
+}
+
+/** Deep-link overview credential actions into the first pending credentials-queue item. */
+export function resolveFirstPendingCredentialSelection(
+  guards: SecurityGuard[]
+): { credentialItemId: string; guardId: string } | null {
+  const feed = filterApprovalsFeedByQueue(
+    buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
+    'credentials'
+  );
+  const item = feed.find((entry) => entry.status === 'pending' || entry.status === 'in_review');
+  if (!item) return null;
+  const guardId = guardIdForCredentialFeedItem(item, guards);
+  if (!guardId) return null;
+  return { credentialItemId: item.id, guardId };
 }

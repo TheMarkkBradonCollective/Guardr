@@ -8,12 +8,13 @@ import {
   requestHasOpenIncident,
 } from './incidentReports';
 import { isClientAccountPending, isGuardAccountPending } from './accountStatus';
+import { isUserSubmittedPendingCert } from './approvalSubmissions';
 import {
-  isUserSubmittedPendingCert,
-} from './approvalSubmissions';
+  countPendingCredentialApprovals as countPendingCredentialFeedApprovals,
+  resolveFirstPendingCredentialSelection,
+} from './staffApprovalsFeed';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
-import { getPendingInsuranceReviews } from './guardInsurance';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
@@ -314,13 +315,8 @@ export function computePlatformStats(
 ): PlatformStats {
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
   const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests).length;
-  const pendingCerts = guards.reduce(
-    (n, g) => n + g.certifications.filter((c) => isUserSubmittedPendingCert(c, g)).length,
-    0
-  );
-  const pendingInsuranceReviews = getPendingInsuranceReviews(guards).length;
   const pendingJobApprovals = pendingJobReviews;
-  const pendingCertApprovals = pendingCerts + pendingInsuranceReviews;
+  const pendingCertApprovals = countPendingCredentialFeedApprovals(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
   const pendingAccountApplications =
     guards.filter((g) => !g.isStaff && isGuardAccountPending(g)).length + pendingClientAccounts;
@@ -956,7 +952,7 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
 }
 
 export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
-  return getPendingCertifications(guards).length + getPendingInsuranceReviews(guards).length;
+  return countPendingCredentialFeedApprovals(guards);
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
@@ -985,6 +981,14 @@ export function resolveOverviewActionSelection(
       if (guard) return { guardId: guard.id };
       const client = getPendingClientAccounts(ctx.clients)[0];
       return { clientId: client?.id ?? null };
+    }
+    case 'pending-certs': {
+      const selection = resolveFirstPendingCredentialSelection(ctx.guards);
+      if (!selection) return {};
+      return {
+        credentialItemId: selection.credentialItemId,
+        guardId: selection.guardId,
+      };
     }
     default:
       return {};
