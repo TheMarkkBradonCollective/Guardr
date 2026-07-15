@@ -39,6 +39,7 @@ export type PushNotificationType =
   | 'payout_ready'
   | 'company_placard_expiry'
   | 'pre_shift_briefing'
+  | 'crew_lead_request'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

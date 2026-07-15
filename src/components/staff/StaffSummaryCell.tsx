@@ -13,13 +13,13 @@ export function StaffSummaryCell({
   value,
   sub,
   accent = false,
-  className = 'staff-summary-cell',
+  className = 'guard-performance-stat',
 }: StaffSummaryCellProps) {
   return (
-    <div className={`${className} ${accent ? 'staff-summary-cell-accent' : ''}`}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-brand-text-muted">{label}</p>
-      <p className="text-lg font-bold mt-1">{value}</p>
-      <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{sub}</p>
+    <div className={`${className} ${accent ? 'guard-performance-stat-accent' : ''}`}>
+      <p className="guard-performance-stat-label">{label}</p>
+      <p className="guard-performance-stat-value">{value}</p>
+      <p className="guard-performance-stat-sub">{sub}</p>
     </div>
   );
 }

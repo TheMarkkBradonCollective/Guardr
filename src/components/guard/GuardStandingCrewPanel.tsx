@@ -24,6 +24,10 @@ interface GuardStandingCrewPanelProps {
   trusted: boolean;
   coordinatingJobs?: GuardJobView[];
   variant?: 'default' | 'embedded';
+  /** Rendered between the hero card and scrollable body when embedded. */
+  afterHero?: React.ReactNode;
+  /** Replaces the default embedded body (e.g. Active tab job list). */
+  embeddedBody?: React.ReactNode;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
     crewDescription: string;
@@ -62,6 +66,79 @@ function memberDisplay(guards: SecurityGuard[], memberGuardId: string): Security
   );
 }
 
+function crewHeroClass(activeCount: number, pendingCount: number): string {
+  if (activeCount >= 4) return 'guard-tier-hero-elite';
+  if (activeCount >= 2) return 'guard-tier-hero-professional';
+  if (activeCount > 0 || pendingCount > 0) return 'guard-tier-hero-rising';
+  return 'guard-tier-hero-starting';
+}
+
+function CrewSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="guard-factors-section crew-hub-section">
+      <div className="guard-factors-header">
+        <h3 className="guard-factors-heading">{title}</h3>
+        {description ? <p className="guard-factors-subheading">{description}</p> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function CrewRosterRow({
+  member,
+  guards,
+  pending = false,
+  onRemove,
+}: {
+  member: GuardStandingCrewMember;
+  guards: SecurityGuard[];
+  pending?: boolean;
+  onRemove?: (memberGuardId: string) => void;
+}) {
+  const profile = memberDisplay(guards, member.memberGuardId);
+  const missing = !guards.some((g) => g.id === member.memberGuardId);
+
+  return (
+    <li className={`crew-roster-item ${pending ? 'crew-roster-item-pending' : ''}`}>
+      <ProfileAvatar src={profile.avatar} name={profile.name} size="sm" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold truncate">
+          {pending && missing ? 'Pending invite' : profile.name}
+        </p>
+        {pending ? (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500 mt-0.5">
+            <Clock className="w-3 h-3" />
+            Pending
+          </span>
+        ) : missing ? (
+          <WfBadge tone="warning">Profile unavailable</WfBadge>
+        ) : (
+          <WfBadge tone="success">Active</WfBadge>
+        )}
+      </div>
+      {!pending && onRemove && (
+        <button
+          type="button"
+          className="app-button-outline app-btn-sm inline-flex items-center gap-1 text-red-400 border-red-500/30 shrink-0"
+          onClick={() => void onRemove(member.memberGuardId)}
+        >
+          <UserMinus className="w-3.5 h-3.5" />
+          Remove
+        </button>
+      )}
+    </li>
+  );
+}
+
 export function GuardStandingCrewPanel({
   guard,
   members,
@@ -69,6 +146,8 @@ export function GuardStandingCrewPanel({
   trusted,
   coordinatingJobs = [],
   variant = 'default',
+  afterHero,
+  embeddedBody,
   onUpdateStandingCrewProfile,
   onInvite,
   onRemove,
@@ -127,6 +206,8 @@ export function GuardStandingCrewPanel({
     [members, guard.id, guard.standingCrewName]
   );
 
+  const crewDisplayName = getStandingCrewDisplayName(guard);
+
   const handleRequestCrewLead = async () => {
     if (!onRequestCrewLead) return;
     setRequestingPlacement(true);
@@ -148,17 +229,69 @@ export function GuardStandingCrewPanel({
   };
 
   const sectionTitle = (title: string) =>
-    embedded ? (
-      <h2 className="text-xs font-bold uppercase tracking-wide text-brand-text-muted mb-2">{title}</h2>
-    ) : (
-      <h2 className="app-section-title">{title}</h2>
-    );
+    embedded ? null : <h2 className="app-section-title">{title}</h2>;
+
+  const renderEmbeddedCard = (hero: React.ReactNode, body: React.ReactNode) => (
+    <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
+      {hero}
+      {afterHero}
+      <div className="guard-rating-body crew-hub-team-body">{body}</div>
+    </section>
+  );
+
+  const leadHero = (
+    <div
+      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}
+    >
+      <div className="guard-tier-hero-glow" aria-hidden />
+      <div className="guard-pref-tier-medal" aria-hidden>
+        <div className="guard-pref-tier-medal-ring">
+          <Users className="guard-pref-tier-medal-icon" />
+        </div>
+      </div>
+      <p className="guard-tier-hero-eyebrow">Standing crew</p>
+      <h2 className="guard-tier-hero-name guard-crew-hero-name">{crewDisplayName}</h2>
+      <div className="guard-tier-hero-score-row">
+        <span className="guard-tier-hero-score-label">Active members</span>
+        <span className="guard-tier-hero-score-value">
+          {active.length}
+          {pendingOutgoing.length > 0 ? (
+            <span className="guard-pref-hero-score-total"> +{pendingOutgoing.length} pending</span>
+          ) : null}
+        </span>
+      </div>
+      <p className="guard-tier-hero-subtitle">
+        {active.length > 0
+          ? 'Your standing roster is ready for coordinated jobs.'
+          : 'Build your team below — clients see this crew in the Teams directory.'}
+      </p>
+    </div>
+  );
+
+  const renderMemberHero = (leadName: string) => (
+    <div
+      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}
+    >
+      <div className="guard-tier-hero-glow" aria-hidden />
+      <div className="guard-pref-tier-medal" aria-hidden>
+        <div className="guard-pref-tier-medal-ring">
+          <Users className="guard-pref-tier-medal-icon" />
+        </div>
+      </div>
+      <p className="guard-tier-hero-eyebrow">Standing crew</p>
+      <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
+      <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
+    </div>
+  );
 
   if (!trusted && pendingIncoming.length === 0) {
     return (
-      <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
-        When a trusted guard invites you to their standing crew, it will show up here.
-      </AppEmptyState>
+      <>
+        {embedded ? afterHero : null}
+        <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
+          When a trusted guard invites you to their standing crew, it will show up here.
+        </AppEmptyState>
+      </>
     );
   }
 
@@ -170,17 +303,14 @@ export function GuardStandingCrewPanel({
     const leadName = leadMembership
       ? guardName(guards, leadMembership.leadGuardId)
       : 'your crew lead';
-    return (
-      <div className={embedded ? 'space-y-5' : 'space-y-4'}>
+
+    const memberBody = (
+      <>
         {pendingIncoming.length > 0 && (
-          <section>
-            {sectionTitle('Invitations')}
-            <ul className="space-y-2">
+          <CrewSection title="Invitations" description="Respond to join a standing crew.">
+            <ul className="crew-invite-list">
               {pendingIncoming.map((invite) => (
-                <li
-                  key={invite.id}
-                  className="rounded-lg border border-brand-primary/30 bg-brand-primary/8 px-3 py-3"
-                >
+                <li key={invite.id} className="crew-invite-item">
                   <p className="text-sm font-semibold text-brand-text">
                     {guardName(guards, invite.leadGuardId)} invited you
                   </p>
@@ -206,10 +336,9 @@ export function GuardStandingCrewPanel({
                 </li>
               ))}
             </ul>
-          </section>
+          </CrewSection>
         )}
-        <section>
-          {sectionTitle('Your crew')}
+        <CrewSection title="Your crew">
           <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
             <p className="text-sm font-semibold text-brand-text">
               You are on {leadName}&apos;s standing crew
@@ -220,22 +349,28 @@ export function GuardStandingCrewPanel({
                 : 'Your coordinator can invite you to job crews. Use Settings → Join a crew when you have a job crew code.'}
             </p>
           </div>
-        </section>
+        </CrewSection>
+      </>
+    );
+
+    if (embedded) {
+      return renderEmbeddedCard(renderMemberHero(leadName), embeddedBody ?? memberBody);
+    }
+
+    return (
+      <div className={embedded ? 'space-y-5' : 'space-y-4'}>
+        {memberBody}
       </div>
     );
   }
 
-  return (
-    <div className={embedded ? 'space-y-5' : 'space-y-4'}>
+  const bodyContent = (
+    <>
       {pendingIncoming.length > 0 && (
-        <section>
-          {sectionTitle('Invitations')}
-          <ul className="space-y-2">
+        <CrewSection title="Invitations" description="Respond to join a standing crew.">
+          <ul className="crew-invite-list">
             {pendingIncoming.map((invite) => (
-              <li
-                key={invite.id}
-                className="rounded-lg border border-brand-primary/30 bg-brand-primary/8 px-3 py-3"
-              >
+              <li key={invite.id} className="crew-invite-item">
                 <p className="text-sm font-semibold text-brand-text">
                   {guardName(guards, invite.leadGuardId)} invited you
                 </p>
@@ -261,14 +396,16 @@ export function GuardStandingCrewPanel({
               </li>
             ))}
           </ul>
-        </section>
+        </CrewSection>
       )}
 
       {trusted && !leadsStandingCrew && (
         <>
           {(canRequestCrewLead || pendingCrewLeadRequest) && (
-            <section>
-              {sectionTitle('Lead your own crew')}
+            <CrewSection
+              title="Lead your own crew"
+              description="Request staff approval to coordinate your own standing team."
+            >
               <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
@@ -290,41 +427,35 @@ export function GuardStandingCrewPanel({
                   )
                 )}
               </div>
-            </section>
+            </CrewSection>
           )}
-
         </>
       )}
 
       {trusted && leadsStandingCrew && (
         <>
           {onUpdateStandingCrewProfile && (
-            <section>
-              {sectionTitle('Team profile')}
-              {!embedded && (
-                <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
-                  Clients see this in the Teams directory. Your standing roster below is reused on
-                  coordinated jobs.
-                </p>
-              )}
+            <CrewSection
+              title="Team profile"
+              description="Clients see this on your crew roster and in the Teams directory."
+            >
               <CrewDetailsEditor
-                jobTitle={getStandingCrewDisplayName(guard)}
+                jobTitle={crewDisplayName}
                 coordinatorName={guard.name}
                 crewName={guard.standingCrewName}
                 crewDescription={guard.standingCrewDescription}
                 editable
                 onSave={onUpdateStandingCrewProfile}
               />
-            </section>
+            </CrewSection>
           )}
 
           {openCrewCodes.length > 0 && (
-            <section>
-              {sectionTitle('Crew codes')}
-              <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
-                Share a code with guards joining your coordinated crew on an open job.
-              </p>
-              <ul className="space-y-2">
+            <CrewSection
+              title="Crew codes"
+              description="Share a code with guards joining your coordinated crew on an open job."
+            >
+              <ul className="crew-code-list">
                 {openCrewCodes.map((job) => (
                   <li key={job.id}>
                     <TeamCodeShareBlock
@@ -335,89 +466,50 @@ export function GuardStandingCrewPanel({
                   </li>
                 ))}
               </ul>
-            </section>
+            </CrewSection>
           )}
 
-          <section>
-            {sectionTitle('Standing roster')}
-            {!embedded && (
-              <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
-                Reusable team for future jobs. New members stay pending until they accept.
-              </p>
-            )}
-
+          <CrewSection
+            title="Standing roster"
+            description="Reusable team for future jobs. New members stay pending until they accept."
+          >
             {active.length === 0 && pendingOutgoing.length === 0 ? (
               <AppEmptyState icon={<Users className="w-5 h-5" />} title="No members yet">
                 Search active guards below to build your team.
               </AppEmptyState>
             ) : (
-              <ul className="divide-y divide-brand-border rounded-lg border border-brand-border overflow-hidden bg-brand-surface/40">
-                {active.map((row) => {
-                  const member = memberDisplay(guards, row.memberGuardId);
-                  const missing = !guards.some((g) => g.id === row.memberGuardId);
-                  return (
-                    <li key={row.id} className="flex items-center gap-3 px-3 py-2.5">
-                      <ProfileAvatar src={member.avatar} name={member.name} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate">{member.name}</p>
-                        {missing ? (
-                          <WfBadge tone="warning">Profile unavailable</WfBadge>
-                        ) : (
-                          <WfBadge tone="success">Active</WfBadge>
-                        )}
-                      </div>
-                      {onRemove && (
-                        <button
-                          type="button"
-                          className="app-button-outline app-btn-sm inline-flex items-center gap-1 text-red-400 border-red-500/30"
-                          onClick={() => void onRemove(row.memberGuardId)}
-                        >
-                          <UserMinus className="w-3.5 h-3.5" />
-                          Remove
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-                {pendingOutgoing.map((row) => {
-                  const member = memberDisplay(guards, row.memberGuardId);
-                  const missing = !guards.some((g) => g.id === row.memberGuardId);
-                  return (
-                    <li key={row.id} className="flex items-center gap-3 px-3 py-2.5 bg-brand-primary/5">
-                      <ProfileAvatar src={member.avatar} name={member.name} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate">
-                          {missing ? 'Pending invite' : member.name}
-                        </p>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
-                          <Clock className="w-3 h-3" />
-                          Pending
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
+              <ul className="crew-roster-list">
+                {active.map((row) => (
+                  <CrewRosterRow
+                    key={row.id}
+                    member={row}
+                    guards={guards}
+                    onRemove={onRemove}
+                  />
+                ))}
+                {pendingOutgoing.map((row) => (
+                  <CrewRosterRow key={row.id} member={row} guards={guards} pending />
+                ))}
               </ul>
             )}
-          </section>
+          </CrewSection>
 
           {onInvite && (
-            <section>
-              {sectionTitle('Add guards')}
+            <CrewSection title="Add guards" description="Search active guards to invite to your standing crew.">
               <WfSearchBar
                 value={search}
                 onChange={setSearch}
                 placeholder="Search active guards…"
                 aria-label="Search guards to add to crew"
               />
-              <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-brand-border bg-brand-surface/40 divide-y divide-brand-border/80">
+              <div className="crew-candidate-list">
                 {candidates.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted px-3 py-4 text-center">
+                  <p className="text-xs text-brand-text-muted px-1 py-4 text-center">
                     No active guards available to add.
                   </p>
                 ) : (
                   candidates.map((g) => (
-                    <div key={g.id} className="flex items-center gap-3 px-3 py-2.5">
+                    <div key={g.id} className="crew-candidate-item">
                       <ProfileAvatar src={g.avatar} name={g.name} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{g.name}</p>
@@ -436,20 +528,39 @@ export function GuardStandingCrewPanel({
                   ))
                 )}
               </div>
-            </section>
+            </CrewSection>
           )}
-            </>
-          )}
+        </>
+      )}
 
       {!trusted && isStandingTeamMember && (
-        <section>
-          {sectionTitle('Job crew codes')}
+        <CrewSection title="Job crew codes">
           <p className="text-xs text-brand-text-muted leading-relaxed">
             When your coordinator shares a job crew code, enter it under{' '}
             <span className="font-semibold text-brand-text">Settings → Join a crew</span>.
           </p>
-        </section>
+        </CrewSection>
       )}
+    </>
+  );
+
+  if (embedded && trusted && leadsStandingCrew) {
+    return renderEmbeddedCard(leadHero, embeddedBody ?? bodyContent);
+  }
+
+  if (embedded) {
+    return (
+      <>
+        {afterHero}
+        <div className="crew-hub-team-body">{embeddedBody ?? bodyContent}</div>
+      </>
+    );
+  }
+
+  return (
+    <div className={embedded ? 'space-y-5' : 'space-y-4'}>
+      {!embedded && trusted && sectionTitle('My team')}
+      {bodyContent}
     </div>
   );
 }

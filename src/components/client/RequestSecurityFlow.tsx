@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { getBrowsableGuards } from '../../lib/guardDirectory';
+import { filterGuardsAvailableForJob } from '../../lib/guardAvailability';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { Heart } from 'lucide-react';
@@ -132,8 +133,15 @@ export function RequestSecurityFlow({
   const favouriteGuards = useMemo(() => {
     if (favoriteGuardIds.length === 0) return [];
     const browseable = getBrowsableGuards(guards);
-    return browseable.filter((g) => favoriteGuardIds.includes(g.id));
-  }, [guards, favoriteGuardIds]);
+    const favorited = browseable.filter((g) => favoriteGuardIds.includes(g.id));
+    if (!startDate || !endDate || validateShiftSchedule(startDate, endDate)) {
+      return favorited;
+    }
+    return filterGuardsAvailableForJob(favorited, {
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString(),
+    });
+  }, [guards, favoriteGuardIds, startDate, endDate]);
 
   const effectiveGuards = customGuards
     ? Math.min(50, Math.max(1, parseInt(customGuards, 10) || 1))

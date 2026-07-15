@@ -378,3 +378,11 @@ export function createOffDayOverride(input: {
 export function isOffDayOverride(override: GuardAvailabilityDateOverride): boolean {
   return !override.isAvailable;
 }
+
+/** Silent filter — guards who fit the job shift inside weekly hours and off-day rules. */
+export function filterGuardsAvailableForJob<T extends Pick<SecurityGuard, 'id'>>(
+  guards: T[],
+  job: Pick<SecurityRequest, 'startDate' | 'endDate'>
+): T[] {
+  return guards.filter((guard) => guardIsAvailableForJob(guard.id, job));
+}

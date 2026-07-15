@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import React, { useMemo } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavItem } from './BottomNavBar';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
-import { Logo } from '../Logo';
+import { NavMenuPopover } from './NavMenuPopover';
+import { AppHeaderBranding } from './AppHeaderBranding';
 import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 
 interface RoleAppShellProps {
   title: string;
-  subtitle?: string;
-  locationLabel?: string;
   accountMenu: AccountMenuProps;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
   activeNavId: string;
   onNavigate: (id: string) => void;
   children: React.ReactNode;
+  notifications?: React.ReactNode;
+  /** @deprecated Use notifications */
   headerRight?: React.ReactNode;
   fullBleed?: boolean;
   hideHeader?: boolean;
@@ -26,14 +26,13 @@ interface RoleAppShellProps {
 
 export function RoleAppShell({
   title,
-  subtitle,
-  locationLabel,
   accountMenu,
   navItems,
   overflowNavItems = [],
   activeNavId,
   onNavigate,
   children,
+  notifications,
   headerRight,
   fullBleed = false,
   hideHeader = false,
@@ -41,45 +40,31 @@ export function RoleAppShell({
   headerOverride,
   variant = 'default',
 }: RoleAppShellProps) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.md}px)`);
   const isMapMode = variant === 'dark';
 
-  useEffect(() => {
-    if (!mobileNavOpen || dockedSidebar) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [mobileNavOpen, dockedSidebar]);
+  const allSideNavItems = useMemo(
+    () => [...navItems, ...overflowNavItems],
+    [navItems, overflowNavItems],
+  );
 
-  const navigate = (id: string) => {
-    onNavigate(id);
-    setMobileNavOpen(false);
-  };
+  const popoverItems = useMemo(
+    () =>
+      allSideNavItems.map(({ id, label, icon, badge }) => ({
+        id,
+        label,
+        icon,
+        badge,
+      })),
+    [allSideNavItems],
+  );
 
-  const allSideNavItems = [...navItems, ...overflowNavItems];
+  const navMenu = !dockedSidebar ? (
+    <NavMenuPopover items={popoverItems} activeId={activeNavId} onNavigate={onNavigate} />
+  ) : null;
 
   const sidebarPanel = (
     <>
-      {!dockedSidebar ? (
-        <button
-          type="button"
-          className="role-side-nav-close"
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Close menu"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      ) : null}
-      <div className="role-side-nav-brand">
-        <Logo size={26} className="text-brand-primary shrink-0" />
-        <span className="role-side-nav-brand-name">
-          Guard<span className="role-side-nav-brand-accent">r</span>
-        </span>
-      </div>
-
       <nav className="role-side-nav-items" role="navigation">
         {allSideNavItems.map(({ id, label, icon: Icon, badge }) => {
           const active = activeNavId === id;
@@ -87,7 +72,7 @@ export function RoleAppShell({
             <button
               key={id}
               type="button"
-              onClick={() => navigate(id)}
+              onClick={() => onNavigate(id)}
               className={`role-side-nav-item${active ? ' role-side-nav-item-active' : ''}`}
               aria-current={active ? 'page' : undefined}
             >
@@ -116,33 +101,8 @@ export function RoleAppShell({
     <div
       className={`role-app-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
         dockedSidebar ? 'role-app-shell--docked' : 'role-app-shell--compact'
-      }${mobileNavOpen && !dockedSidebar ? ' role-app-shell--nav-open' : ''}`}
+      }`}
     >
-      {dockedSidebar ? (
-        <aside className="role-side-nav role-side-nav--docked" aria-label="Main navigation">
-          {sidebarPanel}
-        </aside>
-      ) : (
-        mobileNavOpen && (
-          <>
-            <button
-              type="button"
-              className="role-side-nav-backdrop"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="Close navigation"
-            />
-            <aside
-              className="role-side-nav role-side-nav--overlay role-side-nav--open"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Main navigation"
-            >
-              {sidebarPanel}
-            </aside>
-          </>
-        )
-      )}
-
       <div className="role-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
           <div className="app-screen-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
@@ -151,32 +111,24 @@ export function RoleAppShell({
         ) : !hideHeader ? (
           <AppScreenHeader
             title={title}
-            subtitle={subtitle}
-            locationLabel={locationLabel}
             accountMenu={accountMenu}
-            right={headerRight}
+            notifications={notifications ?? headerRight}
+            navMenu={navMenu}
             extension={headerExtension}
-            onMenuClick={dockedSidebar ? undefined : () => setMobileNavOpen(true)}
             hideAccountMenu={dockedSidebar}
             className={isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : undefined}
           />
         ) : (
-          <header className="app-screen-header app-screen-header--compact shrink-0 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between gap-2 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
-            {!dockedSidebar ? (
-              <button
-                type="button"
-                className="app-chrome-btn -ml-1 text-brand-text"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            ) : (
-              <span />
-            )}
-            <div className="flex items-center gap-2">
-              {headerRight}
-              {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
+          <header className="app-screen-header app-screen-header--compact shrink-0 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
+            <div className="flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
+              <AppHeaderBranding />
+            </div>
+            <div className="relative px-4 pb-2.5 flex items-center justify-between gap-2 min-h-[2.75rem]">
+              <div className="shrink-0 flex items-center z-[1]">{navMenu}</div>
+              <div className="shrink-0 flex items-center gap-1.5 z-[1]">
+                {notifications ?? headerRight}
+                {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
+              </div>
             </div>
           </header>
         )}
@@ -187,6 +139,12 @@ export function RoleAppShell({
           </div>
         </main>
       </div>
+
+      {dockedSidebar ? (
+        <aside className="role-side-nav role-side-nav--docked" aria-label="Main navigation">
+          {sidebarPanel}
+        </aside>
+      ) : null}
     </div>
   );
 }

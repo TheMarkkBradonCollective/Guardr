@@ -102,6 +102,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Guard application',
     body: event.body || 'A guard applied to an open job offer',
   }),
+  crew_lead_request: (event) => ({
+    title: 'Crew lead request',
+    body: event.body || 'A trusted guard requested approval to lead their own standing crew',
+  }),
   guard_pending_approval: (event) => ({
     title: 'Guard pending approval',
     body: event.body || 'A guard account needs staff review',

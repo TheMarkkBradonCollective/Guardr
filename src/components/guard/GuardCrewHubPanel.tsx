@@ -238,62 +238,65 @@ export function GuardCrewHubPanel({
     );
   }
 
+  const tabBar = (
+    <div className="crew-hub-sticky-head">
+      <AppSegmentedControl<CrewHubTab>
+        options={tabOptions}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
+    </div>
+  );
+
+  const activeTabBody =
+    activeTab === 'active' ? (
+      <div className="app-section-body pt-4 pb-8 space-y-3">
+        <p className="text-xs text-brand-text-muted leading-relaxed px-0.5">
+          Jobs where you are coordinating a multi-guard crew. Tap a job to manage members.
+        </p>
+        {coordinatingJobs.length === 0 ? (
+          <AppEmptyState icon={<Users className="w-5 h-5" />} title="No active crews">
+            Apply as team lead on a multi-guard job from the map to coordinate your standing team.
+          </AppEmptyState>
+        ) : (
+          <AppItemCardStack>
+            {coordinatingJobs.map((job) => (
+              <CrewJobListRow
+                key={job.id}
+                job={job}
+                guard={guard}
+                coworkerGuards={coworkerGuards}
+                onSelect={() => setSelectedJobId(job.id)}
+              />
+            ))}
+          </AppItemCardStack>
+        )}
+      </div>
+    ) : undefined;
+
+  const standingCrewPanelProps = {
+    guard,
+    members: standingCrewMembers,
+    guards: coworkerGuards,
+    trusted,
+    coordinatingJobs,
+    variant: 'embedded' as const,
+    afterHero: tabBar,
+    embeddedBody: activeTabBody,
+    onUpdateStandingCrewProfile,
+    onJoinTeamWithCode,
+    onInvite: onInviteStandingCrew,
+    onRemove: onRemoveStandingCrew,
+    onAcceptInvite: onAcceptStandingCrewInvite,
+    onDeclineInvite: onDeclineStandingCrewInvite,
+    onRequestCrewLead,
+    canRequestCrewLead,
+    pendingCrewLeadRequest,
+  };
+
   return (
     <AppScreen className="crew-hub-screen">
-      <div className="crew-hub-sticky-head">
-        <AppSegmentedControl<CrewHubTab>
-          options={tabOptions}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
-      {activeTab === 'team' && (
-        <div className="app-section-body pt-4 pb-8">
-          <GuardStandingCrewPanel
-            guard={guard}
-            members={standingCrewMembers}
-            guards={coworkerGuards}
-            trusted={trusted}
-            coordinatingJobs={coordinatingJobs}
-            variant="embedded"
-            onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
-            onJoinTeamWithCode={onJoinTeamWithCode}
-            onInvite={onInviteStandingCrew}
-            onRemove={onRemoveStandingCrew}
-            onAcceptInvite={onAcceptStandingCrewInvite}
-            onDeclineInvite={onDeclineStandingCrewInvite}
-            onRequestCrewLead={onRequestCrewLead}
-            canRequestCrewLead={canRequestCrewLead}
-            pendingCrewLeadRequest={pendingCrewLeadRequest}
-          />
-        </div>
-      )}
-
-      {activeTab === 'active' && (
-        <div className="app-section-body pt-4 pb-8 space-y-3">
-          <p className="text-xs text-brand-text-muted leading-relaxed px-0.5">
-            Jobs where you are coordinating a multi-guard crew. Tap a job to manage members.
-          </p>
-          {coordinatingJobs.length === 0 ? (
-            <AppEmptyState icon={<Users className="w-5 h-5" />} title="No active crews">
-              Apply as team lead on a multi-guard job from the map to coordinate your standing team.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {coordinatingJobs.map((job) => (
-                <CrewJobListRow
-                  key={job.id}
-                  job={job}
-                  guard={guard}
-                  coworkerGuards={coworkerGuards}
-                  onSelect={() => setSelectedJobId(job.id)}
-                />
-              ))}
-            </AppItemCardStack>
-          )}
-        </div>
-      )}
+      <GuardStandingCrewPanel {...standingCrewPanelProps} />
     </AppScreen>
   );
 }

@@ -5,6 +5,7 @@ import { toGuardJobView } from './guardJobView';
 import { armedStatusRank, computeGuardArmedStatus, guardMeetsArmedRequirement } from './guardArmedStatus';
 import { computeGuardPerformance } from './guardPerformance';
 import { guardHasApplied } from './jobApplications';
+import { filterGuardsAvailableForJob } from './guardAvailability';
 
 export interface GuardMatchFactors {
   certificationMatch: number;
@@ -114,7 +115,9 @@ export function rankGuardsForJob(
     ? guards.filter((g) => guardHasApplied(job, g.id))
     : guards.filter((g) => !g.isStaff && g.userStatus === 'active');
 
-  const ranked = pool
+  const availablePool = filterGuardsAvailableForJob(pool, job);
+
+  const ranked = availablePool
     .map((guard) => scoreGuardForJob(guard, job, options?.allRequests))
     .sort((a, b) => {
       if (b.meetsRequirements !== a.meetsRequirements) {

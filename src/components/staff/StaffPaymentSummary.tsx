@@ -16,9 +16,9 @@ export function StaffPaymentSummary({ summary, financials }: StaffPaymentSummary
     summary.cashDepositPending.every((req) => isPlatformFeeOnlyDeposit(req));
 
   return (
-    <>
+    <div className="staff-payment-stats-wrap">
       {financials && (
-        <div className="staff-income-summary-grid">
+        <div className="guard-performance-stats staff-payment-stats" aria-label="Company income">
           <StaffSummaryCell
             label="Gross income"
             value={formatOperationalMoney(financials.grossIncome)}
@@ -43,7 +43,7 @@ export function StaffPaymentSummary({ summary, financials }: StaffPaymentSummary
           />
         </div>
       )}
-      <div className="staff-payment-summary-grid">
+      <div className="guard-performance-stats staff-payment-stats" aria-label="Payment pipeline">
         <StaffSummaryCell
           label="Client still owes"
           value={`$${summary.awaitingClientTotal.toFixed(2)}`}
@@ -82,6 +82,6 @@ export function StaffPaymentSummary({ summary, financials }: StaffPaymentSummary
           sub={`${summary.settledCount} job${summary.settledCount === 1 ? '' : 's'} fully settled — client paid and guard paid`}
         />
       </div>
-    </>
+    </div>
   );
 }

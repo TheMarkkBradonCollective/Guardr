@@ -196,10 +196,10 @@ export function StaffPaymentsPanel({
     summary.awaitingClient.length;
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <div className="px-4 sm:px-5 pb-5 border-b border-brand-border">
+    <div className="animate-fade-in staff-payments-panel">
+      <div className="staff-payments-summary">
         {actionCount > 0 && (
-          <p className="text-sm font-semibold text-brand-primary mb-4">
+          <p className="staff-payments-attention">
             {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
           </p>
         )}
@@ -207,7 +207,7 @@ export function StaffPaymentsPanel({
         {canManagePayments && (
           <button
             type="button"
-            className="app-button-outline app-btn-sm gap-2 mt-4"
+            className="app-button-outline app-btn-sm gap-2 staff-payments-export"
             onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
           >
             <Download className="w-4 h-4" />
@@ -216,7 +216,7 @@ export function StaffPaymentsPanel({
         )}
       </div>
 
-      <div className="px-4 sm:px-5 space-y-8 pt-6">
+      <div className="staff-payments-body">
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />

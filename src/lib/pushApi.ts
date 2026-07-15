@@ -151,6 +151,7 @@ export type PushEventType =
   | 'standing_crew_invite'
   | 'company_placard_expiry'
   | 'pre_shift_briefing'
+  | 'crew_lead_request'
   | 'test';
 
 export async function reportPushEvent(
