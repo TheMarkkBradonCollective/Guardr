@@ -620,7 +620,7 @@ export function HomePage({
                 className="text-sm font-semibold text-brand-primary hover:underline inline-flex items-center gap-1.5"
               >
                 <BookOpen className="w-4 h-4" />
-                General guide
+                Guide
               </button>
             )}
             <LegalFooterLinks onOpenLegal={onOpenLegal} />

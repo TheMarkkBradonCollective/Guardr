@@ -1493,7 +1493,7 @@ export function AuthPage({
                 type="button"
                 onClick={onOpenGuide}
                 className="inline-flex items-center gap-1 text-white/75 hover:text-white transition-colors text-xs font-semibold"
-                aria-label="Open general guide"
+                aria-label="Open guide"
               >
                 <BookOpen className="w-4 h-4" />
               </button>

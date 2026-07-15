@@ -75,7 +75,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   disputes: 'Disputes',
   analytics: 'Analytics',
   settings: 'System Settings',
-  guide: 'General guide',
+  guide: 'Guide',
   'dev-updates': 'Dev notes',
   profile: 'Profile',
   preferences: 'Settings',
@@ -135,7 +135,7 @@ export function StaffOpsLayout({
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'guide', label: 'General guide', icon: BookOpen },
+    { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];

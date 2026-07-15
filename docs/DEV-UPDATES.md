@@ -1,8 +1,8 @@
 # Guardr Development Notes
 
 **Project start:** Saturday, June 6, 2026  
-**Last updated:** Thursday, June 25, 2026  
-**Total commits:** 824 across 12 active days (20 calendar days)
+**Last updated:** Wednesday, July 15, 2026  
+**Total commits:** 1,190 across 20+ active days
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Calendar span | 20 days (Jun 6 → Jun 25) |
-| Active development days | 12 days with commits |
-| Markeith White direct commits | 23 commits (~8 hours active time) |
-| Total project commits | 824 (Markeith White: 23 · Cursor: 801) |
-| Estimated total dev time | ~92 hours (~3 days 20 hours, or ~11.5 eight-hour workdays) |
+| Calendar span | 39 days (Jun 6 → Jul 15) |
+| Active development days | 20+ days with commits |
+| Total project commits | 1,190 |
+| Current release | **v1.0.44** (web + PWA + APK) |
+| Production URL | [guardr.co](https://www.guardr.co) |
 
 _Times below come from git commit timestamps. They reflect when work was committed, not offline planning or testing without commits._
 
@@ -33,6 +33,8 @@ _Times below come from git commit timestamps. They reflect when work was committ
 9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
 10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, auto Stripe payout, marketplace eligibility framing
 11. **Jun 25 (PM)** — Ops hierarchy: two-step guard activation, Founder role, per-role guides, auth scroll fix, live SQL sync
+12. **Jun 26 – Jul 14** — Applications/Credentials overhaul, credential detail views, auto-activation, expiry enforcement, full UI redesign, PWA/APK branding split, production audit
+13. **Jul 15** — Production polish v1.0.43–44: CI fixes, investor demo accounts, unified system back button (website/PWA/APK)
 
 ---
 
@@ -367,7 +369,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | 5:50 AM | Activation reframed as **marketplace eligibility** — staff still verify credentials |
 | 5:50 AM | 48h self-serve grace for optional PTA/32-hr; automated lockout on expiry |
 | 5:50 AM | Cash disabled platform-wide |
-| 6:21 AM | `docs/guardr-general-guide.md` — **IC marketplace model** section; synced to General guide and Dev notes |
+| 6:21 AM | `docs/guardr-general-guide.md` — **IC marketplace model** section; synced to Guide and Dev notes |
 | 7:36 AM | COI added to guard activation checklist and eligibility lead copy |
 | 8:15 AM | COI styled as credential row after Government ID (compact card + detail modal) |
 
@@ -383,9 +385,53 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Role hierarchy** | Moderator: approve applications. Administrator+: verify credentials & activate. Director: finances + team. Founder (was Owner): platform governance. |
 | **Founder rename** | Owner → Founder across UI, permissions, API session auth, SQL + migration `20260625120000_rename_owner_to_founder.sql` |
 | **Auth scroll fix** | Login/signup form column scrolls on desktop side-by-side layout |
-| **General guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |
+| **Guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |
 | **Complete SQL** | `complete_schema_setup.sql` — single idempotent schema for the whole site |
 | **Tests** | 105 passing; production build verified |
+
+---
+
+## June 26 – July 14, 2026 — Applications, credentials, redesign & production hardening
+
+**Contributors:** Cursor  
+**Themes:** Staff Applications/Credentials split, guard auto-activation, credential UX overhaul, role experience redesign, PWA/APK, investor readiness
+
+| Update | Detail |
+|--------|--------|
+| **Applications panel** | Replaced monolithic Approvals hub with dedicated **Applications** sidebar tab (account intake, job offers, staff-provisioned accounts) |
+| **Credentials panel** | Separate **Credentials** tab for document verification queue |
+| **Auto-activation** | Guards auto-activate when Administrator+ verifies all five activation credentials — removed manual "Grant marketplace eligibility" step |
+| **Pending credential uploads** | Guards can upload activation credentials during application review; staff see uploads in Applications popup |
+| **Credential expiry** | Auto-request updates and **Restricted** label when government ID, COI, or certs expire |
+| **Credential detail views** | Unified credential records, lightbox images, view-full/edit pages, staff add-credential wizard |
+| **Guard roster badges** | Dual badges for account state + pending credential status; removed armed-level badges from UI |
+| **Staff profile editing** | Staff can edit own name, phone, bio, and photo at `/staff/profile` |
+| **Platform tabs** | **Payment settings**, **Marketplace agreements**, and **Audit log** moved to dedicated sidebar tabs (Director/Founder) |
+| **Role permissions in Guide** | Staff role permissions reference moved into Guide with `StaffRolesReference` component |
+| **Full redesign** | Role experience polish across mobile/tablet/desktop/APK — sage brand restored, bottom nav fixes, guard default map tab |
+| **PWA vs APK branding** | PWA white home-screen icons; APK black splash/status bar/icons |
+| **Android APK** | Sideload at `/download/guardr.apk`; Capacitor 7 shell loads live site from guardr.co |
+| **Investor demo SQL** | `supabase/investor_demo_accounts.sql` — testg@test.com, testc@test.com, tests@test.com |
+
+---
+
+## Wednesday, July 15, 2026 — Production audit & system back button (v1.0.43–44)
+
+**Contributors:** Cursor
+
+| Time / version | Update |
+|----------------|--------|
+| **v1.0.43** | Fixed 11 TypeScript CI errors; enlarged PWA install icons; investor demo accounts SQL; service worker cache bust |
+| **v1.0.44** | Unified **system back button** across website, PWA, and Android APK — hardware back, browser back, and overlay dismissal share one handler |
+| Guide + Dev notes | Renamed **General guide** → **Guide** everywhere; updated docs for Applications/Credentials, auto-activation, PWA/APK install, back navigation |
+
+**System back button behavior:**
+- Closes confirm dialogs, sheets, and modals first
+- Then dismisses auth sheet, tutorial, password prompt, and in-app detail views
+- Then navigates history (tabs → sections → nested selections)
+- APK root screen minimizes app instead of force-closing
+
+**Testing at v1.0.44:** 234 unit tests, 3 E2E smoke tests, lint + build pass.
 
 ---
 
@@ -406,7 +452,9 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Jun 23** | 227 | Responsive Uber overhaul, overtime/disputes, messenger redesign, workflow guide |
 | **Jun 24** | 25 | Favourites, direct job requests, notifications, guard filtering |
 | **Jun 25** | 6+ | IC marketplace compliance, control-signal reduction, COI checklist, ops hierarchy, Founder role, per-role guides |
+| **Jun 26 – Jul 14** | 300+ | Applications/Credentials split, auto-activation, credential UX, full redesign, PWA/APK, platform tabs |
+| **Jul 15** | 4 | Production audit v1.0.43–44, system back button, Guide/Dev notes sync |
 
 ---
 
-_Visible in the staff console under **Dev notes** (Director and Founder only)._
+_Visible in the staff console under **Dev notes** (Director and Founder only). The operating manual is **Guide** in the sidebar (all staff) or account menu (clients/guards)._

@@ -227,7 +227,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   support: 'Messages',
   profile: 'Profile',
   settings: 'Settings',
-  guide: 'General guide',
+  guide: 'Guide',
   crew: 'Crew',
 };
 
@@ -968,7 +968,7 @@ export function GuardDashboard({
       ? []
       : [
           {
-            label: 'General guide',
+            label: 'Guide',
             icon: BookOpen,
             onClick: () => setTab('guide'),
             active: tab === 'guide',
