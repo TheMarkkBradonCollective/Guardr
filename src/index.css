@@ -18101,3 +18101,163 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
   min-width: 0;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — HOME PAGE APP DOWNLOADS (APK + PWA)
+═══════════════════════════════════════════════════════════════════════════ */
+
+.landing-app-downloads {
+  position: relative;
+  margin-top: 1.75rem;
+  padding: 1.25rem;
+  border-radius: 1.125rem;
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 0%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 55%),
+    var(--brand-bg-sec);
+  box-shadow: var(--shadow-sm);
+  max-width: 36rem;
+}
+
+.landing-app-downloads--cta {
+  margin-top: 1.5rem;
+  margin-inline: auto;
+  max-width: 32rem;
+  text-align: left;
+}
+
+.landing-app-downloads-head {
+  margin-bottom: 1rem;
+}
+
+.landing-app-downloads-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin: 0 0 0.375rem;
+}
+
+.landing-app-downloads-lead {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+}
+
+.landing-app-downloads-actions {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.landing-app-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+.landing-app-download-btn:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--brand-border));
+  box-shadow: var(--shadow-sm);
+}
+
+.landing-app-download-btn:active {
+  transform: scale(0.985);
+}
+
+.landing-app-download-btn--apk {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg));
+}
+
+.landing-app-download-btn--apk .landing-app-download-btn-icon {
+  background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+}
+
+.landing-app-download-btn--pwa .landing-app-download-btn-icon {
+  background: var(--brand-bg-sec);
+  color: var(--brand-text);
+}
+
+.landing-app-download-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  flex-shrink: 0;
+}
+
+.landing-app-download-btn-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.landing-app-download-btn-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+}
+
+.landing-app-download-btn-sub {
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.landing-app-downloads-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.landing-app-downloads-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.landing-pwa-guide {
+  position: relative;
+  margin-top: 1rem;
+  padding: 1.25rem;
+}
+
+.landing-app-downloads-guide {
+  margin-top: 1rem;
+}
+
+body[data-form-factor="tablet"] .landing-app-downloads--tablet .landing-app-downloads-actions,
+body[data-form-factor="desktop"] .landing-app-downloads--desktop .landing-app-downloads-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .landing-app-downloads--hero {
+  margin-top: 2rem;
+}
+
+body.capacitor-native .landing-app-download-btn:active {
+  transform: scale(0.97);
+}
+
