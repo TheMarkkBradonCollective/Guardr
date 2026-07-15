@@ -1241,6 +1241,8 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS company_placard_ex
 COMMENT ON COLUMN notification_preferences.company_placard_expiry IS 'Director/Founder alert for company placard missing items or upcoming expirations';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_schedule_changed BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.job_schedule_changed IS 'Alert when a job schedule changes (client, guard, or staff)';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
 
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
@@ -1525,6 +1527,25 @@ CREATE TABLE IF NOT EXISTS guard_availability (
 
 CREATE INDEX IF NOT EXISTS idx_guard_availability_guard_id ON guard_availability(guard_id);
 
+CREATE TABLE IF NOT EXISTS guard_availability_date_overrides (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  start_time TIME NOT NULL DEFAULT '00:00',
+  end_time TIME NOT NULL DEFAULT '23:59',
+  is_available BOOLEAN NOT NULL DEFAULT FALSE,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (guard_id, date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_guard_avail_date_guard
+  ON guard_availability_date_overrides (guard_id, date);
+
+COMMENT ON TABLE guard_availability_date_overrides IS
+  'One-off calendar day availability overrides (off-days or custom hours) per guard';
+
 CREATE TABLE IF NOT EXISTS client_locations (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
@@ -1637,6 +1658,7 @@ AS $$ SELECT auth.uid() IS NOT NULL; $$;
 
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_availability_date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_shift_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE compliance_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_invoices ENABLE ROW LEVEL SECURITY;
@@ -1656,6 +1678,15 @@ CREATE POLICY guard_availability_select ON guard_availability FOR SELECT
 
 DROP POLICY IF EXISTS guard_availability_write ON guard_availability;
 CREATE POLICY guard_availability_write ON guard_availability FOR ALL
+  USING (guard_id = auth_guard_id() OR is_staff_user() OR NOT is_authenticated_user())
+  WITH CHECK (guard_id = auth_guard_id() OR is_staff_user() OR NOT is_authenticated_user());
+
+DROP POLICY IF EXISTS guard_avail_date_select ON guard_availability_date_overrides;
+CREATE POLICY guard_avail_date_select ON guard_availability_date_overrides FOR SELECT
+  USING (guard_id = auth_guard_id() OR is_staff_user() OR NOT is_authenticated_user());
+
+DROP POLICY IF EXISTS guard_avail_date_write ON guard_availability_date_overrides;
+CREATE POLICY guard_avail_date_write ON guard_availability_date_overrides FOR ALL
   USING (guard_id = auth_guard_id() OR is_staff_user() OR NOT is_authenticated_user())
   WITH CHECK (guard_id = auth_guard_id() OR is_staff_user() OR NOT is_authenticated_user());
 
@@ -1701,7 +1732,7 @@ DO $$
 DECLARE tbl text;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'audit_log', 'guard_availability', 'recurring_shift_templates',
+    'audit_log', 'guard_availability', 'guard_availability_date_overrides', 'recurring_shift_templates',
     'compliance_alerts', 'client_invoices'
   ]
   LOOP
@@ -1828,8 +1859,20 @@ WHERE table_schema = 'public'
     'support_ticket', 'support_ticket_status', 'dispute_update',
     'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification',
     'guard_arrived', 'guard_left_site', 'job_open_to_guards', 'company_placard_expiry',
-    'job_schedule_changed'
+    'job_schedule_changed', 'pre_shift_briefing'
   )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_crew_join_requests'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_availability_date_overrides'
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
