@@ -586,24 +586,17 @@ export function StaffDashboard({
           <StaffApplications
             guards={guards}
             clients={clients}
-            requests={requests}
-            standingCrewMembers={standingCrewMembers}
             canApproveGuardAccounts={canApproveGuardAccounts}
             canActivateGuardAccounts={canActivateApprovedGuards}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}
-            canVerifyCredentials={canVerifyGuardCredentials}
-            canSuspend={canSuspend}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
             onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
-            onUpdateGuardUserStatus={onUpdateGuardUserStatus}
-            onApproveCert={onApproveCert}
-            onRejectCert={onRejectCert}
-            onDeleteGuardAccount={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
-            onDeleteClientAccount={canManageClientAccounts ? onDeleteClientAccount : undefined}
-            onOpenJob={openJob}
+            onRejectGuardApplication={onRejectGuardIdentityVerification}
+            onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
+            onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             initialGuardId={selectedGuardId}
             initialClientId={selectedClientId}
             onSelectionChange={(selection) => {

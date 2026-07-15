@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Client,
-  GuardStandingCrewMember,
   SecurityGuard,
-  SecurityRequest,
 } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -15,22 +13,18 @@ import {
 import { AppEmptyState, AppItemCardStack, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { Building2, Eye, Shield, UserCheck } from 'lucide-react';
-import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
-import { StaffClientDetailPanel } from './StaffClientDetailPanel';
+import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
+import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
 
 type ApplicationKind = 'guard' | 'client';
 
 interface StaffApplicationsProps {
   guards: SecurityGuard[];
   clients: Client[];
-  requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   canApproveGuardAccounts?: boolean;
   canActivateGuardAccounts?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
-  canVerifyCredentials?: boolean;
-  canSuspend?: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onActivateGuardAccount?: (
     guardId: string,
@@ -38,12 +32,9 @@ interface StaffApplicationsProps {
   ) => void | Promise<void>;
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
-  onUpdateGuardUserStatus?: (guardId: string, status: 'active' | 'suspended' | 'blocked') => void;
-  onApproveCert?: (guardId: string, certId: string) => void;
-  onRejectCert?: (guardId: string, certId: string) => void;
-  onDeleteGuardAccount?: (guardId: string) => void | Promise<void>;
-  onDeleteClientAccount?: (clientId: string) => void | Promise<void>;
-  onOpenJob?: (jobId: string) => void;
+  onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
+  onOpenGuardProfile?: (guardId: string) => void;
+  onOpenClientProfile?: (clientId: string) => void;
   initialGuardId?: string | null;
   initialClientId?: string | null;
   onSelectionChange?: (selection: { guardId?: string | null; clientId?: string | null }) => void;
@@ -136,24 +127,17 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
 export function StaffApplications({
   guards,
   clients,
-  requests,
-  standingCrewMembers = [],
   canApproveGuardAccounts = false,
   canActivateGuardAccounts = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
-  canVerifyCredentials = false,
-  canSuspend = false,
   onApproveGuardAccount,
   onActivateGuardAccount,
   onApproveClient,
   onRejectClient,
-  onUpdateGuardUserStatus,
-  onApproveCert,
-  onRejectCert,
-  onDeleteGuardAccount,
-  onDeleteClientAccount,
-  onOpenJob,
+  onRejectGuardApplication,
+  onOpenGuardProfile,
+  onOpenClientProfile,
   initialGuardId = null,
   initialClientId = null,
   onSelectionChange,
@@ -245,21 +229,15 @@ export function StaffApplications({
           />
           <div className="px-4 sm:px-5 pb-8 space-y-4">
             <ApplicationReviewMeta item={feedItem} />
-            <StaffGuardDetailPanel
+            <StaffGuardApplicationReviewPanel
               guard={guard}
-              requests={requests}
-              standingCrewMembers={standingCrewMembers}
-              canManage={canManageGuardAccounts}
-              canVerifyCredentials={canVerifyCredentials}
-              canSuspend={canSuspend}
-              onUpdateUserStatus={onUpdateGuardUserStatus ?? (() => {})}
-              onApproveCert={onApproveCert ?? (() => {})}
-              onRejectCert={onRejectCert ?? (() => {})}
+              canReview={
+                canApproveGuardAccounts || canActivateGuardAccounts || canManageGuardAccounts
+              }
               onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
               onActivateGuardAccount={canActivateGuardAccounts ? onActivateGuardAccount : undefined}
-              onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
-              onOpenJob={onOpenJob}
-              compact
+              onRejectGuardApplication={onRejectGuardApplication}
+              onOpenGuardProfile={onOpenGuardProfile}
             />
           </div>
         </div>
@@ -278,15 +256,12 @@ export function StaffApplications({
         />
         <div className="px-4 sm:px-5 pb-8 space-y-4">
           <ApplicationReviewMeta item={feedItem} />
-          <StaffClientDetailPanel
+          <StaffClientApplicationReviewPanel
             client={client}
-            requests={requests}
-            canManage={canManageClientAccounts}
+            canReview={canManageClientAccounts}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
-            onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
-            onOpenJob={onOpenJob}
-            compact
+            onOpenClientProfile={onOpenClientProfile}
           />
         </div>
       </div>
