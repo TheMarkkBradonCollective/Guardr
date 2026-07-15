@@ -5,12 +5,13 @@ import { getThirtyTwoHourSectionStatus } from '../../lib/credentialSectionStatus
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
+  getThirtyTwoHourRollupCatalogEntries,
+  isThirtyTwoHourCatalogId,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronRight } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialRowAction,
@@ -60,6 +61,13 @@ function rollupCertsForGuard(guard: SecurityGuard): Certification[] {
   });
 }
 
+function allThirtyTwoHourCerts(guard: SecurityGuard): Certification[] {
+  return guard.certifications.filter((cert) => {
+    if (cert.status === 'rejected') return false;
+    return isThirtyTwoHourCatalogId(resolveCertCatalogId(cert));
+  });
+}
+
 function defaultThirtyTwoHourUploadPath(guard: SecurityGuard): CredentialUploadPath {
   return rollupCertsForGuard(guard).length > 0 ? 'combined' : 'individual';
 }
@@ -76,11 +84,15 @@ export function GuardThirtyTwoHourPanel({
   activationFormOnly,
   certOverlayNav,
 }: GuardThirtyTwoHourPanelProps) {
-  const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
+  const catalogOptions = useMemo(
+    () => [...getThirtyTwoHourRollupCatalogEntries(), ...courses],
+    [courses]
+  );
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
+  const [showAddPicker, setShowAddPicker] = useState(false);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -90,6 +102,7 @@ export function GuardThirtyTwoHourPanel({
   );
 
   const rollupCerts = useMemo(() => rollupCertsForGuard(guard), [guard.certifications]);
+  const listedCerts = useMemo(() => allThirtyTwoHourCerts(guard), [guard]);
 
   const hasIndividualCourseCerts = useMemo(
     () => THIRTY_TWO_HOUR_COURSE_IDS.some((id) => certsForCatalogId(guard, id).length > 0),
@@ -97,14 +110,20 @@ export function GuardThirtyTwoHourPanel({
   );
   const hasAnyCerts = rollupCerts.length > 0 || hasIndividualCourseCerts;
   const effectivePath: CredentialUploadPath = hasAnyCerts
-    ? (rollupCerts.length > 0 ? 'combined' : 'individual')
+    ? rollupCerts.length > 0
+      ? 'combined'
+      : 'individual'
     : uploadPath;
 
-  const progressPct = progress.thirtyTwoHourProgressPercent;
   const sectionStatus = getThirtyTwoHourSectionStatus(guard, staffMode);
+  const sectionUploadStatus =
+    listedCerts.length > 0
+      ? 'on-file'
+      : getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID);
 
   const resetForm = () => {
     setAddingCatalogId(null);
+    setShowAddPicker(false);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -114,6 +133,16 @@ export function GuardThirtyTwoHourPanel({
 
   const startAdd = (catalogId: string) => {
     setAddingCatalogId(catalogId);
+    setShowAddPicker(false);
+    setIssuer('');
+    setNumber('');
+    setImageUrl(undefined);
+    setFormError('');
+  };
+
+  const openAddFlow = () => {
+    setShowAddPicker(true);
+    setAddingCatalogId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -225,8 +254,6 @@ export function GuardThirtyTwoHourPanel({
     </div>
   );
 
-  const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
-
   const certUploadForm = addingCatalogId ? (
     <form onSubmit={submitCert} className="space-y-3">
       <input
@@ -256,6 +283,7 @@ export function GuardThirtyTwoHourPanel({
           type="button"
           onClick={() => {
             setAddingCatalogId(null);
+            setShowAddPicker(true);
             setIssuer('');
             setNumber('');
             setImageUrl(undefined);
@@ -276,18 +304,26 @@ export function GuardThirtyTwoHourPanel({
     </form>
   ) : null;
 
-  const uploadSheet = (
-    <AppFormSheet
-      open={
-        (activationFormOnly?.open ?? false) ||
-        Boolean(addingCatalogId && (editing || staffMode))
-      }
-      onClose={resetForm}
-      title="Add course certificate"
-      subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
-    >
-      {certUploadForm}
-    </AppFormSheet>
+  const catalogPicker = (
+    <ul className="space-y-2">
+      {catalogOptions.map((entry) => (
+        <li key={entry.id}>
+          <button
+            type="button"
+            onClick={() => startAdd(entry.id)}
+            className="w-full flex items-center gap-3 rounded-xl border border-brand-border bg-brand-surface px-4 py-3 text-left hover:border-brand-primary/40 transition-colors"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-brand-text">{entry.name}</p>
+              {entry.description && (
+                <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{entry.description}</p>
+              )}
+            </div>
+            <ChevronRight className="w-4 h-4 shrink-0 text-brand-text-muted" />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 
   if (activationFormOnly) {
@@ -339,87 +375,55 @@ export function GuardThirtyTwoHourPanel({
     );
   }
 
+  const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
+
   return (
-    <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
-      <div>
-        <p className="uber-label flex items-center gap-2 flex-wrap">
-          <BookOpen className="w-4 h-4" strokeWidth={1.5} />
-          32-Hour BSIS Course Block
-        </p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required to work field jobs. Upload all 9 individual course certificates, or a single 32-hour completion
-          certificate if your training provider issued one.
-        </p>
-        <div className="mt-2 space-y-2">
-          <CredentialSectionStatusDisplay status={sectionStatus} />
-          <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-end text-xs">
-          <span className="text-brand-text-muted">{progressPct}%</span>
-        </div>
-        <div className="app-medication-progress">
-          <div className="app-medication-progress-fill" style={{ width: `${progressPct}%` }} />
-        </div>
-      </div>
-
-      {!hasAnyCerts && (
-        <CredentialPathToggle
-          value={uploadPath}
-          onChange={setUploadPath}
-          combinedLabel="Combined certificate"
-          individualLabel="Individual parts"
-        />
-      )}
-
-      {effectivePath === 'combined' ? (
-        <div className="border-t border-brand-border pt-3 space-y-3">
-          <CredentialRowHeader
-            rawTitle
-            title={
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-                32-hour completion certificate
-              </span>
-            }
-            action={
-              <CredentialRowAction
-                staffMode={staffMode}
-                uploadStatus={getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID)}
-                canUpload={canUpload}
-                onAdd={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-              />
-            }
+    <section className="app-form-section space-y-3 pb-5 border-b border-brand-border">
+      <CredentialRowHeader
+        rawTitle
+        title={
+          <p className="uber-label flex items-center gap-2 flex-wrap">
+            <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
+            32-Hour BSIS Course Block
+          </p>
+        }
+        subtitle={
+          <div className="mt-2 space-y-2">
+            <CredentialSectionStatusDisplay status={sectionStatus} />
+            <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
+          </div>
+        }
+        action={
+          <CredentialRowAction
+            staffMode={staffMode}
+            uploadStatus={sectionUploadStatus}
+            canUpload={canUpload}
+            onAdd={openAddFlow}
           />
-          {rollupCerts.length > 0 ? (
-            <div className="app-cert-item-stack !pt-0">
-              {rollupCerts.map((cert) => renderCertRow(cert))}
-            </div>
-          ) : (
-            <p className="text-xs text-brand-text-muted py-2">
-              {rollupEntry?.description ??
-                'Single completion certificate covering all 9 mandatory BSIS courses.'}
-            </p>
-          )}
+        }
+      />
+
+      {listedCerts.length === 0 ? (
+        <div className="border-t border-brand-border py-3">
+          <p className="text-xs text-brand-text-muted">
+            No 32-hour training on file yet.
+            {rollupEntry?.description ? ` ${rollupEntry.description}` : ''}
+          </p>
         </div>
       ) : (
-        <div className="border-t border-brand-border pt-3 space-y-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Individual parts ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
-          </p>
-          {courses.map((course) =>
-            renderCourseRow({
-              catalogId: course.id,
-              label: course.name,
-              subtitle: course.description,
-              uploaded: certsForCatalogId(guard, course.id),
-            })
-          )}
+        <div className="app-cert-item-stack border-t border-brand-border">
+          {listedCerts.map((cert) => renderCertRow(cert))}
         </div>
       )}
 
-      {uploadSheet}
+      <AppFormSheet
+        open={showAddPicker || Boolean(addingCatalogId)}
+        onClose={resetForm}
+        title="Add 32-hour training"
+        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : 'Choose which certificate to upload'}
+      >
+        {addingCatalogId ? certUploadForm : catalogPicker}
+      </AppFormSheet>
     </section>
   );
 }

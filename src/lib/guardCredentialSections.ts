@@ -102,12 +102,12 @@ const SECTION_META: Record<
   },
   'bsis-pta-uof': {
     title: 'Power to Arrest & Appropriate Use of Force',
-    subtitle: 'Required to work — combined 8-hr cert or separate PTA & UOF uploads.',
+    subtitle: 'Required to work field jobs.',
     category: 'bsis-training',
   },
   'bsis-32-hour': {
     title: '32-Hour BSIS Training Block',
-    subtitle: 'Required to work field jobs — all 9 courses or one completion certificate.',
+    subtitle: 'Required to work field jobs.',
     category: 'bsis-training',
   },
   'bsis-refresher': {
