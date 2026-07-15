@@ -809,7 +809,7 @@ export function ClientJobActionsPanel({
             <button
               type="button"
               onClick={() => setViolationOpen(true)}
-              className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
+              className="client-violation-report-btn app-button-outline !w-full !h-9 !text-xs gap-1.5"
             >
               <AlertTriangle className="w-3.5 h-3.5" />
               Report violation
