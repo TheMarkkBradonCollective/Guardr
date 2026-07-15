@@ -13,6 +13,7 @@ import {
   Shield,
   Sparkles,
   Star,
+  TrendingUp,
   Truck,
   UserCheck,
   Wine,
@@ -34,6 +35,8 @@ interface GuardJobPreferencesPanelProps {
   onCompleteOnboarding: (jobType: JobType) => void | Promise<void>;
   saving?: boolean;
 }
+
+type PreferenceFactorStatus = 'very-high' | 'high' | 'moderate' | 'low';
 
 const JOB_TYPE_ICONS: Record<JobType, React.ComponentType<{ className?: string }>> = {
   'nightclub-bar': Wine,
@@ -57,20 +60,90 @@ const OPTION_BY_TYPE = Object.fromEntries(
   JOB_TYPE_PREFERENCE_OPTIONS.map((option) => [option.type, option])
 ) as Record<JobType, JobTypePreferenceOption>;
 
-function JobTypeStatusBadge({
+function preferenceFactorStatus(active: boolean, onboarded: boolean): PreferenceFactorStatus {
+  if (!onboarded) return 'moderate';
+  if (active) return 'very-high';
+  return 'low';
+}
+
+function preferenceStatusLabel(active: boolean, onboarded: boolean): string {
+  if (!onboarded) return 'Setup needed';
+  if (active) return 'Alerts on';
+  return 'Alerts off';
+}
+
+function preferenceFillPercent(active: boolean, onboarded: boolean): number {
+  if (!onboarded) return 28;
+  if (active) return 100;
+  return 0;
+}
+
+function preferenceHeroClass(active: number, total: number): string {
+  if (active >= Math.ceil(total * 0.6)) return 'guard-tier-hero-professional';
+  if (active > 0) return 'guard-tier-hero-rising';
+  return 'guard-tier-hero-starting';
+}
+
+function PreferenceTypeCard({
+  option,
   active,
   onboarded,
+  saving,
+  onboardingBusy,
+  onToggle,
+  onSetup,
 }: {
+  option: JobTypePreferenceOption;
   active: boolean;
   onboarded: boolean;
+  saving: boolean;
+  onboardingBusy: boolean;
+  onToggle: () => void;
+  onSetup: () => void;
 }) {
-  if (!onboarded) {
-    return <span className="guard-pref-badge guard-pref-badge-setup">Setup needed</span>;
-  }
-  if (active) {
-    return <span className="guard-pref-badge guard-pref-badge-on">Alerts on</span>;
-  }
-  return <span className="guard-pref-badge guard-pref-badge-off">Alerts off</span>;
+  const status = preferenceFactorStatus(active, onboarded);
+  const fillPercent = preferenceFillPercent(active, onboarded);
+  const Icon = JOB_TYPE_ICONS[option.type];
+
+  return (
+    <article className={`guard-factor-card guard-pref-factor-card guard-factor-card-${status}`}>
+      <div className="guard-pref-factor-card-head">
+        <Icon className="guard-pref-factor-card-icon" aria-hidden />
+        <p className="guard-factor-card-label">{option.label}</p>
+      </div>
+      <p className="guard-factor-card-rate">{active ? 'On' : onboarded ? 'Off' : '—'}</p>
+      <div className="guard-factor-card-bar" role="presentation" aria-hidden>
+        <div className="guard-factor-card-bar-fill" style={{ width: `${fillPercent}%` }} />
+      </div>
+      <div className="guard-factor-card-footer">
+        <span className="guard-factor-card-points guard-pref-factor-card-desc">{option.description}</span>
+        <span className={`guard-factor-card-status guard-factor-status-${status}`}>
+          <span className="guard-factor-status-dot" />
+          {preferenceStatusLabel(active, onboarded)}
+        </span>
+      </div>
+      <div className="guard-pref-factor-card-actions">
+        {onboarded ? (
+          <AppSwitch
+            checked={active}
+            disabled={saving || onboardingBusy}
+            onChange={onToggle}
+            ariaLabel={`${option.label} job alerts`}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={saving || onboardingBusy}
+            onClick={onSetup}
+            className="guard-pref-factor-setup-btn"
+          >
+            <span>Complete onboarding</span>
+            <ChevronRight className="w-4 h-4 shrink-0" aria-hidden />
+          </button>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export function GuardJobPreferencesPanel({
@@ -91,7 +164,8 @@ export function GuardJobPreferencesPanel({
       isJobTypeOnboarded(guard, option.type)
     ).length;
     const setupNeeded = total - onboarded;
-    return { total, active, onboarded, setupNeeded };
+    const onboardedPercent = total > 0 ? Math.round((onboarded / total) * 100) : 0;
+    return { total, active, onboarded, setupNeeded, onboardedPercent };
   }, [guard, selected]);
 
   const setPreference = (type: JobType, enabled: boolean) => {
@@ -123,113 +197,93 @@ export function GuardJobPreferencesPanel({
 
   return (
     <div className="guard-preferences-panel">
-      <div className="guard-pref-hero">
-        <div className="guard-pref-hero-glow" aria-hidden />
-        <div className="guard-pref-hero-content">
-          <div className="guard-pref-hero-icon-wrap" aria-hidden>
-            <Bell className="guard-pref-hero-icon" />
-          </div>
-          <div className="guard-pref-hero-copy">
-            <p className="guard-pref-hero-eyebrow">Job alerts</p>
-            <h2 className="guard-pref-hero-title">Your alert profile</h2>
-            <div className="guard-pref-hero-subtitle-block">
-              <p className="guard-pref-hero-subtitle">
-                Turn on the job types you want. Complete the read-aloud onboarding once per type, then
-                toggle alerts anytime.
-                {welcomeExpanded ? (
-                  <span className="guard-pref-hero-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
-                ) : null}
-              </p>
-              <button
-                type="button"
-                className="guard-pref-hero-read-more"
-                onClick={() => setWelcomeExpanded((open) => !open)}
-                aria-expanded={welcomeExpanded}
-              >
-                {welcomeExpanded ? 'Read less' : 'Read more'}
-              </button>
-            </div>
+      <div className={`guard-tier-hero guard-pref-tier-hero ${preferenceHeroClass(stats.active, stats.total)}`}>
+        <div className="guard-tier-hero-glow" aria-hidden />
+        <div className="guard-pref-tier-medal" aria-hidden>
+          <div className="guard-pref-tier-medal-ring">
+            <Bell className="guard-pref-tier-medal-icon" />
           </div>
         </div>
-        <div className="guard-pref-stats" role="list">
-          <div className="guard-pref-stat" role="listitem">
-            <span className="guard-pref-stat-value">{stats.active}</span>
-            <span className="guard-pref-stat-label">Active alerts</span>
+        <p className="guard-tier-hero-eyebrow">Alert profile</p>
+        <h2 className="guard-tier-hero-name">Job preferences</h2>
+        <div className="guard-tier-hero-score-row">
+          <span className="guard-tier-hero-score-label">Active alerts</span>
+          <span className="guard-tier-hero-score-value">
+            {stats.active}
+            <span className="guard-pref-hero-score-total"> / {stats.total}</span>
+          </span>
+        </div>
+        <div className="guard-pref-onboard-progress">
+          <div className="guard-tier-progress-track" role="presentation">
+            <div
+              className="guard-tier-progress-fill"
+              style={{ width: `${stats.onboardedPercent}%` }}
+            />
           </div>
-          <div className="guard-pref-stat" role="listitem">
-            <span className="guard-pref-stat-value">{stats.onboarded}</span>
-            <span className="guard-pref-stat-label">Onboarded</span>
-          </div>
-          <div className="guard-pref-stat" role="listitem">
-            <span className="guard-pref-stat-value">{stats.setupNeeded}</span>
-            <span className="guard-pref-stat-label">Setup needed</span>
-          </div>
+          <p className="guard-pref-onboard-progress-hint">
+            <TrendingUp className="guard-tier-progress-hint-icon" aria-hidden />
+            <span>
+              <strong>{stats.onboarded}</strong> of {stats.total} types onboarded
+              {stats.setupNeeded > 0 ? ` · ${stats.setupNeeded} need setup` : ''}
+            </span>
+          </p>
+        </div>
+        <div className="guard-pref-tier-welcome-block">
+          <p className="guard-tier-hero-subtitle">
+            {stats.active > 0
+              ? `Receiving alerts for ${stats.active} job type${stats.active === 1 ? '' : 's'}`
+              : 'Turn on job types you want. Complete read-aloud onboarding once per type.'}
+            {welcomeExpanded ? (
+              <span className="guard-pref-tier-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
+            ) : null}
+          </p>
+          <button
+            type="button"
+            className="guard-pref-hero-read-more"
+            onClick={() => setWelcomeExpanded((open) => !open)}
+            aria-expanded={welcomeExpanded}
+          >
+            {welcomeExpanded ? 'Read less' : 'Read more'}
+          </button>
         </div>
       </div>
 
-      {stats.active === 0 && (
-        <div className="guard-pref-empty-banner">
-          <BellOff className="guard-pref-empty-banner-icon" aria-hidden />
-          <div>
-            <p className="guard-pref-empty-banner-title">No alerts enabled yet</p>
-            <p className="guard-pref-empty-banner-text">
-              Complete onboarding for a job type, then flip the switch to start receiving matching
-              jobs.
-            </p>
+      <div className="guard-pref-body">
+        {stats.active === 0 && (
+          <div className="guard-pref-empty-banner">
+            <BellOff className="guard-pref-empty-banner-icon" aria-hidden />
+            <div>
+              <p className="guard-pref-empty-banner-title">No alerts enabled yet</p>
+              <p className="guard-pref-empty-banner-text">
+                Complete read-aloud onboarding for a job type, then flip the switch to start
+                receiving matching jobs.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="guard-pref-categories">
         {JOB_TYPE_PREFERENCE_CATEGORIES.map((category) => (
-          <section key={category.id} className="guard-pref-category">
-            <header className="guard-pref-category-header">
-              <h3 className="guard-pref-category-title">{category.label}</h3>
-              <p className="guard-pref-category-desc">{category.description}</p>
-            </header>
-            <div className="guard-pref-type-grid">
+          <section key={category.id} className="guard-factors-section guard-pref-category-section">
+            <div className="guard-factors-header">
+              <h3 className="guard-factors-heading">{category.label}</h3>
+              <p className="guard-factors-subheading">{category.description}</p>
+            </div>
+            <div className="guard-factors-grid">
               {category.types.map((type) => {
                 const option = OPTION_BY_TYPE[type];
                 const active = selected.has(type);
                 const onboarded = isJobTypeOnboarded(guard, type);
-                const Icon = JOB_TYPE_ICONS[type];
                 return (
-                  <article
+                  <PreferenceTypeCard
                     key={type}
-                    className={`guard-pref-type-card ${active ? 'guard-pref-type-card-active' : ''} ${
-                      !onboarded ? 'guard-pref-type-card-setup' : ''
-                    }`}
-                  >
-                    <div className="guard-pref-type-card-top">
-                      <div className="guard-pref-type-icon-wrap" aria-hidden>
-                        <Icon className="guard-pref-type-icon" />
-                      </div>
-                      <div className="guard-pref-type-copy">
-                        <div className="guard-pref-type-title-row">
-                          <p className="guard-pref-type-title">{option.label}</p>
-                          <JobTypeStatusBadge active={active} onboarded={onboarded} />
-                        </div>
-                        <p className="guard-pref-type-desc">{option.description}</p>
-                      </div>
-                      <AppSwitch
-                        checked={active}
-                        disabled={saving || onboardingBusy}
-                        onChange={() => handleToggle(type)}
-                        ariaLabel={`${option.label} job alerts`}
-                      />
-                    </div>
-                    {!onboarded && (
-                      <button
-                        type="button"
-                        disabled={saving || onboardingBusy}
-                        onClick={() => setOnboardingType(type)}
-                        className="guard-pref-setup-btn"
-                      >
-                        <span>Complete onboarding to enable</span>
-                        <ChevronRight className="w-4 h-4 shrink-0" aria-hidden />
-                      </button>
-                    )}
-                  </article>
+                    option={option}
+                    active={active}
+                    onboarded={onboarded}
+                    saving={saving}
+                    onboardingBusy={onboardingBusy}
+                    onToggle={() => handleToggle(type)}
+                    onSetup={() => setOnboardingType(type)}
+                  />
                 );
               })}
             </div>

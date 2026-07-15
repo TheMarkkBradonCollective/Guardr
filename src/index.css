@@ -14881,7 +14881,7 @@ html.theme-grey .landing-wordmark {
 .availability-calendar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0;
 }
 
 .availability-calendar-header {
@@ -14901,7 +14901,7 @@ html.theme-grey .landing-wordmark {
   display: flex;
   justify-content: space-between;
   gap: 0.45rem;
-  padding: 0.25rem 0;
+  padding: 0.25rem 1rem 0.5rem;
 }
 
 .availability-day-circle {
@@ -14941,8 +14941,8 @@ html.theme-grey .landing-wordmark {
 }
 
 .availability-day-off-btn {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.6875rem;
+  font-weight: 800;
   color: var(--status-danger);
   background: none;
   border: none;
@@ -15012,50 +15012,70 @@ html.theme-grey .landing-wordmark {
 }
 
 .availability-off-note {
-  margin: 0;
+  margin: 0 1rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--brand-text-muted);
   padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-app);
-  background: var(--brand-bg-sec);
+  border-radius: var(--radius-app-lg);
+  border: 1px dashed var(--brand-border);
+  background: var(--brand-surface);
 }
 
 .availability-save-row {
   display: flex;
   justify-content: flex-end;
+  padding: 0.25rem 1rem 1rem;
 }
 
 .availability-dates-panel {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .availability-dates-header {
+  margin-bottom: 0;
+}
+
+.availability-dates-title-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .availability-date-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: 0.65rem;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .availability-date-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--brand-text-muted);
 }
 
-.availability-date-field:first-child {
-  grid-column: 1 / -1;
+.availability-dates-empty {
+  margin: 0;
+}
+
+.availability-off-day-card {
+  width: 100%;
+}
+
+.availability-off-day-value {
+  font-size: 1.35rem;
+}
+
+.availability-dates-save-row {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .availability-date-list {
@@ -15123,101 +15143,173 @@ html.theme-grey .landing-wordmark {
 .guard-preferences-screen {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0;
+}
+
+.guard-preferences-screen .guard-pref-crew-section {
+  margin: 0 1rem 1rem;
 }
 
 .guard-preferences-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0;
 }
 
-.guard-pref-hero {
+.guard-pref-tier-hero,
+.guard-availability-tier-hero {
+  border-radius: var(--radius-app-xl) var(--radius-app-xl) 0 0;
+}
+
+.guard-pref-tier-medal {
   position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-app-xl);
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
-  background:
-    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--brand-primary) 18%, transparent), transparent 55%),
-    linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface)), var(--brand-surface));
-  padding: 1.1rem 1.15rem 1rem;
-}
-
-.guard-pref-hero-glow {
-  position: absolute;
-  inset: -30% auto auto -20%;
-  width: 12rem;
-  height: 12rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--brand-primary) 16%, transparent);
-  filter: blur(28px);
-  pointer-events: none;
-}
-
-.guard-pref-hero-content {
-  position: relative;
-  display: flex;
-  gap: 0.85rem;
-  align-items: flex-start;
-}
-
-.guard-pref-hero-icon-wrap {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.9rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  width: 4rem;
+  height: 4.5rem;
+  margin: 0 auto 0.75rem;
+  z-index: 1;
+}
+
+.guard-pref-tier-medal-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+.guard-pref-tier-medal-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: #fff;
+}
+
+.guard-pref-hero-score-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.guard-pref-onboard-progress {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 18rem;
+  margin: 0.85rem auto 0;
+}
+
+.guard-pref-onboard-progress .guard-tier-progress-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.guard-pref-onboard-progress .guard-tier-progress-fill {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.65));
+}
+
+.guard-pref-onboard-progress-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.guard-pref-body {
+  background: var(--brand-bg-sec);
+  padding-bottom: 0.5rem;
+}
+
+.guard-pref-category-section {
+  padding-bottom: 0.25rem;
+}
+
+.guard-pref-factor-card {
+  min-height: 100%;
+}
+
+.guard-pref-factor-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.guard-pref-factor-card-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--brand-primary);
   flex-shrink: 0;
 }
 
-.guard-pref-hero-icon {
-  width: 1.35rem;
-  height: 1.35rem;
-  color: var(--brand-primary);
+.guard-pref-factor-card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
-.guard-pref-hero-copy {
-  min-width: 0;
-}
-
-.guard-pref-hero-eyebrow {
-  margin: 0;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brand-primary);
-}
-
-.guard-pref-hero-title {
-  margin: 0.2rem 0 0;
-  font-size: 1.25rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: var(--brand-text);
-}
-
-.guard-pref-hero-subtitle {
-  margin: 0.45rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--brand-text-muted);
-}
-
-.guard-pref-hero-subtitle-block {
+.guard-pref-factor-card-actions {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--brand-border);
 }
 
-.guard-pref-hero-subtitle-block .guard-pref-hero-subtitle {
+.guard-pref-factor-setup-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-bg-sec));
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.guard-pref-factor-setup-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+}
+
+.guard-pref-factor-setup-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.guard-pref-tier-welcome-block {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+  margin: 0.65rem auto 0;
+}
+
+.guard-pref-tier-welcome-block .guard-tier-hero-subtitle {
   margin-top: 0;
 }
 
-.guard-pref-hero-welcome {
-  color: var(--brand-text);
+.guard-pref-tier-welcome {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .guard-pref-hero-read-more {
@@ -15227,53 +15319,78 @@ html.theme-grey .landing-wordmark {
   background: none;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--brand-primary);
+  color: rgba(255, 255, 255, 0.92);
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
 }
 
 .guard-pref-hero-read-more:hover {
-  color: color-mix(in srgb, var(--brand-primary) 80%, var(--brand-text));
+  color: #fff;
 }
 
-.guard-pref-stats {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-  margin-top: 1rem;
-  padding-top: 0.95rem;
-  border-top: 1px solid color-mix(in srgb, var(--brand-primary) 14%, var(--brand-border));
-}
-
-.guard-pref-stat {
+.guard-availability-screen {
   display: flex;
   flex-direction: column;
+  gap: 0;
+}
+
+.availability-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.availability-body {
+  padding-top: 0.25rem;
+}
+
+.availability-days-section {
+  padding-bottom: 0.5rem;
+}
+
+.availability-day-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 0 1rem 0.75rem;
+}
+
+.availability-day-card {
+  gap: 0.55rem;
+}
+
+.availability-day-card-head {
+  display: flex;
   align-items: center;
-  gap: 0.15rem;
-  text-align: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.guard-pref-stat-value {
+.availability-day-card-hours {
   font-size: 1.35rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--brand-text);
 }
 
-.guard-pref-stat-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--brand-text-muted);
+.availability-day-card-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.availability-day-card-footer {
+  margin-top: 0.15rem;
+}
+
+.availability-dates-wrap {
+  padding: 0.5rem 1rem 1rem;
+  border-top: 1px solid var(--brand-border);
 }
 
 .guard-pref-empty-banner {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+  margin: 0 1rem 0.75rem;
   padding: 0.85rem 0.95rem;
   border-radius: var(--radius-app-lg);
   border: 1px dashed color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
@@ -15300,167 +15417,6 @@ html.theme-grey .landing-wordmark {
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--brand-text-muted);
-}
-
-.guard-pref-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 1.35rem;
-}
-
-.guard-pref-category-header {
-  margin-bottom: 0.65rem;
-}
-
-.guard-pref-category-title {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 800;
-  color: var(--brand-text);
-}
-
-.guard-pref-category-desc {
-  margin: 0.2rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--brand-text-muted);
-}
-
-.guard-pref-type-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.65rem;
-}
-
-.guard-pref-type-card {
-  border-radius: var(--radius-app-lg);
-  border: 1px solid var(--brand-border);
-  background: var(--brand-surface);
-  padding: 0.9rem 0.95rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.guard-pref-type-card:hover {
-  border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--brand-border));
-}
-
-.guard-pref-type-card-active {
-  border-color: color-mix(in srgb, var(--brand-primary) 42%, var(--brand-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 10%, transparent);
-  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-surface));
-}
-
-.guard-pref-type-card-setup {
-  border-style: dashed;
-}
-
-.guard-pref-type-card-top {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.guard-pref-type-icon-wrap {
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
-  flex-shrink: 0;
-}
-
-.guard-pref-type-card-active .guard-pref-type-icon-wrap {
-  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
-  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
-}
-
-.guard-pref-type-icon {
-  width: 1.1rem;
-  height: 1.1rem;
-  color: var(--brand-primary);
-}
-
-.guard-pref-type-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.guard-pref-type-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 0.55rem;
-}
-
-.guard-pref-type-title {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--brand-text);
-}
-
-.guard-pref-type-desc {
-  margin: 0.3rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: var(--brand-text-muted);
-}
-
-.guard-pref-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.12rem 0.45rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.guard-pref-badge-on {
-  color: var(--status-success);
-  background: color-mix(in srgb, var(--status-success) 12%, transparent);
-}
-
-.guard-pref-badge-off {
-  color: var(--brand-text-muted);
-  background: color-mix(in srgb, var(--brand-text-muted) 12%, transparent);
-}
-
-.guard-pref-badge-setup {
-  color: var(--status-warning, #b45309);
-  background: color-mix(in srgb, var(--status-warning, #f59e0b) 14%, transparent);
-}
-
-.guard-pref-setup-btn {
-  width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  border-radius: 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
-  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-bg-sec));
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--brand-primary);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.guard-pref-setup-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
-  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-}
-
-.guard-pref-setup-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .guard-pref-crew-section {

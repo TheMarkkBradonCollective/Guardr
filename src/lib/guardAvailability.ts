@@ -266,21 +266,17 @@ export interface AvailabilityWindow {
   isAvailable: boolean;
 }
 
-/** Windows for a calendar day — date overrides take precedence over weekly slots. */
+/** Windows for a calendar day — off-day overrides block the date; weekly slots apply otherwise. */
 export function windowsForDate(
   schedule: GuardAvailabilitySchedule,
   date: Date
 ): AvailabilityWindow[] {
   const dateKey = formatLocalDateKey(date);
   const overrides = schedule.dateOverrides.filter((o) => o.date === dateKey);
-  if (overrides.length > 0) {
-    return overrides
-      .filter((o) => o.isAvailable)
-      .map((o) => ({ startTime: o.startTime, endTime: o.endTime, isAvailable: true }));
-  }
 
-  const blocked = overrides.some((o) => !o.isAvailable);
-  if (blocked) return [];
+  if (overrides.some((o) => !o.isAvailable)) {
+    return [];
+  }
 
   const dayOfWeek = date.getDay();
   return schedule.weeklySlots
@@ -331,6 +327,11 @@ export function guardAvailabilityBlockReason(
   if (guardIsAvailableForJob(guardId, job, schedule)) return null;
   const resolved = schedule ?? loadGuardAvailabilitySchedule(guardId);
   const jobStart = new Date(job.startDate);
+  const dateKey = formatLocalDateKey(jobStart);
+  const offDay = resolved.dateOverrides.some((o) => o.date === dateKey && !o.isAvailable);
+  if (offDay) {
+    return `Marked unavailable on ${dayLabelFull(jobStart.getDay())}`;
+  }
   const day = jobStart.getDay();
   const windows = windowsForDate(resolved, jobStart);
   if (!windows.length) {
@@ -356,4 +357,24 @@ export function createDateOverride(input: {
     isAvailable: input.isAvailable ?? true,
     notes: input.notes,
   };
+}
+
+/** One-off day off that overrides the weekly schedule for that calendar date. */
+export function createOffDayOverride(input: {
+  guardId: string;
+  date: string;
+  notes?: string;
+}): GuardAvailabilityDateOverride {
+  return createDateOverride({
+    guardId: input.guardId,
+    date: input.date,
+    startTime: '00:00',
+    endTime: '23:59',
+    isAvailable: false,
+    notes: input.notes,
+  });
+}
+
+export function isOffDayOverride(override: GuardAvailabilityDateOverride): boolean {
+  return !override.isAvailable;
 }
