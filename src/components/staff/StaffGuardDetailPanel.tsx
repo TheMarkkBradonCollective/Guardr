@@ -83,6 +83,7 @@ interface StaffGuardDetailPanelProps {
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (trusted: boolean) => void | Promise<void>;
+  onMakeCrewLead?: () => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -131,6 +132,7 @@ export function StaffGuardDetailPanel({
   onApproveGuardAccount,
   onRejectGuardApplication,
   onSetGuardTrusted,
+  onMakeCrewLead,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -324,6 +326,11 @@ export function StaffGuardDetailPanel({
       : await confirmMarkGuardTrusted(guard.name);
     if (!confirmed) return;
     await onSetGuardTrusted(!guard.trusted);
+  };
+
+  const handleMakeCrewLead = async () => {
+    if (!onMakeCrewLead) return;
+    await onMakeCrewLead();
   };
 
   const handleUpdateUserStatus = async (status: 'active' | 'suspended' | 'blocked') => {
@@ -681,6 +688,20 @@ export function StaffGuardDetailPanel({
                   title="Guard must be approved and active before they can be marked as trusted."
                 >
                   Mark as trusted
+                </button>
+              )}
+              {onMakeCrewLead && (
+                <button
+                  type="button"
+                  onClick={() => void handleMakeCrewLead()}
+                  className="app-button-outline app-btn-sm"
+                  title={
+                    guard.trusted
+                      ? 'Initialize this guard as a standing crew lead'
+                      : 'Guard must be trusted before they can lead a team'
+                  }
+                >
+                  Make crew lead
                 </button>
               )}
             </div>

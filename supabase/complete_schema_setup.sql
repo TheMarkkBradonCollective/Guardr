@@ -1079,6 +1079,27 @@ CREATE INDEX IF NOT EXISTS idx_standing_crew_member
 COMMENT ON TABLE guard_standing_crew_members IS
   'Persistent roster a trusted guard maintains across jobs; pending until member accepts';
 
+-- ── CREW LEAD REQUESTS (trusted guards requesting to lead their own crew) ─────
+CREATE TABLE IF NOT EXISTS guard_crew_join_requests (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'declined')),
+  message TEXT,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ,
+  resolved_by_staff_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (guard_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_crew_join_requests_status
+  ON guard_crew_join_requests (status, requested_at DESC);
+
+COMMENT ON TABLE guard_crew_join_requests IS
+  'Trusted guards without their own crew can request staff approval to become a crew lead';
+
 -- ── USER NOTIFICATION INBOX ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_notifications (
   id TEXT PRIMARY KEY,
@@ -1288,6 +1309,7 @@ ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_public_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_crew_join_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
 
 DO $$
@@ -1302,7 +1324,7 @@ BEGIN
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
     'user_legal_acceptances', 'guard_insurance_policies', 'company_public_documents',
-    'guard_standing_crew_members', 'user_notifications'
+    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NULL THEN
@@ -1348,7 +1370,7 @@ BEGIN
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
     'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots',
-    'guard_standing_crew_members', 'user_notifications'
+    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN

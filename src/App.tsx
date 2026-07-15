@@ -35,6 +35,7 @@ import {
   AssignmentMode,
   DifferentialPayRates,
   GuardStandingCrewMember,
+  GuardCrewJoinRequest,
   UserNotification,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
@@ -233,6 +234,15 @@ import {
   inviteToStandingCrew,
   removeStandingCrewMember,
 } from './lib/guardStandingCrew';
+import {
+  approveCrewLeadRequest,
+  canRequestCrewLead,
+  declineCrewLeadRequest,
+  getPendingCrewLeadRequest,
+  makeGuardCrewLeadProfile,
+  submitCrewLeadRequest,
+} from './lib/guardCrewJoinRequest';
+import { loadCrewJoinRequests, persistCrewJoinRequest } from './lib/crewJoinRequestStore';
 import {
   markAllNotificationsRead,
   markNotificationClicked,
@@ -615,6 +625,7 @@ export default function App() {
   );
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
+  const [crewJoinRequests, setCrewJoinRequests] = useState<GuardCrewJoinRequest[]>([]);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -1572,6 +1583,7 @@ export default function App() {
   useEffect(() => {
     if (isDbConnected) return;
     void loadStandingCrewMembers(false).then(setStandingCrewMembers);
+    void loadCrewJoinRequests(false).then(setCrewJoinRequests);
   }, [isDbConnected]);
 
   // ── Active guard identity ──────────────────────────────────
@@ -2310,6 +2322,13 @@ export default function App() {
         setStandingCrewMembers(crewRows);
       } catch (crewErr) {
         console.warn('Standing crew load (run migration if missing):', crewErr);
+      }
+
+      try {
+        const joinRequestRows = await loadCrewJoinRequests(true);
+        setCrewJoinRequests(joinRequestRows);
+      } catch (joinErr) {
+        console.warn('Crew join requests load (run migration if missing):', joinErr);
       }
 
       setIsDbConnected(true);
@@ -8454,6 +8473,133 @@ export default function App() {
     appToast('Guard removed from your standing crew.', 'success');
   };
 
+  const handleRequestCrewLead = async () => {
+    const result = submitCrewLeadRequest(crewJoinRequests, activeGuard, standingCrewMembers);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setCrewJoinRequests(result.requests);
+    await persistCrewJoinRequest(result.request, isDbConnected);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'crew_lead_request',
+        title: 'Crew lead request',
+        body: `${activeGuard.name} requested approval to lead their own standing crew.`,
+        url: '/staff/crews',
+      });
+    }
+    appToast('Request sent to Guardr staff to lead your own crew.', 'success');
+  };
+
+  const applyGuardCrewLeadProfile = async (guardId: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) return { error: 'Guard not found.' } as const;
+    const result = makeGuardCrewLeadProfile(guard, standingCrewMembers);
+    if ('error' in result) return result;
+    const { standingCrewName, standingCrewDescription } = result;
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId ? { ...g, standingCrewName, standingCrewDescription } : g
+      )
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          standing_crew_name: standingCrewName,
+          standing_crew_description: standingCrewDescription,
+        })
+        .eq('id', guardId);
+      if (error) return { error: 'Could not set crew lead profile.' } as const;
+    }
+    return { standingCrewName, standingCrewDescription, guard } as const;
+  };
+
+  const handleStaffApproveCrewLeadRequest = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to manage crew lead requests.', 'error');
+      return;
+    }
+    const request = crewJoinRequests.find((r) => r.id === requestId);
+    if (!request) return;
+    const applied = await applyGuardCrewLeadProfile(request.guardId);
+    if ('error' in applied) {
+      appToast(applied.error, 'error');
+      return;
+    }
+    const approval = approveCrewLeadRequest(crewJoinRequests, requestId, currentUser.id);
+    if ('error' in approval) {
+      appToast(approval.error, 'error');
+      return;
+    }
+    setCrewJoinRequests(approval.requests);
+    await persistCrewJoinRequest(approval.request, isDbConnected);
+    void reportPushEvent(currentUser, {
+      type: 'guard_trusted_status',
+      recipientUserId: request.guardId,
+      guardId: request.guardId,
+      title: 'You are approved as a crew lead',
+      body: `Your standing crew profile is ready as "${applied.standingCrewName}". Invite members from your Crew hub.`,
+      url: '/guard/crew',
+    });
+    appToast(`${applied.guard.name} is now set up as a crew lead.`, 'success');
+  };
+
+  const handleStaffDeclineCrewLeadRequest = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to manage crew lead requests.', 'error');
+      return;
+    }
+    const declined = declineCrewLeadRequest(crewJoinRequests, requestId, currentUser.id);
+    if ('error' in declined) {
+      appToast(declined.error, 'error');
+      return;
+    }
+    setCrewJoinRequests(declined.requests);
+    await persistCrewJoinRequest(declined.request, isDbConnected);
+    const requester = guards.find((g) => g.id === declined.request.guardId);
+    if (requester) {
+      void reportPushEvent(currentUser, {
+        type: 'crew_lead_request',
+        recipientUserId: requester.id,
+        title: 'Crew lead request declined',
+        body: 'Guardr staff declined your crew lead request. You can join another crew with a crew code or submit a new request.',
+        url: '/guard/crew',
+      });
+    }
+    appToast('Crew lead request declined.', 'info');
+  };
+
+  const handleMakeGuardCrewLead = async (guardId: string) => {
+    if (!currentUser || !canManageGuards(currentUser)) {
+      appToast('You do not have permission to manage guard crews.', 'error');
+      return;
+    }
+    const applied = await applyGuardCrewLeadProfile(guardId);
+    if ('error' in applied) {
+      appToast(applied.error, 'error');
+      return;
+    }
+    const pending = getPendingCrewLeadRequest(crewJoinRequests, guardId);
+    if (pending) {
+      const approval = approveCrewLeadRequest(crewJoinRequests, pending.id, currentUser.id);
+      if (!('error' in approval)) {
+        setCrewJoinRequests(approval.requests);
+        await persistCrewJoinRequest(approval.request, isDbConnected);
+      }
+    }
+    void reportPushEvent(currentUser, {
+      type: 'guard_trusted_status',
+      recipientUserId: guardId,
+      guardId,
+      title: 'You are set up as a crew lead',
+      body: `Your standing crew profile is ready as "${applied.standingCrewName}". Invite members from your Crew hub.`,
+      url: '/guard/crew',
+    });
+    appToast(`${applied.guard.name} is now set up as a crew lead.`, 'success');
+  };
+
   const handleNotificationClick = async (notification: UserNotification) => {
     if (!currentUser) return;
     const next = markNotificationClicked(userNotifications, notification.id);
@@ -11302,6 +11448,8 @@ export default function App() {
           onRemoveStandingCrew={handleRemoveStandingCrew}
           onAcceptStandingCrewInvite={handleAcceptStandingCrewInvite}
           onDeclineStandingCrewInvite={handleDeclineStandingCrewInvite}
+          onRequestCrewLead={handleRequestCrewLead}
+          crewJoinRequests={crewJoinRequests}
           requests={guardJobs}
           allRequests={requests}
           payments={guardPayouts}
@@ -11707,9 +11855,13 @@ export default function App() {
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}
           standingCrewMembers={standingCrewMembers}
+          crewJoinRequests={crewJoinRequests}
           onApproveCrewMember={handleStaffApproveCrewMember}
           onDenyCrewMember={handleStaffDenyCrewMember}
           onRemoveCrewMember={handleStaffRemoveFromCrew}
+          onApproveCrewLeadRequest={handleStaffApproveCrewLeadRequest}
+          onDeclineCrewLeadRequest={handleStaffDeclineCrewLeadRequest}
+          onMakeGuardCrewLead={handleMakeGuardCrewLead}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

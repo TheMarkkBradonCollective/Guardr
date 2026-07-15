@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GuardStandingCrewMember, SecurityGuard, SecurityRequest } from '../../types';
+import { GuardCrewJoinRequest, GuardStandingCrewMember, SecurityGuard, SecurityRequest } from '../../types';
 import {
   getStaffCrewListings,
   type StaffCrewListing,
@@ -9,6 +9,7 @@ import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewOutgoing,
 } from '../../lib/guardStandingCrew';
+import { getPendingCrewLeadRequests } from '../../lib/guardCrewJoinRequest';
 import { formatShiftRange } from '../../lib/dates';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
@@ -48,6 +49,7 @@ interface StaffGuardCrewsPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   standingCrewMembers?: GuardStandingCrewMember[];
+  crewJoinRequests?: GuardCrewJoinRequest[];
   canManage?: boolean;
   selectedJobId?: string | null;
   onSelectedJobIdChange?: (jobId: string | null) => void;
@@ -57,12 +59,15 @@ interface StaffGuardCrewsPanelProps {
   onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
 }
 
 export function StaffGuardCrewsPanel({
   requests,
   guards,
   standingCrewMembers = [],
+  crewJoinRequests = [],
   canManage = false,
   selectedJobId: controlledSelectedJobId,
   onSelectedJobIdChange,
@@ -72,11 +77,14 @@ export function StaffGuardCrewsPanel({
   onApproveCrewMember,
   onDenyCrewMember,
   onRemoveCrewMember,
+  onApproveCrewLeadRequest,
+  onDeclineCrewLeadRequest,
 }: StaffGuardCrewsPanelProps) {
   const [view, setView] = useState<CrewView>('standing');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CrewFilter>('all');
   const [selectedStandingLeadId, setSelectedStandingLeadId] = useState<string | null>(null);
+  const [resolvingRequestId, setResolvingRequestId] = useState<string | null>(null);
   const [internalSelectedJobId, setInternalSelectedJobId] = useState<string | null>(initialSelectedJobId);
   const isControlled = controlledSelectedJobId !== undefined;
   const selectedJobId = isControlled ? controlledSelectedJobId : internalSelectedJobId;
@@ -127,6 +135,11 @@ export function StaffGuardCrewsPanel({
       );
     });
   }, [trustedGuards, search]);
+
+  const pendingLeadRequests = useMemo(
+    () => getPendingCrewLeadRequests(crewJoinRequests),
+    [crewJoinRequests]
+  );
 
   const { showDetailOnly: showJobDetailOnly } = useSplitListDetail(selectedJobId, 'page');
   const { showDetailOnly: showStandingDetailOnly } = useSplitListDetail(selectedStandingLeadId, 'page');
@@ -257,6 +270,84 @@ export function StaffGuardCrewsPanel({
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
         <>
+          {pendingLeadRequests.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-brand-text">Crew lead requests</h2>
+                <WfBadge tone="warning">{pendingLeadRequests.length} pending</WfBadge>
+              </div>
+              <div className="space-y-2">
+                {pendingLeadRequests.map((request) => {
+                  const requester = guards.find((g) => g.id === request.guardId);
+                  if (!requester) return null;
+                  return (
+                    <div
+                      key={request.id}
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <ProfileAvatar src={requester.avatar} name={requester.name} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-brand-text">{requester.name}</p>
+                          <p className="text-xs text-brand-text-muted">
+                            Trusted guard · wants to lead their own crew
+                            {requester.badgeNumber ? ` · Badge ${requester.badgeNumber}` : ''}
+                          </p>
+                          {request.message && (
+                            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed whitespace-pre-wrap">
+                              {request.message}
+                            </p>
+                          )}
+                          <p className="text-xs text-brand-text-muted mt-1">
+                            Requested {new Date(request.requestedAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      {canManage && (onApproveCrewLeadRequest || onDeclineCrewLeadRequest) && (
+                        <div className="flex flex-wrap gap-2">
+                          {onApproveCrewLeadRequest && (
+                            <button
+                              type="button"
+                              className="app-button-primary app-btn-sm"
+                              disabled={resolvingRequestId === request.id}
+                              onClick={async () => {
+                                setResolvingRequestId(request.id);
+                                try {
+                                  await onApproveCrewLeadRequest(request.id);
+                                } finally {
+                                  setResolvingRequestId(null);
+                                }
+                              }}
+                            >
+                              {resolvingRequestId === request.id ? 'Approving…' : 'Make crew lead'}
+                            </button>
+                          )}
+                          {onDeclineCrewLeadRequest && (
+                            <button
+                              type="button"
+                              className="app-button-outline app-btn-sm text-red-400 border-red-500/30"
+                              disabled={resolvingRequestId === request.id}
+                              onClick={async () => {
+                                setResolvingRequestId(request.id);
+                                try {
+                                  await onDeclineCrewLeadRequest(request.id);
+                                } finally {
+                                  setResolvingRequestId(null);
+                                }
+                              }}
+                            >
+                              Decline
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {!showStandingDetailOnly && (
             <>
               <WfSearchBar

@@ -78,6 +78,7 @@ import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
+import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -110,6 +111,7 @@ interface StaffDashboardProps {
   clients: Client[];
   requests: SecurityRequest[];
   standingCrewMembers?: GuardStandingCrewMember[];
+  crewJoinRequests?: import('../types').GuardCrewJoinRequest[];
   supportTickets?: SupportTicket[];
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -164,6 +166,9 @@ interface StaffDashboardProps {
   onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onMakeGuardCrewLead?: (guardId: string) => void | Promise<void>;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -281,6 +286,7 @@ export function StaffDashboard({
   clients,
   requests,
   standingCrewMembers = [],
+  crewJoinRequests = [],
   supportTickets = [],
   jobChatThreads = [],
   jobChatMessages = [],
@@ -321,6 +327,9 @@ export function StaffDashboard({
   onApproveCrewMember,
   onDenyCrewMember,
   onRemoveCrewMember,
+  onApproveCrewLeadRequest,
+  onDeclineCrewLeadRequest,
+  onMakeGuardCrewLead,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onMakeGuardPayoutAvailable,
@@ -541,9 +550,9 @@ export function StaffDashboard({
       support: openTicketCount(supportTickets),
       messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
-      crews: countStaffCrewsNeedingReview(requests),
+      crews: countStaffCrewsNeedingReview(requests) + countPendingCrewLeadRequests(crewJoinRequests),
     }),
-    [guards, stats, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
+    [guards, stats, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests]
   );
 
   const renderSection = () => {
@@ -700,6 +709,7 @@ export function StaffDashboard({
               canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined
             }
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
+            onMakeCrewLead={canManageGuardAccounts ? onMakeGuardCrewLead : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
@@ -750,6 +760,7 @@ export function StaffDashboard({
             requests={requests}
             guards={guards}
             standingCrewMembers={standingCrewMembers}
+            crewJoinRequests={crewJoinRequests}
             canManage={canReviewJobs}
             selectedJobId={internalCrewJobId}
             onSelectedJobIdChange={setInternalCrewJobId}
@@ -758,6 +769,8 @@ export function StaffDashboard({
             onApproveCrewMember={canReviewJobs ? onApproveCrewMember : undefined}
             onDenyCrewMember={canReviewJobs ? onDenyCrewMember : undefined}
             onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
+            onApproveCrewLeadRequest={canReviewJobs ? onApproveCrewLeadRequest : undefined}
+            onDeclineCrewLeadRequest={canReviewJobs ? onDeclineCrewLeadRequest : undefined}
           />
         );
       case 'clients':

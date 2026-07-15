@@ -30,6 +30,16 @@ export function getPendingStandingCrewIncoming(
   return members.filter((m) => m.memberGuardId === memberGuardId && m.status === 'pending');
 }
 
+export function guardIsMemberOfStandingCrew(
+  members: GuardStandingCrewMember[],
+  guardId: string
+): boolean {
+  return members.some(
+    (m) =>
+      m.memberGuardId === guardId && (m.status === 'active' || m.status === 'pending')
+  );
+}
+
 export function guardAlreadyOnStandingCrew(
   members: GuardStandingCrewMember[],
   leadGuardId: string,
@@ -58,6 +68,24 @@ export function inviteToStandingCrew(
   if (guardAlreadyOnStandingCrew(members, lead.id, memberGuardId)) {
     return { error: 'That guard is already on your crew or has a pending invite.' };
   }
+  if (
+    members.some(
+      (m) =>
+        m.memberGuardId === memberGuardId &&
+        m.leadGuardId !== lead.id &&
+        (m.status === 'pending' || m.status === 'active')
+    )
+  ) {
+    return { error: 'That guard is already on another standing crew.' };
+  }
+  if (
+    members.some(
+      (m) =>
+        m.leadGuardId === memberGuardId && (m.status === 'pending' || m.status === 'active')
+    )
+  ) {
+    return { error: 'That guard already leads their own standing crew.' };
+  }
   const invitedAt = now.toISOString();
   const invite: GuardStandingCrewMember = {
     id: standingCrewMemberId(lead.id, memberGuardId),
@@ -81,6 +109,15 @@ export function acceptStandingCrewInvite(
   }
   if (row.status !== 'pending') {
     return { error: 'This invitation is no longer pending.' };
+  }
+  const otherCrew = members.find(
+    (m) =>
+      m.memberGuardId === memberGuardId &&
+      m.id !== inviteId &&
+      (m.status === 'active' || m.status === 'pending')
+  );
+  if (otherCrew) {
+    return { error: 'You can only be on one standing crew at a time. Leave your current crew first.' };
   }
   const respondedAt = now.toISOString();
   const next = members.map((m) =>
@@ -128,16 +165,25 @@ export function removeStandingCrewMember(
   };
 }
 
-/** Team codes in Settings are for independent guards joining a job crew — not trusted leads or standing roster members. */
+export function guardLeadsOwnStandingCrew(
+  guard: SecurityGuard,
+  members: GuardStandingCrewMember[]
+): boolean {
+  if (guard.standingCrewName?.trim()) return true;
+  return members.some(
+    (m) =>
+      m.leadGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
+  );
+}
+
+/** Crew codes are only for guards not already tied to a standing crew (as lead or member). */
 export function shouldOfferTeamCodeJoin(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[]
 ): boolean {
-  if (isGuardTrusted(guard)) return false;
-  return !standingCrewMembers.some(
-    (m) =>
-      m.memberGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
-  );
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
+  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) return false;
+  return true;
 }
 
 export function listActiveGuardsForStandingCrewInvite(
@@ -151,6 +197,8 @@ export function listActiveGuardsForStandingCrewInvite(
     .filter((g) => {
       if (g.id === leadId) return false;
       if (g.userStatus !== 'active' || !g.verified) return false;
+      if (guardLeadsOwnStandingCrew(g, members)) return false;
+      if (guardIsMemberOfStandingCrew(members, g.id)) return false;
       if (guardAlreadyOnStandingCrew(members, leadId, g.id)) return false;
       if (!q) return true;
       return (
