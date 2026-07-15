@@ -128,6 +128,15 @@ export function checkJobRequirements(
     });
   }
 
+  const minYears = job.minYearsExperience ?? 0;
+  if (minYears > 0) {
+    const years = guard.yearsExperience ?? 0;
+    checks.push({
+      label: `${minYears}+ years experience required`,
+      met: years >= minYears,
+    });
+  }
+
   checks.push(
     {
       label: '8-hour PTA & UOF (combined cert or separate PTA + UOF)',

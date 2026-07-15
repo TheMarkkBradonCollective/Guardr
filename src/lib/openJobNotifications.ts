@@ -6,16 +6,19 @@ import type {
 } from '../types';
 import { reportPushEvent } from './pushApi';
 import { findPriorityCrewLeadsForJob } from './priorityCrewNotify';
+import { guardMatchesJobPreferences } from './guardJobPreferences';
 
 /** Notify trusted crew leads first, then broadcast to all guards. */
 export function notifyOpenJobToGuards(
   actor: SessionUser,
-  job: Pick<SecurityRequest, 'id' | 'title' | 'location' | 'guardsNeeded'>,
+  job: Pick<SecurityRequest, 'id' | 'title' | 'location' | 'guardsNeeded' | 'type'>,
   guards: SecurityGuard[],
   standingCrewMembers: GuardStandingCrewMember[]
 ): void {
   const needed = Math.max(1, job.guardsNeeded ?? 1);
-  const leads = findPriorityCrewLeadsForJob(job, guards, standingCrewMembers);
+  const leads = findPriorityCrewLeadsForJob(job, guards, standingCrewMembers).filter(({ guard }) =>
+    guardMatchesJobPreferences(guard, job)
+  );
 
   for (const { guard, crewSize } of leads) {
     void reportPushEvent(actor, {

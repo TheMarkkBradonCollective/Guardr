@@ -12,6 +12,9 @@ import {
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
+import { ASSIGNMENT_MODE_OPTIONS } from '../../lib/assignmentMode';
+import { activeClientLocations } from '../../lib/clientLocations';
+import type { AssignmentMode, ClientLocation, DifferentialPayRates } from '../../types';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
@@ -47,6 +50,9 @@ interface RequestSecurityFlowProps {
   onSubmit: (req: Partial<SecurityRequest>) => void;
   guards?: SecurityGuard[];
   favoriteGuardIds?: string[];
+  clientLocations?: ClientLocation[];
+  clientId?: string;
+  defaultAssignmentMode?: AssignmentMode;
 }
 
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
@@ -58,6 +64,9 @@ export function RequestSecurityFlow({
   onSubmit,
   guards = [],
   favoriteGuardIds = [],
+  clientLocations = [],
+  clientId,
+  defaultAssignmentMode = 'client-approve',
 }: RequestSecurityFlowProps) {
   const defaultStart = useMemo(() => {
     if (preset === 'schedule' || preset === 'recurring') {
@@ -88,6 +97,11 @@ export function RequestSecurityFlow({
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
+  const [useTierPay, setUseTierPay] = useState(false);
+  const [tierPayRates, setTierPayRates] = useState<DifferentialPayRates>({});
+  const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>(defaultAssignmentMode);
+  const [minYearsExperience, setMinYearsExperience] = useState(0);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [pricingMode, setPricingMode] = useState<PricingMode>('standard');
   const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
   const [openingMessage, setOpeningMessage] = useState('');
@@ -142,6 +156,8 @@ export function RequestSecurityFlow({
 
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
   const title = resolveJobTitle(jobTitle, serviceId);
+  const savedLocations = clientId ? activeClientLocations(clientLocations, clientId) : [];
+  const selectedLocation = savedLocations.find((l) => l.id === selectedLocationId);
 
   const selectService = (id: ClientServiceId) => {
     setServiceSkipped(false);
@@ -223,6 +239,11 @@ export function RequestSecurityFlow({
           ? new Date(`${recurringEndDate}T23:59:59`).toISOString()
           : undefined,
       recurringDays: scheduleType === 'recurring' && recurringDays.length ? recurringDays : undefined,
+      assignmentMode,
+      minYearsExperience: minYearsExperience > 0 ? minYearsExperience : undefined,
+      clientLocationId: selectedLocationId ?? undefined,
+      locationRiskLevel: selectedLocation?.riskLevel,
+      tierPayRates: useTierPay ? tierPayRates : undefined,
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
@@ -377,6 +398,32 @@ export function RequestSecurityFlow({
                 className="uber-input rounded-xl"
               />
             </div>
+            {savedLocations.length > 0 && (
+              <div>
+                <label className="uber-label block mb-1.5">My Locations (optional)</label>
+                <select
+                  className="uber-select w-full rounded-xl"
+                  value={selectedLocationId ?? ''}
+                  onChange={(e) => {
+                    const id = e.target.value || null;
+                    setSelectedLocationId(id);
+                    const loc = savedLocations.find((l) => l.id === id);
+                    if (loc) {
+                      setAddress(loc.address);
+                      if (loc.state) setJobState(loc.state);
+                      if (!siteName.trim()) setSiteName(loc.name);
+                    }
+                  }}
+                >
+                  <option value="">Enter a new address</option>
+                  {savedLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name} — {loc.riskLevel} risk
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <JobLocationCoordsFields
               ref={coordsFieldsRef}
               latitude={latitude}
@@ -606,25 +653,81 @@ export function RequestSecurityFlow({
                 )}
               </div>
             )}
+
+            <div className="space-y-3 pt-2 border-t border-brand-border">
+              <p className="uber-label">How should guards be placed?</p>
+              <div className="grid grid-cols-1 gap-2">
+                {ASSIGNMENT_MODE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setAssignmentMode(opt.id)}
+                    className={`wf-list-card text-left transition-all ${
+                      assignmentMode === opt.id ? '!border-brand-primary bg-brand-primary/8' : ''
+                    }`}
+                  >
+                    <p className="font-bold text-sm">{opt.label}</p>
+                    <p className="text-xs text-brand-text-muted mt-0.5">{opt.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {step === 5 && (
-          <OpenContractRateStep
-            feeConfig={feeConfig}
-            durationHours={durationHours}
-            guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
-            pricingMode={pricingMode}
-            onPricingModeChange={setPricingMode}
-            hourlyRate={hourlyRate}
-            onHourlyRateChange={setHourlyRate}
-            customRate={customRate}
-            onCustomRateChange={setCustomRate}
-            agreementFeeConfig={agreementFeeConfig}
-            onAgreementFeeConfigChange={setAgreementFeeConfig}
-            openingMessage={openingMessage}
-            onOpeningMessageChange={setOpeningMessage}
-          />
+          <div className="space-y-5">
+            <OpenContractRateStep
+              feeConfig={feeConfig}
+              durationHours={durationHours}
+              guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
+              pricingMode={pricingMode}
+              onPricingModeChange={setPricingMode}
+              hourlyRate={hourlyRate}
+              onHourlyRateChange={setHourlyRate}
+              customRate={customRate}
+              onCustomRateChange={setCustomRate}
+              agreementFeeConfig={agreementFeeConfig}
+              onAgreementFeeConfigChange={setAgreementFeeConfig}
+              openingMessage={openingMessage}
+              onOpeningMessageChange={setOpeningMessage}
+            />
+            <div className="rounded-2xl border border-brand-border p-4 space-y-3">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={useTierPay}
+                  onChange={(e) => setUseTierPay(e.target.checked)}
+                />
+                Differential pay by armed status
+              </label>
+              {useTierPay && (
+                <div className="grid grid-cols-1 gap-3">
+                  {([
+                    ['unarmed', 'Unarmed ($/hr)'],
+                    ['lightArmed', 'Light armed ($/hr)'],
+                    ['armed', 'Armed ($/hr)'],
+                  ] as const).map(([key, label]) => (
+                    <div key={key}>
+                      <label className="uber-label block mb-1">{label}</label>
+                      <input
+                        type="number"
+                        min={20}
+                        className="uber-input rounded-xl"
+                        value={tierPayRates[key] ?? ''}
+                        onChange={(e) =>
+                          setTierPayRates((prev) => ({
+                            ...prev,
+                            [key]: Math.max(20, parseInt(e.target.value, 10) || 20),
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {step === 6 && (
@@ -634,6 +737,8 @@ export function RequestSecurityFlow({
             jobState={jobState}
             minGuardQualification={minGuardQualification}
             onMinQualificationChange={setMinGuardQualification}
+            minYearsExperience={minYearsExperience}
+            onMinYearsExperienceChange={setMinYearsExperience}
           />
         )}
 

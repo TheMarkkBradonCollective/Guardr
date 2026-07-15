@@ -30,6 +30,8 @@ import {
 } from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
+import { PostOrdersAckPanel } from './guard/PostOrdersAckPanel';
+import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
 import { activeReplacementOffers } from '../lib/emergencyReplacement';
@@ -162,6 +164,8 @@ interface GuardDashboardProps {
   ) => void | Promise<void>;
   onAcceptPriceOffer?: (requestId: string, offerId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
+  onAckPostOrders?: (requestId: string) => void | Promise<void>;
+  onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onStartEnRoute?: (requestId: string) => void | Promise<void>;
   onUpdateGuardLiveLocation?: (
@@ -279,6 +283,8 @@ export function GuardDashboard({
   onAcceptPriceOffer,
   coworkerGuards = [],
   onUpdateJobAudit,
+  onAckPostOrders,
+  onSaveJobPreferences,
   onStartEnRoute,
   onUpdateGuardLiveLocation,
   onAcceptReplacementOffer,
@@ -1123,6 +1129,17 @@ export function GuardDashboard({
         />
       )}
 
+      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && activeShiftRequest &&
+        jobRequiresPostOrdersAck(activeShiftRequest, guard.id) && onAckPostOrders && (
+        <div className="absolute inset-x-4 top-24 z-[1003] map-browse-offset">
+          <PostOrdersAckPanel
+            job={activeShiftRequest}
+            guardId={guard.id}
+            onAcknowledge={() => onAckPostOrders(activeShiftRequest.id)}
+          />
+        </div>
+      )}
+
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
         <GuardActiveShift
           job={activeShiftJob}
@@ -1400,6 +1417,8 @@ export function GuardDashboard({
                   themeMode={themeMode as 'dark' | 'light' | 'grey'}
                   onChangeTheme={onChangeTheme}
                   onOpenLegal={onOpenLegal}
+                  guard={guard}
+                  onSaveJobPreferences={onSaveJobPreferences}
                   onJoinTeamWithCode={
                     shouldOfferTeamCodeJoin(guard, standingCrewMembers)
                       ? onJoinTeamWithCode

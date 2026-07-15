@@ -19,15 +19,9 @@ export function getOpenJobsWithApplications(requests: SecurityRequest[]): Securi
     );
 }
 
-/** Open jobs where staff still picks an applicant (not awaiting client or already sent). */
-export function jobNeedsStaffApplicationReview(request: SecurityRequest): boolean {
-  return (
-    request.status === 'open' &&
-    !request.assignedGuardId &&
-    !request.pendingGuardId &&
-    !request.staffApprovedGuardAt &&
-    (request.applicants?.length ?? 0) > 0
-  );
+/** Open jobs no longer require staff to pick applicants — client or first-to-accept handles placement. */
+export function jobNeedsStaffApplicationReview(_request: SecurityRequest): boolean {
+  return false;
 }
 
 export function getJobsNeedingStaffApplicationReview(requests: SecurityRequest[]): SecurityRequest[] {

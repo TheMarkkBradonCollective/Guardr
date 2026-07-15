@@ -54,6 +54,8 @@ ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_guard_card_status_check;
 ALTER TABLE guards ADD CONSTRAINT guards_guard_card_status_check
   CHECK (guard_card_status IS NULL OR guard_card_status IN ('active', 'in_progress', 'none'));
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_weapon_gear JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_equipment_gear JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_preferences JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';
@@ -210,6 +212,7 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS how_heard_about_us TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_prior_security_service BOOLEAN;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAULT 'client-approve';
 
 UPDATE clients SET favorite_guard_ids = '[]'::jsonb WHERE favorite_guard_ids IS NULL;
 UPDATE guards SET trusted = FALSE WHERE trusted IS NULL;
@@ -357,6 +360,12 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guards_needed INTEGER DEF
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_type TEXT DEFAULT 'one-time';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_end_date TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_days INTEGER[];
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS assignment_mode TEXT DEFAULT 'client-approve';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS min_years_experience INTEGER;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_location_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS location_risk_level TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tier_pay_rates JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS post_orders_acknowledgments JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS uniform_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS equipment_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_instructions TEXT DEFAULT '';
@@ -1491,6 +1500,25 @@ CREATE TABLE IF NOT EXISTS guard_availability (
 );
 
 CREATE INDEX IF NOT EXISTS idx_guard_availability_guard_id ON guard_availability(guard_id);
+
+CREATE TABLE IF NOT EXISTS client_locations (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected')),
+  site_instructions TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_locations_client ON client_locations(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_locations_status ON client_locations(status);
 
 CREATE TABLE IF NOT EXISTS recurring_shift_templates (
   id TEXT PRIMARY KEY,

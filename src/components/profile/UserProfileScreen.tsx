@@ -100,6 +100,7 @@ export function UserProfileScreen({
     availabilityNotes: guard?.availabilityNotes ?? '',
     hourlyRateRequirement: guard?.hourlyRateRequirement,
     listedWeaponGear: guard?.listedWeaponGear ?? [],
+    listedEquipmentGear: guard?.listedEquipmentGear ?? [],
   });
 
   useEffect(() => {
@@ -128,6 +129,8 @@ export function UserProfileScreen({
       yearsExperience: guard?.yearsExperience,
       availabilityNotes: guard?.availabilityNotes ?? '',
       hourlyRateRequirement: guard?.hourlyRateRequirement,
+      listedWeaponGear: guard?.listedWeaponGear ?? [],
+      listedEquipmentGear: guard?.listedEquipmentGear ?? [],
     });
   }, [currentUser, guard, client]);
 

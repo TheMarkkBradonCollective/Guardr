@@ -14,6 +14,8 @@ interface JobCertRequirementsPickerProps {
   jobState?: string;
   minGuardQualification: MinGuardQualification;
   onMinQualificationChange: (level: MinGuardQualification) => void;
+  minYearsExperience?: number;
+  onMinYearsExperienceChange?: (years: number) => void;
 }
 
 export function JobCertRequirementsPicker({
@@ -22,6 +24,8 @@ export function JobCertRequirementsPicker({
   jobState,
   minGuardQualification,
   onMinQualificationChange,
+  minYearsExperience = 0,
+  onMinYearsExperienceChange,
 }: JobCertRequirementsPickerProps) {
   const toggle = (id: string) => {
     if (selected.includes(id)) {
@@ -63,6 +67,21 @@ export function JobCertRequirementsPicker({
           })}
         </div>
       </div>
+
+      {onMinYearsExperienceChange && (
+        <div>
+          <p className="text-sm font-semibold mb-1.5">Minimum years of experience</p>
+          <input
+            type="number"
+            min={0}
+            max={40}
+            value={minYearsExperience || ''}
+            onChange={(e) => onMinYearsExperienceChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            className="uber-input rounded-xl w-full"
+            placeholder="0 = no minimum"
+          />
+        </div>
+      )}
 
       <div>
         <p className="text-sm font-semibold mb-2">Additional requirements (if applicable)</p>

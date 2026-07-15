@@ -29,6 +29,11 @@ import {
   ClientMessage,
   GuardInsurancePolicy,
   GuardWeaponGearId,
+  GuardEquipmentGearId,
+  JobType,
+  ClientLocation,
+  AssignmentMode,
+  DifferentialPayRates,
   GuardStandingCrewMember,
   UserNotification,
 } from './types';
@@ -350,6 +355,12 @@ import {
 import { reportPushEvent } from './lib/pushApi';
 import { evaluateCheckInEscalation, checkInEscalationDedupKey } from './lib/checkInEscalation';
 import { notifyOpenJobToGuards } from './lib/openJobNotifications';
+import { jobUsesFirstToAccept } from './lib/assignmentMode';
+import { appendPostOrdersAck, jobRequiresPostOrdersAck } from './lib/postOrdersAck';
+import { resolveGuardPayForJob } from './lib/differentialPay';
+import { approveClientLocation, rejectClientLocation } from './lib/clientLocations';
+import { normalizeJobTypePreferences } from './lib/guardJobPreferences';
+import { normalizeListedEquipmentGear } from './lib/guardEquipmentGear';
 import {
   notifyAccountUpdate,
   notifyGuardAppliedToJob,
@@ -591,6 +602,7 @@ export default function App() {
   );
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
+  const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
@@ -1793,6 +1805,13 @@ export default function App() {
         listedWeaponGear: parseJsonStringArray(g.listed_weapon_gear).filter((value): value is GuardWeaponGearId =>
           ['flashlight', 'oc-spray', 'baton', 'handcuffs', 'taser', 'firearm'].includes(value)
         ),
+        listedEquipmentGear: parseJsonStringArray(g.listed_equipment_gear).filter(
+          (value): value is GuardEquipmentGearId => value === 'body-cam' || value === 'walkie-talkie'
+        ),
+        jobTypePreferences: parseJsonStringArray(g.job_type_preferences).filter(
+          (value): value is JobType =>
+            ['event', 'patrol', 'armed-escort', 'bodyguard', 'asset-protection', 'long-term', 'other'].includes(value)
+        ),
         backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
         hourlyRateRequirement: g.hourly_rate_requirement,
@@ -1905,8 +1924,32 @@ export default function App() {
         specialRequirements: c.special_requirements ?? undefined,
         trusted: c.trusted === true,
         favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
+        defaultAssignmentMode:
+          c.default_assignment_mode === 'first-to-accept' ? 'first-to-accept' : 'client-approve',
       };
       }));
+
+      const { data: dbLocations, error: locationsErr } = await supabase.from('client_locations').select('*');
+      if (locationsErr && locationsErr.code !== '42P01') {
+        console.warn('Client locations load:', locationsErr);
+      }
+      setClientLocations(
+        (dbLocations ?? []).map((row: any) => ({
+          id: row.id,
+          clientId: row.client_id,
+          name: row.name,
+          address: row.address,
+          state: row.state ?? undefined,
+          latitude: row.latitude != null ? Number(row.latitude) : undefined,
+          longitude: row.longitude != null ? Number(row.longitude) : undefined,
+          riskLevel: row.risk_level === 'high' || row.risk_level === 'low' ? row.risk_level : 'medium',
+          status: row.status === 'active' || row.status === 'rejected' ? row.status : 'pending',
+          siteInstructions: row.site_instructions ?? undefined,
+          createdAt: row.created_at ?? undefined,
+          reviewedAt: row.reviewed_at ?? undefined,
+          reviewedBy: row.reviewed_by ?? undefined,
+        }))
+      );
 
       setIsDbConnected(true);
 
@@ -1945,6 +1988,20 @@ export default function App() {
           scheduleType: r.schedule_type === 'recurring' ? 'recurring' : 'one-time',
           recurringEndDate: r.recurring_end_date ?? undefined,
           recurringDays: Array.isArray(r.recurring_days) ? r.recurring_days : undefined,
+          assignmentMode:
+            r.assignment_mode === 'first-to-accept' ? 'first-to-accept' : 'client-approve',
+          minYearsExperience: r.min_years_experience ?? undefined,
+          clientLocationId: r.client_location_id ?? undefined,
+          locationRiskLevel:
+            r.location_risk_level === 'high' || r.location_risk_level === 'low'
+              ? r.location_risk_level
+              : r.location_risk_level === 'medium'
+                ? 'medium'
+                : undefined,
+          tierPayRates: r.tier_pay_rates ?? undefined,
+          postOrdersAcknowledgments: Array.isArray(r.post_orders_acknowledgments)
+            ? r.post_orders_acknowledgments
+            : [],
           durationHours: r.duration_hours,
           hourlyRate: r.hourly_rate,
           scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
@@ -4226,6 +4283,8 @@ export default function App() {
           availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
           listed_weapon_gear: payload.listedWeaponGear ?? [],
+          listed_equipment_gear: payload.listedEquipmentGear ?? [],
+          job_type_preferences: payload.jobTypePreferences ?? [],
           is_armed: payload.listedWeaponGear?.includes('firearm') ?? previous.isArmed,
         });
       }
@@ -4915,6 +4974,81 @@ export default function App() {
     }
   };
 
+  const handleSaveClientLocation = async (location: ClientLocation) => {
+    setClientLocations((prev) => {
+      const existing = prev.find((l) => l.id === location.id);
+      return existing ? prev.map((l) => (l.id === location.id ? location : l)) : [location, ...prev];
+    });
+    if (isDbConnected) {
+      const { error } = await supabase.from('client_locations').upsert({
+        id: location.id,
+        client_id: location.clientId,
+        name: location.name,
+        address: location.address,
+        state: location.state ?? null,
+        latitude: location.latitude ?? null,
+        longitude: location.longitude ?? null,
+        risk_level: location.riskLevel,
+        status: location.status,
+        site_instructions: location.siteInstructions ?? null,
+        created_at: location.createdAt ?? new Date().toISOString(),
+        reviewed_at: location.reviewedAt ?? null,
+        reviewed_by: location.reviewedBy ?? null,
+      });
+      if (error) {
+        console.error('Client location save error:', error);
+        showAppToast('Could not save location.', { tone: 'error' });
+      }
+    }
+  };
+
+  const handleApproveClientLocation = async (locationId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) return;
+    const existing = clientLocations.find((l) => l.id === locationId);
+    if (!existing) return;
+    const next = approveClientLocation(existing, currentUser);
+    await handleSaveClientLocation(next);
+    showAppToast('Location approved.', { tone: 'success' });
+  };
+
+  const handleRejectClientLocation = async (locationId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) return;
+    const existing = clientLocations.find((l) => l.id === locationId);
+    if (!existing) return;
+    const next = rejectClientLocation(existing, currentUser);
+    await handleSaveClientLocation(next);
+    showAppToast('Location rejected.', { tone: 'info' });
+  };
+
+  const handleAckPostOrders = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || !activeGuardId) return;
+    const acks = appendPostOrdersAck(job.postOrdersAcknowledgments, activeGuardId);
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, postOrdersAcknowledgments: acks } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ post_orders_acknowledgments: acks })
+        .eq('id', requestId);
+    }
+    showAppToast('Post orders acknowledged.', { tone: 'success' });
+  };
+
+  const handleSaveGuardJobPreferences = async (guardId: string, preferences: JobType[]) => {
+    const normalized = normalizeJobTypePreferences(preferences);
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, jobTypePreferences: normalized } : g))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('guards')
+        .update({ job_type_preferences: normalized })
+        .eq('id', guardId);
+    }
+  };
+
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
     payload: {
@@ -5459,6 +5593,12 @@ export default function App() {
       scheduleType: newRequest.scheduleType ?? 'one-time',
       recurringEndDate: newRequest.recurringEndDate,
       recurringDays: newRequest.recurringDays,
+      assignmentMode: newRequest.assignmentMode ?? clientRecord?.defaultAssignmentMode ?? 'client-approve',
+      minYearsExperience: newRequest.minYearsExperience,
+      clientLocationId: newRequest.clientLocationId,
+      locationRiskLevel: newRequest.locationRiskLevel,
+      tierPayRates: newRequest.tierPayRates,
+      postOrdersAcknowledgments: [],
       durationHours, hourlyRate, guardPay,
       platformFeePerHour,
       pricingMode,
@@ -5549,6 +5689,12 @@ export default function App() {
           schedule_type: freshJob.scheduleType ?? 'one-time',
           recurring_end_date: freshJob.recurringEndDate ?? null,
           recurring_days: freshJob.recurringDays ?? null,
+          assignment_mode: freshJob.assignmentMode ?? 'client-approve',
+          min_years_experience: freshJob.minYearsExperience ?? null,
+          client_location_id: freshJob.clientLocationId ?? null,
+          location_risk_level: freshJob.locationRiskLevel ?? null,
+          tier_pay_rates: freshJob.tierPayRates ?? null,
+          post_orders_acknowledgments: freshJob.postOrdersAcknowledgments ?? [],
           duration_hours: freshJob.durationHours, hourly_rate: freshJob.hourlyRate,
           guard_pay: freshJob.guardPay, platform_fee_per_hour: freshJob.platformFeePerHour,
           pricing_mode: freshJob.pricingMode ?? 'standard',
@@ -7666,6 +7812,7 @@ export default function App() {
       return false;
     }
     const nextApplicants = [...new Set([...job.applicants, guardId])];
+    const resolvedGuardPay = resolveGuardPayForJob(job, guard);
     const previousRequest = job;
     const acceptedJob: SecurityRequest = {
       ...job,
@@ -7674,6 +7821,7 @@ export default function App() {
       pendingGuardId: undefined,
       staffApprovedGuardAt: undefined,
       applicants: nextApplicants,
+      guardPay: resolvedGuardPay,
     };
     setRequests((prev) => prev.map((r) => (r.id === requestId ? acceptedJob : r)));
     if (isDbConnected) {
@@ -7685,6 +7833,7 @@ export default function App() {
           pending_guard_id: null,
           staff_approved_guard_at: null,
           applicants: nextApplicants,
+          guard_pay: resolvedGuardPay,
         })
         .eq('id', requestId);
       if (error) {
@@ -8701,6 +8850,20 @@ export default function App() {
       appToast('You already applied for this job. Awaiting client confirmation.', 'error');
       return;
     }
+
+    const clientRecord = clients.find((c) => c.id === job.clientId);
+    if (jobUsesFirstToAccept(job, clientRecord)) {
+      if (job.assignedGuardId) {
+        appToast('Another guard already picked up this job.', 'error');
+        return;
+      }
+      const assigned = await assignGuardToJob(requestId, activeGuardId);
+      if (assigned) {
+        appToast('You got the job — first qualified guard wins.', 'success');
+      }
+      return;
+    }
+
     if (isOpenContractPricing(job.pricingMode)) {
       const agreed = getAgreedPriceOffer(
         getGuardNegotiation(job.priceNegotiations, activeGuardId)
@@ -9071,6 +9234,10 @@ export default function App() {
       const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
       if (workBlocked) {
         appToast(workBlocked, 'error');
+        return;
+      }
+      if (jobRequiresPostOrdersAck(req, activeGuardId)) {
+        appToast('Review and acknowledge post orders before clocking in.', 'error');
         return;
       }
       if (!canGuardClockIn(req)) {
@@ -10995,6 +11162,8 @@ export default function App() {
           }
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
           onUpdateJobAudit={handleUpdateJobAudit}
+          onAckPostOrders={handleAckPostOrders}
+          onSaveJobPreferences={(prefs) => handleSaveGuardJobPreferences(activeGuardId, prefs)}
           onStartEnRoute={handleStartEnRoute}
           onUpdateGuardLiveLocation={handleUpdateGuardLiveLocation}
           onAcceptReplacementOffer={(requestId) =>
@@ -11218,6 +11387,9 @@ export default function App() {
               crewSettings={platformSettings}
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}
+              clientLocations={clientLocations}
+              onSaveClientLocation={handleSaveClientLocation}
+              clientRecord={clientRecord}
               paymentGates={clientPaymentGatesMemo}
               feeConfig={platformSettings.feeConfig}
               currentUser={currentUser}

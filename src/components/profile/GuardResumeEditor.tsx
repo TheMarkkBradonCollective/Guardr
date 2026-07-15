@@ -6,6 +6,8 @@ import {
   GuardInsurancePolicy,
   GUARD_SPECIALTY_OPTIONS,
   GuardWeaponGearId,
+  GuardEquipmentGearId,
+  JobType,
   SecurityGuard,
 } from '../../types';
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
@@ -16,6 +18,7 @@ import {
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardWeaponGearPanel } from './GuardWeaponGearPanel';
+import { GuardEquipmentGearPanel } from './GuardEquipmentGearPanel';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -31,6 +34,8 @@ export interface GuardResumeSavePayload {
   availabilityNotes: string;
   hourlyRateRequirement?: number;
   listedWeaponGear?: GuardWeaponGearId[];
+  listedEquipmentGear?: GuardEquipmentGearId[];
+  jobTypePreferences?: JobType[];
 }
 
 interface GuardResumeEditorProps {
@@ -318,6 +323,13 @@ export function GuardResumeEditor({
         editing={editing}
         selected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
         onChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
+      />
+
+      <GuardEquipmentGearPanel
+        guard={guard}
+        editing={editing}
+        selected={payload.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+        onChange={(listedEquipmentGear) => onChange({ listedEquipmentGear })}
       />
 
       <AppFormSheet
