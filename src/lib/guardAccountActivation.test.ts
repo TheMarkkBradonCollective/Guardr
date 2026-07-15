@@ -4,6 +4,7 @@ import type { SecurityGuard } from '../types';
 import {
   getGuardActivationChecklist,
   getApprovedGuardsAwaitingActivation,
+  getGuardPendingCredentialPillLabels,
   getGuardRosterAccountBadges,
   getGuardRosterAccountLabel,
   getPendingGuardAccountReviews,
@@ -185,15 +186,23 @@ describe('guard account activation gates', () => {
     assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
   });
 
-  it('shows Approved + Restricted roster badges when credential expiry enforcement applied', () => {
+  it('shows Approved + Restricted + pending credential pills when expiry restricted', () => {
     const guard = baseGuard({
       userStatus: 'approved',
+      verified: true,
       credentialExpiryRestricted: true,
+      idVerificationStatus: 'verified',
+      idState: 'CA',
+      idNumber: 'ID123',
+      idExpiryDate: '2020-01-01',
+      idFrontUrl: 'front',
+      idBackUrl: 'back',
+      idSelfieUrl: 'selfie',
     });
     const badges = getGuardRosterAccountBadges(guard);
-    assert.equal(badges.length, 2);
     assert.equal(badges[0]?.label, 'Approved');
     assert.equal(badges[1]?.label, GUARD_CREDENTIAL_RESTRICTED_LABEL);
+    assert.ok(badges.some((badge) => badge.label === 'Pending: Government ID'));
     assert.equal(getGuardRosterAccountLabel(guard), 'Approved');
     assert.equal(guardActivationSummaryLabel(guard), 'Restricted — required credential expired');
   });
@@ -206,11 +215,14 @@ describe('guard account activation gates', () => {
     assert.equal(badges[1]?.label, 'Active');
   });
 
-  it('shows Approved + Pending roster badges for approved guards awaiting work credentials', () => {
+  it('shows Approved plus specific pending credential pills for approved guards', () => {
     const guard = baseGuard({ userStatus: 'approved', verified: true });
     const badges = getGuardRosterAccountBadges(guard);
-    assert.equal(badges.length, 2);
+    const pendingLabels = getGuardPendingCredentialPillLabels(guard);
     assert.equal(badges[0]?.label, 'Approved');
-    assert.equal(badges[1]?.label, 'Pending');
+    assert.ok(pendingLabels.length > 0);
+    assert.ok(pendingLabels.every((label) => label.startsWith('Pending: ')));
+    assert.ok(badges.some((badge) => badge.label === 'Pending: Government ID'));
+    assert.ok(badges.some((badge) => badge.label === 'Pending: BSIS Guard Card'));
   });
 });

@@ -56,7 +56,6 @@ import {
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
-import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 
@@ -565,7 +564,6 @@ export function StaffGuardDetailPanel({
           {!guard.isStaff && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <GuardRosterStatusBadges guard={guard} className="shrink-0" />
-              <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
             </div>
           )}
         </div>

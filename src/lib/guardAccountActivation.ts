@@ -31,7 +31,9 @@ import {
 import {
   GUARD_CREDENTIAL_RESTRICTED_LABEL,
   isGuardCredentialExpiryRestricted,
+  listExpiredCredentialsForEnforcement,
 } from './guardCredentialExpiryEnforcement';
+import { getGuardApplicationCredentialSteps } from './guardApplicationCredentialSteps';
 import {
   getGuardUserStatus,
   isGuardAccountApproved,
@@ -318,7 +320,36 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
 }
 
 /** Staff guard roster — approved guards also show marketplace / restriction state. */
-export const GUARD_AWAITING_WORK_CREDENTIALS_LABEL = 'Pending';
+export const PENDING_CREDENTIAL_PILL_PREFIX = 'Pending: ';
+
+export function formatPendingCredentialPillLabel(credentialLabel: string): string {
+  return `${PENDING_CREDENTIAL_PILL_PREFIX}${credentialLabel}`;
+}
+
+/** Short pill labels for credentials still missing, submitted, or awaiting re-upload. */
+export function getGuardPendingCredentialPillLabels(guard: SecurityGuard, state = 'CA'): string[] {
+  if (guard.isStaff) return [];
+
+  if (isGuardCredentialExpiryRestricted(guard)) {
+    return listExpiredCredentialsForEnforcement(guard, state)
+      .filter((item) => item.blocksWork)
+      .map((item) => formatPendingCredentialPillLabel(item.label));
+  }
+
+  const status = getGuardUserStatus(guard);
+  if (status !== 'approved' && status !== 'pending') return [];
+
+  return getGuardApplicationCredentialSteps(guard)
+    .filter((step) => step.status !== 'verified')
+    .map((step) => formatPendingCredentialPillLabel(step.label));
+}
+
+function pendingCredentialBadges(guard: SecurityGuard, state = 'CA'): GuardRosterAccountBadge[] {
+  return getGuardPendingCredentialPillLabels(guard, state).map((label) => ({
+    label,
+    tone: 'warning' as const,
+  }));
+}
 
 export type GuardRosterAccountBadge = {
   label: string;
@@ -345,16 +376,18 @@ export function getGuardRosterAccountBadges(guard: SecurityGuard): GuardRosterAc
 
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
+    const pendingCredentialPills = pendingCredentialBadges(guard);
     if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) {
-      return [{ label: GUARD_USER_STATUS_LABELS.pending, tone: 'warning' }];
+      return [{ label: GUARD_USER_STATUS_LABELS.pending, tone: 'warning' }, ...pendingCredentialPills];
     }
-    return [{ label: 'Application in progress', tone: 'default' }];
+    return [{ label: 'Application in progress', tone: 'default' }, ...pendingCredentialPills];
   }
 
   if (isGuardCredentialExpiryRestricted(guard)) {
     return [
       { label: GUARD_USER_STATUS_LABELS.approved, tone: 'primary' },
       { label: GUARD_CREDENTIAL_RESTRICTED_LABEL, tone: 'danger' },
+      ...pendingCredentialBadges(guard),
     ];
   }
 
@@ -368,7 +401,7 @@ export function getGuardRosterAccountBadges(guard: SecurityGuard): GuardRosterAc
   if (status === 'approved') {
     return [
       { label: GUARD_USER_STATUS_LABELS.approved, tone: 'primary' },
-      { label: GUARD_AWAITING_WORK_CREDENTIALS_LABEL, tone: 'warning' },
+      ...pendingCredentialBadges(guard),
     ];
   }
 
