@@ -3,7 +3,7 @@ import { Certification, SecurityGuard } from '../../types';
 import { getGuardCredentialViewSections } from '../../lib/guardCredentialSections';
 import { CertItemCard } from './CertItemCard';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { Award, BookOpen, Shield } from 'lucide-react';
+import { AppDashboardZone, AppItemCardStack } from '../ui/app/AppPrimitives';
 
 interface GuardCredentialsViewProps {
   guard: SecurityGuard;
@@ -19,12 +19,6 @@ interface GuardCredentialsViewProps {
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   renderCertActions?: (cert: Certification) => React.ReactNode;
   className?: string;
-}
-
-function sectionIcon(sectionId: string) {
-  if (sectionId === 'guard-card') return Shield;
-  if (sectionId.startsWith('bsis-')) return BookOpen;
-  return Award;
 }
 
 export function GuardCredentialsView({
@@ -48,56 +42,45 @@ export function GuardCredentialsView({
   const displayName = guardName ?? guard.name;
 
   if (sections.length === 0) {
-    return <p className="text-sm text-brand-text-muted">No credentials on file.</p>;
+    return <p className="text-sm text-brand-text-muted px-5">No credentials on file.</p>;
   }
 
   return (
-    <div className={`guard-credentials-view ${className}`.trim()}>
-      {sections.map((section) => {
-        const Icon = sectionIcon(section.id);
-        return (
-          <section key={section.id} className="credential-view-section">
-            <div className="credential-view-section-header">
-              <div className="flex items-start gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-brand-primary" strokeWidth={1.75} />
+    <div className={`guard-credentials-view space-y-2 ${className}`.trim()}>
+      {sections.map((section) => (
+        <AppDashboardZone
+          key={section.id}
+          title={section.certs.length > 0 ? `${section.title} (${section.certs.length})` : section.title}
+        >
+          {section.subtitle && (
+            <p className="text-xs text-brand-text-muted mb-3 leading-relaxed -mt-1">{section.subtitle}</p>
+          )}
+          <AppItemCardStack className="app-cert-item-stack !gap-0 !pt-0">
+            {section.certs.length > 0 ? (
+              section.certs.map((cert) => (
+                <div key={cert.id} className="app-cert-item-wrap">
+                  <CertItemCard
+                    cert={cert}
+                    guardName={displayName}
+                    compact={compact}
+                    editing={editing}
+                    showCategory={showCategoryOnCards}
+                    onDelete={onDeleteCertification ? () => onDeleteCertification(cert.id) : undefined}
+                    onAttachImage={
+                      onAttachCertificationImage
+                        ? (imageUrl) => onAttachCertificationImage(cert.id, imageUrl)
+                        : undefined
+                    }
+                  />
+                  {renderCertActions?.(cert)}
                 </div>
-                <div className="min-w-0">
-                  <h3>{section.title}</h3>
-                  {section.subtitle && (
-                    <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{section.subtitle}</p>
-                  )}
-                </div>
-              </div>
-              <span className="credential-view-section-count">{section.certs.length}</span>
-            </div>
-            <div className="app-cert-item-stack !pt-0 !gap-2">
-              {section.certs.length > 0 ? (
-                section.certs.map((cert) => (
-                  <div key={cert.id} className="space-y-2">
-                    <CertItemCard
-                      cert={cert}
-                      guardName={displayName}
-                      compact={compact}
-                      editing={editing}
-                      showCategory={showCategoryOnCards}
-                      onDelete={onDeleteCertification ? () => onDeleteCertification(cert.id) : undefined}
-                      onAttachImage={
-                        onAttachCertificationImage
-                          ? (imageUrl) => onAttachCertificationImage(cert.id, imageUrl)
-                          : undefined
-                      }
-                    />
-                    {renderCertActions?.(cert)}
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-brand-text-muted py-2">Nothing on file yet.</p>
-              )}
-            </div>
-          </section>
-        );
-      })}
+              ))
+            ) : (
+              <p className="text-xs text-brand-text-muted py-2">Nothing on file yet.</p>
+            )}
+          </AppItemCardStack>
+        </AppDashboardZone>
+      ))}
     </div>
   );
 }

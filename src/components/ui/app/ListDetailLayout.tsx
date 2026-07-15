@@ -77,10 +77,8 @@ export function ListDetailLayout<T>({
             })}
           </AppItemCardStack>
         </div>
-        <div className="split-detail-pane min-h-0">
-          <div className={`split-detail-pane-body ${detailClassName}`}>
-            {selected ? renderDetail(selected) : emptyDetail}
-          </div>
+        <div className={`split-detail-pane min-h-0 ${detailClassName}`}>
+          {selected ? renderDetail(selected) : emptyDetail}
         </div>
       </div>
     );

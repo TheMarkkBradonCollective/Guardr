@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Eye, RefreshCw, ShieldCheck, Undo2, X } from 'lucide-react';
+import { Check, ChevronRight, ClipboardCheck, Eye, RefreshCw, ShieldCheck, Undo2, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -24,7 +24,7 @@ import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
-import { AppEmptyState, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
@@ -80,27 +80,30 @@ function CredentialFeedRow({
         : 'danger';
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`app-feed-row w-full ${isSelected ? 'app-feed-row-selected' : ''}`}
-    >
-      <div className="app-feed-row-main">
-        <p className="app-feed-row-title truncate">{item.title}</p>
-        {item.subtitle && <p className="app-feed-row-subtitle truncate">{item.subtitle}</p>}
-        <div className="app-feed-row-meta">
-          <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
+    <AppItemCard onClick={onSelect} className={isSelected ? 'app-item-card-selected' : ''}>
+      <div className="flex items-start gap-3 w-full text-left">
+        <span
+          className={`staff-overview-action-icon ${
+            item.status === 'pending' || item.status === 'in_review' ? 'staff-overview-action-icon-urgent' : ''
+          }`}
+        >
+          <ClipboardCheck className="w-4 h-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold truncate">{item.title}</p>
+            <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
+          </div>
+          {item.subtitle && <p className="text-xs text-brand-text-muted mt-1 truncate">{item.subtitle}</p>}
           {item.submittedAt && (item.status === 'pending' || item.status === 'in_review') && (
-            <span className="text-[11px] text-brand-text-muted">
-              {formatApprovalTimestamp(item.submittedAt)}
-            </span>
+            <p className="text-[11px] text-brand-text-muted mt-1">
+              Submitted {formatApprovalTimestamp(item.submittedAt)}
+            </p>
           )}
         </div>
+        <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" />
       </div>
-      <span className="app-feed-row-action">
-        <Eye className="w-4 h-4 text-brand-text-muted" />
-      </span>
-    </button>
+    </AppItemCard>
   );
 }
 
@@ -108,27 +111,27 @@ function CredentialReviewMeta({ item }: { item?: ApprovalFeedItem }) {
   if (!item) return null;
   const reviewer = item.reviewedByName || item.reviewedByEmail;
   return (
-    <div className="rounded-lg border border-brand-border bg-brand-bg-sec/40 px-3 py-2.5 text-xs space-y-1">
+    <div className="app-list-subrow text-xs space-y-1 !pt-0">
       <p>
-        <span className="font-semibold text-brand-text">Status: </span>
-        {item.statusLabel}
+        <span className="detail-field-label !mb-0">Status</span>
+        <span className="text-sm font-medium">{item.statusLabel}</span>
       </p>
       {item.submittedAt && (
         <p>
-          <span className="font-semibold text-brand-text">Submitted: </span>
-          {formatApprovalTimestamp(item.submittedAt)}
+          <span className="detail-field-label !mb-0">Submitted</span>
+          <span className="text-sm">{formatApprovalTimestamp(item.submittedAt)}</span>
         </p>
       )}
       {item.reviewedAt && (
         <p>
-          <span className="font-semibold text-brand-text">Reviewed: </span>
-          {formatApprovalTimestamp(item.reviewedAt)}
+          <span className="detail-field-label !mb-0">Reviewed</span>
+          <span className="text-sm">{formatApprovalTimestamp(item.reviewedAt)}</span>
         </p>
       )}
       {reviewer && (
         <p>
-          <span className="font-semibold text-brand-text">By: </span>
-          {reviewer}
+          <span className="detail-field-label !mb-0">By</span>
+          <span className="text-sm">{reviewer}</span>
         </p>
       )}
     </div>
@@ -375,7 +378,7 @@ export function StaffCredentials({
     const { guard } = context;
 
     const detailBody = (
-      <div className="staff-detail-pane p-4 sm:p-5 space-y-4">
+      <div className="staff-detail-pane space-y-4">
         <CredentialReviewMeta item={feedItem} />
         {onOpenGuardProfile && (
           <button
@@ -467,11 +470,8 @@ export function StaffCredentials({
 
     return (
       <div className="animate-fade-in">
-        <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/40">
-          <h2 className="text-base font-semibold truncate">{feedItem.title ?? 'Credential review'}</h2>
-          {feedItem.subtitle && (
-            <p className="text-xs text-brand-text-muted mt-0.5 truncate">{feedItem.subtitle}</p>
-          )}
+        <div className="app-dashboard-zone-head !px-0 !mb-3">
+          <h2 className="app-dashboard-zone-title truncate">{feedItem.title ?? 'Credential review'}</h2>
         </div>
         {detailBody}
       </div>

@@ -9,7 +9,7 @@ import { ProfileHero } from './ProfileHero';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
-import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import {
@@ -211,26 +211,25 @@ export function UserProfileScreen({
 
   if (isStaffAccount) {
     return (
-      <AppScreen>
+      <AppScreen className="app-profile-screen">
         <ProfileHero
-          avatar={<ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />}
-          name={staffBadgeId || '—'}
+          kicker={roleLabel}
+          title={staffBadgeId || '—'}
           subtitle="Staff ID"
           email={currentUser.email}
-          badge={<span className="wf-badge wf-badge-primary">{roleLabel}</span>}
+          avatar={<ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />}
         />
       </AppScreen>
     );
   }
 
   return (
-    <AppScreen>
+    <AppScreen className="app-profile-screen">
       <ProfileHero
-        className="mt-4"
-        avatar={<ProfileAvatar src={avatar} name={displayName} size="xl" />}
-        name={displayName}
-        subtitle={roleLabel}
+        kicker={roleLabel}
+        title={displayName}
         email={currentUser.email}
+        avatar={<ProfileAvatar src={avatar} name={displayName} size="xl" />}
         photoControls={
           <>
             <label
@@ -242,19 +241,19 @@ export function UserProfileScreen({
               <Camera className="w-4 h-4" />
               <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
             </label>
-            {photoError && <p className="text-xs text-red-500 mt-2 text-center">{photoError}</p>}
+            {photoError && <p className="text-xs text-red-500 mt-2">{photoError}</p>}
             {avatar && !photoSaving && (
               <button
                 type="button"
                 onClick={() => void handleRemovePhoto()}
                 disabled={photoSaving}
-                className="mt-2 text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mx-auto disabled:opacity-50 transition-colors"
+                className="mt-2 text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 disabled:opacity-50 transition-colors"
               >
                 <X className="w-3 h-3" />
                 Remove photo
               </button>
             )}
-            {photoSaving && <p className="text-xs text-brand-text-muted mt-2 text-center">Saving photo…</p>}
+            {photoSaving && <p className="text-xs text-brand-text-muted mt-2">Saving photo…</p>}
           </>
         }
         actions={
@@ -277,7 +276,7 @@ export function UserProfileScreen({
         }
       />
 
-      <AppFormSection title="Contact & account">
+      <AppDashboardZone title="Contact & account">
         <PersonNameFields
           firstName={firstName}
           middleName={middleName}
@@ -307,7 +306,7 @@ export function UserProfileScreen({
             <span className="font-medium">{GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}</span>
           </div>
         )}
-      </AppFormSection>
+      </AppDashboardZone>
 
       {canBuildResume && guard && (
         <section className="border-b border-brand-border">
