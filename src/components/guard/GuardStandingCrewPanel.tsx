@@ -25,8 +25,10 @@ interface GuardStandingCrewPanelProps {
   trusted: boolean;
   coordinatingJobs?: GuardJobView[];
   variant?: 'default' | 'embedded';
-  /** When embedded, render only the hero card or body sections (for crew hub layout). */
-  section?: 'hero' | 'body';
+  /** Rendered between the hero card and scrollable body when embedded. */
+  afterHero?: React.ReactNode;
+  /** Replaces the default embedded body (e.g. Active tab job list). */
+  embeddedBody?: React.ReactNode;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
@@ -146,7 +148,8 @@ export function GuardStandingCrewPanel({
   trusted,
   coordinatingJobs = [],
   variant = 'default',
-  section,
+  afterHero,
+  embeddedBody,
   onJoinTeamWithCode,
   onUpdateStandingCrewProfile,
   onInvite,
@@ -231,61 +234,67 @@ export function GuardStandingCrewPanel({
   const sectionTitle = (title: string) =>
     embedded ? null : <h2 className="app-section-title">{title}</h2>;
 
-  const leadHero = (
+  const renderEmbeddedCard = (hero: React.ReactNode, body: React.ReactNode) => (
     <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
-      <div
-        className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}
-      >
-        <div className="guard-tier-hero-glow" aria-hidden />
-        <div className="guard-pref-tier-medal" aria-hidden>
-          <div className="guard-pref-tier-medal-ring">
-            <Users className="guard-pref-tier-medal-icon" />
-          </div>
-        </div>
-        <p className="guard-tier-hero-eyebrow">Standing crew</p>
-        <h2 className="guard-tier-hero-name guard-crew-hero-name">{crewDisplayName}</h2>
-        <div className="guard-tier-hero-score-row">
-          <span className="guard-tier-hero-score-label">Active members</span>
-          <span className="guard-tier-hero-score-value">
-            {active.length}
-            {pendingOutgoing.length > 0 ? (
-              <span className="guard-pref-hero-score-total"> +{pendingOutgoing.length} pending</span>
-            ) : null}
-          </span>
-        </div>
-        <p className="guard-tier-hero-subtitle">
-          {active.length > 0
-            ? 'Your standing roster is ready for coordinated jobs.'
-            : 'Build your team below — clients see this crew in the Teams directory.'}
-        </p>
-      </div>
+      {hero}
+      {afterHero}
+      <div className="guard-rating-body crew-hub-team-body">{body}</div>
     </section>
+  );
+
+  const leadHero = (
+    <div
+      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}
+    >
+      <div className="guard-tier-hero-glow" aria-hidden />
+      <div className="guard-pref-tier-medal" aria-hidden>
+        <div className="guard-pref-tier-medal-ring">
+          <Users className="guard-pref-tier-medal-icon" />
+        </div>
+      </div>
+      <p className="guard-tier-hero-eyebrow">Standing crew</p>
+      <h2 className="guard-tier-hero-name guard-crew-hero-name">{crewDisplayName}</h2>
+      <div className="guard-tier-hero-score-row">
+        <span className="guard-tier-hero-score-label">Active members</span>
+        <span className="guard-tier-hero-score-value">
+          {active.length}
+          {pendingOutgoing.length > 0 ? (
+            <span className="guard-pref-hero-score-total"> +{pendingOutgoing.length} pending</span>
+          ) : null}
+        </span>
+      </div>
+      <p className="guard-tier-hero-subtitle">
+        {active.length > 0
+          ? 'Your standing roster is ready for coordinated jobs.'
+          : 'Build your team below — clients see this crew in the Teams directory.'}
+      </p>
+    </div>
   );
 
   const renderMemberHero = (leadName: string) => (
-    <section className="guard-rating-section guard-rating-section-tiered guard-crew-screen-card">
-      <div
-        className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}
-      >
-        <div className="guard-tier-hero-glow" aria-hidden />
-        <div className="guard-pref-tier-medal" aria-hidden>
-          <div className="guard-pref-tier-medal-ring">
-            <Users className="guard-pref-tier-medal-icon" />
-          </div>
+    <div
+      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}
+    >
+      <div className="guard-tier-hero-glow" aria-hidden />
+      <div className="guard-pref-tier-medal" aria-hidden>
+        <div className="guard-pref-tier-medal-ring">
+          <Users className="guard-pref-tier-medal-icon" />
         </div>
-        <p className="guard-tier-hero-eyebrow">Standing crew</p>
-        <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
-        <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
       </div>
-    </section>
+      <p className="guard-tier-hero-eyebrow">Standing crew</p>
+      <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
+      <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
+    </div>
   );
 
   if (!trusted && pendingIncoming.length === 0) {
-    if (embedded && section === 'hero') return null;
     return (
-      <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
-        When a trusted guard invites you to their standing crew, it will show up here.
-      </AppEmptyState>
+      <>
+        {embedded ? afterHero : null}
+        <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
+          When a trusted guard invites you to their standing crew, it will show up here.
+        </AppEmptyState>
+      </>
     );
   }
 
@@ -356,16 +365,7 @@ export function GuardStandingCrewPanel({
     );
 
     if (embedded) {
-      if (section === 'hero') return renderMemberHero(leadName);
-      if (section === 'body') {
-        return <div className="guard-rating-body crew-hub-team-body">{memberBody}</div>;
-      }
-      return (
-        <>
-          {renderMemberHero(leadName)}
-          <div className="guard-rating-body">{memberBody}</div>
-        </>
-      );
+      return renderEmbeddedCard(renderMemberHero(leadName), embeddedBody ?? memberBody);
     }
 
     return (
@@ -564,21 +564,16 @@ export function GuardStandingCrewPanel({
   );
 
   if (embedded && trusted && leadsStandingCrew) {
-    if (section === 'hero') return leadHero;
-    if (section === 'body') {
-      return <div className="guard-rating-body crew-hub-team-body">{bodyContent}</div>;
-    }
-    return (
-      <>
-        {leadHero}
-        <div className="guard-rating-body">{bodyContent}</div>
-      </>
-    );
+    return renderEmbeddedCard(leadHero, embeddedBody ?? bodyContent);
   }
 
-  if (embedded && section === 'hero') return null;
-  if (embedded && section === 'body') {
-    return <div className="guard-rating-body crew-hub-team-body">{bodyContent}</div>;
+  if (embedded) {
+    return (
+      <>
+        {afterHero}
+        <div className="crew-hub-team-body">{embeddedBody ?? bodyContent}</div>
+      </>
+    );
   }
 
   return (
