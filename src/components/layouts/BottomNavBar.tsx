@@ -51,9 +51,6 @@ export function BottomNavBar({
         }`}
         aria-current={active ? 'page' : undefined}
       >
-        {active && (
-          <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-brand-primary" aria-hidden="true" />
-        )}
         <span className="relative">
           <Icon className={`w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-2'}`} />
           {badge != null && badge > 0 && (
@@ -105,9 +102,6 @@ export function BottomNavBar({
             }`}
             aria-current={moreActive ? 'page' : undefined}
           >
-            {moreActive && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-brand-primary" aria-hidden="true" />
-            )}
             <span className="relative">
               <LayoutGrid className={`w-5 h-5 ${moreActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
               {moreBadge > 0 && (

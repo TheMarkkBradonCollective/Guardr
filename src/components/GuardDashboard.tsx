@@ -213,6 +213,7 @@ export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages'
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
+const GUARD_BOTTOM_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -1516,7 +1517,7 @@ export function GuardDashboard({
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
       navItems={accountNeedsActivation ? [] : NAV_TABS}
-      activeNavId={showPendingGate ? 'activation' : tab}
+      activeNavId={GUARD_BOTTOM_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}
