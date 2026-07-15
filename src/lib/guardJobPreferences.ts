@@ -27,6 +27,47 @@ export const ALL_JOB_TYPES: JobType[] = [
 
 export const ALL_JOB_TYPE_PREFERENCES = ALL_JOB_TYPES;
 
+export interface JobTypePreferenceCategory {
+  id: string;
+  label: string;
+  description: string;
+  types: JobType[];
+}
+
+export const JOB_TYPE_PREFERENCE_CATEGORIES: JobTypePreferenceCategory[] = [
+  {
+    id: 'nightlife',
+    label: 'Nightlife & hospitality',
+    description: 'Venues, crowds, and front-door coverage.',
+    types: ['nightclub-bar'],
+  },
+  {
+    id: 'events',
+    label: 'Events & venues',
+    description: 'Weddings, concerts, festivals, and private functions.',
+    types: [
+      'event-wedding',
+      'event-concert',
+      'event-festival',
+      'event-corporate',
+      'event-private',
+      'event',
+    ],
+  },
+  {
+    id: 'sites',
+    label: 'Sites & patrol',
+    description: 'Fixed posts, patrols, construction, and property coverage.',
+    types: ['patrol', 'construction', 'fire-watch', 'standing-guard', 'asset-protection'],
+  },
+  {
+    id: 'specialized',
+    label: 'Specialized',
+    description: 'Executive protection, armed escort, and custom requests.',
+    types: ['bodyguard', 'armed-escort', 'other'],
+  },
+];
+
 export const JOB_TYPE_PREFERENCE_OPTIONS: JobTypePreferenceOption[] = [
   {
     type: 'nightclub-bar',

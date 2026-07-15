@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CheckCircle2, ClipboardList } from 'lucide-react';
 import type { JobType } from '../../types';
 import { jobTypeOnboardingContent } from '../../lib/guardJobTypeOnboarding';
 import { jobTypePreferenceLabel } from '../../lib/guardJobPreferences';
@@ -36,20 +37,27 @@ export function JobTypeOnboardingSheet({
       subtitle="Complete onboarding before accepting this job type."
     >
       {content && jobType && (
-        <div className="space-y-5">
-          <p className="text-sm text-brand-text-muted leading-relaxed">{content.summary}</p>
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-4 space-y-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">What to expect</p>
-            <ul className="space-y-2">
+        <div className="guard-pref-onboarding">
+          <div className="guard-pref-onboarding-intro">
+            <div className="guard-pref-onboarding-icon-wrap" aria-hidden>
+              <ClipboardList className="guard-pref-onboarding-icon" />
+            </div>
+            <p className="guard-pref-onboarding-summary">{content.summary}</p>
+          </div>
+
+          <div className="guard-pref-onboarding-expectations">
+            <p className="guard-pref-onboarding-expectations-title">What to expect</p>
+            <ul className="guard-pref-onboarding-list">
               {content.expectations.map((item) => (
-                <li key={item} className="text-sm text-brand-text leading-relaxed flex gap-2">
-                  <span className="text-brand-primary shrink-0">•</span>
+                <li key={item} className="guard-pref-onboarding-list-item">
+                  <CheckCircle2 className="guard-pref-onboarding-check" aria-hidden />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
-          <label className="legal-accept-row cursor-pointer">
+
+          <label className="legal-accept-row cursor-pointer guard-pref-onboarding-ack">
             <input
               type="checkbox"
               checked={acknowledged}
@@ -58,11 +66,12 @@ export function JobTypeOnboardingSheet({
             />
             <span className="text-sm text-brand-text leading-relaxed">{content.acknowledgment}</span>
           </label>
+
           <button
             type="button"
             disabled={!acknowledged || saving}
             onClick={() => void onComplete(jobType)}
-            className="app-button-primary w-full disabled:opacity-50"
+            className="app-button-primary w-full guard-pref-onboarding-submit disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Complete onboarding'}
           </button>

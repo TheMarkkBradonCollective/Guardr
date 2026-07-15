@@ -5,12 +5,14 @@ import { KeyRound } from 'lucide-react';
 interface TeamCodeJoinPanelProps {
   onJoin: (code: string) => void | Promise<void>;
   compact?: boolean;
+  variant?: 'default' | 'preferences';
   hint?: string;
 }
 
 export function TeamCodeJoinPanel({
   onJoin,
   compact = false,
+  variant = 'default',
   hint = 'Enter a crew code from your coordinator to join their coordinated crew.',
 }: TeamCodeJoinPanelProps) {
   const [code, setCode] = useState('');
@@ -29,23 +31,35 @@ export function TeamCodeJoinPanel({
     }
   };
 
+  const isPreferences = variant === 'preferences';
+
   return (
     <form
       onSubmit={(e) => void handleSubmit(e)}
-      className={`space-y-2 ${compact ? '' : 'rounded-lg border border-brand-border bg-brand-surface/60 px-3 py-3'}`}
+      className={
+        isPreferences
+          ? 'guard-pref-crew-form'
+          : `space-y-2 ${compact ? '' : 'rounded-lg border border-brand-border bg-brand-surface/60 px-3 py-3'}`
+      }
     >
-      <div className="flex items-center gap-2">
-        <KeyRound className="w-4 h-4 text-brand-primary shrink-0" />
-        <p className="text-sm font-semibold text-brand-text">Join a crew with code</p>
-      </div>
-      {!compact && <p className="text-xs text-brand-text-muted leading-relaxed">{hint}</p>}
-      <div className="flex gap-2">
+      {!isPreferences && (
+        <div className="flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-brand-primary shrink-0" />
+          <p className="text-sm font-semibold text-brand-text">Join a crew with code</p>
+        </div>
+      )}
+      {!compact && !isPreferences && (
+        <p className="text-xs text-brand-text-muted leading-relaxed">{hint}</p>
+      )}
+      <div className={isPreferences ? 'guard-pref-crew-input-row' : 'flex gap-2'}>
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="CREW-XXXXXX"
-          className="app-input flex-1 text-sm font-mono tracking-wide uppercase"
+          className={`app-input flex-1 text-sm font-mono tracking-wide uppercase ${
+            isPreferences ? 'guard-pref-crew-input' : ''
+          }`}
           autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}
@@ -53,7 +67,7 @@ export function TeamCodeJoinPanel({
         <button
           type="submit"
           disabled={!normalizeTeamCode(code) || joining}
-          className="app-button-primary app-btn-sm shrink-0"
+          className={`app-button-primary shrink-0 ${isPreferences ? 'guard-pref-crew-submit' : 'app-btn-sm'}`}
         >
           {joining ? 'Joining…' : 'Join crew'}
         </button>

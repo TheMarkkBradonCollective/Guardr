@@ -2,8 +2,9 @@ import React from 'react';
 import type { JobType, SecurityGuard, GuardStandingCrewMember } from '../../types';
 import { GuardJobPreferencesPanel } from './GuardJobPreferencesPanel';
 import { TeamCodeJoinPanel } from './TeamCodeJoinPanel';
-import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { AppScreen } from '../ui/app/AppPrimitives';
 import { shouldOfferTeamCodeJoin } from '../../lib/guardStandingCrew';
+import { Users } from 'lucide-react';
 
 interface GuardPreferencesScreenProps {
   guard: SecurityGuard;
@@ -24,25 +25,31 @@ export function GuardPreferencesScreen({
     !!onJoinTeamWithCode && shouldOfferTeamCodeJoin(guard, standingCrewMembers);
 
   return (
-    <AppScreen>
+    <AppScreen className="guard-preferences-screen">
       {onSaveJobPreferences && onCompleteJobTypeOnboarding && (
-        <AppFormSection title="Job alerts">
-          <GuardJobPreferencesPanel
-            guard={guard}
-            onChange={onSaveJobPreferences}
-            onCompleteOnboarding={onCompleteJobTypeOnboarding}
-          />
-        </AppFormSection>
+        <GuardJobPreferencesPanel
+          guard={guard}
+          onChange={onSaveJobPreferences}
+          onCompleteOnboarding={onCompleteJobTypeOnboarding}
+        />
       )}
 
       {showTeamJoin && (
-        <AppFormSection title="Join a crew">
-          <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-1">
-            Crew codes are only for joining an existing coordinated crew. To apply for a job on your
-            own, use Apply on the job listing.
-          </p>
-          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
-        </AppFormSection>
+        <section className="guard-pref-crew-section">
+          <div className="guard-pref-crew-header">
+            <div className="guard-pref-crew-icon-wrap" aria-hidden>
+              <Users className="guard-pref-crew-icon" />
+            </div>
+            <div>
+              <h3 className="guard-pref-crew-title">Join a crew</h3>
+              <p className="guard-pref-crew-desc">
+                Crew codes are only for joining an existing coordinated crew. To apply for a job on
+                your own, use Apply on the job listing.
+              </p>
+            </div>
+          </div>
+          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} variant="preferences" />
+        </section>
       )}
     </AppScreen>
   );
