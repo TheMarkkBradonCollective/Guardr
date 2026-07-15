@@ -18,7 +18,11 @@ import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { getPendingGuardAccounts } from '../../lib/staffOps';
+import {
+  matchesGuardRosterFilter,
+  type GuardRosterFilter,
+} from '../../lib/staffListFilters';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -124,7 +128,7 @@ export function StaffGuardsPanel({
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending'>('all');
+  const [statusFilter, setStatusFilter] = useState<GuardRosterFilter>('pending');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -139,8 +143,16 @@ export function StaffGuardsPanel({
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
   const roster = guards.filter((g) => !g.isStaff);
-  const pendingGuardIds = useMemo(
-    () => new Set(getPendingGuardAccounts(roster).map((g) => g.id)),
+  const pendingGuardCount = useMemo(
+    () => roster.filter((g) => matchesGuardRosterFilter(g, 'pending')).length,
+    [roster]
+  );
+  const activatingGuardCount = useMemo(
+    () => roster.filter((g) => matchesGuardRosterFilter(g, 'activating')).length,
+    [roster]
+  );
+  const activeGuardCount = useMemo(
+    () => roster.filter((g) => matchesGuardRosterFilter(g, 'active')).length,
     [roster]
   );
 
@@ -151,7 +163,7 @@ export function StaffGuardsPanel({
         g.email.toLowerCase().includes(search.toLowerCase()) ||
         g.badgeNumber.toLowerCase().includes(search.toLowerCase())
     )
-    .filter((g) => statusFilter === 'all' || pendingGuardIds.has(g.id))
+    .filter((g) => matchesGuardRosterFilter(g, statusFilter))
     .sort((a, b) => {
       const rank = guardRosterSortRank(a) - guardRosterSortRank(b);
       if (rank !== 0) return rank;
@@ -237,22 +249,17 @@ export function StaffGuardsPanel({
             className="max-w-md"
           />
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={`app-button-outline app-btn-sm ${statusFilter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              All ({roster.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('pending')}
-              className={`app-button-outline app-btn-sm ${statusFilter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              Needs action{pendingGuardIds.size > 0 ? ` (${pendingGuardIds.size})` : ''}
-            </button>
-          </div>
+          <StaffListFilterTabs
+            aria-label="Guard roster status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
+            tabs={[
+              { id: 'pending', label: 'Pending review', count: pendingGuardCount },
+              { id: 'activating', label: 'Activating', count: activatingGuardCount },
+              { id: 'active', label: 'Active', count: activeGuardCount },
+              { id: 'all', label: 'All', count: roster.length, alwaysShowCount: true },
+            ]}
+          />
         </>
       )}
 

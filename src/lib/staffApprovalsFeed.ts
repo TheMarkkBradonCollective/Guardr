@@ -635,6 +635,13 @@ export function formatApprovalTimestamp(iso?: string): string {
   });
 }
 
+/** Submitted credentials awaiting staff review — excludes guard upload-pending slots. */
+export function isCredentialFeedItemAwaitingStaffReview(item: ApprovalFeedItem): boolean {
+  if (item.queue !== 'credentials') return false;
+  if (item.status !== 'pending' && item.status !== 'in_review') return false;
+  return item.statusLabel !== CREDENTIAL_PENDING_UPLOAD_LABEL;
+}
+
 /** Pending credential queue count — matches the Credentials tab pending filter. */
 export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
   return countPendingInFeedByQueue(

@@ -7,6 +7,7 @@ import {
   filterApprovalsFeedByQueue,
   findFeedItem,
   formatApprovalTimestamp,
+  isCredentialFeedItemAwaitingStaffReview,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
   credentialFeedThumbnailUrl,
@@ -17,6 +18,12 @@ import {
   staffVerifyCertificationBlocker,
 } from '../../lib/certImagePolicy';
 import { approvalFeedItemMatchesSearch } from '../../lib/credentialSearch';
+import {
+  isCredentialFeedItemOpen,
+  isCredentialFeedItemPendingUpload,
+  matchesCredentialStatusFilter,
+  type CredentialStatusFilter,
+} from '../../lib/staffListFilters';
 import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
@@ -34,7 +41,7 @@ import { showAppToast } from '../ui/AppToast';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 
-type CredentialFilter = 'pending' | 'all';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -182,7 +189,7 @@ export function StaffCredentials({
   onEditGuardProfile,
   onAddCertification,
 }: StaffCredentialsProps) {
-  const [filter, setFilter] = useState<CredentialFilter>('all');
+  const [filter, setFilter] = useState<CredentialStatusFilter>('open');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -204,8 +211,7 @@ export function StaffCredentials({
   }, [guards, auditLog]);
 
   const visibleFeed = useMemo(() => {
-    if (filter === 'all') return credentialFeed;
-    return credentialFeed.filter((item) => item.status === 'pending' || item.status === 'in_review');
+    return credentialFeed.filter((item) => matchesCredentialStatusFilter(item, filter));
   }, [credentialFeed, filter]);
 
   const filteredFeed = useMemo(() => {
@@ -442,9 +448,9 @@ export function StaffCredentials({
     );
   };
 
-  const pendingCount = credentialFeed.filter(
-    (item) => item.status === 'pending' || item.status === 'in_review'
-  ).length;
+  const openCount = credentialFeed.filter(isCredentialFeedItemOpen).length;
+  const pendingReviewCount = credentialFeed.filter(isCredentialFeedItemAwaitingStaffReview).length;
+  const pendingUploadCount = credentialFeed.filter(isCredentialFeedItemPendingUpload).length;
 
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
 
@@ -594,7 +600,7 @@ export function StaffCredentials({
                 guards={guards}
                 onAddCertification={onAddCertification}
                 onCredentialAdded={(guardId) => {
-                  setFilter('all');
+                  setFilter('open');
                   setPendingFocusGuardId(guardId);
                 }}
               />
@@ -606,22 +612,17 @@ export function StaffCredentials({
             placeholder="Search credentials..."
             className="max-w-md"
           />
-          <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setFilter('all')}
-            className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
-          >
-            All ({credentialFeed.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('pending')}
-            className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-          >
-            Pending{pendingCount > 0 ? ` (${pendingCount})` : ''}
-          </button>
-        </div>
+          <StaffListFilterTabs
+            aria-label="Credential status"
+            activeId={filter}
+            onChange={(id) => setFilter(id as CredentialStatusFilter)}
+            tabs={[
+              { id: 'open', label: 'Open', count: openCount },
+              { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
+              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+              { id: 'all', label: 'All', count: credentialFeed.length, alwaysShowCount: true },
+            ]}
+          />
         </>
       )}
 
@@ -629,8 +630,12 @@ export function StaffCredentials({
         <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No credentials match your search.'
-            : filter === 'pending'
-            ? 'No guard credentials waiting for review.'
+            : filter === 'pending_review'
+            ? 'No credentials waiting for staff review.'
+            : filter === 'pending_upload'
+              ? 'No credentials waiting for guard upload.'
+              : filter === 'open'
+                ? 'No open credential items right now.'
             : 'No credential submissions on file yet.'}
         </AppEmptyState>
       ) : (
