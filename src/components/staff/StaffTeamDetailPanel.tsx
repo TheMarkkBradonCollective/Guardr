@@ -136,7 +136,7 @@ export function StaffTeamDetailPanel({
         </div>
       </div>
 
-      <section className="py-4 border-b border-brand-border space-y-3">
+      <section className="staff-detail-section space-y-3">
         <h3 className="text-sm font-semibold">Platform role</h3>
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
@@ -173,7 +173,7 @@ export function StaffTeamDetailPanel({
       </section>
 
       {canModifyMember ? (
-        <section className="py-4 border-b border-brand-border space-y-2">
+        <section className="staff-detail-section space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="app-action-row--equal">
             {accountStatus !== 'suspended' && (
@@ -207,7 +207,7 @@ export function StaffTeamDetailPanel({
         </section>
       ) : (
         canManageStaff && (
-          <section className="py-4 border-b border-brand-border space-y-2">
+          <section className="staff-detail-section space-y-2">
             <h3 className="text-sm font-semibold">Account controls</h3>
             <p className="text-xs text-brand-text-muted">{blockedReason}</p>
           </section>
@@ -215,7 +215,7 @@ export function StaffTeamDetailPanel({
       )}
 
       {member.bio && (
-        <section className="py-4">
+        <section className="staff-detail-section">
           <h3 className="text-sm font-semibold mb-2">Notes</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">{member.bio}</p>
         </section>

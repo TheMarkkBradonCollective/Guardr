@@ -164,7 +164,7 @@ export function StaffClientDetailPanel({
         </div>
       </div>
 
-      <section className="grid grid-cols-3 gap-x-4 gap-y-3 py-4 border-b border-brand-border">
+      <section className="staff-detail-section grid grid-cols-3 gap-x-4 gap-y-3">
         <div>
           <p className="wf-metric-label">Active jobs</p>
           <p className="wf-metric-value text-brand-primary">{activeJobs.length}</p>
@@ -180,7 +180,7 @@ export function StaffClientDetailPanel({
       </section>
 
       {canManage && (
-        <section className="py-4 border-b border-brand-border space-y-2">
+        <section className="staff-detail-section space-y-2">
           <WfSectionHeader title="Account controls" className="mb-0" />
           <div className="app-action-row--equal">
             {isPending && (
@@ -233,7 +233,7 @@ export function StaffClientDetailPanel({
         client.estimatedStartDate || client.budgetRange || client.serviceCity ||
         client.propertyTypes?.length || client.referredBy || client.howHeardAboutUs ||
         client.hasPriorSecurityService != null || client.specialRequirements) && (
-        <section className="py-4 border-b border-brand-border space-y-4">
+        <section className="staff-detail-section space-y-4">
           <WfSectionHeader title="Client application" className="mb-1" />
 
           {/* Business */}
@@ -352,7 +352,7 @@ export function StaffClientDetailPanel({
         </section>
       )}
 
-      <section className="py-4 space-y-2">
+      <section className="staff-detail-section space-y-2">
         <div className="flex items-center gap-1.5 mb-2">
           <Building2 className="w-4 h-4 text-brand-text-muted" />
           <WfSectionHeader title="Job history" className="mb-0" />

@@ -437,7 +437,7 @@ export function StaffGuardDetailPanel({
     if (pendingCerts.length === 0) return null;
 
     return (
-      <section className="py-4 border-b border-brand-border space-y-3">
+      <section className="staff-detail-section space-y-3">
         <WfSectionHeader title="Pending credentials" count={pendingCerts.length} className="mb-0" />
         <div className="app-cert-item-stack">
           {pendingCerts.map((cert) => (
