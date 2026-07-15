@@ -14498,26 +14498,11 @@ html.theme-dark .app-chat-readonly-footer {
    Desktop: persistent sidebar nav, multi-column layouts, no bottom nav.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─── DESKTOP SIDEBAR NAV: hidden by default ─────────────────────────────── */
+/* ─── ROLE SIDEBAR NAV ───────────────────────────────────────────────────── */
 
 .role-side-nav {
-  display: none;
-}
-
-/* ─── DESKTOP: grid layout — sidebar + main column ───────────────────────── */
-
-body[data-form-factor="desktop"] .role-app-shell {
-  display: grid;
-  grid-template-columns: 15rem 1fr;
-  grid-template-rows: auto 1fr;
-  /* sidebar spans all rows; header + main in column 2 */
-}
-
-body[data-form-factor="desktop"] .role-side-nav {
   display: flex;
   flex-direction: column;
-  grid-column: 1;
-  grid-row: 1 / span 3;
   height: 100%;
   overflow: hidden;
   background: var(--brand-bg-sec);
@@ -14526,34 +14511,103 @@ body[data-form-factor="desktop"] .role-side-nav {
   z-index: 10;
 }
 
-html.theme-dark body[data-form-factor="desktop"] .role-side-nav {
+html.theme-dark .role-side-nav {
   background: #0a0a0a;
   border-right-color: #1a1a1a;
 }
 
-html.theme-light body[data-form-factor="desktop"] .role-side-nav {
+html.theme-light .role-side-nav {
   background: #f8f9f8;
   border-right-color: #e8ebe8;
 }
 
-body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
-  grid-column: 2;
-  grid-row: 1;
+.role-side-nav--docked {
+  position: relative;
+  width: 15rem;
+  flex-shrink: 0;
 }
 
-body[data-form-factor="desktop"] .role-app-shell > main {
+.role-side-nav--docked .role-side-nav-close {
+  display: none;
+}
+
+.role-app-shell--compact > .role-side-nav--overlay {
+  position: fixed !important;
+  inset: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  z-index: 1100;
+  transform: none !important;
+  transition: opacity 0.16s ease-out;
+  box-shadow: none;
+  border-right: none;
+}
+
+.role-side-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  cursor: pointer;
+  animation: staff-nav-fade-in 0.16s ease-out;
+  touch-action: none;
+}
+
+.role-side-nav-close {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
+  right: 0.75rem;
+  z-index: 2;
+  padding: 0.5rem;
+  color: var(--brand-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.role-main {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--brand-bg);
+}
+
+/* ─── DOCKED LAYOUT: sidebar + main column (tablet and desktop) ─────────── */
+
+.role-app-shell--docked {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+.role-app-shell--docked .role-side-nav--docked {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.role-app-shell--docked .role-main {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1 / span 2;
+  min-height: 0;
+}
+
+.role-app-shell--docked .role-main > main {
   min-height: 0;
   overflow: hidden;
 }
 
-/* Hide bottom nav on desktop */
-body[data-form-factor="desktop"] .role-app-shell > nav.bottom-nav-bar {
-  display: none !important;
+/* ─── SIDEBAR BRAND AREA ─────────────────────────────────────────────────── */
+
+.role-side-nav--overlay .role-side-nav-brand {
+  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
 }
 
-/* ─── SIDEBAR BRAND AREA ─────────────────────────────────────────────────── */
+/* Hide bottom nav — clients and guards use sidebar navigation */
+.role-app-shell > nav.bottom-nav-bar {
+  display: none !important;
+}
 
 .role-side-nav-brand {
   display: flex;
@@ -14681,28 +14735,28 @@ html.theme-dark .role-side-nav-footer {
   gap: 0.75rem;
 }
 
-/* Hide the header account menu on desktop (sidebar footer has it) */
-body[data-form-factor="desktop"] .role-app-shell > .app-screen-header .account-menu-trigger,
-body[data-form-factor="desktop"] .role-app-shell > .app-screen-header--compact .account-menu-trigger {
+/* Hide the header account menu when sidebar is docked (footer has it) */
+.role-app-shell--docked .role-main .app-screen-header .account-menu-trigger,
+.role-app-shell--docked .role-main .app-screen-header--compact .account-menu-trigger {
   display: none;
 }
 
-/* Adjust header padding on desktop (no account menu) */
-body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
+/* Adjust header padding when sidebar is docked */
+.role-app-shell--docked .role-main > .app-screen-header {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
 }
 
-/* ─── DESKTOP HEADER: cleaner with sidebar ───────────────────────────────── */
+/* ─── DOCKED HEADER: cleaner with sidebar ───────────────────────────────── */
 
-body[data-form-factor="desktop"] .role-app-shell > .app-screen-header h1 {
+.role-app-shell--docked .role-main > .app-screen-header h1 {
   font-size: 1.5rem !important;
   letter-spacing: -0.04em !important;
 }
 
-/* ─── TABLET: keep bottom nav but improve layout ────────────────────────── */
+/* ─── TABLET: sidebar layout improvements ───────────────────────────────── */
 
-body[data-form-factor="tablet"] .role-app-shell > .app-screen-header h1 {
+body[data-form-factor="tablet"] .role-app-shell--docked .role-main > .app-screen-header h1 {
   font-size: 1.25rem;
 }
 

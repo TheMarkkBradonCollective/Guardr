@@ -124,7 +124,6 @@ export function ClientAppLayout({
       }}
       navItems={navItems}
       overflowNavItems={accountPending ? [] : OVERFLOW_NAV}
-      moreMenuTitle="More"
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       fullBleed={fullBleed}

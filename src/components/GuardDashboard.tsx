@@ -234,7 +234,7 @@ export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages'
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
-const GUARD_BOTTOM_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
+const GUARD_PRIMARY_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
 const GUARD_SIDEBAR_TABS = new Set<GuardTab>(['preferences', 'performance']);
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
@@ -1674,9 +1674,8 @@ export function GuardDashboard({
       accountMenu={accountMenu}
       navItems={accountNeedsActivation ? [] : NAV_TABS}
       overflowNavItems={accountNeedsActivation ? [] : OVERFLOW_NAV}
-      moreMenuTitle="More"
       activeNavId={
-        GUARD_BOTTOM_NAV_TABS.has(tab)
+        GUARD_PRIMARY_NAV_TABS.has(tab)
           ? tab
           : GUARD_SIDEBAR_TABS.has(tab)
             ? tab
