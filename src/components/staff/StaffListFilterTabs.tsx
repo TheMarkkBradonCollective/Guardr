@@ -3,16 +3,6 @@ import React from 'react';
 export interface StaffListFilterTab {
   id: string;
   label: string;
-  count?: number;
-  /** When true, always show (count) even when count is 0 — used for All tabs. */
-  alwaysShowCount?: boolean;
-}
-
-export function formatStaffListFilterTabLabel(tab: StaffListFilterTab): string {
-  if (tab.count === undefined) return tab.label;
-  if (tab.alwaysShowCount) return `${tab.label} (${tab.count})`;
-  if (tab.count > 0) return `${tab.label} (${tab.count})`;
-  return tab.label;
 }
 
 interface StaffListFilterTabsProps {
@@ -48,7 +38,7 @@ export function StaffListFilterTabs({
             activeId === tab.id ? '!border-brand-primary !text-brand-primary' : ''
           }`}
         >
-          {formatStaffListFilterTabLabel(tab)}
+          {tab.label}
         </button>
       ))}
     </div>

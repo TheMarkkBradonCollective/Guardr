@@ -3,7 +3,6 @@ import React from 'react';
 export interface MessagesInboxTab {
   id: string;
   label: string;
-  count?: number;
   icon?: React.ReactNode;
 }
 
@@ -27,7 +26,6 @@ export function MessagesInboxTabs({ tabs, activeTab, onTabChange }: MessagesInbo
         >
           {tab.icon}
           {tab.label}
-          {(tab.count ?? 0) > 0 && <span className="app-inbox-tab-badge">{tab.count}</span>}
         </button>
       ))}
     </div>

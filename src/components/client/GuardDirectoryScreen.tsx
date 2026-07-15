@@ -317,9 +317,6 @@ export function GuardDirectoryScreen({
           >
             <Users className="w-3.5 h-3.5" strokeWidth={2} />
             Teams
-            {clientCrews.length > 0 && (
-              <span className="app-inbox-tab-badge">{clientCrews.length}</span>
-            )}
           </button>
         </div>
       </div>

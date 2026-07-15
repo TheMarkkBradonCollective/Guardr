@@ -305,9 +305,9 @@ export function StaffMessagesPanel({
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
       tabs={[
-        { id: 'team', label: 'Team', count: teamRows.length, icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'jobs', label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'support', label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'team', label: 'Team', icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
   );

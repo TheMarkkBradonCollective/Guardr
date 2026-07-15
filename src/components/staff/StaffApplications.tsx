@@ -7,8 +7,6 @@ import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildApplicationFeed,
   formatApprovalTimestamp,
-  isApplicationFeedItemPending,
-  isApplicationFeedItemOpen,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import { applicationFeedItemMatchesSearch } from '../../lib/credentialSearch';
@@ -248,25 +246,6 @@ export function StaffApplications({
   const canReview =
     (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
 
-  const pendingCount = useMemo(
-    () => applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients)).length,
-    [applicationEntries, guards, clients]
-  );
-
-  const openCount = useMemo(
-    () => applicationEntries.filter((entry) => isApplicationFeedItemOpen(entry.item, guards, clients)).length,
-    [applicationEntries, guards, clients]
-  );
-
-  const guardCount = useMemo(
-    () => applicationEntries.filter((entry) => entry.kind === 'guard').length,
-    [applicationEntries]
-  );
-  const clientCount = useMemo(
-    () => applicationEntries.filter((entry) => entry.kind === 'client').length,
-    [applicationEntries]
-  );
-
   const visibleEntries = useMemo(() => {
     return applicationEntries
       .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
@@ -419,9 +398,9 @@ export function StaffApplications({
             activeId={statusFilter}
             onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
             tabs={[
-              { id: 'open', label: 'Open', count: openCount },
-              { id: 'pending', label: 'Pending review', count: pendingCount },
-              { id: 'all', label: 'All', count: applicationEntries.length, alwaysShowCount: true },
+              { id: 'open', label: 'Open' },
+              { id: 'pending', label: 'Pending review' },
+              { id: 'all', label: 'All' },
             ]}
           />
 
@@ -430,9 +409,9 @@ export function StaffApplications({
             activeId={kindFilter}
             onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
             tabs={[
-              { id: 'all', label: 'All types', count: applicationEntries.length, alwaysShowCount: true },
-              { id: 'guard', label: 'Guards', count: guardCount, alwaysShowCount: true },
-              { id: 'client', label: 'Clients', count: clientCount, alwaysShowCount: true },
+              { id: 'all', label: 'All types' },
+              { id: 'guard', label: 'Guards' },
+              { id: 'client', label: 'Clients' },
             ]}
           />
         </>

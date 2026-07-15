@@ -272,10 +272,10 @@ export function GuardMessagesPanel({
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
       tabs={[
-        { id: 'chats', label: 'Chats', count: 1, icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'teams', label: 'Teams', count: teamRows.length, icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'jobs', label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'support', label: 'Support', count: supportRows.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'chats', label: 'Chats', icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'teams', label: 'Teams', icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
   );
