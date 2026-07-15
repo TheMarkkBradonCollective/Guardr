@@ -30,10 +30,12 @@ import { JobChatPanel } from '../messaging/JobChatPanel';
 import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
 import { useDevice } from '../../lib/platform';
 import {
   AppChatHeader,
+  AppEmptyState,
   AppInboxList,
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
@@ -254,31 +256,16 @@ export function GuardMessagesPanel({
 
   // ── Header: inbox tabs (title lives in AppScreenHeader) ──
   const header = (
-    <div className="app-inbox-tabs" role="tablist">
-        {(
-          [
-            { id: 'chats'   as InboxTab, label: 'Chats',   count: 1,                  icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'teams'   as InboxTab, label: 'Teams',   count: teamRows.length,    icon: <Users          className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,     icon: <Briefcase      className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'support' as InboxTab, label: 'Support', count: supportRows.length, icon: <LifeBuoy   className="w-3.5 h-3.5" strokeWidth={2} /> },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.icon}
-            {tab.label}
-            {tab.count > 0 && (
-              <span className="app-inbox-tab-badge">{tab.count}</span>
-            )}
-          </button>
-        ))}
-    </div>
+    <MessagesInboxTabs
+      activeTab={activeTab}
+      onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
+      tabs={[
+        { id: 'chats', label: 'Chats', count: 1, icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'teams', label: 'Teams', count: teamRows.length, icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'jobs', label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'support', label: 'Support', count: supportRows.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
   );
 
   useEffect(() => {
@@ -367,25 +354,25 @@ export function GuardMessagesPanel({
       )}
 
       {tabRows.length === 0 ? (
-        <div className="app-inbox-tab-empty">
-          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
-          <p className="app-inbox-tab-empty-title">
-            {activeTab === 'teams'
+        <AppEmptyState
+          dashed
+          icon={<MessageCircle className="w-5 h-5" />}
+          title={
+            activeTab === 'teams'
               ? 'No team chats yet'
               : activeTab === 'jobs'
-              ? 'No job chats yet'
-              : 'No conversations yet'}
-          </p>
-          <p className="app-inbox-tab-empty-hint">
-            {activeTab === 'teams'
-              ? 'Join a multi-guard crew to coordinate in team chat.'
-              : activeTab === 'jobs'
+                ? 'No job chats yet'
+                : 'No conversations yet'
+          }
+        >
+          {activeTab === 'teams'
+            ? 'Join a multi-guard crew to coordinate in team chat.'
+            : activeTab === 'jobs'
               ? 'Job chats open once you are assigned to an active job.'
               : activeTab === 'support'
-              ? 'Contact support or file a report using the buttons above.'
-              : 'Community messages will appear here.'}
-          </p>
-        </div>
+                ? 'Contact support or file a report using the buttons above.'
+                : 'Community messages will appear here.'}
+        </AppEmptyState>
       ) : (
         <AppInboxList>
           {tabRows.map((row) => (

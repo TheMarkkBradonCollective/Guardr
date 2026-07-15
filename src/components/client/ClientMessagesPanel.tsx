@@ -20,9 +20,11 @@ import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMesse
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
 import {
   AppChatHeader,
+  AppEmptyState,
   AppInboxList,
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
@@ -257,30 +259,15 @@ export function ClientMessagesPanel({
   };
 
   const header = (
-    <div className="app-inbox-tabs" role="tablist">
-      {(
-        [
-          { id: 'chats' as InboxTab, label: 'Chats', count: 1, icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
-          { id: 'jobs' as InboxTab, label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-          { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
-        ] as const
-      ).map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          role="tab"
-          aria-selected={activeTab === tab.id}
-          className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
-          onClick={() => setActiveTab(tab.id)}
-        >
-          {tab.icon}
-          {tab.label}
-          {tab.count > 0 && (
-            <span className="app-inbox-tab-badge">{tab.count}</span>
-          )}
-        </button>
-      ))}
-    </div>
+    <MessagesInboxTabs
+      activeTab={activeTab}
+      onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
+      tabs={[
+        { id: 'chats', label: 'Chats', count: 1, icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'jobs', label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'support', label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
   );
 
   useEffect(() => {
@@ -354,19 +341,19 @@ export function ClientMessagesPanel({
       )}
 
       {tabRows.length === 0 ? (
-        <div className="app-inbox-tab-empty">
-          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
-          <p className="app-inbox-tab-empty-title">
-            {activeTab === 'jobs' ? 'No job chats yet' : activeTab === 'support' ? 'No support conversations' : 'No conversations yet'}
-          </p>
-          <p className="app-inbox-tab-empty-hint">
-            {activeTab === 'jobs'
-              ? 'Job chats appear here once a guard is assigned to your booking.'
-              : activeTab === 'support'
+        <AppEmptyState
+          dashed
+          icon={<MessageCircle className="w-5 h-5" />}
+          title={
+            activeTab === 'jobs' ? 'No job chats yet' : activeTab === 'support' ? 'No support conversations' : 'No conversations yet'
+          }
+        >
+          {activeTab === 'jobs'
+            ? 'Job chats appear here once a guard is assigned to your booking.'
+            : activeTab === 'support'
               ? 'Use the buttons above to contact support or file a report.'
               : 'Community messages will appear here.'}
-          </p>
-        </div>
+        </AppEmptyState>
       ) : (
         <AppInboxList>
           {tabRows.map((row) => (

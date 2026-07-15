@@ -29,8 +29,12 @@ import { JobChatPanel } from '../messaging/JobChatPanel';
 import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
-import { AppChatHeader, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
+import { AppChatHeader, AppEmptyState, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
+import { useDevice } from '../../lib/platform';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
+import { teamChatRosterLabel } from '../../lib/teamChat';
 import {
   Briefcase,
   FileText,
@@ -78,6 +82,7 @@ interface StaffMessagesPanelProps {
   initialJobChatRequestId?: string | null;
   initialSupportTicketId?: string | null;
   onDetailOpenChange?: (open: boolean) => void;
+  onMessagesChromeChange?: (chrome: MessagesChrome) => void;
 }
 
 function formatInboxMeta(iso: string): string {
@@ -116,7 +121,10 @@ export function StaffMessagesPanel({
   initialJobChatRequestId = null,
   initialSupportTicketId = null,
   onDetailOpenChange,
+  onMessagesChromeChange,
 }: StaffMessagesPanelProps) {
+  const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
     if (initialSupportTicketId)  return { kind: 'support', ticketId: initialSupportTicketId };
@@ -240,11 +248,12 @@ export function StaffMessagesPanel({
     ? { kind: 'job', requestId: controlledJobId }
     : selection;
 
-  useEffect(() => {
-    onDetailOpenChange?.(!!effectiveSelection);
-  }, [effectiveSelection, onDetailOpenChange]);
-
   const hasSelection = !!effectiveSelection;
+  const embedHeaderInShell = !splitView && hasSelection;
+
+  useEffect(() => {
+    onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
+  }, [formFactor, hasSelection, onDetailOpenChange]);
 
   const isRowSelected = (row: InboxRow) => {
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
@@ -256,57 +265,152 @@ export function StaffMessagesPanel({
     return false;
   };
 
-  // ── Header: title + tabs ───────────────────────────────
-  const header = (
-    <div>
-      <div className="app-messages-hub-lead">
-        <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Staff channel, crew team chats, job threads, and support</p>
-      </div>
-      <div className="app-inbox-tabs" role="tablist">
-        {(
-          [
-            { id: 'team'    as InboxTab, label: 'Team',    count: teamRows.length,     icon: <Users      className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,        icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy   className="w-3.5 h-3.5" strokeWidth={2} /> },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.icon}
-            {tab.label}
-            {tab.count > 0 && (
-              <span className="app-inbox-tab-badge">{tab.count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
+  const inboxTabs = (
+    <MessagesInboxTabs
+      activeTab={activeTab}
+      onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
+      tabs={[
+        { id: 'team', label: 'Team', count: teamRows.length, icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'jobs', label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'support', label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
   );
+
+  useEffect(() => {
+    if (!onMessagesChromeChange) return;
+
+    const extension = !embedHeaderInShell ? inboxTabs : null;
+    let override: React.ReactNode | null = null;
+
+    if (embedHeaderInShell && effectiveSelection) {
+      if (effectiveSelection.kind === 'staff-channel') {
+        override = (
+          <AppChatHeader title="Staff chat" subtitle="Internal team channel" onBack={clearSelection} />
+        );
+      } else if (effectiveSelection.kind === 'guard-channel') {
+        override = (
+          <AppChatHeader title="Guard chat" subtitle="All-guards community channel" onBack={clearSelection} />
+        );
+      } else if (effectiveSelection.kind === 'client-channel') {
+        override = (
+          <AppChatHeader title="Client chat" subtitle="All-clients community channel" onBack={clearSelection} />
+        );
+      } else if (effectiveSelection.kind === 'job') {
+        const request = requests.find((r) => r.id === effectiveSelection.requestId);
+        if (request) {
+          override = (
+            <AppChatHeader
+              title={request.title}
+              subtitle={request.location ?? undefined}
+              onBack={clearSelection}
+            />
+          );
+        }
+      } else if (effectiveSelection.kind === 'team') {
+        const request = requests.find((r) => r.id === effectiveSelection.requestId);
+        if (request) {
+          override = (
+            <AppChatHeader
+              title={`${request.title} · Team`}
+              subtitle={teamChatRosterLabel(request)}
+              onBack={clearSelection}
+            />
+          );
+        }
+      } else if (effectiveSelection.kind === 'support') {
+        const ticket = supportTickets.find((t) => t.id === effectiveSelection.ticketId);
+        if (ticket) {
+          const canDelete =
+            !!onDeleteSupportTicket &&
+            canDeleteResolvedSupportChat(currentUser) &&
+            isDeletableResolvedSupportChat(ticket);
+          override = (
+            <AppChatHeader
+              title={ticket.subject}
+              subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
+              onBack={clearSelection}
+              trailing={
+                <div className="flex items-center gap-2 shrink-0">
+                  {canDelete && onDeleteSupportTicket && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void onDeleteSupportTicket(ticket.id);
+                        clearSelection();
+                      }}
+                      className="app-chat-header-action app-chat-header-action-danger"
+                      aria-label="Delete resolved conversation"
+                      title="Delete conversation"
+                    >
+                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                    </button>
+                  )}
+                  <select
+                    value={ticket.status}
+                    onChange={(e) =>
+                      void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
+                    }
+                    className="uber-input text-xs py-1.5 max-w-[8.5rem]"
+                  >
+                    {(
+                      Object.keys(
+                        ticket.kind === 'report'
+                          ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+                          : SUPPORT_STATUS_LABEL
+                      ) as SupportTicketStatus[]
+                    ).map((s) => (
+                      <option key={s} value={s}>
+                        {ticket.kind === 'report'
+                          ? supportStatusLabel({ kind: 'report', status: s })
+                          : SUPPORT_STATUS_LABEL[s]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              }
+            />
+          );
+        }
+      }
+    }
+
+    onMessagesChromeChange({ extension, override });
+    return () => onMessagesChromeChange(EMPTY_MESSAGES_CHROME);
+  }, [
+    onMessagesChromeChange,
+    embedHeaderInShell,
+    activeTab,
+    teamRows.length,
+    jobRows.length,
+    supportRowsAll.length,
+    effectiveSelection,
+    requests,
+    supportTickets,
+    currentUser,
+    onDeleteSupportTicket,
+    onUpdateSupportStatus,
+  ]);
+
+  const header = inboxTabs;
 
   // ── List ───────────────────────────────────────────────
   const list = (
     <>
       {tabRows.length === 0 ? (
-        <div className="app-inbox-tab-empty">
-          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
-          <p className="app-inbox-tab-empty-title">
-            {activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'No team conversations'}
-          </p>
-          <p className="app-inbox-tab-empty-hint">
-            {activeTab === 'jobs'
-              ? 'Job chats appear here when a guard is assigned to a booking.'
-              : activeTab === 'support'
+        <AppEmptyState
+          dashed
+          icon={<MessageCircle className="w-5 h-5" />}
+          title={
+            activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'No team conversations'
+          }
+        >
+          {activeTab === 'jobs'
+            ? 'Job chats appear here when a guard is assigned to a booking.'
+            : activeTab === 'support'
               ? 'Support and report tickets from users will appear here.'
               : 'Staff chat and multi-guard crew chats appear here.'}
-          </p>
-        </div>
+        </AppEmptyState>
       ) : (
         <AppInboxList>
           {tabRows.map((row) => (
@@ -351,12 +455,14 @@ export function StaffMessagesPanel({
       const canPostGuardChat = Boolean(onSendGuardMessage) && canPostToGuardChat(currentUser);
       return (
         <div className="flex flex-col h-full min-h-0 app-full-page-screen">
-          <AppChatHeader
-            title="Guard chat"
-            subtitle="All-guards community channel"
-            onBack={clearSelection}
-            hideBackOnDesktop
-          />
+          {!embedHeaderInShell && (
+            <AppChatHeader
+              title="Guard chat"
+              subtitle="All-guards community channel"
+              onBack={clearSelection}
+              hideBackOnDesktop
+            />
+          )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
@@ -377,12 +483,14 @@ export function StaffMessagesPanel({
       const canPostClientChat = Boolean(onSendClientMessage) && canPostToClientChat(currentUser);
       return (
         <div className="flex flex-col h-full min-h-0 app-full-page-screen">
-          <AppChatHeader
-            title="Client chat"
-            subtitle="All-clients community channel"
-            onBack={clearSelection}
-            hideBackOnDesktop
-          />
+          {!embedHeaderInShell && (
+            <AppChatHeader
+              title="Client chat"
+              subtitle="All-clients community channel"
+              onBack={clearSelection}
+              hideBackOnDesktop
+            />
+          )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
               messages={sortedClientMessages(clientMessages)}
@@ -402,12 +510,14 @@ export function StaffMessagesPanel({
     if (effectiveSelection.kind === 'staff-channel') {
       return (
         <div className="flex flex-col h-full min-h-0 app-full-page-screen">
-          <AppChatHeader
-            title="Staff chat"
-            subtitle="Internal team channel"
-            onBack={clearSelection}
-            hideBackOnDesktop
-          />
+          {!embedHeaderInShell && (
+            <AppChatHeader
+              title="Staff chat"
+              subtitle="Internal team channel"
+              onBack={clearSelection}
+              hideBackOnDesktop
+            />
+          )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
               messages={sortedStaffMessages(staffMessages)}
@@ -433,6 +543,7 @@ export function StaffMessagesPanel({
           onSend={(body) => onSendJobChat(request.id, body)}
           onBack={clearSelection}
           hideBackOnDesktop
+          hideShellHeader={embedHeaderInShell}
         />
       );
     }
@@ -449,6 +560,7 @@ export function StaffMessagesPanel({
           onSend={(body) => onSendTeamChatMessage(request.id, body)}
           onBack={clearSelection}
           hideBackOnDesktop
+          hideShellHeader={embedHeaderInShell}
         />
       );
     }
@@ -478,48 +590,50 @@ export function StaffMessagesPanel({
 
     return (
       <div className="flex flex-col h-full min-h-0 bg-brand-bg app-full-page-screen">
-        <AppChatHeader
-          title={ticket.subject}
-          subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
-          onBack={clearSelection}
-          hideBackOnDesktop
-          trailing={
-            <div className="flex items-center gap-2 shrink-0">
-              {canDelete && (
-                <button
-                  type="button"
-                  onClick={() => void handleDelete()}
-                  className="app-chat-header-action app-chat-header-action-danger"
-                  aria-label="Delete resolved conversation"
-                  title="Delete conversation"
+        {!embedHeaderInShell && (
+          <AppChatHeader
+            title={ticket.subject}
+            subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
+            onBack={clearSelection}
+            hideBackOnDesktop
+            trailing={
+              <div className="flex items-center gap-2 shrink-0">
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete()}
+                    className="app-chat-header-action app-chat-header-action-danger"
+                    aria-label="Delete resolved conversation"
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                  </button>
+                )}
+                <select
+                  value={ticket.status}
+                  onChange={(e) =>
+                    void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
+                  }
+                  className="uber-input text-xs py-1.5 max-w-[8.5rem]"
                 >
-                  <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-                </button>
-              )}
-              <select
-                value={ticket.status}
-                onChange={(e) =>
-                  void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
-                }
-                className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-              >
-                {(
-                  Object.keys(
-                    ticket.kind === 'report'
-                      ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                      : SUPPORT_STATUS_LABEL
-                  ) as SupportTicketStatus[]
-                ).map((s) => (
-                  <option key={s} value={s}>
-                    {ticket.kind === 'report'
-                      ? supportStatusLabel({ kind: 'report', status: s })
-                      : SUPPORT_STATUS_LABEL[s]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          }
-        />
+                  {(
+                    Object.keys(
+                      ticket.kind === 'report'
+                        ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+                        : SUPPORT_STATUS_LABEL
+                    ) as SupportTicketStatus[]
+                  ).map((s) => (
+                    <option key={s} value={s}>
+                      {ticket.kind === 'report'
+                        ? supportStatusLabel({ kind: 'report', status: s })
+                        : SUPPORT_STATUS_LABEL[s]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            }
+          />
+        )}
         <div className="flex-1 min-h-0">
           <ChatThreadPanel
             messages={ticket.messages.map((msg) => ({
@@ -547,6 +661,7 @@ export function StaffMessagesPanel({
       list={list}
       detail={detailView ?? <div />}
       hasSelection={hasSelection && !!detailView}
+      shellInboxHeader
       emptyDetailTitle="Select a conversation"
       emptyDetailHint="Staff channel, crew chats, job threads, and support"
     />

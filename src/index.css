@@ -12424,6 +12424,20 @@ html.theme-dark .notification-inbox-item--unread {
   background: transparent;
 }
 
+.staff-main-header-extension {
+  width: 100%;
+}
+
+.staff-main-header-extension .app-inbox-tabs {
+  border-bottom: none;
+  background: transparent;
+}
+
+.staff-main-header-slot .app-chat-header {
+  border-bottom: none;
+  background: transparent;
+}
+
 .app-screen-header-slot .app-chat-header {
   border-bottom: none;
   background: transparent;
