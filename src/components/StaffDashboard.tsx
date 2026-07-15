@@ -643,6 +643,14 @@ export function StaffDashboard({
                   }
                 : undefined
             }
+            onEditGuardProfile={
+              canManageGuardAccounts
+                ? (guardId) => {
+                    onStaffGuardEditChange?.(true);
+                    navigateSection('guards', { guardId });
+                  }
+                : undefined
+            }
             onItemIdChange={setSelectedCredentialItemId}
           />
         );

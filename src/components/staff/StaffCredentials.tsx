@@ -64,6 +64,7 @@ interface StaffCredentialsProps {
   ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
   onAddCredentialForGuard?: (guardId: string) => void;
+  onEditGuardProfile?: (guardId: string) => void;
 }
 
 function CredentialFeedRow({
@@ -159,6 +160,7 @@ export function StaffCredentials({
   onUpdateCertification,
   onOpenGuardProfile,
   onAddCredentialForGuard,
+  onEditGuardProfile,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialFilter>('all');
   const [search, setSearch] = useState('');
@@ -410,6 +412,9 @@ export function StaffCredentials({
                   ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
                   : undefined
               }
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+              }
             />
             {renderCertActions(guard, context.cert)}
           </div>
@@ -426,6 +431,9 @@ export function StaffCredentials({
                       await onReviewGuardInsurance(guard.id, status, rejectionReason);
                     }
                   : undefined
+              }
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
               }
             />
             <button
@@ -449,6 +457,9 @@ export function StaffCredentials({
                       }
                     : undefined
                 }
+                onEditFullPage={
+                  onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+                }
               />
             )}
           </div>
@@ -456,7 +467,14 @@ export function StaffCredentials({
 
         {context.kind === 'gov-id' && (
           <div className="space-y-3">
-            <GuardIdItemCard guard={guard} staffMode asCredentialSection />
+            <GuardIdItemCard
+              guard={guard}
+              staffMode
+              asCredentialSection
+              onEditFullPage={
+                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+              }
+            />
             {renderGovIdActions(guard)}
             {renderGovIdUnverify(guard)}
           </div>

@@ -61,6 +61,7 @@ interface GuardResumeEditorProps {
   credentialsEditing?: boolean;
   /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
   staffMode?: boolean;
+  onEditCredentialFullPage?: () => void;
 }
 
 export function GuardResumeEditor({
@@ -79,6 +80,7 @@ export function GuardResumeEditor({
   onReviewInsurance,
   credentialsEditing,
   staffMode = false,
+  onEditCredentialFullPage,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
   const [showAddExp, setShowAddExp] = useState(false);
@@ -289,6 +291,9 @@ export function GuardResumeEditor({
         onSubmitIdentityVerification={onSubmitIdentityVerification}
         onSaveInsurance={onSaveInsurance}
         onReviewInsurance={onReviewInsurance}
+        certOverlayNav={
+          onEditCredentialFullPage ? { onEditFullPage: onEditCredentialFullPage } : undefined
+        }
       />
 
       <GuardWeaponGearPanel

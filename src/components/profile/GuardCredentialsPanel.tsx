@@ -43,6 +43,8 @@ import {
 } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { certOverlayProps, type CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
+import { coiApprovalItemId, govIdApprovalItemId } from '../../lib/guardCredentialSections';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -107,6 +109,7 @@ interface GuardCredentialsPanelProps {
   renderCertActions?: (cert: Certification) => React.ReactNode;
   onSaveInsurance?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
+  certOverlayNav?: CertOverlayNavigation;
 }
 
 export function GuardCredentialsPanel({
@@ -122,6 +125,7 @@ export function GuardCredentialsPanel({
   renderCertActions,
   onSaveInsurance,
   onReviewInsurance,
+  certOverlayNav,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -206,6 +210,8 @@ export function GuardCredentialsPanel({
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
+  const credentialViewFullLabel = certOverlayNav?.onViewFull ? 'View full in Credentials →' : undefined;
+
   const certCardProps = (cert: Certification) => ({
     onDelete: onDeleteCertification ? () => handleDelete(cert.id) : undefined,
     onAttachImage: onAttachCertificationImage
@@ -217,6 +223,8 @@ export function GuardCredentialsPanel({
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
       : undefined,
     guardName: guard.name,
+    viewFullLabel: credentialViewFullLabel,
+    ...certOverlayProps(certOverlayNav, cert.id),
   });
 
   const renderCertRow = (cert: Certification) => (
@@ -449,6 +457,13 @@ export function GuardCredentialsPanel({
             staffMode={staffMode}
             asCredentialSection
             onSubmit={onSubmitIdentityVerification}
+            onViewFull={
+              certOverlayNav?.onViewFull
+                ? () => certOverlayNav.onViewFull!(govIdApprovalItemId(guard.id))
+                : undefined
+            }
+            viewFullLabel={credentialViewFullLabel}
+            onEditFullPage={certOverlayNav?.onEditFullPage}
           />
           {staffIdReview && <div className="-mt-2">{staffIdReview}</div>}
           {!guard.isStaff && (onSaveInsurance || onReviewInsurance || guard.insurancePolicy) && (
@@ -458,6 +473,13 @@ export function GuardCredentialsPanel({
               staffMode={staffMode}
               onSave={onSaveInsurance}
               onReview={onReviewInsurance}
+              onViewFull={
+                certOverlayNav?.onViewFull
+                  ? () => certOverlayNav.onViewFull!(coiApprovalItemId(guard.id))
+                  : undefined
+              }
+              viewFullLabel={credentialViewFullLabel}
+              onEditFullPage={certOverlayNav?.onEditFullPage}
             />
           )}
           <GuardCardPanel
@@ -469,6 +491,7 @@ export function GuardCredentialsPanel({
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
             onUpdateCertification={onUpdateCertification}
+            certOverlayNav={certOverlayNav}
           />
         </>
       )}
@@ -482,6 +505,7 @@ export function GuardCredentialsPanel({
         onAttachCertificationImage={onAttachCertificationImage}
         onUpdateCertification={onUpdateCertification}
         renderCertActions={renderCertActions}
+        certOverlayNav={certOverlayNav}
       />
       <GuardThirtyTwoHourPanel
         guard={guard}
@@ -492,6 +516,7 @@ export function GuardCredentialsPanel({
         onAttachCertificationImage={onAttachCertificationImage}
         onUpdateCertification={onUpdateCertification}
         renderCertActions={renderCertActions}
+        certOverlayNav={certOverlayNav}
       />
       {showSection(filteredRefresherItems.length) && (
       <div className="mt-14 pt-8 border-t border-b border-brand-border pb-5">
