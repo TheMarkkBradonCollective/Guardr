@@ -24,7 +24,6 @@ import {
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
-import { isAppExperience } from '../lib/platform/appExperience';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -638,34 +637,12 @@ export function AuthPage({
   ];
 
   const heroContent = AUTH_HERO_CONTENT[role];
-  const appShell = isAppExperience();
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience-${role} ${appShell ? 'auth-experience-app' : ''}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience-${role}`}
       id="guardr-auth-root"
     >
-      {appShell ? (
-        <header className="auth-app-header shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border/60 bg-brand-bg">
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="flex items-center gap-1.5 text-sm font-semibold text-brand-text-muted hover:text-brand-text transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-          <div className="flex items-center gap-2 text-brand-text">
-            <Logo size={24} className="text-brand-primary" />
-            <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
-          </div>
-          <div className="w-14 flex justify-end">
-            {onChangeTheme && (
-              <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-            )}
-          </div>
-        </header>
-      ) : (
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
         <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
         <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -731,9 +708,8 @@ export function AuthPage({
           <p className="auth-hero-trust-line">{heroContent.trustLine}</p>
         </div>
       </div>
-      )}
 
-      <div className={`auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 ${appShell ? 'py-5' : 'py-6 sm:py-10'}`}>
+      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
         <AppFlowSurface className="w-full max-w-md animate-fade-in">
           <div className="mb-7">
             <p className="experience-badge">
