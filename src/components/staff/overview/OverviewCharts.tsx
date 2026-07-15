@@ -154,12 +154,22 @@ export function OverviewVisualCardView({ card }: { card: OverviewVisualCard }) {
 export function OverviewVisualGrid({
   cards,
   columns = 2,
+  variant = 'full',
 }: {
   cards: OverviewVisualCard[];
   columns?: 2 | 3;
+  /** Sidebar column in split dashboards — always stacks cards in one column. */
+  variant?: 'full' | 'sidebar';
 }) {
+  const columnClass =
+    variant === 'sidebar'
+      ? ' staff-overview-visual-grid--sidebar'
+      : columns === 3
+        ? ' staff-overview-visual-grid--3'
+        : '';
+
   return (
-    <div className={`staff-overview-visual-grid${columns === 3 ? ' staff-overview-visual-grid--3' : ''}`}>
+    <div className={`staff-overview-visual-grid${columnClass}`}>
       {cards.map((card) => (
         <OverviewVisualCardView key={card.id} card={card} />
       ))}
