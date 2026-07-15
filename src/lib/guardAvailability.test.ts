@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createDateOverride,
+  createOffDayOverride,
   defaultAvailabilitySlots,
   getEnabledWeekDays,
   guardIsAvailableForJob,
@@ -83,24 +84,17 @@ describe('guardIsAvailableForJob', () => {
     assert.equal(guardIsAvailableForJob('guard-1', job, schedule), false);
   });
 
-  it('uses a specific date override on an otherwise off day', () => {
-    const sunday = '2026-07-19';
-    const withOverride = {
+  it('rejects a job on a specific off-day override', () => {
+    const monday = '2026-07-20';
+    const withOffDay = {
       weeklySlots: schedule.weeklySlots,
-      dateOverrides: [
-        createDateOverride({
-          guardId: 'guard-1',
-          date: sunday,
-          startTime: '09:00',
-          endTime: '17:00',
-        }),
-      ],
+      dateOverrides: [createOffDayOverride({ guardId: 'guard-1', date: monday })],
     };
     const job = {
-      startDate: `${sunday}T10:00:00`,
-      endDate: `${sunday}T14:00:00`,
+      startDate: `${monday}T10:00:00`,
+      endDate: `${monday}T14:00:00`,
     };
-    assert.equal(guardIsAvailableForJob('guard-1', job, withOverride), true);
+    assert.equal(guardIsAvailableForJob('guard-1', job, withOffDay), false);
   });
 });
 
@@ -148,5 +142,17 @@ describe('windowsForDate', () => {
     );
     assert.equal(windows.length, 1);
     assert.equal(windows[0].startTime, '08:00');
+  });
+
+  it('returns no windows when the date is marked off', () => {
+    const monday = new Date('2026-07-20T12:00:00');
+    const windows = windowsForDate(
+      {
+        weeklySlots: defaultAvailabilitySlots('guard-1'),
+        dateOverrides: [createOffDayOverride({ guardId: 'guard-1', date: '2026-07-20' })],
+      },
+      monday
+    );
+    assert.equal(windows.length, 0);
   });
 });

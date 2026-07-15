@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { CalendarPlus, Trash2 } from 'lucide-react';
+import { CalendarOff, Trash2 } from 'lucide-react';
 import {
-  createDateOverride,
-  isInvalidAvailabilityWindow,
+  createOffDayOverride,
+  isOffDayOverride,
   loadGuardAvailabilitySchedule,
   prunePastDateOverrides,
   saveGuardAvailabilitySchedule,
@@ -42,12 +42,12 @@ export function GuardAvailabilityDatesPanel({
     };
   });
   const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('18:00');
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  const upcoming = [...schedule.dateOverrides].sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = [...schedule.dateOverrides]
+    .filter(isOffDayOverride)
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const persist = async (next: GuardAvailabilitySchedule) => {
     setSaving(true);
@@ -56,15 +56,15 @@ export function GuardAvailabilityDatesPanel({
       setSchedule(saved);
       await onSave?.(saved);
       setDirty(false);
-      showAppToast('Specific dates updated', { tone: 'success' });
+      showAppToast('Off days updated', { tone: 'success' });
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not save dates.', { tone: 'error' });
+      showAppToast(err instanceof Error ? err.message : 'Could not save off days.', { tone: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
-  const addOverride = () => {
+  const addOffDay = () => {
     if (!date) {
       showAppToast('Choose a date first', { tone: 'error' });
       return;
@@ -73,11 +73,11 @@ export function GuardAvailabilityDatesPanel({
       showAppToast('Past dates are not allowed', { tone: 'error' });
       return;
     }
-    const candidate = createDateOverride({ guardId, date, startTime, endTime, isAvailable: true });
-    if (isInvalidAvailabilityWindow(candidate)) {
-      showAppToast('End time must be after start time', { tone: 'error' });
+    if (schedule.dateOverrides.some((o) => o.date === date && isOffDayOverride(o))) {
+      showAppToast('That date is already marked off', { tone: 'error' });
       return;
     }
+    const candidate = createOffDayOverride({ guardId, date });
     const withoutDate = schedule.dateOverrides.filter((o) => o.date !== date);
     const next = {
       ...schedule,
@@ -101,20 +101,22 @@ export function GuardAvailabilityDatesPanel({
 
   return (
     <section className="availability-dates-panel">
-      <div className="availability-dates-header">
-        <CalendarPlus className="w-5 h-5 text-brand-primary" />
-        <div>
-          <h3 className="text-base font-bold text-brand-text">Specific dates</h3>
-          <p className="availability-calendar-subtitle">
-            Add one-off availability for a single day. Past dates clear automatically.
-          </p>
+      <div className="guard-factors-header availability-dates-header">
+        <div className="availability-dates-title-row">
+          <CalendarOff className="w-5 h-5 text-brand-primary shrink-0" aria-hidden />
+          <div>
+            <h3 className="guard-factors-heading">Specific dates</h3>
+            <p className="guard-factors-subheading">
+              Mark one-off days you are unavailable. Past dates clear automatically.
+            </p>
+          </div>
         </div>
       </div>
 
       {!readOnly && (
         <div className="availability-date-form">
           <label className="availability-date-field">
-            <span>Date</span>
+            <span>Date to mark off</span>
             <input
               type="date"
               value={date}
@@ -123,67 +125,57 @@ export function GuardAvailabilityDatesPanel({
               className="uber-input w-full"
             />
           </label>
-          <label className="availability-date-field">
-            <span>From</span>
-            <input
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="uber-input w-full"
-            />
-          </label>
-          <label className="availability-date-field">
-            <span>To</span>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="uber-input w-full"
-            />
-          </label>
-          <button type="button" onClick={addOverride} className="app-button-outline app-btn-sm">
-            Add date
+          <button type="button" onClick={addOffDay} className="app-button-outline app-btn-sm">
+            Mark day off
           </button>
         </div>
       )}
 
       {upcoming.length === 0 ? (
-        <p className="availability-off-note">No upcoming specific dates — weekly schedule applies.</p>
+        <p className="availability-off-note availability-dates-empty">
+          No upcoming off days — your weekly schedule applies.
+        </p>
       ) : (
         <ul className="availability-date-list">
           {upcoming.map((override: GuardAvailabilityDateOverride) => (
-            <li key={override.id} className="availability-date-item">
-              <div>
-                <p className="availability-date-item-title">{formatDisplayDate(override.date)}</p>
-                <p className="availability-date-item-hours">
-                  {override.startTime} – {override.endTime}
-                  {!override.isAvailable && ' · Blocked'}
-                </p>
-              </div>
-              {!readOnly && (
-                <button
-                  type="button"
-                  onClick={() => removeOverride(override.id)}
-                  className="availability-slot-remove"
-                  aria-label={`Remove availability for ${formatDisplayDate(override.date)}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+            <li key={override.id}>
+              <article className="guard-factor-card availability-off-day-card guard-factor-card-low">
+                <div className="availability-day-card-head">
+                  <p className="guard-factor-card-label">{formatDisplayDate(override.date)}</p>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => removeOverride(override.id)}
+                      className="availability-slot-remove"
+                      aria-label={`Remove off day for ${formatDisplayDate(override.date)}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <p className="guard-factor-card-rate availability-off-day-value">Off</p>
+                <div className="guard-factor-card-footer availability-day-card-footer">
+                  <span className="guard-factor-card-points">Overrides your weekly hours for this date</span>
+                  <span className="guard-factor-card-status guard-factor-status-low">
+                    <span className="guard-factor-status-dot" />
+                    Day off
+                  </span>
+                </div>
+              </article>
             </li>
           ))}
         </ul>
       )}
 
       {!readOnly && dirty && (
-        <div className="availability-save-row">
+        <div className="availability-save-row availability-dates-save-row">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             className="app-button-primary app-btn-sm disabled:opacity-50"
           >
-            {saving ? 'Saving…' : 'Save specific dates'}
+            {saving ? 'Saving…' : 'Save off days'}
           </button>
         </div>
       )}

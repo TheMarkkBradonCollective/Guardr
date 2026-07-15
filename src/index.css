@@ -15031,33 +15031,51 @@ html.theme-grey .landing-wordmark {
 .availability-dates-panel {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .availability-dates-header {
+  margin-bottom: 0;
+}
+
+.availability-dates-title-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .availability-date-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: 0.65rem;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .availability-date-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--brand-text-muted);
 }
 
-.availability-date-field:first-child {
-  grid-column: 1 / -1;
+.availability-dates-empty {
+  margin: 0;
+}
+
+.availability-off-day-card {
+  width: 100%;
+}
+
+.availability-off-day-value {
+  font-size: 1.35rem;
+}
+
+.availability-dates-save-row {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .availability-date-list {
