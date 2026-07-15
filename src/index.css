@@ -3230,6 +3230,14 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   background: var(--brand-bg);
 }
 
+.app-full-page-detail {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .app-full-page-detail .app-subscreen-header {
   position: sticky;
   top: 0;
@@ -13120,12 +13128,20 @@ html.theme-dark .landing-mobile-cta-bar {
 
 /* ─── SEGMENTED TABS: UNDERLINE INDICATOR PRECISION ────────────────────── */
 
-/* Segmented control: tabs fit in viewport — no horizontal scroll */
+/* Segmented control: underline nav tabs — wrap or scroll instead of clipping */
 .app-segmented-control {
   display: flex;
-  overflow: hidden;
+  flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.app-segmented-control::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─── JOB LIST: PREMIUM RATE DISPLAY ────────────────────────────────────── */
@@ -14027,13 +14043,20 @@ html.theme-light .app-chat-bubble-outgoing {
   height: 0.8125rem;
 }
 
-/* ─── Inbox tabs: fit all tabs in viewport — no horizontal scroll ────────── */
+/* ─── Inbox tabs: horizontal scroll when needed — full labels, no clipping ─ */
 
 .app-inbox-tabs {
-  overflow: hidden;       /* never scroll horizontally */
-  flex-wrap: nowrap;      /* single row */
+  overflow-x: auto;
+  overflow-y: visible;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   background: var(--brand-surface);
   border-bottom: 1px solid var(--brand-border);
+}
+
+.app-inbox-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 html.theme-dark .app-inbox-tabs {
@@ -14047,14 +14070,12 @@ html.theme-light .app-inbox-tabs {
 }
 
 .app-inbox-tab {
-  padding: 0.6875rem 0.625rem;   /* tighter padding so 4 tabs always fit */
-  font-size: 0.75rem;
+  padding: 0.6875rem 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  flex: 1;
-  min-width: 0;                   /* let flex squeeze instead of overflow */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 0 auto;
+  min-width: 4.5rem;
   white-space: nowrap;
 }
 
@@ -15482,16 +15503,14 @@ html.theme-dark .role-side-nav-item-active {
 
 /* ─── Segmented controls & chips ─────────────────────────────────────────── */
 
-.segmented-control,
-.app-segmented-control {
+.segmented-control {
   padding: 0.25rem !important;
   border-radius: var(--radius-pill) !important;
   background: var(--brand-bg-sec) !important;
   border: 1px solid var(--brand-border) !important;
 }
 
-.segmented-control-btn-active,
-.app-segmented-control-item-active {
+.segmented-control-btn-active {
   background: var(--brand-surface) !important;
   color: var(--brand-text) !important;
   box-shadow: var(--shadow-sm) !important;
@@ -16870,6 +16889,17 @@ textarea.uber-input {
   display: none;
 }
 
+.staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
+    padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+}
+
 .staff-shell .staff-main-content--padded > div {
   overflow-x: visible !important;
   overflow-y: auto;
@@ -17289,9 +17319,8 @@ html.theme-light .uber-select {
   color: var(--brand-text-muted);
 }
 
-/* Segmented controls & chips */
-.segmented-control,
-.app-segmented-control {
+/* Segmented controls & chips — pill toggles only; app-segmented-control stays underline nav */
+.segmented-control {
   border-radius: var(--radius-pill);
   padding: 3px;
   background: var(--brand-bg-sec);
