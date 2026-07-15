@@ -12,6 +12,12 @@ import {
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import { applicationFeedItemMatchesSearch } from '../../lib/credentialSearch';
+import {
+  type ApplicationKindFilter,
+  type ApplicationStatusFilter,
+  matchesApplicationKindFilter,
+  matchesApplicationStatusFilter,
+} from '../../lib/staffListFilters';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
@@ -22,9 +28,9 @@ import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 type ApplicationKind = 'guard' | 'client';
-type ApplicationFilter = 'open' | 'pending' | 'all';
 
 interface ApplicationListEntry {
   kind: ApplicationKind;
@@ -182,7 +188,8 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [filter, setFilter] = useState<ApplicationFilter>('open');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('open');
+  const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
     if (initialGuardId) return `guard:${initialGuardId}`;
@@ -249,15 +256,23 @@ export function StaffApplications({
     [applicationEntries, guards, clients]
   );
 
+  const guardCount = useMemo(
+    () => applicationEntries.filter((entry) => entry.kind === 'guard').length,
+    [applicationEntries]
+  );
+  const clientCount = useMemo(
+    () => applicationEntries.filter((entry) => entry.kind === 'client').length,
+    [applicationEntries]
+  );
+
   const visibleEntries = useMemo(() => {
-    const scoped =
-      filter === 'pending'
-        ? applicationEntries.filter((entry) => isApplicationFeedItemPending(entry.item, guards, clients))
-        : filter === 'open'
-          ? applicationEntries.filter((entry) => isApplicationFeedItemOpen(entry.item, guards, clients))
-          : applicationEntries;
-    return scoped.filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
-  }, [applicationEntries, filter, guards, clients, search]);
+    return applicationEntries
+      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
+      .filter((entry) =>
+        matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
+      )
+      .filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
+  }, [applicationEntries, kindFilter, statusFilter, guards, clients, search]);
 
   const { showDetailOnly } = useSplitListDetail(activeItemKey, 'page');
 
@@ -358,7 +373,7 @@ export function StaffApplications({
   }
 
   return (
-    <div className="animate-fade-in space-y-4" data-tour="staff-applications">
+    <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-applications">
       {!showDetailOnly && (
         <>
           <p className="text-sm text-brand-text-muted leading-relaxed">
@@ -372,7 +387,8 @@ export function StaffApplications({
                 onAdd={onAddGuard}
                 onCreated={(guardId) => {
                   setSearch('');
-                  setFilter('open');
+                  setStatusFilter('open');
+                  setKindFilter('guard');
                   setActiveItemKey(`guard:${guardId}`);
                   onSelectionChange?.({ guardId, clientId: null });
                 }}
@@ -383,7 +399,8 @@ export function StaffApplications({
                 onAdd={onAddClient}
                 onCreated={(clientId) => {
                   setSearch('');
-                  setFilter('open');
+                  setStatusFilter('open');
+                  setKindFilter('client');
                   setActiveItemKey(`client:${clientId}`);
                   onSelectionChange?.({ guardId: null, clientId });
                 }}
@@ -398,29 +415,27 @@ export function StaffApplications({
             className="max-w-md"
           />
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setFilter('open')}
-              className={`app-button-outline app-btn-sm ${filter === 'open' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              Open{openCount > 0 ? ` (${openCount})` : ''}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('pending')}
-              className={`app-button-outline app-btn-sm ${filter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              Pending review{pendingCount > 0 ? ` (${pendingCount})` : ''}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('all')}
-              className={`app-button-outline app-btn-sm ${filter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              All ({applicationEntries.length})
-            </button>
-          </div>
+          <StaffListFilterTabs
+            aria-label="Application status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
+            tabs={[
+              { id: 'open', label: 'Open', count: openCount },
+              { id: 'pending', label: 'Pending review', count: pendingCount },
+              { id: 'all', label: 'All', count: applicationEntries.length, alwaysShowCount: true },
+            ]}
+          />
+
+          <StaffListFilterTabs
+            aria-label="Application type"
+            activeId={kindFilter}
+            onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+            tabs={[
+              { id: 'all', label: 'All types', count: applicationEntries.length, alwaysShowCount: true },
+              { id: 'guard', label: 'Guards', count: guardCount, alwaysShowCount: true },
+              { id: 'client', label: 'Clients', count: clientCount, alwaysShowCount: true },
+            ]}
+          />
         </>
       )}
 
@@ -428,9 +443,9 @@ export function StaffApplications({
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No applications match your search.'
-            : filter === 'pending'
+            : statusFilter === 'pending'
               ? 'No account applications waiting for review.'
-              : filter === 'open'
+              : statusFilter === 'open'
                 ? 'No open account applications right now.'
                 : 'No account applications on file yet.'}
         </AppEmptyState>

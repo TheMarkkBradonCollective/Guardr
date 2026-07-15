@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
+import {
+  matchesStaffTeamFilter,
+  staffRosterSortRank,
+  type StaffTeamFilter,
+} from '../../lib/staffListFilters';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
@@ -41,6 +48,7 @@ export function StaffTeamPanel({
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('pending');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -55,19 +63,38 @@ export function StaffTeamPanel({
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
   const roster = guards.filter((g) => g.isStaff);
-
-  const filtered = roster.filter(
-    (g) =>
-      g.name.toLowerCase().includes(search.toLowerCase()) ||
-      g.email.toLowerCase().includes(search.toLowerCase()) ||
-      (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
+  const pendingStaffCount = useMemo(
+    () => roster.filter((member) => matchesStaffTeamFilter(member, 'pending')).length,
+    [roster]
   );
+  const activeStaffCount = useMemo(
+    () => roster.filter((member) => matchesStaffTeamFilter(member, 'active')).length,
+    [roster]
+  );
+  const suspendedStaffCount = useMemo(
+    () => roster.filter((member) => matchesStaffTeamFilter(member, 'suspended')).length,
+    [roster]
+  );
+
+  const filtered = roster
+    .filter(
+      (g) =>
+        g.name.toLowerCase().includes(search.toLowerCase()) ||
+        g.email.toLowerCase().includes(search.toLowerCase()) ||
+        (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((member) => matchesStaffTeamFilter(member, statusFilter))
+    .sort((a, b) => {
+      const rank = staffRosterSortRank(a) - staffRosterSortRank(b);
+      if (rank !== 0) return rank;
+      return a.name.localeCompare(b.name);
+    });
 
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in space-y-4 staff-roster-panel">
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -88,6 +115,18 @@ export function StaffTeamPanel({
             onChange={setSearch}
             placeholder="Search staff..."
             className="max-w-md"
+          />
+
+          <StaffListFilterTabs
+            aria-label="Staff roster status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
+            tabs={[
+              { id: 'pending', label: 'Pending review', count: pendingStaffCount },
+              { id: 'active', label: 'Active', count: activeStaffCount },
+              { id: 'suspended', label: 'Suspended', count: suspendedStaffCount },
+              { id: 'all', label: 'All', count: roster.length, alwaysShowCount: true },
+            ]}
           />
         </>
       )}

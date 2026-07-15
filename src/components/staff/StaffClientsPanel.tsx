@@ -7,6 +7,11 @@ import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { CLIENT_ACCOUNT_STATUS_LABELS, clientRosterSortRank, getClientAccountStatus } from '../../lib/accountStatus';
+import {
+  matchesClientRosterFilter,
+  type ClientRosterFilter,
+} from '../../lib/staffListFilters';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -38,7 +43,7 @@ export function StaffClientsPanel({
   onAddClient,
 }: StaffClientsPanelProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending'>('all');
+  const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('pending');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -52,6 +57,10 @@ export function StaffClientsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
+  const pendingClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'pending')).length;
+  const activeClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'active')).length;
+  const suspendedClientCount = clients.filter((c) => matchesClientRosterFilter(c, 'suspended')).length;
+
   const filtered = clients
     .filter(
       (c) =>
@@ -59,14 +68,12 @@ export function StaffClientsPanel({
         c.email.toLowerCase().includes(search.toLowerCase()) ||
         (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
     )
-    .filter((c) => statusFilter === 'all' || getClientAccountStatus(c) === 'pending')
+    .filter((c) => matchesClientRosterFilter(c, statusFilter))
     .sort((a, b) => {
       const rank = clientRosterSortRank(a) - clientRosterSortRank(b);
       if (rank !== 0) return rank;
       return (a.companyName || a.name).localeCompare(b.companyName || b.name);
     });
-
-  const pendingClientCount = clients.filter((c) => getClientAccountStatus(c) === 'pending').length;
 
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
@@ -87,7 +94,7 @@ export function StaffClientsPanel({
   }
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in space-y-4 staff-roster-panel">
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -109,22 +116,17 @@ export function StaffClientsPanel({
             className="max-w-md"
           />
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={`app-button-outline app-btn-sm ${statusFilter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              All ({clients.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('pending')}
-              className={`app-button-outline app-btn-sm ${statusFilter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
-            >
-              Pending{pendingClientCount > 0 ? ` (${pendingClientCount})` : ''}
-            </button>
-          </div>
+          <StaffListFilterTabs
+            aria-label="Client roster status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+            tabs={[
+              { id: 'pending', label: 'Pending review', count: pendingClientCount },
+              { id: 'active', label: 'Active', count: activeClientCount },
+              { id: 'suspended', label: 'Suspended', count: suspendedClientCount },
+              { id: 'all', label: 'All', count: clients.length, alwaysShowCount: true },
+            ]}
+          />
         </>
       )}
 
