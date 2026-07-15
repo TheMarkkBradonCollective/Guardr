@@ -13,9 +13,7 @@ function installWindowMock() {
     back,
   };
 
-  (globalThis as typeof globalThis & { window: Window }).window = {
-    history,
-  } as unknown as Window;
+  (globalThis as unknown as { window: { history: typeof history } }).window = { history };
 
   return { back, history };
 }
