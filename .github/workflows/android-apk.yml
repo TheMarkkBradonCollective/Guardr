@@ -42,9 +42,9 @@ jobs:
       - name: Write Firebase google-services.json
         run: |
           if [ -z "${GOOGLE_SERVICES_JSON:-}" ]; then
-            echo "::error::GOOGLE_SERVICES_JSON secret is not set — APK push toggle will be disabled."
-            echo "Add the full google-services.json from Firebase as a GitHub Actions secret, then re-run this workflow."
-            exit 1
+            echo "::warning::GOOGLE_SERVICES_JSON secret is not set — APK push toggle will be disabled."
+            echo "Add the full google-services.json from Firebase as a GitHub Actions secret to enable native push."
+            exit 0
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
           node -e "
