@@ -105,10 +105,19 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
     [clients]
   );
 
-  const rehireableGuards = useMemo(
-    () => (clientId ? getClientRehireableGuards(clientId, requests, guards) : []),
-    [clientId, requests, guards]
-  );
+  const scheduleError = validateShiftSchedule(startDate, endDate);
+
+  const rehireableGuards = useMemo(() => {
+    if (!clientId) return [];
+    const job =
+      startDate && endDate && !scheduleError
+        ? {
+            startDate: new Date(startDate).toISOString(),
+            endDate: new Date(endDate).toISOString(),
+          }
+        : undefined;
+    return getClientRehireableGuards(clientId, requests, guards, job);
+  }, [clientId, requests, guards, startDate, endDate, scheduleError]);
 
   const title =
     serviceId === 'custom' && customTitle.trim()
@@ -118,7 +127,6 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const platformFeePerHour = resolvePlatformFeePerHour(hourlyRate, feeConfig);
   const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
   const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
-  const scheduleError = validateShiftSchedule(startDate, endDate);
   const effectiveBreakMinutes = customBreakMinutes.trim()
     ? Math.max(0, Math.min(180, parseInt(customBreakMinutes, 10) || 0))
     : breakMinutes;

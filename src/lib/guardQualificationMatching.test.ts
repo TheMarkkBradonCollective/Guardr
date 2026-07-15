@@ -45,11 +45,30 @@ function baseJob(applicants: string[]): SecurityRequest {
   };
 }
 
+function mondayJob(applicants: string[]): SecurityRequest {
+  const job = baseJob(applicants);
+  job.startDate = '2026-07-20T10:00:00';
+  job.endDate = '2026-07-20T14:00:00';
+  return job;
+}
+
 describe('rankGuardsForJob', () => {
   it('ranks higher-rated applicants first when requirements match', () => {
-    const job = baseJob(['g-low', 'g-high']);
+    const job = mondayJob(['g-low', 'g-high']);
     const guards = [baseGuard('g-low', 3.5), baseGuard('g-high', 4.9)];
     const ranked = rankGuardsForJob(job, guards, { applicantsOnly: true });
     assert.equal(ranked[0]?.guard.id, 'g-high');
+  });
+
+  it('silently excludes applicants when the shift is outside availability', () => {
+    const job = mondayJob(['g-low', 'g-high']);
+    job.startDate = '2026-07-19T10:00:00';
+    job.endDate = '2026-07-19T14:00:00';
+
+    const ranked = rankGuardsForJob(job, [baseGuard('g-low', 3.5), baseGuard('g-high', 4.9)], {
+      applicantsOnly: true,
+    });
+
+    assert.equal(ranked.length, 0);
   });
 });
