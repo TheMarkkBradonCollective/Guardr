@@ -196,7 +196,7 @@ export function GuardJobPreferencesPanel({
   };
 
   return (
-    <div className="guard-preferences-panel">
+    <section className="guard-rating-section guard-rating-section-tiered guard-preferences-panel-tiered">
       <div className={`guard-tier-hero guard-pref-tier-hero ${preferenceHeroClass(stats.active, stats.total)}`}>
         <div className="guard-tier-hero-glow" aria-hidden />
         <div className="guard-pref-tier-medal" aria-hidden>
@@ -289,6 +289,24 @@ export function GuardJobPreferencesPanel({
             </div>
           </section>
         ))}
+        <div className="guard-performance-stats guard-pref-summary-stats" aria-label="Alert profile summary">
+          <div className="guard-performance-stat">
+            <p className="guard-performance-stat-label">Active alerts</p>
+            <p className="guard-performance-stat-value">{stats.active}</p>
+          </div>
+          <div className="guard-performance-stat">
+            <p className="guard-performance-stat-label">Onboarded</p>
+            <p className="guard-performance-stat-value">{stats.onboarded}</p>
+          </div>
+          <div className="guard-performance-stat">
+            <p className="guard-performance-stat-label">Setup needed</p>
+            <p className="guard-performance-stat-value">{stats.setupNeeded}</p>
+          </div>
+          <div className="guard-performance-stat">
+            <p className="guard-performance-stat-label">Total types</p>
+            <p className="guard-performance-stat-value">{stats.total}</p>
+          </div>
+        </div>
       </div>
 
       <JobTypeOnboardingSheet
@@ -298,6 +316,6 @@ export function GuardJobPreferencesPanel({
         onClose={() => setOnboardingType(null)}
         onComplete={handleCompleteOnboarding}
       />
-    </div>
+    </section>
   );
 }
