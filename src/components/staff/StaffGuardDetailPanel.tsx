@@ -57,6 +57,7 @@ import {
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
+import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -157,6 +158,16 @@ export function StaffGuardDetailPanel({
     if (controlledEditing === undefined) setInternalEditing(next);
     onEditingChange?.(next);
   };
+
+  const certOverlayNav = useMemo((): CertOverlayNavigation | undefined => {
+    if (!onOpenGuardCredential && !canManage) return undefined;
+    return {
+      onViewFull: onOpenGuardCredential
+        ? (credentialItemId: string) => onOpenGuardCredential(guard.id, credentialItemId)
+        : undefined,
+      onEditFullPage: canManage ? () => setEditing(true) : undefined,
+    };
+  }, [onOpenGuardCredential, canManage, guard.id, onEditingChange, controlledEditing]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -765,6 +776,7 @@ export function StaffGuardDetailPanel({
                   ) : undefined
                 }
                 renderCertActions={renderStaffCertActions}
+                certOverlayNav={certOverlayNav}
               />
             </section>
           )}

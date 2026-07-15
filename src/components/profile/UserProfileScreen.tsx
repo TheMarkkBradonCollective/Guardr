@@ -324,6 +324,7 @@ export function UserProfileScreen({
           onAddEducation={onAddEducation}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
           onSaveInsurance={onSaveInsurance}
+          onEditCredentialFullPage={!editing ? () => setEditing(true) : undefined}
         />
         </section>
       )}
