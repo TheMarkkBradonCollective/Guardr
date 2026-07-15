@@ -4342,8 +4342,8 @@ export default function App() {
       phone: input.phone?.trim() || '',
       avatar: '',
       totalRequests: 0,
-      approved: true,
-      accountStatus: 'active',
+      approved: false,
+      accountStatus: 'pending',
       password,
       mustChangePassword,
     };
@@ -4360,8 +4360,8 @@ export default function App() {
           phone: newClient.phone,
           avatar: newClient.avatar,
           total_requests: 0,
-          approved: true,
-          account_status: 'active',
+          approved: false,
+          account_status: 'pending',
           password,
           must_change_password: mustChangePassword,
         });

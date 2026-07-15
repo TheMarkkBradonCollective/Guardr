@@ -14,9 +14,19 @@ export function isSelfSubmittedGuardAccount(guard: SecurityGuard): boolean {
   return !guard.isStaff && !guard.mustChangePassword;
 }
 
-/** Client account created via self sign-up. Staff-provisioned clients start active. */
+/** Field guard account in the marketplace application workflow. */
+export function isFieldGuardAccount(guard: SecurityGuard): boolean {
+  return !guard.isStaff;
+}
+
+/** Client account created via self sign-up or staff provisioning. */
 export function isSelfSubmittedClientAccount(client: Client): boolean {
   return getClientAccountStatus(client) === 'pending';
+}
+
+/** Client account shown in the Applications review feed. */
+export function belongsInClientApplicationFeed(client: Client): boolean {
+  return getClientAccountStatus(client) !== 'suspended';
 }
 
 /** Pending credential uploaded by the guard (not staff on their behalf). */
