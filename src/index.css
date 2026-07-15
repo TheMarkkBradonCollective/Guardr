@@ -18275,3 +18275,28 @@ body.capacitor-native .landing-app-download-btn:active {
   transform: scale(0.97);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   NATIVE APP — minimal welcome (not full marketing site)
+═══════════════════════════════════════════════════════════════════════════ */
+
+.app-home-screen {
+  background: var(--brand-bg);
+}
+
+.app-home-screen-main {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app-home-screen-signin {
+  padding: 0.5rem;
+}
+
+.app-home-screen-signin:active {
+  opacity: 0.85;
+}
+
+body.capacitor-native .app-home-screen .landing-path-grid {
+  gap: 0.75rem;
+}
+

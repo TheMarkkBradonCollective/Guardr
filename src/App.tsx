@@ -73,6 +73,7 @@ import { AccountPendingScreen } from './components/account/AccountPendingScreen'
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard, type StaffSectionSelection } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
+import { AppHomeScreen } from './components/AppHomeScreen';
 import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -220,6 +221,7 @@ import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
+import { isNativeShell } from './lib/platform/device';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -10189,18 +10191,30 @@ export default function App() {
     }
     return (
       <>
-        <HomePage
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-          ownerMessage={platformSettings.ownerMessage}
-          directorMessage={platformSettings.directorMessage}
-          companyPlacardDocuments={companyPlacardPublicDocuments}
-          onNavigateToAuth={(role, mode) => {
-            openAuthView(role ?? 'client', mode ?? 'sign-in');
-          }}
-          onOpenLegal={openLegalPage}
-          onOpenGuide={openPublicGuide}
-        />
+        {isNativeShell() ? (
+          <AppHomeScreen
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            onNavigateToAuth={(role, mode) => {
+              openAuthView(role ?? 'client', mode ?? 'sign-in');
+            }}
+            onOpenLegal={openLegalPage}
+            onOpenGuide={openPublicGuide}
+          />
+        ) : (
+          <HomePage
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            ownerMessage={platformSettings.ownerMessage}
+            directorMessage={platformSettings.directorMessage}
+            companyPlacardDocuments={companyPlacardPublicDocuments}
+            onNavigateToAuth={(role, mode) => {
+              openAuthView(role ?? 'client', mode ?? 'sign-in');
+            }}
+            onOpenLegal={openLegalPage}
+            onOpenGuide={openPublicGuide}
+          />
+        )}
         <InstallPrompt />
       </>
     );
