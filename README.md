@@ -32,6 +32,10 @@ Guardr is **not** an employer, staffing agency, or licensed security services pr
 | Payments | Stripe Connect (platform fee model) |
 | Hosting | Vercel |
 
+## Public guide
+
+User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is, how it works, getting started)
+
 ## Deploy to guardr.co
 
 Full step-by-step: **[docs/DEPLOYMENT-GUARDR-CO.md](docs/DEPLOYMENT-GUARDR-CO.md)** (Vercel + GoDaddy DNS + Supabase + Stripe)
