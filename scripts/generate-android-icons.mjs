@@ -1,12 +1,14 @@
 import sharp from 'sharp';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
 const RES = path.join(ROOT, 'android/app/src/main/res');
 
-const ICON_BACKGROUND = '#FFFFFF';
+/** APK home-screen icon — black background with brand sage shield (PWA stays white). */
+const ICON_BACKGROUND = '#000000';
+const SPLASH_BACKGROUND = '#000000';
 
 /** Launcher mipmaps (legacy + round). */
 const LAUNCHER_SIZES = [
@@ -38,8 +40,6 @@ const SPLASH_SCREENS = [
   { dir: 'drawable-land-xxhdpi', width: 1600, height: 960 },
   { dir: 'drawable-land-xxxhdpi', width: 1920, height: 1280 },
 ];
-
-const BRAND_SAGE = '#5E7B61';
 
 async function removeBlackBackground(input) {
   const { data, info } = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -113,17 +113,14 @@ async function renderForegroundIcon(iconMaster, size) {
     .toBuffer();
 }
 
-/** Branded splash — sage fill with centered white shield. */
-async function renderSplash(width, height) {
-  const SVG = path.join(ROOT, 'logo.svg');
-  const svg = await readFile(SVG, 'utf8');
-  const whiteSvg = Buffer.from(svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FFFFFF"'));
+/** APK splash — black fill with centered brand sage shield. */
+async function renderSplash(iconMaster, width, height) {
   const logoSize = Math.round(Math.min(width, height) * 0.34);
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
-  const logo = await sharp(whiteSvg).resize(logoSize, logoSize).png().toBuffer();
+  const logo = await coloredMarkPng(iconMaster, logoSize);
   return sharp({
-    create: { width, height, channels: 4, background: BRAND_SAGE },
+    create: { width, height, channels: 4, background: SPLASH_BACKGROUND },
   })
     .composite([{ input: logo, left: offsetX, top: offsetY }])
     .png()
@@ -151,15 +148,15 @@ async function main() {
   }
 
   for (const { dir, width, height } of SPLASH_SCREENS) {
-    const splash = await renderSplash(width, height);
+    const splash = await renderSplash(iconMaster, width, height);
     await writePng(dir, 'splash.png', splash);
   }
 
-  const defaultSplash = await renderSplash(480, 800);
+  const defaultSplash = await renderSplash(iconMaster, 480, 800);
   await writePng('drawable', 'splash.png', defaultSplash);
 
   console.log('Generated Guardr-branded Android icons and splash screens');
-  console.log(`Launcher icon background: ${ICON_BACKGROUND}, shield: brand sage mark`);
+  console.log(`Launcher icon background: ${ICON_BACKGROUND}, splash: ${SPLASH_BACKGROUND}, shield: brand sage mark`);
 }
 
 main().catch((err) => {

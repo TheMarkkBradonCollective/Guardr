@@ -23,12 +23,13 @@ const config = {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#000000',
       showSpinner: false,
     },
     StatusBar: {
+      // Light status-bar icons on the black APK shell (PWA stays white in manifest).
       style: 'LIGHT',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#000000',
       overlaysWebView: false,
     },
   },
