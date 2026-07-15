@@ -7,6 +7,7 @@ import {
   buildStaffApprovalsFeed,
   countPendingAccountSignupApplications,
   countPendingCredentialApprovals,
+  countPendingCredentialReviews,
   CREDENTIAL_PENDING_UPLOAD_LABEL,
   isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
@@ -136,6 +137,7 @@ describe('buildApplicationFeed', () => {
     const govId = feed.find((item) => item.id === govIdApprovalItemId('g-staff'));
 
     assert.equal(countPendingCredentialApprovals([guard]), 5);
+    assert.equal(countPendingCredentialReviews([guard]), 1);
     assert.equal(govId?.statusLabel, 'Pending review');
     assert.equal(
       feed.filter((item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL).length,
@@ -156,6 +158,7 @@ describe('buildApplicationFeed', () => {
     assert.ok(feed.every((item) => item.status === 'pending'));
     assert.ok(feed.every((item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL));
     assert.equal(countPendingCredentialApprovals([guard]), 5);
+    assert.equal(countPendingCredentialReviews([guard]), 0);
     assert.ok(feed.some((item) => item.id === govIdApprovalItemId('g-staff')));
     assert.ok(feed.some((item) => item.title.includes('BSIS Guard Card')));
   });
