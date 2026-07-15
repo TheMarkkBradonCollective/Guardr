@@ -92,7 +92,7 @@ describe('staff section routing', () => {
     ];
 
     const stats = computePlatformStats(guards, [], []);
-    assert.equal(stats.pendingCertApprovals, 5);
+    assert.equal(stats.pendingCertApprovals, 1);
     assert.equal(stats.pendingAccountApplications, 0);
 
     const selection = resolveOverviewActionSelection(
@@ -100,7 +100,7 @@ describe('staff section routing', () => {
         id: 'pending-certs',
         title: '',
         description: '',
-        count: 5,
+        count: 1,
         section: 'credentials',
         tone: 'urgent',
       },
@@ -108,5 +108,22 @@ describe('staff section routing', () => {
     );
     assert.equal(selection.guardId, 'guard-1');
     assert.equal(selection.credentialItemId, 'gov-id-guard-1');
+  });
+
+  it('does not count credentials awaiting guard upload in overview stats', () => {
+    const guards = [
+      {
+        id: 'guard-1',
+        name: 'Test Guard',
+        email: 'guard@test.com',
+        userStatus: 'pending',
+        mustChangePassword: true,
+        isStaff: false,
+        certifications: [],
+      } as SecurityGuard,
+    ];
+
+    const stats = computePlatformStats(guards, [], []);
+    assert.equal(stats.pendingCertApprovals, 0);
   });
 });

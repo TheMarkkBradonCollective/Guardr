@@ -635,12 +635,27 @@ export function formatApprovalTimestamp(iso?: string): string {
   });
 }
 
+/** Submitted credentials awaiting staff review — excludes guard upload-pending slots. */
+export function isCredentialFeedItemAwaitingStaffReview(item: ApprovalFeedItem): boolean {
+  if (item.queue !== 'credentials') return false;
+  if (item.status !== 'pending' && item.status !== 'in_review') return false;
+  return item.statusLabel !== CREDENTIAL_PENDING_UPLOAD_LABEL;
+}
+
 /** Pending credential queue count — matches the Credentials tab pending filter. */
 export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
   return countPendingInFeedByQueue(
     buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
     'credentials'
   );
+}
+
+/** Credentials submitted and awaiting staff review — drives overview attention metrics. */
+export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
+  return filterApprovalsFeedByQueue(
+    buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
+    'credentials'
+  ).filter(isCredentialFeedItemAwaitingStaffReview).length;
 }
 
 function guardIdForCredentialFeedItem(item: ApprovalFeedItem, guards: SecurityGuard[]): string | null {
@@ -659,7 +674,7 @@ export function resolveFirstPendingCredentialSelection(
     buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
     'credentials'
   );
-  const item = feed.find((entry) => entry.status === 'pending' || entry.status === 'in_review');
+  const item = feed.find((entry) => isCredentialFeedItemAwaitingStaffReview(entry));
   if (!item) return null;
   const guardId = guardIdForCredentialFeedItem(item, guards);
   if (!guardId) return null;

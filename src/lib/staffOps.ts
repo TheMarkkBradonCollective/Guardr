@@ -11,6 +11,7 @@ import { isClientAccountPending, isGuardAccountPending } from './accountStatus';
 import { isUserSubmittedPendingCert } from './approvalSubmissions';
 import {
   countPendingCredentialApprovals as countPendingCredentialFeedApprovals,
+  countPendingCredentialReviews as countPendingCredentialFeedReviews,
   resolveFirstPendingCredentialSelection,
 } from './staffApprovalsFeed';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
@@ -316,7 +317,7 @@ export function computePlatformStats(
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
   const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests).length;
   const pendingJobApprovals = pendingJobReviews;
-  const pendingCertApprovals = countPendingCredentialFeedApprovals(guards);
+  const pendingCertApprovals = countPendingCredentialFeedReviews(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
   const pendingAccountApplications =
     guards.filter((g) => !g.isStaff && isGuardAccountPending(g)).length + pendingClientAccounts;
