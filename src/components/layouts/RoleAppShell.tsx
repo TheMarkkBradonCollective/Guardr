@@ -123,11 +123,10 @@ export function RoleAppShell({
             <div className="flex justify-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1.5">
               <AppHeaderBranding />
             </div>
-            <div className="px-4 pb-2.5 flex items-center gap-2 min-h-[2.75rem]">
-              <div className="shrink-0 flex items-center">{notifications ?? headerRight}</div>
-              <div className="flex-1 min-w-0" aria-hidden />
-              <div className="shrink-0 flex items-center gap-1.5">
-                {navMenu}
+            <div className="relative px-4 pb-2.5 flex items-center justify-between gap-2 min-h-[2.75rem]">
+              <div className="shrink-0 flex items-center z-[1]">{navMenu}</div>
+              <div className="shrink-0 flex items-center gap-1.5 z-[1]">
+                {notifications ?? headerRight}
                 {!dockedSidebar ? <AccountMenu {...accountMenu} /> : null}
               </div>
             </div>

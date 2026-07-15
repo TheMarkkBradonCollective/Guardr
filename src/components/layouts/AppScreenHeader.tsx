@@ -33,19 +33,17 @@ export function AppScreenHeader({
         <AppHeaderBranding trailing={brandingTrailing} />
       </div>
 
-      <div className="app-screen-header-row px-4 pb-3 flex items-center gap-2 min-h-[2.75rem]">
-        <div className="shrink-0 flex items-center">{notifications}</div>
+      <div className="app-screen-header-row relative flex items-center justify-between gap-2 px-4 pb-3 min-h-[2.75rem]">
+        <div className="shrink-0 flex items-center z-[1]">{navMenu}</div>
 
         {showTitle ? (
-          <h1 className="flex-1 min-w-0 text-base sm:text-lg font-black truncate leading-tight tracking-[-0.04em] app-screen-header-title">
+          <h1 className="pointer-events-none absolute left-16 right-16 text-center text-base sm:text-lg font-black truncate leading-tight tracking-[-0.04em] app-screen-header-title">
             {title}
           </h1>
-        ) : (
-          <div className="flex-1 min-w-0" aria-hidden />
-        )}
+        ) : null}
 
-        <div className="shrink-0 flex items-center gap-1.5">
-          {navMenu}
+        <div className="shrink-0 flex items-center gap-1.5 z-[1]">
+          {notifications}
           {!hideAccountMenu ? <AccountMenu {...accountMenu} /> : null}
         </div>
       </div>
