@@ -240,8 +240,28 @@ export function GuardCrewHubPanel({
     );
   }
 
+  const standingCrewPanelProps = {
+    guard,
+    members: standingCrewMembers,
+    guards: coworkerGuards,
+    trusted,
+    coordinatingJobs,
+    variant: 'embedded' as const,
+    onUpdateStandingCrewProfile,
+    onJoinTeamWithCode,
+    onInvite: onInviteStandingCrew,
+    onRemove: onRemoveStandingCrew,
+    onAcceptInvite: onAcceptStandingCrewInvite,
+    onDeclineInvite: onDeclineStandingCrewInvite,
+    onRequestCrewLead,
+    canRequestCrewLead,
+    pendingCrewLeadRequest,
+  };
+
   return (
     <AppScreen className="crew-hub-screen">
+      <GuardStandingCrewPanel {...standingCrewPanelProps} section="hero" />
+
       <div className="crew-hub-sticky-head">
         <AppSegmentedControl<CrewHubTab>
           options={tabOptions}
@@ -251,25 +271,7 @@ export function GuardCrewHubPanel({
       </div>
 
       {activeTab === 'team' && (
-        <div className="crew-hub-team-body">
-          <GuardStandingCrewPanel
-            guard={guard}
-            members={standingCrewMembers}
-            guards={coworkerGuards}
-            trusted={trusted}
-            coordinatingJobs={coordinatingJobs}
-            variant="embedded"
-            onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
-            onJoinTeamWithCode={onJoinTeamWithCode}
-            onInvite={onInviteStandingCrew}
-            onRemove={onRemoveStandingCrew}
-            onAcceptInvite={onAcceptStandingCrewInvite}
-            onDeclineInvite={onDeclineStandingCrewInvite}
-            onRequestCrewLead={onRequestCrewLead}
-            canRequestCrewLead={canRequestCrewLead}
-            pendingCrewLeadRequest={pendingCrewLeadRequest}
-          />
-        </div>
+        <GuardStandingCrewPanel {...standingCrewPanelProps} section="body" />
       )}
 
       {activeTab === 'active' && (
