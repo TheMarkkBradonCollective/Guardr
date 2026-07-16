@@ -13,13 +13,25 @@ import {
   jobTypePreferenceLabel,
   normalizeJobTypePreferences,
 } from '../../lib/guardJobPreferences';
+import { buildGuardContractViolations } from '../../lib/guardContractViolations';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
-import { GuardShiftAuditDisputes } from './GuardShiftAuditDisputes';
+import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
+import { GuardContractViolationsList } from './GuardContractViolationsList';
+import {
+  GuardContractViolationDetail,
+  GuardContractViolationDisputeStatus,
+} from './GuardContractViolationDetail';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
 export type PerformanceViewTab = 'overall' | JobType;
+
+type PerformanceSubview =
+  | 'main'
+  | 'violations'
+  | 'violation-detail'
+  | 'violation-dispute-status';
 
 interface GuardPerformanceScreenProps {
   guard: SecurityGuard;
@@ -47,6 +59,8 @@ export function GuardPerformanceScreen({
 }: GuardPerformanceScreenProps) {
   const { formFactor } = useDevice();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
+  const [subview, setSubview] = useState<PerformanceSubview>('main');
+  const [selectedViolationId, setSelectedViolationId] = useState<string | null>(null);
 
   const enabledJobTypes = useMemo(
     () => normalizeJobTypePreferences(guard.jobTypePreferences),
@@ -82,6 +96,14 @@ export function GuardPerformanceScreen({
     () => new Map(skillRatings.map((skill) => [skill.jobType, skill])),
     [skillRatings]
   );
+  const contractViolations = useMemo(
+    () => buildGuardContractViolations(guard, requests),
+    [guard, requests]
+  );
+  const selectedViolation = useMemo(
+    () => contractViolations.find((v) => v.id === selectedViolationId) ?? null,
+    [contractViolations, selectedViolationId]
+  );
   const selectedFactor = useMemo(() => {
     if (!performanceFactorId) return null;
     const rating = computeGuardPerformanceRating(guard, requests);
@@ -90,9 +112,17 @@ export function GuardPerformanceScreen({
 
   const handleTabChange = (tab: PerformanceViewTab) => {
     setActiveTab(tab);
+    setSubview('main');
+    setSelectedViolationId(null);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
+  };
+
+  const openViolations = () => {
+    setSubview('violations');
+    setSelectedViolationId(null);
+    onPerformanceFactorChange?.(null);
   };
 
   const performanceTabs =
@@ -121,12 +151,8 @@ export function GuardPerformanceScreen({
             onPerformanceFactorChange?.(factor.id);
           }
         }}
+        onOpenViolations={openViolations}
         className="guard-performance-screen-card"
-      />
-      <GuardShiftAuditDisputes
-        guardId={guard.id}
-        requests={requests}
-        onDispute={onDisputeShiftAuditViolation}
       />
     </>
   );
@@ -145,6 +171,39 @@ export function GuardPerformanceScreen({
     ) : null;
 
   const tabbedContent = activeTab === 'overall' ? overallContent : jobTypeContent;
+
+  const violationSubview =
+    subview === 'violations' ? (
+      <GuardContractViolationsList
+        violations={contractViolations}
+        onBack={() => setSubview('main')}
+        onSelect={(violationId) => {
+          setSelectedViolationId(violationId);
+          setSubview('violation-detail');
+        }}
+      />
+    ) : subview === 'violation-detail' && selectedViolation ? (
+      <GuardContractViolationDetail
+        violation={selectedViolation}
+        onBack={() => setSubview('violations')}
+        onOpenDisputeStatus={() => setSubview('violation-dispute-status')}
+        onDispute={onDisputeShiftAuditViolation}
+      />
+    ) : subview === 'violation-dispute-status' && selectedViolation ? (
+      <GuardContractViolationDisputeStatus
+        violation={selectedViolation}
+        onBack={() => setSubview('main')}
+        onOpenDetails={() => setSubview('violation-detail')}
+      />
+    ) : null;
+
+  if (violationSubview) {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        {violationSubview}
+      </AppScreen>
+    );
+  }
 
   if (formFactor === 'desktop') {
     return (
