@@ -21,6 +21,8 @@ import {
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
 import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
+import { GuardMyJobsDesktop } from './GuardMyJobsDesktop';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
 export type { GuardMyJobDetailProps } from './GuardMyJobDetail';
@@ -111,6 +113,7 @@ export function GuardMyJobsPanel({
   completedJobs,
   missedJobs,
   guard,
+  currentUser,
   jobChatThreads = [],
   selectedJobId: selectedJobIdProp,
   onSelectedJobIdChange,
@@ -133,6 +136,7 @@ export function GuardMyJobsPanel({
   onAcceptPriceOffer,
   onViewBriefing,
 }: GuardMyJobsPanelProps) {
+  const { formFactor } = useDevice();
   const [internalTab, setInternalTab] = useState<GuardJobsBrowseTab>('available');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
 
@@ -247,6 +251,40 @@ export function GuardMyJobsPanel({
       ? (offerId: string) => void onAcceptPriceOffer(job.id, offerId)
       : undefined,
   });
+
+  if (formFactor === 'desktop') {
+    return (
+      <GuardMyJobsDesktop
+        availableJobs={availableJobs}
+        scheduledJobs={scheduledJobs}
+        completedJobs={completedJobs}
+        missedJobs={missedJobs}
+        guard={guard}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        selectedJobId={selectedJobIdProp}
+        onSelectedJobIdChange={onSelectedJobIdChange}
+        activeTab={activeTabProp}
+        onActiveTabChange={onActiveTabChange}
+        onOpenMessages={onOpenMessages}
+        onApproveOvertime={onApproveOvertime}
+        onAcceptJob={onAcceptJob}
+        onDeclineDirectJob={onDeclineDirectJob}
+        coworkerGuards={coworkerGuards}
+        scheduleRequests={scheduleRequests}
+        onApplyAsLead={onApplyAsLead}
+        onInviteGuard={onInviteGuard}
+        onRemoveGuard={onRemoveGuard}
+        onUpdateCrewProfile={onUpdateCrewProfile}
+        onAcceptInvite={onAcceptInvite}
+        onDeclineInvite={onDeclineInvite}
+        feeConfig={feeConfig}
+        onSubmitPriceOffer={onSubmitPriceOffer}
+        onAcceptPriceOffer={onAcceptPriceOffer}
+        onViewBriefing={onViewBriefing}
+      />
+    );
+  }
 
   if (selectedJob) {
     return (

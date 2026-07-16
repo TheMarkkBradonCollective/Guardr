@@ -40,6 +40,7 @@ import {
 } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
+import { useDevice } from '../lib/platform';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
 import {
   GUARD_CARD_STATUS_OPTIONS,
@@ -261,6 +262,8 @@ export function AuthPage({
   open = true,
 }: AuthPageProps) {
   const isSheet = presentation === 'sheet';
+  const { formFactor } = useDevice();
+  const isDesktopAuth = !isSheet && formFactor === 'desktop';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -1466,9 +1469,71 @@ export function AuthPage({
 
   return (
     <div
-      className="page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience"
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience${isDesktopAuth ? ' dsk-auth' : ''}`}
       id="guardr-auth-root"
     >
+      {isDesktopAuth ? (
+        <div className="dsk-auth-split">
+          <aside className="dsk-auth-editorial">
+            <div className="dsk-auth-editorial-top">
+              <button type="button" onClick={onBackToHome} className="dsk-auth-back">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+              <div className="dsk-auth-brand">
+                <Logo size={26} className="dsk-auth-logo" />
+                <span className="dsk-auth-wordmark">
+                  Guard<span className="dsk-auth-accent">r</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
+                {onOpenGuide ? (
+                  <button
+                    type="button"
+                    onClick={onOpenGuide}
+                    className="dsk-auth-back"
+                    aria-label="Open guide"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="dsk-auth-editorial-body">
+              <p className="dsk-auth-label">
+                {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
+              </p>
+              <h2 className="dsk-auth-headline">{heroContent.headline}</h2>
+              <p className="dsk-auth-deck">{heroContent.sub}</p>
+              <ul className="dsk-auth-features" role="list">
+                {heroContent.features.map(({ icon: Icon, text }) => (
+                  <li key={text} className="dsk-auth-feature">
+                    <span className="dsk-auth-feature-icon">
+                      <Icon className="w-4 h-4" strokeWidth={1.85} />
+                    </span>
+                    {text}
+                  </li>
+                ))}
+              </ul>
+              <p className="dsk-auth-trust">{heroContent.trustLine}</p>
+            </div>
+
+            <footer className="dsk-auth-editorial-foot">
+              {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} /> : null}
+              <p>© {new Date().getFullYear()} {LEGAL_ENTITY_NAME}</p>
+            </footer>
+          </aside>
+
+          <section className="dsk-auth-form-panel" aria-label="Sign in or sign up">
+            <AppFlowSurface className="dsk-auth-form-inner animate-fade-in">
+              {authFormBody}
+            </AppFlowSurface>
+          </section>
+        </div>
+      ) : (
+        <>
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
         <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
         <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -1534,6 +1599,8 @@ export function AuthPage({
           {authFormBody}
         </AppFlowSurface>
       </div>
+        </>
+      )}
     </div>
   );
 }

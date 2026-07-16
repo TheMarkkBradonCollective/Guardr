@@ -24,6 +24,7 @@ interface RoleAppShellProps {
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
   variant?: 'default' | 'dark';
+  workspaceLabel?: string;
 }
 
 export function RoleAppShell({
@@ -41,6 +42,7 @@ export function RoleAppShell({
   headerExtension,
   headerOverride,
   variant = 'default',
+  workspaceLabel,
 }: RoleAppShellProps) {
   const { formFactor } = useDevice();
 
@@ -59,7 +61,7 @@ export function RoleAppShell({
         headerExtension={headerExtension}
         headerOverride={headerOverride}
         variant={variant}
-        workspaceLabel="Guardr client console"
+        workspaceLabel={workspaceLabel ?? 'Client workspace'}
       >
         {children}
       </DesktopAdminShell>
