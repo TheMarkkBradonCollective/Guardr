@@ -7,6 +7,8 @@ import {
 import { getClientRehireableGuards } from '../lib/guardDirectory';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
+import { ClientHomeDesktop } from './client/ClientHomeDesktop';
+import { useDevice } from '../lib/platform';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates, PlatformSettings } from '../lib/platformSettings';
 import type { PlatformFeeConfig } from '../lib/payments';
@@ -246,6 +248,7 @@ export function ClientDashboard({
     onDirectRequestGuardIdChange?.(guard?.id ?? null);
   };
   const accountPending = isClientAccountPending({ accountStatus, approved });
+  const { formFactor } = useDevice();
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -636,23 +639,29 @@ export function ClientDashboard({
     );
   }
 
+  const homeProps = {
+    companyName,
+    coverage,
+    requests,
+    recentReports,
+    accountPending,
+    onOpenProfile: () => navigate('profile'),
+    onAction: handleHomeAction,
+    recentGuards: getClientRehireableGuards(clientId, requests, guards).slice(0, 5),
+    onHireGuard: startDirectGuardRequest,
+    onViewGuard: (guard: SecurityGuard) => {
+      setSelectedGuard(guard);
+      navigate('guards');
+    },
+  };
+
   return page(
     'home',
-    <ClientHomeScreen
-      companyName={companyName}
-      coverage={coverage}
-      requests={requests}
-      recentReports={recentReports}
-      accountPending={accountPending}
-      onOpenProfile={() => navigate('profile')}
-      onAction={handleHomeAction}
-      recentGuards={getClientRehireableGuards(clientId, requests, guards).slice(0, 5)}
-      onHireGuard={startDirectGuardRequest}
-      onViewGuard={(guard) => {
-        setSelectedGuard(guard);
-        navigate('guards');
-      }}
-    />,
+    formFactor === 'desktop' ? (
+      <ClientHomeDesktop {...homeProps} />
+    ) : (
+      <ClientHomeScreen {...homeProps} />
+    ),
     'client-home'
   );
 }

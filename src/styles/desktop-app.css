@@ -1,0 +1,729 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP APP SYSTEM — True desktop UI (≥1024px only)
+   Top navigation · full-bleed workspace · data tables · command center
+   ZERO reuse of mobile app-screen / card / hero patterns inside .dsk-app
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body[data-form-factor="desktop"] {
+  --dsk-bg: #eceee9;
+  --dsk-surface: #f7f8f5;
+  --dsk-panel: #ffffff;
+  --dsk-border: color-mix(in srgb, var(--brand-border) 75%, #c8ccc4);
+  --dsk-topbar-h: 3.25rem;
+  --dsk-subheader-h: 3.5rem;
+  --dsk-text-dim: var(--brand-text-muted);
+  --dsk-accent: var(--brand-primary);
+  --dsk-font: "IBM Plex Sans", "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+}
+
+html.theme-dark body[data-form-factor="desktop"] {
+  --dsk-bg: #0a0a0a;
+  --dsk-surface: #111111;
+  --dsk-panel: #161616;
+  --dsk-border: #2a2a2a;
+}
+
+html.theme-grey body[data-form-factor="desktop"] {
+  --dsk-bg: #e4e4e0;
+  --dsk-surface: #ededea;
+  --dsk-panel: #f4f4f1;
+}
+
+body[data-form-factor="desktop"] .dsk-app {
+  font-family: var(--dsk-font);
+  background: var(--dsk-bg);
+}
+
+/* ─── Top application bar (NOT a sidebar) ─────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--dsk-topbar-h);
+  padding: 0 1.25rem;
+  background: var(--dsk-panel);
+  border-bottom: 1px solid var(--dsk-border);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  min-width: 9rem;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-wordmark {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-suite {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-app-db-pulse {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--dsk-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsk-accent) 25%, transparent);
+  animation: dsk-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dsk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-nav--staff {
+  gap: 0.1rem;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  margin: 0 0.35rem;
+  background: var(--dsk-border);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--dsk-text-dim);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab:hover:not(.dsk-app-topbar-tab--active) {
+  background: color-mix(in srgb, var(--dsk-accent) 8%, transparent);
+  color: var(--brand-text);
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab--active {
+  background: color-mix(in srgb, var(--dsk-accent) 14%, var(--dsk-surface));
+  color: var(--dsk-accent);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--dsk-accent);
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-badge {
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  background: var(--status-danger);
+  color: #fff;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ─── Subheader ─────────────────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: var(--dsk-subheader-h);
+  padding: 0 1.5rem;
+  background: var(--dsk-surface);
+  border-bottom: 1px solid var(--dsk-border);
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-eyebrow {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+body[data-form-factor="desktop"] .dsk-app-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--status-success);
+  border: 1px solid color-mix(in srgb, var(--status-success) 30%, transparent);
+  background: color-mix(in srgb, var(--status-success) 10%, transparent);
+}
+
+body[data-form-factor="desktop"] .dsk-app-live-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: var(--status-success);
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-extension {
+  padding: 0.65rem 1.5rem;
+  background: var(--dsk-surface);
+  border-bottom: 1px solid var(--dsk-border);
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-slot {
+  border-bottom: 1px solid var(--dsk-border);
+  background: var(--dsk-panel);
+}
+
+/* ─── Main workspace (full bleed — NO mobile card canvas) ───────────────── */
+
+body[data-form-factor="desktop"] .dsk-app-main {
+  background: var(--dsk-bg);
+}
+
+body[data-form-factor="desktop"] .dsk-app-main--padded .dsk-app-main-inner {
+  padding: 1.25rem 1.5rem 1.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+body[data-form-factor="desktop"] .dsk-app-footer {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--dsk-border);
+  background: var(--dsk-panel);
+}
+
+/* ─── Neutralize mobile app-screen inside desktop app ───────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app .app-screen,
+body[data-form-factor="desktop"] .dsk-app .client-home-screen {
+  background: transparent !important;
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+body[data-form-factor="desktop"] .dsk-app .app-dashboard-hero,
+body[data-form-factor="desktop"] .dsk-app .app-hero-band,
+body[data-form-factor="desktop"] .dsk-app .app-page-lead {
+  display: none !important;
+}
+
+body[data-form-factor="desktop"] .dsk-app .app-dashboard-zone {
+  background: var(--dsk-panel);
+  border: 1px solid var(--dsk-border);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+body[data-form-factor="desktop"] .dsk-app .app-item-card {
+  border-radius: 0.35rem !important;
+  border: 1px solid var(--dsk-border) !important;
+  background: var(--dsk-surface) !important;
+}
+
+body[data-form-factor="desktop"] .dsk-app .client-home-quick-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  padding: 0.75rem !important;
+}
+
+body[data-form-factor="desktop"] .dsk-app .client-home-quick-tile {
+  border-radius: 0.4rem !important;
+  border: 1px solid var(--dsk-border) !important;
+  background: var(--dsk-surface) !important;
+  padding: 0.75rem !important;
+  text-align: left !important;
+}
+
+/* ─── Command center (client home desktop) ──────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-command-center {
+  padding: 1.25rem 1.5rem 2rem;
+  overflow-y: auto;
+  height: 100%;
+}
+
+body[data-form-factor="desktop"] .dsk-command-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+body[data-form-factor="desktop"] .dsk-command-kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-command-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+body[data-form-factor="desktop"] .dsk-command-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--dsk-border);
+  border-radius: 0.5rem;
+  background: var(--dsk-panel);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-tile:hover {
+  border-color: color-mix(in srgb, var(--dsk-accent) 35%, var(--dsk-border));
+  box-shadow: 0 4px 16px -8px color-mix(in srgb, #000 25%, transparent);
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--dsk-accent);
+}
+
+body[data-form-factor="desktop"] .dsk-kpi-sub {
+  font-size: 0.75rem;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-command-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .dsk-panel {
+  grid-column: span 12;
+  background: var(--dsk-panel);
+  border: 1px solid var(--dsk-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+body[data-form-factor="desktop"] .dsk-panel--span-4 { grid-column: span 4; }
+body[data-form-factor="desktop"] .dsk-panel--span-6 { grid-column: span 6; }
+body[data-form-factor="desktop"] .dsk-panel--span-8 { grid-column: span 8; }
+
+body[data-form-factor="desktop"] .dsk-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--dsk-border);
+  background: color-mix(in srgb, var(--dsk-surface) 80%, var(--dsk-panel));
+}
+
+body[data-form-factor="desktop"] .dsk-panel-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dsk-accent);
+}
+
+body[data-form-factor="desktop"] .dsk-panel-title {
+  margin: 0.15rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body[data-form-factor="desktop"] .dsk-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+body[data-form-factor="desktop"] .dsk-panel-empty--compact {
+  padding: 1.5rem;
+}
+
+body[data-form-factor="desktop"] .dsk-panel-empty-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+body[data-form-factor="desktop"] .dsk-panel-empty-body {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--dsk-text-dim);
+}
+
+/* ─── Data tables (desktop-native, not mobile cards) ────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+body[data-form-factor="desktop"] .dsk-table th {
+  padding: 0.55rem 1rem;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsk-text-dim);
+  border-bottom: 1px solid var(--dsk-border);
+  background: color-mix(in srgb, var(--dsk-surface) 60%, transparent);
+}
+
+body[data-form-factor="desktop"] .dsk-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--dsk-border) 70%, transparent);
+  vertical-align: middle;
+}
+
+body[data-form-factor="desktop"] .dsk-table-row--clickable {
+  cursor: pointer;
+}
+
+body[data-form-factor="desktop"] .dsk-table-row--clickable:hover td {
+  background: color-mix(in srgb, var(--dsk-accent) 6%, transparent);
+}
+
+body[data-form-factor="desktop"] .dsk-table-primary {
+  font-weight: 600;
+}
+
+body[data-form-factor="desktop"] .dsk-table-muted {
+  color: var(--dsk-text-dim);
+  font-size: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .dsk-table--compact th,
+body[data-form-factor="desktop"] .dsk-table--compact td {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* ─── Action list + buttons ─────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-action-list {
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .dsk-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--dsk-border) 60%, transparent);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .dsk-action-row:hover {
+  background: color-mix(in srgb, var(--dsk-accent) 6%, transparent);
+}
+
+body[data-form-factor="desktop"] .dsk-action-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--dsk-accent) 10%, transparent);
+  color: var(--dsk-accent);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-action-row-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-action-row-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+body[data-form-factor="desktop"] .dsk-action-row-sub {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--dsk-text-dim);
+}
+
+body[data-form-factor="desktop"] .dsk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .dsk-btn--sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .dsk-btn--primary {
+  background: var(--dsk-accent);
+  color: var(--brand-accent-text);
+}
+
+body[data-form-factor="desktop"] .dsk-btn--ghost {
+  background: transparent;
+  border-color: var(--dsk-border);
+  color: var(--brand-text);
+}
+
+body[data-form-factor="desktop"] .dsk-btn--soft {
+  background: color-mix(in srgb, var(--dsk-accent) 12%, transparent);
+  color: var(--dsk-accent);
+}
+
+body[data-form-factor="desktop"] .dsk-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dsk-accent);
+  cursor: pointer;
+}
+
+body[data-form-factor="desktop"] .dsk-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--status-warning) 35%, transparent);
+  background: color-mix(in srgb, var(--status-warning) 10%, transparent);
+  font-size: 0.8125rem;
+}
+
+body[data-form-factor="desktop"] .dsk-guard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+body[data-form-factor="desktop"] .dsk-guard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--dsk-border);
+  border-radius: 0.4rem;
+  background: var(--dsk-surface);
+}
+
+body[data-form-factor="desktop"] .dsk-guard-card-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+body[data-form-factor="desktop"] .dsk-guard-card-name {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-form-factor="desktop"] .dsk-guard-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--dsk-text-dim);
+}
+
+/* ─── Map inspector (desktop) ───────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app .desktop-map-inspector,
+body[data-form-factor="desktop"] .dsk-app .dsk-map-inspector {
+  width: 22rem;
+  background: var(--dsk-panel);
+  border-left: 1px solid var(--dsk-border);
+}
+
+body[data-form-factor="desktop"] .dsk-app .guard-map-layout .guardr-map-root,
+body[data-form-factor="desktop"] .dsk-app .client-map-layout .guardr-map-root {
+  right: 22rem !important;
+}
+
+body[data-form-factor="desktop"] .dsk-app .client-map-layout .map-selection-layer.client-map-offer-offset {
+  right: 22rem !important;
+  width: auto !important;
+  left: 0 !important;
+}
+
+/* ─── Messages workbench inside top-nav app ─────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app .desktop-messages-workbench {
+  display: grid;
+  grid-template-columns: 20rem minmax(0, 1fr);
+  height: 100%;
+  background: var(--dsk-bg);
+}
+
+body[data-form-factor="desktop"] .dsk-app .desktop-messages-inbox {
+  border-right: 1px solid var(--dsk-border);
+  background: var(--dsk-panel);
+}
+
+body[data-form-factor="desktop"] .dsk-app .desktop-messages-thread {
+  background: var(--dsk-surface);
+}
+
+/* ─── Master-detail inside top-nav app ──────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-app .desktop-master-detail {
+  display: grid;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: var(--dsk-bg);
+}
+
+body[data-form-factor="desktop"] .dsk-app .desktop-master-detail-list {
+  border-right: 1px solid var(--dsk-border);
+  background: var(--dsk-panel);
+}
+
+body[data-form-factor="desktop"] .dsk-app .desktop-master-detail-detail {
+  background: var(--dsk-surface);
+  padding: 1.25rem 1.5rem;
+}
+
+/* ─── Hide old desktop workspace shell if any remnant ────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-workspace {
+  display: none !important;
+}
