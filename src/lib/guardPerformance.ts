@@ -114,6 +114,213 @@ export function computeGuardPerformance(
   };
 }
 
+function guardCompletedJobsForType(
+  guardId: string,
+  requests: SecurityRequest[],
+  jobType: JobType
+): SecurityRequest[] {
+  return guardCompletedJobs(guardId, requests).filter((job) => (job.type ?? 'other') === jobType);
+}
+
+export function computeGuardPerformanceForJobType(
+  guardId: string,
+  requests: SecurityRequest[],
+  jobType: JobType,
+  reports: ShiftReport[] = []
+): GuardPerformanceMetrics {
+  const jobs = guardCompletedJobsForType(guardId, requests, jobType);
+  if (!jobs.length) {
+    return {
+      overallScore: 0,
+      onTimeRate: 0,
+      checkInCompletionRate: 0,
+      uniformComplianceRate: 0,
+      attendanceRate: 0,
+      incidentPenalty: 0,
+      jobsSampled: 0,
+    };
+  }
+
+  let onTime = 0;
+  let checkedIn = 0;
+  let uniformOk = 0;
+  let attended = 0;
+
+  for (const job of jobs) {
+    const noShow = (job as SecurityRequest & { noShow?: boolean }).noShow === true;
+    if (!noShow) attended += 1;
+
+    if (job.checkInAudit?.checkedAt) {
+      checkedIn += 1;
+      const startMs = new Date(job.startDate).getTime();
+      const checkMs = new Date(job.checkInAudit.checkedAt).getTime();
+      if (checkMs <= startMs + ON_TIME_GRACE_MS) onTime += 1;
+
+      const uniform = job.checkInAudit.uniform;
+      if (
+        uniform?.uniformPresent &&
+        uniform?.blackShoes &&
+        uniform?.professionalAppearance
+      ) {
+        uniformOk += 1;
+      }
+    }
+  }
+
+  const incidentCount = reports.filter(
+    (r) => r.guardId === guardId && r.type === 'incident'
+  ).length;
+  const incidentPenalty = Math.min(1, incidentCount / Math.max(jobs.length, 1));
+
+  const onTimeRate = onTime / jobs.length;
+  const checkInCompletionRate = checkedIn / jobs.length;
+  const uniformComplianceRate = checkedIn ? uniformOk / checkedIn : 0;
+  const attendanceRate = attended / jobs.length;
+
+  const starRatings = jobs
+    .map((j) => j.ratingGiven)
+    .filter((r): r is number => typeof r === 'number' && r > 0);
+  const reviewAvg = starRatings.length
+    ? starRatings.reduce((a, b) => a + b, 0) / starRatings.length
+    : 3.5;
+
+  const behaviorScore =
+    onTimeRate * 0.25 +
+    checkInCompletionRate * 0.2 +
+    uniformComplianceRate * 0.15 +
+    attendanceRate * 0.25 +
+    (1 - incidentPenalty) * 0.15;
+
+  const overallScore = Number(
+    Math.min(5, Math.max(1, reviewAvg * 0.55 + behaviorScore * 5 * 0.45)).toFixed(1)
+  );
+
+  return {
+    overallScore,
+    onTimeRate,
+    checkInCompletionRate,
+    uniformComplianceRate,
+    attendanceRate,
+    incidentPenalty,
+    jobsSampled: jobs.length,
+  };
+}
+
+export function computeClientReviewStatsForJobType(
+  guardId: string,
+  requests: SecurityRequest[],
+  jobType: JobType
+): ClientReviewStats {
+  const ratings = guardCompletedJobsForType(guardId, requests, jobType)
+    .map((j) => j.ratingGiven)
+    .filter((r): r is number => typeof r === 'number' && r > 0);
+
+  if (!ratings.length) {
+    return { average: 0, count: 0 };
+  }
+
+  const average = Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1));
+  return { average, count: ratings.length };
+}
+
+export interface JobTypeRatingMetric {
+  id: string;
+  label: string;
+  valueDisplay: string;
+  targetLabel: string;
+  status: PerformanceFactorStatus;
+  statusLabel: string;
+}
+
+export function buildJobTypeRatingMetrics(
+  metrics: GuardPerformanceMetrics,
+  clientReviews: ClientReviewStats
+): JobTypeRatingMetric[] {
+  const rows: JobTypeRatingMetric[] = [];
+
+  if (clientReviews.count > 0) {
+    const rate = clientReviews.average / 5;
+    const status = factorStatus(rate);
+    rows.push({
+      id: 'client-reviews',
+      label: 'Client rating',
+      valueDisplay: starDisplay(clientReviews.average),
+      targetLabel: 'Stay above 4.5 ★',
+      status: status.status,
+      statusLabel: status.statusLabel,
+    });
+  }
+
+  if (metrics.jobsSampled <= 0) return rows;
+
+  const metricDefs: Array<{
+    id: string;
+    label: string;
+    rate: number;
+    display: string;
+    targetLabel: string;
+  }> = [
+    {
+      id: 'on-time',
+      label: 'On-time arrival',
+      rate: metrics.onTimeRate,
+      display: percentDisplay(metrics.onTimeRate),
+      targetLabel: 'Stay above 90%',
+    },
+    {
+      id: 'check-ins',
+      label: 'Check-in reliability',
+      rate: metrics.checkInCompletionRate,
+      display: percentDisplay(metrics.checkInCompletionRate),
+      targetLabel: 'Stay above 95%',
+    },
+    {
+      id: 'uniform',
+      label: 'Uniform compliance',
+      rate: metrics.uniformComplianceRate,
+      display: percentDisplay(metrics.uniformComplianceRate),
+      targetLabel: 'Stay above 95%',
+    },
+    {
+      id: 'attendance',
+      label: 'Attendance',
+      rate: metrics.attendanceRate,
+      display: percentDisplay(metrics.attendanceRate),
+      targetLabel: 'Stay above 95%',
+    },
+    {
+      id: 'incident-free',
+      label: 'Incident-free record',
+      rate: 1 - metrics.incidentPenalty,
+      display: percentDisplay(1 - metrics.incidentPenalty),
+      targetLabel: 'Stay above 95%',
+    },
+  ];
+
+  for (const metric of metricDefs) {
+    const status = factorStatus(metric.rate);
+    rows.push({
+      id: metric.id,
+      label: metric.label,
+      valueDisplay: metric.display,
+      targetLabel: metric.targetLabel,
+      status: status.status,
+      statusLabel: status.statusLabel,
+    });
+  }
+
+  rows.push({
+    id: 'lifetime-shifts',
+    label: 'Lifetime shifts',
+    valueDisplay: String(metrics.jobsSampled),
+    targetLabel: 'Requires 5 for rating',
+    status: metrics.jobsSampled >= 5 ? 'very-high' : 'moderate',
+    statusLabel: metrics.jobsSampled >= 5 ? 'Established' : 'Building',
+  });
+
+  return rows;
+}
+
 export function computeGuardSkillRatings(
   guard: SecurityGuard,
   requests: SecurityRequest[],

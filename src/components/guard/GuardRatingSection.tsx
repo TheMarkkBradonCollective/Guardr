@@ -40,10 +40,14 @@ export interface GuardRatingSectionProps {
   pinnedLayout?: boolean;
   /** Show every job type in specialty ratings (zeros for no history) */
   includeAllJobTypes?: boolean;
+  /** Show the specialty ratings list (hidden on performance screen — use job-type tabs instead) */
+  showSpecialtyRatings?: boolean;
   /** Reorder factor cards by id */
   factorOrder?: string[];
   /** Navigate to factor detail when a card is tapped */
   onFactorSelect?: (factor: PerformanceFactor) => void;
+  /** Renders between the pinned hero and scrollable body (e.g. performance tabs) */
+  toolbar?: React.ReactNode;
   className?: string;
 }
 
@@ -270,8 +274,10 @@ export function GuardRatingSection({
   variant = 'full',
   pinnedLayout = false,
   includeAllJobTypes = false,
+  showSpecialtyRatings = false,
   factorOrder,
   onFactorSelect,
+  toolbar,
   className = '',
 }: GuardRatingSectionProps) {
   const clientReviews = useMemo(
@@ -389,7 +395,7 @@ export function GuardRatingSection({
         </section>
       )}
 
-      {displayedSkills.length > 0 && (
+      {showSpecialtyRatings && displayedSkills.length > 0 && (
         <section className="guard-skills-section">
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Specialty ratings</h3>
@@ -446,6 +452,7 @@ export function GuardRatingSection({
             {heroBlock}
           </section>
         </div>
+        {toolbar}
         <div className="guard-tiered-screen-scroll">{bodyBlock}</div>
       </>
     );
