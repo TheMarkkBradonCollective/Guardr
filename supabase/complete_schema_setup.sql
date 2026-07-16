@@ -1286,6 +1286,13 @@ CREATE TABLE IF NOT EXISTS guard_vehicle_insurance_policies (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_insurance_policies_guard_id
   ON guard_vehicle_insurance_policies (guard_id);
 
+COMMENT ON TABLE guard_vehicle_insurance_policies IS
+  'Guard auto insurance for patrol / driving work — separate from general liability COI';
+
+ALTER TABLE guard_vehicle_insurance_policies DROP CONSTRAINT IF EXISTS guard_vehicle_insurance_policies_status_check;
+ALTER TABLE guard_vehicle_insurance_policies ADD CONSTRAINT guard_vehicle_insurance_policies_status_check
+  CHECK (status IN ('not_submitted', 'pending', 'verified', 'rejected', 'expired'));
+
 CREATE TABLE IF NOT EXISTS guard_vehicle_profiles (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   guard_id TEXT NOT NULL UNIQUE REFERENCES guards(id) ON DELETE CASCADE,
@@ -1310,6 +1317,13 @@ CREATE TABLE IF NOT EXISTS guard_vehicle_profiles (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_profiles_guard_id
   ON guard_vehicle_profiles (guard_id);
+
+COMMENT ON TABLE guard_vehicle_profiles IS
+  'Guard vehicle submitted for staff approval before driving priority unlocks';
+
+ALTER TABLE guard_vehicle_profiles DROP CONSTRAINT IF EXISTS guard_vehicle_profiles_status_check;
+ALTER TABLE guard_vehicle_profiles ADD CONSTRAINT guard_vehicle_profiles_status_check
+  CHECK (status IN ('draft', 'pending', 'verified', 'rejected'));
 
 -- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
 CREATE TABLE IF NOT EXISTS company_public_documents (
@@ -1410,6 +1424,8 @@ ALTER TABLE team_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_vehicle_insurance_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_vehicle_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_public_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_crew_join_requests ENABLE ROW LEVEL SECURITY;
@@ -1426,7 +1442,8 @@ BEGIN
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings', 'platform_cities', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
-    'user_legal_acceptances', 'guard_insurance_policies', 'company_public_documents',
+    'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
+    'guard_vehicle_profiles', 'company_public_documents',
     'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
   ]
   LOOP
@@ -1472,7 +1489,8 @@ BEGIN
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
-    'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots',
+    'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
+    'guard_vehicle_profiles', 'team_chat_messages', 'job_guard_slots',
     'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
   ]
   LOOP
@@ -1942,6 +1960,25 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'guard_insurance_policies'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_vehicle_insurance_policies'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_vehicle_profiles'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN ('id_document_type', 'id_license_class', 'trusted', 'standing_crew_name')
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
