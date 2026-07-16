@@ -44,6 +44,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -609,42 +610,42 @@ export function StaffCredentials({
     );
   };
 
-  return (
-    <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-credentials">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {onAddCertification && (
-              <StaffCredentialAddForGuardForm
-                guards={guards}
-                onAddCertification={onAddCertification}
-                onCredentialAdded={(guardId) => {
-                  setFilter('pending_upload');
-                  setPendingFocusGuardId(guardId);
-                }}
-              />
-            )}
-          </div>
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search credentials..."
-            className="max-w-md"
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        {onAddCertification && (
+          <StaffCredentialAddForGuardForm
+            guards={guards}
+            onAddCertification={onAddCertification}
+            onCredentialAdded={(guardId) => {
+              setFilter('pending_upload');
+              setPendingFocusGuardId(guardId);
+            }}
           />
-          <StaffListFilterTabs
-            aria-label="Credential status"
-            activeId={filter}
-            onChange={(id) => setFilter(id as CredentialStatusFilter)}
-            tabs={[
-              { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
-              { id: 'verified', label: 'Verified' },
-              { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
-              { id: 'all', label: 'All' },
-            ]}
-          />
-        </>
-      )}
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search credentials..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Credential status"
+        activeId={filter}
+        onChange={(id) => setFilter(id as CredentialStatusFilter)}
+        tabs={[
+          { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
+          { id: 'verified', label: 'Verified' },
+          { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+    </>
+  ) : null;
 
+  return (
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">
       {filteredFeed.length === 0 ? (
         <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
@@ -677,6 +678,6 @@ export function StaffCredentials({
           renderDetail={(item, options) => renderCredentialDetail(item, options)}
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

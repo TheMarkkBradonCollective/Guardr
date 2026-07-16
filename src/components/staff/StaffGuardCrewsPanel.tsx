@@ -16,6 +16,7 @@ import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { Briefcase, MessageCircle, Shield, Users } from 'lucide-react';
 
 type CrewFilter = 'all' | StaffCrewPhase;
@@ -235,10 +236,8 @@ export function StaffGuardCrewsPanel({
     );
   }
 
-  return (
-    <div className="animate-fade-in space-y-4">
-
-      {/* ── View toggle: Standing crews / Job crews ── */}
+  const toolbar = (
+    <>
       <div className="flex gap-2 flex-wrap">
         <button
           type="button"
@@ -267,6 +266,46 @@ export function StaffGuardCrewsPanel({
           )}
         </button>
       </div>
+      {view === 'standing' && !showStandingDetailOnly ? (
+        <WfSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by name, crew name, badge..."
+          className="max-w-md"
+        />
+      ) : null}
+      {view === 'job' && !showJobDetailOnly ? (
+        <>
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search crews, coordinators, clients, jobs..."
+            className="max-w-md"
+          />
+          <div className="flex flex-wrap gap-2">
+            {FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setFilter(opt.id)}
+                className={`app-chip ${filter === opt.id ? 'app-chip-active' : ''}`}
+              >
+                {opt.label}
+                {opt.id === 'needs_review' && listings.some((c) => c.phase === 'needs_review') && (
+                  <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-400">
+                    {listings.filter((c) => c.phase === 'needs_review').length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+
+  return (
+    <StaffOpsPageShell toolbar={toolbar} className="staff-crews-panel">
 
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
@@ -347,17 +386,6 @@ export function StaffGuardCrewsPanel({
                 })}
               </div>
             </section>
-          )}
-
-          {!showStandingDetailOnly && (
-            <>
-              <WfSearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Search by name, crew name, badge..."
-                className="max-w-md"
-              />
-            </>
           )}
 
           {filteredStanding.length === 0 ? (
@@ -495,35 +523,6 @@ export function StaffGuardCrewsPanel({
       {/* ── Job crews view ── */}
       {view === 'job' && (
         <>
-          {!showJobDetailOnly && (
-            <>
-              <WfSearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Search crews, coordinators, clients, jobs..."
-                className="max-w-md"
-              />
-
-              <div className="flex flex-wrap gap-2">
-                {FILTER_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setFilter(opt.id)}
-                    className={`app-chip ${filter === opt.id ? 'app-chip-active' : ''}`}
-                  >
-                    {opt.label}
-                    {opt.id === 'needs_review' && listings.some((c) => c.phase === 'needs_review') && (
-                      <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-400">
-                        {listings.filter((c) => c.phase === 'needs_review').length}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
           {filtered.length === 0 ? (
             <div className="app-empty-state app-empty-state--dashed">
               <div className="app-empty-state-icon">
@@ -572,6 +571,6 @@ export function StaffGuardCrewsPanel({
           )}
         </>
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

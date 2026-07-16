@@ -1246,6 +1246,166 @@ body[data-form-factor="desktop"] .adm-crew-workbench {
   min-height: 0;
 }
 
+/* Operations pages (jobs, guards, clients, applications, etc.) */
+body[data-form-factor="desktop"] .adm-ops-page {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-ops-page-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .adm-ops-list-detail {
+  flex: 1;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-ops-toolbar {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-ops-toolbar .app-action-row--equal,
+body[data-form-factor="desktop"] .adm-ops-toolbar .staff-list-filter-tabs {
+  margin: 0;
+}
+
+body[data-form-factor="desktop"] .adm-ops-list {
+  max-height: none !important;
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .adm-ops-list-stack,
+body[data-form-factor="desktop"] .adm-workbench-list .app-item-card-stack {
+  gap: 0.35rem;
+  padding: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-workbench-list .app-item-card {
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+  box-shadow: none;
+}
+
+body[data-form-factor="desktop"] .adm-workbench-list .app-item-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--adm-border));
+}
+
+body[data-form-factor="desktop"] .adm-workbench-list .app-item-card-selected {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--adm-card));
+}
+
+body[data-form-factor="desktop"] .adm-ops-page .staff-detail-pane {
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .adm-ops-page .app-empty-state {
+  margin: 0;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed var(--adm-border);
+  border-radius: 0.5rem;
+  background: var(--adm-card);
+}
+
+body[data-form-factor="desktop"] .adm-ops-page .app-sub-screen-header {
+  display: flex !important;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--adm-border);
+}
+
+/* Finance pages (payments, agreements, audit log) */
+body[data-form-factor="desktop"] .adm-finance-page {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-finance-toolbar {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-toolbar-summary {
+  flex: 1;
+  min-width: min(100%, 28rem);
+}
+
+body[data-form-factor="desktop"] .adm-finance-stats {
+  margin-top: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-stats .staff-payment-stats-wrap {
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-stats .guard-performance-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-filter-tabs {
+  margin: 0 0 0.75rem;
+  flex-wrap: wrap;
+}
+
+body[data-form-factor="desktop"] .adm-finance-split {
+  flex: 1;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-finance-page .adm-workbench-detail-inner .app-item-card {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .adm-compliance-detail .adm-card-title {
+  margin-top: 0.15rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit-note {
+  margin: 0 0 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  background: var(--adm-card);
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit-table {
+  min-width: 100%;
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table th,
+body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td {
+  white-space: nowrap;
+}
+
+body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td:nth-child(3) {
+  white-space: normal;
+}
+
 /* Hide legacy shells */
 body[data-form-factor="desktop"] .dsk-app,
 body[data-form-factor="desktop"] .desktop-workspace {

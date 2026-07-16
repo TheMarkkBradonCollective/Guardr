@@ -8,6 +8,7 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { Briefcase, Search } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
@@ -120,9 +121,9 @@ export function StaffJobsPanel({
     );
   }
 
-  return (
-    <div className="animate-fade-in space-y-4">
-      {canManageJobs && onCreateJob && !showDetailOnly && (
+  const toolbar = !showDetailOnly ? (
+    <>
+      {canManageJobs && onCreateJob && (
         <StaffCreateJobForm
           clients={clients}
           guards={guards}
@@ -132,34 +133,33 @@ export function StaffJobsPanel({
           onCreated={(jobId) => setSelectedId(jobId)}
         />
       )}
-      {!showDetailOnly && (
-        <>
-          <div className="app-action-row--equal">
-            {filters.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  filter === f.id
-                    ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-                    : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+      <div className="app-action-row--equal">
+        {filters.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              filter === f.id
+                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
+                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search client, location, title..."
+        className="max-w-md"
+      />
+    </>
+  ) : null;
 
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search client, location, title..."
-            className="max-w-md"
-          />
-        </>
-      )}
-
+  return (
+    <StaffOpsPageShell toolbar={toolbar} data-tour="staff-jobs">
       {filtered.length === 0 ? (
         <div className="app-empty-state">
           <div className="app-empty-state-icon">
@@ -204,6 +204,6 @@ export function StaffJobsPanel({
           mobilePresentation="page"
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }
