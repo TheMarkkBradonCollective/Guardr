@@ -45,5 +45,19 @@
   },
   "rewrites": [
     { "source": "/((?!api/|marketing/|download/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/download/guardr.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/download/version.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
   ]
 }

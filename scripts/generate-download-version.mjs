@@ -13,6 +13,7 @@ const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const version = pkg.version || '1.0.0';
 const parts = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
 const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
+const apkCacheQuery = `?v=${versionCode}`;
 
 const cacheSlug = version.replace(/\./g, '-');
 const cacheName = `guardr-cache-v${cacheSlug}`;
@@ -21,8 +22,8 @@ const manifest = {
   webVersion: version,
   apkVersion: version,
   apkVersionCode: versionCode,
-  apkUrl: '/download/guardr.apk',
-  apkDirectUrl: APK_DIRECT_URL,
+  apkUrl: `/download/guardr.apk${apkCacheQuery}`,
+  apkDirectUrl: `${APK_DIRECT_URL}${apkCacheQuery}`,
   updatedAt: new Date().toISOString(),
 };
 
@@ -32,7 +33,7 @@ await writeFile(
 );
 
 const qrPath = path.join(ROOT, 'public/download/apk-qr.png');
-await QRCode.toFile(qrPath, APK_DIRECT_URL, {
+await QRCode.toFile(qrPath, `${APK_DIRECT_URL}${apkCacheQuery}`, {
   type: 'png',
   width: 320,
   margin: 2,

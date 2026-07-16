@@ -437,8 +437,12 @@
             var directLink = document.getElementById('apk-direct-link');
             if (directLink) {
               directLink.href = latest.apkDirectUrl;
-              directLink.textContent = latest.apkDirectUrl;
+              directLink.textContent = latest.apkDirectUrl.replace(/\?v=\d+$/, '');
             }
+          }
+
+          if (latest.apkUrl) {
+            downloadBtn.href = latest.apkUrl;
           }
 
           if (live === 'apk') {
