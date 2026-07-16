@@ -8482,6 +8482,152 @@ html.theme-dark .wf-badge-success {
   overflow: visible;
 }
 
+.guard-tier-rewards-btn {
+  width: var(--guard-tier-hero-content-width);
+  max-width: 100%;
+  margin-top: 0.85rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in srgb, #fff 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #fff 16%, transparent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.guard-tier-rewards-btn:hover {
+  background: color-mix(in srgb, #fff 24%, transparent);
+  transform: translateY(-1px);
+}
+
+.guard-performance-rewards-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--brand-bg);
+}
+
+.guard-performance-rewards-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1rem 2rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.guard-performance-rewards-hero {
+  padding: 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface)),
+    var(--brand-surface)
+  );
+}
+
+.guard-performance-rewards-eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+}
+
+.guard-performance-rewards-tier {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.guard-performance-rewards-next {
+  margin: 0.45rem 0 0;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-performance-rewards-section {
+  padding: 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+}
+
+.guard-performance-rewards-section.is-locked {
+  opacity: 0.72;
+}
+
+.guard-performance-rewards-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.guard-performance-rewards-section-head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.guard-performance-rewards-section-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-performance-rewards-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--brand-primary);
+}
+
+.guard-performance-rewards-section-check {
+  margin-left: auto;
+  width: 1rem;
+  height: 1rem;
+  color: var(--status-success);
+}
+
+.guard-performance-rewards-section-lock {
+  margin-left: auto;
+  width: 1rem;
+  height: 1rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-performance-rewards-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.guard-performance-rewards-item-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.guard-performance-rewards-item-copy {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--brand-text-muted);
+}
+
 .guard-tier-progress-compact {
   max-width: 17.5rem;
   margin-top: 0.05rem;

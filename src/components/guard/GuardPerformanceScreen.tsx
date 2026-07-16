@@ -15,6 +15,8 @@ import {
 } from '../../lib/guardJobPreferences';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
+import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
+import { GuardPerformanceRewards } from './GuardPerformanceRewards';
 import { GuardShiftAuditDisputes } from './GuardShiftAuditDisputes';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
@@ -47,6 +49,7 @@ export function GuardPerformanceScreen({
 }: GuardPerformanceScreenProps) {
   const { formFactor } = useDevice();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
+  const [showRewards, setShowRewards] = useState(false);
 
   const enabledJobTypes = useMemo(
     () => normalizeJobTypePreferences(guard.jobTypePreferences),
@@ -90,6 +93,7 @@ export function GuardPerformanceScreen({
 
   const handleTabChange = (tab: PerformanceViewTab) => {
     setActiveTab(tab);
+    setShowRewards(false);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
@@ -121,6 +125,10 @@ export function GuardPerformanceScreen({
             onPerformanceFactorChange?.(factor.id);
           }
         }}
+        onViewRewards={() => {
+          setShowRewards(true);
+          onPerformanceFactorChange?.(null);
+        }}
         className="guard-performance-screen-card"
       />
       <GuardShiftAuditDisputes
@@ -145,6 +153,18 @@ export function GuardPerformanceScreen({
     ) : null;
 
   const tabbedContent = activeTab === 'overall' ? overallContent : jobTypeContent;
+
+  if (showRewards && activeTab === 'overall') {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        <GuardPerformanceRewards
+          guard={guard}
+          requests={requests}
+          onBack={() => setShowRewards(false)}
+        />
+      </AppScreen>
+    );
+  }
 
   if (formFactor === 'desktop') {
     return (

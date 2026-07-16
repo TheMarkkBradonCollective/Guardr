@@ -46,6 +46,8 @@ export interface GuardRatingSectionProps {
   factorOrder?: string[];
   /** Navigate to factor detail when a card is tapped */
   onFactorSelect?: (factor: PerformanceFactor) => void;
+  /** Open tier rewards breakdown */
+  onViewRewards?: () => void;
   /** Renders between the pinned hero and scrollable body (e.g. performance tabs) */
   toolbar?: React.ReactNode;
   className?: string;
@@ -277,6 +279,7 @@ export function GuardRatingSection({
   showSpecialtyRatings = false,
   factorOrder,
   onFactorSelect,
+  onViewRewards,
   toolbar,
   className = '',
 }: GuardRatingSectionProps) {
@@ -372,6 +375,11 @@ export function GuardRatingSection({
             ? formatShiftSampleCount(performance.jobsSampled)
             : 'Building your performance profile'}
       </p>
+      {!isCompact && onViewRewards ? (
+        <button type="button" className="guard-tier-rewards-btn" onClick={onViewRewards}>
+          View my rewards
+        </button>
+      ) : null}
     </div>
   );
 
