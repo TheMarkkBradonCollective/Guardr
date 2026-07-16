@@ -8953,6 +8953,15 @@ html.theme-grey .wf-badge-success {
   background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
 }
 
+.guard-tier-hero-brand {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 78%, #fff) 0%,
+    var(--brand-primary) 55%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
 .guard-tier-hero .guard-pref-tier-medal,
 .guard-tier-hero .guard-tier-medal-lg {
   width: clamp(4.75rem, 22vw, 6rem);

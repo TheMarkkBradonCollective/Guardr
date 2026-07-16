@@ -9,12 +9,7 @@ export const JOBS_PIE_COLORS = {
   missed: '#ffb38a',
 } as const;
 
-export function jobsHeroTierClass(scheduledCount: number, openCount: number): string {
-  if (scheduledCount >= 3) return 'guard-tier-hero-professional';
-  if (scheduledCount > 0 || openCount >= 2) return 'guard-tier-hero-rising';
-  if (openCount > 0) return 'guard-tier-hero-rising';
-  return 'guard-tier-hero-starting';
-}
+export const GUARD_BRAND_HERO_CLASS = 'guard-tier-hero-brand';
 
 interface JobsScreenHeroProps<T extends string> {
   eyebrow: string;
@@ -22,7 +17,6 @@ interface JobsScreenHeroProps<T extends string> {
   subtitle: string;
   segments: JobsPieSegment[];
   activeId: T;
-  heroClass: string;
   onSegmentSelect?: (id: T) => void;
   totalLabel?: string;
 }
@@ -33,7 +27,6 @@ export function JobsScreenHero<T extends string>({
   subtitle,
   segments,
   activeId,
-  heroClass,
   onSegmentSelect,
   totalLabel = 'shifts',
 }: JobsScreenHeroProps<T>) {
@@ -44,7 +37,7 @@ export function JobsScreenHero<T extends string>({
 
   return (
     <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
-      <div className={`guard-tier-hero guard-jobs-tier-hero guard-tier-hero-dense ${heroClass}`}>
+      <div className={`guard-tier-hero guard-jobs-tier-hero guard-tier-hero-dense ${GUARD_BRAND_HERO_CLASS}`}>
         <div className="guard-tier-hero-glow" aria-hidden />
         <div className="guard-jobs-hero-stack">
           <p className="guard-tier-hero-eyebrow">{eyebrow}</p>
