@@ -270,7 +270,7 @@ export function GuardMyJobsPanel({
   }
 
   return (
-    <AppScreen className="guard-tiered-screen">
+    <AppScreen className="guard-tiered-screen h-full min-h-0">
       <div className="guard-tiered-screen-pinned">
         <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
           <div
@@ -301,106 +301,106 @@ export function GuardMyJobsPanel({
         </section>
       </div>
 
-      <div className="guard-tiered-screen-toolbar px-4 pt-2">
+      <div className="guard-tiered-screen-toolbar jobs-hub-sticky-head">
         <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
       </div>
 
       <div className="guard-tiered-screen-scroll">
         <div className="guard-rating-body">
-      {activeTab === 'available' && (
-        <div className="app-section-body pt-2">
-          {availableJobs.length === 0 ? (
-            <AppEmptyState
-              icon={<Map className="w-5 h-5" />}
-              title="No open jobs right now"
-            >
-              Check the map to browse available shifts near you.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {availableJobs.map((job) => (
-                <JobRow
-                  key={job.id}
-                  job={job}
-                  onSelect={() => updateSelectedId(job.id)}
-                  showPay
-                />
-              ))}
-            </AppItemCardStack>
+          {activeTab === 'available' && (
+            <div className="app-section-body pt-2">
+              {availableJobs.length === 0 ? (
+                <AppEmptyState
+                  icon={<Map className="w-5 h-5" />}
+                  title="No open jobs right now"
+                >
+                  Check the map to browse available shifts near you.
+                </AppEmptyState>
+              ) : (
+                <AppItemCardStack>
+                  {availableJobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onSelect={() => updateSelectedId(job.id)}
+                      showPay
+                    />
+                  ))}
+                </AppItemCardStack>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {activeTab === 'scheduled' && (
-        <div className="app-section-body pt-2">
-          {scheduledJobs.length === 0 ? (
-            <AppEmptyState
-              icon={<Clock className="w-5 h-5" />}
-              title="No scheduled shifts"
-            >
-              Accepted jobs will appear here before they start.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {scheduledJobs.map((job) => (
-                <JobRow
-                  key={job.id}
-                  job={job}
-                  onSelect={() => updateSelectedId(job.id)}
-                  showPay
-                  showTimeUntil
-                />
-              ))}
-            </AppItemCardStack>
+          {activeTab === 'scheduled' && (
+            <div className="app-section-body pt-2">
+              {scheduledJobs.length === 0 ? (
+                <AppEmptyState
+                  icon={<Clock className="w-5 h-5" />}
+                  title="No scheduled shifts"
+                >
+                  Accepted jobs will appear here before they start.
+                </AppEmptyState>
+              ) : (
+                <AppItemCardStack>
+                  {scheduledJobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onSelect={() => updateSelectedId(job.id)}
+                      showPay
+                      showTimeUntil
+                    />
+                  ))}
+                </AppItemCardStack>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {activeTab === 'completed' && (
-        <div className="app-section-body pt-2">
-          {completedJobs.length === 0 ? (
-            <AppEmptyState
-              icon={<CheckCircle2 className="w-5 h-5" />}
-              title="No completed shifts yet"
-            >
-              Your completed shift history will show up here.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {completedJobs.map((job) => (
-                <JobRow
-                  key={job.id}
-                  job={job}
-                  onSelect={() => updateSelectedId(job.id)}
-                />
-              ))}
-            </AppItemCardStack>
+          {activeTab === 'completed' && (
+            <div className="app-section-body pt-2">
+              {completedJobs.length === 0 ? (
+                <AppEmptyState
+                  icon={<CheckCircle2 className="w-5 h-5" />}
+                  title="No completed shifts yet"
+                >
+                  Your completed shift history will show up here.
+                </AppEmptyState>
+              ) : (
+                <AppItemCardStack>
+                  {completedJobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onSelect={() => updateSelectedId(job.id)}
+                    />
+                  ))}
+                </AppItemCardStack>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {activeTab === 'missed' && (
-        <div className="app-section-body pt-2">
-          {missedJobs.length === 0 ? (
-            <AppEmptyState
-              icon={<AlertTriangle className="w-5 h-5" />}
-              title="No missed shifts"
-            >
-              No-call and no-show shifts will appear here.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {missedJobs.map((job) => (
-                <JobRow
-                  key={job.id}
-                  job={job}
-                  onSelect={() => updateSelectedId(job.id)}
-                />
-              ))}
-            </AppItemCardStack>
+          {activeTab === 'missed' && (
+            <div className="app-section-body pt-2">
+              {missedJobs.length === 0 ? (
+                <AppEmptyState
+                  icon={<AlertTriangle className="w-5 h-5" />}
+                  title="No missed shifts"
+                >
+                  No-call and no-show shifts will appear here.
+                </AppEmptyState>
+              ) : (
+                <AppItemCardStack>
+                  {missedJobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onSelect={() => updateSelectedId(job.id)}
+                    />
+                  ))}
+                </AppItemCardStack>
+              )}
+            </div>
           )}
-        </div>
-      )}
         </div>
       </div>
     </AppScreen>

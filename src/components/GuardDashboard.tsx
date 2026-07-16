@@ -1352,7 +1352,7 @@ export function GuardDashboard({
 
           {tab === 'myJobs' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-my-jobs">
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
               <GuardMyJobsPanel
                 availableJobs={browseJobLists.available}
                 scheduledJobs={browseJobLists.scheduled}

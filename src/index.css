@@ -8864,6 +8864,12 @@ html.theme-grey .wf-badge-success {
   padding-bottom: 0;
 }
 
+.app-screen.guard-tiered-screen {
+  overflow: hidden;
+  overflow-y: hidden;
+  padding-bottom: 0;
+}
+
 .guard-tiered-screen-pinned {
   flex-shrink: 0;
   z-index: 4;
@@ -8871,7 +8877,8 @@ html.theme-grey .wf-badge-success {
 
 .guard-tiered-screen-toolbar {
   flex-shrink: 0;
-  z-index: 3;
+  position: relative;
+  z-index: 5;
 }
 
 .guard-tiered-screen-scroll {
@@ -13947,10 +13954,15 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   grid-row: 1;
 }
 
-/* Crew hub — tier hero pinned, tabs in toolbar slot, body scrolls */
-.crew-hub-sticky-head {
+/* Crew / jobs hub — tier hero pinned, tabs in toolbar slot, body scrolls */
+.crew-hub-sticky-head,
+.jobs-hub-sticky-head {
   padding: 0.5rem 1rem 0;
   background: var(--brand-bg);
+}
+
+.jobs-hub-sticky-head .jobs-tally-strip {
+  margin-inline: 0;
 }
 
 .crew-hub-sticky-head .app-segmented-control,
