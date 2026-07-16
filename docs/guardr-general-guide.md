@@ -518,6 +518,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 | **Activation screen** | Shown automatically after sign-in until account is **active** | Upload credentials, track application progress, wait for staff activation |
 | **Map** | Bottom navigation (active guards only) | Find open jobs, claim direct requests, and run active shifts |
 | **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
+| **Crew** | Bottom navigation (trusted guards only) | Standing team roster, job crews, team codes |
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Bottom navigation (active guards only) | Job chats, support tickets, support reports |
 | **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
@@ -587,11 +588,48 @@ Direct requests are assignments a client sent to you specifically.
 ### 5. Review upcoming and past jobs
 
 1. Open **Jobs**.
-2. Use upcoming jobs to confirm schedule and site details.
-3. Use past jobs to review completed work, overtime prompts, ratings, and history.
-4. Open job chat from the job when you need assignment-specific communication.
+2. The tier hero shows a breakdown of open, scheduled, completed, and missed work — tap a legend item or tab to filter.
+3. Use upcoming jobs to confirm schedule and site details.
+4. Use past jobs to review completed work, overtime prompts, ratings, and history.
+5. Open job chat from the job when you need assignment-specific communication.
 
-### 6. Start a shift
+### 6. Coordinate crews (trusted guards only)
+
+Trusted guards can build a **standing crew** — a reusable roster for multi-guard jobs.
+
+**Standing crew vs job crew:**
+
+| Term | What it is |
+|------|------------|
+| **Standing crew** | Your persistent team roster on the **Crew** page. Invite guards once; reuse them on future coordinated jobs. |
+| **Job crew** | Guards rostered on a specific multi-guard shift. Appears under **Crew → Active** while you are coordinating that job. |
+
+**Become a crew lead:**
+
+1. Open **Crew**.
+2. Under **Lead your own crew**, tap **Request crew lead approval**.
+3. Staff review the request in **Crews** and approve or decline.
+4. Once approved, name your crew and invite members from your standing roster.
+
+**Join another coordinator's crew:**
+
+1. Open **Crew**.
+2. Under **Join a crew**, enter the team code from the coordinator.
+3. You can only be on **one standing crew at a time** — leave your current crew before joining another.
+
+**On a multi-guard job:**
+
+1. Apply as **team lead** from the map on a job that needs multiple guards.
+2. Open **Crew → Active** to manage roster slots, share the team code, and invite your standing crew.
+3. Clients approve the full crew before the job is accepted.
+
+**If trusted status is removed:**
+
+- Your standing crew is dissolved.
+- Coordinated jobs you lead may be re-listed on the marketplace.
+- You can still work as a regular guard but cannot coordinate new crews until staff restore trusted status.
+
+### 7. Start a shift
 
 Clock-in opens around the scheduled start window.
 
@@ -612,7 +650,7 @@ If you cannot complete the self-audit:
 - Use **Skip self audit · clock in** only when necessary.
 - The job is flagged **No Self Audit** until you upload the three required photos yourself.
 
-### 7. Work the shift
+### 8. Work the shift
 
 During an active shift, use the active shift controls:
 
@@ -636,7 +674,7 @@ Activity reporting:
 3. Submit it.
 4. The app confirms **Activity logged**.
 
-### 8. End a shift
+### 9. End a shift
 
 1. At the end of the shift, open **Map** if the active shift controls are not already visible.
 2. Use **Slide to end shift** during the allowed clock-out window.
@@ -650,7 +688,7 @@ Late clock-out:
 - If you clock out late, the app may ask for a time confirmation.
 - Late clock-out can create overtime that both guard and client must approve.
 
-### 9. Review overtime
+### 10. Review overtime
 
 1. Open **Jobs**.
 2. Open the job with **Late clock-out overtime**.
@@ -658,7 +696,7 @@ Late clock-out:
 4. Select **Approve overtime** if the overtime is correct.
 5. If client approval/payment is also required, wait for the client and staff payment process.
 
-### 10. Collect payouts
+### 11. Collect payouts
 
 1. Open **Pay**.
 2. Review earnings by job.
@@ -672,7 +710,7 @@ Payouts depend on:
 - Auto Stripe payout schedule (~48h after completion).
 - Whether overtime or disputes are still open.
 
-### 11. Get help or message people
+### 12. Get help or message people
 
 1. Open **Messages**.
 2. Use job chat for assignment-specific messages.

@@ -1,9 +1,9 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Wednesday, July 15, 2026  
-**Commits so far:** 1,190  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.45**
+**Last updated:** Thursday, July 16, 2026  
+**Commits so far:** 1,200+  
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.51**
 
 ---
 
@@ -407,3 +407,30 @@ Bringing this to investors — needed every workflow working, every button, ever
 ---
 
 _You see this in staff under **Dev notes** (Director and Founder only). Everyone else uses **Guide** in the sidebar or account menu for how the app works._
+
+---
+
+## Thursday, July 16, 2026 — Tier heroes, crew polish, v1.0.51
+
+Unified the Jobs experience across guard and client roles and finished the crew documentation pass.
+
+**Design**
+- Guard **Jobs** tier hero with pie chart, color legend, and pinned segmented tabs (crew-style layout).
+- **Client Jobs** now matches — same tier hero, pie breakdown, and tab pattern as guards.
+- Shared `JobsScreenHero` component; legend items are keyboard-focusable buttons.
+- Performance and Preferences tier heroes fitted cleanly; shield crest cutout removed from heroes.
+- Crew hub flat sections (join + lead); standing crew dissolves when trusted status is revoked.
+
+**Functionality**
+- Crew lead state sync between guard and staff views.
+- Join crew moved from Settings to Crew page.
+
+**Docs**
+- Guide updated with full **Crew** section for trusted guards.
+- Onboarding tours cover Jobs hero breakdown and Crew tab.
+
+**Release**
+- **v1.0.51** — web bundle; APK build when Android SDK is available.
+
+**Test coverage:** 306 unit tests, lint and build clean.
+

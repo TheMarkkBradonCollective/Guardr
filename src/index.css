@@ -14211,60 +14211,43 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   text-underline-offset: 0.12rem;
 }
 
-.crew-join-section {
-  padding: 0.75rem 1rem 0;
-}
-
-.crew-join-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border-radius: var(--radius-app-lg, 14px);
-  border: 1px solid var(--brand-border);
-  background: var(--brand-surface);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-.crew-join-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.crew-join-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
-  color: var(--brand-primary);
-}
-
-.crew-join-icon {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.crew-join-title {
-  margin: 0 0 0.35rem;
-  font-size: 1.0625rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--brand-text);
-}
-
-.crew-join-desc {
+.guard-jobs-hero-legend-button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--brand-text-muted);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.guard-jobs-hero-legend-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 380px) {
+  .guard-jobs-hero-main {
+    gap: 0.65rem;
+  }
+
+  .guard-jobs-pie {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .guard-jobs-hero-legend {
+    gap: 0.18rem 0.35rem;
+  }
+
+  .guard-jobs-hero-subtitle {
+    font-size: 0.72rem;
+    max-width: 100%;
+  }
 }
 
 .crew-join-form {

@@ -10,9 +10,14 @@ export interface JobsPieSegment {
 interface JobsShiftPieChartProps {
   segments: JobsPieSegment[];
   activeId?: string;
+  totalLabel?: string;
 }
 
-export function JobsShiftPieChart({ segments, activeId }: JobsShiftPieChartProps) {
+export function JobsShiftPieChart({
+  segments,
+  activeId,
+  totalLabel = 'shifts',
+}: JobsShiftPieChartProps) {
   const total = useMemo(
     () => segments.reduce((sum, segment) => sum + segment.value, 0),
     [segments]
@@ -37,6 +42,8 @@ export function JobsShiftPieChart({ segments, activeId }: JobsShiftPieChartProps
 
   const activeColor = segments.find((segment) => segment.id === activeId)?.color;
 
+  const activeLabel = segments.find((segment) => segment.id === activeId)?.label;
+
   return (
     <div
       className={`guard-jobs-pie ${total <= 0 ? 'guard-jobs-pie-empty' : ''}`}
@@ -44,11 +51,16 @@ export function JobsShiftPieChart({ segments, activeId }: JobsShiftPieChartProps
         background: total > 0 ? `conic-gradient(${gradient})` : undefined,
         boxShadow: activeColor ? `0 0 0 2px ${activeColor}, 0 4px 16px rgba(0, 0, 0, 0.18)` : undefined,
       }}
-      aria-hidden
+      role="img"
+      aria-label={
+        total <= 0
+          ? `No ${totalLabel}`
+          : `${total} ${totalLabel}${activeLabel ? `, ${activeLabel} selected` : ''}`
+      }
     >
-      <div className="guard-jobs-pie-hole">
+      <div className="guard-jobs-pie-hole" aria-hidden>
         <span className="guard-jobs-pie-total">{total}</span>
-        <span className="guard-jobs-pie-total-label">shifts</span>
+        <span className="guard-jobs-pie-total-label">{totalLabel}</span>
       </div>
     </div>
   );

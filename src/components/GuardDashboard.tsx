@@ -1391,7 +1391,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'crew' && showCrewTab && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-crew">
               <GuardCrewHubPanel
                   guard={guard}
                   coordinatingJobs={coordinatingCrewJobs}
