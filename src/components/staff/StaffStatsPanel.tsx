@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { BarChart3 } from 'lucide-react';
-import type { SecurityGuard, SecurityRequest } from '../../types';
+import type { SecurityGuard, SecurityRequest, GuardCrewJoinRequest, GuardStandingCrewMember } from '../../types';
 import { buildStaffShiftViolations } from '../../lib/staffOps';
 import {
   STAFF_GUARD_STAT_SORT_OPTIONS,
@@ -13,6 +13,11 @@ import {
   type StaffGuardStatRow,
   type StaffGuardStatSortKey,
 } from '../../lib/staffStats';
+import {
+  buildStaffGuardEligibilityRecommendations,
+  staffGuardEligibilityKindLabel,
+  type StaffGuardEligibilityRecommendation,
+} from '../../lib/staffGuardEligibility';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
@@ -21,11 +26,81 @@ type StatsTab = 'overview' | 'guards' | 'compare' | 'violations';
 interface StaffStatsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
+  standingCrewMembers?: GuardStandingCrewMember[];
+  crewJoinRequests?: GuardCrewJoinRequest[];
   onOpenGuard?: (guardId: string) => void;
   onOpenViolations?: () => void;
 }
 
 const MAX_COMPARE = 4;
+
+function EligibilityRecommendations({
+  recommendations,
+  onOpenGuard,
+}: {
+  recommendations: StaffGuardEligibilityRecommendation[];
+  onOpenGuard?: (guardId: string) => void;
+}) {
+  if (recommendations.length === 0) {
+    return (
+      <section className="staff-stats-leaderboard">
+        <div className="staff-stats-section-head">
+          <h3 className="staff-stats-section-title">Staff action recommendations</h3>
+          <p className="staff-stats-section-sub">
+            Trusted status and crew lead setup are staff-only. Eligible guards will appear here when
+            they meet performance and accountability thresholds.
+          </p>
+        </div>
+        <p className="staff-stats-empty-copy">No trusted or crew lead recommendations right now.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="staff-stats-leaderboard">
+      <div className="staff-stats-section-head">
+        <h3 className="staff-stats-section-title">Staff action recommendations</h3>
+        <p className="staff-stats-section-sub">
+          Trusted status and crew lead are set by staff only. These guards meet the system thresholds
+          for your review.
+        </p>
+      </div>
+      <ul className="staff-stats-eligibility-list">
+        {recommendations.map((rec) => (
+          <li key={`${rec.kind}-${rec.guardId}`}>
+            <button
+              type="button"
+              className="staff-stats-eligibility-row"
+              onClick={() => onOpenGuard?.(rec.guardId)}
+            >
+              <div className="staff-stats-eligibility-row-main">
+                <span
+                  className={
+                    rec.kind === 'trusted'
+                      ? 'staff-stats-eligibility-pill staff-stats-eligibility-pill--trusted'
+                      : 'staff-stats-eligibility-pill staff-stats-eligibility-pill--crew-lead'
+                  }
+                >
+                  {staffGuardEligibilityKindLabel(rec.kind)}
+                </span>
+                <div>
+                  <p className="staff-stats-eligibility-name">{rec.guardName}</p>
+                  <p className="staff-stats-eligibility-meta">
+                    {rec.badgeNumber} · {rec.tierName} · Rating {rec.overallRating}
+                  </p>
+                </div>
+              </div>
+              <div className="staff-stats-eligibility-copy">
+                <p className="staff-stats-eligibility-title">{rec.title}</p>
+                <p className="staff-stats-eligibility-summary">{rec.summary}</p>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -244,6 +319,8 @@ function CompareTable({ rows }: { rows: StaffGuardStatRow[] }) {
 export function StaffStatsPanel({
   guards,
   requests,
+  standingCrewMembers = [],
+  crewJoinRequests = [],
   onOpenGuard,
   onOpenViolations,
 }: StaffStatsPanelProps) {
@@ -266,6 +343,16 @@ export function StaffStatsPanel({
   const compareRows = useMemo(
     () => compareStaffGuardStatRows(statRows, [...selectedIds]),
     [statRows, selectedIds]
+  );
+  const eligibilityRecommendations = useMemo(
+    () =>
+      buildStaffGuardEligibilityRecommendations(
+        guards,
+        statRows,
+        standingCrewMembers,
+        crewJoinRequests
+      ),
+    [guards, statRows, standingCrewMembers, crewJoinRequests]
   );
 
   const toggleSelect = (guardId: string) => {
@@ -311,6 +398,11 @@ export function StaffStatsPanel({
           emptyLabel="No shift audit violations logged."
         />
       </div>
+
+      <EligibilityRecommendations
+        recommendations={eligibilityRecommendations}
+        onOpenGuard={onOpenGuard}
+      />
 
       <section className="staff-stats-leaderboard">
         <div className="staff-stats-section-head">
