@@ -62,6 +62,7 @@ import {
 } from '../lib/staffOps';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
+import type { AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApplications } from './staff/StaffApplications';
@@ -308,7 +309,7 @@ interface StaffDashboardProps {
     doc: import('../lib/companyPlacard').CompanyPublicDocument
   ) => Promise<void>;
   onSetCompanyPlacardPublicEnabled?: (enabled: boolean) => Promise<void>;
-  headerActions?: React.ReactNode;
+  accountNotifications?: AccountMenuNotificationProps;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
@@ -451,7 +452,7 @@ export function StaffDashboard({
   companyPublicDocuments = [],
   onSaveCompanyPublicDocument,
   onSetCompanyPlacardPublicEnabled,
-  headerActions,
+  accountNotifications,
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
@@ -1130,7 +1131,7 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
-      headerActions={headerActions}
+      accountNotifications={accountNotifications}
       headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}
     >

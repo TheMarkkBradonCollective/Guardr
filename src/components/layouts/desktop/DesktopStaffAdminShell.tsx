@@ -6,7 +6,7 @@ import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../.
 import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../../lib/staffNavAccess';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { Logo } from '../../Logo';
-import { AccountMenu } from '../AccountMenu';
+import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
@@ -27,7 +27,7 @@ interface DesktopStaffAdminShellProps {
   showCities: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
-  headerActions?: React.ReactNode;
+  accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
 }
@@ -59,7 +59,7 @@ export function DesktopStaffAdminShell({
   showCities,
   onOpenLegal,
   hideHeader = false,
-  headerActions,
+  accountNotifications,
   headerExtension,
   headerOverride,
 }: DesktopStaffAdminShellProps) {
@@ -172,7 +172,6 @@ export function DesktopStaffAdminShell({
             </div>
           </div>
           <div className="adm-header-actions">
-            {headerActions}
             <AccountMenu
               userName={currentUser.name}
               userSubtitle={ROLE_LABELS[currentUser.role]}
@@ -181,6 +180,7 @@ export function DesktopStaffAdminShell({
               onOpenSettings={() => onNavigate('preferences')}
               onSignOut={onSignOut}
               active={activeSection === 'profile' || activeSection === 'preferences'}
+              {...accountNotifications}
             />
             <button
               type="button"

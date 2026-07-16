@@ -89,7 +89,7 @@ import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
-import { AccountMenu } from './components/layouts/AccountMenu';
+import { AccountMenu, type AccountMenuNotificationProps } from './components/layouts/AccountMenu';
 import { ClientDashboard } from './components/ClientDashboard';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from './lib/messagesChrome';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -265,7 +265,6 @@ import {
   loadStandingCrewMembers,
   persistStandingCrewMember,
 } from './lib/standingCrewStore';
-import { NotificationBellMenu } from './components/notifications/NotificationBellMenu';
 import {
   persistJobGuardSlots,
   persistJobTeamMeta,
@@ -9391,13 +9390,13 @@ export default function App() {
     await persistUserNotifications(next, currentUser.id, isDbConnected);
   };
 
-  const notificationBellMenu = currentUser ? (
-    <NotificationBellMenu
-      notifications={userNotifications}
-      onNotificationClick={handleNotificationClick}
-      onMarkAllRead={handleMarkAllNotificationsRead}
-    />
-  ) : null;
+  const accountNotificationMenuProps: AccountMenuNotificationProps = currentUser
+    ? {
+        notifications: userNotifications,
+        onNotificationClick: handleNotificationClick,
+        onMarkAllNotificationsRead: handleMarkAllNotificationsRead,
+      }
+    : {};
 
   const handleClientApproveFullTeam = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
@@ -12271,7 +12270,20 @@ export default function App() {
           page={legalPage}
           onBack={closeLegalPage}
           onOpenLegal={openLegalPage}
-          headerRight={currentUser ? notificationBellMenu : undefined}
+          headerRight={
+            currentUser ? (
+              <AccountMenu
+                userName={currentUser.name}
+                userSubtitle={currentUser.email}
+                avatarUrl={currentUser.avatar}
+                onOpenProfile={() => undefined}
+                onOpenSettings={() => undefined}
+                onSignOut={handleSignOut}
+                hideProfile
+                {...accountNotificationMenuProps}
+              />
+            ) : undefined
+          }
         />
         <InstallPrompt />
       </>
@@ -12373,10 +12385,16 @@ export default function App() {
       return (
         <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
           <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-            {notificationBellMenu}
-            <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
-              Sign out
-            </button>
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={currentUser.email}
+              avatarUrl={currentUser.avatar}
+              onOpenProfile={() => setGuardTab('settings')}
+              onOpenSettings={() => setGuardTab('settings')}
+              onSignOut={handleSignOut}
+              hideProfile
+              {...accountNotificationMenuProps}
+            />
           </header>
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
             <p className="text-brand-text font-semibold">We could not load your guard profile.</p>
@@ -12396,14 +12414,16 @@ export default function App() {
           {passwordChangeOverlay}
           <div className="page-shell h-[100dvh] flex flex-col overflow-hidden bg-brand-bg">
             <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-              {notificationBellMenu}
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="text-sm font-semibold text-brand-text-muted hover:text-brand-text"
-              >
-                Sign out
-              </button>
+              <AccountMenu
+                userName={currentUser.name}
+                userSubtitle={currentUser.email}
+                avatarUrl={currentUser.avatar}
+                onOpenProfile={() => setGuardTab('settings')}
+                onOpenSettings={() => setGuardTab('settings')}
+                onSignOut={handleSignOut}
+                hideProfile
+                {...accountNotificationMenuProps}
+              />
             </header>
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
               <AccountPendingScreen
@@ -12440,7 +12460,7 @@ export default function App() {
           guard={activeGuard}
           tab={resolvedGuardTab}
           onTabChange={setGuardTab}
-          headerRight={notificationBellMenu}
+          accountNotifications={accountNotificationMenuProps}
           standingCrewMembers={standingCrewMembers}
           onInviteStandingCrew={handleInviteStandingCrew}
           onRemoveStandingCrew={handleRemoveStandingCrew}
@@ -12645,7 +12665,6 @@ export default function App() {
     const clientMessagesShellHeaderTrailing =
       clientView === 'messages' ? (
         <div className="shrink-0 flex items-center gap-2">
-          {notificationBellMenu}
           <AccountMenu
             userName={currentUser.name}
             userSubtitle={currentUser.email}
@@ -12654,6 +12673,7 @@ export default function App() {
             onOpenSettings={() => handleClientNavigate('settings')}
             onSignOut={handleSignOut}
             active={false}
+            {...accountNotificationMenuProps}
           />
         </div>
       ) : null;
@@ -12671,7 +12691,7 @@ export default function App() {
           messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
           invoicesBadge={clientInvoicesBadge}
           hideHeader={clientHideHeader}
-          headerRight={notificationBellMenu}
+          accountNotifications={accountNotificationMenuProps}
           messagesChrome={clientMessagesChrome}
         >
           {clientView === 'profile' ? (
@@ -12807,7 +12827,7 @@ export default function App() {
         <StaffDashboard
           section={staffSection}
           onSectionChange={setStaffSection}
-          headerActions={notificationBellMenu}
+          accountNotifications={accountNotificationMenuProps}
           selectedGuardId={staffGuardId}
           onSelectedGuardIdChange={setStaffGuardId}
           selectedClientId={staffClientId}
@@ -12954,10 +12974,16 @@ export default function App() {
   return (
     <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
       <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-        {notificationBellMenu}
-        <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
-          Sign out
-        </button>
+        <AccountMenu
+          userName={currentUser.name}
+          userSubtitle={currentUser.email}
+          avatarUrl={currentUser.avatar}
+          onOpenProfile={() => undefined}
+          onOpenSettings={() => undefined}
+          onSignOut={handleSignOut}
+          hideProfile
+          {...accountNotificationMenuProps}
+        />
       </header>
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
         <p className="text-brand-text font-semibold">This account role is not supported.</p>

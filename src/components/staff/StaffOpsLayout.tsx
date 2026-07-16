@@ -9,7 +9,7 @@ import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
 import { AppHeaderToolbar } from '../layouts/AppHeaderToolbar';
 import { NavMenuPopover } from '../layouts/NavMenuPopover';
-import { AccountMenu } from '../layouts/AccountMenu';
+import { AccountMenu, type AccountMenuNotificationProps } from '../layouts/AccountMenu';
 import { showAppAlert } from '../ui/AppConfirm';
 import { useDevice } from '../../lib/platform';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
@@ -54,7 +54,7 @@ interface StaffOpsLayoutProps {
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
-  headerActions?: React.ReactNode;
+  accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
 }
@@ -104,7 +104,7 @@ export function StaffOpsLayout({
   fullBleed = false,
   onOpenLegal,
   hideHeader = false,
-  headerActions,
+  accountNotifications,
   headerExtension,
   headerOverride,
 }: StaffOpsLayoutProps) {
@@ -157,6 +157,7 @@ export function StaffOpsLayout({
     onOpenSettings: () => onNavigate('preferences'),
     onSignOut,
     active: activeSection === 'profile' || activeSection === 'preferences',
+    ...accountNotifications,
   };
 
   const popoverItems = useMemo(
@@ -207,7 +208,7 @@ export function StaffOpsLayout({
         showCities={showCities}
         onOpenLegal={onOpenLegal}
         hideHeader={hideHeader}
-        headerActions={headerActions}
+        accountNotifications={accountNotifications}
         headerExtension={headerExtension}
         headerOverride={headerOverride}
       >
@@ -231,19 +232,13 @@ export function StaffOpsLayout({
             <AppHeaderToolbar
               showTitle={false}
               left={navMenu}
-              right={
-                <>
-                  {headerActions}
-                  <AccountMenu {...accountMenu} />
-                </>
-              }
+              right={<AccountMenu {...accountMenu} />}
             />
           </header>
         ) : (
           <AppScreenHeader
             title={screenTitle}
             accountMenu={accountMenu}
-            notifications={headerActions}
             navMenu={navMenu}
             extension={headerExtension}
             brandingTrailing={brandingTrailing}

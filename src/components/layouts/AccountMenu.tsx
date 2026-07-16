@@ -1,8 +1,18 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, LogOut, LucideIcon, Settings, User } from 'lucide-react';
+import type { UserNotification } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
+import {
+  NotificationInboxSection,
+  accountMenuUnreadCount,
+} from '../notifications/NotificationInboxSection';
+
+export type AccountMenuNotificationProps = Pick<
+  AccountMenuProps,
+  'notifications' | 'onNotificationClick' | 'onMarkAllNotificationsRead'
+>;
 
 export interface AccountMenuLink {
   label: string;
@@ -24,6 +34,9 @@ export interface AccountMenuProps {
   active?: boolean;
   extraLinks?: AccountMenuLink[];
   footer?: React.ReactNode;
+  notifications?: UserNotification[];
+  onNotificationClick?: (notification: UserNotification) => void | Promise<void>;
+  onMarkAllNotificationsRead?: () => void | Promise<void>;
 }
 
 export function AccountMenu({
@@ -37,12 +50,19 @@ export function AccountMenu({
   active = false,
   extraLinks = [],
   footer,
+  notifications,
+  onNotificationClick,
+  onMarkAllNotificationsRead,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
-  const position = useFloatingPanelPosition(open, triggerRef, 'right', 288);
+  const panelWidth = notifications && onNotificationClick && onMarkAllNotificationsRead ? 352 : 288;
+  const position = useFloatingPanelPosition(open, triggerRef, 'right', panelWidth);
+  const unread = accountMenuUnreadCount(notifications);
+  const showNotifications =
+    !!notifications && !!onNotificationClick && !!onMarkAllNotificationsRead;
 
   useEffect(() => {
     if (!open) return;
@@ -86,13 +106,22 @@ export function AccountMenu({
       ref={menuRef}
       id={menuId}
       role="menu"
-      className="account-menu-panel fixed z-[3000] w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
+      className="account-menu-panel fixed z-[3000] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
       style={{ top: position.top, left: position.left, right: position.right }}
     >
       <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
         <p className="font-bold text-sm truncate tracking-tight">{userName}</p>
         {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
       </div>
+
+      {showNotifications ? (
+        <NotificationInboxSection
+          notifications={notifications}
+          onMarkAllRead={onMarkAllNotificationsRead}
+          onNotificationClick={onNotificationClick}
+          onNavigate={close}
+        />
+      ) : null}
 
       <div className="p-2 border-b border-brand-border space-y-0.5">
         {!hideProfile && (
@@ -171,9 +200,18 @@ export function AccountMenu({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
-        aria-label="Account menu"
+        aria-label={
+          unread > 0 ? `Account menu, ${unread} unread notifications` : 'Account menu'
+        }
       >
-        <ProfileAvatar src={avatarUrl} name={userName} size="sm" />
+        <span className="relative shrink-0">
+          <ProfileAvatar src={avatarUrl} name={userName} size="sm" />
+          {unread > 0 && (
+            <span className="notification-bell-badge absolute -top-0.5 -right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-brand-primary text-[10px] font-black text-white flex items-center justify-center leading-none border-2 border-brand-surface">
+              {unread > 99 ? '99+' : unread}
+            </span>
+          )}
+        </span>
         <ChevronDown
           className={`w-3.5 h-3.5 text-brand-text-muted transition-transform ${open ? 'rotate-180' : ''}`}
           strokeWidth={2}
