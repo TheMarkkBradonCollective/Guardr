@@ -9,11 +9,12 @@ import {
 import { getClientLiveJobs, inferClientShiftPhase, CLIENT_SHIFT_PHASE_LABELS } from '../../lib/clientShift';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
-  Building2,
+  ArrowUpRight,
+  Briefcase,
   Calendar,
-  ChevronRight,
   FileText,
   Map,
+  MapPin,
   Plus,
   Radio,
   Shield,
@@ -34,15 +35,6 @@ interface ClientHomeDesktopProps {
   onHireGuard?: (guard: SecurityGuard) => void;
   onViewGuard?: (guard: SecurityGuard) => void;
 }
-
-const ACTIONS: { id: ClientHomeAction; label: string; sub: string; icon: typeof Plus }[] = [
-  { id: 'request', label: 'Post job', sub: 'Open to guards', icon: Plus },
-  { id: 'guards', label: 'Browse guards', sub: 'Resumes & licenses', icon: Users },
-  { id: 'map', label: 'Operations map', sub: 'Live field view', icon: Map },
-  { id: 'locations', label: 'Locations', sub: 'Saved sites', icon: Building2 },
-  { id: 'schedule', label: 'Schedule', sub: 'Plan ahead', icon: Calendar },
-  { id: 'reports', label: 'Reports', sub: 'Activity log', icon: FileText },
-];
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -77,201 +69,225 @@ export function ClientHomeDesktop({
     onAction(action);
   };
 
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const livePct = coverage.activeAssignments > 0 ? Math.min(100, coverage.activeAssignments * 20) : 0;
 
   return (
-    <div className="dsk-command-center dsk-command-center--client">
-      <header className="dsk-command-header">
-        <div>
-          <p className="dsk-command-kicker">{today} · {companyName}</p>
-          <h2 className="dsk-command-title">{greeting()}</h2>
-        </div>
-        <div className="dsk-command-header-actions">
-          <button type="button" className="dsk-btn dsk-btn--primary" onClick={() => run('request')}>
-            <Plus className="w-4 h-4" />
-            Post job
-          </button>
-          <button type="button" className="dsk-btn dsk-btn--ghost" onClick={() => run('map')}>
-            <Map className="w-4 h-4" />
-            Open map
-          </button>
-        </div>
-      </header>
-
+    <div className="adm-dashboard">
       {accountPending ? (
-        <div className="dsk-banner dsk-banner--warn">
-          <strong>Account pending approval.</strong> Complete your profile before posting jobs or opening operations.
+        <div className="adm-alert adm-alert--warn">
+          <strong>Account pending approval.</strong> Complete your profile before posting jobs.
           {onOpenProfile ? (
-            <button type="button" className="dsk-btn dsk-btn--sm dsk-btn--ghost" onClick={onOpenProfile}>
+            <button type="button" className="adm-btn adm-btn--sm adm-btn--outline" onClick={onOpenProfile}>
               Review profile
             </button>
           ) : null}
         </div>
       ) : null}
 
-      <div className="dsk-kpi-row">
-        <button type="button" className="dsk-kpi-tile" onClick={() => run('map')}>
-          <span className="dsk-kpi-label">Live assignments</span>
-          <span className="dsk-kpi-value">{coverage.activeAssignments}</span>
-          <span className="dsk-kpi-sub">{coverage.guardsOnDuty} on duty now</span>
-        </button>
-        <button type="button" className="dsk-kpi-tile" onClick={() => run('requests')}>
-          <span className="dsk-kpi-label">Open jobs</span>
-          <span className="dsk-kpi-value">{openCount}</span>
-          <span className="dsk-kpi-sub">Active requests</span>
-        </button>
-        <button type="button" className="dsk-kpi-tile" onClick={() => run('requests')}>
-          <span className="dsk-kpi-label">Scheduled</span>
-          <span className="dsk-kpi-value">{upcoming.length}</span>
-          <span className="dsk-kpi-sub">Upcoming shifts</span>
-        </button>
-        <button type="button" className="dsk-kpi-tile" onClick={() => run('reports')}>
-          <span className="dsk-kpi-label">Reports</span>
-          <span className="dsk-kpi-value">{recentReports.length}</span>
-          <span className="dsk-kpi-sub">Recent activity</span>
-        </button>
-      </div>
-
-      <div className="dsk-command-grid">
-        <section className="dsk-panel dsk-panel--span-8">
-          <div className="dsk-panel-head">
-            <div>
-              <p className="dsk-panel-eyebrow">
-                <Radio className="w-3.5 h-3.5" />
-                Live operations
-              </p>
-              <h3 className="dsk-panel-title">Field status</h3>
-            </div>
-            <button type="button" className="dsk-link-btn" onClick={() => run('map')}>
-              Full map
-              <ChevronRight className="w-4 h-4" />
+      <div className="adm-dashboard-grid">
+        {/* Welcome card */}
+        <article className="adm-card adm-card--welcome adm-span-4">
+          <div>
+            <p className="adm-card-eyebrow">Welcome back</p>
+            <h2 className="adm-card-title">{greeting()}, {companyName}</h2>
+            <p className="adm-card-body">Manage coverage, review guards, and monitor live operations from your console.</p>
+            <button type="button" className="adm-btn adm-btn--sand" onClick={() => run('request')}>
+              Post job
+              <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
+          <div className="adm-welcome-art" aria-hidden>
+            <Shield className="w-16 h-16 opacity-20" />
+          </div>
+        </article>
 
+        {/* Live coverage stat */}
+        <article className="adm-card adm-card--stat adm-span-4">
+          <p className="adm-card-eyebrow">Live coverage</p>
+          <div className="adm-stat-row">
+            <div>
+              <p className="adm-stat-value">{coverage.activeAssignments}</p>
+              <p className="adm-stat-label">Active assignments</p>
+              <p className="adm-stat-delta">+ {coverage.guardsOnDuty} on duty now</p>
+            </div>
+            <div className="adm-progress-ring" style={{ '--adm-progress': `${livePct}%` } as React.CSSProperties}>
+              <span>{livePct}%</span>
+            </div>
+          </div>
+          <button type="button" className="adm-btn adm-btn--sm adm-btn--outline adm-mt" onClick={() => run('map')}>
+            View map
+          </button>
+        </article>
+
+        {/* Open jobs stat */}
+        <article className="adm-card adm-card--stat adm-span-4">
+          <p className="adm-card-eyebrow">Open jobs</p>
+          <p className="adm-stat-value">{openCount}</p>
+          <p className="adm-stat-label">Active requests</p>
+          <p className="adm-stat-delta">{upcoming.length} scheduled upcoming</p>
+          <button type="button" className="adm-btn adm-btn--sm adm-btn--outline adm-mt" onClick={() => run('requests')}>
+            View jobs
+          </button>
+        </article>
+
+        {/* Sales status style metrics */}
+        <article className="adm-card adm-span-4">
+          <p className="adm-card-eyebrow">Operations status</p>
+          <h3 className="adm-card-heading">At a glance</h3>
+          <ul className="adm-metric-list">
+            <li>
+              <span className="adm-metric-icon"><Radio className="w-4 h-4" /></span>
+              <div>
+                <p className="adm-metric-label">Live assignments</p>
+                <p className="adm-metric-value">{coverage.activeAssignments}</p>
+              </div>
+            </li>
+            <li>
+              <span className="adm-metric-icon"><Users className="w-4 h-4" /></span>
+              <div>
+                <p className="adm-metric-label">Guards on duty</p>
+                <p className="adm-metric-value">{coverage.guardsOnDuty}</p>
+              </div>
+            </li>
+            <li>
+              <span className="adm-metric-icon"><Briefcase className="w-4 h-4" /></span>
+              <div>
+                <p className="adm-metric-label">Open jobs</p>
+                <p className="adm-metric-value">{openCount}</p>
+              </div>
+            </li>
+            <li>
+              <span className="adm-metric-icon"><FileText className="w-4 h-4" /></span>
+              <div>
+                <p className="adm-metric-label">Recent reports</p>
+                <p className="adm-metric-value">{recentReports.length}</p>
+              </div>
+            </li>
+          </ul>
+        </article>
+
+        {/* Live jobs table */}
+        <article className="adm-card adm-span-8">
+          <div className="adm-card-head">
+            <div>
+              <p className="adm-card-eyebrow">Live operations</p>
+              <h3 className="adm-card-heading">Field status</h3>
+            </div>
+            <button type="button" className="adm-btn adm-btn--sm adm-btn--sand" onClick={() => run('map')}>
+              Open map
+            </button>
+          </div>
           {liveJobs.length > 0 ? (
-            <table className="dsk-table">
+            <table className="adm-table">
               <thead>
                 <tr>
                   <th>Job</th>
                   <th>Phase</th>
-                  <th>Guards</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {liveJobs.slice(0, 6).map((job) => (
-                  <tr key={job.id} onClick={() => run('map')} className="dsk-table-row--clickable">
-                    <td>
-                      <span className="dsk-table-primary">{job.title}</span>
-                    </td>
+                {liveJobs.slice(0, 5).map((job) => (
+                  <tr key={job.id} onClick={() => run('map')} className="adm-table-row--click">
+                    <td className="adm-table-strong">{job.title}</td>
                     <td>{CLIENT_SHIFT_PHASE_LABELS[inferClientShiftPhase(job)]}</td>
-                    <td>{job.assignedGuardId ? 1 : 0}</td>
+                    <td><span className="adm-badge adm-badge--live">Live</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <div className="dsk-panel-empty">
-              <Map className="w-8 h-8 text-brand-primary opacity-80" />
-              <p className="dsk-panel-empty-title">No guards on site</p>
-              <p className="dsk-panel-empty-body">Post a job or open the map when shifts go live.</p>
+            <div className="adm-empty">
+              <Map className="w-8 h-8" />
+              <p>No guards on site right now</p>
             </div>
           )}
-        </section>
+        </article>
 
-        <section className="dsk-panel dsk-panel--span-4">
-          <div className="dsk-panel-head">
-            <h3 className="dsk-panel-title">Quick actions</h3>
-          </div>
-          <div className="dsk-action-list">
-            {ACTIONS.map(({ id, label, sub, icon: Icon }) => (
-              <button key={id} type="button" className="dsk-action-row" onClick={() => run(id)}>
-                <span className="dsk-action-row-icon">
-                  <Icon className="w-4 h-4" />
-                </span>
-                <span className="dsk-action-row-copy">
-                  <span className="dsk-action-row-label">{label}</span>
-                  <span className="dsk-action-row-sub">{sub}</span>
-                </span>
-                <ChevronRight className="w-4 h-4 opacity-40" />
+        {/* Quick actions */}
+        <article className="adm-card adm-span-4">
+          <p className="adm-card-eyebrow">Shortcuts</p>
+          <h3 className="adm-card-heading">Quick actions</h3>
+          <div className="adm-shortcut-grid">
+            {[
+              { id: 'request' as const, label: 'Post job', icon: Plus },
+              { id: 'guards' as const, label: 'Browse guards', icon: Users },
+              { id: 'map' as const, label: 'Map', icon: Map },
+              { id: 'locations' as const, label: 'Locations', icon: MapPin },
+              { id: 'schedule' as const, label: 'Schedule', icon: Calendar },
+              { id: 'reports' as const, label: 'Reports', icon: FileText },
+            ].map(({ id, label, icon: Icon }) => (
+              <button key={id} type="button" className="adm-shortcut" onClick={() => run(id)}>
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
               </button>
             ))}
           </div>
-        </section>
+        </article>
 
-        <section className="dsk-panel dsk-panel--span-6">
-          <div className="dsk-panel-head">
-            <h3 className="dsk-panel-title">Scheduled coverage</h3>
-            {upcoming.length > 0 ? (
-              <button type="button" className="dsk-link-btn" onClick={() => run('requests')}>
-                All jobs
-              </button>
-            ) : null}
+        {/* Scheduled jobs table */}
+        <article className="adm-card adm-span-8">
+          <div className="adm-card-head">
+            <h3 className="adm-card-heading">Latest scheduled jobs</h3>
+            <button type="button" className="adm-link-btn" onClick={() => run('requests')}>View all</button>
           </div>
-          {upcoming.length === 0 ? (
-            <div className="dsk-panel-empty dsk-panel-empty--compact">
-              <p className="dsk-panel-empty-body">No scheduled coverage yet.</p>
-            </div>
-          ) : (
-            <table className="dsk-table dsk-table--compact">
+          {upcoming.length > 0 ? (
+            <table className="adm-table">
               <thead>
                 <tr>
                   <th>Job</th>
                   <th>Date</th>
                   <th>Hours</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {upcoming.slice(0, 5).map((req) => (
-                  <tr key={req.id} onClick={() => run('requests')} className="dsk-table-row--clickable">
-                    <td className="dsk-table-primary">{req.title}</td>
+                  <tr key={req.id} onClick={() => run('requests')} className="adm-table-row--click">
+                    <td className="adm-table-strong">{req.title}</td>
                     <td>{formatCoverageDateLabel(req.startDate)}</td>
-                    <td className="dsk-table-muted">{formatShiftTimeRange(req.startDate, req.endDate)}</td>
+                    <td className="adm-table-muted">{formatShiftTimeRange(req.startDate, req.endDate)}</td>
+                    <td><span className="adm-badge adm-badge--pending">Scheduled</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : (
+            <div className="adm-empty adm-empty--compact"><p>No scheduled coverage yet</p></div>
           )}
-        </section>
+        </article>
 
-        <section className="dsk-panel dsk-panel--span-6">
-          <div className="dsk-panel-head">
-            <h3 className="dsk-panel-title">Your guards</h3>
-            <button type="button" className="dsk-link-btn" onClick={() => run('guards')}>
-              Browse all
-            </button>
+        {/* Guards */}
+        <article className="adm-card adm-span-4">
+          <div className="adm-card-head">
+            <h3 className="adm-card-heading">Your guards</h3>
+            <button type="button" className="adm-link-btn" onClick={() => run('guards')}>Browse</button>
           </div>
           {recentGuards.length === 0 ? (
-            <div className="dsk-panel-empty dsk-panel-empty--compact">
-              <p className="dsk-panel-empty-body">Guards you hire will appear here.</p>
-            </div>
+            <div className="adm-empty adm-empty--compact"><p>No guards yet</p></div>
           ) : (
-            <div className="dsk-guard-grid">
+            <ul className="adm-activity-list">
               {recentGuards.slice(0, 4).map((guard) => (
-                <div key={guard.id} className="dsk-guard-card">
-                  <button type="button" className="dsk-guard-card-main" onClick={() => onViewGuard?.(guard)}>
-                    <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="lg" className="w-11 h-11" />
+                <li key={guard.id}>
+                  <button type="button" className="adm-activity-row" onClick={() => onViewGuard?.(guard)}>
+                    <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="full" className="w-9 h-9" />
                     <div className="min-w-0">
-                      <p className="dsk-guard-card-name">{guard.name}</p>
-                      <p className="dsk-guard-card-rating">
-                        <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
-                        {guard.rating.toFixed(1)}
+                      <p className="adm-activity-name">{guard.name}</p>
+                      <p className="adm-activity-meta">
+                        <Star className="w-3 h-3 inline" /> {guard.rating.toFixed(1)}
                       </p>
                     </div>
                   </button>
                   {onHireGuard ? (
-                    <button type="button" className="dsk-btn dsk-btn--sm dsk-btn--soft" onClick={() => onHireGuard(guard)}>
-                      Hire again
+                    <button type="button" className="adm-btn adm-btn--xs adm-btn--soft" onClick={() => onHireGuard(guard)}>
+                      Hire
                     </button>
                   ) : null}
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </section>
+        </article>
       </div>
     </div>
   );

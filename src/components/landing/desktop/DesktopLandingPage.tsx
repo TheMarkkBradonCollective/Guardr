@@ -47,9 +47,9 @@ export function DesktopLandingPage({
         <aside className="dsk-landing-editorial">
           <div className="dsk-landing-editorial-top">
             <div className="dsk-landing-logo-row">
-              <Logo size={28} className="text-brand-primary" />
+              <Logo size={28} className="dsk-landing-logo" />
               <span className="dsk-landing-logo-text">
-                Guard<span className="text-brand-primary">r</span>
+                Guard<span className="dsk-landing-accent">r</span>
               </span>
             </div>
             <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
@@ -67,11 +67,11 @@ export function DesktopLandingPage({
               <br />
               Run your business.
               <br />
-              <span className="dsk-landing-headline-dim">One desktop console.</span>
+              <span className="dsk-landing-headline-dim">One admin console.</span>
             </h1>
             <p className="dsk-landing-deck">
               Clients command sites. Guards run independent careers. Staff orchestrates the field.
-              Purpose-built desktop workspaces — not a stretched phone app.
+              A desktop admin workspace with sidebar navigation, live dashboards, and operational cards — not a stretched phone app.
             </p>
 
             {(ownerMessage?.trim() || directorMessage?.trim()) && (
@@ -94,7 +94,7 @@ export function DesktopLandingPage({
             <div className="dsk-landing-cta-row">
               <button
                 type="button"
-                className="dsk-landing-cta dsk-landing-cta--light"
+                className="dsk-landing-cta dsk-landing-cta--primary"
                 onClick={() => onNavigateToAuth('client', 'sign-up')}
               >
                 <Building2 className="w-4 h-4" />
@@ -142,7 +142,7 @@ export function DesktopLandingPage({
             <span />
             <span />
             <span />
-            <p>Guardr desktop · operations console</p>
+            <p>Guardr desktop · admin dashboard</p>
           </div>
           <DesktopLandingHeroPreview />
         </section>
