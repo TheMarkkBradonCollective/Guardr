@@ -100,3 +100,16 @@ export function approvedTeamSlotGuardIds(job: Pick<SecurityRequest, 'guardSlots'
     .filter((slot: JobGuardSlot) => slot.status === 'approved' && !!slot.guardId)
     .map((slot) => slot.guardId as string);
 }
+
+/** Unique guards on accepted or in-progress jobs, including approved crew slots. */
+export function assignedGuardIdsOnActiveJobs(
+  requests: Pick<SecurityRequest, 'status' | 'assignedGuardId' | 'guardSlots'>[]
+): Set<string> {
+  const ids = new Set<string>();
+  for (const job of requests) {
+    if (job.status !== 'accepted' && job.status !== 'in-progress') continue;
+    if (job.assignedGuardId) ids.add(job.assignedGuardId);
+    for (const guardId of approvedTeamSlotGuardIds(job)) ids.add(guardId);
+  }
+  return ids;
+}
