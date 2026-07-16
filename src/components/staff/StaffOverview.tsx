@@ -120,7 +120,7 @@ const QUICK_LINK_META: Record<
   'job-chats': { label: 'Messages', icon: MessagesSquare },
   payments: { label: 'Payments', icon: DollarSign },
   'payment-settings': { label: 'Payment settings', icon: CreditCard },
-  agreements: { label: 'Marketplace agreements', icon: FileText },
+  agreements: { label: 'Agreements', icon: FileText },
   'audit-log': { label: 'Audit log', icon: ScrollText },
   disputes: { label: 'Disputes', icon: AlertTriangle },
   analytics: { label: 'Analytics', icon: BarChart3 },

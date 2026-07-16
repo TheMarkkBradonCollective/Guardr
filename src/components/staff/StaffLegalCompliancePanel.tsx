@@ -84,7 +84,7 @@ export function StaffLegalCompliancePanel({
   const missingCount = report.filter((row) => !row.complete).length;
 
   return (
-    <AppFormSection title="Marketplace agreements">
+    <AppFormSection title="Agreements">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {(['all', 'missing', 'complete'] as const).map((value) => (
           <button

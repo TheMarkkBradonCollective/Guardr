@@ -89,8 +89,8 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
       'Payment method, platform fee, and crew pay settings are limited to Director and Founder roles. Ask your Director to review or update these controls.',
   },
   agreements: {
-    title: 'Marketplace agreements',
-    message: 'Marketplace agreement compliance is limited to Director and Founder roles.',
+    title: 'Agreements',
+    message: 'Agreement compliance is limited to Director and Founder roles.',
   },
   'audit-log': {
     title: 'Audit log',
