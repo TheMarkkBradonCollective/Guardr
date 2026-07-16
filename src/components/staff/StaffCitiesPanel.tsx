@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { SessionUser } from '../../types';
 import {
   canManageCityMarkets,
-  canRecommendCityOpen,
+  canRecommendCityMarket,
+  canViewCityMarkets,
 } from '../../lib/permissions';
 import {
   countCityMarketsByFilter,
@@ -63,7 +64,8 @@ export function StaffCitiesPanel({
   const [error, setError] = useState('');
 
   const canManageStatus = canManageCityMarkets(currentUser);
-  const canRecommend = canRecommendCityOpen(currentUser);
+  const canRecommend = canRecommendCityMarket(currentUser);
+  const canView = canViewCityMarkets(currentUser);
 
   const visibleCities = useMemo(
     () => filterCitiesForStaffActor(cities, currentUser.role, actorManagedCities),
@@ -104,7 +106,7 @@ export function StaffCitiesPanel({
     }
   };
 
-  if (!canRecommend) {
+  if (!canView) {
     return (
       <div className="app-empty-state app-empty-state--dashed">
         <p className="app-empty-state-title">City markets unavailable</p>
@@ -135,9 +137,9 @@ export function StaffCitiesPanel({
           denial. Wait list cities still collect applications but hold release to staff until the
           market is fully active.
         </p>
-        {!canManageStatus && (
+        {canRecommend && (
           <p className="text-xs text-amber-400">
-            As a Manager you can recommend cities to open. Directors and Founders control open,
+            As a Manager you can recommend cities for review. Directors and Founders control open,
             closed, and wait list status.
           </p>
         )}
@@ -214,7 +216,7 @@ export function StaffCitiesPanel({
                       <WfBadge tone={STATUS_TONES[city.status]}>
                         {CITY_STATUS_LABELS[city.status]}
                       </WfBadge>
-                      {city.recommendOpen && <WfBadge tone="primary">Recommended open</WfBadge>}
+                      {city.recommendOpen && <WfBadge tone="primary">Recommended</WfBadge>}
                       {city.status === 'waitlist' && (
                         <span className="text-xs text-brand-text-muted capitalize">
                           Wait list: {city.waitlistAudience}
@@ -240,16 +242,18 @@ export function StaffCitiesPanel({
                       </button>
                     ))}
                   </div>
-                ) : (
+                ) : canRecommend ? (
                   <button
                     type="button"
                     disabled={busy}
                     onClick={() => void applyUpdate(city, { recommendOpen: !city.recommendOpen })}
-                    className="app-button-outline app-btn-sm"
+                    className={`app-button-outline app-btn-sm ${
+                      city.recommendOpen ? 'border-brand-primary text-brand-primary' : ''
+                    }`}
                   >
-                    {city.recommendOpen ? 'Withdraw recommendation' : 'Recommend open'}
+                    Recommend
                   </button>
-                )}
+                ) : null}
 
                 {canManageStatus && city.status === 'waitlist' && (
                   <div className="flex flex-wrap items-center gap-2">
@@ -272,18 +276,6 @@ export function StaffCitiesPanel({
                   </div>
                 )}
 
-                {canManageStatus && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void applyUpdate(city, { recommendOpen: !city.recommendOpen })}
-                    className="app-button-outline app-btn-sm"
-                  >
-                    {city.recommendOpen
-                      ? 'Clear recommendation flag'
-                      : 'Flag manager recommendation'}
-                  </button>
-                )}
               </div>
             );
           })}
