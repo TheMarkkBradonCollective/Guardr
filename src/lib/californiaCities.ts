@@ -1,84 +1,31 @@
-/** Major California cities and metros — Guardr operates statewide in CA. */
+import { CALIFORNIA_INCORPORATED_CITIES } from './californiaIncorporatedCities';
+
+/** All incorporated California municipalities — Guardr operates statewide in CA. */
 export const GUARDR_HOME_LICENSE_STATE = 'CA';
 
-export const CALIFORNIA_CITIES = [
-  'Anaheim',
-  'Bakersfield',
-  'Berkeley',
-  'Burbank',
-  'Carlsbad',
-  'Chula Vista',
-  'Chico',
-  'Concord',
-  'Corona',
-  'Costa Mesa',
-  'Daly City',
-  'Elk Grove',
-  'Escondido',
-  'Fontana',
-  'Fremont',
-  'Fresno',
-  'Fullerton',
-  'Garden Grove',
-  'Glendale',
-  'Hayward',
-  'Huntington Beach',
-  'Inglewood',
-  'Irvine',
-  'Lancaster',
-  'Long Beach',
-  'Los Angeles',
-  'Modesto',
-  'Moreno Valley',
-  'Oakland',
-  'Oceanside',
-  'Ontario',
-  'Orange',
-  'Oxnard',
-  'Palmdale',
-  'Pasadena',
-  'Pomona',
-  'Rancho Cucamonga',
-  'Rialto',
-  'Richmond',
-  'Riverside',
-  'Roseville',
-  'Sacramento',
-  'Salinas',
-  'San Bernardino',
-  'San Diego',
-  'San Francisco',
-  'San Jose',
-  'San Mateo',
-  'Santa Ana',
-  'Santa Clara',
-  'Santa Clarita',
-  'Santa Maria',
-  'Santa Monica',
-  'Santa Rosa',
-  'Simi Valley',
-  'Stockton',
-  'Sunnyvale',
-  'Thousand Oaks',
-  'Torrance',
-  'Vallejo',
-  'Ventura',
-  'Victorville',
-  'Visalia',
-] as const;
+/** @deprecated Alias — full list of incorporated CA cities and towns */
+export const CALIFORNIA_CITIES = CALIFORNIA_INCORPORATED_CITIES;
 
 export type CaliforniaCity = (typeof CALIFORNIA_CITIES)[number];
 
 export const DEFAULT_CALIFORNIA_CITY: CaliforniaCity = 'Los Angeles';
 
+const CALIFORNIA_CITY_LOOKUP = new Map(
+  CALIFORNIA_CITIES.map((city) => [city.toLowerCase(), city] as const)
+);
+
+/** Longest names first so geocode matching prefers "South San Francisco" over "San Francisco". */
+const CALIFORNIA_CITIES_BY_LENGTH_DESC = [...CALIFORNIA_CITIES].sort(
+  (a, b) => b.length - a.length
+);
+
 export function isCaliforniaCity(value: string): boolean {
-  return CALIFORNIA_CITIES.some((c) => c.toLowerCase() === value.trim().toLowerCase());
+  return CALIFORNIA_CITY_LOOKUP.has(value.trim().toLowerCase());
 }
 
 export function formatCityLabel(city: string | undefined): string {
   if (!city?.trim()) return '';
-  const match = CALIFORNIA_CITIES.find((c) => c.toLowerCase() === city.trim().toLowerCase());
-  return match ?? city.trim();
+  return CALIFORNIA_CITY_LOOKUP.get(city.trim().toLowerCase()) ?? city.trim();
 }
 
 /**
@@ -125,7 +72,9 @@ export function resolveJobCity(value: string | undefined): CaliforniaCity {
 export function cityFromGeocode(addressLine?: string, stateCode?: string): CaliforniaCity {
   if (addressLine) {
     const lower = addressLine.toLowerCase();
-    const found = CALIFORNIA_CITIES.find((c) => lower.includes(c.toLowerCase()));
+    const found = CALIFORNIA_CITIES_BY_LENGTH_DESC.find((city) =>
+      lower.includes(city.toLowerCase())
+    );
     if (found) return found;
   }
   if (stateCode && isCaliforniaCity(stateCode)) {

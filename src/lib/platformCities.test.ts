@@ -58,7 +58,7 @@ const sampleCities: PlatformCity[] = [
 describe('platform city access', () => {
   it('defaults every seeded city to closed', () => {
     const defaults = buildDefaultPlatformCities();
-    assert.ok(defaults.length >= 60);
+    assert.equal(defaults.length, 483);
     assert.equal(defaults.every((city) => city.status === 'closed'), true);
   });
 

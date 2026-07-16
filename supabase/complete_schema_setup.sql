@@ -1015,10 +1015,6 @@ SET
   recommend_open = FALSE,
   updated_at = timezone('utc'::text, now());
 
-INSERT INTO platform_cities (id, name, state_code, status, waitlist_audience, recommend_open, sort_order)
-VALUES ('chico', 'Chico', 'CA', 'closed', 'both', FALSE, 10)
-ON CONFLICT (name) DO NOTHING;
-
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS verified_guard_self_serve BOOLEAN NOT NULL DEFAULT TRUE;
