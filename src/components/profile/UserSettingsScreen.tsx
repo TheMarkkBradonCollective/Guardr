@@ -62,7 +62,7 @@ export function UserSettingsScreen({
         {isNativeShell() && (
           <p className="text-xs text-brand-text-muted mt-2 leading-relaxed">
             Updates ship with new APK builds. Compare with the live site at{' '}
-            <a href={`${SITE_URL}/download/`} className="text-brand-primary font-semibold underline">
+            <a href={`${SITE_URL}/download/`} className="text-brand-primary font-semibold underline break-all">
               {SITE_URL}/download/
             </a>
             .
