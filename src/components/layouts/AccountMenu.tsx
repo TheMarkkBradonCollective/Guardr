@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, LogOut, LucideIcon, Settings, User } from 'lucide-react';
+import { ChevronDown, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
 import type { UserNotification } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
@@ -55,14 +55,21 @@ export function AccountMenu({
   onMarkAllNotificationsRead,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  const [menuView, setMenuView] = useState<'main' | 'notifications'>('main');
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
-  const panelWidth = notifications && onNotificationClick && onMarkAllNotificationsRead ? 352 : 288;
-  const position = useFloatingPanelPosition(open, triggerRef, 'right', panelWidth);
-  const unread = accountMenuUnreadCount(notifications);
   const showNotifications =
     !!notifications && !!onNotificationClick && !!onMarkAllNotificationsRead;
+  const panelWidth = menuView === 'notifications' ? 352 : 288;
+  const position = useFloatingPanelPosition(open, triggerRef, 'right', panelWidth);
+  const unread = accountMenuUnreadCount(notifications);
+
+  useEffect(() => {
+    if (!open) {
+      setMenuView('main');
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -85,6 +92,14 @@ export function AccountMenu({
   }, [open]);
 
   const close = () => setOpen(false);
+
+  const openNotifications = () => {
+    setMenuView('notifications');
+  };
+
+  const backToMainMenu = () => {
+    setMenuView('main');
+  };
 
   const handleProfile = () => {
     onOpenProfile();
@@ -110,81 +125,115 @@ export function AccountMenu({
       style={{ top: position.top, left: position.left, right: position.right }}
     >
       <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
-        <p className="font-bold text-sm truncate tracking-tight">{userName}</p>
-        {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
+        {menuView === 'notifications' ? (
+          <button
+            type="button"
+            onClick={backToMainMenu}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-text hover:text-brand-primary transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 shrink-0" strokeWidth={2} />
+            Back
+          </button>
+        ) : (
+          <>
+            <p className="font-bold text-sm truncate tracking-tight">{userName}</p>
+            {userSubtitle && (
+              <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>
+            )}
+          </>
+        )}
       </div>
 
-      {showNotifications ? (
+      {menuView === 'notifications' && showNotifications ? (
         <NotificationInboxSection
           notifications={notifications}
           onMarkAllRead={onMarkAllNotificationsRead}
           onNotificationClick={onNotificationClick}
           onNavigate={close}
+          embedded
         />
-      ) : null}
-
-      <div className="p-2 border-b border-brand-border space-y-0.5">
-        {!hideProfile && (
-          <button
-            type="button"
-            role="menuitem"
-            onClick={handleProfile}
-            className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
-          >
-            <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-            Profile
-          </button>
-        )}
-        <button
-          type="button"
-          role="menuitem"
-          onClick={handleSettings}
-          className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
-        >
-          <Settings className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-          Settings
-        </button>
-      </div>
-
-      {extraLinks.length > 0 && (
-        <div className="p-2 border-b border-brand-border">
-          {extraLinks.map((link) => (
+      ) : (
+        <>
+          <div className="p-2 border-b border-brand-border space-y-0.5">
+            {!hideProfile && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleProfile}
+                className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
+              >
+                <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+                Profile
+              </button>
+            )}
+            {showNotifications && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={openNotifications}
+                className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
+              >
+                <Bell className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+                <span className="flex-1 min-w-0">Notifications</span>
+                {unread > 0 && (
+                  <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand-primary text-[10px] font-black text-white flex items-center justify-center leading-none">
+                    {unread > 99 ? '99+' : unread}
+                  </span>
+                )}
+              </button>
+            )}
             <button
-              key={link.label}
               type="button"
               role="menuitem"
-              onClick={() => {
-                link.onClick();
-                close();
-              }}
-              className={`account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
-                link.active
-                  ? 'text-brand-primary bg-brand-primary/10'
-                  : 'text-brand-text hover:bg-brand-bg-sec'
-              }`}
+              onClick={handleSettings}
+              className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
             >
-              <link.icon className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-              {link.label}
+              <Settings className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+              Settings
             </button>
-          ))}
-        </div>
+          </div>
+
+          {extraLinks.length > 0 && (
+            <div className="p-2 border-b border-brand-border">
+              {extraLinks.map((link) => (
+                <button
+                  key={link.label}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    link.onClick();
+                    close();
+                  }}
+                  className={`account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
+                    link.active
+                      ? 'text-brand-primary bg-brand-primary/10'
+                      : 'text-brand-text hover:bg-brand-bg-sec'
+                  }`}
+                >
+                  <link.icon className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="p-2">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleSignOut}
+              className="account-menu-item account-menu-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+              Sign out
+            </button>
+          </div>
+
+          {footer ? (
+            <div className="px-4 py-3 border-t border-brand-border bg-brand-bg-sec/40">{footer}</div>
+          ) : null}
+        </>
       )}
-
-      <div className="p-2">
-        <button
-          type="button"
-          role="menuitem"
-          onClick={handleSignOut}
-          className="account-menu-item account-menu-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-          Sign out
-        </button>
-      </div>
-
-      {footer ? (
-        <div className="px-4 py-3 border-t border-brand-border bg-brand-bg-sec/40">{footer}</div>
-      ) : null}
     </div>
   ) : null;
 

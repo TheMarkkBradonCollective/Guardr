@@ -26,6 +26,8 @@ export interface NotificationInboxSectionProps {
   onMarkAllRead: () => void | Promise<void>;
   onNotificationClick: (notification: UserNotification) => void | Promise<void>;
   onNavigate?: () => void;
+  /** When true, omit outer border (used inside account menu sub-view). */
+  embedded?: boolean;
 }
 
 export function NotificationInboxSection({
@@ -33,12 +35,13 @@ export function NotificationInboxSection({
   onMarkAllRead,
   onNotificationClick,
   onNavigate,
+  embedded = false,
 }: NotificationInboxSectionProps) {
   const unread = countUnreadNotifications(notifications);
   const sorted = sortNotificationsNewestFirst(notifications);
 
   return (
-    <div className="account-menu-notifications border-b border-brand-border">
+    <div className={embedded ? 'account-menu-notifications' : 'account-menu-notifications border-b border-brand-border'}>
       <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-brand-bg-sec/40">
         <p className="text-xs font-black uppercase tracking-wide text-brand-text-muted">Notifications</p>
         {unread > 0 && (
@@ -52,7 +55,7 @@ export function NotificationInboxSection({
           </button>
         )}
       </div>
-      <div className="max-h-[min(16rem,40dvh)] overflow-y-auto overscroll-contain">
+      <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain">
         {sorted.length === 0 ? (
           <p className="px-4 py-6 text-sm text-brand-text-muted text-center">No notifications yet.</p>
         ) : (
