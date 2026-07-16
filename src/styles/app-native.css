@@ -1,0 +1,67 @@
+/* Native APK shell — mobile + tablet Capacitor WebView.
+   Complements body.capacitor-native with data-shell="native" targeting. */
+
+body[data-shell="native"],
+body.shell-native {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body[data-shell="native"] .app-welcome-header,
+body.shell-native .app-welcome-header {
+  background: var(--brand-bg);
+}
+
+body[data-shell="native"] .app-welcome-dock,
+body.shell-native .app-welcome-dock {
+  background: var(--brand-surface);
+  border-top: 1px solid var(--brand-border);
+}
+
+body[data-shell="native"] .app-welcome-role-btn:active,
+body.shell-native .app-welcome-role-btn:active,
+body[data-shell="native"] .app-welcome-signin-btn:active,
+body.shell-native .app-welcome-signin-btn:active {
+  transform: scale(0.98);
+}
+
+body[data-shell="native"] .tablet-admin-rail,
+body.shell-native .tablet-admin-rail {
+  padding-left: max(0px, var(--gr-safe-area-left, env(safe-area-inset-left, 0px)));
+}
+
+body[data-shell="native"] .tablet-admin-main,
+body.shell-native .tablet-admin-main {
+  padding-right: max(0px, var(--gr-safe-area-right, env(safe-area-inset-right, 0px)));
+}
+
+body[data-shell="native"] .tablet-admin-rail-item:active,
+body.shell-native .tablet-admin-rail-item:active {
+  transform: scale(0.94);
+  background: color-mix(in srgb, var(--brand-primary) 22%, transparent);
+}
+
+body[data-shell="native"] .app-welcome-shell-badge--native,
+body.shell-native .app-welcome-shell-badge--native {
+  border-color: color-mix(in srgb, var(--brand-primary) 45%, var(--brand-border));
+}
+
+body[data-view-surface="native-tablet"] .app-welcome--tablet .app-welcome-dock {
+  border-radius: 1rem;
+  box-shadow: none;
+  border: 1px solid var(--brand-border);
+}
+
+body[data-view-surface="native-mobile"] .app-welcome--mobile .app-welcome-headline {
+  letter-spacing: -0.03em;
+}
+
+body[data-shell="native"] .auth-sheet-panel,
+body.shell-native .auth-sheet-panel {
+  padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+body[data-shell="native"] .bottom-nav-bar,
+body.shell-native .bottom-nav-bar {
+  padding-bottom: max(0.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+}

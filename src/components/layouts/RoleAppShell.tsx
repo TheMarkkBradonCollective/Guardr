@@ -7,6 +7,7 @@ import { AppHeaderBranding } from './AppHeaderBranding';
 import { AppHeaderToolbar } from './AppHeaderToolbar';
 import { useDevice } from '../../lib/platform';
 import { DesktopAdminShell } from './desktop/DesktopAdminShell';
+import { TabletAdminShell } from './tablet/TabletAdminShell';
 
 interface RoleAppShellProps {
   title: string;
@@ -68,7 +69,29 @@ export function RoleAppShell({
     );
   }
 
-  const dockedSidebar = formFactor === 'tablet';
+  if (formFactor === 'tablet') {
+    return (
+      <TabletAdminShell
+        title={title}
+        accountMenu={accountMenu}
+        navItems={navItems}
+        overflowNavItems={overflowNavItems}
+        activeNavId={activeNavId}
+        onNavigate={onNavigate}
+        notifications={notifications}
+        headerRight={headerRight}
+        hideHeader={hideHeader}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+        variant={variant}
+        workspaceLabel={workspaceLabel ?? 'Client workspace'}
+      >
+        {children}
+      </TabletAdminShell>
+    );
+  }
+
+  const dockedSidebar = false;
   const isMapMode = variant === 'dark';
 
   const allSideNavItems = useMemo(
