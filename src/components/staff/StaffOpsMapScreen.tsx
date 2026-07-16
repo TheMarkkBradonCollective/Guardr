@@ -15,7 +15,6 @@ interface StaffOpsMapScreenProps {
   staffRole?: PlatformRole;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
-  onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -30,7 +29,6 @@ export function StaffOpsMapScreen({
   staffRole,
   onApproveRequest,
   onDenyRequest,
-  onAssignGuard,
   onEditJobListing,
   onApproveGuardApplication,
   onDenyGuardApplication,
@@ -73,12 +71,10 @@ export function StaffOpsMapScreen({
             <StaffJobDetailPanel
               req={selectedJob}
               guards={guards}
-              canManageJobs={canManageJobs}
               canEditJobListing={canEditJobListing}
               staffRole={staffRole}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
-              onAssignGuard={onAssignGuard}
               onEditJobListing={onEditJobListing}
               onApproveGuardApplication={onApproveGuardApplication}
               onDenyGuardApplication={onDenyGuardApplication}

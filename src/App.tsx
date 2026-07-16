@@ -6637,43 +6637,6 @@ export default function App() {
     return freshJob.id;
   };
 
-  const handleStaffAssignGuard = async (requestId: string, guardId: string) => {
-    if (!currentUser || !canManageCompanyOperations(currentUser)) {
-      appToast('Only directors can place guards on jobs.', 'error');
-      return;
-    }
-    const job = requests.find((r) => r.id === requestId);
-    const guard = guards.find((g) => g.id === guardId);
-    if (!job || !guard) return;
-    if (job.assignedGuardId) {
-      appToast('A guard has already picked up this job.', 'error');
-      return;
-    }
-    if (!['open', 'pending-review'].includes(job.status)) {
-      appToast('Guards can only be placed on open jobs awaiting a guard.', 'error');
-      return;
-    }
-    const userStatus = getGuardUserStatus(guard);
-    if (userStatus === 'pending') {
-      appToast(`${guard.name} cannot pick up this job — marketplace eligibility pending.`, 'error');
-      return;
-    }
-    if (userStatus === 'suspended' || userStatus === 'blocked') {
-      appToast(`${guard.name} cannot pick up this job — account is ${userStatus}.`, 'error');
-      return;
-    }
-    if (!(await showAppConfirm({
-      title: 'Dispute or safety placement?',
-      message:
-        'Guards normally self-select jobs. Staff placement is only for dispute resolution or safety exceptions. Continue?',
-      confirmLabel: 'Place guard',
-    }))) {
-      return;
-    }
-
-    await proposeGuardForClientApproval(requestId, guardId);
-  };
-
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, paymentStatus } : r));
     if (isDbConnected) {
@@ -12743,7 +12706,6 @@ export default function App() {
           onAddGuardProfile={handleAddGuardProfile}
           onAddClientProfile={handleAddClientProfile}
           onStaffCreateJob={handleStaffCreateJob}
-          onStaffAssignGuard={handleStaffAssignGuard}
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}

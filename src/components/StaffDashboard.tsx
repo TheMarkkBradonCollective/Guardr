@@ -239,7 +239,6 @@ interface StaffDashboardProps {
   onAddGuardProfile: (input: StaffAddGuardInput) => Promise<string>;
   onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
-  onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
@@ -400,7 +399,6 @@ export function StaffDashboard({
   onAddGuardProfile,
   onAddClientProfile,
   onStaffCreateJob,
-  onStaffAssignGuard,
   onEditJobListing,
   themeMode,
   onChangeTheme,
@@ -644,7 +642,6 @@ export function StaffDashboard({
             staffRole={currentUser.role}
             onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
             onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
-            onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
@@ -730,7 +727,6 @@ export function StaffDashboard({
             onApproveRequest={canReviewJobs ? onApproveRequest : undefined}
             onDenyRequest={canReviewJobs ? onDenyRequest : undefined}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
-            onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
