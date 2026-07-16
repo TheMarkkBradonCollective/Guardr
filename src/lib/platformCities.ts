@@ -30,12 +30,23 @@ const WAITLIST_MESSAGE =
 
 let cachedPlatformCities: PlatformCity[] | null = null;
 
+/** Active launch market — all other seeded cities default to closed. */
+export const GUARDR_LAUNCH_CITY = 'Sacramento';
+
+export function isLaunchCity(name: string | undefined): boolean {
+  return formatCityLabel(name ?? '').toLowerCase() === GUARDR_LAUNCH_CITY.toLowerCase();
+}
+
+export function defaultCityMarketStatus(name: string): CityMarketStatus {
+  return isLaunchCity(name) ? 'open' : 'closed';
+}
+
 export function buildDefaultPlatformCities(): PlatformCity[] {
   return CALIFORNIA_CITIES.map((name, index) => ({
     id: cityIdFromName(name),
     name,
     stateCode: 'CA',
-    status: 'open' as const,
+    status: defaultCityMarketStatus(name),
     waitlistAudience: 'both' as const,
     recommendOpen: false,
     sortOrder: index,
@@ -126,8 +137,10 @@ export function defaultSelectableCity(
 ): string {
   const selectable =
     role === 'guard' ? getSelectableCitiesForGuards(cities) : getSelectableCitiesForClients(cities);
-  const preferred = selectable.find((city) => city.name === DEFAULT_CALIFORNIA_CITY);
-  return preferred?.name ?? selectable[0]?.name ?? DEFAULT_CALIFORNIA_CITY;
+  const preferred =
+    selectable.find((city) => city.name === GUARDR_LAUNCH_CITY) ??
+    selectable.find((city) => city.name === DEFAULT_CALIFORNIA_CITY);
+  return preferred?.name ?? selectable[0]?.name ?? GUARDR_LAUNCH_CITY;
 }
 
 export function normalizeManagedCities(
