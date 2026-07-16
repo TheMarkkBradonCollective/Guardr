@@ -128,7 +128,7 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const approvalRulesBody = (
+  const jobsBody = (
     <div className="space-y-4">
       <label className="uber-label block mb-1">Job posting review</label>
       <select
@@ -217,7 +217,7 @@ export function StaffSettingsPanel({
           <div>
             <p className="adm-card-eyebrow">Platform</p>
             <p className="adm-workbench-subtitle">
-              Homepage messages, approval rules, integrations, and staff onboarding.
+              Homepage messages, jobs, integrations, and staff onboarding.
             </p>
           </div>
         }
@@ -229,7 +229,7 @@ export function StaffSettingsPanel({
             </DesktopSettingsCard>
           )}
           <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Approval rules">{approvalRulesBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="Jobs">{jobsBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
           {showStaffOnboard && assignableRoles.length > 0 && (
             <DesktopSettingsCard title="Onboard staff" className="adm-platform-settings-card--full">
@@ -249,8 +249,8 @@ export function StaffSettingsPanel({
         <div className="pb-6">{homepageMessagesBody}</div>
       </AppFormSection>
 
-      <AppFormSection title="Approval rules">
-        <div className="pb-6">{approvalRulesBody}</div>
+      <AppFormSection title="Jobs">
+        <div className="pb-6">{jobsBody}</div>
       </AppFormSection>
 
       <AppFormSection title="Integrations">

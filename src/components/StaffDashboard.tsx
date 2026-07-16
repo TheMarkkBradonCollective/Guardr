@@ -1041,7 +1041,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Approval rules', 'Integrations', 'Platform controls']}
+            placeholders={['Jobs', 'Integrations', 'Platform controls']}
           />
         );
       case 'profile':
