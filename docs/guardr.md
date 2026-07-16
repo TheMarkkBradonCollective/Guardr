@@ -92,9 +92,9 @@ Guardr works in any browser. For the best field experience, install it on your p
 |--------|----------|-----|
 | **Website** | Desktop, quick access | Open [guardr.co](https://guardr.co) |
 | **Home screen app (PWA)** | iPhone, Android, Chromebook | Safari → Share → **Add to Home Screen** (iOS) or Chrome → **Install app** (Android). Updates automatically. |
-| **Android APK** | Guards in the field | Download at [guardr.co/download](https://guardr.co/download) |
+| **Android APK** | Guards in the field | Download at [guardr.co/download](https://www.guardr.co/download) (currently v1.0.67) |
 
-The Android app and home-screen shortcut use the same account. The APK is best for push notifications during active shifts.
+The Android app and home-screen shortcut use the same account. The APK is best for push notifications and configurable alert sounds during active shifts. Reinstall from the download page when an update is available — the APK does not auto-update like the PWA.
 
 ---
 
@@ -112,7 +112,7 @@ Posted → Reviewed → Open → Guard assigned → Shift in progress → Comple
 
 ## Payments
 
-- **Clients** pay by card in the app when booking (Stripe checkout).
+- **Clients** pay by card in the app when booking (Stripe checkout). Formal **invoices** are available under **Invoices** after staff approve billing on completed jobs.
 - **Guards** connect a bank account in **Pay** and receive earnings after the job is complete (typically within about 48 hours).
 - **Overtime** from late clock-out may require approval from both guard and client before it is charged.
 

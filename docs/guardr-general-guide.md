@@ -23,10 +23,10 @@ Use it as the operating manual for the whole app:
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **Guide** |
+| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline. **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** remain blocked until **active**. |
-| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Settings**, and **Guide** |
+| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -331,6 +331,7 @@ Issue or exception
 | **Messages** | Bottom navigation | Job chats, support tickets, support reports |
 | **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
 | **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
+| **Invoices** | Account menu → **More** → **Invoices** (tablet/desktop: left sidebar) | View job invoices, download PDF, pay when staff mark invoice ready |
 | **Profile** | Account menu | Company/contact profile details |
 | **Guide** | Account menu | This guide |
 
@@ -507,6 +508,19 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 5. Use the job detail rating action to rate the guard when available.
 6. Guard payout auto-releases to Stripe Connect after the platform delay unless a dispute holds it.
 
+### 12. Invoices
+
+After staff approve a completed job for billing, clients can view and pay formal invoices.
+
+1. Open **More** → **Invoices** (phone) or the **Invoices** sidebar tab (tablet/desktop).
+2. Each row shows the job, invoice number, amount, and status (**Draft**, **Payment due**, **Paid**).
+3. Tap an invoice to open details — review line items, dates, and totals.
+4. Use **Download PDF** to save or share the invoice.
+5. When status is **Payment due**, pay with **Pay by card** (Stripe) or Square if enabled.
+6. You receive a push notification when an invoice is ready (if push is enabled in **Settings**).
+
+Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show payment on the job card first; the invoice page is the record for approved billing.
+
 ---
 
 ## Guard guide
@@ -522,7 +536,11 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Bottom navigation (active guards only) | Job chats, support tickets, support reports |
 | **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
-| **Settings** | Account menu | Theme, legal pages, sign out — available on activation screen too |
+| **Settings** | Account menu | Theme, push notifications, notification sound (APK), legal pages, sign out — available on activation screen too |
+| **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
+| **Vehicle** | Account menu (active guards, when driving jobs apply) | Vehicle profile, insurance link, staff approval for driving priority |
+| **Preferences** | Account menu (active guards) | Job type and work-style preferences |
+| **Availability** | Account menu (active guards) | Schedule and availability windows |
 | **Guide** | Account menu (active guards only) | This guide |
 
 ### 1. Sign up, get approved, upload credentials, and become active
@@ -629,7 +647,22 @@ Trusted guards can build a **standing crew** — a reusable roster for multi-gua
 - Coordinated jobs you lead may be re-listed on the marketplace.
 - You can still work as a regular guard but cannot coordinate new crews until staff restore trusted status.
 
-### 7. Start a shift
+### 7. Performance, vehicle, and driving priority
+
+**Performance** (account menu → **Performance**):
+
+- **Overall** — composite tier and rating across all job types.
+- **Standing** — foot-patrol / static-post priority progress.
+- **Driving** — vehicle-patrol priority progress (requires approved vehicle + valid insurance).
+
+**Vehicle** (account menu → **Vehicle**, when driving jobs apply):
+
+1. Upload **vehicle insurance** in **Profile → Credentials** first.
+2. Save vehicle details (make, model, plate, etc.) on the **Vehicle** page.
+3. Submit for staff approval — driving priority stays locked until approved.
+4. Renew insurance before expiry — expired insurance blocks vehicle/driving access.
+
+### 8. Start a shift
 
 Clock-in opens around the scheduled start window.
 
@@ -650,7 +683,7 @@ If you cannot complete the self-audit:
 - Use **Skip self audit · clock in** only when necessary.
 - The job is flagged **No Self Audit** until you upload the three required photos yourself.
 
-### 8. Work the shift
+### 9. Work the shift
 
 During an active shift, use the active shift controls:
 
@@ -674,7 +707,7 @@ Activity reporting:
 3. Submit it.
 4. The app confirms **Activity logged**.
 
-### 9. End a shift
+### 10. End a shift
 
 1. At the end of the shift, open **Map** if the active shift controls are not already visible.
 2. Use **Slide to end shift** during the allowed clock-out window.
@@ -688,7 +721,7 @@ Late clock-out:
 - If you clock out late, the app may ask for a time confirmation.
 - Late clock-out can create overtime that both guard and client must approve.
 
-### 10. Review overtime
+### 11. Review overtime
 
 1. Open **Jobs**.
 2. Open the job with **Late clock-out overtime**.
@@ -696,7 +729,7 @@ Late clock-out:
 4. Select **Approve overtime** if the overtime is correct.
 5. If client approval/payment is also required, wait for the client and staff payment process.
 
-### 11. Collect payouts
+### 12. Collect payouts
 
 1. Open **Pay**.
 2. Review earnings by job.
@@ -710,7 +743,7 @@ Payouts depend on:
 - Auto Stripe payout schedule (~48h after completion).
 - Whether overtime or disputes are still open.
 
-### 12. Get help or message people
+### 13. Get help or message people
 
 1. Open **Messages**.
 2. Use job chat for assignment-specific messages.
@@ -1183,6 +1216,8 @@ The Applications section holds account intake and job-offer review queues. Open 
 
 When Administrator+ verifies all five activation credentials, guard accounts **auto-activate** (`approved` → `active`).
 
+On phone, the Applications roster fits the viewport — scroll inside the list, not the whole page.
+
 #### Credentials panel
 
 **Where:** Staff sidebar → **Credentials**
@@ -1216,6 +1251,8 @@ Platform fees are set globally in **Payment settings**. Open-contract jobs can o
 **Where:** Staff sidebar → **Incidents**
 
 All incident reports filed by guards across active and completed jobs. Each report includes who, what, when, where, why, and how the guard responded — shared with the client.
+
+On phone, the Incidents list fits the viewport the same way as Applications.
 
 #### Disputes panel
 
@@ -1253,15 +1290,54 @@ Available from **Messages** for all users. Use for safety concerns, formal compl
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK**.
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.67**, build **167**).
 
 | Surface | How to install |
 |---------|----------------|
 | **Website** | Open [guardr.co](https://www.guardr.co) in any browser |
 | **PWA** | **iOS:** Safari → Share → **Add to Home Screen**. **Android/Chrome:** browser menu or install prompt → **Install** |
-| **Android APK** | Download from [guardr.co/download](https://www.guardr.co/download) and sideload |
+| **Android APK** | [guardr.co/download](https://www.guardr.co/download) — scan QR or tap **Download APK** |
 
-Installing the PWA or APK gives faster access, live shift tracking, and push notifications when Guardr is closed. The APK loads the live site in a native shell with black branding; the PWA uses white branding on the home screen.
+Installing the PWA or APK gives faster access, live shift tracking, and push notifications when Guardr is closed. The APK loads the live site in a native shell with black branding; the PWA uses white branding on the home screen and **updates automatically** when you open it.
+
+#### APK updates (important)
+
+The APK does **not** auto-update like the PWA. When a new build ships:
+
+1. Open [guardr.co/download](https://www.guardr.co/download) in your browser.
+2. If your installed version is older, the page shows **Update available**.
+3. Download and install again (your account data stays in the cloud).
+4. Uninstall the old APK first if Android blocks the install.
+
+The install page reads the version from inside the APK — not just the website label — so reinstall when the page says you are behind.
+
+#### Push notifications
+
+| Surface | How it works |
+|---------|--------------|
+| **PWA / browser** | Web Push (VAPID) — enable in **Settings → Push notifications** |
+| **Android APK** | Native Firebase (FCM) — same **Settings** toggle; requires a push-enabled APK build |
+
+After installing or updating the APK:
+
+1. Open **Settings** → **Push notifications**.
+2. Turn on **Register this device**.
+3. Allow notifications when Android prompts.
+4. Tap **Test notification** to confirm.
+5. On APK, choose **Notification sound** — **Guardr tone** (walkie chirp) or **System sound** (pick from Android).
+
+Guards can set **quiet hours** and per-alert-type toggles in the same panel.
+
+### Live updates (no refresh needed)
+
+Guardr syncs key data in real time across web, PWA, and APK:
+
+- **Messages** and job chats
+- **Notifications** inbox
+- **Staff audit log**
+- **Live guard location** on active jobs (when sharing is on)
+
+You should not need to pull-to-refresh for these — changes appear when the other party acts.
 
 ### System back button
 
