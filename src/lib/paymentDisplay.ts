@@ -169,11 +169,8 @@ export function clientPaymentStatusHint(
     | 'overtimeAmount'
     | 'overtimeStatus'
   >,
-  gates?: { allowStripe: boolean; allowCash: boolean }
+  gates?: { allowStripe: boolean; allowSquare: boolean }
 ): string | undefined {
-  if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
-    return 'Staff will confirm once your cash payment is received.';
-  }
   if (req?.overtimeStatus === 'pending_guard') {
     return 'Your guard must confirm the late clock-out before you can approve overtime.';
   }
@@ -187,17 +184,17 @@ export function clientPaymentStatusHint(
     return 'Late clock-out overtime was waived after your dispute.';
   }
   if (req && hasUnpaidOvertime(req as SecurityRequest)) {
-    return `Overtime approved — pay $${(req.overtimeAmount ?? 0).toFixed(2)} by card or cash.`;
+    return `Overtime approved — pay $${(req.overtimeAmount ?? 0).toFixed(2)} by card.`;
   }
   if (!status || status === 'unpaid') {
     if (jobStatus === 'pending-review') {
       return 'Staff must approve this job offer before you can pay.';
     }
-    if (gates?.allowStripe && !gates?.allowCash) {
-      return 'Pay by card to unlock hiring a guard for this job.';
+    if (gates?.allowStripe && gates?.allowSquare) {
+      return 'Pay by card (Stripe or Square) to unlock hiring a guard for this job.';
     }
-    if (gates?.allowCash && !gates?.allowStripe) {
-      return 'Request cash payment — staff will confirm when received.';
+    if (gates?.allowStripe || gates?.allowSquare) {
+      return 'Pay by card to unlock hiring a guard for this job.';
     }
     return 'Pay to unlock hiring a guard for this job.';
   }

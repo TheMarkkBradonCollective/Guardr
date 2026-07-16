@@ -213,20 +213,23 @@ export function hasUnpaidOvertime(req: SecurityRequest): boolean {
 
 export function canClientPayOvertimeStripe(
   req: SecurityRequest,
-  gates: { allowStripe: boolean }
+  gates: { allowStripe: boolean; allowSquare?: boolean }
 ): boolean {
   return hasUnpaidOvertime(req) && gates.allowStripe;
 }
 
-export function canClientRequestOvertimeCash(
+export function canClientPayOvertimeSquare(
   req: SecurityRequest,
-  gates: { allowCash: boolean }
+  gates: { allowSquare: boolean }
 ): boolean {
-  return (
-    hasUnpaidOvertime(req) &&
-    gates.allowCash &&
-    !req.overtimeClientCashPaymentRequested
-  );
+  return hasUnpaidOvertime(req) && gates.allowSquare;
+}
+
+export function canClientRequestOvertimeCash(
+  _req: SecurityRequest,
+  _gates: { allowSquare?: boolean }
+): boolean {
+  return false;
 }
 
 export function canStaffApproveOvertimeCashPayment(req: SecurityRequest): boolean {

@@ -109,33 +109,14 @@ export function JobPaymentRow({
   const guardAmount = guardPayoutAmount(req);
   const cashClientJob = isCashClientPayment(req);
   const cashPending = isClientCashPaymentPendingApproval(req);
-  const canApproveCash =
-    paymentGates.allowCash &&
-    canManagePayments &&
-    canStaffApproveClientCashPayment(req) &&
-    onApproveClientCashPayment;
-  const canRejectCash =
-    paymentGates.allowCash &&
-    canManagePayments &&
-    canStaffApproveClientCashPayment(req) &&
-    onRejectClientCashPayment;
-  const canMarkClientCash =
-    paymentGates.allowCash && isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
-  const canMarkOvertimeCash =
-    paymentGates.allowCash && isDirector && canDirectorMarkOvertimePaidCash(req) && onMarkOvertimePaidCash;
-  const canApproveOvertimeCash =
-    paymentGates.allowCash &&
-    canManagePayments &&
-    canStaffApproveOvertimeCashPayment(req) &&
-    onApproveOvertimeCashPayment;
+  const canApproveCash = false;
+  const canRejectCash = false;
+  const canMarkClientCash = false;
+  const canMarkOvertimeCash = false;
+  const canApproveOvertimeCash = false;
   const canReleaseOvertimeGuard =
     isDirector && canMakeOvertimeGuardPayoutAvailable(req) && onMakeOvertimeGuardPayoutAvailable && !readOnly;
-  const canOvertimeGuardCash =
-    paymentGates.allowCash &&
-    isDirector &&
-    canDirectorPayOvertimeGuardCash(req) &&
-    onMarkOvertimeGuardPaidCash &&
-    !readOnly;
+  const canOvertimeGuardCash = false;
   const overtimeGuardAmount = overtimeGuardEarnings(req);
   const manualDepositDue = getManualCashDepositDue(req);
   const canManualDeposit =
@@ -147,12 +128,7 @@ export function JobPaymentRow({
     canStaffManuallyReleaseGuardPayout(req) &&
     onMakeGuardPayoutAvailable &&
     !readOnly;
-  const canCashGuard =
-    paymentGates.allowCash &&
-    isDirector &&
-    canDirectorPayGuardCash(req) &&
-    onMarkGuardPaidCash &&
-    !readOnly;
+  const canCashGuard = false;
   const guardDepositLabel = cashClientJob
     ? `Deposit $${guardAmount.toFixed(2)} for guard`
     : `Make $${guardAmount.toFixed(2)} available to guard`;

@@ -10,15 +10,15 @@ import type { PlatformFeeConfig } from '../../lib/payments';
 import { isOpenContractPricing } from '../../lib/agreementPricing';
 import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
 import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession, createTipCheckoutSession } from '../../lib/stripeApi';
+import { createSquareCheckoutSession } from '../../lib/paymentProcessorApi';
 import {
   canClientApproveOvertime,
   canClientPayOvertimeStripe,
-  canClientRequestOvertimeCash,
+  canClientPayOvertimeSquare,
   computeLateClockOutHours,
   computeOvertimeAmount,
   hasOvertime,
   hasUnpaidOvertime,
-  isOvertimeCashPaymentPendingApproval,
   isOvertimeDisputed,
   isOvertimeWaived,
   type OvertimeDisputeInput,
@@ -31,13 +31,12 @@ import {
 import {
   canClientCancelRequest,
   canClientEditJobListing,
-  canClientPayForJob,
-  canClientRequestCashPayment,
+  canClientPayWithStripe,
+  canClientPayWithSquare,
   canClientReschedulePaidSchedule,
   isJobScheduleLocked,
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
-import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
 import {
   isMultiGuardJob,
   isFullCrewAwaitingClientApproval,
@@ -75,7 +74,6 @@ import {
 import {
   AlertTriangle,
   Award,
-  Banknote,
   Check,
   CheckCircle2,
   CreditCard,
@@ -110,10 +108,8 @@ export interface ClientJobActionsPanelProps {
   ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
-  onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
-  onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
   onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
@@ -156,10 +152,8 @@ export function ClientJobActionsPanel({
   onAddReview,
   onReportViolation,
   onConfirmSelfAudit,
-  onRequestCashPayment,
   onApproveOvertime,
   onDisputeOvertime,
-  onRequestOvertimeCash,
   onApproveScheduleChange,
   onRejectScheduleChange,
   onApprovePendingGuard,
@@ -185,9 +179,8 @@ export function ClientJobActionsPanel({
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewNote, setReviewNote] = useState('');
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
+  const [payingSquareJobId, setPayingSquareJobId] = useState<string | null>(null);
   const [payingOvertimeJobId, setPayingOvertimeJobId] = useState<string | null>(null);
-  const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
-  const [overtimeCashRequestJobId, setOvertimeCashRequestJobId] = useState<string | null>(null);
   const [overtimeApproveJobId, setOvertimeApproveJobId] = useState<string | null>(null);
   const [overtimeDisputeOpen, setOvertimeDisputeOpen] = useState(false);
   const [overtimeDisputeReason, setOvertimeDisputeReason] = useState('');
@@ -264,6 +257,24 @@ export function ClientJobActionsPanel({
     }
   };
 
+  const handlePayWithSquare = async () => {
+    setPayingSquareJobId(req.id);
+    try {
+      const amountCents = Math.round(req.estimatedPayout * 100);
+      const { url } = await createSquareCheckoutSession({
+        jobId: req.id,
+        clientEmail,
+        jobTitle: req.title,
+        amountCents,
+      });
+      if (url) window.location.href = url;
+    } catch (e: unknown) {
+      showAppToast(e instanceof Error ? e.message : 'Unable to start Square checkout', { tone: 'error' });
+    } finally {
+      setPayingSquareJobId(null);
+    }
+  };
+
   const handlePayOvertime = async () => {
     setPayingOvertimeJobId(req.id);
     try {
@@ -279,6 +290,24 @@ export function ClientJobActionsPanel({
       showAppToast(e instanceof Error ? e.message : 'Unable to start overtime checkout', { tone: 'error' });
     } finally {
       setPayingOvertimeJobId(null);
+    }
+  };
+
+  const handlePayOvertimeWithSquare = async () => {
+    setPayingSquareJobId(req.id);
+    try {
+      const amountCents = Math.round((req.overtimeAmount ?? 0) * 100);
+      const { url } = await createSquareCheckoutSession({
+        jobId: req.id,
+        clientEmail,
+        jobTitle: `${req.title} — overtime`,
+        amountCents,
+      });
+      if (url) window.location.href = url;
+    } catch (e: unknown) {
+      showAppToast(e instanceof Error ? e.message : 'Unable to start Square overtime checkout', { tone: 'error' });
+    } finally {
+      setPayingSquareJobId(null);
     }
   };
 
@@ -491,15 +520,7 @@ export function ClientJobActionsPanel({
                 ))}
               </div>
             )}
-            {isClientCashPaymentPendingApproval(req) && (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                <p className="text-sm font-semibold text-amber-300">Cash payment pending approval</p>
-                <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                  {clientPaymentStatusHint(req.paymentStatus, req.status, req)}
-                </p>
-              </div>
-            )}
-            {(canClientPayForJob(req, paymentGates) || canClientRequestCashPayment(req, paymentGates)) && (
+            {(canClientPayWithStripe(req, paymentGates) || canClientPayWithSquare(req, paymentGates)) && (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
@@ -508,38 +529,31 @@ export function ClientJobActionsPanel({
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-                  {canClientPayForJob(req, paymentGates) && (
+                  {canClientPayWithStripe(req, paymentGates) && (
                     <button
                       type="button"
                       onClick={() => void handlePayNow()}
-                      disabled={payingJobId === req.id || cashRequestJobId === req.id}
+                      disabled={payingJobId === req.id || payingSquareJobId === req.id}
                       className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
                     >
                       {payingJobId === req.id ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                       ) : (
-                        <><CreditCard className="w-3.5 h-3.5" /> Pay by card</>
+                        <><CreditCard className="w-3.5 h-3.5" /> Pay with Stripe</>
                       )}
                     </button>
                   )}
-                  {canClientRequestCashPayment(req, paymentGates) && onRequestCashPayment && (
+                  {canClientPayWithSquare(req, paymentGates) && (
                     <button
                       type="button"
-                      onClick={async () => {
-                        setCashRequestJobId(req.id);
-                        try {
-                          await onRequestCashPayment(req.id);
-                        } finally {
-                          setCashRequestJobId(null);
-                        }
-                      }}
-                      disabled={payingJobId === req.id || cashRequestJobId === req.id}
+                      onClick={() => void handlePayWithSquare()}
+                      disabled={payingJobId === req.id || payingSquareJobId === req.id}
                       className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
                     >
-                      {cashRequestJobId === req.id ? (
-                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
+                      {payingSquareJobId === req.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                       ) : (
-                        <><Banknote className="w-3.5 h-3.5" /> Pay in cash</>
+                        <><CreditCard className="w-3.5 h-3.5" /> Pay with Square</>
                       )}
                     </button>
                   )}
@@ -652,44 +666,33 @@ export function ClientJobActionsPanel({
               </div>
             )}
 
-            {isOvertimeCashPaymentPendingApproval(req) && (
-              <p className="text-xs text-amber-400/90">Cash overtime payment pending staff approval.</p>
-            )}
-
             {hasUnpaidOvertime(req) && (
               <div className="flex flex-col sm:flex-row gap-2">
                 {canClientPayOvertimeStripe(req, paymentGates) && (
                   <button
                     type="button"
                     onClick={() => void handlePayOvertime()}
-                    disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
+                    disabled={payingOvertimeJobId === req.id}
                     className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                   >
                     {payingOvertimeJobId === req.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                     ) : (
-                      <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} by card</>
+                      <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} with Stripe</>
                     )}
                   </button>
                 )}
-                {canClientRequestOvertimeCash(req, paymentGates) && onRequestOvertimeCash && (
+                {canClientPayOvertimeSquare(req, paymentGates) && (
                   <button
                     type="button"
-                    onClick={async () => {
-                      setOvertimeCashRequestJobId(req.id);
-                      try {
-                        await onRequestOvertimeCash(req.id);
-                      } finally {
-                        setOvertimeCashRequestJobId(null);
-                      }
-                    }}
-                    disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
+                    onClick={() => void handlePayOvertimeWithSquare()}
+                    disabled={payingSquareJobId === req.id}
                     className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                   >
-                    {overtimeCashRequestJobId === req.id ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
+                    {payingSquareJobId === req.id ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                     ) : (
-                      <><Banknote className="w-3.5 h-3.5" /> Pay in cash</>
+                      <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} with Square</>
                     )}
                   </button>
                 )}

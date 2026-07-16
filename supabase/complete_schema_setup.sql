@@ -966,6 +966,9 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS payment_square_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE platform_settings SET payment_cash_enabled = FALSE WHERE id = 'default';
+
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL DEFAULT '{
   "model": "flat",
   "flatFeePerHour": 5,
