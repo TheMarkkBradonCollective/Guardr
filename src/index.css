@@ -15454,6 +15454,52 @@ html.theme-grey .landing-wordmark {
   color: var(--brand-text-muted);
 }
 
+/* Availability hero — 0 days grey; each active day up to 5 blends toward company color */
+.guard-availability-hero-days-0 {
+  background: linear-gradient(160deg, #5a6470 0%, #3f4854 100%);
+}
+
+.guard-availability-hero-days-1 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 20%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 20%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-2 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 40%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 40%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-3 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 60%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 60%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-4 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 80%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 80%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-5 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 78%, #fff) 0%,
+    var(--brand-primary) 55%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
 .availability-day-row {
   display: flex;
   justify-content: space-between;

@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  availabilityHeroClass,
   createDateOverride,
   createOffDayOverride,
   defaultAvailabilitySlots,
@@ -203,5 +204,15 @@ describe('windowsForDate', () => {
       monday
     );
     assert.equal(windows.length, 0);
+  });
+});
+
+describe('availabilityHeroClass', () => {
+  it('maps 0 days to grey and caps at 5 for full brand color', () => {
+    assert.equal(availabilityHeroClass(0), 'guard-availability-hero-days-0');
+    assert.equal(availabilityHeroClass(1), 'guard-availability-hero-days-1');
+    assert.equal(availabilityHeroClass(3), 'guard-availability-hero-days-3');
+    assert.equal(availabilityHeroClass(5), 'guard-availability-hero-days-5');
+    assert.equal(availabilityHeroClass(7), 'guard-availability-hero-days-5');
   });
 });
