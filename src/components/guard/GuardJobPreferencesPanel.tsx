@@ -77,15 +77,20 @@ function OnboardingProgressBar({ onboarded, total }: { onboarded: number; total:
   const fillPercent = total > 0 ? Math.min(100, Math.round((onboarded / total) * 100)) : 0;
 
   return (
-    <div className="guard-pref-progress">
-      <div className="guard-pref-progress-track" role="presentation">
-        <div className="guard-pref-progress-fill" style={{ width: `${fillPercent}%` }} />
+    <div
+      className="guard-pref-progress"
+      role="progressbar"
+      aria-valuenow={onboarded}
+      aria-valuemin={0}
+      aria-valuemax={total}
+      aria-label={`${onboarded} of ${total} job types onboarded`}
+    >
+      <div className="guard-pref-progress-track">
+        <div
+          className={`guard-pref-progress-fill${fillPercent === 0 ? ' guard-pref-progress-fill-empty' : ''}`}
+          style={{ width: `${fillPercent}%` }}
+        />
       </div>
-      <p className="guard-pref-progress-hint">
-        <span>
-          <strong>{onboarded}</strong> of <strong>{total}</strong> job types onboarded
-        </span>
-      </p>
     </div>
   );
 }
@@ -158,6 +163,7 @@ export function GuardJobPreferencesPanel({
                 <span className="guard-pref-hero-score-total"> / {stats.total}</span>
               </span>
             </div>
+            <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
             <p className="guard-tier-hero-subtitle">
               {stats.active > 0
                 ? `${stats.active} alert${stats.active === 1 ? '' : 's'} active right now`
