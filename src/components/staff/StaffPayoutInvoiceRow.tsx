@@ -1,7 +1,7 @@
 import React from 'react';
 import { Banknote, CreditCard } from 'lucide-react';
 import { GuardPayoutInvoice, SecurityGuard, SecurityRequest } from '../../types';
-import { payoutInvoiceLabel } from '../../lib/guardPayoutInvoiceStorage';
+import { payoutInvoiceLabel, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import { WfBadge } from '../ui/wireframe';
 
 interface StaffPayoutInvoiceRowProps {
@@ -25,7 +25,9 @@ export function StaffPayoutInvoiceRow({
 }: StaffPayoutInvoiceRowProps) {
   const guard = guards.find((g) => g.id === invoice.guardId);
   const issued = new Date(invoice.createdAt).toLocaleString();
-  const unpaidLines = invoice.lines.filter((line) => {
+  const lines = guardPayoutInvoiceLines(invoice);
+  const total = guardPayoutInvoiceTotal(invoice);
+  const unpaidLines = lines.filter((line) => {
     const job = requests.find((r) => r.id === line.jobId);
     return job?.paymentStatus !== 'released';
   });
@@ -50,12 +52,12 @@ export function StaffPayoutInvoiceRow({
         </div>
         <div className="text-right shrink-0">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted">Total due</p>
-          <p className="text-xl font-bold">${invoice.total.toFixed(2)}</p>
+          <p className="text-xl font-bold">${total.toFixed(2)}</p>
         </div>
       </div>
 
       <ul className="space-y-2 text-sm border-t border-brand-border pt-3 w-full">
-        {invoice.lines.map((line) => {
+        {lines.map((line) => {
           const job = requests.find((r) => r.id === line.jobId);
           const paid = job?.paymentStatus === 'released';
           return (
@@ -70,7 +72,7 @@ export function StaffPayoutInvoiceRow({
                 </p>
               </div>
               <div className="shrink-0 text-right space-y-2">
-                <p className="font-semibold">${line.amount.toFixed(2)}</p>
+                <p className="font-semibold">${(Number(line.amount) || 0).toFixed(2)}</p>
                 {!paid && isDirector && job && (
                   invoice.method === 'cash' ? (
                     onMarkGuardPaidCash && (
