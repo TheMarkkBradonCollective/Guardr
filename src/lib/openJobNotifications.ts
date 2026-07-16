@@ -12,9 +12,8 @@ import {
   isPremiumOpenJob,
   PREMIUM_GUARD_PAY_THRESHOLD,
 } from './guardPremiumJobPriority';
-import { jobTypeRatingDisplayName } from './guardJobTypeRatingMetrics';
 
-/** Notify trusted crew leads first, then premium-priority guards, then everyone else who matches. */
+/** Notify trusted crew leads first, then modality priority guards, then everyone else who matches. */
 export function notifyOpenJobToGuards(
   actor: SessionUser,
   job: Pick<
@@ -28,7 +27,6 @@ export function notifyOpenJobToGuards(
   const needed = Math.max(1, job.guardsNeeded ?? 1);
   const notified = new Set<string>();
   const premiumJob = isPremiumOpenJob(job);
-  const jobType = job.type ?? 'other';
 
   const leads = findPriorityCrewLeadsForJob(job, guards, standingCrewMembers).filter(({ guard }) =>
     guardShouldNotifyForOpenJob(guard, job)
@@ -53,7 +51,7 @@ export function notifyOpenJobToGuards(
         (guard) =>
           !notified.has(guard.id) &&
           guardShouldNotifyForOpenJob(guard, job) &&
-          guardHasPremiumJobPriority(guard.id, jobType, requests)
+          guardHasPremiumJobPriority(guard, requests, job)
       )
       .sort((a, b) => b.rating - a.rating);
 
@@ -66,7 +64,7 @@ export function notifyOpenJobToGuards(
         location: job.location,
         priority: 'high',
         title: 'Premium job — you are in the priority line',
-        body: `"${job.title}" pays $${PREMIUM_GUARD_PAY_THRESHOLD}+/hr or needs a coordinated crew. Your ${jobTypeRatingDisplayName(jobType).toLowerCase()} ratings put you first in line.`,
+        body: `"${job.title}" pays $${PREMIUM_GUARD_PAY_THRESHOLD}+/hr or needs a coordinated crew. Your priority status puts you first in line.`,
       });
     }
   }

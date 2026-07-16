@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import type { JobType, SecurityGuard, SecurityRequest } from '../../types';
+import React, { useState } from 'react';
+import type { SecurityGuard, SecurityRequest } from '../../types';
 import {
   computeGuardPerformance,
   computeGuardPerformanceRating,
@@ -10,17 +10,16 @@ import {
   type PerformanceFactorId,
 } from '../../lib/guardPerformanceFactorDetail';
 import {
-  getJobTypeRatingCard,
   isJobTypeMetricId,
   type JobTypeMetricId,
   type JobTypeRatingCard,
 } from '../../lib/guardJobTypeRatingMetrics';
-import { jobTypePreferenceLabel, normalizeJobTypePreferences } from '../../lib/guardJobPreferences';
 import { buildGuardContractViolations } from '../../lib/guardContractViolations';
+import { PERFORMANCE_MODALITIES, workModalityLabel, type WorkModality } from '../../lib/guardWorkModality';
 import { GuardRatingSection } from './GuardRatingSection';
-import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
-import { GuardJobTypeMetricDetail } from './GuardJobTypeMetricDetail';
+import { GuardModalityPrioritySection } from './GuardModalityPrioritySection';
 import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
+import { GuardModalityMetricDetail } from './GuardModalityMetricDetail';
 import {
   GuardContractViolationDetail,
   GuardContractViolationDisputeStatus,
@@ -29,7 +28,7 @@ import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
-export type PerformanceViewTab = 'overall' | JobType;
+export type PerformanceViewTab = 'overall' | WorkModality;
 
 type PerformanceSubview =
   | 'main'
@@ -49,10 +48,13 @@ interface GuardPerformanceScreenProps {
   ) => void | Promise<void>;
 }
 
-function performanceTabLabel(tab: PerformanceViewTab): string {
-  if (tab === 'overall') return 'Overall';
-  return jobTypePreferenceLabel(tab);
-}
+const PERFORMANCE_TAB_OPTIONS: { id: PerformanceViewTab; label: string }[] = [
+  { id: 'overall', label: 'Overall' },
+  ...PERFORMANCE_MODALITIES.map((modality) => ({
+    id: modality,
+    label: workModalityLabel(modality),
+  })),
+];
 
 export function GuardPerformanceScreen({
   guard,
@@ -65,56 +67,29 @@ export function GuardPerformanceScreen({
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
   const [subview, setSubview] = useState<PerformanceSubview>('main');
   const [selectedViolationId, setSelectedViolationId] = useState<string | null>(null);
-  const [selectedJobTypeMetric, setSelectedJobTypeMetric] = useState<{
-    jobType: JobType;
+  const [selectedModalityMetric, setSelectedModalityMetric] = useState<{
+    modality: WorkModality;
     metricId: JobTypeMetricId;
     card: JobTypeRatingCard;
   } | null>(null);
 
-  const enabledJobTypes = useMemo(
-    () => normalizeJobTypePreferences(guard.jobTypePreferences),
-    [guard.jobTypePreferences]
-  );
-
-  useEffect(() => {
-    if (activeTab !== 'overall' && !enabledJobTypes.includes(activeTab)) {
-      setActiveTab('overall');
-      setSelectedJobTypeMetric(null);
-    }
-  }, [activeTab, enabledJobTypes]);
-
-  const tabOptions = useMemo(
-    () => [
-      { id: 'overall' as const, label: 'Overall' },
-      ...enabledJobTypes.map((jobType) => ({
-        id: jobType,
-        label: performanceTabLabel(jobType),
-      })),
-    ],
-    [enabledJobTypes]
-  );
-
-  const performance = useMemo(
+  const performance = React.useMemo(
     () => computeGuardPerformance(guard.id, requests),
     [guard.id, requests]
   );
-  const skillRatings = useMemo(
+  const skillRatings = React.useMemo(
     () => computeGuardSkillRatings(guard, requests, { includeAllJobTypes: true }),
     [guard, requests]
   );
-  const skillByJobType = useMemo(
-    () => new Map(skillRatings.map((skill) => [skill.jobType, skill])),
-    [skillRatings]
-  );
-  const contractViolations = useMemo(
+  const contractViolations = React.useMemo(
     () => buildGuardContractViolations(guard, requests),
     [guard, requests]
   );
-  const selectedViolation = useMemo(
+  const selectedViolation = React.useMemo(
     () => contractViolations.find((v) => v.id === selectedViolationId) ?? null,
     [contractViolations, selectedViolationId]
   );
-  const selectedFactor = useMemo(() => {
+  const selectedFactor = React.useMemo(() => {
     if (!performanceFactorId) return null;
     const rating = computeGuardPerformanceRating(guard, requests);
     return rating.factors.find((f) => f.id === performanceFactorId) ?? null;
@@ -124,7 +99,7 @@ export function GuardPerformanceScreen({
     setActiveTab(tab);
     setSubview('main');
     setSelectedViolationId(null);
-    setSelectedJobTypeMetric(null);
+    setSelectedModalityMetric(null);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
@@ -133,27 +108,19 @@ export function GuardPerformanceScreen({
   const openViolations = () => {
     setSubview('violations');
     setSelectedViolationId(null);
-    setSelectedJobTypeMetric(null);
+    setSelectedModalityMetric(null);
     onPerformanceFactorChange?.(null);
   };
 
-  const handleMetricSelect = (jobType: JobType, metricId: JobTypeMetricId, card: JobTypeRatingCard) => {
-    setSelectedJobTypeMetric({ jobType, metricId, card });
-    setSubview('main');
-    setSelectedViolationId(null);
-    onPerformanceFactorChange?.(null);
-  };
-
-  const performanceTabs =
-    tabOptions.length > 1 ? (
-      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-performance-toolbar">
-        <AppSegmentedControl<PerformanceViewTab>
-          options={tabOptions}
-          value={activeTab}
-          onChange={handleTabChange}
-        />
-      </div>
-    ) : null;
+  const performanceTabs = (
+    <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-performance-toolbar">
+      <AppSegmentedControl<PerformanceViewTab>
+        options={PERFORMANCE_TAB_OPTIONS}
+        value={activeTab}
+        onChange={handleTabChange}
+      />
+    </div>
+  );
 
   const overallContent = (
     <GuardRatingSection
@@ -174,38 +141,24 @@ export function GuardPerformanceScreen({
     />
   );
 
-  const jobTypeContent =
-    activeTab !== 'overall' ? (
-      <GuardJobTypeRatingSection
+  const modalityContent =
+    activeTab === 'standing' || activeTab === 'driving' ? (
+      <GuardModalityPrioritySection
         guard={guard}
         requests={requests}
-        jobType={activeTab}
-        skillRating={skillByJobType.get(activeTab)}
+        modality={activeTab}
         pinnedLayout
         toolbar={performanceTabs}
-        onMetricSelect={(metricId, card) => handleMetricSelect(activeTab, metricId, card)}
+        onMetricSelect={(metricId, card) => {
+          if (isJobTypeMetricId(metricId)) {
+            setSelectedModalityMetric({ modality: activeTab, metricId, card });
+          }
+        }}
         className="guard-performance-screen-card"
       />
     ) : null;
 
-  const tabbedContent = activeTab === 'overall' ? overallContent : jobTypeContent;
-
-  const selectedJobTypeMetricResolved = useMemo(() => {
-    if (!selectedJobTypeMetric) return null;
-    const card =
-      getJobTypeRatingCard(
-        guard.id,
-        selectedJobTypeMetric.jobType,
-        selectedJobTypeMetric.metricId,
-        requests
-      ) ?? selectedJobTypeMetric.card;
-    if (!isJobTypeMetricId(selectedJobTypeMetric.metricId)) return null;
-    return {
-      jobType: selectedJobTypeMetric.jobType,
-      metricId: selectedJobTypeMetric.metricId,
-      card,
-    };
-  }, [guard.id, requests, selectedJobTypeMetric]);
+  const tabbedContent = activeTab === 'overall' ? overallContent : modalityContent;
 
   const violationSubview =
     subview === 'violations' ? (
@@ -260,15 +213,15 @@ export function GuardPerformanceScreen({
                 onBack={() => onPerformanceFactorChange?.(null)}
               />
             </div>
-          ) : selectedJobTypeMetricResolved ? (
+          ) : selectedModalityMetric ? (
             <div className="adm-workbench-detail-inner">
-              <GuardJobTypeMetricDetail
-                card={selectedJobTypeMetricResolved.card}
-                metricId={selectedJobTypeMetricResolved.metricId}
-                jobType={selectedJobTypeMetricResolved.jobType}
+              <GuardModalityMetricDetail
+                card={selectedModalityMetric.card}
+                metricId={selectedModalityMetric.metricId}
+                modality={selectedModalityMetric.modality}
                 guardId={guard.id}
                 requests={requests}
-                onBack={() => setSelectedJobTypeMetric(null)}
+                onBack={() => setSelectedModalityMetric(null)}
               />
             </div>
           ) : (
@@ -276,7 +229,7 @@ export function GuardPerformanceScreen({
               <p>
                 {activeTab === 'overall'
                   ? 'Select a performance factor to see the breakdown'
-                  : `Select a ${performanceTabLabel(activeTab)} rating card to see details`}
+                  : `Select a ${workModalityLabel(activeTab as WorkModality).toLowerCase()} requirement to see the breakdown`}
               </p>
             </div>
           )}
@@ -304,16 +257,16 @@ export function GuardPerformanceScreen({
     );
   }
 
-  if (selectedJobTypeMetricResolved) {
+  if (selectedModalityMetric) {
     return (
       <AppScreen className="guard-tiered-screen h-full min-h-0">
-        <GuardJobTypeMetricDetail
-          card={selectedJobTypeMetricResolved.card}
-          metricId={selectedJobTypeMetricResolved.metricId}
-          jobType={selectedJobTypeMetricResolved.jobType}
+        <GuardModalityMetricDetail
+          card={selectedModalityMetric.card}
+          metricId={selectedModalityMetric.metricId}
+          modality={selectedModalityMetric.modality}
           guardId={guard.id}
           requests={requests}
-          onBack={() => setSelectedJobTypeMetric(null)}
+          onBack={() => setSelectedModalityMetric(null)}
         />
       </AppScreen>
     );
