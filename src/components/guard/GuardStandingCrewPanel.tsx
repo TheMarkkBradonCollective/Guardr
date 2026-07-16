@@ -15,7 +15,12 @@ import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
 import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import { getStandingCrewDisplayName } from '../../lib/guardTeams';
-import { computeStandingCrewArmedStats, soloArmedStatusFromStats, type StandingCrewArmedStats } from '../../lib/guardCrewArmedCoverage';
+import {
+  computeStandingCrewArmedStats,
+  isLeadOnlyStandingCrew,
+  soloArmedStatusFromStats,
+  type StandingCrewArmedStats,
+} from '../../lib/guardCrewArmedCoverage';
 import { GUARD_ARMED_STATUS_LABELS } from '../../lib/guardArmedStatus';
 import type { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
@@ -80,8 +85,16 @@ function crewHeroClass(activeCount: number, pendingCount: number): string {
   return 'guard-tier-hero-starting';
 }
 
-function CrewArmedHeroProgress({ stats }: { stats: StandingCrewArmedStats }) {
-  const solo = stats.total === 1;
+function CrewArmedHeroProgress({
+  stats,
+  activeMemberCount,
+  leadsStandingCrew = false,
+}: {
+  stats: StandingCrewArmedStats;
+  activeMemberCount: number;
+  leadsStandingCrew?: boolean;
+}) {
+  const solo = isLeadOnlyStandingCrew(activeMemberCount);
   const soloStatus = solo ? soloArmedStatusFromStats(stats) : null;
 
   return (
@@ -147,9 +160,11 @@ function CrewArmedHeroProgress({ stats }: { stats: StandingCrewArmedStats }) {
         </div>
       </div>
       <p className="guard-tier-hero-subtitle crew-armed-progress-caption">
-        {solo
-          ? 'Just you on this roster — your credential tier fills the bar.'
-          : `${stats.armed} armed · ${stats.lightArmed} light armed · ${stats.unarmed} unarmed`}
+        {solo && leadsStandingCrew
+          ? 'Only you on this crew right now — your credential tier fills the bar.'
+          : solo
+            ? 'Just you — your credential tier fills the bar.'
+            : `${stats.armed} armed · ${stats.lightArmed} light armed · ${stats.unarmed} unarmed`}
       </p>
     </>
   );
@@ -359,7 +374,11 @@ export function GuardStandingCrewPanel({
           ) : null}
         </span>
       </div>
-      <CrewArmedHeroProgress stats={armedStats} />
+      <CrewArmedHeroProgress
+        stats={armedStats}
+        activeMemberCount={active.length}
+        leadsStandingCrew
+      />
       <p className="guard-tier-hero-subtitle">
         {active.length > 0
           ? 'Your standing roster is ready for coordinated jobs.'
@@ -380,7 +399,10 @@ export function GuardStandingCrewPanel({
       </div>
       <p className="guard-tier-hero-eyebrow">Standing crew</p>
       <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
-      <CrewArmedHeroProgress stats={armedStats} />
+      <CrewArmedHeroProgress
+        stats={armedStats}
+        activeMemberCount={active.length}
+      />
       <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
     </div>
   );
@@ -443,7 +465,11 @@ export function GuardStandingCrewPanel({
             <span className="guard-tier-hero-score-value">{active.length}</span>
           </div>
         ) : null}
-        <CrewArmedHeroProgress stats={armedStats} />
+        <CrewArmedHeroProgress
+          stats={armedStats}
+          activeMemberCount={active.length}
+          leadsStandingCrew={leadsStandingCrew}
+        />
         <p className="guard-tier-hero-subtitle">{subtitle}</p>
       </div>
     );

@@ -23,6 +23,11 @@ export function soloArmedStatusFromStats(stats: StandingCrewArmedStats): GuardAr
   return 'unarmed';
 }
 
+/** True when the roster is just the lead — no active members yet. */
+export function isLeadOnlyStandingCrew(activeMemberCount: number): boolean {
+  return activeMemberCount === 0;
+}
+
 /** Armed coverage for a standing crew lead plus active roster members. */
 export function computeStandingCrewArmedStats(
   lead: SecurityGuard,
