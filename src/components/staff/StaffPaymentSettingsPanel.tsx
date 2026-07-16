@@ -13,7 +13,9 @@ import {
   platformPaymentModeLabel,
 } from '../../lib/platformSettings';
 import { canManagePlatformSettings, hasExecutivePaymentControls } from '../../lib/permissions';
+import { ResponsiveFormPage } from '../layouts/desktop/DesktopPageShell';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { useDevice } from '../../lib/platform';
 import { showAppToast } from '../ui/AppToast';
 
 interface StaffPaymentSettingsPanelProps {
@@ -56,6 +58,7 @@ export function StaffPaymentSettingsPanel({
   platformSettings,
   onUpdatePlatformSettings,
 }: StaffPaymentSettingsPanelProps) {
+  const { formFactor } = useDevice();
   const canEditPaymentModes = canManagePlatformSettings(currentUser);
   const canEditFees = hasExecutivePaymentControls(currentUser);
   const [cashEnabled, setCashEnabled] = useState(platformSettings.paymentCashEnabled);
@@ -161,8 +164,8 @@ export function StaffPaymentSettingsPanel({
     setFeeDraft((prev) => ({ ...prev, model }));
   };
 
-  return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+  const body = (
+    <div className={formFactor === 'desktop' ? 'adm-settings-panel' : 'animate-fade-in -mx-4 sm:-mx-5'}>
       <AppFormSection title="Payment methods">
         <div className="pb-6 space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
@@ -210,9 +213,7 @@ export function StaffPaymentSettingsPanel({
             </label>
           </div>
           {!canEditPaymentModes && (
-            <p className="text-xs text-brand-text-muted">
-              Only the Founder can change payment methods.
-            </p>
+            <p className="text-xs text-brand-text-muted">Only the Founder can change payment methods.</p>
           )}
         </div>
       </AppFormSection>
@@ -220,8 +221,8 @@ export function StaffPaymentSettingsPanel({
       <AppFormSection title="Platform fees">
         <div className="pb-6 space-y-4">
           <p className="text-sm text-brand-text-muted">
-            Platform fees are based on the client charge — either a flat dollar amount per hour or a
-            percentage of the hourly rate. Open-contract jobs can override these defaults per agreement.
+            Platform fees are based on the client charge — either a flat dollar amount per hour or a percentage of
+            the hourly rate. Open-contract jobs can override these defaults per agreement.
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -236,9 +237,7 @@ export function StaffPaymentSettingsPanel({
                 <option value="flat">Flat rate ($/hr)</option>
                 <option value="percent">Percentage of client charge</option>
               </select>
-              <p className="text-xs text-brand-text-muted mt-1">
-                {platformFeeModelLabel(feeDraft.model)}
-              </p>
+              <p className="text-xs text-brand-text-muted mt-1">{platformFeeModelLabel(feeDraft.model)}</p>
             </div>
 
             {feeDraft.model === 'flat' && (
@@ -311,9 +310,7 @@ export function StaffPaymentSettingsPanel({
               )}
             </div>
           ) : (
-            <p className="text-xs text-brand-text-muted">
-              Only Directors and Founders can edit platform fees.
-            </p>
+            <p className="text-xs text-brand-text-muted">Only Directors and Founders can edit platform fees.</p>
           )}
         </div>
       </AppFormSection>
@@ -321,7 +318,8 @@ export function StaffPaymentSettingsPanel({
       <AppFormSection title="Crew team pay bump">
         <div className="pb-6 space-y-4">
           <p className="text-sm text-brand-text-muted">
-            Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour. Independent applicants and guards on other jobs do not receive it.
+            Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour.
+            Independent applicants and guards on other jobs do not receive it.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
             <label className="block space-y-1">
@@ -353,4 +351,17 @@ export function StaffPaymentSettingsPanel({
       </AppFormSection>
     </div>
   );
+
+  if (formFactor === 'desktop') {
+    return (
+      <ResponsiveFormPage
+        title="Payment settings"
+        subtitle="Payment methods, platform fees, and crew pay bump defaults"
+      >
+        {body}
+      </ResponsiveFormPage>
+    );
+  }
+
+  return body;
 }

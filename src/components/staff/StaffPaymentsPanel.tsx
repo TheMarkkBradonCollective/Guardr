@@ -1,19 +1,21 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { openGuardPayoutInvoices } from '../../lib/guardPayoutInvoiceStorage';
-import { PIPELINE_FLOW_STEPS } from '../../lib/paymentDisplay';
 import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
+  type PaymentPipelineStage,
 } from '../../lib/paymentPipeline';
 import { computeOperationalFinancials } from '../../lib/operationalFinancials';
 import { buildPayoutExportRows, downloadPayoutCsv } from '../../lib/payoutExport';
+import { staffJobMoneySummary } from '../../lib/paymentDisplay';
 import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { JobPaymentRow } from './JobPaymentRow';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
 import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
 
@@ -41,6 +43,29 @@ interface StaffPaymentsPanelProps {
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
 
+type PipelineStageKey = Exclude<PaymentPipelineStage, 'closed'>;
+
+type PaymentQueueItem =
+  | { kind: 'job'; id: string; req: SecurityRequest; stage: PipelineStageKey }
+  | { kind: 'invoice'; id: string; invoice: GuardPayoutInvoice };
+
+type PaymentsFilter = 'action' | 'all' | PipelineStageKey | 'invoices';
+
+const ACTION_STAGES: PipelineStageKey[] = [
+  'awaiting-guard-payout',
+  'cash-deposit-pending',
+  'awaiting-client',
+];
+
+const PIPELINE_STAGE_ORDER: PipelineStageKey[] = [
+  'awaiting-guard-payout',
+  'cash-deposit-pending',
+  'awaiting-client',
+  'guard-collection-pending',
+  'client-paid-active',
+  'settled',
+];
+
 function PipelineSection({
   stage,
   items,
@@ -64,7 +89,7 @@ function PipelineSection({
   readOnly = false,
   limit,
 }: {
-  stage: keyof typeof PIPELINE_SECTION_META;
+  stage: PipelineStageKey;
   items: SecurityRequest[];
   guards: SecurityGuard[];
   payments: Payment[];
@@ -143,6 +168,29 @@ function PipelineSection({
   );
 }
 
+function queueItemLabel(item: PaymentQueueItem): string {
+  if (item.kind === 'invoice') return 'Payout invoice';
+  return PIPELINE_SECTION_META[item.stage].title;
+}
+
+function queueItemPrimary(item: PaymentQueueItem): string {
+  if (item.kind === 'invoice') return `${item.invoice.guardName} — invoice`;
+  return item.req.title;
+}
+
+function queueItemSecondary(item: PaymentQueueItem, guards: SecurityGuard[]): string {
+  if (item.kind === 'invoice') {
+    return `${item.invoice.lines.length} job${item.invoice.lines.length === 1 ? '' : 's'} · $${item.invoice.total.toFixed(2)}`;
+  }
+  const guard = guards.find((g) => g.id === item.req.assignedGuardId);
+  return `${item.req.clientName} · ${guard?.name || 'No guard'}`;
+}
+
+function queueItemAmount(item: PaymentQueueItem): string {
+  if (item.kind === 'invoice') return `$${item.invoice.total.toFixed(2)}`;
+  return staffJobMoneySummary(item.req).headline;
+}
+
 export function StaffPaymentsPanel({
   requests,
   guards,
@@ -197,48 +245,234 @@ export function StaffPaymentsPanel({
     summary.cashDepositPending.length +
     summary.awaitingClient.length;
 
-  return (
-    <div className={`animate-fade-in staff-payments-panel${formFactor === 'desktop' ? ' adm-payments-workbench' : ''}`}>
-      <div className={formFactor === 'desktop' ? 'adm-dashboard-grid adm-span-12' : 'staff-payments-summary'}>
-        {formFactor === 'desktop' ? (
-          <>
-            {actionCount > 0 && (
-              <article className="adm-card adm-span-12">
-                <p className="adm-card-eyebrow">Attention needed</p>
-                <p className="adm-stat-value adm-stat-value--sm">{actionCount} job{actionCount === 1 ? '' : 's'}</p>
-              </article>
-            )}
-            <article className="adm-card adm-span-12">
+  const allQueueItems = useMemo(() => {
+    const items: PaymentQueueItem[] = openInvoices.map((invoice) => ({
+      kind: 'invoice' as const,
+      id: `invoice-${invoice.id}`,
+      invoice,
+    }));
+    for (const stage of PIPELINE_STAGE_ORDER) {
+      const stageItems = summary[stage];
+      for (const req of stageItems) {
+        items.push({ kind: 'job', id: req.id, req, stage });
+      }
+    }
+    return items;
+  }, [openInvoices, summary]);
+
+  const actionQueueItems = useMemo(() => {
+    const items: PaymentQueueItem[] = openInvoices.map((invoice) => ({
+      kind: 'invoice' as const,
+      id: `invoice-${invoice.id}`,
+      invoice,
+    }));
+    for (const stage of ACTION_STAGES) {
+      for (const req of summary[stage]) {
+        items.push({ kind: 'job', id: req.id, req, stage });
+      }
+    }
+    return items;
+  }, [openInvoices, summary]);
+
+  const [filter, setFilter] = useState<PaymentsFilter>(actionCount > 0 ? 'action' : 'all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const filteredQueue = useMemo(() => {
+    if (filter === 'action') return actionQueueItems;
+    if (filter === 'all') return allQueueItems;
+    if (filter === 'invoices') {
+      return allQueueItems.filter((item) => item.kind === 'invoice');
+    }
+    return allQueueItems.filter((item) => item.kind === 'job' && item.stage === filter);
+  }, [actionQueueItems, allQueueItems, filter]);
+
+  useEffect(() => {
+    if (formFactor !== 'desktop') return;
+    if (filteredQueue.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !filteredQueue.some((item) => item.id === selectedId)) {
+      setSelectedId(filteredQueue[0].id);
+    }
+  }, [formFactor, filteredQueue, selectedId]);
+
+  const selectedItem = filteredQueue.find((item) => item.id === selectedId) ?? null;
+
+  const exportButton = canManagePayments ? (
+    <button
+      type="button"
+      className={
+        formFactor === 'desktop'
+          ? 'adm-btn adm-btn--outline adm-btn--sm'
+          : 'app-button-outline app-btn-sm gap-2 staff-payments-export'
+      }
+      onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
+    >
+      <Download className="w-4 h-4" />
+      Export payouts CSV
+    </button>
+  ) : null;
+
+  const emptyState = (
+    <div className={formFactor === 'desktop' ? 'adm-empty' : 'app-empty-state'}>
+      {formFactor !== 'desktop' ? (
+        <div className="app-empty-state-icon">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+      ) : null}
+      <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>No payment activity yet</p>
+      <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
+        Jobs will appear here once clients post security requests.
+      </p>
+    </div>
+  );
+
+  if (formFactor === 'desktop') {
+    const filterTabs: { id: PaymentsFilter; label: string; count?: number }[] = [
+      { id: 'action', label: 'Needs action', count: actionCount },
+      { id: 'all', label: 'All', count: allQueueItems.length },
+      { id: 'invoices', label: 'Invoices', count: openInvoices.length },
+      ...PIPELINE_STAGE_ORDER.map((stage) => ({
+        id: stage as PaymentsFilter,
+        label: PIPELINE_SECTION_META[stage].title,
+        count: summary[stage].length,
+      })),
+    ];
+
+    return (
+      <StaffOpsPageShell className="adm-finance-page adm-payments-workbench">
+        <div className="adm-workbench-toolbar adm-finance-toolbar">
+          <div className="adm-finance-toolbar-summary">
+            <p className="adm-card-eyebrow">Finance</p>
+            <p className="adm-workbench-subtitle">Payment pipeline — client billing through guard payout.</p>
+            <div className="adm-finance-stats">
               <StaffPaymentSummary summary={summary} financials={financials} />
-            </article>
-          </>
+            </div>
+          </div>
+          {exportButton}
+        </div>
+
+        {allQueueItems.length === 0 ? (
+          emptyState
         ) : (
           <>
+            <div className="adm-finance-filter-tabs staff-list-filter-tabs">
+              {filterTabs.map((tab) =>
+                tab.count === 0 && tab.id !== 'all' && tab.id !== 'action' ? null : (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={filter === tab.id ? 'is-active' : undefined}
+                    onClick={() => setFilter(tab.id)}
+                  >
+                    {tab.label}
+                    {tab.count != null ? ` (${tab.count})` : ''}
+                  </button>
+                )
+              )}
+            </div>
+
+            {filteredQueue.length === 0 ? (
+              <div className="adm-empty adm-empty--detail">
+                <p>No items in this queue.</p>
+              </div>
+            ) : (
+              <div className="adm-workbench-split adm-finance-split">
+                <div className="adm-workbench-list">
+                  <table className="adm-table adm-table--list">
+                    <thead>
+                      <tr>
+                        <th>Job / invoice</th>
+                        <th>Stage</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredQueue.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={`adm-table-row--click${selectedId === item.id ? ' adm-table-row--selected' : ''}`}
+                          onClick={() => setSelectedId(item.id)}
+                        >
+                          <td>
+                            <p className="adm-table-primary">{queueItemPrimary(item)}</p>
+                            <p className="adm-table-secondary">{queueItemSecondary(item, guards)}</p>
+                          </td>
+                          <td className="adm-table-secondary">{queueItemLabel(item)}</td>
+                          <td className="adm-table-secondary">{queueItemAmount(item)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="adm-workbench-detail">
+                  {selectedItem ? (
+                    <div className="adm-workbench-detail-inner">
+                      {selectedItem.kind === 'invoice' ? (
+                        <StaffPayoutInvoiceRow
+                          invoice={selectedItem.invoice}
+                          requests={requests}
+                          guards={guards}
+                          isDirector={isDirector}
+                          onMarkGuardPaidCash={onMarkGuardPaidCash}
+                          onReleasePayout={onReleasePayout}
+                          onCompleteInvoice={onCompletePayoutInvoice}
+                        />
+                      ) : (
+                        <JobPaymentRow
+                          req={selectedItem.req}
+                          guard={guards.find((g) => g.id === selectedItem.req.assignedGuardId)}
+                          payment={payments.find((p) => p.jobId === selectedItem.req.id)}
+                          isDirector={isDirector}
+                          canManagePayments={canManagePayments}
+                          paymentGates={paymentGates}
+                          readOnly={
+                            selectedItem.stage === 'guard-collection-pending' ||
+                            selectedItem.stage === 'client-paid-active' ||
+                            selectedItem.stage === 'settled'
+                          }
+                          {...sectionProps}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="adm-empty adm-empty--detail">
+                      <p>Select a payment to review</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </StaffOpsPageShell>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in staff-payments-panel">
+      <div className="staff-payments-summary">
         {actionCount > 0 && (
           <p className="staff-payments-attention">
             {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
           </p>
         )}
         <StaffPaymentSummary summary={summary} financials={financials} />
-          </>
-        )}
-        {canManagePayments && (
-          <button
-            type="button"
-            className={formFactor === 'desktop' ? 'adm-btn adm-btn--outline adm-btn--sm adm-mt-sm' : 'app-button-outline app-btn-sm gap-2 staff-payments-export'}
-            onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
-          >
-            <Download className="w-4 h-4" />
-            Export payouts CSV
-          </button>
-        )}
+        {exportButton}
       </div>
 
-      <div className={formFactor === 'desktop' ? 'adm-payments-pipeline' : 'staff-payments-body'}>
+      <div className="staff-payments-body">
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
-            <AppItemCardStack className={formFactor === 'desktop' ? '' : '-mx-4 sm:-mx-5 px-4 sm:px-5'}>
+            <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
               {openInvoices.map((invoice) => (
                 <StaffPayoutInvoiceRow
                   key={invoice.id}
@@ -265,29 +499,9 @@ export function StaffPaymentsPanel({
           readOnly
         />
         <PipelineSection stage="client-paid-active" items={summary.clientPaidActive} {...sectionProps} readOnly />
-        <PipelineSection
-          stage="settled"
-          items={summary.settled}
-          {...sectionProps}
-          readOnly
-          limit={8}
-        />
+        <PipelineSection stage="settled" items={summary.settled} {...sectionProps} readOnly limit={8} />
 
-        {openInvoices.length === 0 &&
-          summary.awaitingClient.length === 0 &&
-          summary.cashDepositPending.length === 0 &&
-          summary.awaitingGuardPayout.length === 0 &&
-          summary.guardCollectionPending.length === 0 &&
-          summary.clientPaidActive.length === 0 &&
-          summary.settled.length === 0 && (
-            <div className="app-empty-state">
-              <div className="app-empty-state-icon">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <p className="app-empty-state-title">No payment activity yet</p>
-              <p className="app-empty-state-body">Jobs will appear here once clients post security requests.</p>
-            </div>
-          )}
+        {allQueueItems.length === 0 && emptyState}
       </div>
     </div>
   );
