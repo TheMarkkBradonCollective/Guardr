@@ -545,7 +545,7 @@ export function StaffDashboard({
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
   const canManageCrews = canManageGuardAccounts || canReviewJobs;
-  const canResolveDisputes = canHandleDisputes(currentUser);
+  const showDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
   const canStaffEditJobListings = isStaffRole(currentUser.role);
@@ -924,7 +924,7 @@ export function StaffDashboard({
           />
         );
       case 'disputes':
-        return canResolveDisputes ? (
+        return showDisputes ? (
           <StaffDisputesPanel
             disputes={disputes}
             onResolveDispute={onResolveDispute}
