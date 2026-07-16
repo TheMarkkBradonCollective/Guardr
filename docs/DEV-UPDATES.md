@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Thursday, July 16, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.67**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.68**
 
 ---
 

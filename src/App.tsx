@@ -2964,6 +2964,51 @@ export default function App() {
         });
         if (played) void playWalkieChirpSound();
       },
+      onMessageDeleted: (table, id) => {
+        if (shouldSkipRealtimeSync()) return;
+        switch (table) {
+          case 'guard_messages':
+            void refreshGuardMessagesRef.current();
+            break;
+          case 'staff_messages':
+            void refreshStaffMessagesRef.current();
+            break;
+          case 'client_messages':
+            void refreshClientMessagesRef.current();
+            break;
+          case 'job_chat_messages':
+            setJobChatMessages((prev) => {
+              const next = prev.filter((m) => m.id !== id);
+              if (next.length === prev.length) return prev;
+              saveJobChatMessagesToStorage(next);
+              return next;
+            });
+            break;
+          case 'team_chat_messages':
+            setTeamChatMessages((prev) => {
+              const next = prev.filter((m) => m.id !== id);
+              if (next.length === prev.length) return prev;
+              saveTeamChatMessagesToStorage(next);
+              return next;
+            });
+            break;
+          case 'support_messages':
+            setSupportTickets((prev) => {
+              let changed = false;
+              const next = prev.map((ticket) => {
+                const filtered = ticket.messages.filter((m) => m.id !== id);
+                if (filtered.length === ticket.messages.length) return ticket;
+                changed = true;
+                return { ...ticket, messages: filtered };
+              });
+              if (changed) saveSupportTicketsToStorage(next);
+              return changed ? next : prev;
+            });
+            break;
+          default:
+            break;
+        }
+      },
     },
     isDbConnected
   );

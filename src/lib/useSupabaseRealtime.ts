@@ -33,6 +33,10 @@ export const SYNC_TABLES = [
   'platform_cities',
   'client_locations',
   'company_public_documents',
+  'client_invoices',
+  'message_reactions',
+  'guard_availability',
+  'guard_availability_date_overrides',
 ] as const;
 
 const DEBOUNCE_MS = 300;
