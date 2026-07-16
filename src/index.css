@@ -8840,7 +8840,7 @@ html.theme-grey .wf-badge-success {
   gap: 0;
   border: none;
   background: transparent;
-  border-radius: var(--radius-app-xl);
+  border-radius: 0;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 12px 40px rgba(0, 0, 0, 0.08);
@@ -8915,6 +8915,7 @@ html.theme-grey .wf-badge-success {
   justify-content: center;
   gap: 0.35rem;
   z-index: 1;
+  border-radius: 0;
 }
 
 .guard-tier-hero-glow,
@@ -8993,6 +8994,11 @@ html.theme-grey .wf-badge-success {
 .guard-tier-hero .guard-tier-medal-ribbon,
 .guard-tier-hero .guard-pref-hero-medal-ribbon {
   display: none;
+}
+
+.guard-tier-hero .guard-tier-medal-ring,
+.guard-tier-hero .guard-pref-tier-medal-ring {
+  border-radius: 0;
 }
 
 .guard-tier-hero-dense {
@@ -9163,7 +9169,7 @@ html.theme-grey .wf-badge-success {
   gap: 0.45rem;
   margin: 0.2rem 0 0.35rem;
   padding: 0.35rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(0, 0, 0, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
@@ -15691,7 +15697,7 @@ html.theme-grey .landing-wordmark {
   gap: 0;
   border: none;
   background: transparent;
-  border-radius: var(--radius-app-xl);
+  border-radius: 0;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 12px 40px rgba(0, 0, 0, 0.08);
