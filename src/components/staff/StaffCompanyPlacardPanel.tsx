@@ -20,6 +20,7 @@ interface StaffCompanyPlacardPanelProps {
   publicEnabled: boolean;
   onSaveDocument: (doc: CompanyPublicDocument) => Promise<void>;
   onSetPublicEnabled: (enabled: boolean) => Promise<void>;
+  variant?: 'mobile' | 'desktop';
 }
 
 function statusTone(status: string): string {
@@ -104,27 +105,32 @@ export function StaffCompanyPlacardPanel({
   publicEnabled,
   onSaveDocument,
   onSetPublicEnabled,
+  variant = 'mobile',
 }: StaffCompanyPlacardPanelProps) {
   const canEdit = hasExecutivePaymentControls(currentUser);
   const checklist = useMemo(() => buildCompanyPlacardChecklist(documents), [documents]);
   const summary = useMemo(() => companyPlacardChecklistSummary(checklist), [checklist]);
   const [expandedType, setExpandedType] = useState<CompanyDocumentTypeId | null>(null);
   const [savingType, setSavingType] = useState<CompanyDocumentTypeId | null>(null);
+  const isDesktop = variant === 'desktop';
 
   const toggleExpanded = (typeId: CompanyDocumentTypeId) => {
     setExpandedType((prev) => (prev === typeId ? null : typeId));
   };
 
-  return (
-    <AppFormSection title="Company public placard">
-      <div className="pb-6 space-y-5">
+  const content = (
+      <div className={isDesktop ? 'space-y-5' : 'pb-6 space-y-5'}>
         <p className="text-sm text-brand-text-muted leading-relaxed">
           Upload company registration and insurance for the public homepage — like a placard on the
           business wall. Guardr is a technology marketplace, not a licensed security company. This is
           display-only and does not block platform operations.
         </p>
 
-        <div className="rounded-xl border border-brand-border bg-brand-surface-elevated p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div
+          className={`rounded-xl border border-brand-border bg-brand-surface-elevated p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center ${
+            isDesktop ? 'adm-platform-placard-stats' : ''
+          }`.trim()}
+        >
           <div>
             <p className="text-lg font-black text-brand-text">{summary.requiredOnFile}/{summary.requiredTotal}</p>
             <p className="text-[10px] uppercase tracking-wide text-brand-text-muted">Required on file</p>
@@ -177,6 +183,7 @@ export function StaffCompanyPlacardPanel({
                   typeId={item.type.id}
                   document={item.document}
                   saving={savingType === item.type.id}
+                  variant={variant}
                   onSave={async (next) => {
                     setSavingType(item.type.id);
                     try {
@@ -203,19 +210,26 @@ export function StaffCompanyPlacardPanel({
           </p>
         )}
       </div>
-    </AppFormSection>
   );
+
+  if (isDesktop) {
+    return content;
+  }
+
+  return <AppFormSection title="Company public placard">{content}</AppFormSection>;
 }
 
 function CompanyDocumentEditor({
   typeId,
   document,
   saving,
+  variant = 'mobile',
   onSave,
 }: {
   typeId: CompanyDocumentTypeId;
   document?: CompanyPublicDocument;
   saving: boolean;
+  variant?: 'mobile' | 'desktop';
   onSave: (doc: CompanyPublicDocument) => Promise<void>;
 }) {
   const typeDef = companyDocumentTypeById(typeId)!;
@@ -313,7 +327,11 @@ function CompanyDocumentEditor({
       </label>
       <button
         type="button"
-        className="app-button-primary !w-auto !h-10 !px-5"
+        className={
+          variant === 'desktop'
+            ? 'adm-btn adm-btn--sand'
+            : 'app-button-primary !w-auto !h-10 !px-5'
+        }
         disabled={saving}
         onClick={handleSave}
       >

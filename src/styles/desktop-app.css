@@ -1473,6 +1473,45 @@ body[data-form-factor="desktop"] .adm-payment-settings-page .adm-table-wrap {
   background: var(--adm-bg);
 }
 
+body[data-form-factor="desktop"] .adm-platform-settings-page .adm-ops-page-body {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-card {
+  padding: 1.15rem 1.25rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-card-title {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-card--full {
+  grid-column: 1 / -1;
+}
+
+body[data-form-factor="desktop"] .adm-platform-placard-stats {
+  background: var(--adm-bg);
+  border-color: var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-page .adm-platform-settings-card .rounded-xl.border {
+  border-color: var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-platform-settings-page .adm-platform-settings-card .border-t {
+  border-color: var(--adm-border);
+}
+
 body[data-form-factor="desktop"] .adm-finance-page .adm-workbench-detail-inner .app-item-card {
   border: none;
   box-shadow: none;
