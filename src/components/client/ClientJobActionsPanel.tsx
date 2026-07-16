@@ -50,7 +50,8 @@ import { CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { ClientShiftStartVerification } from './ClientShiftStartVerification';
+import { ClientShiftEndVerification } from './ClientShiftEndVerification';
 import { ClientViolationReportSheet, type ClientViolationReportInput } from './ClientViolationReportSheet';
 import { ReplacementRequestPanel } from './ReplacementRequestPanel';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
@@ -108,6 +109,10 @@ export interface ClientJobActionsPanelProps {
   ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
+  onVerifyStartCheckpoint?: (requestId: string) => void | Promise<void>;
+  onFlagStartCheckpoint?: (requestId: string, category: string, note: string) => void | Promise<void>;
+  onVerifyEndCheckpoint?: (requestId: string) => void | Promise<void>;
+  onFlagEndCheckpoint?: (requestId: string, category: string, note: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
@@ -152,6 +157,10 @@ export function ClientJobActionsPanel({
   onAddReview,
   onReportViolation,
   onConfirmSelfAudit,
+  onVerifyStartCheckpoint,
+  onFlagStartCheckpoint,
+  onVerifyEndCheckpoint,
+  onFlagEndCheckpoint,
   onApproveOvertime,
   onDisputeOvertime,
   onApproveScheduleChange,
@@ -786,7 +795,21 @@ export function ClientJobActionsPanel({
           </div>
         )}
 
-        {onConfirmSelfAudit && <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />}
+        {(onVerifyStartCheckpoint || onConfirmSelfAudit) && (
+          <ClientShiftStartVerification
+            request={req}
+            onVerify={onVerifyStartCheckpoint ?? onConfirmSelfAudit!}
+            onFlag={onFlagStartCheckpoint ?? (async () => undefined)}
+          />
+        )}
+
+        {(onVerifyEndCheckpoint || onFlagEndCheckpoint) && (
+          <ClientShiftEndVerification
+            request={req}
+            onVerify={onVerifyEndCheckpoint ?? (async () => undefined)}
+            onFlag={onFlagEndCheckpoint ?? (async () => undefined)}
+          />
+        )}
 
         {req.status === 'in-progress' && hiredGuard && onUpdateStatus && context === 'jobs' && (
           <button

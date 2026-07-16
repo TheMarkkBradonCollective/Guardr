@@ -1,4 +1,5 @@
 import { countGuardViolationReports } from './clientViolations';
+import { countActiveShiftAuditViolations } from './shiftAuditViolations';
 import { ALL_JOB_TYPES } from './guardJobPreferences';
 import { JOB_TYPE_LABELS } from './guardJobs';
 import type { SecurityGuard, SecurityRequest, ShiftReport, JobType } from '../types';
@@ -237,21 +238,17 @@ export function buildJobTypeRatingMetrics(
   clientReviews: ClientReviewStats
 ): JobTypeRatingMetric[] {
   const rows: JobTypeRatingMetric[] = [];
+  const clientRate = clientReviews.count > 0 ? clientReviews.average / 5 : 0;
+  const clientStatus = factorStatus(clientRate);
 
-  if (clientReviews.count > 0) {
-    const rate = clientReviews.average / 5;
-    const status = factorStatus(rate);
-    rows.push({
-      id: 'client-reviews',
-      label: 'Client rating',
-      valueDisplay: starDisplay(clientReviews.average),
-      targetLabel: 'Stay above 4.5 ★',
-      status: status.status,
-      statusLabel: status.statusLabel,
-    });
-  }
-
-  if (metrics.jobsSampled <= 0) return rows;
+  rows.push({
+    id: 'client-reviews',
+    label: 'Client rating',
+    valueDisplay: clientReviews.count > 0 ? starDisplay(clientReviews.average) : '—',
+    targetLabel: 'Stay above 4.5 ★',
+    status: clientStatus.status,
+    statusLabel: clientStatus.statusLabel,
+  });
 
   const metricDefs: Array<{
     id: string;
@@ -263,36 +260,36 @@ export function buildJobTypeRatingMetrics(
     {
       id: 'on-time',
       label: 'On-time arrival',
-      rate: metrics.onTimeRate,
-      display: percentDisplay(metrics.onTimeRate),
+      rate: metrics.jobsSampled > 0 ? metrics.onTimeRate : 0,
+      display: percentDisplay(metrics.jobsSampled > 0 ? metrics.onTimeRate : 0),
       targetLabel: 'Stay above 90%',
     },
     {
       id: 'check-ins',
       label: 'Check-in reliability',
-      rate: metrics.checkInCompletionRate,
-      display: percentDisplay(metrics.checkInCompletionRate),
+      rate: metrics.jobsSampled > 0 ? metrics.checkInCompletionRate : 0,
+      display: percentDisplay(metrics.jobsSampled > 0 ? metrics.checkInCompletionRate : 0),
       targetLabel: 'Stay above 95%',
     },
     {
       id: 'uniform',
       label: 'Uniform compliance',
-      rate: metrics.uniformComplianceRate,
-      display: percentDisplay(metrics.uniformComplianceRate),
+      rate: metrics.jobsSampled > 0 ? metrics.uniformComplianceRate : 0,
+      display: percentDisplay(metrics.jobsSampled > 0 ? metrics.uniformComplianceRate : 0),
       targetLabel: 'Stay above 95%',
     },
     {
       id: 'attendance',
       label: 'Attendance',
-      rate: metrics.attendanceRate,
-      display: percentDisplay(metrics.attendanceRate),
+      rate: metrics.jobsSampled > 0 ? metrics.attendanceRate : 0,
+      display: percentDisplay(metrics.jobsSampled > 0 ? metrics.attendanceRate : 0),
       targetLabel: 'Stay above 95%',
     },
     {
       id: 'incident-free',
       label: 'Incident-free record',
-      rate: 1 - metrics.incidentPenalty,
-      display: percentDisplay(1 - metrics.incidentPenalty),
+      rate: metrics.jobsSampled > 0 ? 1 - metrics.incidentPenalty : 0,
+      display: percentDisplay(metrics.jobsSampled > 0 ? 1 - metrics.incidentPenalty : 0),
       targetLabel: 'Stay above 95%',
     },
   ];
@@ -309,13 +306,18 @@ export function buildJobTypeRatingMetrics(
     });
   }
 
+  const shiftStatus =
+    metrics.jobsSampled >= 5
+      ? { status: 'very-high' as const, statusLabel: 'Established' }
+      : factorStatus(0);
+
   rows.push({
     id: 'lifetime-shifts',
     label: 'Lifetime shifts',
     valueDisplay: String(metrics.jobsSampled),
     targetLabel: 'Requires 5 for rating',
-    status: metrics.jobsSampled >= 5 ? 'very-high' : 'moderate',
-    statusLabel: metrics.jobsSampled >= 5 ? 'Established' : 'Building',
+    status: shiftStatus.status,
+    statusLabel: metrics.jobsSampled >= 5 ? 'Established' : metrics.jobsSampled > 0 ? 'Building' : shiftStatus.statusLabel,
   });
 
   return rows;
@@ -618,6 +620,15 @@ export function computePerformanceViolations(
     });
   }
 
+  const auditViolations = countActiveShiftAuditViolations(guardId, requests);
+  if (auditViolations > 0) {
+    violations.push({
+      id: 'shift-audit',
+      label: 'Shift audit violation',
+      count: auditViolations,
+    });
+  }
+
   return violations;
 }
 
@@ -685,6 +696,17 @@ export function buildPerformanceFactors(
   }
 
   return factors;
+}
+
+export function buildJobTypePerformanceFactors(
+  guardId: string,
+  jobType: JobType,
+  requests: SecurityRequest[]
+): PerformanceFactor[] {
+  const scoped = requests.filter((request) => (request.type ?? 'other') === jobType);
+  const metrics = computeGuardPerformanceForJobType(guardId, requests, jobType);
+  const clientReviews = computeClientReviewStatsForJobType(guardId, requests, jobType);
+  return buildPerformanceFactors(guardId, metrics, clientReviews, scoped);
 }
 
 export function computeGuardPerformanceRating(

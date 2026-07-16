@@ -52,6 +52,24 @@ export function isSelfAuditClientConfirmed(audit: SecurityRequest['checkInAudit'
   return !!audit?.clientConfirmedAt;
 }
 
+export function hasStartLocationPhoto(audit: SecurityRequest['checkInAudit'] | undefined): boolean {
+  return !!audit?.locationPhoto?.trim();
+}
+
+export function isEndSelfAuditClientConfirmed(
+  audit: SecurityRequest['checkOutAudit'] | undefined
+): boolean {
+  return !!audit?.clientConfirmedAt;
+}
+
+export function hasEndLocationPhoto(audit: SecurityRequest['checkOutAudit'] | undefined): boolean {
+  return !!audit?.locationPhoto?.trim();
+}
+
+export function endSelfAuditComplete(audit: SecurityRequest['checkOutAudit'] | undefined): boolean {
+  return !!audit?.endSelfie?.trim();
+}
+
 export function hasSelfAuditPhotosToReview(req: SecurityRequest): boolean {
   return selfAuditPhotosComplete(req.checkInAudit) && CLIENT_CONFIRM_STATUSES.includes(req.status);
 }

@@ -16,6 +16,8 @@ interface StaffDisputesPanelProps {
   ) => void | Promise<void>;
 }
 
+type DisputeTab = 'all' | 'overtime';
+
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
     month: 'short',
@@ -31,6 +33,7 @@ export function StaffDisputesPanel({
   onResolveOvertimeDispute,
 }: StaffDisputesPanelProps) {
   const { formFactor } = useDevice();
+  const [tab, setTab] = useState<DisputeTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [adjustHoursById, setAdjustHoursById] = useState<Record<string, string>>({});
@@ -41,9 +44,11 @@ export function StaffDisputesPanel({
     () =>
       disputes.filter((d) => {
         const status = statusMap[d.id] ?? d.status;
-        return status === 'open';
+        if (status !== 'open') return false;
+        if (tab === 'overtime') return d.type === 'overtime';
+        return d.type !== 'audit-violation';
       }),
-    [disputes, statusMap]
+    [disputes, statusMap, tab]
   );
 
   useEffect(() => {
@@ -262,14 +267,30 @@ export function StaffDisputesPanel({
       )}
       <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>No open disputes</p>
       <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
-        Overtime billing disputes and guard vs client conflicts will appear here when they need staff review.
+        Overtime billing disputes and guard vs client conflicts appear here. Shift checkpoint violations are under Violations.
       </p>
+    </div>
+  );
+
+  const tabBar = (
+    <div className="flex gap-2 mb-4">
+      {(['all', 'overtime'] as DisputeTab[]).map((key) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => setTab(key)}
+          className={`app-button-outline app-btn-sm capitalize ${tab === key ? '!border-brand-primary !text-brand-primary' : ''}`}
+        >
+          {key}
+        </button>
+      ))}
     </div>
   );
 
   if (openDisputes.length === 0) {
     return (
       <div className={formFactor === 'desktop' ? 'adm-workbench' : 'animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5'}>
+        {tabBar}
         {emptyState}
       </div>
     );
@@ -286,6 +307,7 @@ export function StaffDisputesPanel({
             <p className="adm-workbench-subtitle">Open disputes requiring staff resolution.</p>
           </div>
         </div>
+        {tabBar}
         <div className="adm-workbench-split">
           <div className="adm-workbench-list">
             <table className="adm-table adm-table--list">
@@ -307,7 +329,9 @@ export function StaffDisputesPanel({
                       <p className="adm-table-primary">{d.jobTitle}</p>
                       <p className="adm-table-secondary">{d.guardName} vs {d.clientName}</p>
                     </td>
-                    <td className="adm-table-secondary">{d.type === 'overtime' ? 'Overtime' : d.type}</td>
+                    <td className="adm-table-secondary">
+                      {d.type === 'overtime' ? 'Overtime' : d.type}
+                    </td>
                     <td className="adm-table-secondary">{formatWhen(d.openedAt)}</td>
                   </tr>
                 ))}
@@ -330,7 +354,8 @@ export function StaffDisputesPanel({
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+      {tabBar}
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => (
           <React.Fragment key={d.id}>{renderDisputeCard(d)}</React.Fragment>

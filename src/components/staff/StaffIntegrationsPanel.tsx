@@ -2,10 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { SessionUser } from '../../types';
 import {
   PlatformSettings,
+  platformBackgroundCheckModeDescription,
+  platformBackgroundCheckModeLabel,
+  platformInsuranceModeDescription,
+  platformInsuranceModeLabel,
   platformPaymentModeDescription,
   platformPaymentModeLabel,
+  platformSmsModeDescription,
+  platformSmsModeLabel,
 } from '../../lib/platformSettings';
 import { canManagePlatformSettings } from '../../lib/permissions';
+import { fetchIntegrationHealth } from '../../lib/integrationApi';
+import { INTEGRATION_ENV_HINTS, type IntegrationHealth } from '../../lib/integrationProviders';
 import { fetchPaymentProcessorHealth } from '../../lib/paymentProcessorApi';
 import type { CardPaymentProcessor, PaymentProcessorHealth } from '../../lib/paymentProcessors';
 import { CARD_PROCESSOR_LABELS, processorEnvHint } from '../../lib/paymentProcessors';
@@ -52,6 +60,83 @@ function ConnectionBadge({ connected }: { connected: boolean }) {
   );
 }
 
+function IntegrationSection({
+  modeLabel,
+  modeDescription,
+  children,
+  readOnlyNote,
+}: {
+  modeLabel: string;
+  modeDescription: string;
+  children: React.ReactNode;
+  readOnlyNote?: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+        Current mode: {modeLabel}
+      </p>
+      <p className="text-sm text-brand-text-muted leading-relaxed">{modeDescription}</p>
+      {children}
+      {readOnlyNote && <p className="text-xs text-brand-text-muted">{readOnlyNote}</p>}
+    </div>
+  );
+}
+
+function IntegrationToggleCard({
+  title,
+  subtitle,
+  connected,
+  healthLoading,
+  enabled,
+  canEdit,
+  disabled,
+  onToggle,
+  primary = false,
+  envHint,
+}: {
+  title: string;
+  subtitle: string;
+  connected: boolean;
+  healthLoading: boolean;
+  enabled: boolean;
+  canEdit: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+  primary?: boolean;
+  envHint?: string;
+}) {
+  return (
+    <div
+      className={`flex items-start justify-between gap-4 rounded-xl border p-4 ${
+        primary && enabled ? 'border-brand-primary/30 bg-brand-primary/5' : 'border-brand-border'
+      }`}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">{title}</span>
+          {!healthLoading && <ConnectionBadge connected={connected} />}
+        </div>
+        <span className="text-xs text-brand-text-muted block mt-1 leading-relaxed">{subtitle}</span>
+        {!connected && !enabled && envHint && (
+          <span className="text-xs text-amber-400/90 block mt-1.5">{envHint}</span>
+        )}
+        {enabled && !connected && envHint && (
+          <span className="text-xs text-amber-400/90 block mt-1.5">
+            Enabled but not connected — configure env before this integration can run.
+          </span>
+        )}
+      </div>
+      <AppSwitch
+        checked={enabled}
+        disabled={!canEdit || disabled}
+        onChange={() => onToggle()}
+        ariaLabel={`Toggle ${title}`}
+      />
+    </div>
+  );
+}
+
 export function StaffIntegrationsPanel({
   currentUser,
   platformSettings,
@@ -60,10 +145,13 @@ export function StaffIntegrationsPanel({
   const { formFactor } = useDevice();
   const canEdit = canManagePlatformSettings(currentUser);
   const isDesktop = formFactor === 'desktop';
+  const readOnlyNote = !canEdit ? 'Only the Founder can change integrations.' : undefined;
+
   const [stripeEnabled, setStripeEnabled] = useState(platformSettings.paymentStripeEnabled);
   const [squareEnabled, setSquareEnabled] = useState(platformSettings.paymentSquareEnabled);
   const [savingModes, setSavingModes] = useState(false);
   const [processorHealth, setProcessorHealth] = useState<PaymentProcessorHealth | null>(null);
+  const [integrationHealth, setIntegrationHealth] = useState<IntegrationHealth | null>(null);
   const [healthLoading, setHealthLoading] = useState(true);
 
   useEffect(() => {
@@ -74,15 +162,23 @@ export function StaffIntegrationsPanel({
   useEffect(() => {
     let cancelled = false;
     setHealthLoading(true);
-    void fetchPaymentProcessorHealth()
-      .then((health) => {
-        if (!cancelled) setProcessorHealth(health);
+    void Promise.all([fetchPaymentProcessorHealth(), fetchIntegrationHealth()])
+      .then(([payments, integrations]) => {
+        if (!cancelled) {
+          setProcessorHealth(payments);
+          setIntegrationHealth(integrations);
+        }
       })
       .catch(() => {
         if (!cancelled) {
           setProcessorHealth({
             stripe: { configured: false },
             square: { configured: false },
+          });
+          setIntegrationHealth({
+            twilio: { configured: false },
+            checkr: { configured: false },
+            insuranceApi: { configured: false },
           });
         }
       })
@@ -152,106 +248,156 @@ export function StaffIntegrationsPanel({
     }
   };
 
-  const renderProcessorToggle = (processor: CardPaymentProcessor, primary = false) => {
-    const isStripe = processor === 'stripe';
-    const enabled = isStripe ? stripeEnabled : squareEnabled;
-    const connected = isProcessorConnected(processor);
-    const canToggleOn = connected || enabled;
-
-    return (
-      <label
-        key={processor}
-        className={`flex items-start gap-3 rounded-xl border p-4 ${
-          primary ? 'border-brand-primary/30 bg-brand-primary/5' : 'border-brand-border'
-        } ${canEdit && canToggleOn ? 'cursor-pointer' : 'opacity-90'}`}
-      >
-        <input
-          type="checkbox"
-          className="mt-1"
-          checked={enabled}
-          onChange={() => void toggleProcessor(processor)}
-          disabled={!canEdit || savingModes || (!canToggleOn && !enabled)}
-        />
-        <span className="flex-1 min-w-0">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">Card ({CARD_PROCESSOR_LABELS[processor]})</span>
-            {!healthLoading && <ConnectionBadge connected={connected} />}
-          </span>
-          <span className="text-xs text-brand-text-muted block mt-1">
-            {primary
-              ? 'Primary card processor — Stripe Checkout + Connect guard payouts'
-              : 'Alternative card processor — Square checkout for client payments'}
-          </span>
-          {!connected && !enabled && (
-            <span className="text-xs text-amber-400/90 block mt-1.5">
-              Connect {CARD_PROCESSOR_LABELS[processor]} in env before enabling.
-            </span>
-          )}
-          {enabled && !connected && (
-            <span className="text-xs text-amber-400/90 block mt-1.5">
-              Enabled but not connected — clients cannot pay until env is configured.
-            </span>
-          )}
-        </span>
-      </label>
-    );
+  const toggleConnectedIntegration = async ({
+    next,
+    connected,
+    name,
+    envHint,
+    apply,
+  }: {
+    next: boolean;
+    connected: boolean;
+    name: string;
+    envHint: string;
+    apply: () => Promise<void>;
+  }) => {
+    if (!canEdit) return;
+    if (next && !connected) {
+      showAppToast(`${name} is not connected. ${envHint}`, { tone: 'error' });
+      return;
+    }
+    await apply();
   };
 
-  const paymentMethodsBody = (
-    <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-        Current mode: {platformPaymentModeLabel(platformSettings)}
-      </p>
-      <p className="text-sm text-brand-text-muted leading-relaxed">
-        {platformPaymentModeDescription(platformSettings)}
-      </p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {renderProcessorToggle('stripe', true)}
-        {renderProcessorToggle('square')}
-      </div>
-      {!canEdit && (
-        <p className="text-xs text-brand-text-muted">Only the Founder can change payment methods.</p>
-      )}
-    </div>
-  );
+  const smsEnabled = platformSettings.smsNotificationsEnabled === true;
+  const checkrEnabled = platformSettings.backgroundCheckProvider === 'checkr';
+  const insuranceApiEnabled = platformSettings.insuranceVerificationMode === 'api';
 
-  const integrationsBody = (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span>SMS notifications (Twilio — configure in env)</span>
-        <AppSwitch
-          checked={platformSettings.smsNotificationsEnabled === true}
-          disabled={!canEdit}
-          onChange={(checked) => void persistSettings({ smsNotificationsEnabled: checked })}
-          ariaLabel="SMS notifications"
+  const paymentMethodsBody = (
+    <IntegrationSection
+      modeLabel={platformPaymentModeLabel(platformSettings)}
+      modeDescription={platformPaymentModeDescription(platformSettings)}
+      readOnlyNote={readOnlyNote}
+    >
+      <div className="grid grid-cols-1 gap-3">
+        <IntegrationToggleCard
+          title={`Card (${CARD_PROCESSOR_LABELS.stripe})`}
+          subtitle="Primary card processor — Stripe Checkout + Connect guard payouts"
+          connected={isProcessorConnected('stripe')}
+          healthLoading={healthLoading}
+          enabled={stripeEnabled}
+          canEdit={canEdit}
+          disabled={savingModes || (!isProcessorConnected('stripe') && !stripeEnabled)}
+          onToggle={() => void toggleProcessor('stripe')}
+          primary
+          envHint={`Connect Stripe in env before enabling. ${processorEnvHint('stripe')}`}
+        />
+        <IntegrationToggleCard
+          title={`Card (${CARD_PROCESSOR_LABELS.square})`}
+          subtitle="Alternative card processor — Square checkout for client payments"
+          connected={isProcessorConnected('square')}
+          healthLoading={healthLoading}
+          enabled={squareEnabled}
+          canEdit={canEdit}
+          disabled={savingModes || (!isProcessorConnected('square') && !squareEnabled)}
+          onToggle={() => void toggleProcessor('square')}
+          envHint={`Connect Square in env before enabling. ${processorEnvHint('square')}`}
         />
       </div>
-      <label className="uber-label block">Background check provider</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.backgroundCheckProvider ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
-      >
-        <option value="manual">Manual staff review</option>
-        <option value="checkr">Checkr (API key required)</option>
-      </select>
-      <label className="uber-label block">Insurance verification</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.insuranceVerificationMode ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
-      >
-        <option value="manual">Manual COI review</option>
-        <option value="api">Automated verification API</option>
-      </select>
-      {!canEdit && (
-        <p className="text-xs text-brand-text-muted">
-          Only the Founder can change third-party integrations.
-        </p>
-      )}
-    </div>
+    </IntegrationSection>
+  );
+
+  const smsBody = (
+    <IntegrationSection
+      modeLabel={platformSmsModeLabel(platformSettings)}
+      modeDescription={platformSmsModeDescription(platformSettings)}
+      readOnlyNote={readOnlyNote}
+    >
+      <IntegrationToggleCard
+        title="Twilio"
+        subtitle="SMS notifications for job updates, approvals, and staff alerts"
+        connected={integrationHealth?.twilio.configured ?? false}
+        healthLoading={healthLoading}
+        enabled={smsEnabled}
+        canEdit={canEdit}
+        disabled={!integrationHealth?.twilio.configured && !smsEnabled}
+        onToggle={() =>
+          void toggleConnectedIntegration({
+            next: !smsEnabled,
+            connected: integrationHealth?.twilio.configured ?? false,
+            name: 'Twilio',
+            envHint: INTEGRATION_ENV_HINTS.twilio,
+            apply: () => persistSettings({ smsNotificationsEnabled: !smsEnabled }),
+          })
+        }
+        primary
+        envHint={INTEGRATION_ENV_HINTS.twilio}
+      />
+    </IntegrationSection>
+  );
+
+  const backgroundCheckBody = (
+    <IntegrationSection
+      modeLabel={platformBackgroundCheckModeLabel(platformSettings)}
+      modeDescription={platformBackgroundCheckModeDescription(platformSettings)}
+      readOnlyNote={readOnlyNote}
+    >
+      <IntegrationToggleCard
+        title="Checkr"
+        subtitle="Automated background screening — when off, staff review manually in Credentials"
+        connected={integrationHealth?.checkr.configured ?? false}
+        healthLoading={healthLoading}
+        enabled={checkrEnabled}
+        canEdit={canEdit}
+        disabled={!integrationHealth?.checkr.configured && !checkrEnabled}
+        onToggle={() =>
+          void toggleConnectedIntegration({
+            next: !checkrEnabled,
+            connected: integrationHealth?.checkr.configured ?? false,
+            name: 'Checkr',
+            envHint: INTEGRATION_ENV_HINTS.checkr,
+            apply: () =>
+              persistSettings({
+                backgroundCheckProvider: checkrEnabled ? 'manual' : 'checkr',
+              }),
+          })
+        }
+        primary
+        envHint={INTEGRATION_ENV_HINTS.checkr}
+      />
+    </IntegrationSection>
+  );
+
+  const insuranceBody = (
+    <IntegrationSection
+      modeLabel={platformInsuranceModeLabel(platformSettings)}
+      modeDescription={platformInsuranceModeDescription(platformSettings)}
+      readOnlyNote={readOnlyNote}
+    >
+      <IntegrationToggleCard
+        title="Automated verification API"
+        subtitle="Automated COI verification — when off, staff review COI documents manually"
+        connected={integrationHealth?.insuranceApi.configured ?? false}
+        healthLoading={healthLoading}
+        enabled={insuranceApiEnabled}
+        canEdit={canEdit}
+        disabled={!integrationHealth?.insuranceApi.configured && !insuranceApiEnabled}
+        onToggle={() =>
+          void toggleConnectedIntegration({
+            next: !insuranceApiEnabled,
+            connected: integrationHealth?.insuranceApi.configured ?? false,
+            name: 'Insurance verification API',
+            envHint: INTEGRATION_ENV_HINTS.insuranceApi,
+            apply: () =>
+              persistSettings({
+                insuranceVerificationMode: insuranceApiEnabled ? 'manual' : 'api',
+              }),
+          })
+        }
+        primary
+        envHint={INTEGRATION_ENV_HINTS.insuranceApi}
+      />
+    </IntegrationSection>
   );
 
   if (isDesktop) {
@@ -269,7 +415,9 @@ export function StaffIntegrationsPanel({
       >
         <div className="adm-platform-settings-grid">
           <DesktopSettingsCard title="Payment methods">{paymentMethodsBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="SMS notifications">{smsBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="Background check">{backgroundCheckBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="Insurance verification">{insuranceBody}</DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
     );
@@ -280,9 +428,14 @@ export function StaffIntegrationsPanel({
       <AppFormSection title="Payment methods">
         <div className="pb-6">{paymentMethodsBody}</div>
       </AppFormSection>
-
-      <AppFormSection title="Integrations">
-        <div className="pb-6">{integrationsBody}</div>
+      <AppFormSection title="SMS notifications">
+        <div className="pb-6">{smsBody}</div>
+      </AppFormSection>
+      <AppFormSection title="Background check">
+        <div className="pb-6">{backgroundCheckBody}</div>
+      </AppFormSection>
+      <AppFormSection title="Insurance verification">
+        <div className="pb-6">{insuranceBody}</div>
       </AppFormSection>
     </div>
   );

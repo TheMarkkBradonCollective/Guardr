@@ -367,6 +367,8 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_location_id TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS location_risk_level TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tier_pay_rates JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS post_orders_acknowledgments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS briefing_acknowledgments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_audit_violations JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS uniform_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS equipment_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_instructions TEXT DEFAULT '';

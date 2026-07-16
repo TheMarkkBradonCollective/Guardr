@@ -6,6 +6,7 @@ import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { guardAcknowledgedPostOrders, jobRequiresPostOrdersAck } from '../../lib/postOrdersAck';
+import { guardAcknowledgedBriefing, jobHasBriefingContent } from '../../lib/briefingAck';
 import {
   canGuardStartEnRoute,
   enRouteBlockedMessage,
@@ -20,6 +21,7 @@ interface GuardPreShiftBriefingProps {
   guardId: string;
   onStartEnRoute: () => void | Promise<void>;
   onAckPostOrders?: () => void | Promise<void>;
+  onAckBriefing?: () => void | Promise<void>;
   onClose?: () => void;
   /** Use fixed positioning when opened from Jobs or map job detail. */
   layout?: 'map-sheet' | 'modal';
@@ -30,6 +32,7 @@ export function GuardPreShiftBriefing({
   guardId,
   onStartEnRoute,
   onAckPostOrders,
+  onAckBriefing,
   onClose,
   layout = 'map-sheet',
 }: GuardPreShiftBriefingProps) {
@@ -45,6 +48,8 @@ export function GuardPreShiftBriefing({
   const enRouteBlocked = enRouteBlockedMessage(job, nowMs);
   const needsPostOrdersAck = jobRequiresPostOrdersAck(job, guardId);
   const postOrdersAcked = guardAcknowledgedPostOrders(job, guardId);
+  const needsBriefingAck = jobHasBriefingContent(job);
+  const briefingAcked = guardAcknowledgedBriefing(job, guardId);
   const enRouteCountdownMs = msUntilEnRouteUnlock(job.startDate, nowMs);
 
   const slideBlocked = !enRouteOpen || (needsPostOrdersAck && !postOrdersAcked);
@@ -52,6 +57,10 @@ export function GuardPreShiftBriefing({
     needsPostOrdersAck && !postOrdersAcked
       ? 'Acknowledge post orders below before heading to site.'
       : enRouteBlocked ?? 'Review the briefing, then start heading when the slide unlocks.';
+  const enRouteWarning =
+    needsBriefingAck && !briefingAcked
+      ? 'You have not acknowledged the site briefing. Arriving on site without reading it will be recorded as a violation and you must complete it before clock-in.'
+      : null;
 
   const panelBody = (
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
@@ -128,7 +137,32 @@ export function GuardPreShiftBriefing({
           </div>
         )}
 
+        {needsBriefingAck && onAckBriefing && !briefingAcked && (
+          <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/5 p-4 space-y-3">
+            <div>
+              <h3 className="font-bold text-sm">Acknowledge site briefing</h3>
+              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                Confirm you have reviewed the full site briefing before heading out. Skipping this may delay
+                clock-in and count as a violation if you arrive unprepared.
+              </p>
+            </div>
+            <SlideToConfirm
+              label="I have read the site briefing"
+              onConfirm={() => void onAckBriefing()}
+            />
+          </div>
+        )}
+
+        {briefingAcked && (
+          <p className="text-xs text-emerald-600 dark:text-emerald-400">Site briefing acknowledged.</p>
+        )}
+
         <div className="space-y-3 pt-2 border-t border-brand-border">
+          {enRouteWarning && (
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+              {enRouteWarning}
+            </p>
+          )}
           <p className="text-xs text-center text-brand-text-muted flex items-center justify-center gap-1.5">
             <Navigation className="w-3.5 h-3.5" />
             {enRouteOpen

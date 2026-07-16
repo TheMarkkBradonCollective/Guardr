@@ -400,6 +400,50 @@ export interface PostOrdersAcknowledgment {
   acknowledgedAt: string;
 }
 
+export interface BriefingAcknowledgment {
+  guardId: string;
+  acknowledgedAt: string;
+}
+
+export type ShiftCheckpointKind = 'start' | 'end' | 'briefing';
+
+export type ShiftAuditViolationSource = 'system' | 'client';
+
+export type ShiftAuditViolationStatus =
+  | 'auto-flagged'
+  | 'flagged'
+  | 'verified'
+  | 'expired'
+  | 'dispute-open'
+  | 'upheld'
+  | 'dismissed';
+
+export interface ShiftAuditViolationDispute {
+  status: 'open' | 'upheld' | 'dismissed';
+  guardNote?: string;
+  guardSubmittedAt?: string;
+  disputeDeadlineAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  resolutionNote?: string;
+}
+
+export interface ShiftAuditViolation {
+  id: string;
+  checkpoint: ShiftCheckpointKind;
+  source: ShiftAuditViolationSource;
+  category: string;
+  label: string;
+  description: string;
+  createdAt: string;
+  guardId: string;
+  reportedByClientId?: string;
+  reportedByClientName?: string;
+  status: ShiftAuditViolationStatus;
+  reviewExpiresAt?: string;
+  dispute?: ShiftAuditViolationDispute;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -887,6 +931,10 @@ export interface SecurityRequest {
   tierPayRates?: DifferentialPayRates;
   /** Guards who acknowledged post orders before clock-in */
   postOrdersAcknowledgments?: PostOrdersAcknowledgment[];
+  /** Guard confirmed they read the pre-shift site briefing. */
+  briefingAcknowledgments?: BriefingAcknowledgment[];
+  /** Checkpoint violations (skips, not-ready briefing, client flags) with dispute lifecycle. */
+  shiftAuditViolations?: ShiftAuditViolation[];
   durationHours: number;
   /** Original scheduled duration before late clock-out billing adjustment */
   scheduledDurationHours?: number;
@@ -1025,8 +1073,12 @@ export interface SecurityRequest {
     selfieUpload: string;
     uniformPhoto?: string;
     shoesPhoto?: string;
+    /** Photo of post / site at clock-in */
+    locationPhoto?: string;
     /** Guard clocked in without completing self-audit photos */
     selfAuditSkipped?: boolean;
+    /** Guard skipped location photo at clock-in */
+    locationPhotoSkipped?: boolean;
     gpsVerified: boolean;
     readyForDuty?: boolean;
     /** Staff uploaded photos on behalf of the guard */
@@ -1083,6 +1135,15 @@ export interface SecurityRequest {
     noViolations: boolean;
     noEquipmentIssues: boolean;
     endSelfie?: string;
+    /** Photo of post / site at clock-out */
+    locationPhoto?: string;
+    /** Guard skipped end-of-shift self-audit photos */
+    endSelfAuditSkipped?: boolean;
+    /** Guard skipped location photo at clock-out */
+    locationPhotoSkipped?: boolean;
+    /** Client reviewed and confirmed end-of-shift checkpoint */
+    clientConfirmedAt?: string;
+    clientConfirmedBy?: string;
     dailyActivityReport: string;
     incidentReport: {
       hasIncident: boolean;

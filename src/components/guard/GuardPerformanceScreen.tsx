@@ -10,22 +10,43 @@ import {
   type PerformanceFactorId,
 } from '../../lib/guardPerformanceFactorDetail';
 import {
-  jobTypePreferenceLabel,
-  normalizeJobTypePreferences,
-} from '../../lib/guardJobPreferences';
+  getJobTypeRatingCard,
+  isJobTypeMetricId,
+  type JobTypeMetricId,
+  type JobTypeRatingCard,
+} from '../../lib/guardJobTypeRatingMetrics';
+import { jobTypePreferenceLabel, normalizeJobTypePreferences } from '../../lib/guardJobPreferences';
+import { buildGuardContractViolations } from '../../lib/guardContractViolations';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
+import { GuardJobTypeMetricDetail } from './GuardJobTypeMetricDetail';
 import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
+import {
+  GuardContractViolationDetail,
+  GuardContractViolationDisputeStatus,
+} from './GuardContractViolationDetail';
+import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
 export type PerformanceViewTab = 'overall' | JobType;
+
+type PerformanceSubview =
+  | 'main'
+  | 'violations'
+  | 'violation-detail'
+  | 'violation-dispute-status';
 
 interface GuardPerformanceScreenProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
   performanceFactorId?: PerformanceFactorId | null;
   onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
+  onDisputeShiftAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    note: string
+  ) => void | Promise<void>;
 }
 
 function performanceTabLabel(tab: PerformanceViewTab): string {
@@ -38,9 +59,17 @@ export function GuardPerformanceScreen({
   requests,
   performanceFactorId = null,
   onPerformanceFactorChange,
+  onDisputeShiftAuditViolation,
 }: GuardPerformanceScreenProps) {
   const { formFactor } = useDevice();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
+  const [subview, setSubview] = useState<PerformanceSubview>('main');
+  const [selectedViolationId, setSelectedViolationId] = useState<string | null>(null);
+  const [selectedJobTypeMetric, setSelectedJobTypeMetric] = useState<{
+    jobType: JobType;
+    metricId: JobTypeMetricId;
+    card: JobTypeRatingCard;
+  } | null>(null);
 
   const enabledJobTypes = useMemo(
     () => normalizeJobTypePreferences(guard.jobTypePreferences),
@@ -50,6 +79,7 @@ export function GuardPerformanceScreen({
   useEffect(() => {
     if (activeTab !== 'overall' && !enabledJobTypes.includes(activeTab)) {
       setActiveTab('overall');
+      setSelectedJobTypeMetric(null);
     }
   }, [activeTab, enabledJobTypes]);
 
@@ -76,6 +106,14 @@ export function GuardPerformanceScreen({
     () => new Map(skillRatings.map((skill) => [skill.jobType, skill])),
     [skillRatings]
   );
+  const contractViolations = useMemo(
+    () => buildGuardContractViolations(guard, requests),
+    [guard, requests]
+  );
+  const selectedViolation = useMemo(
+    () => contractViolations.find((v) => v.id === selectedViolationId) ?? null,
+    [contractViolations, selectedViolationId]
+  );
   const selectedFactor = useMemo(() => {
     if (!performanceFactorId) return null;
     const rating = computeGuardPerformanceRating(guard, requests);
@@ -84,9 +122,26 @@ export function GuardPerformanceScreen({
 
   const handleTabChange = (tab: PerformanceViewTab) => {
     setActiveTab(tab);
+    setSubview('main');
+    setSelectedViolationId(null);
+    setSelectedJobTypeMetric(null);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
+  };
+
+  const openViolations = () => {
+    setSubview('violations');
+    setSelectedViolationId(null);
+    setSelectedJobTypeMetric(null);
+    onPerformanceFactorChange?.(null);
+  };
+
+  const handleMetricSelect = (jobType: JobType, metricId: JobTypeMetricId, card: JobTypeRatingCard) => {
+    setSelectedJobTypeMetric({ jobType, metricId, card });
+    setSubview('main');
+    setSelectedViolationId(null);
+    onPerformanceFactorChange?.(null);
   };
 
   const performanceTabs =
@@ -114,6 +169,7 @@ export function GuardPerformanceScreen({
           onPerformanceFactorChange?.(factor.id);
         }
       }}
+      onOpenViolations={openViolations}
       className="guard-performance-screen-card"
     />
   );
@@ -127,11 +183,62 @@ export function GuardPerformanceScreen({
         skillRating={skillByJobType.get(activeTab)}
         pinnedLayout
         toolbar={performanceTabs}
+        onMetricSelect={(metricId, card) => handleMetricSelect(activeTab, metricId, card)}
         className="guard-performance-screen-card"
       />
     ) : null;
 
   const tabbedContent = activeTab === 'overall' ? overallContent : jobTypeContent;
+
+  const selectedJobTypeMetricResolved = useMemo(() => {
+    if (!selectedJobTypeMetric) return null;
+    const card =
+      getJobTypeRatingCard(
+        guard.id,
+        selectedJobTypeMetric.jobType,
+        selectedJobTypeMetric.metricId,
+        requests
+      ) ?? selectedJobTypeMetric.card;
+    if (!isJobTypeMetricId(selectedJobTypeMetric.metricId)) return null;
+    return {
+      jobType: selectedJobTypeMetric.jobType,
+      metricId: selectedJobTypeMetric.metricId,
+      card,
+    };
+  }, [guard.id, requests, selectedJobTypeMetric]);
+
+  const violationSubview =
+    subview === 'violations' ? (
+      <GuardContractViolationsList
+        violations={contractViolations}
+        onBack={() => setSubview('main')}
+        onSelect={(violationId) => {
+          setSelectedViolationId(violationId);
+          setSubview('violation-detail');
+        }}
+      />
+    ) : subview === 'violation-detail' && selectedViolation ? (
+      <GuardContractViolationDetail
+        violation={selectedViolation}
+        onBack={() => setSubview('violations')}
+        onOpenDisputeStatus={() => setSubview('violation-dispute-status')}
+        onDispute={onDisputeShiftAuditViolation}
+      />
+    ) : subview === 'violation-dispute-status' && selectedViolation ? (
+      <GuardContractViolationDisputeStatus
+        violation={selectedViolation}
+        onBack={() => setSubview('main')}
+        onOpenDetails={() => setSubview('violation-detail')}
+      />
+    ) : null;
+
+  if (violationSubview) {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        {violationSubview}
+      </AppScreen>
+    );
+  }
 
   if (formFactor === 'desktop') {
     return (
@@ -153,12 +260,23 @@ export function GuardPerformanceScreen({
                 onBack={() => onPerformanceFactorChange?.(null)}
               />
             </div>
+          ) : selectedJobTypeMetricResolved ? (
+            <div className="adm-workbench-detail-inner">
+              <GuardJobTypeMetricDetail
+                card={selectedJobTypeMetricResolved.card}
+                metricId={selectedJobTypeMetricResolved.metricId}
+                jobType={selectedJobTypeMetricResolved.jobType}
+                guardId={guard.id}
+                requests={requests}
+                onBack={() => setSelectedJobTypeMetric(null)}
+              />
+            </div>
           ) : (
             <div className="adm-empty adm-empty--detail">
               <p>
                 {activeTab === 'overall'
                   ? 'Select a performance factor to see the breakdown'
-                  : `Viewing ${performanceTabLabel(activeTab)} specialty ratings`}
+                  : `Select a ${performanceTabLabel(activeTab)} rating card to see details`}
               </p>
             </div>
           )}
@@ -181,6 +299,21 @@ export function GuardPerformanceScreen({
           guardId={guard.id}
           requests={requests}
           onBack={() => onPerformanceFactorChange?.(null)}
+        />
+      </AppScreen>
+    );
+  }
+
+  if (selectedJobTypeMetricResolved) {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        <GuardJobTypeMetricDetail
+          card={selectedJobTypeMetricResolved.card}
+          metricId={selectedJobTypeMetricResolved.metricId}
+          jobType={selectedJobTypeMetricResolved.jobType}
+          guardId={guard.id}
+          requests={requests}
+          onBack={() => setSelectedJobTypeMetric(null)}
         />
       </AppScreen>
     );
