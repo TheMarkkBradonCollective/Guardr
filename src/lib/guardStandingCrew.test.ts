@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   acceptStandingCrewInvite,
+  dissolveStandingCrewForUntrustedGuard,
   getPendingStandingCrewIncoming,
   inviteToStandingCrew,
   shouldOfferTeamCodeJoin,
@@ -105,4 +106,22 @@ test('shouldOfferTeamCodeJoin allows trusted guards without their own crew', () 
   assert.ok(!('error' in accepted));
   if ('error' in accepted) return;
   assert.equal(shouldOfferTeamCodeJoin(member, accepted.members), false);
+});
+
+test('dissolveStandingCrewForUntrustedGuard frees roster members and removes lead ties', () => {
+  const invited = inviteToStandingCrew([], trustedLead(), 'member-1');
+  assert.ok(!('error' in invited));
+  if ('error' in invited) return;
+  const accepted = acceptStandingCrewInvite(invited.members, 'member-1', invited.invite.id);
+  assert.ok(!('error' in accepted));
+  if ('error' in accepted) return;
+
+  const dissolved = dissolveStandingCrewForUntrustedGuard(accepted.members, 'lead-1');
+  assert.deepEqual(dissolved.freedMemberIds, ['member-1']);
+  assert.equal(dissolved.updatedRows.length, 1);
+  assert.equal(dissolved.updatedRows[0]?.status, 'removed');
+  assert.equal(
+    dissolved.members.filter((m) => m.status === 'active' || m.status === 'pending').length,
+    0
+  );
 });
