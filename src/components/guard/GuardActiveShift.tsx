@@ -299,7 +299,7 @@ export function GuardActiveShift({
               Skip self audit · clock in
             </button>
             <p className="text-xs text-brand-text-muted text-center">
-              Skipping flags this job until you complete your self-audit photos.
+              Skipping flags missing start items automatically for client review.
             </p>
           </div>
         )}

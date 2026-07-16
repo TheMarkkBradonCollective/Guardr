@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Camera, Loader2 } from 'lucide-react';
+import { Check, Camera, Loader2, MapPin } from 'lucide-react';
 import { SELF_AUDIT_PHOTO_LABELS, SelfAuditPhotoKind } from '../../lib/selfAuditPhotos';
 import { AppModal } from '../ui/motion/AppMotion';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
@@ -11,6 +11,8 @@ interface GuardSelfAuditModalProps {
     selfieUpload: string;
     uniformPhoto?: string;
     shoesPhoto?: string;
+    locationPhoto?: string;
+    locationPhotoSkipped: boolean;
   }) => void;
   onClose: () => void;
   onTriggerCamera: () => Promise<string | null>;
@@ -26,7 +28,8 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
     requiredEquipment: false,
   });
   const [photos, setPhotos] = useState<Partial<Record<SelfAuditPhotoKind, string>>>({});
-  const [loadingKind, setLoadingKind] = useState<SelfAuditPhotoKind | null>(null);
+  const [locationPhoto, setLocationPhoto] = useState<string | undefined>();
+  const [loadingKind, setLoadingKind] = useState<SelfAuditPhotoKind | 'location' | null>(null);
 
   const labels = {
     uniformPresent: 'Uniform',
@@ -35,10 +38,13 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
     requiredEquipment: 'Required equipment',
   };
 
-  const handleCapture = async (kind: SelfAuditPhotoKind) => {
+  const handleCapture = async (kind: SelfAuditPhotoKind | 'location') => {
     setLoadingKind(kind);
     const url = await onTriggerCamera();
-    if (url) setPhotos((prev) => ({ ...prev, [kind]: url }));
+    if (url) {
+      if (kind === 'location') setLocationPhoto(url);
+      else setPhotos((prev) => ({ ...prev, [kind]: url }));
+    }
     setLoadingKind(null);
   };
 
@@ -49,6 +55,8 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
       selfieUpload: photos.self,
       uniformPhoto: photos.uniform,
       shoesPhoto: photos.shoes,
+      locationPhoto,
+      locationPhotoSkipped: !locationPhoto,
     });
   };
 
@@ -56,14 +64,19 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
     <AppModal open={open} position="absolute" zIndex={1003} onClose={onClose} ariaLabelledBy="guard-self-audit-title">
       <div className="sticky top-0 bg-brand-surface border-b border-brand-border px-5 py-4 flex items-center justify-between rounded-t-[1.25rem]">
         <p id="guard-self-audit-title" className="font-semibold text-brand-primary">
-          Self audit
+          Start of shift package
         </p>
         <button type="button" onClick={onClose} aria-label="Close" className="text-brand-text-muted hover:text-brand-text text-lg">
           ×
         </button>
       </div>
 
-      <div className="p-5 space-y-5">
+      <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Self-audit and location photo before clock-in. Skipping items from the previous screen is allowed but
+          automatically flagged for the client.
+        </p>
+
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
           {(Object.keys(uniform) as (keyof typeof uniform)[]).map((key) => (
             <label key={key} className="flex items-center gap-3 py-2 cursor-pointer w-full">
@@ -112,6 +125,36 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
               )}
             </div>
           ))}
+        </div>
+
+        <div>
+          <p className="uber-label mb-2 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5" />
+            Location photo (optional)
+          </p>
+          {locationPhoto ? (
+            <img
+              src={locationPhoto}
+              alt="Site location"
+              className="w-full h-32 object-cover rounded-xl border border-brand-primary/30"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleCapture('location')}
+              disabled={loadingKind !== null}
+              className="w-full h-28 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2"
+            >
+              {loadingKind === 'location' ? (
+                <Loader2 className="w-7 h-7 animate-spin text-brand-text-muted" />
+              ) : (
+                <>
+                  <MapPin className="w-7 h-7 text-brand-text-muted" />
+                  <span className="text-sm text-brand-text-muted">Photo of post / site</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         <SlideToConfirm

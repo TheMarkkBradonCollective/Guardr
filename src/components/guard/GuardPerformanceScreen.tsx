@@ -15,7 +15,7 @@ import {
 } from '../../lib/guardJobPreferences';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
-import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
+import { GuardShiftAuditDisputes } from './GuardShiftAuditDisputes';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
@@ -26,6 +26,11 @@ interface GuardPerformanceScreenProps {
   requests: SecurityRequest[];
   performanceFactorId?: PerformanceFactorId | null;
   onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
+  onDisputeShiftAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    note: string
+  ) => void | Promise<void>;
 }
 
 function performanceTabLabel(tab: PerformanceViewTab): string {
@@ -38,6 +43,7 @@ export function GuardPerformanceScreen({
   requests,
   performanceFactorId = null,
   onPerformanceFactorChange,
+  onDisputeShiftAuditViolation,
 }: GuardPerformanceScreenProps) {
   const { formFactor } = useDevice();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
@@ -101,21 +107,28 @@ export function GuardPerformanceScreen({
     ) : null;
 
   const overallContent = (
-    <GuardRatingSection
-      guard={guard}
-      requests={requests}
-      performance={performance}
-      skillRatings={skillRatings}
-      variant="full"
-      pinnedLayout
-      toolbar={performanceTabs}
-      onFactorSelect={(factor) => {
-        if (isPerformanceFactorId(factor.id)) {
-          onPerformanceFactorChange?.(factor.id);
-        }
-      }}
-      className="guard-performance-screen-card"
-    />
+    <>
+      <GuardRatingSection
+        guard={guard}
+        requests={requests}
+        performance={performance}
+        skillRatings={skillRatings}
+        variant="full"
+        pinnedLayout
+        toolbar={performanceTabs}
+        onFactorSelect={(factor) => {
+          if (isPerformanceFactorId(factor.id)) {
+            onPerformanceFactorChange?.(factor.id);
+          }
+        }}
+        className="guard-performance-screen-card"
+      />
+      <GuardShiftAuditDisputes
+        guardId={guard.id}
+        requests={requests}
+        onDispute={onDisputeShiftAuditViolation}
+      />
+    </>
   );
 
   const jobTypeContent =

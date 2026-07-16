@@ -60,6 +60,8 @@ export interface GuardJobView {
   minGuardQualification?: SecurityRequest['minGuardQualification'];
   minYearsExperience?: number;
   postOrdersAcknowledgments?: SecurityRequest['postOrdersAcknowledgments'];
+  briefingAcknowledgments?: SecurityRequest['briefingAcknowledgments'];
+  shiftAuditViolations?: SecurityRequest['shiftAuditViolations'];
   applicants: string[];
   ratingGiven?: number;
   reviewText?: string;
@@ -238,6 +240,8 @@ export function toGuardJobView(
     minGuardQualification: req.minGuardQualification,
     minYearsExperience: req.minYearsExperience,
     postOrdersAcknowledgments: req.postOrdersAcknowledgments,
+    briefingAcknowledgments: req.briefingAcknowledgments,
+    shiftAuditViolations: req.shiftAuditViolations,
     applicants: req.applicants,
     ratingGiven: req.ratingGiven,
     reviewText: req.reviewText,
