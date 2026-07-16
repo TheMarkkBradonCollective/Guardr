@@ -3,7 +3,7 @@ import { PanelLeft, Settings } from 'lucide-react';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../../lib/staffOps';
-import { getStaffNavAccessNotice } from '../../../lib/staffNavAccess';
+import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../../lib/staffNavAccess';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { Logo } from '../../Logo';
 import { AccountMenu } from '../AccountMenu';
@@ -71,13 +71,7 @@ export function DesktopStaffAdminShell({
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
-  const visible = (item: StaffNavItem) => {
-    if (item.financeOnly && !showFinance) return false;
-    if (item.settingsOnly && !showSettings) return false;
-    if (item.citiesOnly && !showCities) return false;
-    if (item.disputesOnly && !showDisputes) return false;
-    return true;
-  };
+  const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 
   const handleNav = (id: StaffSection) => {
     const notice = getStaffNavAccessNotice(id, accessFlags);

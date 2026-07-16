@@ -1,6 +1,6 @@
 import React from 'react';
 import { StaffSection } from '../../../lib/staffOps';
-import { getStaffNavAccessNotice, type StaffNavAccessFlags } from '../../../lib/staffNavAccess';
+import { getStaffNavAccessNotice, isStaffNavItemVisible, type StaffNavAccessFlags } from '../../../lib/staffNavAccess';
 import { showAppAlert } from '../../ui/AppConfirm';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { Logo } from '../../Logo';
@@ -48,12 +48,7 @@ export function StaffDesktopNav({
     onNavigate(id);
   };
 
-  const visibleItem = (item: StaffNavItem) => {
-    if (item.financeOnly && !showFinance) return false;
-    if (item.settingsOnly && !showSettings) return false;
-    if (item.disputesOnly && !showDisputes) return false;
-    return true;
-  };
+  const visibleItem = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 
   return (
     <aside className="desktop-nav-rail desktop-nav-rail--staff" aria-label="Staff navigation">
