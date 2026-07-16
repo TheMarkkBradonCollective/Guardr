@@ -417,7 +417,7 @@ export function GuardStandingCrewPanel({
           </CrewSection>
         )}
         <CrewSection title="Your crew">
-          <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
+          <div className="space-y-2">
             <p className="text-sm font-semibold text-brand-text">
               You are on {leadName}&apos;s standing crew
             </p>
@@ -486,7 +486,7 @@ export function GuardStandingCrewPanel({
               title="Lead your own crew"
               description="Request staff approval to coordinate your own standing team."
             >
-              <div className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-3">
+              <div className="space-y-3">
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
                   staff. To join another coordinator&apos;s crew instead, use{' '}
