@@ -8850,18 +8850,11 @@ html.theme-grey .wf-badge-success {
   background: var(--brand-bg-sec);
 }
 
-/* Tier hero — fixed height, shield-crest bottom cut, pinned on tiered screens */
+/* Tier hero — fixed height, shield-crest overlap into body, pinned on tiered screens */
 :root {
   --guard-tier-hero-height: 16.5rem;
-  --guard-tier-hero-clip: polygon(
-    0% 0%,
-    100% 0%,
-    100% 80%,
-    90% 88%,
-    50% 100%,
-    10% 88%,
-    0% 80%
-  );
+  --guard-tier-hero-crest-height: 2.5rem;
+  --guard-tier-hero-crest-overlap: 1.35rem;
 }
 
 .guard-tiered-screen {
@@ -8896,23 +8889,27 @@ html.theme-grey .wf-badge-success {
   margin-top: 0.25rem;
 }
 
+.guard-tier-hero-card.guard-rating-section-tiered {
+  overflow: visible;
+}
+
 .guard-tier-hero,
 .guard-pref-hero-tiered {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   color: #fff;
   box-sizing: border-box;
   height: var(--guard-tier-hero-height);
   min-height: var(--guard-tier-hero-height);
   max-height: var(--guard-tier-hero-height);
-  padding: 1.35rem 1.25rem 2.35rem;
+  padding: 1.35rem 1.25rem 1.85rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  clip-path: var(--guard-tier-hero-clip);
+  z-index: 1;
 }
 
 .guard-tier-hero-glow,
@@ -8927,8 +8924,30 @@ html.theme-grey .wf-badge-success {
 
 .guard-tier-hero::after,
 .guard-pref-hero-tiered::after {
-  content: none;
-  display: none;
+  content: '';
+  display: block;
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  bottom: calc(-1 * var(--guard-tier-hero-crest-overlap));
+  height: var(--guard-tier-hero-crest-height);
+  background: var(--brand-bg-sec);
+  clip-path: polygon(
+    0% 100%,
+    100% 100%,
+    100% 70%,
+    90% 80%,
+    50% 0%,
+    10% 80%,
+    0% 70%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.guard-tiered-screen-pinned ~ .guard-tiered-screen-scroll .guard-rating-body,
+.guard-tiered-screen-pinned ~ .guard-tiered-screen-scroll .guard-pref-body {
+  margin-top: calc(-1 * var(--guard-tier-hero-crest-overlap) + 0.35rem);
 }
 
 .guard-tier-hero-starting {
@@ -15505,7 +15524,6 @@ html.theme-grey .landing-wordmark {
   margin-right: 1rem;
 }
 
-<<<<<<< HEAD
 .guard-settings-crew-wrap {
   margin: 0 1rem;
 }
@@ -15516,8 +15534,6 @@ html.theme-grey .landing-wordmark {
     0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
-=======
->>>>>>> eebfd9fddb37f448b079c5a77bd770d23d00390b
 .guard-pref-hero-medal-ring {
   position: relative;
   z-index: 2;
