@@ -16,6 +16,7 @@ describe('staff section routing', () => {
   it('includes platform payment and agreements sections', () => {
     assert.equal(normalizeStaffSection('payment-settings'), 'payment-settings');
     assert.equal(normalizeStaffSection('integrations'), 'integrations');
+    assert.equal(normalizeStaffSection('permissions'), 'permissions');
     assert.equal(normalizeStaffSection('agreements'), 'agreements');
     assert.equal(normalizeStaffSection('audit-log'), 'audit-log');
   });

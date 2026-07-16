@@ -11,7 +11,7 @@ import {
   platformSmsModeDescription,
   platformSmsModeLabel,
 } from '../../lib/platformSettings';
-import { canManagePlatformSettings } from '../../lib/permissions';
+import { canManageStaffPlatformContent } from '../../lib/permissions';
 import { fetchIntegrationHealth } from '../../lib/integrationApi';
 import { INTEGRATION_ENV_HINTS, type IntegrationHealth } from '../../lib/integrationProviders';
 import { fetchPaymentProcessorHealth } from '../../lib/paymentProcessorApi';
@@ -26,8 +26,19 @@ import { StaffOpsPageShell } from './StaffOpsPageShell';
 interface StaffIntegrationsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
-  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  onUpdateStaffIntegrations?: (
+    patch: Partial<StaffIntegrationsPatch>
+  ) => void | Promise<void>;
 }
+
+type StaffIntegrationsPatch = Pick<
+  PlatformSettings,
+  | 'paymentStripeEnabled'
+  | 'paymentSquareEnabled'
+  | 'smsNotificationsEnabled'
+  | 'backgroundCheckProvider'
+  | 'insuranceVerificationMode'
+>;
 
 function DesktopSettingsCard({
   title,
@@ -140,12 +151,14 @@ function IntegrationToggleCard({
 export function StaffIntegrationsPanel({
   currentUser,
   platformSettings,
-  onUpdatePlatformSettings,
+  onUpdateStaffIntegrations,
 }: StaffIntegrationsPanelProps) {
   const { formFactor } = useDevice();
-  const canEdit = canManagePlatformSettings(currentUser);
+  const canEdit = canManageStaffPlatformContent(currentUser);
   const isDesktop = formFactor === 'desktop';
-  const readOnlyNote = !canEdit ? 'Only the Founder can change integrations.' : undefined;
+  const readOnlyNote = !canEdit
+    ? 'View-only — Manager access or above is required to change integrations.'
+    : undefined;
 
   const [stripeEnabled, setStripeEnabled] = useState(platformSettings.paymentStripeEnabled);
   const [squareEnabled, setSquareEnabled] = useState(platformSettings.paymentSquareEnabled);
@@ -190,13 +203,9 @@ export function StaffIntegrationsPanel({
     };
   }, []);
 
-  const persistSettings = async (patch: Partial<PlatformSettings>) => {
-    if (!onUpdatePlatformSettings || !canEdit) return;
-    await onUpdatePlatformSettings({
-      ...platformSettings,
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    });
+  const persistSettings = async (patch: Partial<StaffIntegrationsPatch>) => {
+    if (!onUpdateStaffIntegrations || !canEdit) return;
+    await onUpdateStaffIntegrations(patch);
   };
 
   const isProcessorConnected = (processor: CardPaymentProcessor): boolean => {
@@ -207,18 +216,16 @@ export function StaffIntegrationsPanel({
   };
 
   const persistPaymentModes = async (nextStripe: boolean, nextSquare: boolean) => {
-    if (!onUpdatePlatformSettings) return;
+    if (!onUpdateStaffIntegrations) return;
     if (!nextStripe && !nextSquare) {
       showAppToast('Enable at least one payment method.', { tone: 'error' });
       return;
     }
     setSavingModes(true);
     try {
-      await onUpdatePlatformSettings({
-        ...platformSettings,
+      await onUpdateStaffIntegrations({
         paymentStripeEnabled: nextStripe,
         paymentSquareEnabled: nextSquare,
-        updatedAt: new Date().toISOString(),
       });
     } finally {
       setSavingModes(false);

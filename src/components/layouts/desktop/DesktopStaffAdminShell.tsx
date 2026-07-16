@@ -23,6 +23,7 @@ interface DesktopStaffAdminShellProps {
   navHighlight: StaffSection;
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
@@ -40,7 +41,7 @@ const MENU_GROUPS: { label: string; ids: StaffSection[] }[] = [
   },
   { label: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { label: 'Risk', ids: ['incidents', 'disputes'] },
-  { label: 'Platform', ids: ['cities', 'settings', 'integrations', 'guide', 'dev-updates'] },
+  { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
 export function DesktopStaffAdminShell({
@@ -55,6 +56,7 @@ export function DesktopStaffAdminShell({
   navHighlight,
   showFinance,
   showSettings,
+  showPermissions,
   showDisputes,
   showCities,
   onOpenLegal,
@@ -64,7 +66,7 @@ export function DesktopStaffAdminShell({
   headerOverride,
 }: DesktopStaffAdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const accessFlags = { showFinance, showSettings, showDisputes, showCities };
+  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesSection(activeSection);
 

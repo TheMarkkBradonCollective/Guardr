@@ -3,6 +3,7 @@ import {
   normalizePlatformFeeConfig,
   type PlatformFeeConfig,
 } from '../../lib/platformFees';
+import type { StaffRolePermissionOverrides } from './permissions';
 
 export type {
   AgreementPlatformFeeConfig,
@@ -13,6 +14,21 @@ export type {
 export { DEFAULT_PLATFORM_FEE_CONFIG, TIERED_PLATFORM_FEE_PRESET } from '../../lib/platformFees';
 
 export type JobReviewMode = 'staff-all' | 'trusted-auto' | 'none';
+
+function parseStaffRolePermissions(raw: unknown): StaffRolePermissionOverrides | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const entries = Object.entries(raw as Record<string, unknown>);
+  if (entries.length === 0) return undefined;
+  const result: StaffRolePermissionOverrides = {};
+  for (const [role, perms] of entries) {
+    if (!Array.isArray(perms)) continue;
+    result[role as keyof StaffRolePermissionOverrides] = perms.filter(
+      (p): p is NonNullable<StaffRolePermissionOverrides[keyof StaffRolePermissionOverrides]>[number] =>
+        typeof p === 'string',
+    );
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
 
 export interface PlatformSettings {
   paymentStripeEnabled: boolean;
@@ -37,6 +53,8 @@ export interface PlatformSettings {
   /** Homepage message from the Director account — editable by Director and Founder. */
   directorMessage?: string;
   directorMessageUpdatedAt?: string;
+  /** Custom staff-role permission lists — when set, overrides built-in defaults for that role. */
+  staffRolePermissions?: StaffRolePermissionOverrides;
   /** When true, the public homepage shows the company license & insurance placard. */
   companyPlacardPublicEnabled?: boolean;
   /** Extra pay per hour for guards rostered on a coordinated crew for that specific job. */
@@ -173,6 +191,7 @@ export function normalizePlatformSettings(
     backgroundCheckProvider: input.backgroundCheckProvider ?? 'manual',
     insuranceVerificationMode: input.insuranceVerificationMode ?? 'manual',
     companyPlacardPublicEnabled: input.companyPlacardPublicEnabled ?? true,
+    staffRolePermissions: input.staffRolePermissions,
     crewTeamPayBumpPerHour: bumpRate,
     teamLeadBonusPerGuardPerHour: bumpRate,
     teamLeadBonusClientSharePercent: 100,
@@ -230,6 +249,7 @@ export function platformSettingsFromDbRow(row: {
   background_check_provider?: string | null;
   insurance_verification_mode?: string | null;
   company_placard_public_enabled?: boolean | null;
+  staff_role_permissions?: unknown;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
@@ -255,6 +275,7 @@ export function platformSettingsFromDbRow(row: {
       backgroundCheckProvider: row.background_check_provider ?? 'manual',
       insuranceVerificationMode: row.insurance_verification_mode ?? 'manual',
       companyPlacardPublicEnabled: row.company_placard_public_enabled ?? true,
+      staffRolePermissions: parseStaffRolePermissions(row.staff_role_permissions),
       crewTeamPayBumpPerHour:
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
@@ -291,6 +312,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     background_check_provider: settings.backgroundCheckProvider ?? 'manual',
     insurance_verification_mode: settings.insuranceVerificationMode ?? 'manual',
     company_placard_public_enabled: settings.companyPlacardPublicEnabled ?? true,
+    staff_role_permissions: settings.staffRolePermissions ?? null,
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

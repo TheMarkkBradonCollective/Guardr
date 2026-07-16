@@ -171,6 +171,57 @@ export const STAFF_ROLES_ORDERED: StaffRole[] = [
   'Founder',
 ];
 
+/** Staff permissions that can be toggled per role on the Permissions page. */
+export const STAFF_PERMISSION_CATALOG: {
+  permission: Permission;
+  label: string;
+  group: string;
+}[] = [
+  { permission: 'moderator.approve_guards', label: 'Approve guard applications', group: 'Applications' },
+  { permission: 'moderator.approve_clients', label: 'Approve client applications', group: 'Applications' },
+  { permission: 'moderator.review_reports', label: 'Review incident reports', group: 'Monitoring' },
+  { permission: 'moderator.monitor_activity', label: 'Monitor platform activity', group: 'Monitoring' },
+  { permission: 'moderator.review_certifications', label: 'Verify credentials', group: 'Credentials' },
+  { permission: 'moderator.review_job_requests', label: 'Review job postings', group: 'Jobs' },
+  { permission: 'moderator.handle_disputes', label: 'Handle disputes', group: 'Support' },
+  { permission: 'moderator.suspend_users', label: 'Suspend users', group: 'User management' },
+  { permission: 'moderator.issue_warnings', label: 'Issue warnings', group: 'User management' },
+  { permission: 'admin.manage_users', label: 'Manage user accounts', group: 'User management' },
+  { permission: 'admin.manage_settings', label: 'Manage public information', group: 'Platform' },
+  { permission: 'admin.manage_platform_config', label: 'Manage platform configuration', group: 'Platform' },
+  { permission: 'admin.view_analytics', label: 'View analytics', group: 'Platform' },
+  { permission: 'admin.manage_content', label: 'Manage content', group: 'Platform' },
+  { permission: 'admin.manage_payouts', label: 'Manage payouts', group: 'Finance' },
+  { permission: 'admin.manage_fees', label: 'Manage fees', group: 'Finance' },
+  { permission: 'director.view_all_financial_data', label: 'View all financial data', group: 'Finance' },
+  { permission: 'director.access_audit_logs', label: 'Access audit log', group: 'Finance' },
+  { permission: 'director.manage_company_operations', label: 'Manage company operations', group: 'Operations' },
+  { permission: 'director.recommend_city_open', label: 'View operations & recommend cities', group: 'Operations' },
+  { permission: 'director.manage_city_markets', label: 'Manage city markets', group: 'Operations' },
+  { permission: 'director.manage_administrators', label: 'Manage administrators', group: 'Staff management' },
+  { permission: 'director.manage_moderators', label: 'Manage moderators', group: 'Staff management' },
+  { permission: 'director.override_restrictions', label: 'Override system restrictions', group: 'Executive' },
+  { permission: 'owner.manage_directors', label: 'Manage directors', group: 'Governance' },
+  { permission: 'owner.manage_owners', label: 'Manage founders', group: 'Governance' },
+  { permission: 'owner.platform_governance', label: 'Platform governance', group: 'Governance' },
+];
+
+export function getDefaultStaffRolePermissions(staffRole: StaffRole): Permission[] {
+  const platformRole = staffRoleToPlatformRole(staffRole);
+  return [...(ROLE_PERMISSIONS[platformRole] ?? [])];
+}
+
+export function getConfiguredStaffRolePermissions(
+  staffRole: StaffRole,
+  overrides?: StaffRolePermissionOverrides,
+): Permission[] {
+  const resolvedOverrides = overrides ?? activeStaffRolePermissionOverrides;
+  if (resolvedOverrides?.[staffRole]) {
+    return [...resolvedOverrides[staffRole]!];
+  }
+  return getDefaultStaffRolePermissions(staffRole);
+}
+
 const STAFF_ROLE_RANK: Record<StaffRole, number> = {
   Moderator: 1,
   Administrator: 2,
@@ -239,9 +290,30 @@ export function hasDirectorStaffOverride(user: Pick<SessionUser, 'role'>): boole
   );
 }
 
+/** Configurable staff-role permission lists — stored in platform settings when customized. */
+export type StaffRolePermissionOverrides = Partial<Record<StaffRole, Permission[]>>;
+
+let activeStaffRolePermissionOverrides: StaffRolePermissionOverrides | undefined;
+
+/** Sync effective staff permissions from loaded platform settings (App root). */
+export function setStaffRolePermissionOverrides(overrides?: StaffRolePermissionOverrides): void {
+  activeStaffRolePermissionOverrides = overrides;
+}
+
+export function getEffectiveRolePermissions(
+  role: PlatformRole,
+  overrides?: StaffRolePermissionOverrides,
+): Permission[] {
+  const staffRole = platformRoleToStaffRole(role);
+  const resolvedOverrides = overrides ?? activeStaffRolePermissionOverrides;
+  if (staffRole && resolvedOverrides?.[staffRole]) {
+    return resolvedOverrides[staffRole]!;
+  }
+  return ROLE_PERMISSIONS[role] ?? [];
+}
+
 export function hasPermission(user: Pick<SessionUser, 'role'>, permission: Permission): boolean {
-  const perms = ROLE_PERMISSIONS[user.role] ?? [];
-  return perms.includes(permission);
+  return getEffectiveRolePermissions(user.role).includes(permission);
 }
 
 export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: Permission[]): boolean {
@@ -256,6 +328,16 @@ export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boo
 export function canAccessStaffSettings(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'admin.manage_settings') || canManagePlatformSettings(user);
 }
+
+/** Manager+ — view and edit staff role permissions and approval rules */
+export function canAccessStaffPermissions(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
+export const canManageStaffPermissions = canAccessStaffPermissions;
+
+/** Manager+ may edit public information and integrations (all staff may view). */
+export const canManageStaffPlatformContent = canAccessStaffPermissions;
 
 /** Directors manage moderators and administrators; Founders manage all staff tiers */
 export function canManageStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {

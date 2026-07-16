@@ -1616,6 +1616,9 @@ COMMENT ON COLUMN platform_settings.trusted_client_auto_publish IS 'When true, t
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS company_placard_public_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true, the public homepage shows the company license & insurance placard.';
 
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_role_permissions JSONB;
+COMMENT ON COLUMN platform_settings.staff_role_permissions IS 'Custom staff-role permission lists — overrides built-in defaults when set.';
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
   actor_id TEXT NOT NULL,
