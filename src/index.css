@@ -9062,11 +9062,45 @@ html.theme-grey .wf-badge-success {
   font-size: clamp(1.35rem, 5vw, 1.65rem);
 }
 
-.guard-rating-body .guard-pay-hero-actions {
+.guard-pay-actions-section {
+  padding: 1rem 1rem 0.25rem;
+}
+
+.guard-pay-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 480px) {
+  .guard-pay-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.guard-pay-action-block {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  padding: 1rem 1rem 0;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.guard-pay-action-button {
+  min-height: 3.25rem;
+  height: auto;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-pill);
+}
+
+.guard-pay-action-hint {
+  margin: 0;
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--brand-text-muted);
+  text-align: center;
 }
 
 .guard-tier-medal {
