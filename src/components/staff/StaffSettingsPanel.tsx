@@ -161,40 +161,6 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const integrationsBody = (
-    <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={platformSettings.smsNotificationsEnabled === true}
-          disabled={!canEdit}
-          onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
-        />
-        SMS notifications (Twilio — configure in env)
-      </label>
-      <label className="uber-label block">Background check provider</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.backgroundCheckProvider ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
-      >
-        <option value="manual">Manual staff review</option>
-        <option value="checkr">Checkr (API key required)</option>
-      </select>
-      <label className="uber-label block">Insurance verification</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.insuranceVerificationMode ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
-      >
-        <option value="manual">Manual COI review</option>
-        <option value="api">Automated verification API</option>
-      </select>
-    </div>
-  );
-
   const onboardStaffBody = (
     <div>
       <p className="text-sm text-brand-text-muted mb-4">
@@ -217,7 +183,7 @@ export function StaffSettingsPanel({
           <div>
             <p className="adm-card-eyebrow">Platform</p>
             <p className="adm-workbench-subtitle">
-              Homepage messages, approval rules, integrations, and staff onboarding.
+              Homepage messages, approval rules, and staff onboarding.
             </p>
           </div>
         }
@@ -230,7 +196,6 @@ export function StaffSettingsPanel({
           )}
           <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Approval rules">{approvalRulesBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
           {showStaffOnboard && assignableRoles.length > 0 && (
             <DesktopSettingsCard title="Onboard staff" className="adm-platform-settings-card--full">
               {onboardStaffBody}
@@ -251,10 +216,6 @@ export function StaffSettingsPanel({
 
       <AppFormSection title="Approval rules">
         <div className="pb-6">{approvalRulesBody}</div>
-      </AppFormSection>
-
-      <AppFormSection title="Integrations">
-        <div className="pb-6">{integrationsBody}</div>
       </AppFormSection>
 
       {showStaffOnboard && assignableRoles.length > 0 && (
