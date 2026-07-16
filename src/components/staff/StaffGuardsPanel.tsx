@@ -15,6 +15,7 @@ import { WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
@@ -228,42 +229,41 @@ export function StaffGuardsPanel({
     };
   }
 
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        {canManage && onAddGuard && (
+          <StaffAddGuardForm
+            onAdd={onAddGuard}
+            onCreated={(guardId) => {
+              setSearch('');
+              setSelectedId(guardId);
+            }}
+          />
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search guards..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Guard roster status"
+        activeId={statusFilter}
+        onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
+        tabs={[
+          { id: 'pending', label: 'Pending review' },
+          { id: 'activated', label: 'Activated' },
+          { id: 'active', label: 'Active' },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+    </>
+  ) : null;
+
   return (
-    <div className="animate-fade-in space-y-4 staff-roster-panel">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {canManage && onAddGuard && (
-              <StaffAddGuardForm
-                onAdd={onAddGuard}
-                onCreated={(guardId) => {
-                  setSearch('');
-                  setSelectedId(guardId);
-                }}
-              />
-            )}
-          </div>
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search guards..."
-            className="max-w-md"
-          />
-
-          <StaffListFilterTabs
-            aria-label="Guard roster status"
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
-            tabs={[
-              { id: 'pending', label: 'Pending review' },
-              { id: 'activated', label: 'Activated' },
-              { id: 'active', label: 'Active' },
-              { id: 'all', label: 'All' },
-            ]}
-          />
-        </>
-      )}
-
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
       {filtered.length === 0 ? (
         <div className="app-empty-state app-empty-state--dashed">
           <div className="app-empty-state-icon">
@@ -328,6 +328,6 @@ export function StaffGuardsPanel({
           mobilePresentation="page"
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

@@ -14,6 +14,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
@@ -93,47 +94,46 @@ export function StaffTeamPanel({
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
 
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        {canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
+          <StaffAddStaffForm
+            assignableRoles={assignableRoles}
+            requiresDirectorApproval={requiresDirectorApproval}
+            platformCities={platformCities}
+            actorManagedCities={actorManagedCities}
+            managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
+            onAdd={onAddStaff}
+            onCreated={(staffId) => {
+              setSearch('');
+              setSelectedId(staffId);
+            }}
+          />
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search staff..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Staff roster status"
+        activeId={statusFilter}
+        onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
+        tabs={[
+          { id: 'pending', label: 'Pending review' },
+          { id: 'active', label: 'Active' },
+          { id: 'suspended', label: 'Suspended' },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+    </>
+  ) : null;
+
   return (
-    <div className="animate-fade-in space-y-4 staff-roster-panel">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
-              <StaffAddStaffForm
-                assignableRoles={assignableRoles}
-                requiresDirectorApproval={requiresDirectorApproval}
-                platformCities={platformCities}
-                actorManagedCities={actorManagedCities}
-                managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
-                onAdd={onAddStaff}
-                onCreated={(staffId) => {
-                  setSearch('');
-                  setSelectedId(staffId);
-                }}
-              />
-            )}
-          </div>
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search staff..."
-            className="max-w-md"
-          />
-
-          <StaffListFilterTabs
-            aria-label="Staff roster status"
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
-            tabs={[
-              { id: 'pending', label: 'Pending review' },
-              { id: 'active', label: 'Active' },
-              { id: 'suspended', label: 'Suspended' },
-              { id: 'all', label: 'All' },
-            ]}
-          />
-        </>
-      )}
-
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
       {filtered.length === 0 ? (
         <div className="app-empty-state app-empty-state--dashed">
           <div className="app-empty-state-icon">
@@ -192,6 +192,6 @@ export function StaffTeamPanel({
           mobilePresentation="page"
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

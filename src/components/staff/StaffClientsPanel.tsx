@@ -12,6 +12,7 @@ import {
   type ClientRosterFilter,
 } from '../../lib/staffListFilters';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -90,43 +91,41 @@ export function StaffClientsPanel({
     );
   }
 
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        {canManage && onAddClient && (
+          <StaffAddClientForm
+            onAdd={onAddClient}
+            onCreated={(clientId) => {
+              setSearch('');
+              setSelectedId(clientId);
+            }}
+          />
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search clients..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Client roster status"
+        activeId={statusFilter}
+        onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+        tabs={[
+          { id: 'pending', label: 'Pending review' },
+          { id: 'active', label: 'Active' },
+          { id: 'suspended', label: 'Suspended' },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+    </>
+  ) : null;
+
   return (
-    <div className="animate-fade-in space-y-4 staff-roster-panel">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {canManage && onAddClient && (
-              <StaffAddClientForm
-                onAdd={onAddClient}
-                onCreated={(clientId) => {
-                  setSearch('');
-                  setSelectedId(clientId);
-                }}
-              />
-            )}
-          </div>
-
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search clients..."
-            className="max-w-md"
-          />
-
-          <StaffListFilterTabs
-            aria-label="Client roster status"
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
-            tabs={[
-              { id: 'pending', label: 'Pending review' },
-              { id: 'active', label: 'Active' },
-              { id: 'suspended', label: 'Suspended' },
-              { id: 'all', label: 'All' },
-            ]}
-          />
-        </>
-      )}
-
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
       {filtered.length === 0 ? (
         <div className="app-empty-state app-empty-state--dashed">
           <div className="app-empty-state-icon">
@@ -191,6 +190,6 @@ export function StaffClientsPanel({
           mobilePresentation="page"
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }
