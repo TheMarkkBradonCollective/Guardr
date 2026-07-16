@@ -1,11 +1,21 @@
-# /runit — Full Guardr platform release
+# /runit — Explain Guardr in my words
 
-Do a full Guardr release in one shot.
+Explain what Guardr is and how it works — in **my voice**, simple and plain. Like I'm telling someone new what I built, not a marketing doc.
 
-Pull `main`, merge every open PR (fix conflicts, skip anything already on `main`), get `tsc` and tests green, and update `supabase/complete_schema_setup.sql` with anything new.
+Cover:
 
-Make sure the **website, PWA, and APK are all on the same build** — bump version, run `generate:download-version`, bust the PWA/service worker cache, deploy web, and ship the CI FCM APK (no `ALLOW_APK_WITHOUT_FCM`) with the **actual APK binary** matching `package.json`, not just `version.json`.
+1. **What it is** — Uber-for-security marketplace for Signature Security. Clients post jobs, licensed guards pick them up. I'm the platform — I verify credentials, I don't employ guards or dispatch them like an agency.
 
-I need **real-time working everywhere** — web, PWA, and APK — for messages, notifications, audit log, live location, and anything else that should update without a manual refresh. Wire up Supabase realtime wherever it's missing.
+2. **Who uses it** — clients (businesses/sites/events), guards (independent contractors), staff (Moderator → Founder tiers).
 
-Bundle push handlers if needed, update `docs/DEV-UPDATES.md` and `docs/guardr-general-guide.md`, run lint/tests/apk audit, push `cursor/full-platform-update-361c`, merge to `main`, and tell me what shipped (version/build), which PRs merged, test count, any SQL I need to run in Supabase, the download link, and what I should do next.
+3. **How a job flows** — client posts → staff approves listing → client pays → guard applies or gets a direct request → client approves guard → guard arrives, self-audit photos, works shift, ends shift → payout ~48h.
+
+4. **How guards get on** — sign up, upload 5 creds (ID, guard card, COI, PTA/UOF, 32-hr), staff approve application, admin verifies each doc, account activates.
+
+5. **Surfaces** — website at guardr.co, PWA (auto-updates), Android APK (manual reinstall for updates, better push).
+
+6. **Money** — Stripe in-app. Clients pay by card. Guards connect bank in Pay tab.
+
+7. **What makes it different** — guards choose jobs, clients approve who works their site, everything documented (self-audits, reports, messaging).
+
+Keep it short — a few paragraphs max. No jargon unless I explain it. If I ask about a specific role or screen, zoom in on that part.
