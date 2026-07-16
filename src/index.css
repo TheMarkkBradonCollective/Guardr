@@ -15816,10 +15816,18 @@ html.theme-grey .landing-wordmark {
 .guard-pref-hero-tiered {
   background: linear-gradient(
     160deg,
-    color-mix(in srgb, var(--brand-primary) 88%, #1d4f8f) 0%,
-    color-mix(in srgb, var(--brand-primary) 62%, #12345f) 55%,
-    color-mix(in srgb, var(--brand-primary) 48%, #0c2444) 100%
+    var(--pref-hero-c1, #b58a8a) 0%,
+    var(--pref-hero-c2, #966969) 55%,
+    var(--pref-hero-c3, #7a5252) 100%
   );
+  transition: background 0.4s ease;
+}
+
+.guard-pref-hero-onboard-complete {
+  --pref-hero-c1: color-mix(in srgb, var(--brand-primary) 78%, #fff);
+  --pref-hero-c2: var(--brand-primary);
+  --pref-hero-c3: var(--brand-primary-hover);
+  --pref-tint-color: var(--brand-primary);
 }
 
 .guard-pref-hero-tiered .guard-pref-hero-glow {
@@ -15987,8 +15995,12 @@ html.theme-grey .landing-wordmark {
   height: 100%;
   min-width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
-  transition: width 0.35s ease;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--pref-hero-c2, #fff) 92%, #fff),
+    color-mix(in srgb, var(--pref-hero-c2, #fff) 72%, #fff)
+  );
+  transition: width 0.35s ease, background 0.4s ease;
 }
 
 .guard-pref-progress-fill-empty {
@@ -16016,9 +16028,23 @@ html.theme-grey .landing-wordmark {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.guard-pref-scroll-tinted {
+  background: color-mix(
+    in srgb,
+    var(--pref-tint-color, var(--brand-bg-sec)) calc(var(--pref-active-pct, 0) * 0.24%),
+    var(--brand-bg-sec)
+  );
+  transition: background 0.35s ease;
+}
+
 .guard-pref-body {
-  background: var(--brand-bg-sec);
+  background: transparent;
   padding-bottom: calc(1.5rem + var(--app-safe-bottom));
+}
+
+.guard-pref-body-saturation {
+  filter: grayscale(calc(100% - var(--pref-active-pct, 0) * 1%));
+  transition: filter 0.35s ease;
 }
 
 .guard-pref-intro {

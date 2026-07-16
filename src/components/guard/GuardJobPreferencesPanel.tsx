@@ -22,6 +22,9 @@ import {
   JOB_TYPE_PREFERENCE_CATEGORIES,
   JOB_TYPE_PREFERENCE_OPTIONS,
   normalizeJobTypePreferences,
+  preferencesActivePercent,
+  preferencesHeroStyleVars,
+  preferencesOnboardPercent,
   type JobTypePreferenceOption,
 } from '../../lib/guardJobPreferences';
 import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
@@ -116,6 +119,18 @@ export function GuardJobPreferencesPanel({
     return { total, active, onboarded, setupNeeded };
   }, [guard, selected]);
 
+  const onboardPercent = preferencesOnboardPercent(stats.onboarded, stats.total);
+  const activePercent = preferencesActivePercent(stats.active, stats.total);
+  const heroColorVars = preferencesHeroStyleVars(onboardPercent);
+  const onboardComplete = onboardPercent >= 100;
+
+  const pageStyle = {
+    ...heroColorVars,
+    '--pref-active-pct': String(activePercent),
+  } as React.CSSProperties;
+
+  const heroStyle = heroColorVars as React.CSSProperties;
+
   const setPreference = (type: JobType, enabled: boolean) => {
     const next = enabled
       ? [...new Set([...selected, type])]
@@ -147,7 +162,12 @@ export function GuardJobPreferencesPanel({
     <>
       <div className="guard-tiered-screen-pinned">
         <section className="guard-preferences-panel guard-preferences-panel-tiered guard-tier-hero-card">
-          <div className="guard-tier-hero guard-pref-hero-tiered guard-tier-hero-dense">
+          <div
+            className={`guard-tier-hero guard-pref-hero-tiered guard-tier-hero-dense${
+              onboardComplete ? ' guard-pref-hero-onboard-complete' : ''
+            }`}
+            style={heroStyle}
+          >
             <div className="guard-pref-hero-glow" aria-hidden />
             <div className="guard-pref-tier-medal" aria-hidden>
               <div className="guard-pref-tier-medal-ring">
@@ -175,8 +195,8 @@ export function GuardJobPreferencesPanel({
         </section>
       </div>
 
-      <div className="guard-tiered-screen-scroll">
-        <div className="guard-pref-body">
+      <div className="guard-tiered-screen-scroll guard-pref-scroll-tinted" style={pageStyle}>
+        <div className="guard-pref-body guard-pref-body-saturation">
         <div className="guard-pref-intro">
           <p className="guard-pref-intro-text">
             Turn on the job types you want. Complete the read-aloud onboarding once per type, then
