@@ -6,6 +6,7 @@ import {
   getAssignableStaffRoles,
 } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
@@ -145,15 +146,15 @@ export function StaffSettingsPanel({
         <option value="trusted-auto">Trusted clients auto-publish (with coordinates)</option>
         <option value="none">No review — all jobs go live immediately</option>
       </select>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>Enable trusted-client auto-publish</span>
+        <AppSwitch
           checked={platformSettings.trustedClientAutoPublish !== false}
           disabled={!canEdit}
-          onChange={(e) => void persistSettings({ trustedClientAutoPublish: e.target.checked })}
+          onChange={(checked) => void persistSettings({ trustedClientAutoPublish: checked })}
+          ariaLabel="Enable trusted-client auto-publish"
         />
-        Enable trusted-client auto-publish
-      </label>
+      </div>
       <p id="job-review-note" className="text-xs text-brand-text-muted">
         Trusted clients with valid map coordinates skip the approval queue when auto-publish is enabled.
         Mark clients as trusted from the Clients panel.
@@ -163,15 +164,15 @@ export function StaffSettingsPanel({
 
   const integrationsBody = (
     <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>SMS notifications (Twilio — configure in env)</span>
+        <AppSwitch
           checked={platformSettings.smsNotificationsEnabled === true}
           disabled={!canEdit}
-          onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
+          onChange={(checked) => void persistSettings({ smsNotificationsEnabled: checked })}
+          ariaLabel="SMS notifications"
         />
-        SMS notifications (Twilio — configure in env)
-      </label>
+      </div>
       <label className="uber-label block">Background check provider</label>
       <select
         className="uber-input w-full"
