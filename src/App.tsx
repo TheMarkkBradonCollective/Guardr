@@ -96,6 +96,8 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
+import { useUserNotificationsRealtime } from './lib/useUserNotificationsRealtime';
+import { useRequestLiveLocationRealtime } from './lib/useRequestLiveLocationRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
   getGuardMissingGraceCredentialLabels,
@@ -1411,6 +1413,7 @@ export default function App() {
   applyAppRouteRef.current = applyAppRoute;
   const currentUserRef = useRef(currentUser);
   currentUserRef.current = currentUser;
+  const loadAppDataRef = useRef<() => void>(() => {});
   const loggedInUserIdRef = useRef<string | null>(currentUser?.id ?? null);
 
   const defaultRouteForUser = (user: SessionUser): AppRoute => {
@@ -1587,11 +1590,13 @@ export default function App() {
 
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
+      loadAppDataRef.current();
       navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
     };
     window.addEventListener('pageshow', onPageShow);
 
     const unsubscribe = listenForPushNavigation((url) => {
+      loadAppDataRef.current();
       navigateFromLocation(url, { source: 'deeplink' });
     });
     return () => {
@@ -1716,6 +1721,7 @@ export default function App() {
     (result) => {
       if (result.synced > 0) {
         showAppToast(`Synced ${result.synced} offline record${result.synced === 1 ? '' : 's'}.`, { tone: 'success' });
+        loadAppDataRef.current();
       }
     }
   );
@@ -2730,10 +2736,26 @@ export default function App() {
   // Live sync — any DB change propagates to all open sessions without a manual refresh
   const loadRef = useRef(loadFromSupabase);
   loadRef.current = loadFromSupabase;
+  loadAppDataRef.current = () => {
+    void loadRef.current();
+  };
+
   useSupabaseRealtimeSync(() => {
     if (shouldSkipRealtimeSync()) return;
     if (isInactiveGuardSession(currentUserRef.current, guardsRef.current)) return;
     void loadRef.current();
+  }, isDbConnected);
+
+  useUserNotificationsRealtime(
+    currentUser?.id,
+    (updater) => setUserNotifications(updater),
+    isDbConnected && !!currentUser
+  );
+
+  useRequestLiveLocationRealtime((requestId, location) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, guardLiveLocation: location } : r))
+    );
   }, isDbConnected);
 
   useEffect(() => {
@@ -2954,7 +2976,7 @@ export default function App() {
       if (!shouldSkipRealtimeSync()) {
         void loadRef.current();
       }
-    }, 5000);
+    }, 30_000);
     return () => clearInterval(interval);
   }, [isDbConnected, isInMessagingView, staffSection, guardTab, currentUser]);
 
@@ -10492,6 +10514,7 @@ export default function App() {
       prev.map((r) => (r.id === requestId ? { ...r, guardLiveLocation: location } : r))
     );
     if (isDbConnected) {
+      beginLocalMutation();
       await supabase
         .from('security_requests')
         .update({ guard_live_location: location })
