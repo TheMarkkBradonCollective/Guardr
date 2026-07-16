@@ -421,6 +421,7 @@ import {
   syncLegalPage,
   type AppRole,
   type AppRoute,
+  type StaffGuardDetailTab,
   type AuthViewMode,
   type AuthViewRole,
 } from './lib/appNavigation';
@@ -456,6 +457,7 @@ import { showAppConfirm } from './components/ui/AppConfirm';
 function appToast(message: string, tone: 'success' | 'error' | 'info' = 'error') {
   showAppToast(message, { tone });
 }
+import type { PerformanceFactorId } from './lib/guardPerformanceFactorDetail';
 import type { GuardTab, GuardSupportMode } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { resolveStaffRouteSection, isStaffMessagesSection, type StaffSection } from './lib/staffOps';
@@ -668,6 +670,12 @@ export default function App() {
   const [staffEdit, setStaffEditState] = useState(
     () => initialRoute?.staffEdit ?? false
   );
+  const [staffGuardTab, setStaffGuardTabState] = useState<StaffGuardDetailTab>(
+    () => initialRoute?.staffGuardTab ?? 'profile'
+  );
+  const [performanceFactorId, setPerformanceFactorIdState] = useState<PerformanceFactorId | null>(
+    () => initialRoute?.performanceFactorId ?? null
+  );
   const [clientGuardId, setClientGuardIdState] = useState<string | null>(
     () => initialRoute?.clientGuardId ?? null
   );
@@ -733,6 +741,8 @@ export default function App() {
       staffCredentialItemId: staffCredentialItemId ?? undefined,
       staffTeamId: staffTeamId ?? undefined,
       staffEdit: staffEdit || undefined,
+      staffGuardTab: staffGuardTab !== 'profile' ? staffGuardTab : undefined,
+      performanceFactorId: performanceFactorId ?? undefined,
       clientGuardId: clientGuardId ?? undefined,
       clientDirectGuardId: clientDirectGuardId ?? undefined,
       jobChatRequestId: jobChatRequestId ?? undefined,
@@ -774,6 +784,8 @@ export default function App() {
     setStaffCredentialItemIdState(route.staffCredentialItemId ?? null);
     setStaffTeamIdState(route.staffTeamId ?? null);
     setStaffEditState(route.staffEdit ?? false);
+    setStaffGuardTabState(route.staffGuardTab ?? 'profile');
+    setPerformanceFactorIdState(route.performanceFactorId ?? null);
     setClientGuardIdState(route.clientGuardId ?? null);
     setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
     setJobChatRequestIdState(route.jobChatRequestId ?? null);
@@ -925,6 +937,10 @@ export default function App() {
       setSupportModeState(null);
       setSupportSectionState('support');
     }
+    const keepsPerformance = normalizedTab === 'performance';
+    if (!keepsPerformance) {
+      setPerformanceFactorIdState(null);
+    }
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
@@ -934,6 +950,50 @@ export default function App() {
         supportTicketId: keepsMessages ? supportTicketId ?? undefined : undefined,
         supportSection: keepsMessages ? supportSection : undefined,
         supportMode: keepsMessages ? supportMode ?? undefined : undefined,
+        performanceFactorId: keepsPerformance ? performanceFactorId ?? undefined : undefined,
+      })
+    );
+  };
+
+  const setPerformanceFactorId = (factorId: PerformanceFactorId | null) => {
+    setPerformanceFactorIdState(factorId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'performance',
+        performanceFactorId: factorId ?? undefined,
+      })
+    );
+  };
+
+  const setStaffGuardTab = (tab: StaffGuardDetailTab) => {
+    setStaffGuardTabState(tab);
+    if (tab !== 'performance') {
+      setPerformanceFactorIdState(null);
+    }
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'guards',
+        staffGuardId: staffGuardId ?? undefined,
+        staffGuardTab: tab !== 'profile' ? tab : undefined,
+        staffEdit: staffEdit || undefined,
+        performanceFactorId:
+          tab === 'performance' ? performanceFactorId ?? undefined : undefined,
+      })
+    );
+  };
+
+  const setStaffPerformanceFactorId = (factorId: PerformanceFactorId | null) => {
+    setPerformanceFactorIdState(factorId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'guards',
+        staffGuardId: staffGuardId ?? undefined,
+        staffGuardTab: 'performance',
+        staffEdit: staffEdit || undefined,
+        performanceFactorId: factorId ?? undefined,
       })
     );
   };
@@ -1155,13 +1215,20 @@ export default function App() {
 
   const setStaffGuardId = (guardId: string | null) => {
     setStaffGuardIdState(guardId);
-    if (!guardId) setStaffEditState(false);
+    if (!guardId) {
+      setStaffEditState(false);
+      setStaffGuardTabState('profile');
+      setPerformanceFactorIdState(null);
+    }
     syncAppRoute(
       buildAppRoute({
         role: 'staff',
         staffSection: 'guards',
         staffGuardId: guardId ?? undefined,
         staffEdit: guardId && staffEdit ? true : undefined,
+        staffGuardTab: guardId && staffGuardTab !== 'profile' ? staffGuardTab : undefined,
+        performanceFactorId:
+          guardId && staffGuardTab === 'performance' ? performanceFactorId ?? undefined : undefined,
       })
     );
   };
@@ -11630,6 +11697,8 @@ export default function App() {
           onOpenSupportCompose={openGuardSupportCompose}
           onOpenSupportReport={openGuardSupportReport}
           onCloseSupportForm={closeGuardSupportForm}
+          performanceFactorId={performanceFactorId}
+          onPerformanceFactorChange={setPerformanceFactorId}
           onSubmitIncidentReport={handleSubmitIncidentReport}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
@@ -11854,6 +11923,10 @@ export default function App() {
           onSelectedTeamIdChange={setStaffTeamId}
           staffGuardEdit={staffEdit}
           onStaffGuardEditChange={setStaffEdit}
+          staffGuardTab={staffGuardTab}
+          onStaffGuardTabChange={setStaffGuardTab}
+          performanceFactorId={performanceFactorId}
+          onPerformanceFactorChange={setStaffPerformanceFactorId}
           selectedSupportTicketId={supportTicketId}
           onSelectedSupportTicketIdChange={setSupportTicketId}
           selectedJobChatRequestId={jobChatRequestId}

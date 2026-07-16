@@ -6,6 +6,7 @@ import {
   computeClientReviewStats,
   computeGuardPerformance,
   computeGuardPerformanceRating,
+  computeGuardSkillRatings,
   formatReviewCount,
   formatShiftSampleCount,
   formatViolationSummary,
@@ -176,4 +177,12 @@ test('computeGuardPerformanceRating includes tier and violations', () => {
   assert.ok(rating.violations.some((v) => v.id === 'client-reported'));
   assert.equal(rating.violations.some((v) => v.id === 'incident'), false);
   assert.equal(formatViolationSummary(rating.violations).includes('violation'), true);
+});
+
+test('computeGuardSkillRatings can include every job type', () => {
+  const guard = { ...baseGuard, rating: 4.5 };
+  const ratings = computeGuardSkillRatings(guard, [], { includeAllJobTypes: true });
+  assert.equal(ratings.length, 15);
+  assert.ok(ratings.every((row) => row.reviewCount === 0));
+  assert.ok(ratings.some((row) => row.skill === 'Nightclub & bar'));
 });

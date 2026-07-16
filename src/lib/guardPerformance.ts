@@ -1,4 +1,6 @@
 import { countGuardViolationReports } from './clientViolations';
+import { ALL_JOB_TYPES } from './guardJobPreferences';
+import { JOB_TYPE_LABELS } from './guardJobs';
 import type { SecurityGuard, SecurityRequest, ShiftReport, JobType } from '../types';
 
 export interface GuardPerformanceMetrics {
@@ -14,6 +16,7 @@ export interface GuardPerformanceMetrics {
 
 export interface GuardSkillRating {
   skill: string;
+  jobType: JobType;
   rating: number;
   reviewCount: number;
 }
@@ -111,56 +114,37 @@ export function computeGuardPerformance(
   };
 }
 
-const SKILL_BY_JOB_TYPE: Partial<Record<JobType, string>> = {
-  'nightclub-bar': 'Nightlife Security',
-  'event-wedding': 'Wedding Security',
-  'event-concert': 'Concert Security',
-  'event-festival': 'Festival Security',
-  'event-corporate': 'Corporate Event Security',
-  'event-private': 'Private Event Security',
-  event: 'Event Security',
-  patrol: 'Patrol',
-  construction: 'Construction Security',
-  'fire-watch': 'Fire Watch',
-  'standing-guard': 'Standing Guard',
-  'armed-escort': 'Armed Escort',
-  bodyguard: 'Executive Protection',
-  'asset-protection': 'Asset Protection',
-  other: 'General Security',
-};
-
 export function computeGuardSkillRatings(
   guard: SecurityGuard,
-  requests: SecurityRequest[]
+  requests: SecurityRequest[],
+  options?: { includeAllJobTypes?: boolean }
 ): GuardSkillRating[] {
   const jobs = guardCompletedJobs(guard.id, requests);
-  const buckets = new Map<string, { total: number; count: number }>();
+  const buckets = new Map<JobType, { total: number; count: number }>();
 
   for (const job of jobs) {
-    const skill =
-      guard.specialties?.find((s) => job.title.toLowerCase().includes(s.toLowerCase())) ??
-      SKILL_BY_JOB_TYPE[job.type] ??
-      'General Security';
+    const jobType = job.type ?? 'other';
     const rating = job.ratingGiven ?? guard.rating;
-    const entry = buckets.get(skill) ?? { total: 0, count: 0 };
+    const entry = buckets.get(jobType) ?? { total: 0, count: 0 };
     entry.total += rating;
     entry.count += 1;
-    buckets.set(skill, entry);
+    buckets.set(jobType, entry);
   }
 
-  for (const specialty of guard.specialties ?? []) {
-    if (!buckets.has(specialty)) {
-      buckets.set(specialty, { total: guard.rating, count: 1 });
-    }
-  }
+  const types = options?.includeAllJobTypes ? ALL_JOB_TYPES : [...buckets.keys()];
 
-  return [...buckets.entries()]
-    .map(([skill, { total, count }]) => ({
-      skill,
-      rating: Number((total / count).toFixed(1)),
-      reviewCount: count,
-    }))
-    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating);
+  return types
+    .map((jobType) => {
+      const entry = buckets.get(jobType);
+      const count = entry?.count ?? 0;
+      return {
+        skill: JOB_TYPE_LABELS[jobType],
+        jobType,
+        rating: count > 0 ? Number((entry!.total / count).toFixed(1)) : 0,
+        reviewCount: count,
+      };
+    })
+    .sort((a, b) => b.reviewCount - a.reviewCount || b.rating - a.rating || a.skill.localeCompare(b.skill));
 }
 
 export function formatPerformanceScore(score: number): string {

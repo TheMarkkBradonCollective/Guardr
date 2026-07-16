@@ -38,6 +38,10 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Camera, Check, Save, User, Users, X } from 'lucide-react';
+import { AppSegmentedControl } from '../ui/app/AppPrimitives';
+import type { StaffGuardDetailTab } from '../../lib/appNavigation';
+import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
+import { StaffGuardPerformancePanel } from './StaffGuardPerformancePanel';
 import { GuardResumeEditor, GuardResumeSavePayload } from '../profile/GuardResumeEditor';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
@@ -107,6 +111,10 @@ interface StaffGuardDetailPanelProps {
   onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  staffGuardTab?: StaffGuardDetailTab;
+  onStaffGuardTabChange?: (tab: StaffGuardDetailTab) => void;
+  performanceFactorId?: PerformanceFactorId | null;
+  onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   compact?: boolean;
 }
 
@@ -147,6 +155,10 @@ export function StaffGuardDetailPanel({
   onOpenGuardCredential,
   editing: controlledEditing,
   onEditingChange,
+  staffGuardTab = 'profile',
+  onStaffGuardTabChange,
+  performanceFactorId = null,
+  onPerformanceFactorChange,
   compact = false,
 }: StaffGuardDetailPanelProps) {
   const canEdit = canManage && !!onUpdateProfile;
@@ -492,7 +504,7 @@ export function StaffGuardDetailPanel({
           ) : (
             <span />
           )}
-          {canEdit && !guard.isStaff && (
+          {canEdit && !guard.isStaff && staffGuardTab === 'profile' && (
             <div className="app-action-row" style={{ width: 'auto', flex: '0 1 auto' }}>
               <button
                 type="button"
@@ -517,6 +529,29 @@ export function StaffGuardDetailPanel({
         </div>
       )}
 
+      {!guard.isStaff && onStaffGuardTabChange && !performanceFactorId && (
+        <div className="staff-guard-detail-tabs">
+          <AppSegmentedControl<StaffGuardDetailTab>
+            value={staffGuardTab}
+            onChange={onStaffGuardTabChange}
+            options={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'performance', label: 'Guard status' },
+            ]}
+          />
+        </div>
+      )}
+
+      {staffGuardTab === 'performance' && !guard.isStaff ? (
+        <StaffGuardPerformancePanel
+          guard={guard}
+          requests={requests}
+          performanceFactorId={performanceFactorId}
+          onPerformanceFactorChange={onPerformanceFactorChange}
+          onOpenJob={onOpenJob}
+        />
+      ) : (
+        <>
       <div className="staff-detail-header">
         <div className="relative shrink-0">
           <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
@@ -902,6 +937,8 @@ export function StaffGuardDetailPanel({
           <WfSectionHeader title="Bio" className="!px-0 !mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>
+      )}
+        </>
       )}
     </div>
   );

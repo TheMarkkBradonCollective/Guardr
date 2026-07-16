@@ -259,6 +259,12 @@ interface StaffDashboardProps {
   onSelectedTeamIdChange?: (id: string | null) => void;
   staffGuardEdit?: boolean;
   onStaffGuardEditChange?: (editing: boolean) => void;
+  staffGuardTab?: import('../lib/appNavigation').StaffGuardDetailTab;
+  onStaffGuardTabChange?: (tab: import('../lib/appNavigation').StaffGuardDetailTab) => void;
+  performanceFactorId?: import('../lib/guardPerformanceFactorDetail').PerformanceFactorId | null;
+  onPerformanceFactorChange?: (
+    factorId: import('../lib/guardPerformanceFactorDetail').PerformanceFactorId | null
+  ) => void;
   selectedSupportTicketId?: string | null;
   onSelectedSupportTicketIdChange?: (id: string | null) => void;
   selectedJobChatRequestId?: string | null;
@@ -395,6 +401,10 @@ export function StaffDashboard({
   onSelectedTeamIdChange,
   staffGuardEdit: controlledStaffGuardEdit,
   onStaffGuardEditChange,
+  staffGuardTab: controlledStaffGuardTab,
+  onStaffGuardTabChange,
+  performanceFactorId: controlledPerformanceFactorId,
+  onPerformanceFactorChange,
   selectedSupportTicketId,
   onSelectedSupportTicketIdChange,
   selectedJobChatRequestId,
@@ -724,6 +734,10 @@ export function StaffDashboard({
             onSelectedIdChange={setSelectedGuardId}
             staffEdit={controlledStaffGuardEdit}
             onStaffEditChange={onStaffGuardEditChange}
+            staffGuardTab={controlledStaffGuardTab}
+            onStaffGuardTabChange={onStaffGuardTabChange}
+            performanceFactorId={controlledPerformanceFactorId}
+            onPerformanceFactorChange={onPerformanceFactorChange}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
             onOpenGuardApplication={(guardId) => navigateSection('applications', { guardId })}
