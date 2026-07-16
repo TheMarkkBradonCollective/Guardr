@@ -44,6 +44,8 @@ import { GuardJobDetailView } from './guard/GuardJobDetailView';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
+import { GuardEndShiftCheckpointModal } from './guard/GuardEndShiftCheckpointModal';
+import { GuardBriefingAckGate } from './guard/GuardBriefingAckGate';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
 import { GuardIncidentReportModal } from './guard/GuardIncidentReportModal';
@@ -90,6 +92,12 @@ import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { isPreShiftBriefingWindowOpen, canGuardStartEnRoute, enRouteBlockedMessage } from '../lib/preShiftBriefing';
 import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
+import { guardMustAckBriefingOnSite } from '../lib/briefingAck';
+import {
+  createEndSkipViolations,
+  createStartSkipViolations,
+  mergeShiftAuditViolations,
+} from '../lib/shiftAuditViolations';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
@@ -177,6 +185,7 @@ interface GuardDashboardProps {
   onAcceptPriceOffer?: (requestId: string, offerId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
   onAckPostOrders?: (requestId: string) => void | Promise<void>;
+  onAckBriefing?: (requestId: string) => void | Promise<void>;
   onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
   onCompleteJobTypeOnboarding?: (jobType: import('../types').JobType) => void | Promise<void>;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
@@ -190,6 +199,11 @@ interface GuardDashboardProps {
   onGeofenceLeave?: (requestId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
+  onDisputeShiftAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    note: string
+  ) => void | Promise<void>;
   onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
   onSignOut: () => void;
   themeMode: string;
@@ -314,6 +328,7 @@ export function GuardDashboard({
   coworkerGuards = [],
   onUpdateJobAudit,
   onAckPostOrders,
+  onAckBriefing,
   onSaveJobPreferences,
   onCompleteJobTypeOnboarding,
   onStartEnRoute,
@@ -323,6 +338,7 @@ export function GuardDashboard({
   onGeofenceLeave,
   onApproveOvertime,
   onRecordAuditViolation,
+  onDisputeShiftAuditViolation,
   onUpdateStripeAccount,
   onSignOut,
   themeMode,
@@ -416,7 +432,10 @@ export function GuardDashboard({
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
   const [mapRouteLoading, setMapRouteLoading] = useState(false);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [showEndCheckpoint, setShowEndCheckpoint] = useState(false);
+  const [showBriefingGate, setShowBriefingGate] = useState(false);
+  const [pendingCheckInAudit, setPendingCheckInAudit] = useState<SecurityRequest['checkInAudit'] | null>(null);
+  const [pendingStartViolations, setPendingStartViolations] = useState<import('../types').ShiftAuditViolation[]>([]);
   const [showLateClockOutPrompt, setShowLateClockOutPrompt] = useState(false);
   const [pendingClockOutAt, setPendingClockOutAt] = useState<string | null>(null);
   const [pendingLeftEarlier, setPendingLeftEarlier] = useState(false);
@@ -847,11 +866,54 @@ export function GuardDashboard({
     setShowSelfAudit(true);
   };
 
+  const finalizeClockIn = (
+    checkInAudit: NonNullable<SecurityRequest['checkInAudit']>,
+    skipViolations: import('../types').ShiftAuditViolation[]
+  ) => {
+    if (!activeShiftJob) return;
+    const mergedViolations = mergeShiftAuditViolations(activeShiftJob.shiftAuditViolations, skipViolations);
+    onUpdateJobAudit(activeShiftJob.id, {
+      status: 'in-progress',
+      checkInAudit,
+      shiftAuditViolations: mergedViolations,
+    });
+    updatePhase(activeShiftJob.id, 'on-duty');
+    setShowSelfAudit(false);
+    setShowBriefingGate(false);
+    setPendingCheckInAudit(null);
+    setPendingStartViolations([]);
+  };
+
+  const queueClockIn = (
+    checkInAudit: NonNullable<SecurityRequest['checkInAudit']>,
+    skipViolations: import('../types').ShiftAuditViolation[]
+  ) => {
+    if (!activeShiftJob) return;
+    if (guardMustAckBriefingOnSite(activeShiftJob, guard.id)) {
+      setPendingCheckInAudit(checkInAudit);
+      setPendingStartViolations(skipViolations);
+      setShowSelfAudit(false);
+      setShowBriefingGate(true);
+      return;
+    }
+    finalizeClockIn(checkInAudit, skipViolations);
+  };
+
+  const handleBriefingGateAck = async () => {
+    if (!activeShiftJob || !onAckBriefing) return;
+    await onAckBriefing(activeShiftJob.id);
+    if (pendingCheckInAudit) {
+      finalizeClockIn(pendingCheckInAudit, pendingStartViolations);
+    }
+  };
+
   const handleSelfAuditSubmit = (payload: {
     uniform: { uniformPresent: boolean; blackShoes: boolean; dutyBelt: boolean; requiredEquipment: boolean };
     selfieUpload: string;
     uniformPhoto?: string;
     shoesPhoto?: string;
+    locationPhoto?: string;
+    locationPhotoSkipped: boolean;
   }) => {
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
@@ -865,32 +927,34 @@ export function GuardDashboard({
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
     if (failed) onRecordAuditViolation(guard.id, 'Pre-job check-in audit incomplete');
-    onUpdateJobAudit(activeShiftJob.id, {
-      status: 'in-progress',
-      checkInAudit: {
-        checkedAt: new Date().toISOString(),
-        gpsVerified: true,
-        selfAuditSkipped: false,
-        uniform: {
-          uniformPresent: payload.uniform.uniformPresent,
-          blackShoes: payload.uniform.blackShoes,
-          dutyBelt: payload.uniform.dutyBelt,
-          nameBadge: true,
-          professionalAppearance: payload.uniform.uniformPresent,
-        },
-        equipment: {
-          radio: payload.uniform.requiredEquipment,
-          flashlight: payload.uniform.requiredEquipment,
-          requiredEquipment: payload.uniform.requiredEquipment,
-        },
-        selfieUpload: payload.selfieUpload,
-        uniformPhoto: payload.uniformPhoto,
-        shoesPhoto: payload.shoesPhoto,
-        readyForDuty: !failed,
-      },
+    const skipViolations = createStartSkipViolations(guard.id, {
+      selfAuditSkipped: false,
+      locationPhotoSkipped: payload.locationPhotoSkipped,
     });
-    updatePhase(activeShiftJob.id, 'on-duty');
-    setShowSelfAudit(false);
+    const checkInAudit: NonNullable<SecurityRequest['checkInAudit']> = {
+      checkedAt: new Date().toISOString(),
+      gpsVerified: true,
+      selfAuditSkipped: false,
+      locationPhotoSkipped: payload.locationPhotoSkipped,
+      uniform: {
+        uniformPresent: payload.uniform.uniformPresent,
+        blackShoes: payload.uniform.blackShoes,
+        dutyBelt: payload.uniform.dutyBelt,
+        nameBadge: true,
+        professionalAppearance: payload.uniform.uniformPresent,
+      },
+      equipment: {
+        radio: payload.uniform.requiredEquipment,
+        flashlight: payload.uniform.requiredEquipment,
+        requiredEquipment: payload.uniform.requiredEquipment,
+      },
+      selfieUpload: payload.selfieUpload,
+      uniformPhoto: payload.uniformPhoto,
+      shoesPhoto: payload.shoesPhoto,
+      locationPhoto: payload.locationPhoto,
+      readyForDuty: !failed,
+    };
+    queueClockIn(checkInAudit, skipViolations);
   };
 
   const handleSkipSelfAudit = () => {
@@ -906,20 +970,23 @@ export function GuardDashboard({
     }
     void (async () => {
       if (!(await showAppConfirm({
-        title: 'Skip self audit?',
+        title: 'Skip start package?',
         message:
-          'Clock in without completing your self-audit photos? This job will be flagged No Self Audit until you upload them.',
-        confirmLabel: 'Skip and clock in',
+          'Clock in without self-audit and location photos? This will be automatically flagged for the client.',
+        confirmLabel: 'Skip and continue',
         tone: 'danger',
       }))) {
         return;
       }
-      onUpdateJobAudit(activeShiftJob.id, {
-      status: 'in-progress',
-      checkInAudit: {
+      const skipViolations = createStartSkipViolations(guard.id, {
+        selfAuditSkipped: true,
+        locationPhotoSkipped: true,
+      });
+      const checkInAudit: NonNullable<SecurityRequest['checkInAudit']> = {
         checkedAt: new Date().toISOString(),
         gpsVerified: true,
         selfAuditSkipped: true,
+        locationPhotoSkipped: true,
         uniform: {
           uniformPresent: false,
           blackShoes: false,
@@ -934,9 +1001,8 @@ export function GuardDashboard({
         },
         selfieUpload: '',
         readyForDuty: false,
-      },
-    });
-    updatePhase(activeShiftJob.id, 'on-duty');
+      };
+      queueClockIn(checkInAudit, skipViolations);
     })();
   };
 
@@ -982,7 +1048,7 @@ export function GuardDashboard({
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
     setPendingOvertimeClaimed(false);
-    setShowCheckout(true);
+    setShowEndCheckpoint(true);
   };
 
   const handleLateClockOutConfirm = (result: import('./guard/LateClockOutPrompt').LateClockOutResult) => {
@@ -990,19 +1056,55 @@ export function GuardDashboard({
     setPendingLeftEarlier(result.leftEarlier);
     setPendingOvertimeClaimed(result.overtimeClaimed);
     setShowLateClockOutPrompt(false);
-    setShowCheckout(true);
+    setShowEndCheckpoint(true);
   };
 
-  const handleCheckoutConfirm = () => {
+  const handleEndCheckpointSkip = () => {
+    void (async () => {
+      if (!(await showAppConfirm({
+        title: 'Skip end package?',
+        message:
+          'End shift without photos and report? Missing items will be automatically flagged for the client.',
+        confirmLabel: 'Skip and end shift',
+        tone: 'danger',
+      }))) {
+        return;
+      }
+      handleEndCheckpointSubmit({
+        dailyActivityReport: activeShiftJob?.checkOutAudit?.dailyActivityReport ?? '',
+        endSelfAuditSkipped: true,
+        locationPhotoSkipped: true,
+        endReportSkipped: true,
+      });
+    })();
+  };
+
+  const handleEndCheckpointSubmit = (payload: {
+    endSelfie?: string;
+    locationPhoto?: string;
+    dailyActivityReport: string;
+    endSelfAuditSkipped: boolean;
+    locationPhotoSkipped: boolean;
+    endReportSkipped: boolean;
+  }) => {
     if (!activeShiftJob) return;
     if (!canGuardClockOut(activeShiftJob)) {
       showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.', { tone: 'error' });
-      setShowCheckout(false);
+      setShowEndCheckpoint(false);
       return;
     }
     const checkedAt = pendingClockOutAt ?? new Date().toISOString();
     const existing = activeShiftJob.checkOutAudit;
     const hasIncidents = (existing?.incidentReports?.length ?? 0) > 0 || existing?.incidentReport?.hasIncident;
+    const endViolations = createEndSkipViolations(
+      guard.id,
+      {
+        endSelfAuditSkipped: payload.endSelfAuditSkipped,
+        locationPhotoSkipped: payload.locationPhotoSkipped,
+        endReportSkipped: payload.endReportSkipped,
+      },
+      checkedAt
+    );
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
@@ -1010,7 +1112,12 @@ export function GuardDashboard({
         completed: true,
         noViolations: true,
         noEquipmentIssues: true,
+        endSelfie: payload.endSelfie,
+        locationPhoto: payload.locationPhoto,
+        endSelfAuditSkipped: payload.endSelfAuditSkipped,
+        locationPhotoSkipped: payload.locationPhotoSkipped,
         dailyActivityReport:
+          payload.dailyActivityReport ||
           existing?.dailyActivityReport ||
           (hasIncidents ? 'Shift completed with incident report(s) on file.' : 'Job completed. No incidents to report.'),
         incidentReport: existing?.incidentReport ?? { hasIncident: false },
@@ -1019,9 +1126,10 @@ export function GuardDashboard({
         leftEarlier: pendingLeftEarlier || undefined,
         overtimeClaimed: pendingOvertimeClaimed || undefined,
       },
+      shiftAuditViolations: mergeShiftAuditViolations(activeShiftJob.shiftAuditViolations, endViolations),
     });
     updatePhase(activeShiftJob.id, 'complete');
-    setShowCheckout(false);
+    setShowEndCheckpoint(false);
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
     setPendingOvertimeClaimed(false);
@@ -1242,6 +1350,9 @@ export function GuardDashboard({
           onStartEnRoute={() => handleStartEnRoute(activeShiftJob.id)}
           onAckPostOrders={
             onAckPostOrders ? () => onAckPostOrders(activeShiftJob.id) : undefined
+          }
+          onAckBriefing={
+            onAckBriefing ? () => onAckBriefing(activeShiftJob.id) : undefined
           }
         />
       )}
@@ -1566,6 +1677,7 @@ export function GuardDashboard({
                   requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}
                   performanceFactorId={performanceFactorId}
                   onPerformanceFactorChange={onPerformanceFactorChange}
+                  onDisputeShiftAuditViolation={onDisputeShiftAuditViolation}
                 />
               </div>
             </div>
@@ -1598,6 +1710,23 @@ export function GuardDashboard({
         onSubmit={handleSelfAuditSubmit}
       />
 
+      {activeShiftJob && (
+        <GuardBriefingAckGate
+          open={showBriefingGate}
+          job={activeShiftJob}
+          onAcknowledge={handleBriefingGateAck}
+        />
+      )}
+
+      <GuardEndShiftCheckpointModal
+        open={showEndCheckpoint && !!activeShiftJob}
+        onClose={() => setShowEndCheckpoint(false)}
+        onTriggerCamera={captureSelfie}
+        existingReport={activeShiftJob?.checkOutAudit?.dailyActivityReport}
+        onSubmit={handleEndCheckpointSubmit}
+        onSkip={handleEndCheckpointSkip}
+      />
+
         <LateClockOutPrompt
           open={showLateClockOutPrompt && !!activeShiftJob}
           endDate={activeShiftJob?.endDate ?? ''}
@@ -1605,44 +1734,6 @@ export function GuardDashboard({
           onClose={() => setShowLateClockOutPrompt(false)}
           onConfirm={handleLateClockOutConfirm}
         />
-
-        <AppModal
-          open={showCheckout && !!activeShiftJob}
-          align="center"
-          position="absolute"
-          zIndex={1003}
-          onClose={() => {
-            setShowCheckout(false);
-            setPendingClockOutAt(null);
-            setPendingLeftEarlier(false);
-          }}
-          panelClassName="p-6 space-y-4"
-        >
-          <h3 className="font-bold text-lg">Complete job?</h3>
-          <p className="text-sm text-brand-text-muted">
-            {pendingClockOutAt
-              ? `Confirm you are clocking out at ${new Date(pendingClockOutAt).toLocaleString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })} and your job duties are complete.`
-              : 'Confirm you are leaving the site and your job duties are complete.'}
-          </p>
-          <SlideToConfirm
-            label="Slide to complete job"
-            confirmedLabel="Completed"
-            tone="success"
-            onConfirm={handleCheckoutConfirm}
-          />
-          <button
-            type="button"
-            onClick={() => setShowCheckout(false)}
-            className="app-button-outline app-btn-md"
-          >
-            Cancel
-          </button>
-        </AppModal>
 
       <GuardRatingModal
         open={!!ratingJob}
@@ -1727,6 +1818,9 @@ export function GuardDashboard({
               onStartEnRoute={() => handleStartEnRoute(manualBriefingJob.id)}
               onAckPostOrders={
                 onAckPostOrders ? () => onAckPostOrders(manualBriefingJob.id) : undefined
+              }
+              onAckBriefing={
+                onAckBriefing ? () => onAckBriefing(manualBriefingJob.id) : undefined
               }
             />
           </div>

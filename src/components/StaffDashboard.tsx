@@ -187,6 +187,12 @@ interface StaffDashboardProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => Promise<void>;
+  onResolveAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    action: 'uphold' | 'dismiss',
+    resolutionNote?: string
+  ) => Promise<void>;
   onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -363,6 +369,7 @@ export function StaffDashboard({
   onMarkClientPaidCash,
   onMarkOvertimePaidCash,
   onResolveOvertimeDispute,
+  onResolveAuditViolation,
   onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
   onMarkOvertimeGuardPaidCash,
@@ -932,6 +939,7 @@ export function StaffDashboard({
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
+            onResolveAuditViolation={onResolveAuditViolation}
           />
         ) : (
           <AppBlockedAccessScreen

@@ -1,4 +1,5 @@
 import { countGuardViolationReports } from './clientViolations';
+import { countActiveShiftAuditViolations } from './shiftAuditViolations';
 import { ALL_JOB_TYPES } from './guardJobPreferences';
 import { JOB_TYPE_LABELS } from './guardJobs';
 import type { SecurityGuard, SecurityRequest, ShiftReport, JobType } from '../types';
@@ -615,6 +616,15 @@ export function computePerformanceViolations(
       id: 'client-reported',
       label: 'Client-reported violation',
       count: clientReported,
+    });
+  }
+
+  const auditViolations = countActiveShiftAuditViolations(guardId, requests);
+  if (auditViolations > 0) {
+    violations.push({
+      id: 'shift-audit',
+      label: 'Shift audit violation',
+      count: auditViolations,
     });
   }
 

@@ -14,7 +14,15 @@ interface StaffDisputesPanelProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => void | Promise<void>;
+  onResolveAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    action: 'uphold' | 'dismiss',
+    resolutionNote?: string
+  ) => void | Promise<void>;
 }
+
+type DisputeTab = 'all' | 'overtime' | 'audit';
 
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
@@ -29,8 +37,10 @@ export function StaffDisputesPanel({
   disputes,
   onResolveDispute,
   onResolveOvertimeDispute,
+  onResolveAuditViolation,
 }: StaffDisputesPanelProps) {
   const { formFactor } = useDevice();
+  const [tab, setTab] = useState<DisputeTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [adjustHoursById, setAdjustHoursById] = useState<Record<string, string>>({});
@@ -41,9 +51,12 @@ export function StaffDisputesPanel({
     () =>
       disputes.filter((d) => {
         const status = statusMap[d.id] ?? d.status;
-        return status === 'open';
+        if (status !== 'open') return false;
+        if (tab === 'overtime') return d.type === 'overtime';
+        if (tab === 'audit') return d.type === 'audit-violation';
+        return true;
       }),
-    [disputes, statusMap]
+    [disputes, statusMap, tab]
   );
 
   useEffect(() => {
@@ -88,6 +101,7 @@ export function StaffDisputesPanel({
 
   const renderDisputeCard = (d: OpsDispute) => {
     const isOvertime = d.type === 'overtime';
+    const isAudit = d.type === 'audit-violation';
     const status = statusMap[d.id] ?? d.status;
     const defaultAdjustHours =
       d.clientClaimedHours != null ? d.clientClaimedHours : d.claimedHours ?? 0;
@@ -104,7 +118,11 @@ export function StaffDisputesPanel({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <WfBadge tone="primary">
-              {isOvertime ? 'late clock-out overtime' : d.type.replace('-', ' ')}
+              {isOvertime
+                ? 'late clock-out overtime'
+                : isAudit
+                  ? `audit · ${d.auditCheckpoint ?? 'checkpoint'}`
+                  : d.type.replace('-', ' ')}
             </WfBadge>
             <h3 className="font-semibold text-sm mt-1">{d.jobTitle}</h3>
             <p className="text-xs text-brand-text-muted mt-0.5">Opened {formatWhen(d.openedAt)}</p>
@@ -140,6 +158,17 @@ export function StaffDisputesPanel({
                 {d.clientClaimedAmount != null ? ` ($${d.clientClaimedAmount.toFixed(2)})` : ''}
               </p>
             </div>
+          </div>
+        )}
+
+        {isAudit && (
+          <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-2.5 space-y-1.5 text-xs text-brand-text-muted">
+            <p>
+              <span className="text-brand-text">Category:</span> {d.auditCategory ?? '—'}
+            </p>
+            <p>
+              <span className="text-brand-text">Checkpoint:</span> {d.auditCheckpoint ?? '—'}
+            </p>
           </div>
         )}
 
@@ -215,7 +244,42 @@ export function StaffDisputesPanel({
           </div>
         )}
 
-        {!isOvertime && status === 'open' && onResolveDispute && (
+        {isAudit && onResolveAuditViolation && d.requestId && d.auditViolationId && status === 'open' && (
+          <div className="app-action-row--equal pt-4">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                void onResolveAuditViolation(
+                  d.requestId!,
+                  d.auditViolationId!,
+                  'dismiss',
+                  resolutionNoteById[d.id]
+                ).then(() => setStatusMap((m) => ({ ...m, [d.id]: 'resolved' })));
+              }}
+              className="app-button-outline app-btn-sm"
+            >
+              Side with guard
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                void onResolveAuditViolation(
+                  d.requestId!,
+                  d.auditViolationId!,
+                  'uphold',
+                  resolutionNoteById[d.id]
+                ).then(() => setStatusMap((m) => ({ ...m, [d.id]: 'resolved' })));
+              }}
+              className="app-button-primary app-btn-sm"
+            >
+              Uphold client
+            </button>
+          </div>
+        )}
+
+        {!isOvertime && !isAudit && status === 'open' && onResolveDispute && (
           <div className="app-action-row--equal pt-4">
             <button
               type="button"
@@ -267,9 +331,25 @@ export function StaffDisputesPanel({
     </div>
   );
 
+  const tabBar = (
+    <div className="flex gap-2 mb-4">
+      {(['all', 'overtime', 'audit'] as DisputeTab[]).map((key) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => setTab(key)}
+          className={`app-button-outline app-btn-sm capitalize ${tab === key ? '!border-brand-primary !text-brand-primary' : ''}`}
+        >
+          {key === 'audit' ? 'Audit violations' : key}
+        </button>
+      ))}
+    </div>
+  );
+
   if (openDisputes.length === 0) {
     return (
       <div className={formFactor === 'desktop' ? 'adm-workbench' : 'animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5'}>
+        {tabBar}
         {emptyState}
       </div>
     );
@@ -286,6 +366,7 @@ export function StaffDisputesPanel({
             <p className="adm-workbench-subtitle">Open disputes requiring staff resolution.</p>
           </div>
         </div>
+        {tabBar}
         <div className="adm-workbench-split">
           <div className="adm-workbench-list">
             <table className="adm-table adm-table--list">
@@ -307,7 +388,9 @@ export function StaffDisputesPanel({
                       <p className="adm-table-primary">{d.jobTitle}</p>
                       <p className="adm-table-secondary">{d.guardName} vs {d.clientName}</p>
                     </td>
-                    <td className="adm-table-secondary">{d.type === 'overtime' ? 'Overtime' : d.type}</td>
+                    <td className="adm-table-secondary">
+                      {d.type === 'overtime' ? 'Overtime' : d.type === 'audit-violation' ? 'Audit' : d.type}
+                    </td>
                     <td className="adm-table-secondary">{formatWhen(d.openedAt)}</td>
                   </tr>
                 ))}
@@ -330,7 +413,8 @@ export function StaffDisputesPanel({
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+      {tabBar}
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => (
           <React.Fragment key={d.id}>{renderDisputeCard(d)}</React.Fragment>

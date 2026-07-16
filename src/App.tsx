@@ -376,6 +376,17 @@ import { evaluateCheckInEscalation, checkInEscalationDedupKey } from './lib/chec
 import { notifyOpenJobToGuards } from './lib/openJobNotifications';
 import { jobUsesFirstToAccept } from './lib/assignmentMode';
 import { appendPostOrdersAck, jobRequiresPostOrdersAck } from './lib/postOrdersAck';
+import { appendBriefingAck, guardAcknowledgedBriefing, jobHasBriefingContent } from './lib/briefingAck';
+import {
+  createClientCheckpointFlag,
+  createNotReadyBriefingViolation,
+  flagReasonLabel,
+  markCheckpointVerified,
+  mergeShiftAuditViolations,
+  processAutoUpholdDisputes,
+  resolveAuditViolation,
+  submitGuardDispute,
+} from './lib/shiftAuditViolations';
 import {
   canGuardStartEnRoute,
   evaluatePreShiftBriefingReminder,
@@ -2129,6 +2140,12 @@ export default function App() {
           tierPayRates: r.tier_pay_rates ?? undefined,
           postOrdersAcknowledgments: Array.isArray(r.post_orders_acknowledgments)
             ? r.post_orders_acknowledgments
+            : [],
+          briefingAcknowledgments: Array.isArray(r.briefing_acknowledgments)
+            ? r.briefing_acknowledgments
+            : [],
+          shiftAuditViolations: Array.isArray(r.shift_audit_violations)
+            ? r.shift_audit_violations
             : [],
           durationHours: r.duration_hours,
           hourlyRate: r.hourly_rate,
@@ -5447,6 +5464,22 @@ export default function App() {
     const next = rejectClientLocation(existing, currentUser);
     await handleSaveClientLocation(next);
     showAppToast('Location rejected.', { tone: 'info' });
+  };
+
+  const handleAckBriefing = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || !activeGuardId) return;
+    const acks = appendBriefingAck(job.briefingAcknowledgments, activeGuardId);
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, briefingAcknowledgments: acks } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ briefing_acknowledgments: acks })
+        .eq('id', requestId);
+    }
+    showAppToast('Site briefing acknowledged.', { tone: 'success' });
   };
 
   const handleAckPostOrders = async (requestId: string) => {
@@ -9936,7 +9969,7 @@ export default function App() {
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
-  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; status?: SecurityRequest['status']; }) => {
+  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; shiftAuditViolations?: SecurityRequest['shiftAuditViolations']; status?: SecurityRequest['status']; }) => {
     const req = requests.find((r) => r.id === requestId);
     if (req && payload.status === 'in-progress' && payload.checkInAudit) {
       const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
@@ -9991,6 +10024,9 @@ export default function App() {
       if (nextMidShiftAudits) updated.midShiftAudits = nextMidShiftAudits;
       if (payload.shiftBreaks) updated.shiftBreaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
+      if (payload.shiftAuditViolations) {
+        updated.shiftAuditViolations = payload.shiftAuditViolations;
+      }
       if (detectedOvertime) {
         const guardConfirmedAt = new Date().toISOString();
         updated.scheduledDurationHours = detectedOvertime.scheduledDurationHours;
@@ -10025,6 +10061,9 @@ export default function App() {
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
       if (payload.shiftBreaks) updates.shift_breaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
+      if (payload.shiftAuditViolations) {
+        updates.shift_audit_violations = payload.shiftAuditViolations;
+      }
       if (detectedOvertime) {
         const guardConfirmedAt = new Date().toISOString();
         updates.scheduled_duration_hours = detectedOvertime.scheduledDurationHours;
@@ -10446,50 +10485,233 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isDbConnected, requests, guards, currentUser?.id]);
 
-  const handleClientConfirmSelfAudit = async (requestId: string) => {
+  const persistShiftAuditViolations = async (
+    requestId: string,
+    violations: SecurityRequest['shiftAuditViolations']
+  ) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, shiftAuditViolations: violations } : r))
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ shift_audit_violations: violations ?? [] })
+        .eq('id', requestId);
+    }
+  };
+
+  const handleClientVerifyStartCheckpoint = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
-    if (!existing) {
-      appToast('Job not found.', 'error');
+    if (!existing?.checkInAudit?.checkedAt) {
+      appToast('Start-of-shift package is not available yet.', 'error');
       return;
     }
-    const ownsJob =
-      existing.clientId === currentUser.id ||
-      existing.clientName === currentUser.clientName ||
-      existing.clientName === currentUser.name;
-    if (!ownsJob) {
-      appToast('You can only confirm audits on your own jobs.', 'error');
-      return;
-    }
-    if (!canClientConfirmSelfAudit(existing)) {
-      appToast(
-        existing.checkInAudit?.clientConfirmedAt
-          ? 'Self-audit photos are already confirmed.'
-          : 'All three self-audit photos must be on file before you can confirm.'
-      , 'error');
-      return;
-    }
-
     const checkInAudit = {
-      ...existing.checkInAudit!,
+      ...existing.checkInAudit,
       clientConfirmedAt: new Date().toISOString(),
       clientConfirmedBy: currentUser.name,
     };
-
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
+    const violations = markCheckpointVerified(existing.shiftAuditViolations, 'start');
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, checkInAudit, shiftAuditViolations: violations }
+          : r
+      )
+    );
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+      await supabase
+        .from('security_requests')
+        .update({ check_in_audit: checkInAudit, shift_audit_violations: violations })
+        .eq('id', requestId);
     }
-    if (currentUser && existing.assignedGuardId) {
+    if (existing.assignedGuardId) {
       void reportPushEvent(currentUser, {
         type: 'guard_checkin',
         guardId: existing.assignedGuardId,
         requestId,
         location: existing.location,
-        body: `Client confirmed your self-audit photos for "${existing.title}".`,
+        body: `Client verified your start-of-shift package for "${existing.title}".`,
       });
     }
+    appToast('Start of shift verified.', 'success');
   };
+
+  const handleClientVerifyEndCheckpoint = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing?.checkOutAudit?.checkedAt) {
+      appToast('End-of-shift package is not available yet.', 'error');
+      return;
+    }
+    const checkOutAudit = {
+      ...existing.checkOutAudit,
+      clientConfirmedAt: new Date().toISOString(),
+      clientConfirmedBy: currentUser.name,
+    };
+    const violations = markCheckpointVerified(existing.shiftAuditViolations, 'end');
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, checkOutAudit, shiftAuditViolations: violations }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ check_out_audit: checkOutAudit, shift_audit_violations: violations })
+        .eq('id', requestId);
+    }
+    if (existing.assignedGuardId) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_clockout',
+        guardId: existing.assignedGuardId,
+        requestId,
+        location: existing.location,
+        body: `Client verified your end-of-shift package for "${existing.title}".`,
+      });
+    }
+    appToast('End of shift verified.', 'success');
+  };
+
+  const handleClientFlagStartCheckpoint = async (
+    requestId: string,
+    category: string,
+    note: string
+  ) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing?.assignedGuardId) return;
+    const violation = createClientCheckpointFlag({
+      checkpoint: 'start',
+      category,
+      label: flagReasonLabel('start', category),
+      description: note,
+      guardId: existing.assignedGuardId,
+      reportedByClientId: currentUser.id,
+      reportedByClientName: currentUser.name,
+    });
+    const violations = mergeShiftAuditViolations(existing.shiftAuditViolations, [violation]);
+    await persistShiftAuditViolations(requestId, violations);
+    notifyAccountUpdate(
+      currentUser,
+      existing.assignedGuardId,
+      'Start-of-shift issue flagged',
+      `Client flagged "${violation.label}" on "${existing.title}". You may dispute within 48 hours.`
+    );
+    appToast('Start-of-shift issue flagged.', 'success');
+  };
+
+  const handleClientFlagEndCheckpoint = async (
+    requestId: string,
+    category: string,
+    note: string
+  ) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing?.assignedGuardId || !existing.checkOutAudit?.checkedAt) return;
+    const violation = createClientCheckpointFlag({
+      checkpoint: 'end',
+      category,
+      label: flagReasonLabel('end', category),
+      description: note,
+      guardId: existing.assignedGuardId,
+      reportedByClientId: currentUser.id,
+      reportedByClientName: currentUser.name,
+      reviewExpiresAt: new Date(
+        new Date(existing.checkOutAudit.checkedAt).getTime() + 48 * 60 * 60 * 1000
+      ).toISOString(),
+    });
+    const violations = mergeShiftAuditViolations(existing.shiftAuditViolations, [violation]);
+    await persistShiftAuditViolations(requestId, violations);
+    notifyAccountUpdate(
+      currentUser,
+      existing.assignedGuardId,
+      'End-of-shift issue flagged',
+      `Client flagged "${violation.label}" on "${existing.title}". You may dispute within 48 hours.`
+    );
+    appToast('End-of-shift issue flagged.', 'success');
+  };
+
+  const handleGuardDisputeShiftAuditViolation = async (
+    requestId: string,
+    violationId: string,
+    guardNote: string
+  ) => {
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !activeGuardId) return;
+    const violations = submitGuardDispute(existing.shiftAuditViolations ?? [], violationId, guardNote);
+    await persistShiftAuditViolations(requestId, violations);
+    appToast('Dispute submitted. Guardr will review if the client does not respond.', 'success');
+  };
+
+  const handleStaffResolveAuditViolation = async (
+    requestId: string,
+    violationId: string,
+    action: 'uphold' | 'dismiss',
+    resolutionNote?: string
+  ) => {
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !currentUser) return;
+    const violations = resolveAuditViolation(
+      existing.shiftAuditViolations ?? [],
+      violationId,
+      action,
+      currentUser.name,
+      resolutionNote
+    );
+    await persistShiftAuditViolations(requestId, violations);
+    const violation = violations.find((v) => v.id === violationId);
+    if (violation?.guardId) {
+      notifyAccountUpdate(
+        currentUser,
+        violation.guardId,
+        'Audit dispute resolved',
+        action === 'uphold'
+          ? `Guardr upheld the client report: ${violation.label}.`
+          : `Guardr dismissed the client report: ${violation.label}.`
+      );
+    }
+    appToast(action === 'uphold' ? 'Violation upheld.' : 'Violation dismissed.', 'success');
+  };
+
+  const handleClientConfirmSelfAudit = async (requestId: string) => {
+    await handleClientVerifyStartCheckpoint(requestId);
+  };
+
+  useEffect(() => {
+    if (!isDbConnected) return;
+    const tick = () => {
+      setRequests((prev) => {
+        let changed = false;
+        const next = prev.map((req) => {
+          const processed = processAutoUpholdDisputes(req.shiftAuditViolations);
+          if (JSON.stringify(processed) === JSON.stringify(req.shiftAuditViolations ?? [])) {
+            return req;
+          }
+          changed = true;
+          return { ...req, shiftAuditViolations: processed };
+        });
+        if (!changed) return prev;
+        void Promise.all(
+          next
+            .filter((req, index) => req !== prev[index])
+            .map((req) =>
+              supabase
+                .from('security_requests')
+                .update({ shift_audit_violations: req.shiftAuditViolations ?? [] })
+                .eq('id', req.id)
+            )
+        );
+        return next;
+      });
+    };
+    tick();
+    const id = window.setInterval(tick, 5 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, [isDbConnected]);
 
   const persistGuardPayoutInvoiceToDb = async (invoice: GuardPayoutInvoice) => {
     if (!isDbConnected) return;
@@ -11908,6 +12130,17 @@ export default function App() {
             if (!currentUser) return;
             const req = requests.find((r) => r.id === requestId);
             const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+            if (req && guard && jobHasBriefingContent(req) && !guardAcknowledgedBriefing(req, guard.id)) {
+              const violation = createNotReadyBriefingViolation(guard.id);
+              const violations = mergeShiftAuditViolations(req.shiftAuditViolations, [violation]);
+              void persistShiftAuditViolations(requestId, violations);
+              notifyAccountUpdate(
+                currentUser,
+                guard.id,
+                "You weren't ready",
+                `You arrived without reviewing the briefing for "${req.title}". Complete it before clock-in.`
+              );
+            }
             void reportPushEvent(currentUser, {
               type: 'guard_arrived',
               guardId: guard?.id,
@@ -11916,6 +12149,7 @@ export default function App() {
               location: req?.location,
             });
           }}
+          onAckBriefing={handleAckBriefing}
           onGeofenceLeave={(requestId) => {
             if (!currentUser) return;
             const req = requests.find((r) => r.id === requestId);
@@ -11931,6 +12165,7 @@ export default function App() {
           }}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
+          onDisputeShiftAuditViolation={handleGuardDisputeShiftAuditViolation}
           onUpdateStripeAccount={handleUpdateGuardStripeAccount}
           onSignOut={handleSignOut}
           themeMode={themeMode}
@@ -12104,6 +12339,10 @@ export default function App() {
               onAddReview={handleAddReview}
               onReportViolation={handleReportClientViolation}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
+              onVerifyStartCheckpoint={handleClientVerifyStartCheckpoint}
+              onFlagStartCheckpoint={handleClientFlagStartCheckpoint}
+              onVerifyEndCheckpoint={handleClientVerifyEndCheckpoint}
+              onFlagEndCheckpoint={handleClientFlagEndCheckpoint}
               onApproveOvertime={handleClientApproveOvertime}
               onDisputeOvertime={handleClientDisputeOvertime}
               onApproveScheduleChange={handleClientApproveScheduleChange}
@@ -12242,6 +12481,7 @@ export default function App() {
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
           onResolveOvertimeDispute={handleStaffResolveOvertimeDispute}
+          onResolveAuditViolation={handleStaffResolveAuditViolation}
           onApproveOvertimeCashPayment={handleApproveOvertimeCashPayment}
           onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
           onMarkOvertimeGuardPaidCash={handleMarkOvertimeGuardPaidCash}
