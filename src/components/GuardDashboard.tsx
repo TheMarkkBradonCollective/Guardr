@@ -429,8 +429,8 @@ export function GuardDashboard({
   const [manualBriefingJobId, setManualBriefingJobId] = useState<string | null>(null);
 
   const browseJobLists = useMemo(
-    () => getGuardBrowseJobLists(guard.id, requests),
-    [guard.id, requests]
+    () => getGuardBrowseJobLists(guard, requests),
+    [guard, requests]
   );
 
   const upcomingForMessages = useMemo(() => {

@@ -296,9 +296,10 @@ export function GuardMyJobsPanel({
               {availableJobs.length === 0 ? (
                 <AppEmptyState
                   icon={<Map className="w-5 h-5" />}
-                  title="No open jobs right now"
+                  title="No open jobs in your service areas"
                 >
-                  Check the map to browse available shifts near you.
+                  Open jobs in your cities appear here. Use the map to browse shifts in nearby
+                  areas too.
                 </AppEmptyState>
               ) : (
                 <AppItemCardStack>
