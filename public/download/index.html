@@ -133,6 +133,39 @@
         font-size: 0.92rem;
       }
       .hidden { display: none; }
+      .qr-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin: 16px 0 4px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .qr-block img {
+        width: 180px;
+        height: 180px;
+        border-radius: 12px;
+        background: #fff;
+        padding: 8px;
+      }
+      .qr-link {
+        width: 100%;
+        word-break: break-all;
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--sage-bright);
+        text-decoration: none;
+      }
+      .qr-caption {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.45;
+      }
     </style>
   </head>
   <body>
@@ -167,6 +200,11 @@
       <div class="card">
         <h2>Download Android APK</h2>
         <p id="apk-download-copy">Latest APK for guards who want the native app icon, permissions, and more reliable notifications.</p>
+        <div class="qr-block">
+          <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr APK" />
+          <p class="qr-caption">Scan to download the APK directly on Android</p>
+          <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr.apk">https://www.guardr.co/download/guardr.apk</a>
+        </div>
         <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
         <p id="latest-version" style="margin-top:10px;font-size:0.85rem;"></p>
         <ol id="apk-steps">
@@ -394,6 +432,14 @@
 
           latestVersion.textContent =
             'Latest APK: v' + latest.apkVersion + ' (build ' + latest.apkVersionCode + ') · Web: v' + latest.webVersion;
+
+          if (latest.apkDirectUrl) {
+            var directLink = document.getElementById('apk-direct-link');
+            if (directLink) {
+              directLink.href = latest.apkDirectUrl;
+              directLink.textContent = latest.apkDirectUrl;
+            }
+          }
 
           if (live === 'apk') {
             liveContext.textContent = 'You are viewing this page inside the Guardr Android app.';

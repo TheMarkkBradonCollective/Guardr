@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
  * Single source of truth for web + APK versions on the download page.
- * Writes public/download/version.json and syncs android/app/build.gradle.
+ * Writes public/download/version.json, APK QR code, and syncs android/app/build.gradle.
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import QRCode from 'qrcode';
 
 const ROOT = process.cwd();
+const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
 const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const version = pkg.version || '1.0.0';
 const parts = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
@@ -20,6 +22,7 @@ const manifest = {
   apkVersion: version,
   apkVersionCode: versionCode,
   apkUrl: '/download/guardr.apk',
+  apkDirectUrl: APK_DIRECT_URL,
   updatedAt: new Date().toISOString(),
 };
 
@@ -27,6 +30,14 @@ await writeFile(
   path.join(ROOT, 'public/download/version.json'),
   `${JSON.stringify(manifest, null, 2)}\n`
 );
+
+const qrPath = path.join(ROOT, 'public/download/apk-qr.png');
+await QRCode.toFile(qrPath, APK_DIRECT_URL, {
+  type: 'png',
+  width: 320,
+  margin: 2,
+  color: { dark: '#5e7b61', light: '#ffffff' },
+});
 
 const gradlePath = path.join(ROOT, 'android/app/build.gradle');
 let gradle = await readFile(gradlePath, 'utf8');
@@ -43,4 +54,6 @@ sw = sw.replace(/const CACHE_NAME = 'guardr-cache-v[^']+';/, `const CACHE_NAME =
 await writeFile(swPath, sw);
 
 console.log(`Download manifest: web/apk v${version} (code ${versionCode})`);
+console.log(`APK direct URL: ${APK_DIRECT_URL}`);
+console.log(`APK QR code: public/download/apk-qr.png`);
 console.log(`Service worker cache: ${cacheName}`);

@@ -5,7 +5,7 @@ Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [gu
 ## Download
 
 - **Install page:** [https://guardr.co/download/](https://guardr.co/download/)
-- **Direct APK:** [https://guardr.co/download/guardr.apk](https://guardr.co/download/guardr.apk)
+- **Direct APK (QR code):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk)
 
 The install page compares your **APK** vs **Save to Home Screen (PWA)** install, checks whether an APK update is needed, and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
 
