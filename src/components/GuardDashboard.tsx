@@ -244,8 +244,16 @@ export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages'
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
-const GUARD_PRIMARY_NAV_TABS = new Set<GuardTab>(['map', 'myJobs', 'messages', 'earnings', 'crew']);
-const GUARD_SIDEBAR_TABS = new Set<GuardTab>(['preferences', 'performance', 'availability']);
+const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
+  'map',
+  'myJobs',
+  'crew',
+  'messages',
+  'availability',
+  'preferences',
+  'performance',
+  'earnings',
+]);
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -1108,18 +1116,15 @@ export function GuardDashboard({
     !showBriefingOverlay;
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
-  const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
-    { id: 'messages', icon: MessagesSquare, label: 'Messages' },
+  const SIDEBAR_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
-    { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
     ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
-  ];
-
-  const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
+    { id: 'messages', icon: MessagesSquare, label: 'Messages' },
     { id: 'availability', icon: CalendarDays, label: 'Availability' },
-    { id: 'performance', icon: BarChart3, label: 'Performance' },
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
+    { id: 'performance', icon: BarChart3, label: 'Performance' },
+    { id: 'earnings', icon: DollarSign, label: 'Pay' },
   ];
 
   const accountMenu = {
@@ -1780,15 +1785,9 @@ export function GuardDashboard({
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
-      navItems={accountNeedsActivation ? [] : NAV_TABS}
-      overflowNavItems={accountNeedsActivation ? [] : OVERFLOW_NAV}
-      activeNavId={
-        GUARD_PRIMARY_NAV_TABS.has(tab)
-          ? tab
-          : GUARD_SIDEBAR_TABS.has(tab)
-            ? tab
-            : ''
-      }
+      navItems={accountNeedsActivation ? [] : SIDEBAR_NAV}
+      overflowNavItems={[]}
+      activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}

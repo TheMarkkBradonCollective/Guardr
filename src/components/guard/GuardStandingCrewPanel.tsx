@@ -15,6 +15,7 @@ import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
 import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import { getStandingCrewDisplayName } from '../../lib/guardTeams';
+import { computeStandingCrewArmedStats, type StandingCrewArmedStats } from '../../lib/guardCrewArmedCoverage';
 import type { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { TeamCodeShareBlock } from './TeamCodeShareBlock';
@@ -76,6 +77,49 @@ function crewHeroClass(activeCount: number, pendingCount: number): string {
   if (activeCount >= 2) return 'guard-tier-hero-professional';
   if (activeCount > 0 || pendingCount > 0) return 'guard-tier-hero-rising';
   return 'guard-tier-hero-starting';
+}
+
+function CrewArmedHeroProgress({ stats }: { stats: StandingCrewArmedStats }) {
+  return (
+    <>
+      <div className="guard-tier-hero-score-row">
+        <span className="guard-tier-hero-score-label">Armed coverage</span>
+        <span className="guard-tier-hero-score-value">
+          {stats.armedCapablePercent}%
+          <span className="guard-pref-hero-score-total">
+            {' '}
+            · {stats.armedCapable}/{stats.total}
+          </span>
+        </span>
+      </div>
+      <div
+        className="guard-pref-progress crew-armed-progress"
+        role="progressbar"
+        aria-valuenow={stats.armedCapablePercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${stats.armedCapablePercent}% of crew armed capable`}
+      >
+        <div className="guard-pref-progress-track crew-armed-progress-track">
+          {stats.armedPercent > 0 ? (
+            <div
+              className="crew-armed-progress-segment crew-armed-progress-segment-armed"
+              style={{ width: `${stats.armedPercent}%` }}
+            />
+          ) : null}
+          {stats.lightArmedPercent > 0 ? (
+            <div
+              className="crew-armed-progress-segment crew-armed-progress-segment-light"
+              style={{ width: `${stats.lightArmedPercent}%` }}
+            />
+          ) : null}
+        </div>
+      </div>
+      <p className="guard-tier-hero-subtitle crew-armed-progress-caption">
+        {stats.armed} armed · {stats.lightArmed} light armed · {stats.unarmed} unarmed
+      </p>
+    </>
+  );
 }
 
 function CrewSection({
@@ -211,6 +255,16 @@ export function GuardStandingCrewPanel({
 
   const crewDisplayName = getStandingCrewDisplayName(guard);
 
+  const armedStats = useMemo(
+    () =>
+      computeStandingCrewArmedStats(
+        guard,
+        active.map((member) => member.memberGuardId),
+        guards
+      ),
+    [guard, active, guards]
+  );
+
   const handleRequestCrewLead = async () => {
     if (!onRequestCrewLead) return;
     setRequestingPlacement(true);
@@ -272,6 +326,7 @@ export function GuardStandingCrewPanel({
           ) : null}
         </span>
       </div>
+      <CrewArmedHeroProgress stats={armedStats} />
       <p className="guard-tier-hero-subtitle">
         {active.length > 0
           ? 'Your standing roster is ready for coordinated jobs.'
@@ -354,6 +409,7 @@ export function GuardStandingCrewPanel({
             <span className="guard-tier-hero-score-value">{active.length}</span>
           </div>
         ) : null}
+        {trusted && leadsStandingCrew ? <CrewArmedHeroProgress stats={armedStats} /> : null}
         <p className="guard-tier-hero-subtitle">{subtitle}</p>
       </div>
     );

@@ -67,51 +67,59 @@ export function GuardEarningsPanel({
     !stripeReady && (breakdown.onlineAvailable > 0 || (breakdown.cashAvailable ?? 0) === 0);
 
   const payHeroActions = (
-    <div className="guard-pay-hero-actions">
-      <button
-        type="button"
-        onClick={() => void onRequestStripePayout?.()}
-        disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
-        className="guard-pay-action-btn guard-pay-action-btn-primary disabled:opacity-40"
-      >
-        <span className="guard-pay-action-btn-label">
-          {stripeRequestPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <CreditCard className="w-4 h-4" />
+    <section className="guard-pay-actions-section" aria-label="Payout actions">
+      <div className="guard-pay-actions-grid">
+        <div className="guard-pay-action-block">
+          <button
+            type="button"
+            onClick={() => void onRequestStripePayout?.()}
+            disabled={
+              breakdown.onlineAvailable <= 0 ||
+              stripeRequestPending ||
+              !onRequestStripePayout ||
+              !stripeReady
+            }
+            className="app-button-primary guard-pay-action-button"
+          >
+            {stripeRequestPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CreditCard className="w-4 h-4" />
+            )}
+            Send to my bank
+          </button>
+          {!stripeReady && needsBankForOnline && (
+            <p className="guard-pay-action-hint">Connect your bank through Stripe first</p>
           )}
-          Send to my bank
-        </span>
-        {!stripeReady && needsBankForOnline && (
-          <span className="guard-pay-action-btn-hint">Connect your bank through Stripe first</span>
-        )}
-        {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
-          <span className="guard-pay-action-btn-hint">
-            Pending deposit — cash pickup available now
-          </span>
-        )}
-        {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
-          <span className="guard-pay-action-btn-hint">
-            No bank payouts ready yet — complete more shifts first
-          </span>
-        )}
-      </button>
-      <button
-        type="button"
-        onClick={() => void onRequestCashPayout?.()}
-        disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-        className="guard-pay-action-btn guard-pay-action-btn-secondary disabled:opacity-40"
-      >
-        <span className="guard-pay-action-btn-label">
-          {cashRequestPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Banknote className="w-4 h-4" />
+          {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
+            <p className="guard-pay-action-hint">Pending deposit — cash pickup available now</p>
           )}
-          Request cash pickup
-        </span>
-      </button>
-    </div>
+          {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
+            <p className="guard-pay-action-hint">
+              No bank payouts ready yet — complete more shifts first
+            </p>
+          )}
+        </div>
+        <div className="guard-pay-action-block">
+          <button
+            type="button"
+            onClick={() => void onRequestCashPayout?.()}
+            disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
+            className="app-button-outline guard-pay-action-button"
+          >
+            {cashRequestPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Banknote className="w-4 h-4" />
+            )}
+            Request cash pickup
+          </button>
+          {(breakdown.cashAvailable ?? 0) <= 0 && (
+            <p className="guard-pay-action-hint">Available when cash pickup funds are ready</p>
+          )}
+        </div>
+      </div>
+    </section>
   );
 
   return (
