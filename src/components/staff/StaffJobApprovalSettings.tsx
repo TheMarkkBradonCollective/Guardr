@@ -1,32 +1,30 @@
 import React from 'react';
 import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
-import { canManagePlatformSettings } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
 interface StaffJobApprovalSettingsProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
-  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  canEdit?: boolean;
+  onPersistSettings?: (patch: Partial<PlatformSettings>) => void | Promise<void>;
+  /** When true, skip outer card/section wrapper (parent provides layout). */
+  embedded?: boolean;
 }
 
 function ApprovalRulesFields({
   platformSettings,
   canEdit,
-  onUpdatePlatformSettings,
+  onPersistSettings,
 }: {
   platformSettings: PlatformSettings;
   canEdit: boolean;
-  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  onPersistSettings?: (patch: Partial<PlatformSettings>) => void | Promise<void>;
 }) {
   const persistSettings = async (patch: Partial<PlatformSettings>) => {
-    if (!onUpdatePlatformSettings || !canEdit) return;
-    await onUpdatePlatformSettings({
-      ...platformSettings,
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    });
+    if (!onPersistSettings || !canEdit) return;
+    await onPersistSettings(patch);
   };
 
   return (
@@ -64,19 +62,24 @@ function ApprovalRulesFields({
 }
 
 export function StaffJobApprovalSettings({
-  currentUser,
+  currentUser: _currentUser,
   platformSettings,
-  onUpdatePlatformSettings,
+  canEdit = false,
+  onPersistSettings,
+  embedded = false,
 }: StaffJobApprovalSettingsProps) {
   const { formFactor } = useDevice();
-  const canEdit = canManagePlatformSettings(currentUser);
   const fields = (
     <ApprovalRulesFields
       platformSettings={platformSettings}
       canEdit={canEdit}
-      onUpdatePlatformSettings={onUpdatePlatformSettings}
+      onPersistSettings={onPersistSettings}
     />
   );
+
+  if (embedded) {
+    return fields;
+  }
 
   if (formFactor === 'desktop') {
     return (

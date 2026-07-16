@@ -38,7 +38,7 @@ import {
   GuardCrewJoinRequest,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -51,6 +51,7 @@ import {
 } from './lib/clientViolations';
 import type { ClientViolationReportInput } from './components/client/ClientViolationReportSheet';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
+import type { StaffPermissionsPatch } from './components/staff/StaffPermissionsPanel';
 import { formatCityLabel, normalizeGuardServiceAreas, resolveJobCity } from './lib/californiaCities';
 import {
   canDirectorMarkClientPaidCash,
@@ -679,6 +680,9 @@ export default function App() {
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() =>
     loadPlatformSettingsFromStorage()
   );
+  useEffect(() => {
+    setStaffRolePermissionOverrides(platformSettings.staffRolePermissions);
+  }, [platformSettings.staffRolePermissions]);
   const [platformCities, setPlatformCities] = useState<PlatformCity[]>(() => {
     const defaults = buildDefaultPlatformCities();
     setPlatformCitiesCache(defaults);
@@ -7541,11 +7545,35 @@ export default function App() {
       return;
     }
     setPlatformSettings(normalized);
+    setStaffRolePermissionOverrides(normalized.staffRolePermissions);
     savePlatformSettingsToStorage(normalized);
     if (isDbConnected) {
       await supabase.from('platform_settings').upsert(platformSettingsToDbRow(normalized));
     }
     appToast('Platform settings saved.', 'success');
+  };
+
+  const handleUpdateStaffPermissions = async (patch: StaffPermissionsPatch) => {
+    if (!currentUser || !canManageStaffPermissions(currentUser)) {
+      appToast('Manager access or above is required to change permissions.', 'error');
+      return;
+    }
+    const next = normalizePlatformSettings({
+      ...platformSettings,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
+    if (!next) {
+      appToast('Unable to save permissions.', 'error');
+      return;
+    }
+    setPlatformSettings(next);
+    setStaffRolePermissionOverrides(next.staffRolePermissions);
+    savePlatformSettingsToStorage(next);
+    if (isDbConnected) {
+      await supabase.from('platform_settings').upsert(platformSettingsToDbRow(next));
+    }
+    appToast('Permissions saved.', 'success');
   };
 
   const handleSaveCompanyPublicDocument = async (doc: CompanyPublicDocument) => {
@@ -12908,6 +12936,7 @@ export default function App() {
           onUpdatePlatformCity={handleUpdatePlatformCity}
           onUpdateStaffCityAccess={handleUpdateStaffCityAccess}
           onUpdatePlatformSettings={handleUpdatePlatformSettings}
+          onUpdateStaffPermissions={handleUpdateStaffPermissions}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}

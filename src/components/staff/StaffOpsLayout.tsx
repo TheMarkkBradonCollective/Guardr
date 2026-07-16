@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canAccessStaffSettings, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../lib/staffNavAccess';
 import { StaffNavItem } from './StaffSidebarNav';
@@ -37,6 +37,7 @@ import {
   UsersRound,
   MapPinned,
   Plug,
+  KeyRound,
 } from 'lucide-react';
 
 import type { ThemeMode } from '../../lib/platform/theme';
@@ -83,6 +84,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   stats: 'Stats',
   analytics: 'Analytics',
   settings: 'Public Information',
+  permissions: 'Permissions',
   integrations: 'Integrations',
   cities: 'Operations',
   guide: 'Guide',
@@ -111,6 +113,7 @@ export function StaffOpsLayout({
   const { formFactor } = useDevice();
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
+  const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
   const bleed =
@@ -141,11 +144,12 @@ export function StaffOpsLayout({
     { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
+    { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
     { id: 'settings', label: 'Public Information', icon: Settings, settingsOnly: true },
     { id: 'integrations', label: 'Integrations', icon: Plug, settingsOnly: true },
   ];
 
-  const accessFlags = { showFinance, showSettings, showDisputes, showCities };
+  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
 
@@ -204,6 +208,7 @@ export function StaffOpsLayout({
         navHighlight={navHighlight}
         showFinance={showFinance}
         showSettings={showSettings}
+        showPermissions={showPermissions}
         showDisputes={showDisputes}
         showCities={showCities}
         onOpenLegal={onOpenLegal}

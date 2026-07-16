@@ -22,6 +22,7 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canAccessStaffPermissions,
   canAccessStaffSettings,
   canEditJobListingDetails,
   canHandleDisputes,
@@ -93,6 +94,8 @@ import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { StaffPermissionsPanel } from './staff/StaffPermissionsPanel';
+import type { StaffPermissionsPatch } from './staff/StaffPermissionsPanel';
 import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
@@ -225,6 +228,7 @@ interface StaffDashboardProps {
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
   onAddStaffProfile: (
     email: string,
     badgeNumber: string,
@@ -393,6 +397,7 @@ export function StaffDashboard({
   onUpdatePlatformCity,
   onUpdateStaffCityAccess,
   onUpdatePlatformSettings,
+  onUpdateStaffPermissions,
   onAddStaffProfile,
   onApproveStaffAccount,
   onRejectStaffAccount,
@@ -549,6 +554,7 @@ export function StaffDashboard({
 
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
+  const showPermissions = canAccessStaffPermissions(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
   const canApproveStaff = canApproveStaffAccounts(currentUser);
@@ -570,11 +576,11 @@ export function StaffDashboard({
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
-    const accessFlags = { showFinance, showSettings, showDisputes, showCities };
+    const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showSettings, showDisputes, showCities]);
+  }, [section, showFinance, showSettings, showPermissions, showDisputes, showCities]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -736,10 +742,6 @@ export function StaffDashboard({
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
             feeConfig={platformSettings.feeConfig}
-            showApprovalSettings={showSettings}
-            currentUser={currentUser}
-            platformSettings={platformSettings}
-            onUpdatePlatformSettings={onUpdatePlatformSettings}
           />
           </div>
         );
@@ -1061,6 +1063,20 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
             placeholders={['Open cities', 'Wait list', 'Recommendations']}
+          />
+        );
+      case 'permissions':
+        return showPermissions ? (
+          <StaffPermissionsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdateStaffPermissions={onUpdateStaffPermissions}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.permissions!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.permissions!.message}
+            placeholders={['Approval rules', 'Staff role permissions']}
           />
         );
       case 'settings':

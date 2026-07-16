@@ -11,6 +11,7 @@ interface StaffDesktopNavProps {
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   footer?: React.ReactNode;
   brandingTrailing?: React.ReactNode;
@@ -24,7 +25,7 @@ const GROUPS: { title: string; ids: StaffSection[] }[] = [
   },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { title: 'Risk & support', ids: ['incidents', 'disputes'] },
-  { title: 'Platform', ids: ['settings', 'integrations', 'guide', 'dev-updates'] },
+  { title: 'Platform', ids: ['permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
 export function StaffDesktopNav({
@@ -33,11 +34,12 @@ export function StaffDesktopNav({
   onNavigate,
   showFinance,
   showSettings,
+  showPermissions,
   showDisputes,
   footer,
   brandingTrailing,
 }: StaffDesktopNavProps) {
-  const accessFlags: StaffNavAccessFlags = { showFinance, showSettings, showDisputes, showCities: false };
+  const accessFlags: StaffNavAccessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities: false };
 
   const handleSelect = (id: StaffSection) => {
     const notice = getStaffNavAccessNotice(id, accessFlags);

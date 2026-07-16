@@ -22,6 +22,7 @@ interface DesktopStaffTopShellProps {
   navHighlight: StaffSection;
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
@@ -39,6 +40,7 @@ const SECONDARY_NAV: StaffSection[] = [
   'payments',
   'incidents',
   'analytics',
+  'permissions',
   'settings',
 ];
 
@@ -54,6 +56,7 @@ export function DesktopStaffTopShell({
   navHighlight,
   showFinance,
   showSettings,
+  showPermissions,
   showDisputes,
   onOpenLegal,
   hideHeader = false,
@@ -61,7 +64,7 @@ export function DesktopStaffTopShell({
   headerExtension,
   headerOverride,
 }: DesktopStaffTopShellProps) {
-  const accessFlags = { showFinance, showSettings, showDisputes, showCities: false };
+  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities: false };
   const isMap = isStaffOpsMapSection(activeSection);
 
   const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);

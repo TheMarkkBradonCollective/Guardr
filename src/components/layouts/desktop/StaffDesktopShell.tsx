@@ -1,6 +1,6 @@
 import React from 'react';
 import { SessionUser } from '../../../types';
-import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../../lib/staffOps';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../../lib/legalContent';
@@ -26,6 +26,7 @@ interface StaffDesktopShellProps {
   navHighlight: StaffSection;
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   bleed: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
@@ -47,6 +48,7 @@ export function StaffDesktopShell({
   navHighlight,
   showFinance,
   showSettings,
+  showPermissions,
   showDisputes,
   bleed,
   onOpenLegal,
@@ -96,6 +98,7 @@ export function StaffDesktopShell({
         onNavigate={onNavigate}
         showFinance={showFinance}
         showSettings={showSettings}
+        showPermissions={showPermissions}
         showDisputes={showDisputes}
         footer={railFooter}
         brandingTrailing={brandingTrailing}

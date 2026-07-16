@@ -13,6 +13,8 @@ export interface StaffNavItem {
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
   settingsOnly?: boolean;
+  /** Visible to Manager and above (permissions & approval rules) */
+  permissionsOnly?: boolean;
   /** Visible to Manager and above (Operations controls) */
   citiesOnly?: boolean;
   /** Visible to Administrator and above (dispute resolution) */
@@ -25,6 +27,7 @@ interface StaffSidebarNavProps {
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
 }
@@ -43,7 +46,7 @@ const OPERATIONS_IDS: StaffSection[] = [
 const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'violations', 'stats', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
-const PLATFORM_IDS: StaffSection[] = ['cities', 'settings', 'integrations'];
+const PLATFORM_IDS: StaffSection[] = ['cities', 'permissions', 'settings', 'integrations'];
 
 function NavGroup({
   title,
@@ -110,10 +113,11 @@ export function StaffSidebarNav({
   onNavigate,
   showFinance,
   showSettings,
+  showPermissions,
   showDisputes,
   showCities,
 }: StaffSidebarNavProps) {
-  const accessFlags = { showFinance, showSettings, showDisputes, showCities };
+  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
 
   return (
     <nav aria-label="Staff navigation">

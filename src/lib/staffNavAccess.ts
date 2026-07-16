@@ -3,6 +3,7 @@ import type { StaffSection } from './staffOps';
 export interface StaffNavAccessFlags {
   showFinance: boolean;
   showSettings: boolean;
+  showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
 }
@@ -21,6 +22,7 @@ const FINANCE_SECTIONS = new Set<StaffSection>([
 ]);
 
 const SETTINGS_SECTIONS = new Set<StaffSection>(['settings', 'integrations']);
+const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
 
@@ -40,6 +42,13 @@ export function getStaffNavAccessNotice(
       title: 'Administrator access required',
       message:
         'Platform settings are limited to Administrator roles and above. Ask your Director to update homepage messages or other system-wide controls.',
+    };
+  }
+  if (PERMISSIONS_SECTIONS.has(section) && !flags.showPermissions) {
+    return {
+      title: 'Manager access required',
+      message:
+        'Permissions and approval rules are limited to Manager roles and above. Ask your Director if you need access.',
     };
   }
   if (CITIES_SECTIONS.has(section) && !flags.showCities) {
@@ -66,6 +75,7 @@ export function isStaffNavSectionAccessible(section: StaffSection, flags: StaffN
 export interface StaffNavItemAccess {
   financeOnly?: boolean;
   settingsOnly?: boolean;
+  permissionsOnly?: boolean;
   citiesOnly?: boolean;
   disputesOnly?: boolean;
 }
@@ -77,6 +87,7 @@ export function isStaffNavItemVisible(
 ): boolean {
   if (item.financeOnly && !flags.showFinance) return false;
   if (item.settingsOnly && !flags.showSettings) return false;
+  if (item.permissionsOnly && !flags.showPermissions) return false;
   if (item.citiesOnly && !flags.showCities) return false;
   if (item.disputesOnly && !flags.showDisputes) return false;
   return true;
@@ -124,6 +135,11 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     title: 'Integrations',
     message:
       'Third-party integrations and payment methods are limited to Administrator roles and above. Only the Founder can change these settings.',
+  },
+  permissions: {
+    title: 'Permissions',
+    message:
+      'Staff permissions and approval rules are limited to Manager roles and above. Ask your Director if you need access.',
   },
   cities: {
     title: 'Operations',
