@@ -108,6 +108,47 @@ export function platformPaymentModeDescription(settings: PlatformSettings): stri
   return 'Enable at least one connected card processor below.';
 }
 
+export function platformSmsModeLabel(settings: PlatformSettings): string {
+  return settings.smsNotificationsEnabled === true ? 'Twilio only' : 'Off';
+}
+
+export function platformSmsModeDescription(settings: PlatformSettings): string {
+  if (settings.smsNotificationsEnabled === true) {
+    return 'SMS alerts are sent through Twilio for job updates, approvals, and staff notifications.';
+  }
+  return 'SMS notifications are off. Staff can still use in-app and push alerts.';
+}
+
+export function platformBackgroundCheckModeLabel(settings: PlatformSettings): string {
+  return settings.backgroundCheckProvider === 'checkr' ? 'Checkr only' : 'Manual staff review';
+}
+
+export function platformBackgroundCheckModeDescription(settings: PlatformSettings): string {
+  if (settings.backgroundCheckProvider === 'checkr') {
+    return 'Guard background checks run through Checkr when connected. Results sync automatically.';
+  }
+  return 'Staff manually review guard background checks in the Credentials panel.';
+}
+
+export function platformInsuranceModeLabel(settings: PlatformSettings): string {
+  return settings.insuranceVerificationMode === 'api' ? 'Automated API' : 'Manual COI review';
+}
+
+export function platformInsuranceModeDescription(settings: PlatformSettings): string {
+  if (settings.insuranceVerificationMode === 'api') {
+    return 'Certificates of insurance are verified automatically through the connected API.';
+  }
+  return 'Staff manually review COI documents in the Credentials panel.';
+}
+
+export function platformCheckrEnabled(settings: PlatformSettings): boolean {
+  return settings.backgroundCheckProvider === 'checkr';
+}
+
+export function platformInsuranceApiEnabled(settings: PlatformSettings): boolean {
+  return settings.insuranceVerificationMode === 'api';
+}
+
 /** At least one card processor must stay enabled. */
 export function normalizePlatformSettings(
   input: Partial<PlatformSettings> & { paymentCashEnabled?: boolean }
