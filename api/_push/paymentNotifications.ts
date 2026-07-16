@@ -40,6 +40,9 @@ export async function notifyJobOpenToGuards(
     location?: string;
     title?: string;
     guardsNeeded?: number;
+    hourlyRate?: number;
+    guardPay?: number | null;
+    teamLeadId?: string | null;
     type: string;
     state?: string | null;
     startDate: string;
@@ -53,6 +56,9 @@ export async function notifyJobOpenToGuards(
     body: options.body,
     location: options.location,
     guardsNeeded: options.guardsNeeded,
+    hourlyRate: options.hourlyRate,
+    guardPay: options.guardPay,
+    teamLeadId: options.teamLeadId,
     type: options.type,
     state: options.state,
     startDate: options.startDate,

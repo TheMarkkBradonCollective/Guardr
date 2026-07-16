@@ -3,7 +3,13 @@ import { getJobDistance } from './guardJobs';
 import { guardCanApplyToJob } from './guardJobs';
 import { toGuardJobView } from './guardJobView';
 import { armedStatusRank, computeGuardArmedStatus, guardMeetsArmedRequirement } from './guardArmedStatus';
-import { computeGuardPerformance } from './guardPerformance';
+import { computeGuardPerformance, computeGuardPerformanceRating } from './guardPerformance';
+import {
+  isPremiumJob,
+  performanceTierId,
+  tierMatchingBoostPoints,
+  type PerformanceTierId,
+} from './guardTierJobPriority';
 import { guardHasApplied } from './jobApplications';
 import { filterGuardsAvailableForJob } from './guardAvailability';
 
@@ -15,6 +21,7 @@ export interface GuardMatchFactors {
   experienceScore: number;
   performanceScore: number;
   trainingComplete: number;
+  tierBoost: number;
 }
 
 export interface GuardMatchScore {
@@ -33,6 +40,7 @@ const WEIGHTS: GuardMatchFactors = {
   experienceScore: 10,
   performanceScore: 10,
   trainingComplete: 5,
+  tierBoost: 0,
 };
 
 function scoreDistance(miles: number | null): number {
@@ -75,6 +83,11 @@ export function scoreGuardForJob(
   const meetsRequirements = guardCanApplyToJob(guard, jobView, allRequests);
   const distanceMiles = getJobDistance(jobView);
   const performance = computeGuardPerformance(guard.id, allRequests ?? []);
+  const premiumJob = isPremiumJob(job);
+  const tierId: PerformanceTierId = allRequests?.length
+    ? performanceTierId(computeGuardPerformanceRating(guard, allRequests).tier)
+    : 'starting';
+  const tierBoost = tierMatchingBoostPoints(tierId, premiumJob);
 
   const factors: GuardMatchFactors = {
     certificationMatch: meetsRequirements ? 1 : 0,
@@ -84,12 +97,15 @@ export function scoreGuardForJob(
     experienceScore: scoreExperience(guard.yearsExperience, guard.jobsCompleted),
     performanceScore: performance.overallScore > 0 ? performance.overallScore / 5 : scoreRating(guard.rating),
     trainingComplete: scoreTraining(guard, job),
+    tierBoost,
   };
 
   let totalScore = 0;
   for (const key of Object.keys(WEIGHTS) as (keyof GuardMatchFactors)[]) {
+    if (key === 'tierBoost') continue;
     totalScore += factors[key] * WEIGHTS[key];
   }
+  totalScore += tierBoost;
   if (!meetsRequirements) totalScore *= 0.35;
 
   return {

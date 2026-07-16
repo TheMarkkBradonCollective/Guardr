@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { SecurityGuard, SecurityRequest } from '../types';
-import { rankGuardsForJob } from './guardQualificationMatching';
+import { rankGuardsForJob, scoreGuardForJob } from './guardQualificationMatching';
 
 function baseGuard(id: string, rating: number): SecurityGuard {
   return {
@@ -71,4 +71,55 @@ describe('rankGuardsForJob', () => {
 
     assert.equal(ranked.length, 0);
   });
+
+  it('adds a larger tier boost for elite guards on premium jobs', () => {
+    const job = mondayJob(['g-starting', 'g-elite']);
+    job.hourlyRate = 50;
+    job.guardPay = 42;
+
+    const startingGuard = baseGuard('g-starting', 4.8);
+    const eliteGuard = baseGuard('g-elite', 4.8);
+    const eliteHistory = buildEliteHistory();
+
+    const startingScore = scoreGuardForJob(startingGuard, job, []);
+    const eliteScore = scoreGuardForJob(eliteGuard, job, eliteHistory);
+
+    assert.equal(startingScore.factors.tierBoost, 0);
+    assert.equal(eliteScore.factors.tierBoost, 18);
+    assert.ok(eliteScore.totalScore > startingScore.totalScore);
+
+    const ranked = rankGuardsForJob(job, [startingGuard, eliteGuard], {
+      applicantsOnly: true,
+      allRequests: eliteHistory,
+    });
+    assert.equal(ranked[0]?.guard.id, 'g-elite');
+  });
 });
+
+function buildEliteHistory(): SecurityRequest[] {
+  return [
+    {
+      ...baseJob(['g-elite']),
+      id: 'elite-1',
+      status: 'completed',
+      assignedGuardId: 'g-elite',
+      applicants: ['g-elite'],
+      startDate: '2026-07-20T10:00:00',
+      endDate: '2026-07-20T14:00:00',
+      ratingGiven: 5,
+      checkInAudit: {
+        checkedAt: '2026-07-20T10:00:00',
+        uniform: {
+          uniformPresent: true,
+          blackShoes: true,
+          dutyBelt: true,
+          nameBadge: true,
+          professionalAppearance: true,
+        },
+        equipment: { radio: true, flashlight: true, requiredEquipment: true },
+        selfieUpload: 'selfie.jpg',
+        gpsVerified: true,
+      },
+    },
+  ];
+}

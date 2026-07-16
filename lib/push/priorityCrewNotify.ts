@@ -2,6 +2,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { isPushConfigured } from './config';
 import { dispatchPushNotification } from './delivery';
 import { findGuardsToNotifyForOpenJob } from './guardOpenJobRecipients';
+import {
+  groupGuardsIntoNotificationWaves,
+  isPremiumJob,
+  tierJobNotificationCopy,
+  type PerformanceTierId,
+  type PremiumJob,
+} from '../../src/lib/guardTierJobPriority.ts';
+import { resolveGuardTierMap, sleep } from './guardTierResolve';
 
 interface PriorityCrewLeadRow {
   id: string;
@@ -98,6 +106,10 @@ export async function notifyOpenJobToGuards(
     body: string;
     location?: string;
     guardsNeeded?: number;
+    hourlyRate?: number;
+    guardPay?: number | null;
+    teamLeadId?: string | null;
+    guardSlots?: PremiumJob['guardSlots'];
     type: string;
     state?: string | null;
     startDate: string;
@@ -114,6 +126,14 @@ export async function notifyOpenJobToGuards(
   });
   if (!recipients.length) return;
 
+  const premiumJob = isPremiumJob({
+    hourlyRate: options.hourlyRate ?? 0,
+    guardPay: options.guardPay ?? undefined,
+    guardsNeeded: options.guardsNeeded,
+    teamLeadId: options.teamLeadId ?? undefined,
+    guardSlots: options.guardSlots,
+  });
+
   const recipientSet = new Set(recipients);
   const notified = new Set<string>();
 
@@ -128,15 +148,44 @@ export async function notifyOpenJobToGuards(
     for (const leadId of priorityLeads) notified.add(leadId);
   }
 
-  for (const guardId of recipients) {
-    if (notified.has(guardId)) continue;
-    await dispatchPushNotification(db, {
-      userId: guardId,
-      title: 'New job on the map',
-      body: options.body,
-      type: 'job_open_to_guards',
-      requestId: options.requestId,
-      siteId: options.location,
-    });
+  const remainingGuardIds = recipients.filter((guardId) => !notified.has(guardId));
+  const { data: guardRows, error: guardError } = await db
+    .from('guards')
+    .select('id, failed_audits')
+    .in('id', remainingGuardIds);
+
+  if (guardError) throw new Error(guardError.message);
+
+  const tierMap = await resolveGuardTierMap(
+    db,
+    (guardRows ?? []).map((row) => ({
+      id: String(row.id),
+      failedAudits: Number(row.failed_audits ?? 0),
+    }))
+  );
+
+  const waves = groupGuardsIntoNotificationWaves(
+    remainingGuardIds.map((guardId) => ({ id: guardId })),
+    (guard) => tierMap.get(guard.id) ?? ('starting' as PerformanceTierId),
+    premiumJob
+  );
+
+  for (const wave of waves) {
+    if (wave.delayMs > 0) await sleep(wave.delayMs);
+
+    for (const guard of wave.items) {
+      if (notified.has(guard.id)) continue;
+      notified.add(guard.id);
+      const copy = tierJobNotificationCopy(wave.tierId, premiumJob, options.title);
+      await dispatchPushNotification(db, {
+        userId: guard.id,
+        title: copy.title ?? 'New job on the map',
+        body: copy.body,
+        type: 'job_open_to_guards',
+        requestId: options.requestId,
+        siteId: options.location,
+        priority: copy.priority,
+      });
+    }
   }
 }
