@@ -12,7 +12,7 @@ import { NavMenuPopover } from '../layouts/NavMenuPopover';
 import { AccountMenu } from '../layouts/AccountMenu';
 import { showAppAlert } from '../ui/AppConfirm';
 import { useDevice } from '../../lib/platform';
-import { StaffDesktopShell } from '../layouts/desktop/StaffDesktopShell';
+import { DesktopStaffTopShell } from '../layouts/desktop/DesktopStaffTopShell';
 import {
   AlertTriangle,
   BarChart3,
@@ -178,12 +178,10 @@ export function StaffOpsLayout({
 
   if (formFactor === 'desktop') {
     return (
-      <StaffDesktopShell
+      <DesktopStaffTopShell
         currentUser={currentUser}
         activeSection={activeSection}
         onNavigate={onNavigate}
-        themeMode={themeMode}
-        onChangeTheme={onChangeTheme}
         onSignOut={onSignOut}
         isDbConnected={isDbConnected}
         navItems={navItems}
@@ -192,7 +190,6 @@ export function StaffOpsLayout({
         showFinance={showFinance}
         showSettings={showSettings}
         showDisputes={showDisputes}
-        bleed={bleed}
         onOpenLegal={onOpenLegal}
         hideHeader={hideHeader}
         headerActions={headerActions}
@@ -200,7 +197,7 @@ export function StaffOpsLayout({
         headerOverride={headerOverride}
       >
         {children}
-      </StaffDesktopShell>
+      </DesktopStaffTopShell>
     );
   }
 

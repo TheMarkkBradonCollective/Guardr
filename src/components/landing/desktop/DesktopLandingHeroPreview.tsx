@@ -9,12 +9,12 @@ import {
   Users,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-  { icon: Home, label: 'Home', active: false },
-  { icon: Briefcase, label: 'Jobs', active: false },
+const TABS = [
+  { icon: Home, label: 'Home' },
+  { icon: Briefcase, label: 'Jobs' },
   { icon: Map, label: 'Map', active: true },
-  { icon: MessagesSquare, label: 'Messages', active: false },
-  { icon: Users, label: 'Guards', active: false },
+  { icon: MessagesSquare, label: 'Messages' },
+  { icon: Users, label: 'Guards' },
 ];
 
 const JOBS = [
@@ -27,80 +27,59 @@ export function DesktopLandingHeroPreview() {
   return (
     <motion.div
       className="desktop-landing-preview"
-      initial={{ opacity: 0, y: 32, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.65, delay: 0.1 }}
       aria-hidden
     >
-      <div className="desktop-landing-preview-glow" />
-      <div className="desktop-landing-preview-frame">
-        <div className="desktop-landing-preview-chrome">
-          <span className="desktop-landing-preview-dot desktop-landing-preview-dot--close" />
-          <span className="desktop-landing-preview-dot desktop-landing-preview-dot--min" />
-          <span className="desktop-landing-preview-dot desktop-landing-preview-dot--max" />
-          <span className="desktop-landing-preview-url">app.guardr.com · Guard workspace</span>
+      <div className="desktop-landing-preview-frame dsk-preview-app">
+        <div className="dsk-preview-topbar">
+          <span className="dsk-preview-logo">G</span>
+          <div className="dsk-preview-tabs">
+            {TABS.map(({ icon: Icon, label, active }) => (
+              <span
+                key={label}
+                className={`dsk-preview-tab${active ? ' dsk-preview-tab--active' : ''}`}
+              >
+                <Icon className="w-3 h-3" />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="desktop-landing-preview-body">
-          <aside className="desktop-landing-preview-rail">
-            <div className="desktop-landing-preview-rail-brand">
-              <span className="desktop-landing-preview-logo">G</span>
-              <span className="desktop-landing-preview-brand-text">Guardr</span>
-            </div>
-            <div className="desktop-landing-preview-rail-nav">
-              {NAV_ITEMS.map(({ icon: Icon, label, active }) => (
-                <div
-                  key={label}
-                  className={`desktop-landing-preview-rail-item${
-                    active ? ' desktop-landing-preview-rail-item--active' : ''
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" strokeWidth={active ? 2.25 : 1.75} />
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-          </aside>
-
-          <div className="desktop-landing-preview-main">
-            <div className="desktop-landing-preview-command">
-              <div>
-                <p className="desktop-landing-preview-command-eyebrow">Operations</p>
-                <p className="desktop-landing-preview-command-title">Map</p>
-              </div>
-              <span className="desktop-landing-preview-live">Live</span>
-            </div>
-
-            <div className="desktop-landing-preview-workspace">
-              <div className="desktop-landing-preview-map">
-                <div className="desktop-landing-preview-map-grid" />
-                <span className="desktop-landing-preview-pin desktop-landing-preview-pin--a" />
-                <span className="desktop-landing-preview-pin desktop-landing-preview-pin--b" />
-                <span className="desktop-landing-preview-pin desktop-landing-preview-pin--c desktop-landing-preview-pin--active">
-                  <MapPin className="w-3 h-3" />
-                </span>
-                <div className="desktop-landing-preview-map-label">Open jobs near you</div>
-              </div>
-
-              <aside className="desktop-landing-preview-inspector">
-                <p className="desktop-landing-preview-inspector-label">3 offers · Inspector</p>
-                {JOBS.map((job) => (
-                  <div
-                    key={job.title}
-                    className={`desktop-landing-preview-job${
-                      job.hot ? ' desktop-landing-preview-job--hot' : ''
-                    }`}
-                  >
-                    <div>
-                      <p className="desktop-landing-preview-job-title">{job.title}</p>
-                      <p className="desktop-landing-preview-job-meta">{job.meta}</p>
-                    </div>
-                    <span className="desktop-landing-preview-job-rate">{job.rate}</span>
-                  </div>
-                ))}
-              </aside>
-            </div>
+        <div className="dsk-preview-subheader">
+          <div>
+            <p className="dsk-preview-sub-eyebrow">Workspace</p>
+            <p className="dsk-preview-sub-title">Map</p>
           </div>
+          <span className="dsk-preview-live">Live</span>
+        </div>
+
+        <div className="dsk-preview-body">
+          <div className="dsk-preview-map">
+            <div className="dsk-preview-map-grid" />
+            <span className="dsk-preview-pin dsk-preview-pin--a" />
+            <span className="dsk-preview-pin dsk-preview-pin--b" />
+            <span className="dsk-preview-pin dsk-preview-pin--c dsk-preview-pin--active">
+              <MapPin className="w-3 h-3" />
+            </span>
+          </div>
+          <aside className="dsk-preview-inspector">
+            <p className="dsk-preview-inspector-label">3 offers</p>
+            {JOBS.map((job) => (
+              <div
+                key={job.title}
+                className={`dsk-preview-job${job.hot ? ' dsk-preview-job--hot' : ''}`}
+              >
+                <div>
+                  <p className="dsk-preview-job-title">{job.title}</p>
+                  <p className="dsk-preview-job-meta">{job.meta}</p>
+                </div>
+                <span className="dsk-preview-job-rate">{job.rate}</span>
+              </div>
+            ))}
+          </aside>
         </div>
       </div>
     </motion.div>

@@ -144,7 +144,7 @@ export function GuardBottomSheet({
 
   if (isDesktopInspector) {
     return (
-      <aside className="desktop-map-inspector" aria-label={sheetLabel}>
+      <aside className="dsk-map-inspector desktop-map-inspector" aria-label={sheetLabel}>
         <div className="desktop-map-inspector-header">
           <p className="desktop-map-inspector-header-label">{sheetLabel}</p>
         </div>

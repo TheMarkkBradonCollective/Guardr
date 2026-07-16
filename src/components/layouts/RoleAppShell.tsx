@@ -6,7 +6,7 @@ import { NavMenuPopover } from './NavMenuPopover';
 import { AppHeaderBranding } from './AppHeaderBranding';
 import { AppHeaderToolbar } from './AppHeaderToolbar';
 import { useDevice } from '../../lib/platform';
-import { DesktopWorkspaceShell } from './desktop/DesktopWorkspaceShell';
+import { DesktopTopShell } from './desktop/DesktopTopShell';
 
 interface RoleAppShellProps {
   title: string;
@@ -46,7 +46,7 @@ export function RoleAppShell({
 
   if (formFactor === 'desktop') {
     return (
-      <DesktopWorkspaceShell
+      <DesktopTopShell
         title={title}
         accountMenu={accountMenu}
         navItems={navItems}
@@ -62,7 +62,7 @@ export function RoleAppShell({
         variant={variant}
       >
         {children}
-      </DesktopWorkspaceShell>
+      </DesktopTopShell>
     );
   }
 
