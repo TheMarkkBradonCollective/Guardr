@@ -3026,8 +3026,8 @@ body[data-form-factor="desktop"] .role-app-shell .app-screen {
   margin-inline: 0;
 }
 
-body[data-form-factor="tablet"] .client-map-layout .guardr-map-root,
-body[data-form-factor="desktop"] .client-map-layout .guardr-map-root {
+body[data-form-factor="tablet"] .client-map-layout:has(.map-selection-layer) .guardr-map-root,
+body[data-form-factor="desktop"] .client-map-layout:has(.map-selection-layer) .guardr-map-root {
   right: min(400px, 38vw);
 }
 

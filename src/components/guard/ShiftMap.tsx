@@ -142,14 +142,27 @@ function MapInvalidateSize() {
   const map = useMap();
 
   useEffect(() => {
-    const syncSize = () => map.invalidateSize();
+    const container = map.getContainer();
+    const syncSize = () => map.invalidateSize({ animate: false });
+
     const raf = requestAnimationFrame(syncSize);
     const timer = window.setTimeout(syncSize, 120);
+    const lateTimer = window.setTimeout(syncSize, 400);
     window.addEventListener('resize', syncSize);
+
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => syncSize())
+        : null;
+    observer?.observe(container);
+    container.parentElement && observer?.observe(container.parentElement);
+
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(timer);
+      window.clearTimeout(lateTimer);
       window.removeEventListener('resize', syncSize);
+      observer?.disconnect();
     };
   }, [map]);
 

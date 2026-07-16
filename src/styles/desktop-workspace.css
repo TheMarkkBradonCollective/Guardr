@@ -527,18 +527,12 @@ body[data-form-factor="desktop"] .desktop-map-inspector-body {
   padding: 1rem 1.15rem 1.5rem;
 }
 
-body[data-form-factor="desktop"] .guard-map-layout .guardr-map-root {
+body[data-form-factor="desktop"] .guard-map-layout:has(.desktop-map-inspector, .guard-side-panel) .guardr-map-root {
   right: 28rem !important;
 }
 
-body[data-form-factor="desktop"] .client-map-layout .guardr-map-root {
+body[data-form-factor="desktop"] .client-map-layout:has(.map-selection-layer) .guardr-map-root {
   right: 28rem !important;
-}
-
-body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset {
-  right: 28rem !important;
-  width: auto !important;
-  left: 0 !important;
 }
 
 /* ─── Content width helpers ─────────────────────────────────────────────── */
