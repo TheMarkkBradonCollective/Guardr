@@ -75,6 +75,8 @@ interface StaffGuardsPanelProps {
     status: 'verified' | 'rejected',
     rejectionReason?: string
   ) => void | Promise<void>;
+  onApproveVehicle?: (guardId: string) => void | Promise<void>;
+  onRejectVehicle?: (guardId: string, reason?: string) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -124,6 +126,8 @@ export function StaffGuardsPanel({
   onRequestIdentityResubmit,
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
+  onApproveVehicle,
+  onRejectVehicle,
   onUpdateGuardIdImages,
   canVerifyCredentials = false,
   selectedId: controlledSelectedId,
@@ -222,6 +226,8 @@ export function StaffGuardsPanel({
       onReviewInsurance: onReviewGuardInsurance
         ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
         : undefined,
+      onApproveVehicle: onApproveVehicle ? () => onApproveVehicle(guard.id) : undefined,
+      onRejectVehicle: onRejectVehicle ? (reason) => onRejectVehicle(guard.id, reason) : undefined,
       onOpenJob,
       onOpenGuardApplication,
       onOpenGuardCredential,

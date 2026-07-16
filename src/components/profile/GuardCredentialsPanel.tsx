@@ -21,6 +21,7 @@ import { GuardPtaUofPanel } from '../guard/GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { GuardCardPanel } from './GuardCardPanel';
 import { GuardCoiItemCard } from './GuardCoiItemCard';
+import { GuardVehicleInsuranceItemCard } from './GuardVehicleInsuranceItemCard';
 import { GuardIdItemCard } from './GuardIdItemCard';
 import {
   type GuardIdentityVerificationPayload,
@@ -109,6 +110,9 @@ interface GuardCredentialsPanelProps {
   staffIdReview?: React.ReactNode;
   renderCertActions?: (cert: Certification) => React.ReactNode;
   onSaveInsurance?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
+  onSaveVehicleInsurance?: (
+    policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   certOverlayNav?: CertOverlayNavigation;
 }
@@ -125,6 +129,7 @@ export function GuardCredentialsPanel({
   staffIdReview,
   renderCertActions,
   onSaveInsurance,
+  onSaveVehicleInsurance,
   onReviewInsurance,
   certOverlayNav,
 }: GuardCredentialsPanelProps) {
@@ -496,6 +501,13 @@ export function GuardCredentialsPanel({
               }
               viewFullLabel={credentialViewFullLabel}
               onEditFullPage={certOverlayNav?.onEditFullPage}
+            />
+          )}
+          {(onSaveVehicleInsurance || guard.vehicleInsurancePolicy) && (
+            <GuardVehicleInsuranceItemCard
+              guard={guard}
+              editing={editing}
+              onSave={onSaveVehicleInsurance}
             />
           )}
           <GuardCardPanel

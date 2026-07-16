@@ -91,6 +91,8 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_deadline TIMESTAMPT
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_hours INTEGER;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_missing JSONB;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_submitted_by TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_document_type TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_license_class TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_name TEXT DEFAULT '';
@@ -1262,6 +1264,52 @@ COMMENT ON TABLE guard_insurance_policies IS
 
 ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
 ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_request_note TEXT;
+
+CREATE TABLE IF NOT EXISTS guard_vehicle_insurance_policies (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  guard_id TEXT NOT NULL UNIQUE REFERENCES guards(id) ON DELETE CASCADE,
+  carrier TEXT NOT NULL DEFAULT '',
+  policy_number TEXT NOT NULL DEFAULT '',
+  effective_date DATE,
+  expiry_date DATE,
+  document_url TEXT,
+  status TEXT NOT NULL DEFAULT 'not_submitted',
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  update_requested_at TIMESTAMPTZ,
+  update_request_note TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_insurance_policies_guard_id
+  ON guard_vehicle_insurance_policies (guard_id);
+
+CREATE TABLE IF NOT EXISTS guard_vehicle_profiles (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  guard_id TEXT NOT NULL UNIQUE REFERENCES guards(id) ON DELETE CASCADE,
+  make TEXT NOT NULL DEFAULT '',
+  model TEXT NOT NULL DEFAULT '',
+  year TEXT,
+  color TEXT,
+  plate_number TEXT NOT NULL DEFAULT '',
+  plate_state TEXT NOT NULL DEFAULT '',
+  front_photo_url TEXT,
+  left_side_photo_url TEXT,
+  right_side_photo_url TEXT,
+  back_photo_url TEXT,
+  vehicle_insurance_policy_id TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_profiles_guard_id
+  ON guard_vehicle_profiles (guard_id);
 
 -- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
 CREATE TABLE IF NOT EXISTS company_public_documents (

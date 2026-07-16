@@ -52,6 +52,7 @@ import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { StaffVehicleReviewSection } from './StaffVehicleReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
@@ -105,6 +106,8 @@ interface StaffGuardDetailPanelProps {
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => void | Promise<void>;
+  onApproveVehicle?: (guardId: string) => void | Promise<void>;
+  onRejectVehicle?: (guardId: string, reason?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   onOpenGuardApplication?: (guardId: string) => void;
@@ -149,6 +152,8 @@ export function StaffGuardDetailPanel({
   onUpdateGuardIdImages,
   onRequestCertImageResubmit,
   onReviewInsurance,
+  onApproveVehicle,
+  onRejectVehicle,
   onBack,
   onOpenJob,
   onOpenGuardApplication,
@@ -835,6 +840,14 @@ export function StaffGuardDetailPanel({
                 renderCertActions={renderStaffCertActions}
                 certOverlayNav={certOverlayNav}
               />
+              {canManage ? (
+                <StaffVehicleReviewSection
+                  guard={guard}
+                  canManage={canManage}
+                  onApprove={onApproveVehicle}
+                  onReject={onRejectVehicle}
+                />
+              ) : null}
             </section>
           )}
 

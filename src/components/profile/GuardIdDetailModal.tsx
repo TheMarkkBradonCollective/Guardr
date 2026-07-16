@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { IdCard, Loader2, Pencil, UserRound, X } from 'lucide-react';
-import { SecurityGuard } from '../../types';
+import type { GovernmentIdDocumentType, SecurityGuard } from '../../types';
+import { DRIVER_LICENSE_CLASSES } from '../../types';
 import {
   getGuardIdVerificationStatus,
   guardIdVerificationIsLocked,
   guardIdVerificationPhotosComplete,
   guardIdVerificationSubmissionReady,
   ID_VERIFICATION_SELFIE_HINT,
-  ID_VERIFICATION_SLOT_LABELS,
+  governmentIdSlotLabels,
+  governmentIdDocumentTypeLabel,
 } from '../../lib/guardIdentityVerification';
 import { US_STATES } from '../../lib/states';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
@@ -51,6 +53,10 @@ export function GuardIdDetailModal({
   const photosLocked = staffMode ? false : locked;
 
   const [editing, setEditing] = useState(initialEditMode && canEdit && !onEditFullPage);
+  const [idDocumentType, setIdDocumentType] = useState<GovernmentIdDocumentType>(
+    guard.idDocumentType ?? 'state_id'
+  );
+  const [idLicenseClass, setIdLicenseClass] = useState(guard.idLicenseClass ?? '');
   const [idState, setIdState] = useState(guard.idState ?? 'CA');
   const [idNumber, setIdNumber] = useState(guard.idNumber ?? '');
   const [idExpiryDate, setIdExpiryDate] = useState(guard.idExpiryDate ?? '');
@@ -62,6 +68,8 @@ export function GuardIdDetailModal({
 
   React.useEffect(() => {
     if (editing) return;
+    setIdDocumentType(guard.idDocumentType ?? 'state_id');
+    setIdLicenseClass(guard.idLicenseClass ?? '');
     setIdState(guard.idState ?? 'CA');
     setIdNumber(guard.idNumber ?? '');
     setIdExpiryDate(guard.idExpiryDate ?? '');
@@ -74,6 +82,8 @@ export function GuardIdDetailModal({
     }
   }, [
     guard.id,
+    guard.idDocumentType,
+    guard.idLicenseClass,
     guard.idState,
     guard.idNumber,
     guard.idExpiryDate,
@@ -87,6 +97,8 @@ export function GuardIdDetailModal({
 
   const displayGuard: SecurityGuard = {
     ...guard,
+    idDocumentType,
+    idLicenseClass: idLicenseClass.trim() || guard.idLicenseClass,
     idState: idState.trim().toUpperCase() || guard.idState,
     idNumber: idNumber.trim() || guard.idNumber,
     idExpiryDate: idExpiryDate.trim() || guard.idExpiryDate,
@@ -103,7 +115,10 @@ export function GuardIdDetailModal({
   const draftFront = frontUrl.trim();
   const draftBack = backUrl.trim();
   const draftSelfie = selfieUrl.trim();
+  const slotLabels = governmentIdSlotLabels(idDocumentType);
   const draftComplete = guardIdVerificationSubmissionReady({
+    idDocumentType,
+    idLicenseClass: idLicenseClass.trim(),
     idState: draftState,
     idNumber: draftNumber,
     idExpiryDate: draftExpiry,
@@ -122,7 +137,11 @@ export function GuardIdDetailModal({
       return;
     }
     if (!draftFront || !draftBack || !draftSelfie) {
-      setSubmitError('Upload ID front, ID back, and an identity selfie before saving.');
+      setSubmitError(`Upload ${slotLabels.front.toLowerCase()}, ${slotLabels.back.toLowerCase()}, and an identity selfie before saving.`);
+      return;
+    }
+    if (idDocumentType === 'drivers_license' && !idLicenseClass.trim()) {
+      setSubmitError("Select your driver's license class.");
       return;
     }
 
@@ -130,6 +149,8 @@ export function GuardIdDetailModal({
     setSubmitError('');
     try {
       const result = await onSubmit({
+        idDocumentType,
+        idLicenseClass: idLicenseClass.trim(),
         idState: draftState,
         idNumber: draftNumber,
         idExpiryDate: draftExpiry,
@@ -153,6 +174,8 @@ export function GuardIdDetailModal({
   };
 
   const handleCancelEdit = () => {
+    setIdDocumentType(guard.idDocumentType ?? 'state_id');
+    setIdLicenseClass(guard.idLicenseClass ?? '');
     setIdState(guard.idState ?? 'CA');
     setIdNumber(guard.idNumber ?? '');
     setIdExpiryDate(guard.idExpiryDate ?? '');
@@ -174,10 +197,10 @@ export function GuardIdDetailModal({
         <div className="min-w-0">
           {guardName && <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>}
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
-            Government ID
+            {governmentIdDocumentTypeLabel(guard.idDocumentType)}
           </p>
           <h2 id="guard-id-detail-title" className="font-bold text-lg leading-snug">
-            {editing ? 'Edit government ID' : 'Identity verification'}
+            {editing ? `Edit ${governmentIdDocumentTypeLabel(idDocumentType).toLowerCase()}` : 'Identity verification'}
           </h2>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -230,6 +253,35 @@ export function GuardIdDetailModal({
         {editing ? (
           <div className="space-y-4">
             <div className="space-y-3">
+              <label className="uber-label">Document type</label>
+              <select
+                value={idDocumentType}
+                onChange={(e) => setIdDocumentType(e.target.value as GovernmentIdDocumentType)}
+                className="uber-select w-full"
+                aria-label="Government ID document type"
+              >
+                <option value="state_id">Government ID</option>
+                <option value="drivers_license">Driver&apos;s license</option>
+              </select>
+              {idDocumentType === 'drivers_license' ? (
+                <>
+                  <label className="uber-label">License class</label>
+                  <select
+                    value={idLicenseClass}
+                    onChange={(e) => setIdLicenseClass(e.target.value)}
+                    className="uber-select w-full"
+                    required
+                    aria-label="Driver license class"
+                  >
+                    <option value="">Select class</option>
+                    {DRIVER_LICENSE_CLASSES.map((licenseClass) => (
+                      <option key={licenseClass} value={licenseClass}>
+                        {licenseClass}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
               <label className="uber-label">Issuing state</label>
               <select
                 value={idState}
@@ -268,21 +320,21 @@ export function GuardIdDetailModal({
               <p className="uber-label">Photos</p>
               <div className="app-cert-item-stack">
                 <GuardIdPhotoRow
-                  label={ID_VERIFICATION_SLOT_LABELS.front}
+                  label={slotLabels.front}
                   currentUrl={frontUrl}
                   locked={photosLocked}
                   onSelect={setFrontUrl}
                   icon={IdCard}
                 />
                 <GuardIdPhotoRow
-                  label={ID_VERIFICATION_SLOT_LABELS.back}
+                  label={slotLabels.back}
                   currentUrl={backUrl}
                   locked={photosLocked}
                   onSelect={setBackUrl}
                   icon={IdCard}
                 />
                 <GuardIdPhotoRow
-                  label={ID_VERIFICATION_SLOT_LABELS.selfie}
+                  label={slotLabels.selfie}
                   hint={ID_VERIFICATION_SELFIE_HINT}
                   currentUrl={selfieUrl}
                   locked={photosLocked}

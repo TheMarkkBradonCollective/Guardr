@@ -55,6 +55,8 @@ import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
+import { GuardVehiclePanel } from './guard/GuardVehiclePanel';
+import { guardVehicleTabVisible } from '../lib/guardVehicle';
 import { GuardPreferencesScreen } from './guard/GuardPreferencesScreen';
 import { GuardAvailabilityScreen } from './guard/GuardAvailabilityScreen';
 import { SupportComposePage } from './support/SupportComposePage';
@@ -66,7 +68,7 @@ import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -148,6 +150,15 @@ interface GuardDashboardProps {
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onSaveInsurance?: (
     policy: Partial<import('../types').GuardInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
+  onSaveVehicleInsurance?: (
+    policy: Partial<import('../types').GuardVehicleInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
+  onSaveVehicle?: (
+    profile: Partial<import('../types').GuardVehicleProfile> & { guardId: string }
+  ) => Promise<void>;
+  onSubmitVehicle?: (
+    profile: Partial<import('../types').GuardVehicleProfile> & { guardId: string }
   ) => Promise<void>;
   onAcceptJob: (requestId: string) => void;
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
@@ -258,7 +269,7 @@ interface GuardDashboardProps {
   isDbConnected?: boolean;
 }
 
-export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability';
+export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
@@ -270,6 +281,7 @@ const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'availability',
   'preferences',
   'performance',
+  'vehicle',
   'earnings',
 ]);
 
@@ -288,6 +300,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   preferences: 'Preferences',
   performance: 'Performance',
   availability: 'Availability',
+  vehicle: 'Vehicle',
 };
 
 export function GuardDashboard({
@@ -304,6 +317,9 @@ export function GuardDashboard({
   onAddEducation,
   onSubmitIdentityVerification,
   onSaveInsurance,
+  onSaveVehicleInsurance,
+  onSaveVehicle,
+  onSubmitVehicle,
   onAcceptJob,
   onDeclineDirectJob,
   onApplyAsTeamLead,
@@ -1239,6 +1255,8 @@ export function GuardDashboard({
     !showBriefingOverlay;
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
+  const showVehicleTab = guardVehicleTabVisible(guard);
+
   const SIDEBAR_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
@@ -1247,6 +1265,7 @@ export function GuardDashboard({
     { id: 'availability', icon: CalendarDays, label: 'Availability' },
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
     { id: 'performance', icon: BarChart3, label: 'Performance' },
+    ...(showVehicleTab ? [{ id: 'vehicle' as const, icon: Car, label: 'Vehicle' }] : []),
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
   ];
 
@@ -1633,6 +1652,7 @@ export function GuardDashboard({
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
                 onSaveInsurance={onSaveInsurance}
+                onSaveVehicleInsurance={onSaveVehicleInsurance}
               />
             </div>
           )}
@@ -1680,6 +1700,16 @@ export function GuardDashboard({
                   onDisputeShiftAuditViolation={onDisputeShiftAuditViolation}
                 />
               </div>
+            </div>
+          )}
+
+          {tab === 'vehicle' && onSaveVehicle && onSubmitVehicle && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <GuardVehiclePanel
+                guard={guard}
+                onSaveVehicle={onSaveVehicle}
+                onSubmitVehicle={onSubmitVehicle}
+              />
             </div>
           )}
         </AppPageTransition>

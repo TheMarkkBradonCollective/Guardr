@@ -343,6 +343,60 @@ export interface GuardInsurancePolicy {
   updateRequestNote?: string;
 }
 
+export type GovernmentIdDocumentType = 'state_id' | 'drivers_license';
+
+export const DRIVER_LICENSE_CLASSES = ['Class A', 'Class B', 'Class C', 'Class M'] as const;
+
+export type DriverLicenseClass = (typeof DRIVER_LICENSE_CLASSES)[number];
+
+export type GuardVehicleInsuranceStatus =
+  | 'not_submitted'
+  | 'pending'
+  | 'verified'
+  | 'rejected'
+  | 'expired';
+
+/** Auto insurance for patrol / driving work — separate from general liability COI. */
+export interface GuardVehicleInsurancePolicy {
+  id: string;
+  guardId: string;
+  carrier: string;
+  policyNumber: string;
+  effectiveDate?: string;
+  expiryDate?: string;
+  documentUrl?: string;
+  status: GuardVehicleInsuranceStatus;
+  rejectionReason?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  updateRequestedAt?: string;
+  updateRequestNote?: string;
+}
+
+export type GuardVehicleProfileStatus = 'draft' | 'pending' | 'verified' | 'rejected';
+
+export interface GuardVehicleProfile {
+  id: string;
+  guardId: string;
+  make: string;
+  model: string;
+  year?: string;
+  color?: string;
+  plateNumber: string;
+  plateState: string;
+  frontPhotoUrl?: string;
+  leftSidePhotoUrl?: string;
+  rightSidePhotoUrl?: string;
+  backPhotoUrl?: string;
+  vehicleInsurancePolicyId?: string;
+  status: GuardVehicleProfileStatus;
+  rejectionReason?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
 export interface JobServiceAgreement {
   id: string;
   jobId: string;
@@ -523,6 +577,14 @@ export interface SecurityGuard {
   idUpdateRequestNote?: string;
   /** Who submitted government ID for approvals filtering */
   idSubmittedBy?: 'guard' | 'staff';
+  /** State ID or driver's license — controls labels and driving eligibility. */
+  idDocumentType?: GovernmentIdDocumentType;
+  /** Shown when idDocumentType is drivers_license (e.g. Class C). */
+  idLicenseClass?: string;
+  /** Auto insurance credential for driving / patrol work. */
+  vehicleInsurancePolicy?: GuardVehicleInsurancePolicy;
+  /** Guard vehicle submitted for staff approval before driving priority unlocks. */
+  vehicleProfile?: GuardVehicleProfile;
   /** Staff-granted deadline to upload optional credentials before account deactivation */
   credentialGraceDeadline?: string;
   /** Credential labels missing when grace period started */

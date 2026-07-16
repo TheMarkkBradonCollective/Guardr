@@ -1,4 +1,5 @@
 import { SecurityGuard } from '../types';
+import type { GovernmentIdDocumentType } from '../types';
 import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
 import { isGuardSubmittedIdentityVerification } from './approvalSubmissions';
 import { getGuardUserStatus } from './accountStatus';
@@ -18,6 +19,33 @@ export const ID_VERIFICATION_SLOT_LABELS = {
   back: 'ID — back',
   selfie: 'Identity selfie',
 } as const;
+
+export function governmentIdDocumentTypeLabel(type?: GovernmentIdDocumentType): string {
+  return type === 'drivers_license' ? "Driver's license" : 'Government ID';
+}
+
+export function governmentIdSlotLabels(
+  type?: GovernmentIdDocumentType
+): Record<'front' | 'back' | 'selfie', string> {
+  if (type === 'drivers_license') {
+    return {
+      front: 'License — front',
+      back: 'License — back',
+      selfie: 'Identity selfie',
+    };
+  }
+  return {
+    front: ID_VERIFICATION_SLOT_LABELS.front,
+    back: ID_VERIFICATION_SLOT_LABELS.back,
+    selfie: ID_VERIFICATION_SLOT_LABELS.selfie,
+  };
+}
+
+export function guardGovernmentIdIsDriversLicense(
+  guard: Pick<SecurityGuard, 'idDocumentType'>
+): boolean {
+  return guard.idDocumentType === 'drivers_license';
+}
 
 export const ID_VERIFICATION_SELFIE_HINT =
   'Take a clear headshot with your front camera. Face the camera directly with good lighting. This is for identity verification — not your profile photo.';
@@ -124,9 +152,19 @@ export function getGovernmentIdUploadStatusSummary(
 }
 
 export function guardIdVerificationSubmissionReady(
-  guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idExpiryDate' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+  guard: Pick<
+    SecurityGuard,
+    | 'idState'
+    | 'idNumber'
+    | 'idExpiryDate'
+    | 'idFrontUrl'
+    | 'idBackUrl'
+    | 'idSelfieUrl'
+    | 'idDocumentType'
+    | 'idLicenseClass'
+  >
 ): boolean {
-  return Boolean(
+  const baseReady = Boolean(
     guard.idState?.trim() &&
       guard.idNumber?.trim() &&
       guard.idExpiryDate?.trim() &&
@@ -134,6 +172,11 @@ export function guardIdVerificationSubmissionReady(
       guard.idBackUrl?.trim() &&
       guard.idSelfieUrl?.trim()
   );
+  if (!baseReady) return false;
+  if (guard.idDocumentType === 'drivers_license') {
+    return Boolean(guard.idLicenseClass?.trim());
+  }
+  return Boolean(guard.idDocumentType);
 }
 
 export function guardIdVerificationIsLocked(
@@ -165,10 +208,18 @@ export function guardIdVerificationResubmitPending(
 export function staffApproveIdVerificationBlocker(
   guard: Pick<
     SecurityGuard,
-    'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'
+    'name' | 'userStatus' | 'isStaff' | 'mustChangePassword' | 'idDocumentType' | 'idLicenseClass'
   >
 ): string | null {
-  return guardApplicationCredentialVerificationBlocker(guard, 'Government ID');
+  const applicationBlocker = guardApplicationCredentialVerificationBlocker(guard, 'Government ID');
+  if (applicationBlocker) return applicationBlocker;
+  if (!guard.idDocumentType) {
+    return 'Select whether this is a government ID or driver\'s license before approval.';
+  }
+  if (guard.idDocumentType === 'drivers_license' && !guard.idLicenseClass?.trim()) {
+    return "Enter the driver's license class before approval.";
+  }
+  return null;
 }
 
 export function staffCanApproveIdVerification(

@@ -60,6 +60,9 @@ interface GuardResumeEditorProps {
   onSaveInsurance?: (
     policy: Partial<GuardInsurancePolicy> & { guardId: string }
   ) => Promise<void>;
+  onSaveVehicleInsurance?: (
+    policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
   credentialsEditing?: boolean;
@@ -81,6 +84,7 @@ export function GuardResumeEditor({
   onAddEducation,
   onSubmitIdentityVerification,
   onSaveInsurance,
+  onSaveVehicleInsurance,
   onReviewInsurance,
   credentialsEditing,
   staffMode = false,
@@ -272,6 +276,7 @@ export function GuardResumeEditor({
           onUpdateCertification={onUpdateCertification}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
           onSaveInsurance={onSaveInsurance}
+          onSaveVehicleInsurance={onSaveVehicleInsurance}
           onReviewInsurance={onReviewInsurance}
         />
       )}
@@ -309,6 +314,7 @@ export function GuardResumeEditor({
           onUpdateCertification={onUpdateCertification}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
           onSaveInsurance={onSaveInsurance}
+          onSaveVehicleInsurance={onSaveVehicleInsurance}
           onReviewInsurance={onReviewInsurance}
           certOverlayNav={
             onEditCredentialFullPage ? { onEditFullPage: onEditCredentialFullPage } : undefined

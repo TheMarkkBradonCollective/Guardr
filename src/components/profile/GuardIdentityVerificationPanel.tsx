@@ -8,7 +8,11 @@ import {
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { GuardIdItemCard } from './GuardIdItemCard';
 
+import type { GovernmentIdDocumentType } from '../../types';
+
 export interface GuardIdentityVerificationPayload {
+  idDocumentType: GovernmentIdDocumentType;
+  idLicenseClass?: string;
   idState: string;
   idNumber: string;
   idExpiryDate: string;

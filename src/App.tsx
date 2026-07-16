@@ -459,6 +459,15 @@ import {
   resolveInsuranceStatus,
 } from './lib/guardInsurance';
 import {
+  vehicleInsurancePolicyFromRow,
+  vehicleInsurancePolicyToDbRow,
+} from './lib/guardVehicleInsurance';
+import {
+  vehicleProfileFromRow,
+  vehicleProfileToDbRow,
+  staffApproveVehicleBlocker,
+} from './lib/guardVehicle';
+import {
   computeAutoPayoutScheduledAt,
   isAutoPayoutDue,
   shouldScheduleAutoStripePayout,
@@ -1815,6 +1824,12 @@ export default function App() {
       const { data: dbInsurance, error: insuranceErr } = await supabase
         .from('guard_insurance_policies')
         .select('*');
+      const { data: dbVehicleInsurance, error: vehicleInsuranceErr } = await supabase
+        .from('guard_vehicle_insurance_policies')
+        .select('*');
+      const { data: dbVehicleProfiles, error: vehicleProfilesErr } = await supabase
+        .from('guard_vehicle_profiles')
+        .select('*');
       const { data: dbLegalAcceptances, error: legalAcceptancesErr } = await supabase
         .from('user_legal_acceptances')
         .select('*');
@@ -1824,6 +1839,12 @@ export default function App() {
 
       if (insuranceErr && insuranceErr.code !== '42P01') {
         console.warn('Guard insurance load (run migration if missing):', insuranceErr);
+      }
+      if (vehicleInsuranceErr && vehicleInsuranceErr.code !== '42P01') {
+        console.warn('Guard vehicle insurance load (run migration if missing):', vehicleInsuranceErr);
+      }
+      if (vehicleProfilesErr && vehicleProfilesErr.code !== '42P01') {
+        console.warn('Guard vehicle profiles load (run migration if missing):', vehicleProfilesErr);
       }
       if (legalAcceptancesErr && legalAcceptancesErr.code !== '42P01') {
         console.warn('Legal acceptances load (run migration if missing):', legalAcceptancesErr);
@@ -1836,6 +1857,18 @@ export default function App() {
         (dbInsurance ?? []).map((row: Record<string, unknown>) => [
           String(row.guard_id),
           insurancePolicyFromRow(row),
+        ])
+      );
+      const vehicleInsuranceByGuardId = new Map(
+        (dbVehicleInsurance ?? []).map((row: Record<string, unknown>) => [
+          String(row.guard_id),
+          vehicleInsurancePolicyFromRow(row),
+        ])
+      );
+      const vehicleProfileByGuardId = new Map(
+        (dbVehicleProfiles ?? []).map((row: Record<string, unknown>) => [
+          String(row.guard_id),
+          vehicleProfileFromRow(row),
         ])
       );
 
@@ -1975,6 +2008,11 @@ export default function App() {
         idUpdateRequestedAt: g.id_update_requested_at ?? undefined,
         idUpdateRequestNote: g.id_update_request_note ?? undefined,
         idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
+        idDocumentType:
+          g.id_document_type === 'drivers_license' || g.id_document_type === 'state_id'
+            ? g.id_document_type
+            : undefined,
+        idLicenseClass: g.id_license_class ?? undefined,
         credentialGraceDeadline: g.credential_grace_deadline ?? undefined,
         credentialGraceMissing: Array.isArray(g.credential_grace_missing)
           ? (g.credential_grace_missing as string[])
@@ -1986,6 +2024,8 @@ export default function App() {
         standingCrewName: g.standing_crew_name?.trim() || undefined,
         standingCrewDescription: g.standing_crew_description?.trim() || undefined,
         insurancePolicy: insuranceByGuardId.get(g.id),
+        vehicleInsurancePolicy: vehicleInsuranceByGuardId.get(g.id),
+        vehicleProfile: vehicleProfileByGuardId.get(g.id),
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -3416,6 +3456,174 @@ export default function App() {
         'Your credentials are verified. You can now browse and accept jobs on Guardr.'
       );
     }
+  };
+
+  const handleSaveGuardVehicleInsurance = async (
+    policy: Partial<import('./types').GuardVehicleInsurancePolicy> & { guardId: string }
+  ) => {
+    const existing = guards.find((g) => g.id === policy.guardId)?.vehicleInsurancePolicy;
+    const nextPolicy = {
+      id: existing?.id ?? policy.id ?? `vins-${policy.guardId}`,
+      guardId: policy.guardId,
+      carrier: policy.carrier ?? '',
+      policyNumber: policy.policyNumber ?? '',
+      effectiveDate: policy.effectiveDate,
+      expiryDate: policy.expiryDate,
+      documentUrl: policy.documentUrl,
+      status: policy.status ?? 'pending',
+      rejectionReason: policy.rejectionReason,
+      submittedAt: policy.submittedAt ?? new Date().toISOString(),
+      reviewedAt: policy.reviewedAt,
+      reviewedBy: policy.reviewedBy,
+      updateRequestedAt: policy.updateRequestedAt ?? existing?.updateRequestedAt,
+      updateRequestNote: policy.updateRequestNote ?? existing?.updateRequestNote,
+    } as import('./types').GuardVehicleInsurancePolicy;
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('guard_vehicle_insurance_policies')
+        .upsert(vehicleInsurancePolicyToDbRow(nextPolicy), { onConflict: 'guard_id' });
+      if (error) throw error;
+    }
+    setGuards((prev) =>
+      prev.map((g) => (g.id === policy.guardId ? { ...g, vehicleInsurancePolicy: nextPolicy } : g))
+    );
+    const guard = guards.find((g) => g.id === policy.guardId);
+    if (currentUser && guard && nextPolicy.status === 'pending') {
+      void reportPushEvent(currentUser, {
+        type: 'credential_pending',
+        guardId: policy.guardId,
+        guardName: guard.name,
+        body: `${guard.name} uploaded vehicle insurance for review`,
+      });
+    }
+  };
+
+  const handleReviewGuardVehicleInsurance = async (
+    guardId: string,
+    status: 'verified' | 'rejected'
+  ) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard?.vehicleInsurancePolicy) return;
+    const reviewedAt = new Date().toISOString();
+    const nextPolicy = {
+      ...guard.vehicleInsurancePolicy,
+      status,
+      reviewedAt,
+      reviewedBy: currentUser.id,
+      rejectionReason: status === 'rejected' ? 'Vehicle insurance needs a clearer upload.' : undefined,
+    };
+    if (isDbConnected) {
+      await supabase
+        .from('guard_vehicle_insurance_policies')
+        .update({
+          status,
+          reviewed_at: reviewedAt,
+          reviewed_by: currentUser.id,
+          rejection_reason: nextPolicy.rejectionReason ?? null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('guard_id', guardId);
+    }
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, vehicleInsurancePolicy: nextPolicy } : g))
+    );
+    appToast(status === 'verified' ? 'Vehicle insurance verified.' : 'Vehicle insurance rejected.', 'success');
+  };
+
+  const persistGuardVehicleProfile = async (
+    guardId: string,
+    profile: Partial<import('./types').GuardVehicleProfile> & { guardId: string }
+  ) => {
+    const existing = guards.find((g) => g.id === guardId)?.vehicleProfile;
+    const nextProfile = {
+      id: existing?.id ?? profile.id ?? `vehicle-${guardId}`,
+      guardId,
+      make: profile.make ?? existing?.make ?? '',
+      model: profile.model ?? existing?.model ?? '',
+      year: profile.year ?? existing?.year,
+      color: profile.color ?? existing?.color,
+      plateNumber: profile.plateNumber ?? existing?.plateNumber ?? '',
+      plateState: profile.plateState ?? existing?.plateState ?? '',
+      frontPhotoUrl: profile.frontPhotoUrl ?? existing?.frontPhotoUrl,
+      leftSidePhotoUrl: profile.leftSidePhotoUrl ?? existing?.leftSidePhotoUrl,
+      rightSidePhotoUrl: profile.rightSidePhotoUrl ?? existing?.rightSidePhotoUrl,
+      backPhotoUrl: profile.backPhotoUrl ?? existing?.backPhotoUrl,
+      vehicleInsurancePolicyId:
+        profile.vehicleInsurancePolicyId ?? existing?.vehicleInsurancePolicyId ?? guards.find((g) => g.id === guardId)?.vehicleInsurancePolicy?.id,
+      status: profile.status ?? existing?.status ?? 'draft',
+      rejectionReason: profile.rejectionReason ?? existing?.rejectionReason,
+      submittedAt: profile.submittedAt ?? existing?.submittedAt,
+      reviewedAt: profile.reviewedAt ?? existing?.reviewedAt,
+      reviewedBy: profile.reviewedBy ?? existing?.reviewedBy,
+    } as import('./types').GuardVehicleProfile;
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('guard_vehicle_profiles')
+        .upsert(vehicleProfileToDbRow(nextProfile), { onConflict: 'guard_id' });
+      if (error) throw error;
+    }
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, vehicleProfile: nextProfile } : g)));
+    return nextProfile;
+  };
+
+  const handleSaveGuardVehicle = async (
+    profile: Partial<import('./types').GuardVehicleProfile> & { guardId: string }
+  ) => {
+    await persistGuardVehicleProfile(profile.guardId, { ...profile, status: 'draft' });
+  };
+
+  const handleSubmitGuardVehicle = async (
+    profile: Partial<import('./types').GuardVehicleProfile> & { guardId: string }
+  ) => {
+    const submittedAt = new Date().toISOString();
+    await persistGuardVehicleProfile(profile.guardId, {
+      ...profile,
+      status: 'pending',
+      submittedAt,
+      rejectionReason: undefined,
+    });
+    const guard = guards.find((g) => g.id === profile.guardId);
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'credential_pending',
+        guardId: profile.guardId,
+        guardName: guard.name,
+        body: `${guard.name} submitted a vehicle for approval`,
+      });
+    }
+  };
+
+  const handleReviewGuardVehicle = async (
+    guardId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string
+  ) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard?.vehicleProfile) return;
+    if (status === 'verified') {
+      const blocker = staffApproveVehicleBlocker(guard);
+      if (blocker) {
+        appToast(blocker, 'error');
+        return;
+      }
+    }
+    const reviewedAt = new Date().toISOString();
+    await persistGuardVehicleProfile(guardId, {
+      ...guard.vehicleProfile,
+      status,
+      reviewedAt,
+      reviewedBy: currentUser.id,
+      rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+    });
+    appToast(status === 'verified' ? 'Vehicle approved.' : 'Vehicle rejected.', 'success');
   };
 
   /**
@@ -5538,6 +5746,8 @@ export default function App() {
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
     payload: {
+      idDocumentType: import('./types').GovernmentIdDocumentType;
+      idLicenseClass?: string;
       idState: string;
       idNumber: string;
       idExpiryDate: string;
@@ -5553,6 +5763,8 @@ export default function App() {
     const idState = payload.idState.trim().toUpperCase();
     const idNumber = payload.idNumber.trim();
     const idExpiryDate = payload.idExpiryDate.trim();
+    const idDocumentType = payload.idDocumentType;
+    const idLicenseClass = payload.idLicenseClass?.trim() || undefined;
     const front = payload.idFrontUrl.trim();
     const back = payload.idBackUrl.trim();
     const selfie = payload.idSelfieUrl.trim();
@@ -5564,6 +5776,12 @@ export default function App() {
     }
     if (!front || !back || !selfie) {
       return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
+    }
+    if (!idDocumentType) {
+      return { ok: false, error: 'Select whether this is a government ID or driver\'s license.' };
+    }
+    if (idDocumentType === 'drivers_license' && !idLicenseClass) {
+      return { ok: false, error: "Enter your driver's license class before submitting." };
     }
     if (getGuardUserStatus(guard) === 'blocked') {
       return { ok: false, error: 'Your application was not approved. Contact Guardr support.' };
@@ -5579,6 +5797,8 @@ export default function App() {
               idState,
               idNumber,
               idExpiryDate,
+              idDocumentType,
+              idLicenseClass,
               idFrontUrl: front,
               idBackUrl: back,
               idSelfieUrl: selfie,
@@ -5601,6 +5821,8 @@ export default function App() {
           id_state: idState,
           id_number: idNumber,
           id_expiry_date: idExpiryDate,
+          id_document_type: idDocumentType,
+          id_license_class: idLicenseClass ?? null,
           id_front_url: front,
           id_back_url: back,
           id_selfie_url: selfie,
@@ -12099,6 +12321,9 @@ export default function App() {
             handleSubmitGuardIdentityVerification(activeGuard.id, payload)
           }
           onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
+          onSaveVehicleInsurance={(policy) => handleSaveGuardVehicleInsurance(policy)}
+          onSaveVehicle={(profile) => handleSaveGuardVehicle(profile)}
+          onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onApplyAsTeamLead={handleApplyAsTeamLead}
@@ -12467,6 +12692,8 @@ export default function App() {
           onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onReviewGuardInsurance={handleReviewGuardInsurance}
+          onApproveVehicle={(guardId) => handleReviewGuardVehicle(guardId, 'verified')}
+          onRejectVehicle={(guardId, reason) => handleReviewGuardVehicle(guardId, 'rejected', reason)}
           onRequestCoiUpdate={handleRequestCoiUpdate}
           onRequestCertUpdate={handleRequestCertUpdate}
           onRevokeGuardIdentityVerification={handleRevokeGuardIdentityVerification}
