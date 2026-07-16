@@ -29,6 +29,7 @@ import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 type ApplicationKind = 'guard' | 'client';
 
@@ -355,67 +356,64 @@ export function StaffApplications({
     );
   }
 
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
+        {canManageGuardAccounts && onAddGuard && (
+          <StaffAddGuardForm
+            onAdd={onAddGuard}
+            onCreated={(guardId) => {
+              setSearch('');
+              setStatusFilter('pending');
+              setKindFilter('guard');
+              setActiveItemKey(`guard:${guardId}`);
+              onSelectionChange?.({ guardId, clientId: null });
+            }}
+          />
+        )}
+        {canManageClientAccounts && onAddClient && (
+          <StaffAddClientForm
+            onAdd={onAddClient}
+            onCreated={(clientId) => {
+              setSearch('');
+              setStatusFilter('pending');
+              setKindFilter('client');
+              setActiveItemKey(`client:${clientId}`);
+              onSelectionChange?.({ guardId: null, clientId });
+            }}
+          />
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search applications..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Application status"
+        activeId={statusFilter}
+        onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
+        tabs={[
+          { id: 'pending', label: 'Pending review' },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+      <StaffListFilterTabs
+        aria-label="Application type"
+        activeId={kindFilter}
+        onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+        tabs={[
+          { id: 'all', label: 'All types' },
+          { id: 'guard', label: 'Guards' },
+          { id: 'client', label: 'Clients' },
+        ]}
+      />
+    </>
+  ) : null;
+
   return (
-    <div className="animate-fade-in space-y-4 staff-roster-panel" data-tour="staff-applications">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
-            {canManageGuardAccounts && onAddGuard && (
-              <StaffAddGuardForm
-                onAdd={onAddGuard}
-                onCreated={(guardId) => {
-                  setSearch('');
-                  setStatusFilter('pending');
-                  setKindFilter('guard');
-                  setActiveItemKey(`guard:${guardId}`);
-                  onSelectionChange?.({ guardId, clientId: null });
-                }}
-              />
-            )}
-            {canManageClientAccounts && onAddClient && (
-              <StaffAddClientForm
-                onAdd={onAddClient}
-                onCreated={(clientId) => {
-                  setSearch('');
-                  setStatusFilter('pending');
-                  setKindFilter('client');
-                  setActiveItemKey(`client:${clientId}`);
-                  onSelectionChange?.({ guardId: null, clientId });
-                }}
-              />
-            )}
-          </div>
-
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search applications..."
-            className="max-w-md"
-          />
-
-          <StaffListFilterTabs
-            aria-label="Application status"
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
-            tabs={[
-              { id: 'pending', label: 'Pending review' },
-              { id: 'all', label: 'All' },
-            ]}
-          />
-
-          <StaffListFilterTabs
-            aria-label="Application type"
-            activeId={kindFilter}
-            onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
-            tabs={[
-              { id: 'all', label: 'All types' },
-              { id: 'guard', label: 'Guards' },
-              { id: 'client', label: 'Clients' },
-            ]}
-          />
-        </>
-      )}
-
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
       {visibleEntries.length === 0 ? (
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
@@ -451,6 +449,6 @@ export function StaffApplications({
           renderDetail={(entry, options) => renderApplicationDetail(entry, options)}
         />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

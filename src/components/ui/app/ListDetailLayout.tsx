@@ -66,9 +66,9 @@ export function ListDetailLayout<T>({
 
   if (desktopView) {
     return (
-      <div className="desktop-master-detail">
-        <div className={`desktop-master-detail-list ${listScrollClassName}`}>
-          <AppItemCardStack>
+      <div className="adm-workbench-split adm-ops-list-detail">
+        <div className={`adm-workbench-list adm-ops-list ${listScrollClassName}`}>
+          <AppItemCardStack className="adm-ops-list-stack">
             {items.map((item) => {
               const id = getItemId(item);
               const isSelected = resolvedSelectedId === id;
@@ -80,8 +80,16 @@ export function ListDetailLayout<T>({
             })}
           </AppItemCardStack>
         </div>
-        <div className={`desktop-master-detail-detail min-h-0 ${detailClassName}`}>
-          {selected ? renderDetail(selected) : emptyDetail}
+        <div className="adm-workbench-detail">
+          <div className={`adm-workbench-detail-inner ${detailClassName}`}>
+            {selected
+              ? renderDetail(selected)
+              : emptyDetail ?? (
+                  <div className="adm-empty adm-empty--detail">
+                    <p>Select an item to view details</p>
+                  </div>
+                )}
+          </div>
         </div>
       </div>
     );
