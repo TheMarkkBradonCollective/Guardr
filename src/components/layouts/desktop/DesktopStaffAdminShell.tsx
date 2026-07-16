@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Settings } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { PanelLeft, Settings } from 'lucide-react';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../../lib/staffOps';
@@ -63,9 +63,13 @@ export function DesktopStaffAdminShell({
   headerExtension,
   headerOverride,
 }: DesktopStaffAdminShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const accessFlags = { showFinance, showSettings, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesSection(activeSection);
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
   const visible = (item: StaffNavItem) => {
     if (item.financeOnly && !showFinance) return false;
@@ -82,11 +86,27 @@ export function DesktopStaffAdminShell({
       return;
     }
     onNavigate(id);
+    closeSidebar();
   };
 
   return (
-    <div className={`adm-app adm-app--staff page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden ${isMap ? 'adm-app--map' : ''}`}>
-      <aside className="adm-sidebar adm-sidebar--staff" aria-label="Staff navigation">
+    <div
+      className={`adm-app adm-app--staff page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden ${isMap ? 'adm-app--map' : ''}${sidebarOpen ? ' adm-app--sidebar-open' : ''}`}
+    >
+      {sidebarOpen ? (
+        <button
+          type="button"
+          className="adm-sidebar-backdrop"
+          onClick={closeSidebar}
+          aria-label="Close navigation"
+        />
+      ) : null}
+
+      <aside
+        className={`adm-sidebar adm-sidebar--staff adm-sidebar--drawer${sidebarOpen ? ' adm-sidebar--open' : ''}`}
+        aria-label="Staff navigation"
+        aria-hidden={!sidebarOpen}
+      >
         <div className="adm-sidebar-brand">
           <Logo size={26} className="adm-logo shrink-0" />
           <div>
@@ -137,12 +157,26 @@ export function DesktopStaffAdminShell({
         ) : null}
       </aside>
 
-      <div className="adm-main">
-        <header className="adm-header">
-          <label className="adm-search">
-            <Search className="adm-search-icon" />
-            <input type="search" placeholder="Search guards, clients, jobs…" className="adm-search-input" />
-          </label>
+      <div className="adm-main" onClick={sidebarOpen ? closeSidebar : undefined}>
+        <header className="adm-header" onClick={(e) => e.stopPropagation()}>
+          <div className="adm-header-brand">
+            <button
+              type="button"
+              className="adm-header-icon-btn"
+              onClick={toggleSidebar}
+              aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={sidebarOpen}
+            >
+              <PanelLeft className="w-4 h-4" />
+            </button>
+            <Logo size={24} className="adm-logo shrink-0" />
+            <div className="adm-header-brand-text">
+              <span className="adm-header-wordmark">
+                Guard<span className="adm-accent-text">r</span>
+              </span>
+              <span className="adm-header-suite">Operations</span>
+            </div>
+          </div>
           <div className="adm-header-actions">
             {headerActions}
             <AccountMenu

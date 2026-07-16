@@ -36,6 +36,7 @@ import {
   MessageCircle,
   Navigation,
 } from 'lucide-react';
+import { MapDesktopInspector, MapMobileBottomSheet } from '../map/MapDesktopInspector';
 
 interface GuardActiveShiftProps {
   job: GuardJobView;
@@ -136,10 +137,7 @@ export function GuardActiveShift({
   const gpsRequired = jobHasCoords;
   const notOnSiteBlocked = gpsRequired && !onSite;
 
-  return (
-    <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
-      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
-
+  const panelBody = (
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -398,6 +396,13 @@ export function GuardActiveShift({
           </div>
         )}
       </div>
-    </div>
+  );
+
+  return (
+    <MapDesktopInspector label="Active shift">
+      <MapMobileBottomSheet className="guardr-active-shift">
+        {panelBody}
+      </MapMobileBottomSheet>
+    </MapDesktopInspector>
   );
 }

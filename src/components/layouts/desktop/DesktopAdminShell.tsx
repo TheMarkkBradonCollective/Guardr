@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Search, Settings } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { PanelLeft, Settings } from 'lucide-react';
 import { Logo } from '../../Logo';
 import { AccountMenu, type AccountMenuProps } from '../AccountMenu';
 import { BottomNavItem } from '../BottomNavBar';
@@ -37,10 +37,19 @@ export function DesktopAdminShell({
   variant = 'default',
   workspaceLabel = 'Client workspace',
 }: DesktopAdminShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMapMode = variant === 'dark';
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
   const menuItems = useMemo(() => navItems, [navItems]);
   const accountItems = useMemo(() => overflowNavItems, [overflowNavItems]);
+
+  const handleNavigate = (id: string) => {
+    onNavigate(id);
+    closeSidebar();
+  };
 
   const renderNavItem = ({ id, label, icon: Icon, badge }: BottomNavItem) => {
     const active = activeNavId === id;
@@ -48,7 +57,7 @@ export function DesktopAdminShell({
       <button
         key={id}
         type="button"
-        onClick={() => onNavigate(id)}
+        onClick={() => handleNavigate(id)}
         className={`adm-sidebar-item${active ? ' adm-sidebar-item--active' : ''}`}
         aria-current={active ? 'page' : undefined}
       >
@@ -62,8 +71,23 @@ export function DesktopAdminShell({
   };
 
   return (
-    <div className={`adm-app page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden ${isMapMode ? 'adm-app--map' : ''}`}>
-      <aside className="adm-sidebar" aria-label="Main navigation">
+    <div
+      className={`adm-app page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden ${isMapMode ? 'adm-app--map' : ''}${sidebarOpen ? ' adm-app--sidebar-open' : ''}`}
+    >
+      {sidebarOpen ? (
+        <button
+          type="button"
+          className="adm-sidebar-backdrop"
+          onClick={closeSidebar}
+          aria-label="Close navigation"
+        />
+      ) : null}
+
+      <aside
+        className={`adm-sidebar adm-sidebar--drawer${sidebarOpen ? ' adm-sidebar--open' : ''}`}
+        aria-label="Main navigation"
+        aria-hidden={!sidebarOpen}
+      >
         <div className="adm-sidebar-brand">
           <Logo size={26} className="adm-logo shrink-0" />
           <span className="adm-sidebar-wordmark">
@@ -86,12 +110,26 @@ export function DesktopAdminShell({
         </div>
       </aside>
 
-      <div className="adm-main">
-        <header className="adm-header">
-          <label className="adm-search">
-            <Search className="adm-search-icon" />
-            <input type="search" placeholder="Search jobs, guards, sites…" className="adm-search-input" />
-          </label>
+      <div className="adm-main" onClick={sidebarOpen ? closeSidebar : undefined}>
+        <header className="adm-header" onClick={(e) => e.stopPropagation()}>
+          <div className="adm-header-brand">
+            <button
+              type="button"
+              className="adm-header-icon-btn"
+              onClick={toggleSidebar}
+              aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={sidebarOpen}
+            >
+              <PanelLeft className="w-4 h-4" />
+            </button>
+            <Logo size={24} className="adm-logo shrink-0" />
+            <div className="adm-header-brand-text">
+              <span className="adm-header-wordmark">
+                Guard<span className="adm-accent-text">r</span>
+              </span>
+              <span className="adm-header-suite">{workspaceLabel}</span>
+            </div>
+          </div>
           <div className="adm-header-actions">
             {notifications ?? headerRight}
             <AccountMenu {...accountMenu} />

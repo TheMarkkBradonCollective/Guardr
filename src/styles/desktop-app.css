@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    DESKTOP ADMIN — XORIC-style dashboard (≥1024px only)
-   Left sidebar · top search bar · brand hero band · white card grid
+   Overlay sidebar · header branding · brand hero band · white card grid
    Uses company brand green (--brand-primary) for accents
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -64,6 +64,36 @@ body[data-form-factor="desktop"] .adm-sidebar {
   border-right: 1px solid var(--adm-border);
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+body[data-form-factor="desktop"] .adm-sidebar--drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+  transform: translateX(-100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+}
+
+body[data-form-factor="desktop"] .adm-sidebar--drawer.adm-sidebar--open {
+  transform: translateX(0);
+}
+
+body[data-form-factor="desktop"] .adm-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.28);
+  cursor: default;
+}
+
+html.theme-dark body[data-form-factor="desktop"] .adm-sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.45);
 }
 
 body[data-form-factor="desktop"] .adm-sidebar-brand {
@@ -207,6 +237,36 @@ body[data-form-factor="desktop"] .adm-header {
   background: var(--adm-card);
   border-bottom: 1px solid var(--adm-border);
   flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-wordmark {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--adm-text);
+}
+
+body[data-form-factor="desktop"] .adm-header-suite {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+  line-height: 1.2;
 }
 
 body[data-form-factor="desktop"] .adm-search {
@@ -786,7 +846,7 @@ body[data-form-factor="desktop"] .adm-app .guard-map-layout:has(.desktop-map-ins
   right: 22rem !important;
 }
 
-body[data-form-factor="desktop"] .adm-app .client-map-layout:has(.map-selection-layer) .guardr-map-root {
+body[data-form-factor="desktop"] .adm-app .client-map-layout:has(.map-selection-layer, .desktop-map-inspector) .guardr-map-root {
   right: min(22rem, 32vw) !important;
 }
 
@@ -1404,6 +1464,149 @@ body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td {
 
 body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td:nth-child(3) {
   white-space: normal;
+}
+
+/* Cities platform page */
+body[data-form-factor="desktop"] .adm-cities-toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-cities-search {
+  min-width: min(100%, 14rem);
+}
+
+body[data-form-factor="desktop"] .adm-cities-sort {
+  min-width: 10rem;
+}
+
+body[data-form-factor="desktop"] .adm-cities-count {
+  margin: 0 0 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-city-detail .adm-btn.is-active {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Guard availability + preferences workbench */
+body[data-form-factor="desktop"] .adm-availability-workbench,
+body[data-form-factor="desktop"] .adm-pref-workbench,
+body[data-form-factor="desktop"] .adm-reports-workbench {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .guard-tiered-screen-scroll,
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-tiered-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .availability-day-row {
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .availability-day-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .guard-pref-body,
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-body {
+  max-width: none;
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-performance-stats.guard-pref-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-category {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Guard crew — My team tab on desktop */
+body[data-form-factor="desktop"] .adm-crew-team-workbench {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .guard-tiered-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-hub-team-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 0 1rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-section,
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-invite-list {
+  margin: 0;
+}
+
+/* Client reports + invoices */
+body[data-form-factor="desktop"] .adm-reports-tabs {
+  margin: 0;
+}
+
+body[data-form-factor="desktop"] .adm-reports-invoices {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1.15rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-invoice-panel .adm-invoice-list {
+  max-width: min(36rem, 100%);
+}
+
+/* Active shift map inspector */
+body[data-form-factor="desktop"] .desktop-map-inspector .guardr-active-shift,
+body[data-form-factor="desktop"] .desktop-map-inspector .client-active-shift {
+  position: static;
+  max-height: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector .guard-scroll-panel {
+  padding-bottom: 1.25rem;
 }
 
 /* Hide legacy shells */
