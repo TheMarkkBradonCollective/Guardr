@@ -116,7 +116,10 @@ async function sendFcmV1Notification(serviceAccount, endpoint, token, payload, a
             },
             data,
             android: {
-              priority: payload.priority === "high" ? "high" : "normal"
+              priority: payload.priority === "high" ? "high" : "normal",
+              notification: {
+                channel_id: "guardr_alerts"
+              }
             }
           }
         })
@@ -154,7 +157,8 @@ async function sendFcmLegacyNotification(endpoint, token, payload, serverKey, at
         to: token,
         notification: {
           title: String(payload.title ?? "Guardr"),
-          body: String(payload.body ?? "")
+          body: String(payload.body ?? ""),
+          android_channel_id: "guardr_alerts"
         },
         data,
         priority: payload.priority === "high" ? "high" : "normal"
