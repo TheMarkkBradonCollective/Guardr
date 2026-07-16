@@ -62,7 +62,7 @@ import { GuardAvailabilityScreen } from './guard/GuardAvailabilityScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { AccountMenu } from './layouts/AccountMenu';
+import { AccountMenu, type AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
@@ -183,7 +183,7 @@ interface GuardDashboardProps {
   onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onRequestCrewLead?: () => void | Promise<void>;
   crewJoinRequests?: import('../types').GuardCrewJoinRequest[];
-  headerRight?: React.ReactNode;
+  accountNotifications?: AccountMenuNotificationProps;
   feeConfig?: import('../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
     requestId: string,
@@ -337,7 +337,7 @@ export function GuardDashboard({
   onDeclineStandingCrewInvite,
   onRequestCrewLead,
   crewJoinRequests = [],
-  headerRight,
+  accountNotifications,
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
@@ -1288,6 +1288,7 @@ export function GuardDashboard({
             active: tab === 'guide',
           },
         ],
+    ...accountNotifications,
   };
 
   const messagesChromeActive =
@@ -1295,7 +1296,6 @@ export function GuardDashboard({
   const messagesShellHeaderTrailing =
     messagesChromeActive ? (
       <div className="shrink-0 flex items-center gap-2">
-        {headerRight}
         <AccountMenu {...accountMenu} />
       </div>
     ) : null;
@@ -1923,7 +1923,6 @@ export function GuardDashboard({
     <RoleAppShell
       title={guardScreenTitle}
       hideHeader={shellHideHeader}
-      notifications={headerRight}
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}

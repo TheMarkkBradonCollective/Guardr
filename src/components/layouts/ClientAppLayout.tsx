@@ -5,6 +5,7 @@ import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
+import type { AccountMenuNotificationProps } from './AccountMenu';
 import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings, Receipt } from 'lucide-react';
 
 interface ClientAppLayoutProps {
@@ -20,6 +21,7 @@ interface ClientAppLayoutProps {
   headerRight?: React.ReactNode;
   messagesChrome?: MessagesChrome;
   invoicesBadge?: number;
+  accountNotifications?: AccountMenuNotificationProps;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -71,6 +73,7 @@ export function ClientAppLayout({
   hideHeader = false,
   headerRight,
   messagesChrome = EMPTY_MESSAGES_CHROME,
+  accountNotifications,
 }: ClientAppLayoutProps) {
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map';
@@ -131,6 +134,7 @@ export function ClientAppLayout({
           },
         ],
         footer: accountFooter,
+        ...accountNotifications,
       }}
       navItems={navItems}
       overflowNavItems={accountPending ? [] : overflowNavItems}
