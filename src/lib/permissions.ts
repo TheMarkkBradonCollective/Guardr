@@ -395,6 +395,11 @@ export function canRecommendCityOpen(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.recommend_city_open');
 }
 
+/** Only Managers may flag cities for Director review — not Directors or Founders */
+export function canRecommendCityMarket(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'manager';
+}
+
 /** Director+ assign which cities managers and lower staff may manage */
 export function canAssignStaffCityAccess(user: Pick<SessionUser, 'role'>): boolean {
   return canManageCityMarkets(user) || user.role === 'manager';

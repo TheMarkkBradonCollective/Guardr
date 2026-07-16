@@ -23,7 +23,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Review job requests & handle disputes',
       'Suspend users & issue warnings',
       'Manage users, analytics & general settings',
-      'No payouts, payment settings, audit log, or marketplace agreements',
+      'No payouts, payment settings, audit log, or agreements',
     ],
   },
   {
@@ -32,7 +32,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     permissions: [
       'Full unrestricted platform operations',
       'Manage Administrators & Moderators (not other Directors)',
-      'Payments, payment settings, marketplace agreements & audit log',
+      'Payments, payment settings, agreements & audit log',
       'View all financial data & override system restrictions',
       'Cash payments, job creation & guard assignment',
     ],

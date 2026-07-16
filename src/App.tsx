@@ -517,7 +517,11 @@ import {
   getCompanyPlacardPublicItems,
   type CompanyPublicDocument,
 } from './lib/companyPlacard';
-import { canEditJobListingDetails, canManageCityMarkets } from './lib/permissions';
+import {
+  canEditJobListingDetails,
+  canManageCityMarkets,
+  canRecommendCityMarket,
+} from './lib/permissions';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -5014,8 +5018,12 @@ export default function App() {
     if (!city) throw new Error('City not found.');
     const actor = guards.find((g) => g.id === currentUser.id && g.isStaff);
     const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
+    const isRecommendChange = patch.recommendOpen !== undefined;
     if (isStatusChange && !canManageCityMarkets(currentUser)) {
       throw new Error('Only Directors and Founders can change city market status.');
+    }
+    if (isRecommendChange && !canRecommendCityMarket(currentUser)) {
+      throw new Error('Only Managers can recommend cities.');
     }
     if (!staffCanManageCity(currentUser.role, actor?.managedCities, city.name)) {
       throw new Error('You are not assigned to manage this city.');
