@@ -42,7 +42,7 @@ function DevActivityGrid({ grid, variant = 'mobile' }: { grid: number[][]; varia
     <div
       className={
         isDesktop
-          ? 'adm-card adm-dev-notes-activity'
+          ? 'adm-dev-notes-activity'
           : 'mb-8 rounded-xl border border-brand-border bg-brand-surface-elevated p-4'
       }
     >
@@ -125,16 +125,20 @@ export function DevNotesPage() {
           </div>
         }
       >
-        <div className="adm-dev-notes-body">
-          <DevActivityGrid grid={activityGrid} variant="desktop" />
-          {summary ? (
-            <section className="adm-card adm-dev-notes-summary">
-              <MarkdownDoc source={summary} />
-            </section>
-          ) : null}
-          <section className="adm-card adm-dev-notes-doc">
-            <MarkdownDoc source={mainNotes} />
-          </section>
+        <div className="adm-workbench-split adm-dev-notes-workbench">
+          <div className="adm-workbench-list adm-dev-notes-sidebar">
+            <DevActivityGrid grid={activityGrid} variant="desktop" />
+            {summary ? (
+              <section className="adm-dev-notes-summary">
+                <MarkdownDoc source={summary} />
+              </section>
+            ) : null}
+          </div>
+          <div className="adm-workbench-detail">
+            <div className="adm-workbench-detail-inner adm-dev-notes-doc">
+              <MarkdownDoc source={mainNotes} />
+            </div>
+          </div>
         </div>
       </StaffOpsPageShell>
     );

@@ -19,6 +19,7 @@ import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/g
 import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
+import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
 import type { PlatformRole } from '../../types';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
@@ -151,18 +152,25 @@ function platformRoleToGuideAudience(role?: PlatformRole): GuideAudienceTag | un
 function SubsectionAccordion({
   sub,
   defaultOpen,
+  variant = 'mobile',
 }: {
   sub: GuideSubsection;
   defaultOpen?: boolean;
+  variant?: 'mobile' | 'desktop';
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
+  const isDesktop = variant === 'desktop';
 
   return (
-    <div className="border-b border-brand-border last:border-b-0">
+    <div className={isDesktop ? 'adm-guide-accordion' : 'border-b border-brand-border last:border-b-0'}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-brand-bg-sec/50 transition-colors"
+        className={
+          isDesktop
+            ? 'adm-guide-accordion-trigger'
+            : 'w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-brand-bg-sec/50 transition-colors'
+        }
       >
         <span className="text-sm font-semibold text-brand-text leading-snug">{sub.title}</span>
         <ChevronDown
@@ -170,7 +178,7 @@ function SubsectionAccordion({
         />
       </button>
       {open && (
-        <div className="px-4 pb-5 pt-1">
+        <div className={isDesktop ? 'adm-guide-accordion-body' : 'px-4 pb-5 pt-1'}>
           <MarkdownDoc source={sub.rawContent} />
         </div>
       )}
@@ -183,33 +191,53 @@ function SubsectionAccordion({
 function SectionDetail({
   section,
   onBack,
+  variant = 'mobile',
 }: {
   section: GuideSection;
   onBack: () => void;
+  variant?: 'mobile' | 'desktop';
 }) {
-  return (
-    <AppScreen className="h-full overflow-y-auto overscroll-contain">
-      <AppSubScreenHeader title={section.title} onBack={onBack} />
+  const isDesktop = variant === 'desktop';
 
+  const body = (
+    <>
       {section.topRaw.trim() && (
-        <div className="px-4 pt-3 pb-4 border-b border-brand-border">
+        <div className={isDesktop ? 'adm-guide-intro' : 'px-4 pt-3 pb-4 border-b border-brand-border'}>
           <MarkdownDoc source={section.topRaw} />
         </div>
       )}
 
       {section.id === 'staff-role-permissions' && (
-        <div className="px-4 py-4 border-b border-brand-border">
+        <div className={isDesktop ? 'adm-guide-roles' : 'px-4 py-4 border-b border-brand-border'}>
           <StaffRolesReference />
         </div>
       )}
 
       {section.subsections.length > 0 && (
-        <div className="divide-y-0">
+        <div className={isDesktop ? 'adm-guide-subsections' : 'divide-y-0'}>
           {section.subsections.map((sub, i) => (
-            <SubsectionAccordion key={sub.id} sub={sub} defaultOpen={i === 0} />
+            <SubsectionAccordion key={sub.id} sub={sub} defaultOpen={i === 0} variant={variant} />
           ))}
         </div>
       )}
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <>
+        <div className="adm-workbench-detail-head">
+          <h2 className="adm-card-title">{section.title}</h2>
+        </div>
+        <div className="adm-guide-doc">{body}</div>
+      </>
+    );
+  }
+
+  return (
+    <AppScreen className="h-full overflow-y-auto overscroll-contain">
+      <AppSubScreenHeader title={section.title} onBack={onBack} />
+      {body}
     </AppScreen>
   );
 }
@@ -219,12 +247,43 @@ function SectionDetail({
 function SectionCard({
   section,
   onClick,
+  active = false,
+  variant = 'mobile',
 }: {
   section: GuideSection;
   onClick: () => void;
+  active?: boolean;
+  variant?: 'mobile' | 'desktop';
 }) {
   const meta = getSectionMeta(section);
   const Icon = meta.icon;
+  const isDesktop = variant === 'desktop';
+
+  if (isDesktop) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`adm-guide-section-row${active ? ' adm-guide-section-row--active' : ''}`}
+        aria-current={active ? 'page' : undefined}
+      >
+        <span className="adm-guide-section-icon" aria-hidden>
+          <Icon className="w-4 h-4" strokeWidth={1.75} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="adm-guide-section-title">{section.title}</span>
+          {meta.description ? (
+            <span className="adm-guide-section-desc">{meta.description}</span>
+          ) : null}
+        </span>
+        {section.subsections.length > 0 ? (
+          <span className="adm-guide-section-count">
+            {section.subsections.length}
+          </span>
+        ) : null}
+      </button>
+    );
+  }
 
   return (
     <button
@@ -261,18 +320,27 @@ function TutorialPracticePanel({
   tutorialActive,
   onStartTutorial,
   onEnterPracticeMode,
+  variant = 'mobile',
 }: {
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
   onEnterPracticeMode?: () => void;
+  variant?: 'mobile' | 'desktop';
 }) {
   if (!tutorialAvailable || (!onStartTutorial && !onEnterPracticeMode)) return null;
+  const isDesktop = variant === 'desktop';
 
   return (
-    <div className="px-4 pt-2 pb-4 border-b border-brand-border">
-      <div className="rounded-xl border border-brand-border bg-brand-bg-sec/60 p-4 space-y-3">
+    <div className={isDesktop ? 'adm-guide-tutorial' : 'px-4 pt-2 pb-4 border-b border-brand-border'}>
+      <div
+        className={
+          isDesktop
+            ? 'adm-card adm-guide-tutorial-card'
+            : 'rounded-xl border border-brand-border bg-brand-bg-sec/60 p-4 space-y-3'
+        }
+      >
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">Tutorial & practice</p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
@@ -280,9 +348,17 @@ function TutorialPracticePanel({
             this device and is removed when you end the tutorial.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className={`flex flex-col sm:flex-row gap-2${isDesktop ? ' adm-guide-tutorial-actions' : ''}`}>
           {onStartTutorial && (
-            <button type="button" onClick={onStartTutorial} className="app-button-primary !w-auto !h-10 !px-5">
+            <button
+              type="button"
+              onClick={onStartTutorial}
+              className={
+                isDesktop
+                  ? 'adm-btn adm-btn--sand'
+                  : 'app-button-primary !w-auto !h-10 !px-5'
+              }
+            >
               {tutorialCompleted ? 'Restart tutorial' : 'Start tutorial'}
             </button>
           )}
@@ -290,7 +366,11 @@ function TutorialPracticePanel({
             <button
               type="button"
               onClick={onEnterPracticeMode}
-              className="app-button-outline !w-auto !h-10 !px-5"
+              className={
+                isDesktop
+                  ? 'adm-btn adm-btn--outline'
+                  : 'app-button-outline !w-auto !h-10 !px-5'
+              }
             >
               Practice mode
             </button>
@@ -313,6 +393,7 @@ function GuideHub({
   tabs,
   initialAudience = 'all',
   highlightAudience,
+  activeSectionId,
   onSelect,
   onBack,
   tutorialAvailable,
@@ -320,11 +401,13 @@ function GuideHub({
   tutorialActive,
   onStartTutorial,
   onEnterPracticeMode,
+  variant = 'mobile',
 }: {
   sections: GuideSection[];
   tabs: { id: AudienceFilter; label: string }[];
   initialAudience?: AudienceFilter;
   highlightAudience?: GuideAudienceTag;
+  activeSectionId?: string | null;
   onSelect: (section: GuideSection) => void;
   onBack?: () => void;
   tutorialAvailable?: boolean;
@@ -332,15 +415,69 @@ function GuideHub({
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
   onEnterPracticeMode?: () => void;
+  variant?: 'mobile' | 'desktop';
 }) {
   const defaultTab = highlightAudience ?? initialAudience;
   const [audience, setAudience] = useState<AudienceFilter>(defaultTab);
+  const isDesktop = variant === 'desktop';
 
   const visible = sections.filter((s) => {
     if (audience === 'all') return true;
     const meta = getSectionMeta(s);
     return !meta.audience || meta.audience === audience;
   });
+
+  const filterTabs = (
+    <div className={isDesktop ? 'adm-guide-filter-tabs' : 'px-4 pb-3 border-b border-brand-border'}>
+      {tabs.length > 3 ? (
+        <StaffListFilterTabs
+          aria-label="Guide audience"
+          activeId={audience}
+          onChange={(id) => setAudience(id as AudienceFilter)}
+          tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
+        />
+      ) : (
+        <div className="app-guide-tabs -mx-0">
+          <AppSegmentedControl<AudienceFilter>
+            options={tabs}
+            value={audience}
+            onChange={setAudience}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  const sectionList = (
+    <div className={isDesktop ? 'adm-guide-section-list' : undefined}>
+      {visible.map((section) => (
+        <SectionCard
+          key={section.id}
+          section={section}
+          active={activeSectionId === section.id}
+          variant={variant}
+          onClick={() => onSelect(section)}
+        />
+      ))}
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="adm-guide-sidebar">
+        <TutorialPracticePanel
+          variant="desktop"
+          tutorialAvailable={tutorialAvailable}
+          tutorialCompleted={tutorialCompleted}
+          tutorialActive={tutorialActive}
+          onStartTutorial={onStartTutorial}
+          onEnterPracticeMode={onEnterPracticeMode}
+        />
+        {filterTabs}
+        {sectionList}
+      </div>
+    );
+  }
 
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
@@ -358,30 +495,8 @@ function GuideHub({
         onEnterPracticeMode={onEnterPracticeMode}
       />
 
-      <div className="px-4 pb-3 border-b border-brand-border">
-        {tabs.length > 3 ? (
-          <StaffListFilterTabs
-            aria-label="Guide audience"
-            activeId={audience}
-            onChange={(id) => setAudience(id as AudienceFilter)}
-            tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
-          />
-        ) : (
-          <div className="app-guide-tabs -mx-0">
-            <AppSegmentedControl<AudienceFilter>
-              options={tabs}
-              value={audience}
-              onChange={setAudience}
-            />
-          </div>
-        )}
-      </div>
-
-      <div>
-        {visible.map((section) => (
-          <SectionCard key={section.id} section={section} onClick={() => onSelect(section)} />
-        ))}
-      </div>
+      {filterTabs}
+      {sectionList}
     </AppScreen>
   );
 }
@@ -434,38 +549,52 @@ export function AppGuidePage({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench-split adm-guide-workbench">
-        <div className="adm-workbench-list adm-workbench-list--flat">
-          <GuideHub
-            sections={ALL_SECTIONS}
-            tabs={tabs}
-            initialAudience={
-              initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
-                ? initialAudience
-                : 'all'
-            }
-            highlightAudience={highlightAudience}
-            onSelect={handleSelect}
-            tutorialAvailable={tutorialAvailable}
-            tutorialCompleted={tutorialCompleted}
-            tutorialActive={tutorialActive}
-            onStartTutorial={onStartTutorial}
-            onEnterPracticeMode={onEnterPracticeMode}
-          />
+      <StaffOpsPageShell
+        className="adm-platform-page adm-guide-page"
+        toolbar={
+          <div>
+            <p className="adm-card-eyebrow">Platform</p>
+            <p className="adm-workbench-subtitle">
+              Role-based workflows, permissions, and how Guardr works end to end.
+            </p>
+          </div>
+        }
+      >
+        <div className="adm-workbench-split adm-guide-workbench">
+          <div className="adm-workbench-list adm-guide-list">
+            <GuideHub
+              variant="desktop"
+              sections={ALL_SECTIONS}
+              tabs={tabs}
+              initialAudience={
+                initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
+                  ? initialAudience
+                  : 'all'
+              }
+              highlightAudience={highlightAudience}
+              activeSectionId={activeSection?.id ?? null}
+              onSelect={handleSelect}
+              tutorialAvailable={tutorialAvailable}
+              tutorialCompleted={tutorialCompleted}
+              tutorialActive={tutorialActive}
+              onStartTutorial={onStartTutorial}
+              onEnterPracticeMode={onEnterPracticeMode}
+            />
+          </div>
+          <div className="adm-workbench-detail">
+            {activeSection ? (
+              <div className="adm-workbench-detail-inner">
+                <SectionDetail section={activeSection} onBack={handleBack} variant="desktop" />
+              </div>
+            ) : (
+              <div className="adm-empty adm-empty--detail">
+                <BookOpen className="w-10 h-10 adm-muted-icon" />
+                <p>Select a guide section to read</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="adm-workbench-detail">
-          {activeSection ? (
-            <div className="adm-workbench-detail-inner">
-              <SectionDetail section={activeSection} onBack={handleBack} />
-            </div>
-          ) : (
-            <div className="adm-empty adm-empty--detail">
-              <BookOpen className="w-10 h-10 adm-muted-icon" />
-              <p>Select a guide section to read</p>
-            </div>
-          )}
-        </div>
-      </div>
+      </StaffOpsPageShell>
     );
   }
 
