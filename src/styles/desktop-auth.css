@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESKTOP AUTH — split editorial + form (sand tan, matches landing preview)
+   DESKTOP AUTH — split editorial + form (brand green accents)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] .dsk-auth {
@@ -44,7 +44,7 @@ body[data-form-factor="desktop"] .dsk-auth-back {
 }
 
 body[data-form-factor="desktop"] .dsk-auth-back:hover {
-  color: var(--adm-sand-dark, #9A8B72);
+  color: var(--brand-primary);
 }
 
 body[data-form-factor="desktop"] .dsk-auth-brand {
@@ -54,7 +54,7 @@ body[data-form-factor="desktop"] .dsk-auth-brand {
 }
 
 body[data-form-factor="desktop"] .dsk-auth-logo {
-  color: var(--adm-sand-dark, #9A8B72) !important;
+  color: var(--brand-primary) !important;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-wordmark {
@@ -64,7 +64,7 @@ body[data-form-factor="desktop"] .dsk-auth-wordmark {
 }
 
 body[data-form-factor="desktop"] .dsk-auth-accent {
-  color: var(--adm-sand-dark, #9A8B72);
+  color: var(--brand-primary);
 }
 
 body[data-form-factor="desktop"] .dsk-auth-editorial-body {
@@ -81,7 +81,7 @@ body[data-form-factor="desktop"] .dsk-auth-label {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--adm-sand-dark, #9A8B72);
+  color: var(--brand-primary);
 }
 
 body[data-form-factor="desktop"] .dsk-auth-headline {
@@ -123,8 +123,8 @@ body[data-form-factor="desktop"] .dsk-auth-feature-icon {
   width: 2rem;
   height: 2rem;
   border-radius: 0.4rem;
-  background: var(--adm-sand-light, #E8DFD0);
-  color: var(--adm-sand-dark, #9A8B72);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--adm-card, #fff));
+  color: var(--brand-primary);
   flex-shrink: 0;
 }
 
@@ -161,27 +161,9 @@ body[data-form-factor="desktop"] .dsk-auth-form-inner {
   box-shadow: 0 8px 32px -12px rgba(0, 0, 0, 0.1);
 }
 
-/* Sand-tan accents inside auth form on desktop */
-body[data-form-factor="desktop"] .dsk-auth .text-brand-primary {
-  color: var(--adm-sand-dark, #9A8B72) !important;
-}
-
-body[data-form-factor="desktop"] .dsk-auth .auth-role-card-active,
-body[data-form-factor="desktop"] .dsk-auth .segmented-control-btn-active {
-  border-color: var(--adm-sand, #C4B5A0) !important;
-  background: color-mix(in srgb, var(--adm-sand, #C4B5A0) 14%, var(--adm-card, #fff)) !important;
-  color: var(--adm-sand-dark, #9A8B72) !important;
-}
-
-body[data-form-factor="desktop"] .dsk-auth .app-button-primary,
-body[data-form-factor="desktop"] .dsk-auth .auth-submit-btn {
-  background: var(--adm-sand-band, #B8A88A) !important;
-  color: #fff !important;
-}
-
 body[data-form-factor="desktop"] .dsk-auth .experience-badge {
-  color: var(--adm-sand-dark, #9A8B72);
-  background: var(--adm-sand-light, #E8DFD0);
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--adm-card, #fff));
 }
 
 /* Hide mobile auth hero when desktop split is active */

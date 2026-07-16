@@ -1,15 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    DESKTOP ADMIN — XORIC-style dashboard (≥1024px only)
-   Left sidebar · top search bar · sand-tan hero band · white card grid
-   NO sage green on desktop — sand tan is the company secondary color
+   Left sidebar · top search bar · brand hero band · white card grid
+   Uses company brand green (--brand-primary) for accents
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] {
-  --adm-sand: #C4B5A0;
-  --adm-sand-light: #E8DFD0;
-  --adm-sand-dark: #9A8B72;
-  --adm-sand-band: #B8A88A;
-  --adm-sand-hover: #D4C8B4;
+  --adm-accent: var(--brand-primary);
+  --adm-accent-hover: var(--brand-primary-hover);
+  --adm-accent-light: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  --adm-accent-dark: var(--brand-primary-hover);
+  --adm-accent-band: var(--brand-primary);
+  /* Legacy token names kept for compatibility — all map to brand green */
+  --adm-sand: var(--brand-primary);
+  --adm-sand-light: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  --adm-sand-dark: var(--brand-primary);
+  --adm-sand-band: var(--brand-primary);
+  --adm-sand-hover: var(--brand-primary-hover);
   --adm-sidebar-w: 15.5rem;
   --adm-bg: #EFF1F5;
   --adm-card: #FFFFFF;
@@ -27,8 +33,9 @@ html.theme-dark body[data-form-factor="desktop"] {
   --adm-text: #F0F0EC;
   --adm-muted: #9CA3AF;
   --adm-border: #2D2D2D;
-  --adm-sand-band: #8A7D68;
-  --adm-sand-light: #3D3830;
+  --adm-accent-light: color-mix(in srgb, var(--brand-primary) 18%, #1C1C1C);
+  --adm-sand-light: color-mix(in srgb, var(--brand-primary) 18%, #1C1C1C);
+  --adm-sand-band: var(--brand-primary);
 }
 
 body[data-form-factor="desktop"] .adm-app {
@@ -260,13 +267,13 @@ body[data-form-factor="desktop"] .adm-header-icon-btn:hover {
   color: var(--adm-text);
 }
 
-/* Sand-tan hero band (replaces blue header in reference) */
+/* Brand hero band */
 body[data-form-factor="desktop"] .adm-hero {
   display: flex;
   align-items: center;
   min-height: var(--adm-hero-h);
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, var(--adm-sand-band) 0%, color-mix(in srgb, var(--adm-sand) 85%, #000) 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
   flex-shrink: 0;
 }
 
@@ -286,12 +293,12 @@ body[data-form-factor="desktop"] .adm-hero-sub {
 
 body[data-form-factor="desktop"] .adm-hero-extension {
   padding: 0.65rem 1.5rem;
-  background: color-mix(in srgb, var(--adm-sand-band) 90%, #000);
+  background: color-mix(in srgb, var(--brand-primary-hover) 92%, #000);
   border-bottom: 1px solid color-mix(in srgb, #000 15%, transparent);
 }
 
 body[data-form-factor="desktop"] .adm-hero-slot {
-  background: var(--adm-sand-band);
+  background: var(--brand-primary);
   border-bottom: 1px solid color-mix(in srgb, #000 10%, transparent);
 }
 
@@ -641,12 +648,12 @@ body[data-form-factor="desktop"] .adm-btn {
 }
 
 body[data-form-factor="desktop"] .adm-btn--sand {
-  background: var(--adm-sand-band);
+  background: var(--brand-primary);
   color: #fff;
 }
 
 body[data-form-factor="desktop"] .adm-btn--sand:hover {
-  background: var(--adm-sand-dark);
+  background: var(--brand-primary-hover);
 }
 
 body[data-form-factor="desktop"] .adm-btn--outline {
@@ -1243,17 +1250,4 @@ body[data-form-factor="desktop"] .adm-crew-workbench {
 body[data-form-factor="desktop"] .dsk-app,
 body[data-form-factor="desktop"] .desktop-workspace {
   display: none !important;
-}
-
-/* Override brand green accents inside desktop admin */
-body[data-form-factor="desktop"] .adm-app .text-brand-primary {
-  color: var(--adm-sand-dark) !important;
-}
-
-body[data-form-factor="desktop"] .adm-app .fill-brand-primary {
-  fill: var(--adm-sand-dark) !important;
-}
-
-body[data-form-factor="desktop"] .adm-app .bg-brand-primary {
-  background-color: var(--adm-sand-band) !important;
 }
