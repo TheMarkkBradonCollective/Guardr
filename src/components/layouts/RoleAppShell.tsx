@@ -6,7 +6,7 @@ import { NavMenuPopover } from './NavMenuPopover';
 import { AppHeaderBranding } from './AppHeaderBranding';
 import { AppHeaderToolbar } from './AppHeaderToolbar';
 import { useDevice } from '../../lib/platform';
-import { DesktopTopShell } from './desktop/DesktopTopShell';
+import { DesktopAdminShell } from './desktop/DesktopAdminShell';
 
 interface RoleAppShellProps {
   title: string;
@@ -46,7 +46,7 @@ export function RoleAppShell({
 
   if (formFactor === 'desktop') {
     return (
-      <DesktopTopShell
+      <DesktopAdminShell
         title={title}
         accountMenu={accountMenu}
         navItems={navItems}
@@ -55,14 +55,14 @@ export function RoleAppShell({
         onNavigate={onNavigate}
         notifications={notifications}
         headerRight={headerRight}
-        fullBleed={fullBleed}
         hideHeader={hideHeader}
         headerExtension={headerExtension}
         headerOverride={headerOverride}
         variant={variant}
+        workspaceLabel="Guardr client console"
       >
         {children}
-      </DesktopTopShell>
+      </DesktopAdminShell>
     );
   }
 
