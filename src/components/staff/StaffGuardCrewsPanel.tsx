@@ -247,9 +247,9 @@ export function StaffGuardCrewsPanel({
         >
           <Users className="w-3.5 h-3.5" />
           Standing crews
-          {trustedGuards.length > 0 && (
+          {standingCrewLeads.length > 0 && (
             <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-brand-primary/15 text-[10px] font-bold text-brand-primary">
-              {trustedGuards.length}
+              {standingCrewLeads.length}
             </span>
           )}
         </button>

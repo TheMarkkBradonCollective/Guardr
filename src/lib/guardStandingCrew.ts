@@ -213,7 +213,7 @@ export function clearStandingCrewProfile(
 }
 
 export function guardLeadsOwnStandingCrew(
-  guard: SecurityGuard,
+  guard: Pick<SecurityGuard, 'id' | 'standingCrewName'>,
   members: GuardStandingCrewMember[]
 ): boolean {
   if (guard.standingCrewName?.trim()) return true;
