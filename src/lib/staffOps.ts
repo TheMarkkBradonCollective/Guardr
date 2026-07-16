@@ -42,6 +42,7 @@ export type StaffSection =
   | 'agreements'
   | 'audit-log'
   | 'disputes'
+  | 'violations'
   | 'analytics'
   | 'settings'
   | 'integrations'
@@ -71,7 +72,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   }
   const valid: StaffSection[] = [
     'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
-    'incidents', 'messages', 'payments', 'payment-settings', 'agreements', 'audit-log', 'disputes', 'analytics', 'settings', 'integrations', 'cities', 'guide', 'dev-updates', 'profile', 'preferences',
+    'incidents', 'messages', 'payments', 'payment-settings', 'agreements', 'audit-log', 'disputes', 'violations', 'analytics', 'settings', 'integrations', 'cities', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }
@@ -270,6 +271,73 @@ export type DisputeResolutionAction =
   | 'hold_funds'
   | 'partial_payout'
   | 'cancel_payout';
+
+export interface OpsShiftViolation {
+  id: string;
+  violationId: string;
+  requestId: string;
+  guardId: string;
+  clientId: string;
+  jobTitle: string;
+  guardName: string;
+  clientName: string;
+  checkpoint: string;
+  category: string;
+  label: string;
+  description: string;
+  source: 'system' | 'client';
+  status: string;
+  createdAt: string;
+  guardNote?: string;
+  disputeDeadlineAt?: string;
+  needsReview: boolean;
+}
+
+const OPEN_SHIFT_VIOLATION_STATUSES = new Set(['auto-flagged', 'flagged', 'dispute-open']);
+
+export function buildStaffShiftViolations(
+  requests: SecurityRequest[],
+  guards: SecurityGuard[]
+): OpsShiftViolation[] {
+  const rows: OpsShiftViolation[] = [];
+
+  for (const req of requests) {
+    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
+    for (const violation of req.shiftAuditViolations ?? []) {
+      rows.push({
+        id: `shift-violation-${violation.id}`,
+        violationId: violation.id,
+        requestId: req.id,
+        guardId: violation.guardId,
+        clientId: req.clientId,
+        jobTitle: req.title,
+        guardName,
+        clientName: req.clientName,
+        checkpoint: violation.checkpoint,
+        category: violation.category,
+        label: violation.label,
+        description: violation.description,
+        source: violation.source,
+        status: violation.status,
+        createdAt: violation.createdAt,
+        guardNote: violation.dispute?.guardNote,
+        disputeDeadlineAt: violation.dispute?.disputeDeadlineAt,
+        needsReview: OPEN_SHIFT_VIOLATION_STATUSES.has(violation.status),
+      });
+    }
+  }
+
+  return rows.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export function countOpenStaffShiftViolations(
+  requests: SecurityRequest[],
+  guards: SecurityGuard[]
+): number {
+  return buildStaffShiftViolations(requests, guards).filter((v) => v.needsReview).length;
+}
 
 export interface OpsDispute {
   id: string;
@@ -848,30 +916,6 @@ export function buildDisputes(
       hourlyRate: req.hourlyRate,
       guardsNeeded: req.guardsNeeded ?? 1,
     });
-  }
-
-  for (const req of requests) {
-    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
-    for (const violation of req.shiftAuditViolations ?? []) {
-      if (!['auto-flagged', 'flagged', 'dispute-open'].includes(violation.status)) continue;
-      disputes.push({
-        id: `audit-dispute-${violation.id}`,
-        type: 'audit-violation',
-        requestId: req.id,
-        guardId: violation.guardId,
-        clientId: req.clientId,
-        jobTitle: req.title,
-        guardName,
-        clientName: req.clientName,
-        guardStatement: violation.dispute?.guardNote?.trim() || 'No guard dispute note yet.',
-        clientStatement: violation.description,
-        status: 'open',
-        openedAt: violation.createdAt,
-        auditViolationId: violation.id,
-        auditCheckpoint: violation.checkpoint,
-        auditCategory: violation.category,
-      });
-    }
   }
 
   for (const ticket of tickets) {
