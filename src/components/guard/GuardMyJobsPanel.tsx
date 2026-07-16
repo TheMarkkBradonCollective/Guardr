@@ -6,7 +6,12 @@ import { getGuardHourlyPay } from '../../lib/guardJobs';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
-import { JobsShiftPieChart, type JobsPieSegment } from '../jobs/JobsShiftPieChart';
+import { formatTimeUntilShift } from '../../lib/shiftCountdown';
+import {
+  JobsScreenHero,
+  JOBS_PIE_COLORS,
+} from '../jobs/JobsScreenHero';
+import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import {
   AppEmptyState,
   AppItemCard,
@@ -17,26 +22,6 @@ import {
 } from '../ui/app/AppPrimitives';
 import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
-
-/** Format time until a shift in a human-friendly way. */
-function formatTimeUntilShift(startDate: string): string {
-  const now = new Date();
-  const start = new Date(startDate);
-  const diffMs = start.getTime() - now.getTime();
-  if (diffMs <= 0) return 'Now';
-  const diffHours = diffMs / 3_600_000;
-  if (diffHours < 1) {
-    const mins = Math.round(diffMs / 60_000);
-    return `In ${mins} min${mins === 1 ? '' : 's'}`;
-  }
-  if (diffHours < 24) {
-    const hours = Math.floor(diffHours);
-    const mins = Math.round((diffHours - hours) * 60);
-    return mins > 0 ? `In ${hours}h ${mins}m` : `In ${hours}h`;
-  }
-  return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
-    ' at ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
 
 export type { GuardMyJobDetailProps } from './GuardMyJobDetail';
 export { GuardMyJobDetail } from './GuardMyJobDetail';
@@ -80,20 +65,6 @@ interface GuardMyJobsPanelProps {
   onAcceptPriceOffer?: (jobId: string, offerId: string) => void | Promise<void>;
   onViewBriefing?: (jobId: string) => void;
 }
-
-function jobsHeroClass(scheduledCount: number, availableCount: number): string {
-  if (scheduledCount >= 3) return 'guard-tier-hero-professional';
-  if (scheduledCount > 0 || availableCount >= 2) return 'guard-tier-hero-rising';
-  if (availableCount > 0) return 'guard-tier-hero-rising';
-  return 'guard-tier-hero-starting';
-}
-
-const JOBS_PIE_COLORS: Record<GuardJobsBrowseTab, string> = {
-  available: '#6ee7a8',
-  scheduled: '#7ec8ff',
-  completed: '#f5e6a8',
-  missed: '#ffb38a',
-};
 
 function JobRow({
   job,
@@ -300,41 +271,14 @@ export function GuardMyJobsPanel({
   return (
     <AppScreen className="guard-tiered-screen h-full min-h-0">
       <div className="guard-tiered-screen-pinned">
-        <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
-          <div
-            className={`guard-tier-hero guard-jobs-tier-hero guard-tier-hero-dense ${jobsHeroClass(
-              tallies.scheduled,
-              tallies.available
-            )}`}
-          >
-            <div className="guard-tier-hero-glow" aria-hidden />
-            <div className="guard-jobs-hero-main">
-              <JobsShiftPieChart segments={pieSegments} activeId={activeTab} />
-              <div className="guard-jobs-hero-copy">
-                <p className="guard-tier-hero-eyebrow">Your shifts</p>
-                <h2 className="guard-tier-hero-name guard-jobs-hero-name">My jobs</h2>
-                <div className="guard-jobs-hero-legend" aria-label="Shift breakdown">
-                  {pieSegments.map((segment) => (
-                    <div
-                      key={segment.id}
-                      className={`guard-jobs-hero-legend-item ${
-                        activeTab === segment.id ? 'guard-jobs-hero-legend-item-active' : ''
-                      }`}
-                    >
-                      <span
-                        className="guard-jobs-hero-legend-dot"
-                        style={{ backgroundColor: segment.color }}
-                      />
-                      <span className="guard-jobs-hero-legend-label">{segment.label}</span>
-                      <span className="guard-jobs-hero-legend-value">{segment.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="guard-tier-hero-subtitle guard-jobs-hero-subtitle">{jobsHeroSubtitle}</p>
-          </div>
-        </section>
+        <JobsScreenHero
+          eyebrow="Your shifts"
+          title="My jobs"
+          subtitle={jobsHeroSubtitle}
+          segments={pieSegments}
+          activeId={activeTab}
+          onSegmentSelect={(id) => setActiveTab(id)}
+        />
       </div>
 
       <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar">
@@ -352,9 +296,10 @@ export function GuardMyJobsPanel({
               {availableJobs.length === 0 ? (
                 <AppEmptyState
                   icon={<Map className="w-5 h-5" />}
-                  title="No open jobs right now"
+                  title="No open jobs in your service areas"
                 >
-                  Check the map to browse available shifts near you.
+                  Open jobs in your cities appear here. Use the map to browse shifts in nearby
+                  areas too.
                 </AppEmptyState>
               ) : (
                 <AppItemCardStack>

@@ -10,6 +10,7 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
+  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
@@ -18,7 +19,12 @@ import {
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
 import { isJobMissed, JOB_TALLY_LABELS, splitCompletedAndMissed } from '../../lib/jobTallies';
-import { JobsTallyStrip } from '../jobs/JobsTallyStrip';
+import { formatTimeUntilShift } from '../../lib/shiftCountdown';
+import {
+  JobsScreenHero,
+  JOBS_PIE_COLORS,
+} from '../jobs/JobsScreenHero';
+import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 
@@ -174,19 +180,67 @@ export function ClientRequestsList({
   );
 
   const tallies = useMemo(
-    () => [
-      { id: 'open' as const, label: JOB_TALLY_LABELS.open, value: openJobs.length },
-      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled, value: scheduledJobs.length },
-      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed, value: completedJobs.length },
-      {
-        id: 'missed' as const,
-        label: JOB_TALLY_LABELS.missed,
-        value: missedJobs.length,
-        sub: 'No call / no show',
-      },
-    ],
+    () => ({
+      open: openJobs.length,
+      scheduled: scheduledJobs.length,
+      completed: completedJobs.length,
+      missed: missedJobs.length,
+    }),
     [openJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
   );
+
+  const pieSegments = useMemo<JobsPieSegment[]>(
+    () => [
+      { id: 'open', label: JOB_TALLY_LABELS.open, value: tallies.open, color: JOBS_PIE_COLORS.open },
+      {
+        id: 'scheduled',
+        label: JOB_TALLY_LABELS.scheduled,
+        value: tallies.scheduled,
+        color: JOBS_PIE_COLORS.scheduled,
+      },
+      {
+        id: 'completed',
+        label: JOB_TALLY_LABELS.completed,
+        value: tallies.completed,
+        color: JOBS_PIE_COLORS.completed,
+      },
+      { id: 'missed', label: JOB_TALLY_LABELS.missed, value: tallies.missed, color: JOBS_PIE_COLORS.missed },
+    ],
+    [tallies]
+  );
+
+  const tabOptions = useMemo(
+    () => [
+      { id: 'open' as const, label: JOB_TALLY_LABELS.open },
+      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled },
+      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed },
+      { id: 'missed' as const, label: JOB_TALLY_LABELS.missed },
+    ],
+    []
+  );
+
+  const jobTotal = tallies.open + tallies.scheduled + tallies.completed + tallies.missed;
+
+  const nextScheduled = useMemo(() => {
+    if (scheduledJobs.length === 0) return null;
+    return [...scheduledJobs].sort(
+      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    )[0];
+  }, [scheduledJobs]);
+
+  const jobsHeroSubtitle = useMemo(() => {
+    if (nextScheduled) {
+      const timeUntil = formatTimeUntilShift(nextScheduled.startDate);
+      return `Next: ${nextScheduled.title} — ${timeUntil}`;
+    }
+    if (tallies.open > 0) {
+      return `${tallies.open} open posting${tallies.open === 1 ? '' : 's'} awaiting guards.`;
+    }
+    if (jobTotal === 0) {
+      return 'Post a job to get matched with licensed guards.';
+    }
+    return 'Tap a tab below to browse your coverage.';
+  }, [nextScheduled, tallies.open, jobTotal]);
 
   const updateSelectedId = (jobId: string | null) => {
     setSelectedId(jobId);
@@ -268,11 +322,29 @@ export function ClientRequestsList({
   }
 
   return (
-    <AppScreen>
-      <div className="px-4 pt-4">
-        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={(id) => setActiveTab(id as JobTab)} />
+    <AppScreen className="guard-tiered-screen h-full min-h-0" data-tour="client-jobs">
+      <div className="guard-tiered-screen-pinned">
+        <JobsScreenHero
+          eyebrow="Your coverage"
+          title="Jobs"
+          subtitle={jobsHeroSubtitle}
+          segments={pieSegments}
+          activeId={activeTab}
+          onSegmentSelect={(id) => setActiveTab(id)}
+          totalLabel="jobs"
+        />
       </div>
 
+      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar">
+        <AppSegmentedControl<JobTab>
+          options={tabOptions}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+      </div>
+
+      <div className="guard-tiered-screen-scroll">
+        <div className="guard-rating-body">
       {activeTab === 'open' && (
         <div className="app-section-body pt-2">
           {openJobs.length === 0 ? (
@@ -368,6 +440,8 @@ export function ClientRequestsList({
           )}
         </div>
       )}
+        </div>
+      </div>
 
       <EditRequestSheet
         open={!!editingRequest}

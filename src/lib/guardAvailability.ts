@@ -49,6 +49,12 @@ export const WEEK_DAY_TAB_OPTIONS = WEEK_DAY_ORDER.map((day) => ({
   label: DAY_TAB_LABELS[day] ?? '?',
 }));
 
+/** Hero gradient tier: 0 days grey, each active day up to 5 blends toward company color. */
+export function availabilityHeroClass(enabledDayCount: number): string {
+  const days = Math.min(5, Math.max(0, enabledDayCount));
+  return `guard-availability-hero-days-${days}`;
+}
+
 export function dayLabel(day: number): string {
   return DAY_LABELS[day] ?? '?';
 }

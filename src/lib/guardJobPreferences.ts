@@ -187,3 +187,85 @@ export function jobTypePreferenceLabel(type: JobType): string {
 export function jobTypePreferenceDescription(type: JobType): string {
   return JOB_TYPE_PREFERENCE_OPTIONS.find((option) => option.type === type)?.description ?? '';
 }
+
+export function preferencesOnboardPercent(onboarded: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.round((onboarded / total) * 100));
+}
+
+export function preferencesActivePercent(active: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.round((active / total) * 100));
+}
+
+/** Muted sage-toned anchors aligned with company green at 0% / 50% / 100%. */
+const PREF_HERO_RED = { top: '#b58a8a', mid: '#966969', bottom: '#7a5252' };
+const PREF_HERO_YELLOW = { top: '#c9bc7a', mid: '#ada055', bottom: '#8f843f' };
+const PREF_HERO_GREEN = { top: '#9ab09c', mid: '#5e7b61', bottom: '#4a6b4e' };
+
+function lerpChannel(a: number, b: number, t: number): number {
+  return Math.round(a + (b - a) * t);
+}
+
+function parseHex(hex: string): [number, number, number] {
+  const normalized = hex.replace('#', '');
+  return [
+    parseInt(normalized.slice(0, 2), 16),
+    parseInt(normalized.slice(2, 4), 16),
+    parseInt(normalized.slice(4, 6), 16),
+  ];
+}
+
+function toHex([r, g, b]: [number, number, number]): string {
+  return `#${[r, g, b].map((value) => value.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function lerpHex(from: string, to: string, t: number): string {
+  const start = parseHex(from);
+  const end = parseHex(to);
+  return toHex([
+    lerpChannel(start[0], end[0], t),
+    lerpChannel(start[1], end[1], t),
+    lerpChannel(start[2], end[2], t),
+  ]);
+}
+
+export interface PreferencesHeroColorStops {
+  top: string;
+  mid: string;
+  bottom: string;
+  tint: string;
+}
+
+/** Interpolate hero/page tint: red at 0%, yellow at 50%, company green at 100%. */
+export function preferencesHeroColorStops(onboardPercent: number): PreferencesHeroColorStops {
+  const pct = Math.min(100, Math.max(0, onboardPercent));
+  if (pct <= 50) {
+    const t = pct / 50;
+    return {
+      top: lerpHex(PREF_HERO_RED.top, PREF_HERO_YELLOW.top, t),
+      mid: lerpHex(PREF_HERO_RED.mid, PREF_HERO_YELLOW.mid, t),
+      bottom: lerpHex(PREF_HERO_RED.bottom, PREF_HERO_YELLOW.bottom, t),
+      tint: lerpHex(PREF_HERO_RED.mid, PREF_HERO_YELLOW.mid, t),
+    };
+  }
+  const t = (pct - 50) / 50;
+  return {
+    top: lerpHex(PREF_HERO_YELLOW.top, PREF_HERO_GREEN.top, t),
+    mid: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_GREEN.mid, t),
+    bottom: lerpHex(PREF_HERO_YELLOW.bottom, PREF_HERO_GREEN.bottom, t),
+    tint: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_GREEN.mid, t),
+  };
+}
+
+export function preferencesHeroStyleVars(
+  onboardPercent: number
+): Record<'--pref-hero-c1' | '--pref-hero-c2' | '--pref-hero-c3' | '--pref-tint-color', string> {
+  const stops = preferencesHeroColorStops(onboardPercent);
+  return {
+    '--pref-hero-c1': stops.top,
+    '--pref-hero-c2': stops.mid,
+    '--pref-hero-c3': stops.bottom,
+    '--pref-tint-color': stops.tint,
+  };
+}

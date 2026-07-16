@@ -8834,6 +8834,37 @@ html.theme-grey .wf-badge-success {
   margin-top: 0.25rem;
 }
 
+.guard-performance-hero-starting {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 82%, #fff) 0%,
+    var(--brand-primary) 52%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
+.guard-performance-hero-rising {
+  background: linear-gradient(160deg, #8b6b4d 0%, #6d4f34 55%, #5a3f28 100%);
+}
+
+.guard-performance-hero-professional {
+  background: linear-gradient(160deg, #c9a227 0%, #a67c00 52%, #8a6400 100%);
+}
+
+.guard-performance-hero-elite {
+  background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
+}
+
+.guard-tier-medal-starting .guard-tier-medal-ring {
+  border-color: rgba(220, 255, 228, 0.75);
+  background: rgba(180, 230, 190, 0.22);
+}
+
+.guard-tier-medal-rising .guard-tier-medal-ring {
+  border-color: rgba(255, 220, 180, 0.75);
+  background: rgba(210, 170, 130, 0.2);
+}
+
 .guard-rating-section-tiered {
   padding: 0;
   overflow: hidden;
@@ -8850,9 +8881,11 @@ html.theme-grey .wf-badge-success {
   background: var(--brand-bg-sec);
 }
 
-/* Tier hero — fixed height, straight bottom edge, pinned on tiered screens */
+/* Tier hero — scrolls with page; content fills the banner */
 :root {
-  --guard-tier-hero-height: 16.5rem;
+  --guard-tier-hero-height: 22rem;
+  --guard-tier-hero-padding: 1.35rem 1.25rem 1.5rem;
+  --guard-tier-hero-content-width: min(100%, 26rem);
 }
 
 .guard-tiered-screen {
@@ -8860,38 +8893,37 @@ html.theme-grey .wf-badge-success {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
-  padding-bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
 
 .app-screen.guard-tiered-screen {
-  overflow: hidden;
-  overflow-y: hidden;
-  padding-bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
 
 .guard-tiered-screen-pinned {
   flex-shrink: 0;
-  z-index: 4;
 }
 
 .guard-tiered-screen-toolbar {
   flex-shrink: 0;
   position: relative;
-  z-index: 5;
+  z-index: 1;
 }
 
 .guard-tiered-screen-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  flex: none;
+  min-height: auto;
+  overflow: visible;
 }
 
 .guard-tier-hero-card {
-  margin-top: 0.25rem;
+  margin-top: 0;
 }
 
 .guard-tier-hero-card.guard-rating-section-tiered {
@@ -8904,18 +8936,26 @@ html.theme-grey .wf-badge-success {
   overflow: hidden;
   color: #fff;
   box-sizing: border-box;
+  width: 100%;
   height: var(--guard-tier-hero-height);
   min-height: var(--guard-tier-hero-height);
-  max-height: var(--guard-tier-hero-height);
-  padding: 1.35rem 1.25rem;
+  padding: var(--guard-tier-hero-padding);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+  justify-content: space-evenly;
+  gap: 0;
   z-index: 1;
   border-radius: 0;
+}
+
+.guard-tier-hero > :not(.guard-tier-hero-glow) {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;
+  width: var(--guard-tier-hero-content-width);
+  max-width: 100%;
 }
 
 .guard-tier-hero-glow,
@@ -8944,11 +8984,20 @@ html.theme-grey .wf-badge-success {
   background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
 }
 
+.guard-tier-hero-brand {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 78%, #fff) 0%,
+    var(--brand-primary) 55%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
 .guard-tier-hero .guard-pref-tier-medal,
 .guard-tier-hero .guard-tier-medal-lg {
-  width: 3.25rem;
-  height: 3.65rem;
-  margin: 0 auto 0.1rem;
+  width: clamp(4.75rem, 22vw, 6rem);
+  height: clamp(5.25rem, 24vw, 6.65rem);
+  margin: 0;
 }
 
 .guard-pref-tier-medal {
@@ -8956,9 +9005,9 @@ html.theme-grey .wf-badge-success {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.65rem;
-  margin: 0 auto 0.1rem;
+  width: clamp(4.75rem, 22vw, 6rem);
+  height: clamp(5.25rem, 24vw, 6.65rem);
+  margin: 0;
   flex-shrink: 0;
   z-index: 1;
 }
@@ -8996,24 +9045,22 @@ html.theme-grey .wf-badge-success {
   display: none;
 }
 
-.guard-tier-hero .guard-tier-medal-ring,
-.guard-tier-hero .guard-pref-tier-medal-ring {
-  border-radius: 0;
-}
-
 .guard-tier-hero-dense {
-  gap: 0.2rem;
-  padding: 1rem 1.15rem 1.05rem;
+  gap: 0;
+  padding: var(--guard-tier-hero-padding);
+  justify-content: space-evenly;
 }
 
 .guard-tier-hero-dense .guard-tier-hero-score-row {
-  margin: 0.1rem 0 0.15rem;
-  padding: 0.28rem 0.65rem;
+  margin: 0;
+  padding: 0.55rem 1rem;
 }
 
 .guard-tier-hero-dense .guard-tier-hero-subtitle {
-  margin: 0.1rem 0 0;
-  -webkit-line-clamp: 1;
+  margin: 0;
+  -webkit-line-clamp: unset;
+  display: block;
+  overflow: visible;
 }
 
 .guard-tier-progress-compact {
@@ -9058,14 +9105,38 @@ html.theme-grey .wf-badge-success {
 }
 
 .guard-tier-hero .guard-pref-onboard-progress,
-.guard-tier-hero .guard-tier-progress {
-  width: 100%;
-  max-width: 16rem;
-  margin-top: 0.15rem;
+.guard-tier-hero .guard-tier-progress,
+.guard-tier-hero .guard-pref-progress {
+  width: var(--guard-tier-hero-content-width);
+  max-width: 100%;
+  margin: 0;
+}
+
+.guard-tier-hero .guard-tier-progress-compact {
+  max-width: 100%;
+  width: var(--guard-tier-hero-content-width);
+}
+
+.guard-tier-hero .guard-tier-progress-compact .guard-tier-progress-markers {
+  height: 2.1rem;
+}
+
+.guard-tier-hero .guard-tier-progress-compact .guard-tier-progress-node-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.guard-tier-hero .guard-tier-progress-compact .guard-tier-progress-node-label {
+  font-size: 0.625rem;
+}
+
+.guard-tier-hero .guard-tier-progress-compact .guard-tier-progress-track {
+  height: 0.5rem;
 }
 
 .guard-pay-hero-amount {
-  font-size: clamp(1.35rem, 5vw, 1.65rem);
+  font-size: clamp(1.75rem, 6.5vw, 2.25rem);
+  margin: 0;
 }
 
 .guard-pay-actions-section {
@@ -9176,7 +9247,7 @@ html.theme-grey .wf-badge-success {
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -9186,10 +9257,10 @@ html.theme-grey .wf-badge-success {
 .guard-tier-hero-name {
   position: relative;
   z-index: 1;
-  font-size: clamp(1.35rem, 5vw, 1.65rem);
+  font-size: clamp(1.75rem, 6.5vw, 2.25rem);
   font-weight: 900;
   letter-spacing: -0.05em;
-  margin: 0.1rem 0 0;
+  margin: 0;
   line-height: 1.05;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
@@ -9200,22 +9271,25 @@ html.theme-grey .wf-badge-success {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  margin: 0.2rem 0 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 0;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
   background: rgba(0, 0, 0, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  width: var(--guard-tier-hero-content-width);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .guard-tier-hero-score-label {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   opacity: 0.9;
 }
 
 .guard-tier-hero-score-value {
-  font-size: 1.125rem;
+  font-size: 1.35rem;
   font-weight: 900;
   letter-spacing: -0.03em;
 }
@@ -9229,15 +9303,14 @@ html.theme-grey .wf-badge-success {
 .guard-tier-hero-subtitle {
   position: relative;
   z-index: 1;
-  font-size: 0.6875rem;
-  line-height: 1.35;
+  font-size: 0.875rem;
+  line-height: 1.45;
   opacity: 0.88;
-  margin: 0.25rem 0 0;
-  max-width: 18rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin: 0;
+  max-width: var(--guard-tier-hero-content-width);
+  width: 100%;
+  display: block;
+  overflow: visible;
 }
 
 .guard-tier-progress {
@@ -14095,7 +14168,7 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   grid-row: 1;
 }
 
-/* Crew / jobs hub — tier hero pinned, tabs in toolbar slot, body scrolls */
+/* Crew / jobs hub — hero scrolls with body; tabs sit below hero */
 .crew-hub-sticky-head,
 .jobs-hub-sticky-head {
   padding: 0.5rem 1rem 0;
@@ -14120,92 +14193,71 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   }
 }
 
-/* Jobs hero — donut breakdown + crew-style tabs */
+/* Jobs hero — segmented progress breakdown */
 .guard-jobs-tier-hero {
-  justify-content: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  text-align: center;
 }
 
-.guard-jobs-hero-main {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
+.guard-jobs-hero-stack {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 19.5rem;
+  max-width: 18rem;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
 }
 
-.guard-jobs-hero-copy {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-}
-
-.guard-jobs-hero-copy .guard-tier-hero-eyebrow {
-  text-align: left;
+.guard-jobs-hero-stack .guard-tier-hero-eyebrow,
+.guard-jobs-hero-name {
+  text-align: center;
 }
 
 .guard-jobs-hero-name {
-  font-size: clamp(1.15rem, 4.5vw, 1.4rem);
-  text-align: left;
+  font-size: clamp(1.65rem, 6vw, 2.15rem);
+  margin: 0;
 }
 
 .guard-jobs-hero-subtitle {
-  max-width: 19.5rem;
-  margin-inline: auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  flex: 0 0 auto;
 }
 
-.guard-jobs-pie {
-  width: 4.35rem;
-  height: 4.35rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  position: relative;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  transition: box-shadow 0.2s ease;
+.jobs-segment-progress {
+  margin: 0.45rem auto 0;
 }
 
-.guard-jobs-pie-empty {
-  background: rgba(255, 255, 255, 0.14);
-  border: 2px dashed rgba(255, 255, 255, 0.28);
-  box-shadow: none;
-}
-
-.guard-jobs-pie-hole {
-  position: absolute;
-  inset: 20%;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+.jobs-segment-progress-track {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  backdrop-filter: blur(4px);
+  width: 100%;
+  align-items: stretch;
 }
 
-.guard-jobs-pie-total {
-  font-size: 1.05rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.03em;
+.jobs-segment-progress-segment {
+  height: 100%;
+  min-width: 0;
+  transition: width 0.35s ease, opacity 0.15s ease;
 }
 
-.guard-jobs-pie-total-label {
-  margin-top: 0.1rem;
-  font-size: 0.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.78;
+.jobs-segment-progress-segment-dimmed {
+  opacity: 0.38;
+}
+
+.jobs-segment-progress-segment-active {
+  opacity: 1;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
 }
 
 .guard-jobs-hero-legend {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.22rem 0.5rem;
-  margin-top: 0.3rem;
+  gap: 0.4rem 0.75rem;
+  margin-top: 0.45rem;
 }
 
 .guard-jobs-hero-legend-item {
@@ -14232,7 +14284,7 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
 .guard-jobs-hero-legend-label {
   flex: 1;
   min-width: 0;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
@@ -14241,7 +14293,7 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
 }
 
 .guard-jobs-hero-legend-value {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -14251,60 +14303,34 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   text-underline-offset: 0.12rem;
 }
 
-.crew-join-section {
-  padding: 0.75rem 1rem 0;
-}
-
-.crew-join-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border-radius: var(--radius-app-lg, 14px);
-  border: 1px solid var(--brand-border);
-  background: var(--brand-surface);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-.crew-join-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.crew-join-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
-  color: var(--brand-primary);
-}
-
-.crew-join-icon {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.crew-join-title {
-  margin: 0 0 0.35rem;
-  font-size: 1.0625rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--brand-text);
-}
-
-.crew-join-desc {
+.guard-jobs-hero-legend-button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--brand-text-muted);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.guard-jobs-hero-legend-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 380px) {
+  .guard-jobs-hero-legend {
+    gap: 0.18rem 0.35rem;
+  }
+
+  .guard-jobs-hero-subtitle {
+    font-size: 0.72rem;
+    max-width: 100%;
+  }
 }
 
 .crew-join-form {
@@ -14326,6 +14352,41 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
 
 .crew-join-submit {
   width: 100%;
+}
+
+.crew-armed-progress-track {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+}
+
+.crew-armed-progress-segment {
+  height: 100%;
+  min-width: 0;
+  transition: width 0.35s ease;
+}
+
+.crew-armed-progress-segment-armed {
+  background: linear-gradient(90deg, #f87171, #ef4444);
+}
+
+.crew-armed-progress-segment-light {
+  background: linear-gradient(90deg, #fde047, #eab308);
+}
+
+.crew-armed-progress-segment-unarmed {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.24));
+}
+
+.crew-armed-progress-segment-light-armed {
+  background: linear-gradient(90deg, #fde047, #eab308);
+}
+
+.crew-armed-progress-caption {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+  font-size: 0.6875rem;
+  opacity: 0.88;
 }
 
 .crew-hub-team-body {
@@ -15433,6 +15494,52 @@ html.theme-grey .landing-wordmark {
   color: var(--brand-text-muted);
 }
 
+/* Availability hero — 0 days grey; each active day up to 5 blends toward company color */
+.guard-availability-hero-days-0 {
+  background: linear-gradient(160deg, #5a6470 0%, #3f4854 100%);
+}
+
+.guard-availability-hero-days-1 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 20%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 20%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-2 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 40%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 40%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-3 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 60%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 60%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-4 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 80%, #5a6470) 0%,
+    color-mix(in srgb, var(--brand-primary) 80%, #3f4854) 100%
+  );
+}
+
+.guard-availability-hero-days-5 {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 78%, #fff) 0%,
+    var(--brand-primary) 55%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
 .availability-day-row {
   display: flex;
   justify-content: space-between;
@@ -15740,10 +15847,18 @@ html.theme-grey .landing-wordmark {
 .guard-pref-hero-tiered {
   background: linear-gradient(
     160deg,
-    color-mix(in srgb, var(--brand-primary) 88%, #1d4f8f) 0%,
-    color-mix(in srgb, var(--brand-primary) 62%, #12345f) 55%,
-    color-mix(in srgb, var(--brand-primary) 48%, #0c2444) 100%
+    var(--pref-hero-c1, #b58a8a) 0%,
+    var(--pref-hero-c2, #966969) 55%,
+    var(--pref-hero-c3, #7a5252) 100%
   );
+  transition: background 0.4s ease;
+}
+
+.guard-pref-hero-onboard-complete {
+  --pref-hero-c1: color-mix(in srgb, var(--brand-primary) 78%, #fff);
+  --pref-hero-c2: var(--brand-primary);
+  --pref-hero-c3: var(--brand-primary-hover);
+  --pref-tint-color: var(--brand-primary);
 }
 
 .guard-pref-hero-tiered .guard-pref-hero-glow {
@@ -15894,18 +16009,33 @@ html.theme-grey .landing-wordmark {
   max-width: 18rem;
 }
 
+.guard-tier-hero-dense .guard-pref-progress {
+  margin: 0.55rem auto 0;
+}
+
 .guard-pref-progress-track {
   height: 0.45rem;
+  min-height: 0.45rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
 }
 
 .guard-pref-progress-fill {
   height: 100%;
+  min-width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
-  transition: width 0.35s ease;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--pref-hero-c2, #fff) 92%, #fff),
+    color-mix(in srgb, var(--pref-hero-c2, #fff) 72%, #fff)
+  );
+  transition: width 0.35s ease, background 0.4s ease;
+}
+
+.guard-pref-progress-fill-empty {
+  opacity: 0;
 }
 
 .guard-pref-progress-hint {
@@ -15929,9 +16059,23 @@ html.theme-grey .landing-wordmark {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.guard-pref-scroll-tinted {
+  background: color-mix(
+    in srgb,
+    var(--pref-tint-color, var(--brand-bg-sec)) calc(var(--pref-active-pct, 0) * 0.24%),
+    var(--brand-bg-sec)
+  );
+  transition: background 0.35s ease;
+}
+
 .guard-pref-body {
-  background: var(--brand-bg-sec);
+  background: transparent;
   padding-bottom: calc(1.5rem + var(--app-safe-bottom));
+}
+
+.guard-pref-body-saturation {
+  filter: grayscale(calc(100% - var(--pref-active-pct, 0) * 1%));
+  transition: filter 0.35s ease;
 }
 
 .guard-pref-intro {

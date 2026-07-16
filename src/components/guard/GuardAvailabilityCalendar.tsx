@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, Plus, Trash2, TrendingUp } from 'lucide-react';
 import {
+  availabilityHeroClass,
   dayLabel,
   dayLabelFull,
   defaultAvailabilitySchedule,
@@ -23,12 +24,6 @@ interface GuardAvailabilityCalendarProps {
   schedule?: GuardAvailabilitySchedule;
   onSave?: (schedule: GuardAvailabilitySchedule) => void | Promise<void>;
   readOnly?: boolean;
-}
-
-function availabilityHeroClass(enabledCount: number): string {
-  if (enabledCount >= 5) return 'guard-tier-hero-professional';
-  if (enabledCount >= 1) return 'guard-tier-hero-rising';
-  return 'guard-tier-hero-starting';
 }
 
 export function GuardAvailabilityCalendar({

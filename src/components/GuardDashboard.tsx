@@ -77,6 +77,7 @@ import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedu
 import { getCoordinatingCrewJobs } from '../lib/guardTeams';
 import {
   getPendingStandingCrewIncoming,
+  guardIsInStandingCrew,
   shouldOfferTeamCodeJoin,
 } from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
@@ -428,8 +429,8 @@ export function GuardDashboard({
   const [manualBriefingJobId, setManualBriefingJobId] = useState<string | null>(null);
 
   const browseJobLists = useMemo(
-    () => getGuardBrowseJobLists(guard.id, requests),
-    [guard.id, requests]
+    () => getGuardBrowseJobLists(guard, requests),
+    [guard, requests]
   );
 
   const upcomingForMessages = useMemo(() => {
@@ -637,12 +638,21 @@ export function GuardDashboard({
     () => canRequestCrewLead(guard, standingCrewMembers, crewJoinRequests),
     [guard, standingCrewMembers, crewJoinRequests]
   );
-  const showCrewTab = trustedGuard || pendingStandingCrewInvites.length > 0;
-
   const coordinatingCrewJobs = useMemo(
     () => getCoordinatingCrewJobs(guard.id, requests),
     [requests, guard.id]
   );
+
+  const inStandingCrew = useMemo(
+    () => guardIsInStandingCrew(guard, standingCrewMembers),
+    [guard, standingCrewMembers]
+  );
+
+  const showCrewTab =
+    trustedGuard ||
+    inStandingCrew ||
+    pendingStandingCrewInvites.length > 0 ||
+    coordinatingCrewJobs.length > 0;
 
   useEffect(() => {
     if (tab === 'crew' && !showCrewTab) {
@@ -1396,7 +1406,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'crew' && showCrewTab && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-crew">
               <GuardCrewHubPanel
                   guard={guard}
                   coordinatingJobs={coordinatingCrewJobs}

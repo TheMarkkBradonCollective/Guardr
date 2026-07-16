@@ -22,6 +22,9 @@ import {
   JOB_TYPE_PREFERENCE_CATEGORIES,
   JOB_TYPE_PREFERENCE_OPTIONS,
   normalizeJobTypePreferences,
+  preferencesActivePercent,
+  preferencesHeroStyleVars,
+  preferencesOnboardPercent,
   type JobTypePreferenceOption,
 } from '../../lib/guardJobPreferences';
 import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
@@ -77,15 +80,20 @@ function OnboardingProgressBar({ onboarded, total }: { onboarded: number; total:
   const fillPercent = total > 0 ? Math.min(100, Math.round((onboarded / total) * 100)) : 0;
 
   return (
-    <div className="guard-pref-progress">
-      <div className="guard-pref-progress-track" role="presentation">
-        <div className="guard-pref-progress-fill" style={{ width: `${fillPercent}%` }} />
+    <div
+      className="guard-pref-progress"
+      role="progressbar"
+      aria-valuenow={onboarded}
+      aria-valuemin={0}
+      aria-valuemax={total}
+      aria-label={`${onboarded} of ${total} job types onboarded`}
+    >
+      <div className="guard-pref-progress-track">
+        <div
+          className={`guard-pref-progress-fill${fillPercent === 0 ? ' guard-pref-progress-fill-empty' : ''}`}
+          style={{ width: `${fillPercent}%` }}
+        />
       </div>
-      <p className="guard-pref-progress-hint">
-        <span>
-          <strong>{onboarded}</strong> of <strong>{total}</strong> job types onboarded
-        </span>
-      </p>
     </div>
   );
 }
@@ -110,6 +118,18 @@ export function GuardJobPreferencesPanel({
     const setupNeeded = total - onboarded;
     return { total, active, onboarded, setupNeeded };
   }, [guard, selected]);
+
+  const onboardPercent = preferencesOnboardPercent(stats.onboarded, stats.total);
+  const activePercent = preferencesActivePercent(stats.active, stats.total);
+  const heroColorVars = preferencesHeroStyleVars(onboardPercent);
+  const onboardComplete = onboardPercent >= 100;
+
+  const pageStyle = {
+    ...heroColorVars,
+    '--pref-active-pct': String(activePercent),
+  } as React.CSSProperties;
+
+  const heroStyle = heroColorVars as React.CSSProperties;
 
   const setPreference = (type: JobType, enabled: boolean) => {
     const next = enabled
@@ -142,7 +162,12 @@ export function GuardJobPreferencesPanel({
     <>
       <div className="guard-tiered-screen-pinned">
         <section className="guard-preferences-panel guard-preferences-panel-tiered guard-tier-hero-card">
-          <div className="guard-tier-hero guard-pref-hero-tiered guard-tier-hero-dense">
+          <div
+            className={`guard-tier-hero guard-pref-hero-tiered guard-tier-hero-dense${
+              onboardComplete ? ' guard-pref-hero-onboard-complete' : ''
+            }`}
+            style={heroStyle}
+          >
             <div className="guard-pref-hero-glow" aria-hidden />
             <div className="guard-pref-tier-medal" aria-hidden>
               <div className="guard-pref-tier-medal-ring">
@@ -158,6 +183,7 @@ export function GuardJobPreferencesPanel({
                 <span className="guard-pref-hero-score-total"> / {stats.total}</span>
               </span>
             </div>
+            <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
             <p className="guard-tier-hero-subtitle">
               {stats.active > 0
                 ? `${stats.active} alert${stats.active === 1 ? '' : 's'} active right now`
@@ -169,8 +195,8 @@ export function GuardJobPreferencesPanel({
         </section>
       </div>
 
-      <div className="guard-tiered-screen-scroll">
-        <div className="guard-pref-body">
+      <div className="guard-tiered-screen-scroll guard-pref-scroll-tinted" style={pageStyle}>
+        <div className="guard-pref-body guard-pref-body-saturation">
         <div className="guard-pref-intro">
           <p className="guard-pref-intro-text">
             Turn on the job types you want. Complete the read-aloud onboarding once per type, then
@@ -187,7 +213,6 @@ export function GuardJobPreferencesPanel({
           >
             {welcomeExpanded ? 'Read less' : 'Read more'}
           </button>
-          <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
         </div>
         {stats.active === 0 && (
           <div className="guard-pref-empty-banner">
