@@ -85,6 +85,11 @@ export function StaffDesktopShell({
 
   return (
     <div className="desktop-workspace desktop-workspace--staff page-shell fixed inset-0 h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
+      <div className="desktop-workspace-ambient" aria-hidden>
+        <div className="desktop-workspace-ambient-orb desktop-workspace-ambient-orb--a" />
+        <div className="desktop-workspace-ambient-orb desktop-workspace-ambient-orb--b" />
+      </div>
+
       <StaffDesktopNav
         items={navItems}
         activeSection={navHighlight}
@@ -104,6 +109,7 @@ export function StaffDesktopShell({
             <DesktopCommandBar
               title={screenTitle}
               subtitle="Staff operations console"
+              breadcrumb="Command center"
               notifications={headerActions}
               extension={headerExtension}
               showAccountMenu={false}

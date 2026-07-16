@@ -70,6 +70,11 @@ export function DesktopWorkspaceShell({
 
   return (
     <div className="desktop-workspace page-shell fixed inset-0 h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
+      <div className="desktop-workspace-ambient" aria-hidden>
+        <div className="desktop-workspace-ambient-orb desktop-workspace-ambient-orb--a" />
+        <div className="desktop-workspace-ambient-orb desktop-workspace-ambient-orb--b" />
+      </div>
+
       <DesktopNavRail
         items={primaryNav}
         secondaryItems={secondaryNav}
@@ -87,6 +92,7 @@ export function DesktopWorkspaceShell({
           ) : (
             <DesktopCommandBar
               title={title}
+              breadcrumb="Operations"
               notifications={notifications ?? headerRight}
               extension={headerExtension}
               accountMenu={accountMenu}
