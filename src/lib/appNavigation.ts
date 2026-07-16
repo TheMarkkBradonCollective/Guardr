@@ -500,6 +500,8 @@ const EPHEMERAL_QUERY_KEYS = [
   'job_id',
   'deposit',
   'stripe_connect',
+  'tip',
+  'overtime',
 ] as const;
 
 export function stripEphemeralQueryParams(url: string): string {

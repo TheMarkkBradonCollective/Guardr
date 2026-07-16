@@ -997,6 +997,12 @@ export interface SecurityRequest {
   autoPayoutScheduledAt?: string;
   ratingGiven?: number;
   reviewText?: string;
+  /** Optional gratuity left by the client after the shift. */
+  tipAmount?: number;
+  tipPaymentStatus?: 'none' | 'pending' | 'paid' | 'failed';
+  tipStripeSessionId?: string;
+  tipStripePaymentIntentId?: string;
+  tipPaidAt?: string;
   // Dynamic Self-Audit Tracker
   checkInAudit?: {
     checkedAt: string;

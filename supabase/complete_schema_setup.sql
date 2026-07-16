@@ -423,6 +423,11 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_paym
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_payment_status TEXT DEFAULT 'none';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_stripe_session_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_stripe_payment_intent_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_paid_at TIMESTAMPTZ;
 
 -- Overtime dispute: client contests late clock-out charge; staff reviews and adjusts.
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_reason TEXT;
