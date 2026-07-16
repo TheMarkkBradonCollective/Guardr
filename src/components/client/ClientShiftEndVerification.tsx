@@ -29,7 +29,7 @@ export function ClientShiftEndVerification({
   const [verifying, setVerifying] = useState(false);
   const [flagging, setFlagging] = useState(false);
   const [showFlagForm, setShowFlagForm] = useState(false);
-  const [flagCategory, setFlagCategory] = useState(END_CHECKPOINT_FLAG_REASONS[0].value);
+  const [flagCategory, setFlagCategory] = useState<string>(END_CHECKPOINT_FLAG_REASONS[0].value);
   const [flagNote, setFlagNote] = useState('');
 
   if (!audit?.checkedAt || !['completed', 'closed'].includes(request.status)) {

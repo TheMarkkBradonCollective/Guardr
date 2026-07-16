@@ -14,6 +14,12 @@ interface StaffDisputesPanelProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => void | Promise<void>;
+  onResolveAuditViolation?: (
+    requestId: string,
+    violationId: string,
+    action: 'uphold' | 'dismiss',
+    note?: string
+  ) => void | Promise<void>;
 }
 
 type DisputeTab = 'all' | 'overtime';

@@ -70,9 +70,9 @@ export function GuardShiftAuditDisputes({
                     disabled={busy || !(noteById[violation.id] ?? '').trim()}
                     onClick={() => {
                       setSubmittingId(violation.id);
-                      void onDispute(request.id, violation.id, noteById[violation.id] ?? '').finally(() =>
-                        setSubmittingId(null)
-                      );
+                      void Promise.resolve(
+                        onDispute(request.id, violation.id, noteById[violation.id] ?? '')
+                      ).finally(() => setSubmittingId(null));
                     }}
                     className="app-button-outline app-btn-sm gap-1.5"
                   >

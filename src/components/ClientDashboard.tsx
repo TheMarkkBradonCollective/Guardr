@@ -76,6 +76,10 @@ interface ClientDashboardProps {
   ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: import('./client/ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
+  onVerifyStartCheckpoint?: (requestId: string) => void | Promise<void>;
+  onFlagStartCheckpoint?: (requestId: string, category: string, note: string) => void | Promise<void>;
+  onVerifyEndCheckpoint?: (requestId: string) => void | Promise<void>;
+  onFlagEndCheckpoint?: (requestId: string, category: string, note: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
@@ -162,6 +166,10 @@ export function ClientDashboard({
   onAddReview,
   onReportViolation,
   onConfirmSelfAudit,
+  onVerifyStartCheckpoint,
+  onFlagStartCheckpoint,
+  onVerifyEndCheckpoint,
+  onFlagEndCheckpoint,
   onApproveOvertime,
   onDisputeOvertime,
   onApproveScheduleChange,
@@ -375,6 +383,10 @@ export function ClientDashboard({
         initialLiveJobId={jobChatRequestId}
         onLiveJobIdChange={onJobChatRequestIdChange}
         onConfirmSelfAudit={onConfirmSelfAudit}
+        onVerifyStartCheckpoint={onVerifyStartCheckpoint}
+        onFlagStartCheckpoint={onFlagStartCheckpoint}
+        onVerifyEndCheckpoint={onVerifyEndCheckpoint}
+        onFlagEndCheckpoint={onFlagEndCheckpoint}
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}
         onApproveScheduleChange={onApproveScheduleChange}
@@ -634,6 +646,10 @@ export function ClientDashboard({
         onAddReview={onAddReview}
         onReportViolation={onReportViolation}
         onConfirmSelfAudit={onConfirmSelfAudit}
+        onVerifyStartCheckpoint={onVerifyStartCheckpoint}
+        onFlagStartCheckpoint={onFlagStartCheckpoint}
+        onVerifyEndCheckpoint={onVerifyEndCheckpoint}
+        onFlagEndCheckpoint={onFlagEndCheckpoint}
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}
         onApproveScheduleChange={onApproveScheduleChange}

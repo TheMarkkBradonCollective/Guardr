@@ -29,7 +29,7 @@ export function ClientShiftStartVerification({
   const [verifying, setVerifying] = useState(false);
   const [flagging, setFlagging] = useState(false);
   const [showFlagForm, setShowFlagForm] = useState(false);
-  const [flagCategory, setFlagCategory] = useState(START_CHECKPOINT_FLAG_REASONS[0].value);
+  const [flagCategory, setFlagCategory] = useState<string>(START_CHECKPOINT_FLAG_REASONS[0].value);
   const [flagNote, setFlagNote] = useState('');
 
   if (!audit?.checkedAt || !['in-progress', 'completed', 'closed'].includes(request.status)) {

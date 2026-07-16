@@ -13,7 +13,7 @@ interface GuardBriefingAckGateProps {
 
 export function GuardBriefingAckGate({ open, job, onAcknowledge }: GuardBriefingAckGateProps) {
   return (
-    <AppModal open={open} position="absolute" zIndex={1004} ariaLabelledBy="briefing-ack-gate-title">
+    <AppModal open={open} onClose={() => {}} position="absolute" zIndex={1004} ariaLabelledBy="briefing-ack-gate-title">
       <div className="p-5 space-y-4 max-h-[85vh] overflow-y-auto">
         <div>
           <p id="briefing-ack-gate-title" className="font-semibold text-brand-primary flex items-center gap-2">

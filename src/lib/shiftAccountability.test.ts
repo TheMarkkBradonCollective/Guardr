@@ -13,13 +13,13 @@ import type { SecurityRequest } from '../types.ts';
 
 describe('briefingAck', () => {
   it('detects briefing content from site instructions', () => {
-    assert.equal(jobHasBriefingContent({ siteInstructions: 'Use north gate' }), true);
-    assert.equal(jobHasBriefingContent({}), false);
+    assert.equal(jobHasBriefingContent({ description: '', siteInstructions: 'Use north gate' }), true);
+    assert.equal(jobHasBriefingContent({ description: '' }), false);
   });
 
   it('tracks acknowledgments per guard', () => {
     const acks = appendBriefingAck(undefined, 'g1');
-    assert.equal(guardAcknowledgedBriefing({ briefingAcknowledgments: acks }, 'g1'), true);
+    assert.equal(guardAcknowledgedBriefing({ description: '', briefingAcknowledgments: acks }, 'g1'), true);
   });
 });
 
