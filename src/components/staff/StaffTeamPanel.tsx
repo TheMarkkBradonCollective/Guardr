@@ -101,6 +101,7 @@ export function StaffTeamPanel({
           <StaffAddStaffForm
             assignableRoles={assignableRoles}
             requiresDirectorApproval={requiresDirectorApproval}
+            actorRole={currentUserRole}
             platformCities={platformCities}
             actorManagedCities={actorManagedCities}
             managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}

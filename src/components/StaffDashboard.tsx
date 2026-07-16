@@ -1030,9 +1030,6 @@ export function StaffDashboard({
             currentUser={currentUser}
             platformSettings={platformSettings}
             onUpdatePlatformSettings={onUpdatePlatformSettings}
-            showStaffOnboard={canProposeStaff}
-            requiresDirectorApproval={requiresDirectorApproval}
-            onAddStaffProfile={onAddStaffProfile}
             companyPublicDocuments={companyPublicDocuments}
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}

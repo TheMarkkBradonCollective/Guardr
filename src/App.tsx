@@ -2269,7 +2269,7 @@ export default function App() {
             guardEmail: row.guard_email,
             method: row.method === 'cash' ? 'cash' : 'stripe',
             jobIds: row.job_ids || [],
-            lines: row.lines || [],
+            lines: Array.isArray(row.lines) ? row.lines : [],
             total: Number(row.total),
             status: row.status,
             createdAt: row.created_at,
