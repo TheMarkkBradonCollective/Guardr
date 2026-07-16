@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import {
   buildLegalComplianceReport,
   type LegalAcceptanceRecord,
@@ -6,7 +7,9 @@ import {
 } from '../../lib/legalAcceptance';
 import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../../lib/legalContent';
 import type { Client, SecurityGuard } from '../../types';
-import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppFormSection } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
+import { WfBadge, WfListCard } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -24,10 +27,20 @@ function formatAcceptedAt(iso: string): string {
   }
 }
 
-function ComplianceDetail({ row }: { row: LegalComplianceUserRow }) {
+function ComplianceDetail({ row, onBack }: { row: LegalComplianceUserRow; onBack?: () => void }) {
   const required = requiredLegalDocumentsForRole(row.role);
   return (
     <div className="adm-compliance-detail space-y-4">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm text-brand-primary"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to agreements
+        </button>
+      )}
       <div>
         <p className="adm-card-eyebrow">{row.roleLabel}</p>
         <h3 className="adm-card-title">{row.name}</h3>
@@ -63,47 +76,6 @@ function ComplianceDetail({ row }: { row: LegalComplianceUserRow }) {
         })}
       </ul>
     </div>
-  );
-}
-
-function ComplianceRow({ row }: { row: LegalComplianceUserRow }) {
-  const required = requiredLegalDocumentsForRole(row.role);
-  return (
-    <tr className="border-t border-brand-border align-top">
-      <td className="px-3 py-3">
-        <p className="font-semibold text-sm">{row.name}</p>
-        <p className="text-xs text-brand-text-muted mt-0.5">{row.email}</p>
-      </td>
-      <td className="px-3 py-3 text-sm">{row.roleLabel}</td>
-      <td className="px-3 py-3">
-        <span
-          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-            row.complete ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'
-          }`}
-        >
-          {row.complete ? 'Complete' : 'Missing'}
-        </span>
-      </td>
-      <td className="px-3 py-3 text-xs text-brand-text-muted">
-        <ul className="space-y-1.5">
-          {required.map((documentId) => {
-            const acceptance = row.documents[documentId];
-            return (
-              <li key={documentId}>
-                <span className="font-medium text-brand-text">{legalDocumentLabel(documentId)}:</span>{' '}
-                {acceptance ? (
-                  <>
-                    accepted v{acceptance.version} · {formatAcceptedAt(acceptance.acceptedAt)}
-                  </>
-                ) : (
-                  <span className="text-amber-400 font-medium">Not accepted</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </td>
-    </tr>
   );
 }
 
@@ -232,29 +204,37 @@ export function StaffLegalCompliancePanel({
 
   return (
     <AppFormSection title="Agreements">
-      {filterButtons}
-      <div className="rounded-xl border border-brand-border overflow-x-auto mt-4">
-        <table className="w-full min-w-[720px] text-left">
-          <thead>
-            <tr className="bg-brand-surface-elevated text-xs uppercase tracking-wide text-brand-text-muted">
-              <th className="px-3 py-2 font-semibold">User</th>
-              <th className="px-3 py-2 font-semibold">Role</th>
-              <th className="px-3 py-2 font-semibold">Status</th>
-              <th className="px-3 py-2 font-semibold">Documents</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-3 py-8 text-center text-sm text-brand-text-muted">
-                  No users match this filter.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((row) => <ComplianceRow key={row.userId} row={row} />)
+      <div className="space-y-4">
+        {filterButtons}
+        {filtered.length === 0 ? (
+          <AppEmptyState title="No users match this filter." />
+        ) : (
+          <ListDetailLayout
+            items={filtered}
+            selectedId={selectedId}
+            onSelectId={setSelectedId}
+            getItemId={(row) => row.userId}
+            autoSelectFirst={false}
+            renderItem={(row, isActive, onSelect) => (
+              <WfListCard
+                title={row.name}
+                subtitle={row.email}
+                meta={
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-brand-text-muted">{row.roleLabel}</span>
+                    <WfBadge tone={row.complete ? 'success' : 'warning'}>
+                      {row.complete ? 'Complete' : 'Missing'}
+                    </WfBadge>
+                  </div>
+                }
+                onClick={onSelect}
+                className={isActive ? 'app-item-card-selected' : ''}
+              />
             )}
-          </tbody>
-        </table>
+            renderDetail={(row, options) => <ComplianceDetail row={row} onBack={options?.onBack} />}
+            mobilePresentation="page"
+          />
+        )}
       </div>
     </AppFormSection>
   );
