@@ -20,7 +20,7 @@ const FINANCE_SECTIONS = new Set<StaffSection>([
   'dev-updates',
 ]);
 
-const SETTINGS_SECTIONS = new Set<StaffSection>(['settings']);
+const SETTINGS_SECTIONS = new Set<StaffSection>(['settings', 'integrations']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
 
@@ -39,7 +39,7 @@ export function getStaffNavAccessNotice(
     return {
       title: 'Administrator access required',
       message:
-        'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings, integrations, or other system-wide controls.',
+        'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings or other system-wide controls.',
     };
   }
   if (CITIES_SECTIONS.has(section) && !flags.showCities) {
@@ -105,7 +105,7 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   'payment-settings': {
     title: 'Payment settings',
     message:
-      'Payment method, platform fee, and crew pay settings are limited to Director and Founder roles. Ask your Director to review or update these controls.',
+      'Platform fee and crew pay settings are limited to Director and Founder roles. Ask your Director to review or update these controls.',
   },
   agreements: {
     title: 'Agreements',
@@ -118,7 +118,12 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   settings: {
     title: 'Public Information',
     message:
-      'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings, integrations, or other system-wide controls.',
+      'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings or other system-wide controls.',
+  },
+  integrations: {
+    title: 'Integrations',
+    message:
+      'Third-party integrations and payment methods are limited to Administrator roles and above. Only the Founder can change these settings.',
   },
   cities: {
     title: 'Operations',

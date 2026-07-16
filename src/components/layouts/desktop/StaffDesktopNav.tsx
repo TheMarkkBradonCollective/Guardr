@@ -24,7 +24,7 @@ const GROUPS: { title: string; ids: StaffSection[] }[] = [
   },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { title: 'Risk & support', ids: ['incidents', 'disputes'] },
-  { title: 'Platform', ids: ['settings', 'guide', 'dev-updates'] },
+  { title: 'Platform', ids: ['settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
 export function StaffDesktopNav({

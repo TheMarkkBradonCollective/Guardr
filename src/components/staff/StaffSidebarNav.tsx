@@ -43,7 +43,7 @@ const OPERATIONS_IDS: StaffSection[] = [
 const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
-const PLATFORM_IDS: StaffSection[] = ['cities', 'settings'];
+const PLATFORM_IDS: StaffSection[] = ['cities', 'settings', 'integrations'];
 
 function NavGroup({
   title,

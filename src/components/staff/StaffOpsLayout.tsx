@@ -35,6 +35,7 @@ import {
   Users,
   UsersRound,
   MapPinned,
+  Plug,
 } from 'lucide-react';
 
 import type { ThemeMode } from '../../lib/platform/theme';
@@ -79,6 +80,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   disputes: 'Disputes',
   analytics: 'Analytics',
   settings: 'Public Information',
+  integrations: 'Integrations',
   cities: 'Operations',
   guide: 'Guide',
   'dev-updates': 'Dev notes',
@@ -135,6 +137,7 @@ export function StaffOpsLayout({
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
     { id: 'settings', label: 'Public Information', icon: Settings, settingsOnly: true },
+    { id: 'integrations', label: 'Integrations', icon: Plug, settingsOnly: true },
   ];
 
   const accessFlags = { showFinance, showSettings, showDisputes, showCities };

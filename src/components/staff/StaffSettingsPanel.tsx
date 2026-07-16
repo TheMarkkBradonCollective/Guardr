@@ -146,40 +146,6 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const integrationsBody = (
-    <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={platformSettings.smsNotificationsEnabled === true}
-          disabled={!canEdit}
-          onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
-        />
-        SMS notifications (Twilio — configure in env)
-      </label>
-      <label className="uber-label block">Background check provider</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.backgroundCheckProvider ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
-      >
-        <option value="manual">Manual staff review</option>
-        <option value="checkr">Checkr (API key required)</option>
-      </select>
-      <label className="uber-label block">Insurance verification</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.insuranceVerificationMode ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
-      >
-        <option value="manual">Manual COI review</option>
-        <option value="api">Automated verification API</option>
-      </select>
-    </div>
-  );
-
   if (isDesktop) {
     return (
       <StaffOpsPageShell
@@ -187,9 +153,7 @@ export function StaffSettingsPanel({
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
-              Homepage messages, jobs, and integrations.
-            </p>
+            <p className="adm-workbench-subtitle">Homepage messages and jobs.</p>
           </div>
         }
       >
@@ -201,7 +165,6 @@ export function StaffSettingsPanel({
             </DesktopSettingsCard>
           )}
           <DesktopSettingsCard title="Jobs">{jobsBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
     );
@@ -217,10 +180,6 @@ export function StaffSettingsPanel({
 
       <AppFormSection title="Jobs">
         <div className="pb-6">{jobsBody}</div>
-      </AppFormSection>
-
-      <AppFormSection title="Integrations">
-        <div className="pb-6">{integrationsBody}</div>
       </AppFormSection>
     </div>
   );
