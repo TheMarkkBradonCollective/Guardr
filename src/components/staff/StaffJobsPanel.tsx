@@ -123,16 +123,18 @@ export function StaffJobsPanel({
 
   const toolbar = !showDetailOnly ? (
     <>
-      {canManageJobs && onCreateJob && (
-        <StaffCreateJobForm
-          clients={clients}
-          guards={guards}
-          requests={requests}
-          feeConfig={feeConfig}
-          onCreate={onCreateJob}
-          onCreated={(jobId) => setSelectedId(jobId)}
-        />
-      )}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        {canManageJobs && onCreateJob && (
+          <StaffCreateJobForm
+            clients={clients}
+            guards={guards}
+            requests={requests}
+            feeConfig={feeConfig}
+            onCreate={onCreateJob}
+            onCreated={(jobId) => setSelectedId(jobId)}
+          />
+        )}
+      </div>
       <div className="app-action-row--equal">
         {filters.map((f) => (
           <button
