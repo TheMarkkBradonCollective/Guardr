@@ -450,6 +450,10 @@ export interface SecurityGuard {
   hasReliableTransportation?: boolean;
   isStaff?: boolean;
   staffRole?: StaffRole;
+  /** Cities this staff member may manage or operate in */
+  managedCities?: string[];
+  /** Manager staff IDs supervising this account */
+  assignedManagerIds?: string[];
   userStatus?: 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
   themePreference?: 'dark' | 'light' | 'grey';

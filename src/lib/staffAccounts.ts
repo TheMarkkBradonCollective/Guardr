@@ -1,6 +1,7 @@
 import { SecurityGuard, StaffRole } from '../types';
 import { resolvePersonNameParts } from './personName';
 import { isThemeMode } from './platform/theme';
+import { normalizeManagedCities } from './platformCities';
 
 export type StaffRow = {
   id: string;
@@ -15,6 +16,8 @@ export type StaffRow = {
   bio?: string | null;
   staff_role: StaffRole;
   user_status?: string | null;
+  managed_cities?: string[] | null;
+  assigned_manager_ids?: string[] | null;
   password?: string | null;
   must_change_password?: boolean | null;
   theme_preference?: string | null;
@@ -49,6 +52,12 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     hourlyRateRequirement: 0,
     isStaff: true,
     staffRole: row.staff_role,
+    managedCities: normalizeManagedCities(
+      Array.isArray(row.managed_cities) ? (row.managed_cities as string[]) : undefined
+    ),
+    assignedManagerIds: Array.isArray(row.assigned_manager_ids)
+      ? (row.assigned_manager_ids as string[])
+      : [],
     userStatus:
       row.user_status === 'suspended' || row.user_status === 'blocked'
         ? row.user_status

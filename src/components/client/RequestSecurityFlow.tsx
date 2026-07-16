@@ -21,7 +21,8 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
 import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
+import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
+import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { MinGuardQualification } from '../../types';
@@ -73,6 +74,7 @@ export function RequestSecurityFlow({
   defaultAssignmentMode = 'client-approve',
 }: RequestSecurityFlowProps) {
   const { formFactor } = useDevice();
+  const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => {
     if (preset === 'schedule' || preset === 'recurring') {
       const d = new Date();
@@ -403,7 +405,7 @@ export function RequestSecurityFlow({
                 className="uber-select w-full rounded-xl"
                 required
               >
-                {CALIFORNIA_CITIES.map((city) => (
+                {selectableClientCities.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>

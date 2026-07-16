@@ -19,6 +19,8 @@ export type AuditAction =
   | 'payout_released'
   | 'trusted_status_changed'
   | 'settings_updated'
+  | 'city_market_updated'
+  | 'staff_city_access_updated'
   | 'bulk_action'
   | 'password_changed'
   | 'compliance_alert_created';

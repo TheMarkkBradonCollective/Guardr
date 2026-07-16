@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StaffRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import type { PlatformCity } from '../../lib/platformCities';
+import { normalizeManagedCities } from '../../lib/platformCities';
 
 export interface StaffAddStaffInput {
   email: string;
   badgeNumber: string;
   staffRole: StaffRole;
+  managedCities?: string[];
+  assignedManagerIds?: string[];
 }
 
 interface StaffAddStaffFormProps {
   assignableRoles: StaffRole[];
   requiresDirectorApproval?: boolean;
+  platformCities?: PlatformCity[];
+  actorManagedCities?: string[];
+  managerOptions?: Array<{ id: string; badgeNumber?: string; name: string }>;
   onAdd: (input: StaffAddStaffInput) => Promise<string | void>;
   onCreated?: (staffId: string) => void;
 }
@@ -20,6 +27,9 @@ interface StaffAddStaffFormProps {
 export function StaffAddStaffForm({
   assignableRoles,
   requiresDirectorApproval = false,
+  platformCities = [],
+  actorManagedCities = [],
+  managerOptions = [],
   onAdd,
   onCreated,
 }: StaffAddStaffFormProps) {
@@ -27,14 +37,29 @@ export function StaffAddStaffForm({
   const [email, setEmail] = useState('');
   const [badge, setBadge] = useState('');
   const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
+  const [managedCities, setManagedCities] = useState<string[]>([]);
+  const [assignedManagerIds, setAssignedManagerIds] = useState<string[]>([]);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const assignableCityNames = useMemo(
+    () =>
+      normalizeManagedCities(
+        actorManagedCities.length > 0
+          ? actorManagedCities
+          : platformCities.map((city) => city.name),
+        platformCities
+      ),
+    [actorManagedCities, platformCities]
+  );
 
   const reset = () => {
     setEmail('');
     setBadge('');
     setRole(assignableRoles[0] ?? 'Moderator');
+    setManagedCities([]);
+    setAssignedManagerIds([]);
     setError('');
     setMsg('');
   };
@@ -59,6 +84,8 @@ export function StaffAddStaffForm({
         email: email.trim(),
         badgeNumber: badge.trim(),
         staffRole: role,
+        managedCities: managedCities.length > 0 ? managedCities : undefined,
+        assignedManagerIds: assignedManagerIds.length > 0 ? assignedManagerIds : undefined,
       });
       setMsg(
         requiresDirectorApproval
@@ -135,6 +162,56 @@ export function StaffAddStaffForm({
               </select>
             </div>
           </div>
+
+          {assignableCityNames.length > 0 && (
+            <div className="space-y-2">
+              <label className="uber-label block">City access</label>
+              <div className="flex flex-wrap gap-2">
+                {assignableCityNames.map((cityName) => (
+                  <button
+                    key={cityName}
+                    type="button"
+                    onClick={() =>
+                      setManagedCities((prev) =>
+                        prev.includes(cityName)
+                          ? prev.filter((city) => city !== cityName)
+                          : [...prev, cityName]
+                      )
+                    }
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      managedCities.includes(cityName)
+                        ? 'bg-brand-primary text-white border-brand-primary'
+                        : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                    }`}
+                  >
+                    {cityName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {managerOptions.length > 0 && (
+            <div>
+              <label className="uber-label block mb-1">Assigned managers</label>
+              <select
+                multiple
+                value={assignedManagerIds}
+                onChange={(e) =>
+                  setAssignedManagerIds(
+                    Array.from(e.target.selectedOptions).map((option) => option.value)
+                  )
+                }
+                className="uber-select w-full min-h-[5rem]"
+              >
+                {managerOptions.map((manager) => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.badgeNumber || manager.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-400">{error}</p>}
           {msg && <p className="text-sm text-brand-primary">{msg}</p>}

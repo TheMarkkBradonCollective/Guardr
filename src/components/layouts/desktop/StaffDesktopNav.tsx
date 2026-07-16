@@ -37,7 +37,7 @@ export function StaffDesktopNav({
   footer,
   brandingTrailing,
 }: StaffDesktopNavProps) {
-  const accessFlags: StaffNavAccessFlags = { showFinance, showSettings, showDisputes };
+  const accessFlags: StaffNavAccessFlags = { showFinance, showSettings, showDisputes, showCities: false };
 
   const handleSelect = (id: StaffSection) => {
     const notice = getStaffNavAccessNotice(id, accessFlags);

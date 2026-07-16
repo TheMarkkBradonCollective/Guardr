@@ -38,6 +38,7 @@ import {
   canStaffManageJobs,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
+  canViewCityMarkets,
   isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -81,11 +82,13 @@ import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
 import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
+import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
@@ -194,11 +197,25 @@ interface StaffDashboardProps {
   isDbConnected: boolean;
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
+  platformCities?: PlatformCity[];
+  onUpdatePlatformCity?: (
+    cityId: string,
+    patch: {
+      status?: import('../lib/platformCities').CityMarketStatus;
+      waitlistAudience?: import('../lib/platformCities').CityWaitlistAudience;
+      recommendOpen?: boolean;
+    }
+  ) => Promise<void>;
+  onUpdateStaffCityAccess?: (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
+  ) => Promise<void>;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   onAddStaffProfile: (
     email: string,
     badgeNumber: string,
-    staffRole: StaffRole
+    staffRole: StaffRole,
+    options?: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<string>;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
@@ -356,6 +373,9 @@ export function StaffDashboard({
   isDbConnected,
   currentUser,
   platformSettings,
+  platformCities = [],
+  onUpdatePlatformCity,
+  onUpdateStaffCityAccess,
   onUpdatePlatformSettings,
   onAddStaffProfile,
   onApproveStaffAccount,
@@ -531,6 +551,8 @@ export function StaffDashboard({
   const canStaffEditJobListings = isStaffRole(currentUser.role);
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
+  const showCities = canViewCityMarkets(currentUser);
+  const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -751,8 +773,10 @@ export function StaffDashboard({
         return (
           <StaffTeamPanel
             guards={guards}
+            platformCities={platformCities}
             currentUserId={currentUser.id}
             currentUserRole={currentUser.role}
+            actorManagedCities={actorStaffProfile?.managedCities}
             canManageStaff={canManageStaff}
             canProposeStaff={canProposeStaff}
             requiresDirectorApproval={requiresDirectorApproval}
@@ -760,10 +784,14 @@ export function StaffDashboard({
             onAddStaff={
               canProposeStaff
                 ? (input) =>
-                    onAddStaffProfile(input.email, input.badgeNumber, input.staffRole)
+                    onAddStaffProfile(input.email, input.badgeNumber, input.staffRole, {
+                      managedCities: input.managedCities,
+                      assignedManagerIds: input.assignedManagerIds,
+                    })
                 : undefined
             }
             onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
+            onUpdateStaffCityAccess={onUpdateStaffCityAccess}
             selectedId={selectedTeamId}
             onSelectedIdChange={setSelectedTeamId}
             initialSelectedId={selectedTeamId}
@@ -972,6 +1000,21 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES['audit-log']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['audit-log']!.message}
             placeholders={['Recent activity', 'Compliance events']}
+          />
+        );
+      case 'cities':
+        return showCities && onUpdatePlatformCity ? (
+          <StaffCitiesPanel
+            currentUser={currentUser}
+            cities={platformCities}
+            actorManagedCities={actorStaffProfile?.managedCities}
+            onUpdateCity={onUpdatePlatformCity}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
+            placeholders={['Open markets', 'Wait list cities', 'Manager recommendations']}
           />
         );
       case 'settings':

@@ -12,9 +12,9 @@ import {
 } from '../../types';
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
 import {
-  CALIFORNIA_CITIES,
   formatCityLabel,
 } from '../../lib/californiaCities';
+import { getSelectableCityNamesForGuards } from '../../lib/platformCities';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardWeaponGearPanel } from './GuardWeaponGearPanel';
@@ -88,6 +88,7 @@ export function GuardResumeEditor({
   onEditCredentialFullPage,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
+  const selectableGuardCities = getSelectableCityNamesForGuards();
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
 
@@ -244,7 +245,7 @@ export function GuardResumeEditor({
       <section className="app-form-section space-y-3">
         <p className="uber-label">Service areas (cities)</p>
         <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-          {CALIFORNIA_CITIES.map((city) => {
+          {selectableGuardCities.map((city) => {
             const active = payload.serviceAreas.some(
               (area) => formatCityLabel(area).toLowerCase() === city.toLowerCase()
             );

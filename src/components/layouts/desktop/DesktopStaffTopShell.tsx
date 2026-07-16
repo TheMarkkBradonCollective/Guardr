@@ -61,7 +61,7 @@ export function DesktopStaffTopShell({
   headerExtension,
   headerOverride,
 }: DesktopStaffTopShellProps) {
-  const accessFlags = { showFinance, showSettings, showDisputes };
+  const accessFlags = { showFinance, showSettings, showDisputes, showCities: false };
   const isMap = isStaffOpsMapSection(activeSection);
 
   const visible = (item: StaffNavItem) => {
