@@ -1290,9 +1290,71 @@ body[data-form-factor="desktop"] .adm-payments-pipeline section {
 
 /* Dev notes */
 body[data-form-factor="desktop"] .adm-dev-notes-page {
-  max-width: min(48rem, 100%);
-  margin: 0 auto;
-  padding: 1.25rem;
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-page .adm-ops-page-body {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-activity,
+body[data-form-factor="desktop"] .adm-dev-notes-summary,
+body[data-form-factor="desktop"] .adm-dev-notes-doc {
+  padding: 1.15rem 1.25rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc h2,
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc h2 {
+  margin-top: 0;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc .overflow-x-auto {
+  border-color: var(--adm-border);
+  border-radius: 0.5rem;
+  background: var(--adm-bg);
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc table,
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc thead tr,
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc thead tr {
+  background: var(--adm-bg);
+  border-bottom: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc th,
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc th {
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  font-weight: 600;
+  color: var(--adm-text);
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc td,
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc td {
+  padding: 0.55rem 0.75rem;
+  color: var(--adm-muted);
+  vertical-align: top;
+  border-bottom: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes-doc .guide-doc tbody tr:last-child td,
+body[data-form-factor="desktop"] .adm-dev-notes-summary .guide-doc tbody tr:last-child td {
+  border-bottom: none;
 }
 
 body[data-form-factor="desktop"] .adm-dev-notes .rounded-xl {

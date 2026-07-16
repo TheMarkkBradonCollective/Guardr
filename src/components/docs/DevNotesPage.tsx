@@ -3,24 +3,24 @@ import devNotesMarkdown from '../../../docs/DEV-UPDATES.md?raw';
 import { parseDevActivityGrid } from '../../lib/devActivityGrid';
 import { MarkdownDoc } from './MarkdownDoc';
 import { AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
-import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
+import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 
-const MILESTONES_HEADING = '## Major platform milestones';
+const SUMMARY_HEADING = '## Quick reference by date';
 
 function splitDevNotesMarkdown(markdown: string) {
-  const start = markdown.indexOf(MILESTONES_HEADING);
+  const start = markdown.indexOf(SUMMARY_HEADING);
   if (start < 0) {
-    return { beforeMilestones: markdown, milestones: '', afterMilestones: '' };
+    return { beforeSummary: markdown, summary: '', afterSummary: '' };
   }
 
-  const sectionEnd = markdown.indexOf('\n---\n', start + MILESTONES_HEADING.length);
-  const milestonesEnd = sectionEnd >= 0 ? sectionEnd : markdown.length;
+  const sectionEnd = markdown.indexOf('\n---\n', start + SUMMARY_HEADING.length);
+  const summaryEnd = sectionEnd >= 0 ? sectionEnd : markdown.length;
 
   return {
-    beforeMilestones: markdown.slice(0, start).trimEnd(),
-    milestones: markdown.slice(start, milestonesEnd).trimEnd(),
-    afterMilestones: (sectionEnd >= 0 ? markdown.slice(sectionEnd) : '').trimStart(),
+    beforeSummary: markdown.slice(0, start).trimEnd(),
+    summary: markdown.slice(start, summaryEnd).trimEnd(),
+    afterSummary: (sectionEnd >= 0 ? markdown.slice(sectionEnd) : '').trimStart(),
   };
 }
 
@@ -34,16 +34,24 @@ function formatHourLabel(hour: number): string {
   return `${hour - 12} PM`;
 }
 
-function DevActivityGrid({ grid }: { grid: number[][] }) {
+function DevActivityGrid({ grid, variant = 'mobile' }: { grid: number[][]; variant?: 'mobile' | 'desktop' }) {
   const max = Math.max(1, ...grid.flat());
+  const isDesktop = variant === 'desktop';
 
   return (
-    <div className="mb-8 rounded-xl border border-brand-border bg-brand-surface-elevated p-4">
+    <div
+      className={
+        isDesktop
+          ? 'adm-card adm-dev-notes-activity'
+          : 'mb-8 rounded-xl border border-brand-border bg-brand-surface-elevated p-4'
+      }
+    >
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
         Dev activity by day & hour
       </p>
       <p className="text-xs text-brand-text-muted mb-4 leading-relaxed">
-        When commits land across the week — similar to rush-hour charts. Rows are days; columns are hours. Peaks show when Cursor and Markeith White are most active.
+        When commits land across the week — similar to rush-hour charts. Rows are days; columns are hours.
+        Peaks show when Cursor and Markeith White are most active.
       </p>
       <div className="flex gap-2">
         <div className="flex flex-col justify-between py-0.5 shrink-0">
@@ -85,35 +93,56 @@ function DevActivityGrid({ grid }: { grid: number[][] }) {
 
 export function DevNotesPage() {
   const { formFactor } = useDevice();
+  const isDesktop = formFactor === 'desktop';
   const activityGrid = useMemo(() => parseDevActivityGrid(devNotesMarkdown), []);
-  const { beforeMilestones, milestones, afterMilestones } = useMemo(
+  const { beforeSummary, summary, afterSummary } = useMemo(
     () => splitDevNotesMarkdown(devNotesMarkdown),
     []
   );
-  const mainNotes = [beforeMilestones, afterMilestones].filter(Boolean).join('\n\n');
+  const mainNotes = [beforeSummary, afterSummary].filter(Boolean).join('\n\n');
 
-  const content = (
+  const mobileContent = (
     <>
-      {formFactor !== 'desktop' ? <AppScreenTitle>Dev notes</AppScreenTitle> : null}
-      <div className={formFactor === 'desktop' ? 'adm-dev-notes' : 'px-4 pb-8'}>
+      <AppScreenTitle>Dev notes</AppScreenTitle>
+      <div className="px-4 pb-8">
         <DevActivityGrid grid={activityGrid} />
-        {milestones ? <MarkdownDoc source={milestones} /> : null}
+        {summary ? <MarkdownDoc source={summary} /> : null}
         <MarkdownDoc source={mainNotes} />
       </div>
     </>
   );
 
-  if (formFactor === 'desktop') {
+  if (isDesktop) {
     return (
-      <ResponsivePage className="adm-dev-notes-page">
-        {content}
-      </ResponsivePage>
+      <StaffOpsPageShell
+        className="adm-platform-page adm-dev-notes-page"
+        toolbar={
+          <div>
+            <p className="adm-card-eyebrow">Platform</p>
+            <p className="adm-workbench-subtitle">
+              Build history, commit activity heatmap, and release notes.
+            </p>
+          </div>
+        }
+      >
+        <div className="adm-dev-notes-body">
+          <DevActivityGrid grid={activityGrid} variant="desktop" />
+          {summary ? (
+            <section className="adm-card adm-dev-notes-summary">
+              <MarkdownDoc source={summary} />
+            </section>
+          ) : null}
+          <section className="adm-card adm-dev-notes-doc">
+            <MarkdownDoc source={mainNotes} />
+          </section>
+        </div>
+      </StaffOpsPageShell>
     );
   }
 
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain max-w-3xl">
-      {content}
+      {mobileContent}
     </AppScreen>
   );
 }
