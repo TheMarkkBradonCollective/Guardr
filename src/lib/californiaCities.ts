@@ -8,6 +8,7 @@ export const CALIFORNIA_CITIES = [
   'Burbank',
   'Carlsbad',
   'Chula Vista',
+  'Chico',
   'Concord',
   'Corona',
   'Costa Mesa',
