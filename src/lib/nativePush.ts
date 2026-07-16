@@ -8,6 +8,7 @@ import {
 import { SITE_URL } from './siteConfig';
 import type { PushSubscriptionDto } from './push';
 import { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
+import { initNotificationSound } from './notificationSound';
 
 export const FCM_NATIVE_ENDPOINT_PREFIX = 'fcm-native:';
 const NATIVE_PUSH_TOKEN_KEY = 'guardr_native_push_token';
@@ -126,6 +127,8 @@ function rejectPendingRegistration(error: Error): void {
 export function initNativePushBridge(): void {
   if (!isNativePushPlatform() || bridgeInstalled) return;
   bridgeInstalled = true;
+
+  void initNotificationSound();
 
   void PushNotifications.addListener('registration', (event: Token) => {
     if (!event.value?.trim()) return;

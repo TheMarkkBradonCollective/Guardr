@@ -74,3 +74,9 @@ for (let i = 0; i < pcm.length; i += 1) {
 mkdirSync(outDir, { recursive: true });
 writeFileSync(outPath, buffer);
 console.log(`Wrote ${outPath} (${buffer.length} bytes)`);
+
+const androidRawDir = join(__dirname, '../android/app/src/main/res/raw');
+mkdirSync(androidRawDir, { recursive: true });
+const androidOutPath = join(androidRawDir, 'guardr_notification.wav');
+writeFileSync(androidOutPath, buffer);
+console.log(`Wrote ${androidOutPath} (${buffer.length} bytes)`);

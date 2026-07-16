@@ -173,6 +173,9 @@ async function sendFcmV1Notification(
             data,
             android: {
               priority: payload.priority === 'high' ? 'high' : 'normal',
+              notification: {
+                channel_id: 'guardr_alerts',
+              },
             },
           },
         }),
@@ -229,6 +232,7 @@ async function sendFcmLegacyNotification(
         notification: {
           title: String(payload.title ?? 'Guardr'),
           body: String(payload.body ?? ''),
+          android_channel_id: 'guardr_alerts',
         },
         data,
         priority: payload.priority === 'high' ? 'high' : 'normal',
