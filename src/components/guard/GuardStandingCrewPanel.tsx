@@ -15,7 +15,8 @@ import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
 import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import { getStandingCrewDisplayName } from '../../lib/guardTeams';
-import { computeStandingCrewArmedStats, type StandingCrewArmedStats } from '../../lib/guardCrewArmedCoverage';
+import { computeStandingCrewArmedStats, soloArmedStatusFromStats, type StandingCrewArmedStats } from '../../lib/guardCrewArmedCoverage';
+import { GUARD_ARMED_STATUS_LABELS } from '../../lib/guardArmedStatus';
 import type { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { TeamCodeShareBlock } from './TeamCodeShareBlock';
@@ -80,43 +81,75 @@ function crewHeroClass(activeCount: number, pendingCount: number): string {
 }
 
 function CrewArmedHeroProgress({ stats }: { stats: StandingCrewArmedStats }) {
+  const solo = stats.total === 1;
+  const soloStatus = solo ? soloArmedStatusFromStats(stats) : null;
+
   return (
     <>
       <div className="guard-tier-hero-score-row">
-        <span className="guard-tier-hero-score-label">Armed coverage</span>
+        <span className="guard-tier-hero-score-label">
+          {solo ? 'Your armed tier' : 'Armed coverage'}
+        </span>
         <span className="guard-tier-hero-score-value">
-          {stats.armedCapablePercent}%
-          <span className="guard-pref-hero-score-total">
-            {' '}
-            · {stats.armedCapable}/{stats.total}
-          </span>
+          {solo && soloStatus ? (
+            GUARD_ARMED_STATUS_LABELS[soloStatus]
+          ) : (
+            <>
+              {stats.armedCapablePercent}%
+              <span className="guard-pref-hero-score-total">
+                {' '}
+                · {stats.armedCapable}/{stats.total}
+              </span>
+            </>
+          )}
         </span>
       </div>
       <div
         className="guard-pref-progress crew-armed-progress"
         role="progressbar"
-        aria-valuenow={stats.armedCapablePercent}
+        aria-valuenow={solo ? 100 : stats.armedCapablePercent}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`${stats.armedCapablePercent}% of crew armed capable`}
+        aria-label={
+          solo && soloStatus
+            ? `You are ${GUARD_ARMED_STATUS_LABELS[soloStatus].toLowerCase()}`
+            : `${stats.armedCapablePercent}% of crew armed capable`
+        }
       >
         <div className="guard-pref-progress-track crew-armed-progress-track">
-          {stats.armedPercent > 0 ? (
+          {solo && soloStatus ? (
             <div
-              className="crew-armed-progress-segment crew-armed-progress-segment-armed"
-              style={{ width: `${stats.armedPercent}%` }}
+              className={`crew-armed-progress-segment crew-armed-progress-segment-${soloStatus}`}
+              style={{ width: '100%' }}
             />
-          ) : null}
-          {stats.lightArmedPercent > 0 ? (
-            <div
-              className="crew-armed-progress-segment crew-armed-progress-segment-light"
-              style={{ width: `${stats.lightArmedPercent}%` }}
-            />
-          ) : null}
+          ) : (
+            <>
+              {stats.armedPercent > 0 ? (
+                <div
+                  className="crew-armed-progress-segment crew-armed-progress-segment-armed"
+                  style={{ width: `${stats.armedPercent}%` }}
+                />
+              ) : null}
+              {stats.lightArmedPercent > 0 ? (
+                <div
+                  className="crew-armed-progress-segment crew-armed-progress-segment-light"
+                  style={{ width: `${stats.lightArmedPercent}%` }}
+                />
+              ) : null}
+              {stats.unarmedPercent > 0 ? (
+                <div
+                  className="crew-armed-progress-segment crew-armed-progress-segment-unarmed"
+                  style={{ width: `${stats.unarmedPercent}%` }}
+                />
+              ) : null}
+            </>
+          )}
         </div>
       </div>
       <p className="guard-tier-hero-subtitle crew-armed-progress-caption">
-        {stats.armed} armed · {stats.lightArmed} light armed · {stats.unarmed} unarmed
+        {solo
+          ? 'Just you on this roster — your credential tier fills the bar.'
+          : `${stats.armed} armed · ${stats.lightArmed} light armed · ${stats.unarmed} unarmed`}
       </p>
     </>
   );
@@ -347,6 +380,7 @@ export function GuardStandingCrewPanel({
       </div>
       <p className="guard-tier-hero-eyebrow">Standing crew</p>
       <h2 className="guard-tier-hero-name guard-crew-hero-name">{leadName}&apos;s crew</h2>
+      <CrewArmedHeroProgress stats={armedStats} />
       <p className="guard-tier-hero-subtitle">You are a member of this standing team.</p>
     </div>
   );
@@ -409,7 +443,7 @@ export function GuardStandingCrewPanel({
             <span className="guard-tier-hero-score-value">{active.length}</span>
           </div>
         ) : null}
-        {trusted && leadsStandingCrew ? <CrewArmedHeroProgress stats={armedStats} /> : null}
+        <CrewArmedHeroProgress stats={armedStats} />
         <p className="guard-tier-hero-subtitle">{subtitle}</p>
       </div>
     );

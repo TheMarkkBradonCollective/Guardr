@@ -10,10 +10,17 @@ export interface StandingCrewArmedStats {
   armedCapablePercent: number;
   armedPercent: number;
   lightArmedPercent: number;
+  unarmedPercent: number;
 }
 
 function countStatus(counts: Record<GuardArmedStatus, number>, status: GuardArmedStatus): void {
   counts[status] += 1;
+}
+
+export function soloArmedStatusFromStats(stats: StandingCrewArmedStats): GuardArmedStatus {
+  if (stats.armed > 0) return 'armed';
+  if (stats.lightArmed > 0) return 'light-armed';
+  return 'unarmed';
 }
 
 /** Armed coverage for a standing crew lead plus active roster members. */
@@ -56,5 +63,6 @@ export function computeStandingCrewArmedStats(
     armedCapablePercent: total > 0 ? Math.round((armedCapable / total) * 100) : 0,
     armedPercent: total > 0 ? (armed / total) * 100 : 0,
     lightArmedPercent: total > 0 ? (lightArmed / total) * 100 : 0,
+    unarmedPercent: total > 0 ? (unarmed / total) * 100 : 0,
   };
 }
