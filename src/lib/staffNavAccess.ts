@@ -39,7 +39,7 @@ export function getStaffNavAccessNotice(
     return {
       title: 'Administrator access required',
       message:
-        'Platform settings are limited to Administrator roles and above. Ask your Director to update approval rules or other system-wide controls.',
+        'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings or other system-wide controls.',
     };
   }
   if (CITIES_SECTIONS.has(section) && !flags.showCities) {
@@ -116,9 +116,9 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     message: 'The platform audit log is limited to Director and Founder roles.',
   },
   settings: {
-    title: 'Settings',
+    title: 'Public Information',
     message:
-      'Platform settings are limited to Administrator roles and above. Ask your Director to update approval rules or other system-wide controls.',
+      'Platform settings are limited to Administrator roles and above. Ask your Director to update jobs settings or other system-wide controls.',
   },
   integrations: {
     title: 'Integrations',

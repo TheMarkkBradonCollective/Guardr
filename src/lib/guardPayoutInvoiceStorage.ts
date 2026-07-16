@@ -86,3 +86,12 @@ export function maybeCompletePayoutInvoice(
 export function payoutInvoiceLabel(invoice: GuardPayoutInvoice): string {
   return invoice.method === 'cash' ? 'Cash pickup' : 'Bank transfer';
 }
+
+export function guardPayoutInvoiceLines(invoice: Pick<GuardPayoutInvoice, 'lines'>): GuardPayoutInvoice['lines'] {
+  return Array.isArray(invoice.lines) ? invoice.lines : [];
+}
+
+export function guardPayoutInvoiceTotal(invoice: Pick<GuardPayoutInvoice, 'total'>): number {
+  const total = Number(invoice.total);
+  return Number.isFinite(total) ? total : 0;
+}

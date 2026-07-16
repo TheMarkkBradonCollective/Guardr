@@ -1031,9 +1031,6 @@ export function StaffDashboard({
             currentUser={currentUser}
             platformSettings={platformSettings}
             onUpdatePlatformSettings={onUpdatePlatformSettings}
-            showStaffOnboard={canProposeStaff}
-            requiresDirectorApproval={requiresDirectorApproval}
-            onAddStaffProfile={onAddStaffProfile}
             companyPublicDocuments={companyPublicDocuments}
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
@@ -1042,7 +1039,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Approval rules', 'Homepage messages', 'Platform controls']}
+            placeholders={['Jobs', 'Homepage messages', 'Platform controls']}
           />
         );
       case 'integrations':

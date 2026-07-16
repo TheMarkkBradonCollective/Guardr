@@ -125,7 +125,7 @@ const QUICK_LINK_META: Record<
   'audit-log': { label: 'Audit log', icon: ScrollText },
   disputes: { label: 'Disputes', icon: AlertTriangle },
   analytics: { label: 'Analytics', icon: BarChart3 },
-  settings: { label: 'Settings', icon: Settings },
+  settings: { label: 'Public Information', icon: Settings },
   integrations: { label: 'Integrations', icon: Plug },
   cities: { label: 'Operations', icon: MapPin },
   guide: { label: 'Guide', icon: LayoutDashboard },
