@@ -39,6 +39,7 @@ export function resolveNotificationUrl(
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
@@ -166,6 +167,7 @@ export function resolveNotificationUrlForRole(
 
   switch (type) {
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
       if (role === 'client') {
         return options.requestId
@@ -393,6 +395,7 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':

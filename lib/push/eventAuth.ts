@@ -113,6 +113,7 @@ export async function authorizePushEvent(
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
@@ -266,6 +267,11 @@ export async function authorizePushEvent(
         return null;
       }
       return 'Not authorized to send crew chat notifications for this job';
+
+    case 'standing_crew_invite':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard' && event.recipientUserId) return null;
+      return 'Only guards can send standing crew invitations';
 
     default:
       return 'Unknown notification type';

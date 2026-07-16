@@ -180,7 +180,7 @@ import {
   saveGuardPayoutInvoicesToStorage,
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
-import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
+import { listingDetailDbColumns, buildJobListingDbPayload, hasOperationalListingChange, mergeJobListingUpdates } from './lib/jobListing';
 import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import {
@@ -389,6 +389,7 @@ import { normalizeJobTypeOnboarding } from './lib/guardJobTypeOnboarding';
 import { normalizeListedEquipmentGear } from './lib/guardEquipmentGear';
 import {
   notifyAccountUpdate,
+  notifyAssignedGuards,
   notifyGuardAppliedToJob,
   notifyJobStatusUpdate,
   notifyPayoutReady,
@@ -7588,6 +7589,16 @@ export default function App() {
         body: `Your job time has changed from ${oldRange} to ${newRange}`,
       });
     }
+
+    if (updated.clientId && updated.status !== 'open') {
+      void reportPushEvent(actor, {
+        type: 'job_status_update',
+        requestId: updated.id,
+        clientId: updated.clientId,
+        title: 'Shift time updated',
+        body: `"${updated.title}" is now scheduled for ${newRange}.`,
+      });
+    }
   };
 
   const applyApprovedScheduleChange = async (
@@ -7680,6 +7691,19 @@ export default function App() {
     }
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? merged : r)));
+
+    if (
+      currentUser &&
+      jobHasAssignedOrOnDutyGuards(merged) &&
+      hasOperationalListingChange(existing, merged)
+    ) {
+      notifyAssignedGuards(
+        currentUser,
+        merged,
+        'Job details updated',
+        `Details were updated for "${merged.title}" — review the site briefing before your shift.`
+      );
+    }
 
     if (
       currentUser &&
@@ -8559,6 +8583,17 @@ export default function App() {
       return;
     }
     await persistTeamJobUpdate(result.job, result.slots);
+    const leadId = job.teamLeadId ?? activeGuardId;
+    const lead = guards.find((g) => g.id === leadId);
+    if (currentUser && lead && lead.id !== activeGuardId) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: lead.id,
+        requestId,
+        title: 'Crew invite declined',
+        body: `${activeGuard.name} declined your crew invitation for "${job.title}".`,
+      });
+    }
     appToast('Invitation declined.', 'info');
   };
 
@@ -8617,6 +8652,17 @@ export default function App() {
     setStandingCrewMembers(result.members);
     const declined = result.members.find((m) => m.id === inviteId);
     if (declined) await persistStandingCrewMember(declined, isDbConnected);
+    const lead = guards.find((g) => g.id === declined?.leadGuardId);
+    if (currentUser && lead) {
+      void reportPushEvent(currentUser, {
+        type: 'standing_crew_invite',
+        title: 'Crew invitation declined',
+        recipientUserId: lead.id,
+        guardId: activeGuardId,
+        url: '/guard/crew',
+        body: `${activeGuard.name} declined your standing crew invitation.`,
+      });
+    }
     appToast('Invitation declined.', 'info');
   };
 
@@ -8631,6 +8677,17 @@ export default function App() {
       (m) => m.leadGuardId === activeGuardId && m.memberGuardId === memberGuardId
     );
     if (removed) await persistStandingCrewMember(removed, isDbConnected);
+    const removedGuard = guards.find((g) => g.id === memberGuardId);
+    if (currentUser && removedGuard) {
+      void reportPushEvent(currentUser, {
+        type: 'standing_crew_invite',
+        title: 'Removed from standing crew',
+        recipientUserId: memberGuardId,
+        guardId: activeGuardId,
+        url: '/guard/crew',
+        body: `${activeGuard.name} removed you from their standing crew.`,
+      });
+    }
     appToast('Guard removed from your standing crew.', 'success');
   };
 
@@ -9298,6 +9355,17 @@ export default function App() {
       await proposeGuardForClientApproval(requestId, guardId, { initiatedByGuard: true });
       appToast('Price agreed — awaiting client confirmation.', 'success');
       return;
+    }
+    if (currentUser) {
+      const recipientUserId = offer.offeredBy === 'client' ? guardId : job.clientId;
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId,
+        requestId,
+        guardId,
+        title: 'Price agreed',
+        body: `Price agreed on "${job.title}" at $${billing.hourlyRate}/hr client rate.`,
+      });
     }
     appToast('Price agreed.', 'success');
   };
@@ -10012,7 +10080,7 @@ export default function App() {
     }
     if (currentUser) {
       void reportPushEvent(currentUser, {
-        type: 'guard_arrived',
+        type: 'guard_en_route',
         guardId: activeGuardId,
         guardName: activeGuard?.name,
         requestId,

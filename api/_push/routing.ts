@@ -39,6 +39,7 @@ export function resolveNotificationUrl(
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
@@ -82,11 +83,13 @@ export function resolveNotificationUrl(
     case 'job_submitted':
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
-        : '/staff/approvals?aq=job-offers';
+        : '/staff/jobs';
     case 'guard_application':
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
+    case 'crew_lead_request':
+      return '/staff/crews';
     case 'guard_pending_approval':
       return options.guardId
         ? `/staff/applications?g=${encodeURIComponent(options.guardId)}`
@@ -104,8 +107,16 @@ export function resolveNotificationUrl(
     case 'support_ticket':
     case 'support_ticket_status':
       return options.ticketId
-        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
-        : '/staff/messages?mtab=support';
+        ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages';
+    case 'account_update':
+      return '/staff/settings';
+    case 'job_status_update':
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+    case 'payout_ready':
+      return '/guard/earnings';
     case 'dispute_update':
       return options.ticketId
         ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
@@ -156,6 +167,7 @@ export function resolveNotificationUrlForRole(
 
   switch (type) {
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
       if (role === 'client') {
         return options.requestId
@@ -282,17 +294,37 @@ export function resolveNotificationUrlForRole(
       }
       if (role === 'client') {
         return options.ticketId
-          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
-          : '/client/support';
+          ? `/client/messages?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/messages';
       }
       if (role === 'guard') {
         return options.ticketId
-          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
-          : '/guard/support';
+          ? `/guard/messages?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/messages';
       }
       return options.ticketId
-        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
-        : '/staff/messages?mtab=support';
+        ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages';
+    case 'account_update':
+      if (role === 'client') return '/client/settings';
+      if (role === 'guard') return '/guard/settings';
+      return '/staff/settings';
+    case 'job_status_update':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/requests';
+      }
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/my-jobs';
+      }
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+    case 'payout_ready':
+      return role === 'guard' ? '/guard/earnings' : '/staff/payments';
     case 'dispute_update':
       if (role === 'client') {
         return options.ticketId
@@ -363,6 +395,7 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
@@ -376,6 +409,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'assignment':
       return ['guard'];
     case 'guard_application':
+      return ['dispatch', 'admin'];
+    case 'crew_lead_request':
       return ['dispatch', 'admin'];
     case 'emergency_alert':
       return ['guard', 'client', 'dispatch', 'admin'];

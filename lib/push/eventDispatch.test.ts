@@ -263,6 +263,57 @@ describe('buildEventDispatchPayloads', () => {
     );
   });
 
+  it('targets standing crew invite to the invitee', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'standing_crew_invite',
+      recipientUserId: 'guard-2',
+      guardId: 'guard-1',
+      body: 'Alex invited you to join their standing crew.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-2');
+    assert.equal(payloads[0].role, undefined);
+  });
+
+  it('routes crew lead requests to staff or the requesting guard', async () => {
+    const staff = await buildEventDispatchPayloads(mockDb(), {
+      type: 'crew_lead_request',
+      guardId: 'guard-4',
+      body: 'Alex requested approval to lead their own standing crew.',
+    });
+    assert.equal(staff.length, 1);
+    assert.equal(staff[0].role, 'dispatch');
+
+    const guard = await buildEventDispatchPayloads(mockDb(), {
+      type: 'crew_lead_request',
+      recipientUserId: 'guard-4',
+      title: 'Crew lead request declined',
+      body: 'Guardr staff declined your crew lead request.',
+    });
+    assert.equal(guard.length, 1);
+    assert.equal(guard[0].userId, 'guard-4');
+  });
+
+  it('notifies client and dispatch when a guard starts en route', async () => {
+    const payloads = await buildEventDispatchPayloads(
+      mockDb({ client_id: 'client-1', assigned_guard_id: 'guard-2' }),
+      {
+        type: 'guard_en_route',
+        guardId: 'guard-2',
+        guardName: 'Alex',
+        requestId: 'job-1',
+        location: 'Warehouse',
+      }
+    );
+
+    assert.equal(payloads.length, 2);
+    assert.deepEqual(
+      payloads.map((p) => p.userId ?? p.role),
+      ['dispatch', 'client-1']
+    );
+  });
+
   it('targets payout_ready to the guard recipient', async () => {
     const payloads = await buildEventDispatchPayloads(mockDb(), {
       type: 'payout_ready',
