@@ -17,7 +17,10 @@ import {
   staffRoleRank,
 } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
-import { normalizeManagedCities } from '../../lib/platformCities';
+import {
+  getAssignableCityNamesForStaffAccess,
+  normalizeManagedCities,
+} from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
@@ -104,11 +107,10 @@ export function StaffTeamDetailPanel({
     canModifyMember &&
     canAssignStaffCityAccess({ role: currentUserRole }) &&
     Boolean(onUpdateStaffCityAccess);
-  const assignableCityNames = normalizeManagedCities(
-    currentUserRole === 'manager'
-      ? actorManagedCities
-      : platformCities.map((city) => city.name),
-    platformCities
+  const assignableCityNames = getAssignableCityNamesForStaffAccess(
+    platformCities,
+    currentUserRole,
+    actorManagedCities
   );
 
   const toggleManagedCity = (cityName: string) => {
