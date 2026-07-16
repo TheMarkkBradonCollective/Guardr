@@ -76,10 +76,10 @@ export function LegalAcceptanceModal({
         <ul className="mt-5 space-y-3">
           {missing.map((documentId) => (
             <li key={documentId}>
-              <label className="flex items-start gap-3 text-sm cursor-pointer">
+              <label className="legal-accept-row cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-1 rounded border-brand-border"
+                  className="app-checkbox mt-0.5"
                   checked={!!checked[documentId]}
                   onChange={(e) =>
                     setChecked((prev) => ({ ...prev, [documentId]: e.target.checked }))
@@ -97,7 +97,7 @@ export function LegalAcceptanceModal({
                   (version {CURRENT_LEGAL_VERSIONS[documentId]})
                 </span>
               </label>
-              <p className="text-xs text-brand-text-muted mt-1 ml-7">
+              <p className="text-xs text-brand-text-muted mt-1 ml-[2.375rem]">
                 {LEGAL_DOCUMENTS[documentId].intro.slice(0, 140)}…
               </p>
             </li>
