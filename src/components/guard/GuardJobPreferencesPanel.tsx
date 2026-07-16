@@ -1,21 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import {
   BellOff,
-  Building2,
   ChevronRight,
-  ClipboardCheck,
-  Flame,
-  HardHat,
-  KeyRound,
-  Music,
-  PartyPopper,
-  Shield,
   SlidersHorizontal,
-  Sparkles,
-  Star,
-  Truck,
-  UserCheck,
-  Wine,
 } from 'lucide-react';
 import type { JobType, SecurityGuard } from '../../types';
 import {
@@ -30,6 +17,7 @@ import {
 import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
 import { AppSwitch } from '../ui/AppSwitch';
 import { JobTypeOnboardingSheet } from './JobTypeOnboardingSheet';
+import { JOB_TYPE_ICONS } from './guardJobTypeIcons';
 
 interface GuardJobPreferencesPanelProps {
   guard: SecurityGuard;
@@ -37,24 +25,6 @@ interface GuardJobPreferencesPanelProps {
   onCompleteOnboarding: (jobType: JobType) => void | Promise<void>;
   saving?: boolean;
 }
-
-const JOB_TYPE_ICONS: Record<JobType, React.ComponentType<{ className?: string }>> = {
-  'nightclub-bar': Wine,
-  'event-wedding': Star,
-  'event-concert': Music,
-  'event-festival': PartyPopper,
-  'event-corporate': Building2,
-  'event-private': KeyRound,
-  event: Sparkles,
-  patrol: Truck,
-  construction: HardHat,
-  'fire-watch': Flame,
-  'standing-guard': Shield,
-  bodyguard: UserCheck,
-  'armed-escort': Shield,
-  'asset-protection': Building2,
-  other: ClipboardCheck,
-};
 
 const OPTION_BY_TYPE = Object.fromEntries(
   JOB_TYPE_PREFERENCE_OPTIONS.map((option) => [option.type, option])

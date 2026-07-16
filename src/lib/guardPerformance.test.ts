@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildJobTypeRatingMetrics,
   buildPerformanceBreakdown,
   buildPerformanceFactors,
   computeClientReviewStats,
+  computeClientReviewStatsForJobType,
   computeGuardPerformance,
+  computeGuardPerformanceForJobType,
   computeGuardPerformanceRating,
   computeGuardSkillRatings,
   formatReviewCount,
@@ -185,4 +188,41 @@ test('computeGuardSkillRatings can include every job type', () => {
   assert.equal(ratings.length, 15);
   assert.ok(ratings.every((row) => row.reviewCount === 0));
   assert.ok(ratings.some((row) => row.skill === 'Nightclub & bar'));
+});
+
+test('computeGuardPerformanceForJobType scopes metrics to one job type', () => {
+  const requests = [
+    completedJob({ id: 'j1', type: 'event-wedding', ratingGiven: 5 }),
+    completedJob({ id: 'j2', type: 'patrol', ratingGiven: 3 }),
+  ];
+  const weddingMetrics = computeGuardPerformanceForJobType('guard-1', requests, 'event-wedding');
+  const patrolMetrics = computeGuardPerformanceForJobType('guard-1', requests, 'patrol');
+
+  assert.equal(weddingMetrics.jobsSampled, 1);
+  assert.equal(patrolMetrics.jobsSampled, 1);
+  assert.notEqual(weddingMetrics.overallScore, patrolMetrics.overallScore);
+});
+
+test('computeClientReviewStatsForJobType scopes reviews to one job type', () => {
+  const requests = [
+    completedJob({ id: 'j1', type: 'event-wedding', ratingGiven: 5 }),
+    completedJob({ id: 'j2', type: 'patrol', ratingGiven: 3 }),
+  ];
+  const weddingReviews = computeClientReviewStatsForJobType('guard-1', requests, 'event-wedding');
+  const patrolReviews = computeClientReviewStatsForJobType('guard-1', requests, 'patrol');
+
+  assert.equal(weddingReviews.count, 1);
+  assert.equal(weddingReviews.average, 5);
+  assert.equal(patrolReviews.count, 1);
+  assert.equal(patrolReviews.average, 3);
+});
+
+test('buildJobTypeRatingMetrics includes lifetime shifts row', () => {
+  const requests = [completedJob({ id: 'j1', type: 'event', ratingGiven: 4 })];
+  const metrics = computeGuardPerformanceForJobType('guard-1', requests, 'event');
+  const clientReviews = computeClientReviewStatsForJobType('guard-1', requests, 'event');
+  const rows = buildJobTypeRatingMetrics(metrics, clientReviews);
+
+  assert.ok(rows.some((row) => row.id === 'lifetime-shifts'));
+  assert.ok(rows.some((row) => row.id === 'client-reviews'));
 });
