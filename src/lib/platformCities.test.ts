@@ -55,19 +55,13 @@ const sampleCities: PlatformCity[] = [
 ];
 
 describe('platform city access', () => {
-  it('defaults Sacramento open and all other cities closed', () => {
+  it('defaults every seeded city to closed', () => {
     const defaults = buildDefaultPlatformCities();
     assert.ok(defaults.length >= 60);
-    const sacramento = defaults.find((city) => city.name === GUARDR_LAUNCH_CITY);
-    assert.equal(sacramento?.status, 'open');
-    assert.equal(
-      defaults.filter((city) => city.status === 'open').length,
-      1
-    );
-    assert.equal(defaults.filter((city) => city.status === 'closed').length, defaults.length - 1);
+    assert.equal(defaults.every((city) => city.status === 'closed'), true);
   });
 
-  it('prefers Sacramento as the default selectable city', () => {
+  it('falls back to Sacramento when no markets are open', () => {
     setPlatformCitiesCache(buildDefaultPlatformCities());
     assert.equal(defaultSelectableCity('guard'), GUARDR_LAUNCH_CITY);
     assert.equal(defaultSelectableCity('client'), GUARDR_LAUNCH_CITY);

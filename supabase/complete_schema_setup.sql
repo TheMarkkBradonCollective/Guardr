@@ -1008,19 +1008,12 @@ ALTER TABLE staff ADD COLUMN IF NOT EXISTS assigned_manager_ids JSONB NOT NULL D
 COMMENT ON COLUMN staff.managed_cities IS 'California cities this staff member may operate or manage';
 COMMENT ON COLUMN staff.assigned_manager_ids IS 'Manager staff IDs supervising this account (set by Director+)';
 
--- Launch market: Sacramento open, all other configured cities closed.
+-- All configured cities start closed; directors open markets in Staff → City markets.
 UPDATE platform_cities
 SET
   status = 'closed',
   recommend_open = FALSE,
-  updated_at = timezone('utc'::text, now())
-WHERE lower(name) <> 'sacramento';
-
-UPDATE platform_cities
-SET
-  status = 'open',
-  updated_at = timezone('utc'::text, now())
-WHERE lower(name) = 'sacramento';
+  updated_at = timezone('utc'::text, now());
 
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
