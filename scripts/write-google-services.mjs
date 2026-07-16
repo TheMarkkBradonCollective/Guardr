@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = process.cwd();
 const servicesPath = path.join(ROOT, 'android/app/google-services.json');
+const secretsPath = path.join(ROOT, 'secrets/google-services.json');
 const EXPECTED_PACKAGE = 'com.signaturesecurity.guardr';
 
 function validateGoogleServices(json) {
@@ -38,6 +39,20 @@ export async function writeGoogleServicesFromEnv() {
   if (!raw) {
     if (isGoogleServicesConfigured()) {
       console.log('Firebase config: using existing android/app/google-services.json');
+      return true;
+    }
+    if (existsSync(secretsPath)) {
+      const secretsRaw = readFileSync(secretsPath, 'utf8');
+      let json;
+      try {
+        json = JSON.parse(secretsRaw);
+      } catch (error) {
+        throw new Error(`secrets/google-services.json is not valid JSON: ${error.message}`);
+      }
+      validateGoogleServices(json);
+      await mkdir(path.dirname(servicesPath), { recursive: true });
+      await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\n`);
+      console.log(`Firebase config: copied secrets/google-services.json → android/app/`);
       return true;
     }
     return false;

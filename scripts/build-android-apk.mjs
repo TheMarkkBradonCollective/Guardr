@@ -39,12 +39,20 @@ console.log('→ Auditing APK / site parity…');
 run('node', ['scripts/audit-apk-parity.mjs']);
 
 if (!isGoogleServicesConfigured()) {
-  console.warn(
-    '\n⚠ android/app/google-services.json is missing or invalid — native push toggle will be disabled in this APK.',
-  );
-  console.warn(
-    `  Ensure Firebase config targets package ${EXPECTED_ANDROID_PACKAGE} before shipping push.\n`,
-  );
+  if (process.env.ALLOW_APK_WITHOUT_FCM === '1') {
+    console.warn(
+      '\n⚠ ALLOW_APK_WITHOUT_FCM=1 — building without Firebase; native push toggle will be disabled.',
+    );
+  } else {
+    console.error(
+      '\n✗ android/app/google-services.json is missing or invalid — refusing to ship APK without Firebase.',
+    );
+    console.error(
+      '  Set GOOGLE_SERVICES_JSON, place secrets/google-services.json, or add android/app/google-services.json.',
+    );
+    console.error(`  Package must be ${EXPECTED_ANDROID_PACKAGE}. Set ALLOW_APK_WITHOUT_FCM=1 to override.\n`);
+    process.exit(1);
+  }
 }
 
 const nativeFcmConfigured = isGoogleServicesConfigured();
@@ -85,4 +93,9 @@ console.log('→ Post-build parity audit…');
 run('node', ['scripts/audit-apk-parity.mjs']);
 
 console.log(`\n✓ APK ready:\n  ${releaseApk}\n  ${publicApk}\n`);
+if (nativeFcmConfigured) {
+  console.log('✓ Native FCM enabled — push toggle will work after reinstall.');
+} else {
+  console.warn('⚠ Native FCM disabled in this APK build.');
+}
 console.log('Share: https://guardr.co/download/');

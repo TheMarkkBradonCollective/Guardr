@@ -88,12 +88,15 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 ### Push setup (APK)
 
 1. Create a Firebase project and add an Android app with package `com.signaturesecurity.guardr`
-2. Download `google-services.json` into `android/app/` (gitignored — do not commit)
+2. Place Firebase config in **one** of these locations (gitignored — never commit):
+   - `secrets/google-services.json` (preferred for local/cloud-agent builds — copied to `android/app/` automatically)
+   - `android/app/google-services.json` directly
+   - `GOOGLE_SERVICES_JSON` environment variable (full JSON string)
 3. Set `FCM_SERVICE_ACCOUNT_JSON` on the Guardr server (Vercel env):
    - Firebase Console → Project settings → **Service accounts** → **Generate new private key**
    - Paste the full JSON file contents as the env var value (single line is fine)
    - Use the **Firebase Cloud Messaging API (V1)** — the legacy Server key is deprecated and disabled on new projects
-4. Rebuild the APK: `npm run android:apk`
+4. Rebuild the APK: `npm run android:apk` (fails if Firebase config is missing unless `ALLOW_APK_WITHOUT_FCM=1`)
 
 **CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.
 
