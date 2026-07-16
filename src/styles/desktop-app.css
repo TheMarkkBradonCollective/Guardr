@@ -1961,3 +1961,232 @@ body[data-form-factor="desktop"] .dsk-app,
 body[data-form-factor="desktop"] .desktop-workspace {
   display: none !important;
 }
+
+/* ─── Overview / dashboard status & breakdowns ─────────────────────────── */
+
+body[data-form-factor="desktop"] .adm-card--status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-card--status-ok {
+  border-color: color-mix(in srgb, var(--status-success) 35%, var(--adm-border));
+  background: color-mix(in srgb, var(--status-success) 4%, var(--adm-card));
+}
+
+body[data-form-factor="desktop"] .adm-card--status-warn {
+  border-color: color-mix(in srgb, var(--status-warning) 40%, var(--adm-border));
+  background: color-mix(in srgb, var(--status-warning) 5%, var(--adm-card));
+}
+
+body[data-form-factor="desktop"] .adm-card--status-muted {
+  border-color: var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-status-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .adm-status-dot--ok {
+  background: var(--status-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-success) 20%, transparent);
+}
+
+body[data-form-factor="desktop"] .adm-status-dot--warn {
+  background: var(--status-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-warning) 20%, transparent);
+}
+
+body[data-form-factor="desktop"] .adm-status-dot--muted {
+  background: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-status-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body[data-form-factor="desktop"] .adm-status-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-status-alert {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  list-style: none;
+  border-top: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-status-grid-value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-status-grid-label {
+  margin: 0.1rem 0 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-overview-meta {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-overview-focus {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--adm-muted);
+  max-width: 28rem;
+}
+
+body[data-form-factor="desktop"] .adm-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--adm-sand-light);
+  color: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--adm-text);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .adm-quick-link:hover {
+  background: var(--adm-sand-light);
+  border-color: color-mix(in srgb, var(--adm-sand-dark) 25%, var(--adm-border));
+}
+
+body[data-form-factor="desktop"] .adm-section-eyebrow {
+  margin: 0 0 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-card--metric {
+  padding: 1rem 1.15rem;
+}
+
+body[data-form-factor="desktop"] .adm-stat-value--accent {
+  color: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-table-with-icon {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+  border: 1px solid var(--adm-border);
+  flex-shrink: 0;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-action-icon--urgent {
+  background: color-mix(in srgb, var(--status-warning) 10%, var(--adm-bg));
+  border-color: color-mix(in srgb, var(--status-warning) 30%, var(--adm-border));
+  color: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-live-job-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+body[data-form-factor="desktop"] .adm-financial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-financial-cell {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+}
+
+body[data-form-factor="desktop"] .adm-dashboard .staff-overview-visual-grid {
+  gap: 0.85rem;
+}
+
+body[data-form-factor="desktop"] .adm-dashboard .staff-overview-visual-card {
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: var(--adm-bg);
+}
+
+body[data-form-factor="desktop"] .adm-dashboard .overview-visual-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}

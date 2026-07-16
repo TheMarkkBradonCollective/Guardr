@@ -7,7 +7,12 @@ import {
   getUpcomingCoverage,
 } from '../../lib/clientCoverage';
 import { getClientLiveJobs, inferClientShiftPhase, CLIENT_SHIFT_PHASE_LABELS } from '../../lib/clientShift';
+import { canClientApproveStaffScheduleChange } from '../../lib/jobScheduleChange';
+import { canClientApproveOvertime } from '../../lib/shiftBilling';
+import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClientConfirmed } from '../../lib/selfAuditPhotos';
+import { buildJobPipelineSegments, computeWeeklyJobSeries } from '../../lib/overviewVisuals';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { OverviewSegmentBar, OverviewWeekChart } from '../staff/overview/OverviewCharts';
 import {
   ArrowUpRight,
   Briefcase,
@@ -36,11 +41,34 @@ interface ClientHomeDesktopProps {
   onViewGuard?: (guard: SecurityGuard) => void;
 }
 
+const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
+  incident: 'Incident report',
+  activity: 'Activity report',
+  property: 'Property report',
+};
+
 function greeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
+}
+
+function clientActionCount(requests: SecurityRequest[]): number {
+  let count = 0;
+  for (const req of requests) {
+    if (canClientApproveOvertime(req)) count += 1;
+    if (canClientApproveStaffScheduleChange(req)) count += 1;
+    if (
+      hasSelfAuditPhotosToReview(req) &&
+      req.checkInAudit &&
+      !isSelfAuditClientConfirmed(req.checkInAudit) &&
+      canClientConfirmSelfAudit(req)
+    ) {
+      count += 1;
+    }
+  }
+  return count;
 }
 
 export function ClientHomeDesktop({
@@ -60,6 +88,11 @@ export function ClientHomeDesktop({
   const openCount = requests.filter(
     (r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review',
   ).length;
+  const completedCount = requests.filter((r) => r.status === 'completed' || r.status === 'closed').length;
+  const pendingActions = useMemo(() => clientActionCount(requests), [requests]);
+  const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
+  const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
+  const hasLiveCoverage = coverage.activeAssignments > 0;
 
   const run = (action: ClientHomeAction) => {
     if (accountPending && action !== 'messages') {
@@ -70,6 +103,18 @@ export function ClientHomeDesktop({
   };
 
   const livePct = coverage.activeAssignments > 0 ? Math.min(100, coverage.activeAssignments * 20) : 0;
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const statusItems = [
+    { label: 'Live assignments', value: coverage.activeAssignments },
+    { label: 'Guards on duty', value: coverage.guardsOnDuty },
+    { label: 'Arriving soon', value: coverage.guardsArriving },
+    { label: 'Open jobs', value: openCount },
+  ];
 
   return (
     <div className="adm-dashboard">
@@ -85,11 +130,11 @@ export function ClientHomeDesktop({
       ) : null}
 
       <div className="adm-dashboard-grid">
-        {/* Welcome card */}
-        <article className="adm-card adm-card--welcome adm-span-4">
+        {/* Welcome */}
+        <article className="adm-card adm-card--welcome adm-span-8">
           <div>
-            <p className="adm-card-eyebrow">Welcome back</p>
-            <h2 className="adm-card-title">{greeting()}, {companyName}</h2>
+            <p className="adm-card-eyebrow">{todayLabel} · {companyName}</p>
+            <h2 className="adm-card-title">{greeting()}</h2>
             <p className="adm-card-body">Manage coverage, review guards, and monitor live operations from your console.</p>
             <button type="button" className="adm-btn adm-btn--sand" onClick={() => run('request')}>
               Post job
@@ -101,8 +146,44 @@ export function ClientHomeDesktop({
           </div>
         </article>
 
-        {/* Live coverage stat */}
-        <article className="adm-card adm-card--stat adm-span-4">
+        {/* Whole coverage status */}
+        <article
+          className={`adm-card adm-card--status adm-span-4 ${
+            hasLiveCoverage ? 'adm-card--status-ok' : 'adm-card--status-muted'
+          }`}
+        >
+          <div className="adm-status-head">
+            <span
+              className={`adm-status-dot ${hasLiveCoverage ? 'adm-status-dot--ok' : 'adm-status-dot--muted'}`}
+              aria-hidden
+            />
+            <div>
+              <p className="adm-card-eyebrow">Coverage status</p>
+              <h3 className="adm-status-title">{hasLiveCoverage ? 'Live coverage active' : 'No guards on site'}</h3>
+            </div>
+          </div>
+          <p className="adm-status-summary">
+            {hasLiveCoverage
+              ? `${coverage.guardsOnDuty} guard${coverage.guardsOnDuty === 1 ? '' : 's'} on duty across ${coverage.activeAssignments} assignment${coverage.activeAssignments === 1 ? '' : 's'}.`
+              : 'Post a job or open the map to track coverage when shifts go live.'}
+          </p>
+          {pendingActions > 0 ? (
+            <p className="adm-status-alert">
+              {pendingActions} item{pendingActions === 1 ? '' : 's'} need your approval on the map
+            </p>
+          ) : null}
+          <ul className="adm-status-grid">
+            {statusItems.map((item) => (
+              <li key={item.label}>
+                <p className="adm-status-grid-value">{item.value}</p>
+                <p className="adm-status-grid-label">{item.label}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
+
+        {/* Key metrics */}
+        <article className="adm-card adm-card--stat adm-span-3">
           <p className="adm-card-eyebrow">Live coverage</p>
           <div className="adm-stat-row">
             <div>
@@ -119,8 +200,7 @@ export function ClientHomeDesktop({
           </button>
         </article>
 
-        {/* Open jobs stat */}
-        <article className="adm-card adm-card--stat adm-span-4">
+        <article className="adm-card adm-card--stat adm-span-3">
           <p className="adm-card-eyebrow">Open jobs</p>
           <p className="adm-stat-value">{openCount}</p>
           <p className="adm-stat-label">Active requests</p>
@@ -130,7 +210,46 @@ export function ClientHomeDesktop({
           </button>
         </article>
 
-        {/* Sales status style metrics */}
+        <article className="adm-card adm-card--stat adm-span-3">
+          <p className="adm-card-eyebrow">Completed</p>
+          <p className="adm-stat-value">{completedCount}</p>
+          <p className="adm-stat-label">Finished jobs</p>
+          <p className="adm-stat-delta">{recentReports.length} recent reports</p>
+          <button type="button" className="adm-btn adm-btn--sm adm-btn--outline adm-mt" onClick={() => run('reports')}>
+            View reports
+          </button>
+        </article>
+
+        <article className="adm-card adm-card--stat adm-span-3">
+          <p className="adm-card-eyebrow">Scheduled</p>
+          <p className="adm-stat-value">{upcoming.length}</p>
+          <p className="adm-stat-label">Upcoming shifts</p>
+          <p className="adm-stat-delta">
+            {coverage.guardsArriving > 0 && coverage.arrivingTimeLabel
+              ? `Next at ${coverage.arrivingTimeLabel}`
+              : 'No arrivals queued'}
+          </p>
+          <button type="button" className="adm-btn adm-btn--sm adm-btn--outline adm-mt" onClick={() => run('schedule')}>
+            Schedule
+          </button>
+        </article>
+
+        {/* Charts row */}
+        <article className="adm-card adm-span-6">
+          <p className="adm-card-heading">Job pipeline breakdown</p>
+          {jobPipelineSegments.length > 0 ? (
+            <OverviewSegmentBar segments={jobPipelineSegments} />
+          ) : (
+            <p className="adm-card-body">No jobs in the pipeline yet. Post a job to get started.</p>
+          )}
+        </article>
+
+        <article className="adm-card adm-span-6">
+          <p className="adm-card-heading">Completed jobs this week</p>
+          <OverviewWeekChart series={weeklySeries} />
+        </article>
+
+        {/* Operations status list */}
         <article className="adm-card adm-span-4">
           <p className="adm-card-eyebrow">Operations status</p>
           <h3 className="adm-card-heading">At a glance</h3>
@@ -254,6 +373,33 @@ export function ClientHomeDesktop({
             </table>
           ) : (
             <div className="adm-empty adm-empty--compact"><p>No scheduled coverage yet</p></div>
+          )}
+        </article>
+
+        {/* Recent reports */}
+        <article className="adm-card adm-span-4">
+          <div className="adm-card-head">
+            <h3 className="adm-card-heading">Recent reports</h3>
+            {recentReports.length > 0 ? (
+              <button type="button" className="adm-link-btn" onClick={() => run('reports')}>View all</button>
+            ) : null}
+          </div>
+          {recentReports.length === 0 ? (
+            <div className="adm-empty adm-empty--compact"><p>No reports yet</p></div>
+          ) : (
+            <ul className="adm-activity-list">
+              {recentReports.slice(0, 4).map((report) => (
+                <li key={report.id}>
+                  <button type="button" className="adm-activity-row" onClick={() => run('reports')}>
+                    <FileText className="adm-metric-icon w-4 h-4" />
+                    <span>
+                      <p className="adm-activity-name">{report.title}</p>
+                      <p className="adm-activity-meta">{REPORT_TYPE_LABEL[report.type]}</p>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </article>
 

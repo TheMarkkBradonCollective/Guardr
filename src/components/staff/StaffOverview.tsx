@@ -454,6 +454,7 @@ export function StaffOverview({
         liveJobs={liveJobs}
         onNavigate={onNavigate}
         onOpenJob={onOpenJob}
+        canUpdateJobs={canUpdateJobs}
         staffName={staffName}
         staffRole={staffRole}
       />
