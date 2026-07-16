@@ -1356,8 +1356,8 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing
 COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS standing_crew_invite BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.standing_crew_invite IS 'Guard alert for standing crew invites and crew updates';
-ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS crew_lead_request BOOLEAN NOT NULL DEFAULT true;
-COMMENT ON COLUMN notification_preferences.crew_lead_request IS 'Guard/staff alert for crew lead request outcomes';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_invoice_ready BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.client_invoice_ready IS 'Client alert when a job invoice is ready after staff approval';
 
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';

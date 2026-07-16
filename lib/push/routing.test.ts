@@ -38,6 +38,11 @@ describe('resolveNotificationUrlForRole', () => {
     assert.equal(url, '/client/map?jc=job-1');
   });
 
+  it('deep-links clients to invoices when ready', () => {
+    const url = resolveNotificationUrlForRole('client_invoice_ready', 'client', { requestId: 'job-1' });
+    assert.equal(url, '/client/invoices?inv=job-1');
+  });
+
   it('deep-links clients to job requests on assignments', () => {
     const url = resolveNotificationUrlForRole('assignment', 'client', { requestId: 'job-1' });
     assert.equal(url, '/client/requests?jc=job-1');

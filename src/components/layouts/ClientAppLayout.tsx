@@ -5,7 +5,7 @@ import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
-import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings, Receipt } from 'lucide-react';
 
 interface ClientAppLayoutProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ interface ClientAppLayoutProps {
   hideHeader?: boolean;
   headerRight?: React.ReactNode;
   messagesChrome?: MessagesChrome;
+  invoicesBadge?: number;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -30,12 +31,13 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 ];
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
   { id: 'locations', label: 'Locations', icon: MapPin },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'settings']);
+const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'invoices', 'settings']);
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
@@ -50,6 +52,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
+  invoices: 'Invoices',
   guide: 'Guide',
   messages: 'Messages',
   support: 'Messages',
@@ -64,6 +67,7 @@ export function ClientAppLayout({
   accountPending = false,
   onOpenLegal,
   messagesBadge = 0,
+  invoicesBadge = 0,
   hideHeader = false,
   headerRight,
   messagesChrome = EMPTY_MESSAGES_CHROME,
@@ -85,6 +89,14 @@ export function ClientAppLayout({
         item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
       ),
     [messagesBadge]
+  );
+
+  const overflowNavItems = useMemo(
+    () =>
+      OVERFLOW_NAV.map((item) =>
+        item.id === 'invoices' && invoicesBadge > 0 ? { ...item, badge: invoicesBadge } : item
+      ),
+    [invoicesBadge]
   );
 
   const accountFooter = onOpenLegal ? (
@@ -121,7 +133,7 @@ export function ClientAppLayout({
         footer: accountFooter,
       }}
       navItems={navItems}
-      overflowNavItems={accountPending ? [] : OVERFLOW_NAV}
+      overflowNavItems={accountPending ? [] : overflowNavItems}
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       fullBleed={fullBleed}

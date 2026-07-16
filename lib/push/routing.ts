@@ -104,6 +104,10 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
         : '/staff/payments';
+    case 'client_invoice_ready':
+      return options.requestId
+        ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}`
+        : '/client/invoices';
     case 'support_ticket':
     case 'support_ticket_status':
       return options.ticketId
@@ -323,6 +327,10 @@ export function resolveNotificationUrlForRole(
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
+    case 'client_invoice_ready':
+      return options.requestId
+        ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}`
+        : '/client/invoices';
     case 'payout_ready':
       return role === 'guard' ? '/guard/earnings' : '/staff/payments';
     case 'dispute_update':
@@ -430,6 +438,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'credential_pending':
     case 'payment_attention':
       return ['dispatch', 'admin'];
+    case 'client_invoice_ready':
+      return ['client'];
     case 'support_ticket':
       return ['dispatch', 'admin'];
     case 'support_ticket_status':

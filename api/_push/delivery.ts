@@ -31,6 +31,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   client_pending_approval: 'client_pending_approval',
   credential_pending: 'credential_pending',
   payment_attention: 'payment_attention',
+  client_invoice_ready: 'client_invoice_ready',
   client_cash_payment_requested: 'payment_attention',
   guard_cash_payout_requested: 'payment_attention',
   stripe_payment_complete: 'payment_attention',
