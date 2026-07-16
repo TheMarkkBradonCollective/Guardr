@@ -96,6 +96,8 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
+import { useUserNotificationsRealtime } from './lib/useUserNotificationsRealtime';
+import { useRequestLiveLocationRealtime } from './lib/useRequestLiveLocationRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
   getGuardMissingGraceCredentialLabels,
@@ -342,9 +344,9 @@ import {
   canPostToGuardChat,
   canReadGuardChat,
   loadGuardMessagesFromStorage,
-  mergeGuardMessages,
   appendGuardMessage,
   saveGuardMessagesToStorage,
+  sortedGuardMessages,
 } from './lib/guardMessenger';
 import { fetchGuardMessagesFromApi, postGuardMessageToApi } from './lib/guardMessagesApi';
 import {
@@ -352,17 +354,17 @@ import {
   canPostToClientChat,
   canReadClientChat,
   loadClientMessagesFromStorage,
-  mergeClientMessages,
   appendClientMessage,
   saveClientMessagesToStorage,
+  sortedClientMessages,
 } from './lib/clientMessenger';
 import { fetchClientMessagesFromApi, postClientMessageToApi } from './lib/clientMessagesApi';
 import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
-  mergeStaffMessages,
   appendStaffMessage,
   saveStaffMessagesToStorage,
+  sortedStaffMessages,
 } from './lib/staffMessenger';
 import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
 import { mapStaffRowToSecurityGuard } from './lib/staffAccounts';
@@ -372,6 +374,19 @@ import {
   syncPushSubscriptionWithServer,
 } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
+import {
+  clientInvoiceFromRow,
+  createApprovedJobInvoice,
+  invoiceReadyNotificationBody,
+  invoiceReadyNotificationUrl,
+  loadClientInvoicesFromStorage,
+  persistClientInvoiceToDb,
+  saveClientInvoicesToStorage,
+  syncInvoicePaymentStatus,
+  unpaidClientInvoices,
+  upsertClientInvoice,
+} from './lib/clientInvoiceStorage';
+import type { ClientInvoice } from './lib/clientInvoicing';
 import { evaluateCheckInEscalation, checkInEscalationDedupKey } from './lib/checkInEscalation';
 import { notifyOpenJobToGuards } from './lib/openJobNotifications';
 import { jobUsesFirstToAccept } from './lib/assignmentMode';
@@ -734,6 +749,15 @@ export default function App() {
     }
     return null;
   });
+  const [clientInvoiceRequestId, setClientInvoiceRequestIdState] = useState<string | null>(
+    () =>
+      initialRoute?.role === 'client' && initialRoute.clientView === 'invoices'
+        ? initialRoute.clientInvoiceRequestId ?? null
+        : null
+  );
+  const [clientInvoices, setClientInvoices] = useState<ClientInvoice[]>(() =>
+    loadClientInvoicesFromStorage()
+  );
   const [clientMessagesDetailOpen, setClientMessagesDetailOpen] = useState(false);
   const [clientMessagesChrome, setClientMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
   const [clientTeamDetailOpen, setClientTeamDetailOpen] = useState(false);
@@ -793,6 +817,7 @@ export default function App() {
       supportSection: supportSection ?? undefined,
       supportMode: supportMode ?? undefined,
       openJobChat: openJobChat || undefined,
+      clientInvoiceRequestId: clientInvoiceRequestId ?? undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
     };
@@ -836,6 +861,11 @@ export default function App() {
     setSupportSectionState(route.supportSection ?? 'support');
     setSupportModeState(route.supportMode ?? null);
     setOpenJobChatState(route.openJobChat ?? false);
+    if (route.clientInvoiceRequestId && route.clientView === 'invoices') {
+      setClientInvoiceRequestIdState(route.clientInvoiceRequestId);
+    } else if (route.clientView !== 'invoices') {
+      setClientInvoiceRequestIdState(null);
+    }
     if (route.jobChatRequestId && !route.openJobChat) {
       if (route.role === 'client' && route.clientView === 'requests') {
         setClientRequestsSelectedIdState(route.jobChatRequestId);
@@ -869,6 +899,11 @@ export default function App() {
     if (resolvedView !== 'requests') {
       setClientRequestsSelectedIdState(null);
     }
+    if (resolvedView !== 'invoices') {
+      setClientInvoiceRequestIdState(null);
+    }
+    const nextInvoiceRequestId =
+      resolvedView === 'invoices' ? clientInvoiceRequestId ?? undefined : undefined;
     if (!keepsJobChatId) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
@@ -889,6 +924,7 @@ export default function App() {
         clientDirectGuardId: nextDirectId,
         jobChatRequestId: nextJobChatId,
         openJobChat: resolvedView === 'messages' && openJobChat ? true : undefined,
+        clientInvoiceRequestId: nextInvoiceRequestId,
         supportTicketId: nextSupportId,
         supportSection: resolvedView === 'messages' ? supportSection : undefined,
         supportMode: undefined,
@@ -1411,6 +1447,7 @@ export default function App() {
   applyAppRouteRef.current = applyAppRoute;
   const currentUserRef = useRef(currentUser);
   currentUserRef.current = currentUser;
+  const loadAppDataRef = useRef<() => void>(() => {});
   const loggedInUserIdRef = useRef<string | null>(currentUser?.id ?? null);
 
   const defaultRouteForUser = (user: SessionUser): AppRoute => {
@@ -1587,11 +1624,13 @@ export default function App() {
 
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
+      loadAppDataRef.current();
       navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
     };
     window.addEventListener('pageshow', onPageShow);
 
     const unsubscribe = listenForPushNavigation((url) => {
+      loadAppDataRef.current();
       navigateFromLocation(url, { source: 'deeplink' });
     });
     return () => {
@@ -1716,6 +1755,7 @@ export default function App() {
     (result) => {
       if (result.synced > 0) {
         showAppToast(`Synced ${result.synced} offline record${result.synced === 1 ? '' : 's'}.`, { tone: 'success' });
+        loadAppDataRef.current();
       }
     }
   );
@@ -1811,6 +1851,9 @@ export default function App() {
       const { data: dbClientMessages, error: clientMessagesErr } = await supabase.from('client_messages').select('*');
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
         .from('guard_payout_invoices')
+        .select('*');
+      const { data: dbClientInvoices, error: clientInvoicesErr } = await supabase
+        .from('client_invoices')
         .select('*');
       const { data: dbPlatformSettings, error: platformSettingsErr } = await supabase
         .from('platform_settings')
@@ -1912,6 +1955,9 @@ export default function App() {
       }
       if (payoutInvoicesErr) {
         console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
+      }
+      if (clientInvoicesErr && clientInvoicesErr.code !== '42P01') {
+        console.warn('Client invoices load (run migration if missing):', clientInvoicesErr);
       }
       if (platformSettingsErr && platformSettingsErr.code !== '42P01') {
         console.warn('Platform settings load (run migration if missing):', platformSettingsErr);
@@ -2304,6 +2350,19 @@ export default function App() {
       );
       setRequests(loadedRequests);
 
+      if (!clientInvoicesErr && dbClientInvoices) {
+        const loadedInvoices = dbClientInvoices.map((row: Record<string, unknown>) =>
+          clientInvoiceFromRow(row)
+        );
+        const syncedInvoices = syncInvoicePaymentStatus(loadedInvoices, loadedRequests);
+        setClientInvoices(syncedInvoices);
+        saveClientInvoicesToStorage(syncedInvoices);
+      } else {
+        const localInvoices = syncInvoicePaymentStatus(loadClientInvoicesFromStorage(), loadedRequests);
+        setClientInvoices(localInvoices);
+        saveClientInvoicesToStorage(localInvoices);
+      }
+
       setPayments((dbPayments ?? []).map((p: any) => ({
         id: p.id,
         jobId: p.job_id,
@@ -2433,11 +2492,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setStaffMessages((prev) => {
-          const next = mergeStaffMessages(prev, mappedStaffMessages);
-          saveStaffMessagesToStorage(next);
-          return next;
-        });
+        const nextStaffMessages = sortedStaffMessages(mappedStaffMessages);
+        setStaffMessages(nextStaffMessages);
+        saveStaffMessagesToStorage(nextStaffMessages);
       }
 
       if (!guardMessagesErr && dbGuardMessages != null) {
@@ -2449,11 +2506,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setGuardMessages((prev) => {
-          const next = mergeGuardMessages(prev, mappedGuardMessages);
-          saveGuardMessagesToStorage(next);
-          return next;
-        });
+        const nextGuardMessages = sortedGuardMessages(mappedGuardMessages);
+        setGuardMessages(nextGuardMessages);
+        saveGuardMessagesToStorage(nextGuardMessages);
       }
 
       if (!clientMessagesErr && dbClientMessages != null) {
@@ -2465,11 +2520,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setClientMessages((prev) => {
-          const next = mergeClientMessages(prev, mappedClientMessages);
-          saveClientMessagesToStorage(next);
-          return next;
-        });
+        const nextClientMessages = sortedClientMessages(mappedClientMessages);
+        setClientMessages(nextClientMessages);
+        saveClientMessagesToStorage(nextClientMessages);
       }
 
       if (!platformSettingsErr && dbPlatformSettings) {
@@ -2585,8 +2638,8 @@ export default function App() {
     if (!currentUser || !canReadGuardChat(currentUser)) return;
 
     const applyRemote = (remote: GuardMessage[]) => {
+      const next = sortedGuardMessages(remote);
       setGuardMessages((prev) => {
-        const next = mergeGuardMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
@@ -2629,8 +2682,8 @@ export default function App() {
     if (!currentUser || !canReadClientChat(currentUser)) return;
 
     const applyRemote = (remote: ClientMessage[]) => {
+      const next = sortedClientMessages(remote);
       setClientMessages((prev) => {
-        const next = mergeClientMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
@@ -2673,8 +2726,8 @@ export default function App() {
     if (!currentUser || !isStaffRole(currentUser.role)) return;
 
     const applyRemote = (remote: StaffMessage[]) => {
+      const next = sortedStaffMessages(remote);
       setStaffMessages((prev) => {
-        const next = mergeStaffMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
@@ -2730,10 +2783,26 @@ export default function App() {
   // Live sync — any DB change propagates to all open sessions without a manual refresh
   const loadRef = useRef(loadFromSupabase);
   loadRef.current = loadFromSupabase;
+  loadAppDataRef.current = () => {
+    void loadRef.current();
+  };
+
   useSupabaseRealtimeSync(() => {
     if (shouldSkipRealtimeSync()) return;
     if (isInactiveGuardSession(currentUserRef.current, guardsRef.current)) return;
     void loadRef.current();
+  }, isDbConnected);
+
+  useUserNotificationsRealtime(
+    currentUser?.id,
+    (updater) => setUserNotifications(updater),
+    isDbConnected && !!currentUser
+  );
+
+  useRequestLiveLocationRealtime((requestId, location) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, guardLiveLocation: location } : r))
+    );
   }, isDbConnected);
 
   useEffect(() => {
@@ -2954,7 +3023,7 @@ export default function App() {
       if (!shouldSkipRealtimeSync()) {
         void loadRef.current();
       }
-    }, 5000);
+    }, 30_000);
     return () => clearInterval(interval);
   }, [isDbConnected, isInMessagingView, staffSection, guardTab, currentUser]);
 
@@ -6453,6 +6522,9 @@ export default function App() {
 
     if (initialStatus === 'open') {
       showAppToast('Job posted — complete payment when ready to publish on the marketplace.', { tone: 'success' });
+      if (clientRecord && currentUser) {
+        void issueClientJobInvoice(freshJob, clientRecord, currentUser, { notify: false });
+      }
     } else if (clientIsTrusted && !coordsReady) {
       showAppToast(
         'Job submitted for staff review — map coordinates are required before it can go live.',
@@ -6638,7 +6710,15 @@ export default function App() {
   };
 
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, paymentStatus } : r));
+    setRequests((prev) => {
+      const next = prev.map((r) => (r.id === requestId ? { ...r, paymentStatus } : r));
+      setClientInvoices((invoices) => {
+        const synced = syncInvoicePaymentStatus(invoices, next);
+        saveClientInvoicesToStorage(synced);
+        return synced;
+      });
+      return next;
+    });
     if (isDbConnected) {
       await supabase.from('security_requests').update({ payment_status: paymentStatus }).eq('id', requestId);
     }
@@ -7849,6 +7929,43 @@ export default function App() {
     );
   };
 
+  const issueClientJobInvoice = useCallback(
+    async (
+      job: SecurityRequest,
+      client: Client,
+      actor: SessionUser,
+      options?: { notify?: boolean }
+    ) => {
+      if (job.status !== 'open') return null;
+      if (job.paymentStatus && job.paymentStatus !== 'unpaid') return null;
+      const invoice = createApprovedJobInvoice(job, client);
+      setClientInvoices((prev) => {
+        const next = upsertClientInvoice(prev, invoice);
+        saveClientInvoicesToStorage(next);
+        return next;
+      });
+      if (isDbConnected) {
+        try {
+          await persistClientInvoiceToDb(supabase, invoice);
+        } catch (error) {
+          console.warn('Client invoice persist error:', error);
+        }
+      }
+      if (options?.notify !== false) {
+        void reportPushEvent(actor, {
+          type: 'client_invoice_ready',
+          recipientUserId: job.clientId,
+          requestId: job.id,
+          title: 'Invoice ready',
+          body: invoiceReadyNotificationBody(job, invoice),
+          url: invoiceReadyNotificationUrl(job.id),
+        });
+      }
+      return invoice;
+    },
+    [isDbConnected]
+  );
+
   const handleApproveRequest = async (requestId: string) => {
     if (isTutorialDemoId(requestId)) {
       appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
@@ -7897,8 +8014,13 @@ export default function App() {
         recipientUserId: job.clientId,
         requestId,
         title: 'Job approved',
-        body: `"${job.title}" was approved. Complete payment to publish it on the marketplace.`,
+        body: `"${job.title}" was approved and is ready for payment.`,
       });
+      const approvedJob: SecurityRequest = { ...mergedJob, ...patch };
+      const client = clients.find((c) => c.id === job.clientId);
+      if (client) {
+        void issueClientJobInvoice(approvedJob, client, currentUser);
+      }
     }
   };
 
@@ -10492,6 +10614,7 @@ export default function App() {
       prev.map((r) => (r.id === requestId ? { ...r, guardLiveLocation: location } : r))
     );
     if (isDbConnected) {
+      beginLocalMutation();
       await supabase
         .from('security_requests')
         .update({ guard_live_location: location })
@@ -11203,8 +11326,12 @@ export default function App() {
         });
       }
       if (currentUser?.role === 'client') {
-        setClientViewState('requests');
-        syncAppRoute({ role: 'client', clientView: 'requests' }, true);
+        setClientViewState('invoices');
+        setClientInvoiceRequestIdState(jobId);
+        syncAppRoute(
+          { role: 'client', clientView: 'invoices', clientInvoiceRequestId: jobId },
+          true
+        );
       }
       showAppToast('Payment received', {
         body: 'Your job status will update shortly.',
@@ -12441,7 +12568,8 @@ export default function App() {
         view !== 'messages' &&
         view !== 'guide' &&
         view !== 'support-compose' &&
-        view !== 'support-report'
+        view !== 'support-report' &&
+        view !== 'invoices'
       ) {
         setClientView('home');
         return;
@@ -12449,11 +12577,25 @@ export default function App() {
       setClientView(view);
     };
 
+    const clientInvoicesBadge = unpaidClientInvoices(clientInvoices, currentUser.id).length;
+
+    const setClientInvoiceRequestId = (requestId: string | null) => {
+      setClientInvoiceRequestIdState(requestId);
+      syncAppRoute(
+        buildAppRoute({
+          role: 'client',
+          clientView: 'invoices',
+          clientInvoiceRequestId: requestId ?? undefined,
+        })
+      );
+    };
+
     const clientHideHeader =
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (clientView === 'guards' && (!!clientGuardId || clientTeamDetailOpen)) ||
-      (clientView === 'requests' && !!clientRequestsSelectedId);
+      (clientView === 'requests' && !!clientRequestsSelectedId) ||
+      (clientView === 'invoices' && !!clientInvoiceRequestId);
 
     const clientMessagesShellHeaderTrailing =
       clientView === 'messages' ? (
@@ -12482,6 +12624,7 @@ export default function App() {
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
           messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
+          invoicesBadge={clientInvoicesBadge}
           hideHeader={clientHideHeader}
           headerRight={notificationBellMenu}
           messagesChrome={clientMessagesChrome}
@@ -12593,6 +12736,9 @@ export default function App() {
               onOpenSupportReport={openClientSupportReport}
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
               requestsSelectedId={clientRequestsSelectedId}
+              clientInvoices={clientInvoices}
+              invoiceRequestId={clientInvoiceRequestId}
+              onInvoiceRequestIdChange={setClientInvoiceRequestId}
               onMessagesDetailOpenChange={setClientMessagesDetailOpen}
               onMessagesChromeChange={setClientMessagesChrome}
               messagesShellHeaderTrailing={clientMessagesShellHeaderTrailing}

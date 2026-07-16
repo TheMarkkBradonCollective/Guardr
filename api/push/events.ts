@@ -138,7 +138,10 @@ async function sendFcmV1Notification(serviceAccount, endpoint, token, payload, a
             },
             data,
             android: {
-              priority: payload.priority === "high" ? "high" : "normal"
+              priority: payload.priority === "high" ? "high" : "normal",
+              notification: {
+                channel_id: "guardr_alerts"
+              }
             }
           }
         })
@@ -176,7 +179,8 @@ async function sendFcmLegacyNotification(endpoint, token, payload, serverKey, at
         to: token,
         notification: {
           title: String(payload.title ?? "Guardr"),
-          body: String(payload.body ?? "")
+          body: String(payload.body ?? ""),
+          android_channel_id: "guardr_alerts"
         },
         data,
         priority: payload.priority === "high" ? "high" : "normal"
@@ -306,6 +310,8 @@ function resolveNotificationUrl(type, options = {}) {
       return options.guardId ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}` : "/staff/credentials";
     case "payment_attention":
       return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "client_invoice_ready":
+      return options.requestId ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}` : "/client/invoices";
     case "support_ticket":
     case "support_ticket_status":
       return options.ticketId ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}` : "/staff/messages";
@@ -445,6 +451,8 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
         return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
       }
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "client_invoice_ready":
+      return options.requestId ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}` : "/client/invoices";
     case "payout_ready":
       return role === "guard" ? "/guard/earnings" : "/staff/payments";
     case "dispute_update":
@@ -529,6 +537,8 @@ function rolesForNotificationType(type) {
     case "credential_pending":
     case "payment_attention":
       return ["dispatch", "admin"];
+    case "client_invoice_ready":
+      return ["client"];
     case "support_ticket":
       return ["dispatch", "admin"];
     case "support_ticket_status":
@@ -598,6 +608,7 @@ var PREF_COLUMN = {
   client_pending_approval: "client_pending_approval",
   credential_pending: "credential_pending",
   payment_attention: "payment_attention",
+  client_invoice_ready: "client_invoice_ready",
   client_cash_payment_requested: "payment_attention",
   guard_cash_payout_requested: "payment_attention",
   stripe_payment_complete: "payment_attention",
@@ -889,6 +900,10 @@ var EVENT_DEFAULTS = {
     title: "Payment attention",
     body: event.body || "A payment or payout needs staff action"
   }),
+  client_invoice_ready: (event) => ({
+    title: event.title ?? "Invoice ready",
+    body: event.body || "Your job invoice is ready for payment"
+  }),
   client_cash_payment_requested: (event) => ({
     title: "Client cash payment request",
     body: event.body || "A client requested to pay in cash"
@@ -1072,6 +1087,9 @@ async function buildEventDispatchPayloads(db, event) {
     return payloads;
   }
   if (event.type === "support_ticket_status" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "client_invoice_ready" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
   if (event.type === "account_update" && event.recipientUserId) {
@@ -1334,6 +1352,8 @@ async function authorizePushEvent(db, session, event) {
       return "Not authorized to file this support ticket";
     case "support_ticket_status":
       return isStaffSession(session) ? null : "Only staff can send support status updates";
+    case "client_invoice_ready":
+      return isStaffSession(session) ? null : "Only staff can send client invoice notifications";
     case "account_update":
       return isStaffSession(session) ? null : "Only staff can send account update notifications";
     case "payout_ready":

@@ -133,6 +133,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Payment attention',
     body: event.body || 'A payment or payout needs staff action',
   }),
+  client_invoice_ready: (event) => ({
+    title: event.title ?? 'Invoice ready',
+    body: event.body || 'Your job invoice is ready for payment',
+  }),
   client_cash_payment_requested: (event) => ({
     title: 'Client cash payment request',
     body: event.body || 'A client requested to pay in cash',
@@ -356,6 +360,10 @@ export async function buildEventDispatchPayloads(
   }
 
   if (event.type === 'support_ticket_status' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'client_invoice_ready' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
 

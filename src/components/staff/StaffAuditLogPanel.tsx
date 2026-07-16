@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollText, RefreshCw } from 'lucide-react';
 import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../lib/auditLog';
+import { useAuditLogRealtime } from '../../lib/useAuditLogRealtime';
 import { useDevice } from '../../lib/platform';
 import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -45,16 +46,23 @@ export function StaffAuditLogPanel() {
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     const data = await loadAuditLog(200);
     setEntries(data);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
+
+  useAuditLogRealtime((entry) => {
+    setEntries((prev) => {
+      if (prev.some((row) => row.id === entry.id)) return prev;
+      return [entry, ...prev].slice(0, 200);
+    });
+  }, true);
 
   const refreshButton = (
     <button

@@ -1356,8 +1356,8 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing
 COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS standing_crew_invite BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.standing_crew_invite IS 'Guard alert for standing crew invites and crew updates';
-ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS crew_lead_request BOOLEAN NOT NULL DEFAULT true;
-COMMENT ON COLUMN notification_preferences.crew_lead_request IS 'Guard/staff alert for crew lead request outcomes';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_invoice_ready BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.client_invoice_ready IS 'Client alert when a job invoice is ready after staff approval';
 
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
@@ -1490,8 +1490,9 @@ BEGIN
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
-    'guard_vehicle_profiles', 'team_chat_messages', 'job_guard_slots',
-    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
+    'guard_vehicle_profiles', 'team_chat_threads', 'team_chat_messages', 'job_guard_slots',
+    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
+    'platform_settings', 'platform_cities', 'client_locations', 'company_public_documents'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN

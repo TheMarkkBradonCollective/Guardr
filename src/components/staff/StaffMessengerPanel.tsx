@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SessionUser, StaffMessage } from '../../types';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
@@ -14,17 +14,7 @@ export function StaffMessengerPanel({
   messages,
   currentUser,
   onSend,
-  onRefresh,
 }: StaffMessengerPanelProps) {
-  useEffect(() => {
-    if (!onRefresh) return;
-    void onRefresh();
-    const interval = setInterval(() => {
-      void onRefresh();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [onRefresh]);
-
   return (
     <div className="staff-split-pane-detail flex flex-col min-h-[420px] h-full">
       <div className="flex-1 min-h-0">

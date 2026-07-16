@@ -57,6 +57,8 @@ export interface AppRoute {
   staffApprovalQueue?: ApprovalQueueId;
   /** Open job chat UI immediately (guard/client) */
   openJobChat?: boolean;
+  /** Client invoices — selected job invoice */
+  clientInvoiceRequestId?: string;
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
@@ -142,6 +144,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   coverage: 'map',
   messages: 'messages',
   reports: 'reports',
+  invoices: 'invoices',
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
@@ -160,6 +163,7 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   'direct-request': 'direct-request',
   messages: 'messages',
   reports: 'reports',
+  invoices: 'invoices',
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
@@ -198,6 +202,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const staffMessageTab = searchParams.get('mtab');
   const staffApprovalQueue = searchParams.get('aq');
   const openJobChat = searchParams.get('chat');
+  const clientInvoiceRequestId = searchParams.get('inv');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
 
@@ -241,6 +246,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
     nested.staffApprovalQueue = staffApprovalQueue;
   }
   if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
+  if (clientInvoiceRequestId) nested.clientInvoiceRequestId = clientInvoiceRequestId;
   if (authView === 'sign-in' || authView === 'sign-up') nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client') nested.authRole = authRole;
 
@@ -267,6 +273,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffMessageTab) params.set('mtab', route.staffMessageTab);
   if (route.staffApprovalQueue) params.set('aq', route.staffApprovalQueue);
   if (route.openJobChat) params.set('chat', '1');
+  if (route.clientInvoiceRequestId) params.set('inv', route.clientInvoiceRequestId);
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
   return params;

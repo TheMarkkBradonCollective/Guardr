@@ -23,6 +23,7 @@ export type PushNotificationType =
   | 'client_pending_approval'
   | 'credential_pending'
   | 'payment_attention'
+  | 'client_invoice_ready'
   | 'client_cash_payment_requested'
   | 'guard_cash_payout_requested'
   | 'stripe_payment_complete'

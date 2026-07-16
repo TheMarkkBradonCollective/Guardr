@@ -63,13 +63,16 @@ export function remapNotificationUrlForUser(url: string, user: SessionUser): str
   if (!role) return null;
 
   const { pathname, searchParams } = parsePath(url);
-  const requestId = searchParams.get('jc') || searchParams.get('j') || undefined;
+  const requestId = searchParams.get('jc') || searchParams.get('j') || searchParams.get('inv') || undefined;
   const ticketId = searchParams.get('st') || undefined;
   const guardId = searchParams.get('g') || undefined;
   const openChat = searchParams.get('chat') === '1' || searchParams.get('chat') === 'true';
 
   if (requestId) {
     if (role === 'client') {
+      if (pathname.includes('/invoices')) {
+        return `/client/invoices?inv=${encodeURIComponent(requestId)}`;
+      }
       const onMap = pathname.includes('/map') || openChat;
       const base = onMap ? '/client/map' : '/client/requests';
       return `${base}?jc=${encodeURIComponent(requestId)}${openChat ? '&chat=1' : ''}`;

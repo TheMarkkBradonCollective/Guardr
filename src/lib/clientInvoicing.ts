@@ -31,6 +31,20 @@ export function generateInvoiceNumber(): string {
   return `GRD-${year}-${String(invoiceCounter).padStart(5, '0')}`;
 }
 
+export function issueInvoiceForApprovedJob(
+  request: SecurityRequest,
+  client: Client,
+  taxRate = 0
+): ClientInvoice {
+  const invoice = buildInvoiceFromJob(request, client, taxRate);
+  const issuedAt = new Date().toISOString();
+  return {
+    ...invoice,
+    status: 'sent',
+    issuedAt,
+  };
+}
+
 export function buildInvoiceFromJob(
   request: SecurityRequest,
   client: Client,

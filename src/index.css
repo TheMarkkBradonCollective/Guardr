@@ -19885,6 +19885,43 @@ textarea.uber-input {
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
   }}
 
+.staff-shell .staff-main-content--padded > div:has(.staff-ops-mobile-shell),
+.staff-shell .staff-main-content--padded > div:has(> .app-full-page-detail) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-shell .staff-ops-mobile-shell {
+  flex: 1;
+  min-height: 0;
+}
+
+.staff-shell .staff-ops-mobile-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.staff-shell .staff-ops-mobile-body:has(> .app-full-page-detail),
+.staff-shell .staff-ops-mobile-body:has(> .tablet-split-panel) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-shell .staff-ops-mobile-body > .app-full-page-detail,
+.staff-shell .staff-main-content--padded > div > .app-full-page-detail {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.staff-shell .staff-ops-mobile-body > .tablet-split-panel {
+  flex: 1;
+  min-height: 0;
+}
+
 .staff-shell .staff-roster-panel .app-item-card-stack,
 .staff-shell .staff-roster-panel .split-list-pane {
   margin-inline: 0 !important;
@@ -19920,6 +19957,25 @@ textarea.uber-input {
   overscroll-behavior: contain;
   overscroll-behavior-x: none;
   touch-action: pan-y;
+}
+
+.staff-shell .staff-main-content--padded > div:has(.staff-ops-mobile-shell),
+.staff-shell .staff-main-content--padded > div:has(> .app-full-page-detail),
+.staff-shell .staff-main-content--padded > div:has(> .staff-ops-mobile-shell) {
+  overflow: hidden !important;
+}
+
+.staff-shell .staff-ops-mobile-body > .tablet-split-panel .split-list-pane {
+  max-height: none !important;
+  flex: 0 1 42%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.staff-shell .staff-ops-mobile-body > .tablet-split-panel .split-detail-pane {
+  flex: 1 1 58%;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .staff-shell .staff-main-content--bleed {

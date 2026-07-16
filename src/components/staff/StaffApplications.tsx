@@ -358,7 +358,7 @@ export function StaffApplications({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-3">
+      <div className="flex flex-row flex-wrap items-center gap-2">
         {canManageGuardAccounts && onAddGuard && (
           <StaffAddGuardForm
             onAdd={onAddGuard}
@@ -390,25 +390,27 @@ export function StaffApplications({
         placeholder="Search applications..."
         className="max-w-md"
       />
-      <StaffListFilterTabs
-        aria-label="Application status"
-        activeId={statusFilter}
-        onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
-        tabs={[
-          { id: 'pending', label: 'Pending review' },
-          { id: 'all', label: 'All' },
-        ]}
-      />
-      <StaffListFilterTabs
-        aria-label="Application type"
-        activeId={kindFilter}
-        onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
-        tabs={[
-          { id: 'all', label: 'All types' },
-          { id: 'guard', label: 'Guards' },
-          { id: 'client', label: 'Clients' },
-        ]}
-      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label="Application status"
+          activeId={statusFilter}
+          onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
+          tabs={[
+            { id: 'pending', label: 'Pending review' },
+            { id: 'all', label: 'All' },
+          ]}
+        />
+        <StaffListFilterTabs
+          aria-label="Application type"
+          activeId={kindFilter}
+          onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+          tabs={[
+            { id: 'all', label: 'All types' },
+            { id: 'guard', label: 'Guards' },
+            { id: 'client', label: 'Clients' },
+          ]}
+        />
+      </div>
     </>
   ) : null;
 

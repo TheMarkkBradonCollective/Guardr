@@ -172,6 +172,13 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     roles: ['staff'],
   },
   {
+    key: 'clientInvoiceReady',
+    type: 'client_invoice_ready',
+    label: 'Job invoices',
+    description: 'When Guardr approves your job and an invoice is ready to pay.',
+    roles: ['client'],
+  },
+  {
     key: 'paymentAttention',
     type: 'payment_attention',
     label: 'Payments & payouts',
@@ -268,6 +275,7 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     clientPendingApproval: true,
     credentialPending: true,
     paymentAttention: true,
+    clientInvoiceReady: true,
     supportTicket: true,
     supportTicketStatus: true,
     disputeUpdate: true,
@@ -323,6 +331,7 @@ export function preferenceKeyForType(
     client_cash_payment_requested: 'paymentAttention',
     guard_cash_payout_requested: 'paymentAttention',
     stripe_payment_complete: 'paymentAttention',
+    client_invoice_ready: 'clientInvoiceReady',
   };
   if (alias[type]) return alias[type]!;
   const match = NOTIFICATION_TYPE_OPTIONS.find((o) => o.type === type);
@@ -373,6 +382,7 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     client_pending_approval: prefs.clientPendingApproval,
     credential_pending: prefs.credentialPending,
     payment_attention: prefs.paymentAttention,
+    client_invoice_ready: prefs.clientInvoiceReady,
     support_ticket: prefs.supportTicket,
     support_ticket_status: prefs.supportTicketStatus,
     dispute_update: prefs.disputeUpdate,
@@ -413,6 +423,7 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     clientPendingApproval: row.client_pending_approval !== false,
     credentialPending: row.credential_pending !== false,
     paymentAttention: row.payment_attention !== false,
+    clientInvoiceReady: row.client_invoice_ready !== false,
     supportTicket: row.support_ticket !== false,
     supportTicketStatus: row.support_ticket_status !== false,
     disputeUpdate: row.dispute_update !== false,
