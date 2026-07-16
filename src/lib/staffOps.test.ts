@@ -127,3 +127,56 @@ describe('staff section routing', () => {
     assert.equal(stats.pendingCertApprovals, 0);
   });
 });
+
+describe('computePlatformStats active guards', () => {
+  it('counts marketplace-active guard accounts, not job assignments', () => {
+    const guards = [
+      {
+        id: 'guard-active',
+        userStatus: 'active',
+        isStaff: false,
+        certifications: [],
+      } as SecurityGuard,
+      {
+        id: 'guard-pending',
+        userStatus: 'pending',
+        isStaff: false,
+        certifications: [],
+      } as SecurityGuard,
+      {
+        id: 'staff-1',
+        userStatus: 'active',
+        isStaff: true,
+        certifications: [],
+      } as SecurityGuard,
+    ];
+
+    const stats = computePlatformStats(guards, [], []);
+    assert.equal(stats.activeGuards, 1);
+    assert.equal(stats.assignedGuardsOnJobs, 0);
+  });
+
+  it('counts all approved crew members on active jobs', () => {
+    const guards = [
+      { id: 'lead', userStatus: 'active', isStaff: false, certifications: [] } as SecurityGuard,
+      { id: 'crew-1', userStatus: 'active', isStaff: false, certifications: [] } as SecurityGuard,
+      { id: 'crew-2', userStatus: 'active', isStaff: false, certifications: [] } as SecurityGuard,
+    ];
+    const requests = [
+      {
+        id: 'job-1',
+        status: 'accepted',
+        assignedGuardId: 'lead',
+        guardSlots: [
+          { id: 'slot-1', jobId: 'job-1', slotIndex: 1, status: 'approved', guardId: 'lead', isLead: true },
+          { id: 'slot-2', jobId: 'job-1', slotIndex: 2, status: 'approved', guardId: 'crew-1', isLead: false },
+          { id: 'slot-3', jobId: 'job-1', slotIndex: 3, status: 'approved', guardId: 'crew-2', isLead: false },
+        ],
+      },
+    ] as Parameters<typeof computePlatformStats>[2];
+
+    const stats = computePlatformStats(guards, [], requests);
+    assert.equal(stats.activeGuards, 3);
+    assert.equal(stats.assignedGuardsOnJobs, 3);
+  });
+});

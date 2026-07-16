@@ -7,7 +7,8 @@ import {
   listIncidentReportsForRequest,
   requestHasOpenIncident,
 } from './incidentReports';
-import { isClientAccountPending, isGuardAccountPending } from './accountStatus';
+import { isClientAccountPending, isGuardAccountPending, isGuardUserStatusActive } from './accountStatus';
+import { assignedGuardIdsOnActiveJobs } from './guardSchedule';
 import { isUserSubmittedPendingCert } from './approvalSubmissions';
 import {
   countPendingCredentialApprovals as countPendingCredentialFeedApprovals,
@@ -137,8 +138,10 @@ export interface PlatformStats {
   platformHealthy: boolean;
   pendingReviews: number;
   activeIncidents: number;
-  /** Guards assigned to picked-up or in-progress jobs */
+  /** Non-staff guard accounts with marketplace-active user status */
   activeGuards: number;
+  /** Unique guards on accepted or in-progress jobs (includes crew slots) */
+  assignedGuardsOnJobs: number;
   /** Jobs where client, guard, or Stripe deposit still needs money action */
   paymentsNeedingAction: number;
   activeJobs: number;
@@ -331,12 +334,8 @@ export function computePlatformStats(
     pendingStaffAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
-  const activeGuardIds = new Set(
-    requests
-      .filter((r) => (r.status === 'accepted' || r.status === 'in-progress') && r.assignedGuardId)
-      .map((r) => r.assignedGuardId as string)
-  );
-  const activeGuards = activeGuardIds.size;
+  const activeGuards = guards.filter((g) => !g.isStaff && isGuardUserStatusActive(g)).length;
+  const assignedGuardsOnJobs = assignedGuardIdsOnActiveJobs(requests).size;
   const paymentsNeedingAction = paymentAttentionSummary(requests).count;
 
   const activeJobs = requests.filter((r) =>
@@ -353,6 +352,7 @@ export function computePlatformStats(
     pendingReviews,
     activeIncidents,
     activeGuards,
+    assignedGuardsOnJobs,
     paymentsNeedingAction,
     activeJobs,
     onDutyGuards,
@@ -460,8 +460,8 @@ export function buildOverviewMetricCells(
       value: String(stats.activeGuards),
       sub:
         stats.activeGuards === 0
-          ? 'No guards on accepted or in-progress assignments'
-          : `${stats.activeGuards} guard${stats.activeGuards === 1 ? '' : 's'} assigned to active jobs`,
+          ? 'No guard accounts active on the marketplace'
+          : `${stats.activeGuards} guard account${stats.activeGuards === 1 ? '' : 's'} cleared for marketplace work`,
       accent: stats.activeGuards > 0,
       navigateTo: 'guards',
     },
