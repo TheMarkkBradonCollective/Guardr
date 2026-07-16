@@ -17,7 +17,10 @@ import {
 import {
   buildJobPipelineSegments,
   buildOperationsSnapshotCards,
+  buildPlatformHealthPieSegments,
   buildPlatformPulseCards,
+  buildPeopleSegments,
+  buildQueuePieSegments,
   computeWeeklyJobSeries,
 } from '../../lib/overviewVisuals';
 import {
@@ -25,6 +28,7 @@ import {
   filterOverviewMetrics,
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
+import { buildPerformanceTierPercentBars, buildStaffGuardStatRows } from '../../lib/staffStats';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
   AlertTriangle,
@@ -49,11 +53,16 @@ import {
 } from 'lucide-react';
 import { StaffSummaryCell } from './StaffSummaryCell';
 import {
+  OverviewDonutGrid,
+  OverviewLineChart,
+  OverviewPieChart,
   OverviewSegmentBar,
   OverviewVisualCardBody,
   OverviewVisualGrid,
   OverviewWeekChart,
 } from './overview/OverviewCharts';
+import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
+import { clampPct, DesktopStatusPanel } from '../ui/desktop/DesktopStatusPanel';
 
 interface StaffOverviewDesktopProps {
   stats: PlatformStats;
@@ -195,19 +204,60 @@ export function StaffOverviewDesktop({
   );
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
+  const queuePieSegments = useMemo(() => buildQueuePieSegments(stats), [stats]);
+  const healthPieSegments = useMemo(() => buildPlatformHealthPieSegments(stats), [stats]);
+  const peopleSegments = useMemo(() => buildPeopleSegments(guards, clients), [guards, clients]);
+  const guardStatRows = useMemo(() => buildStaffGuardStatRows(guards, requests), [guards, requests]);
+  const tierPercentBars = useMemo(() => buildPerformanceTierPercentBars(guardStatRows), [guardStatRows]);
 
-  const statusItems = [
-    { label: 'On site now', value: stats.onDutyGuards },
-    { label: 'Active jobs', value: stats.activeJobs },
-    { label: 'In review queue', value: stats.pendingReviews },
-    { label: 'Open incidents', value: stats.activeIncidents },
+  const queueBreakdown = [
+    {
+      id: 'jobs',
+      label: 'Job offers',
+      value: stats.pendingJobApprovals,
+      detail: 'Awaiting approval',
+      tone: stats.pendingJobApprovals > 0 ? ('warn' as const) : ('ok' as const),
+      onClick: () => onNavigate('applications'),
+    },
+    {
+      id: 'schedule',
+      label: 'Schedule changes',
+      value: stats.pendingScheduleChanges,
+      detail: 'Client or staff edits',
+      tone: stats.pendingScheduleChanges > 0 ? ('warn' as const) : ('ok' as const),
+      onClick: () => onNavigate('applications'),
+    },
+    {
+      id: 'certs',
+      label: 'Credentials',
+      value: stats.pendingCertApprovals,
+      detail: 'Guard uploads',
+      tone: stats.pendingCertApprovals > 0 ? ('warn' as const) : ('ok' as const),
+      onClick: () => onNavigate('credentials'),
+    },
+    {
+      id: 'accounts',
+      label: 'Account applications',
+      value: stats.pendingAccountApplications,
+      detail: `${stats.pendingClientAccounts} client · guard signups`,
+      tone: stats.pendingAccountApplications > 0 ? ('warn' as const) : ('ok' as const),
+      onClick: () => onNavigate('applications'),
+    },
+    {
+      id: 'payments',
+      label: 'Payments',
+      value: stats.paymentsNeedingAction,
+      detail: 'Deposits or payouts',
+      tone: stats.paymentsNeedingAction > 0 ? ('warn' as const) : ('ok' as const),
+      onClick: () => onNavigate('payments'),
+    },
   ];
 
   return (
     <div className="adm-dashboard" data-tour="staff-overview">
       <div className="adm-dashboard-grid">
         {/* Welcome */}
-        <article className="adm-card adm-card--welcome adm-span-8">
+        <article className="adm-card adm-card--welcome adm-span-4">
           <div>
             <p className="adm-card-eyebrow">
               {config.workspaceKicker} · {formatOverviewDate()}
@@ -224,32 +274,113 @@ export function StaffOverviewDesktop({
         </article>
 
         {/* Whole platform status */}
-        <article
-          className={`adm-card adm-card--status adm-span-4 ${
-            stats.platformHealthy ? 'adm-card--status-ok' : 'adm-card--status-warn'
-          }`}
-        >
-          <div className="adm-status-head">
-            <span className={`adm-status-dot ${stats.platformHealthy ? 'adm-status-dot--ok' : 'adm-status-dot--warn'}`} aria-hidden />
-            <div>
-              <p className="adm-card-eyebrow">Platform status</p>
-              <h3 className="adm-status-title">{stats.platformHealthy ? 'All clear' : 'Needs review'}</h3>
-            </div>
-          </div>
-          <p className="adm-status-summary">
-            {stats.platformHealthy
+        <DesktopStatusPanel
+          className="adm-span-8"
+          eyebrow="Platform status"
+          title={stats.platformHealthy ? 'All clear' : 'Needs review'}
+          summary={
+            stats.platformHealthy
               ? 'Operations are running smoothly across the platform.'
-              : `${stats.pendingReviews} item${stats.pendingReviews === 1 ? '' : 's'} waiting in the review queue.`}
-          </p>
-          <ul className="adm-status-grid">
-            {statusItems.map((item) => (
-              <li key={item.label}>
-                <p className="adm-status-grid-value">{item.value}</p>
-                <p className="adm-status-grid-label">{item.label}</p>
-              </li>
-            ))}
-          </ul>
-        </article>
+              : `${stats.pendingReviews} item${stats.pendingReviews === 1 ? '' : 's'} waiting in the review queue.`
+          }
+          variant={stats.platformHealthy ? 'ok' : 'warn'}
+          alert={
+            filteredActions.length > 0
+              ? `${filteredActions.length} action item${filteredActions.length === 1 ? '' : 's'} need follow-up today`
+              : undefined
+          }
+          metrics={[
+            {
+              id: 'on-site',
+              label: 'On site now',
+              value: stats.onDutyGuards,
+              tone: stats.onDutyGuards > 0 ? 'ok' : 'default',
+              onClick: () => onNavigate('map'),
+            },
+            {
+              id: 'live-jobs',
+              label: 'Live jobs',
+              value: liveJobs.length,
+              tone: liveJobs.length > 0 ? 'ok' : 'default',
+              onClick: () => onNavigate('jobs'),
+            },
+            {
+              id: 'active-jobs',
+              label: 'Active jobs',
+              value: stats.activeJobs,
+              onClick: () => onNavigate('jobs'),
+            },
+            {
+              id: 'queue',
+              label: 'Review queue',
+              value: stats.pendingReviews,
+              tone: stats.pendingReviews > 0 ? 'warn' : 'ok',
+              onClick: () => onNavigate('applications'),
+            },
+            {
+              id: 'incidents',
+              label: 'Open incidents',
+              value: stats.activeIncidents,
+              tone: stats.activeIncidents > 0 ? 'warn' : 'ok',
+              onClick: () => onNavigate('incidents'),
+            },
+            {
+              id: 'clients',
+              label: 'Active clients',
+              value: stats.activeClients,
+              onClick: () => onNavigate('clients'),
+            },
+            {
+              id: 'guards',
+              label: 'Active guards',
+              value: stats.activeGuards,
+              onClick: () => onNavigate('guards'),
+            },
+            {
+              id: 'completed',
+              label: 'Completed jobs',
+              value: stats.completedJobs,
+              onClick: () => onNavigate('analytics'),
+            },
+          ]}
+          meters={[
+            {
+              id: 'approvals',
+              label: 'Approvals backlog',
+              value: String(stats.pendingApprovals),
+              pct: clampPct(stats.pendingApprovals, 20),
+              sub: stats.pendingApprovals === 0 ? 'Queue clear' : 'Items waiting for review',
+              tone: stats.pendingApprovals > 5 ? 'warning' : stats.pendingApprovals > 0 ? 'primary' : 'success',
+              onClick: () => onNavigate('applications'),
+            },
+            {
+              id: 'coverage',
+              label: 'Field coverage',
+              value: `${stats.onDutyGuards}/${Math.max(stats.activeGuards, 1)}`,
+              pct: clampPct(stats.onDutyGuards, Math.max(stats.activeGuards, 1)),
+              sub: `${stats.assignedGuardsOnJobs} assigned to active jobs`,
+              tone: 'primary',
+              onClick: () => onNavigate('map'),
+            },
+            {
+              id: 'payments',
+              label: 'Payments needing action',
+              value: String(stats.paymentsNeedingAction),
+              pct: clampPct(stats.paymentsNeedingAction, 15),
+              sub: stats.paymentsNeedingAction > 0 ? 'Client, guard, or Stripe follow-up' : 'All payments current',
+              tone: stats.paymentsNeedingAction > 0 ? 'warning' : 'success',
+              onClick: () => onNavigate('payments'),
+            },
+          ]}
+          breakdown={queueBreakdown}
+          pipelineSegments={jobPipelineSegments}
+          queuePieSegments={queuePieSegments}
+          actions={[
+            { id: 'map', label: 'Open map', onClick: () => onNavigate('map'), variant: 'sand' },
+            { id: 'queue', label: 'Review queue', onClick: () => onNavigate('applications'), variant: 'outline' },
+            { id: 'stats', label: 'Stats', onClick: () => onNavigate('stats'), variant: 'soft' },
+          ]}
+        />
 
         {/* Quick links */}
         <nav className="adm-card adm-span-12 adm-quick-links" aria-label="Quick navigation">
@@ -264,6 +395,126 @@ export function StaffOverviewDesktop({
             );
           })}
         </nav>
+
+        {/* Charts dashboard */}
+        <section className="adm-span-12 adm-charts-section">
+          <p className="adm-section-eyebrow">Charts & graphs</p>
+          <div className="adm-dashboard-grid adm-charts-grid">
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Job pipeline pie</p>
+              <OverviewPieChart
+                segments={jobPipelineSegments}
+                centerLabel={String(jobPipelineSegments.reduce((sum, s) => sum + s.value, 0))}
+                centerSub="jobs"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Review queue pie</p>
+              <OverviewPieChart
+                segments={queuePieSegments}
+                centerLabel={String(stats.pendingReviews)}
+                centerSub="in queue"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Platform health</p>
+              <OverviewPieChart
+                segments={healthPieSegments}
+                centerLabel={stats.platformHealthy ? 'OK' : 'Review'}
+                centerSub="status"
+                size="sm"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">People mix</p>
+              <OverviewPieChart segments={peopleSegments} centerLabel={String(clients.length + guards.length)} centerSub="accounts" size="sm" />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Completed jobs trend</p>
+              <OverviewLineChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Weekly bar chart</p>
+              <OverviewWeekChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Pipeline bars</p>
+              {jobPipelineSegments.length > 0 ? (
+                <OverviewSegmentBar segments={jobPipelineSegments} />
+              ) : (
+                <p className="adm-card-body">No jobs in the pipeline yet.</p>
+              )}
+            </article>
+
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Guard performance levels</p>
+              <p className="adm-card-body adm-card-body--tight">
+                Share of field guards at each tier — Starting, Rising, Professional, and Elite.
+              </p>
+              <PerformanceTierProgressBars
+                bars={tierPercentBars}
+                totalGuards={guardStatRows.length}
+                showPie
+              />
+            </article>
+
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Field & queue gauges</p>
+              <OverviewDonutGrid
+                items={[
+                  {
+                    id: 'coverage',
+                    label: 'Field coverage',
+                    value: `${stats.onDutyGuards}`,
+                    pct: clampPct(stats.onDutyGuards, Math.max(stats.activeGuards, 1)),
+                    tone: 'primary',
+                  },
+                  {
+                    id: 'approvals',
+                    label: 'Approvals',
+                    value: String(stats.pendingApprovals),
+                    pct: clampPct(stats.pendingApprovals, 20),
+                    tone: stats.pendingApprovals > 5 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'payments',
+                    label: 'Payments',
+                    value: String(stats.paymentsNeedingAction),
+                    pct: clampPct(stats.paymentsNeedingAction, 15),
+                    tone: stats.paymentsNeedingAction > 0 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'incidents',
+                    label: 'Incidents',
+                    value: String(stats.activeIncidents),
+                    pct: clampPct(stats.activeIncidents, 10),
+                    tone: stats.activeIncidents > 0 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'live',
+                    label: 'Live jobs',
+                    value: String(liveJobs.length),
+                    pct: clampPct(liveJobs.length, Math.max(stats.activeJobs, 1)),
+                    tone: 'info',
+                  },
+                  {
+                    id: 'completed',
+                    label: 'Completed',
+                    value: String(stats.completedJobs),
+                    pct: clampPct(stats.completedJobs, Math.max(requests.length, 1)),
+                    tone: 'muted',
+                  },
+                ]}
+              />
+            </article>
+          </div>
+        </section>
 
         {/* All metrics */}
         <section className="adm-span-12">
