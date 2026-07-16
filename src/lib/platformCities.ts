@@ -189,6 +189,18 @@ export function filterCitiesForStaffActor(
   return cities.filter((city) => managed.has(city.name.toLowerCase()));
 }
 
+/** Cities staff may assign when onboarding or editing city access (open markets only). */
+export function getAssignableCityNamesForStaffAccess(
+  cities: PlatformCity[],
+  actorRole: PlatformRole,
+  actorManagedCities?: string[]
+): string[] {
+  const openCities = cities.filter((city) => city.status === 'open');
+  return filterCitiesForStaffActor(openCities, actorRole, actorManagedCities)
+    .map((city) => city.name)
+    .sort((a, b) => a.localeCompare(b));
+}
+
 export function platformCityFromRow(row: Record<string, unknown>): PlatformCity {
   const status = row.status;
   const waitlistAudience = row.waitlist_audience;

@@ -3,6 +3,7 @@ import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
 import { canManagePlatformSettings } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -113,7 +114,7 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const approvalRulesBody = (
+  const jobsBody = (
     <div className="space-y-4">
       <label className="uber-label block mb-1">Job posting review</label>
       <select
@@ -130,53 +131,19 @@ export function StaffSettingsPanel({
         <option value="trusted-auto">Trusted clients auto-publish (with coordinates)</option>
         <option value="none">No review — all jobs go live immediately</option>
       </select>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>Enable trusted-client auto-publish</span>
+        <AppSwitch
           checked={platformSettings.trustedClientAutoPublish !== false}
           disabled={!canEdit}
-          onChange={(e) => void persistSettings({ trustedClientAutoPublish: e.target.checked })}
+          onChange={(checked) => void persistSettings({ trustedClientAutoPublish: checked })}
+          ariaLabel="Enable trusted-client auto-publish"
         />
-        Enable trusted-client auto-publish
-      </label>
+      </div>
       <p id="job-review-note" className="text-xs text-brand-text-muted">
         Trusted clients with valid map coordinates skip the approval queue when auto-publish is enabled.
         Mark clients as trusted from the Clients panel.
       </p>
-    </div>
-  );
-
-  const integrationsBody = (
-    <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={platformSettings.smsNotificationsEnabled === true}
-          disabled={!canEdit}
-          onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
-        />
-        SMS notifications (Twilio — configure in env)
-      </label>
-      <label className="uber-label block">Background check provider</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.backgroundCheckProvider ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
-      >
-        <option value="manual">Manual staff review</option>
-        <option value="checkr">Checkr (API key required)</option>
-      </select>
-      <label className="uber-label block">Insurance verification</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.insuranceVerificationMode ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
-      >
-        <option value="manual">Manual COI review</option>
-        <option value="api">Automated verification API</option>
-      </select>
     </div>
   );
 
@@ -187,9 +154,7 @@ export function StaffSettingsPanel({
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
-              Homepage messages, approval rules, and integrations.
-            </p>
+            <p className="adm-workbench-subtitle">Homepage messages and jobs.</p>
           </div>
         }
       >
@@ -200,8 +165,7 @@ export function StaffSettingsPanel({
               {companyPlacardBody}
             </DesktopSettingsCard>
           )}
-          <DesktopSettingsCard title="Approval rules">{approvalRulesBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="Jobs">{jobsBody}</DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
     );
@@ -215,12 +179,8 @@ export function StaffSettingsPanel({
 
       {companyPlacardBody}
 
-      <AppFormSection title="Approval rules">
-        <div className="pb-6">{approvalRulesBody}</div>
-      </AppFormSection>
-
-      <AppFormSection title="Integrations">
-        <div className="pb-6">{integrationsBody}</div>
+      <AppFormSection title="Jobs">
+        <div className="pb-6">{jobsBody}</div>
       </AppFormSection>
     </div>
   );

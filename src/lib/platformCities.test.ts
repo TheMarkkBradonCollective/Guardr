@@ -5,6 +5,7 @@ import {
   checkCityAccessForRole,
   defaultSelectableCity,
   filterCitiesForStaffActor,
+  getAssignableCityNamesForStaffAccess,
   getSelectableCityNamesForClients,
   getSelectableCityNamesForGuards,
   GUARDR_LAUNCH_CITY,
@@ -127,6 +128,17 @@ describe('staff city management scope', () => {
       visible.map((city) => city.name),
       ['Los Angeles', 'Oakland']
     );
+  });
+
+  it('limits assignable staff city access to open markets', () => {
+    assert.deepEqual(getAssignableCityNamesForStaffAccess(sampleCities, 'director'), [
+      'Los Angeles',
+    ]);
+    assert.deepEqual(
+      getAssignableCityNamesForStaffAccess(sampleCities, 'manager', ['Oakland', 'Los Angeles']),
+      ['Los Angeles']
+    );
+    assert.deepEqual(getAssignableCityNamesForStaffAccess(sampleCities, 'administrator'), []);
   });
 
   it('normalizes managed city lists', () => {
