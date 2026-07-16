@@ -3187,8 +3187,13 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
 
 .app-screen {
   height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
   background: var(--brand-bg);
   -webkit-overflow-scrolling: touch;
 }
@@ -3574,6 +3579,7 @@ a.app-item-card:active,
   border-top: 1px solid var(--brand-border);
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -15250,21 +15256,26 @@ html.theme-dark .landing-wordmark {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.25rem 0 calc(1rem + var(--app-safe-bottom));
+  padding: 0.25rem 1rem calc(1rem + var(--app-safe-bottom));
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
 .guard-settings-screen .app-form-section {
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .guard-settings-crew-wrap {
-  margin: 0 1rem;
+  margin: 0;
 }
 
 .guard-settings-crew-card {
@@ -16935,6 +16946,11 @@ body,
 .auth-experience {
   overflow-x: clip;
   max-width: 100%;
+}
+
+.role-app-shell {
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 
 .staff-shell {
@@ -18811,9 +18827,11 @@ textarea.uber-input {
   }}
 
 .staff-shell .staff-main-content--padded > div {
-  overflow-x: visible !important;
+  overflow-x: clip !important;
   overflow-y: auto;
   overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 .staff-shell .staff-main-content--bleed {

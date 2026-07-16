@@ -1527,7 +1527,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'settings' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0 overflow-hidden">
               <UserSettingsScreen
                 currentUser={currentUser}
                 themeMode={themeMode as 'dark' | 'light'}
