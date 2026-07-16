@@ -26,6 +26,7 @@ import {
   GuardContractViolationDisputeStatus,
 } from './GuardContractViolationDetail';
 import { GuardContractViolationsList } from './GuardContractViolationsList';
+import { GuardPerformanceRewards } from './GuardPerformanceRewards';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
@@ -70,6 +71,7 @@ export function GuardPerformanceScreen({
     metricId: JobTypeMetricId;
     card: JobTypeRatingCard;
   } | null>(null);
+  const [showRewards, setShowRewards] = useState(false);
 
   const enabledJobTypes = useMemo(
     () => normalizeJobTypePreferences(guard.jobTypePreferences),
@@ -125,6 +127,7 @@ export function GuardPerformanceScreen({
     setSubview('main');
     setSelectedViolationId(null);
     setSelectedJobTypeMetric(null);
+    setShowRewards(false);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
@@ -134,6 +137,7 @@ export function GuardPerformanceScreen({
     setSubview('violations');
     setSelectedViolationId(null);
     setSelectedJobTypeMetric(null);
+    setShowRewards(false);
     onPerformanceFactorChange?.(null);
   };
 
@@ -141,6 +145,7 @@ export function GuardPerformanceScreen({
     setSelectedJobTypeMetric({ jobType, metricId, card });
     setSubview('main');
     setSelectedViolationId(null);
+    setShowRewards(false);
     onPerformanceFactorChange?.(null);
   };
 
@@ -170,6 +175,11 @@ export function GuardPerformanceScreen({
         }
       }}
       onOpenViolations={openViolations}
+      onViewRewards={() => {
+        setShowRewards(true);
+        setSubview('main');
+        onPerformanceFactorChange?.(null);
+      }}
       className="guard-performance-screen-card"
     />
   );
@@ -206,6 +216,18 @@ export function GuardPerformanceScreen({
       card,
     };
   }, [guard.id, requests, selectedJobTypeMetric]);
+
+  if (showRewards && activeTab === 'overall') {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        <GuardPerformanceRewards
+          guard={guard}
+          requests={requests}
+          onBack={() => setShowRewards(false)}
+        />
+      </AppScreen>
+    );
+  }
 
   const violationSubview =
     subview === 'violations' ? (

@@ -919,6 +919,30 @@ export function buildDisputes(
     });
   }
 
+  for (const req of requests) {
+    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
+    for (const violation of req.shiftAuditViolations ?? []) {
+      if (!['auto-flagged', 'flagged', 'dispute-open'].includes(violation.status)) continue;
+      disputes.push({
+        id: `audit-dispute-${violation.id}`,
+        type: 'audit-violation',
+        requestId: req.id,
+        guardId: violation.guardId,
+        clientId: req.clientId,
+        jobTitle: req.title,
+        guardName,
+        clientName: req.clientName,
+        guardStatement: violation.dispute?.guardNote?.trim() || 'No guard dispute note yet.',
+        clientStatement: violation.description,
+        status: 'open',
+        openedAt: violation.createdAt,
+        auditViolationId: violation.id,
+        auditCheckpoint: violation.checkpoint,
+        auditCategory: violation.category,
+      });
+    }
+  }
+
   for (const ticket of tickets) {
     if (ticket.status === 'resolved' || ticket.kind !== 'report') continue;
     if (!['payment', 'job-issue', 'safety'].includes(ticket.category)) continue;

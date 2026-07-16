@@ -964,6 +964,7 @@ export function StaffDashboard({
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
+            onResolveAuditViolation={onResolveAuditViolation}
           />
         ) : (
           <AppBlockedAccessScreen
