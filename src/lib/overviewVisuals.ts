@@ -246,7 +246,7 @@ export function buildPlatformPulseCards(
   const analytics = computeAnalytics(guards, clients, requests);
   const fieldGuards = guards.filter((g) => !g.isStaff).length;
   const onDutyPct = pctOf(stats.onDutyGuards, Math.max(fieldGuards, 1));
-  const activeGuardPct = pctOf(stats.activeGuards, Math.max(fieldGuards, 1));
+  const activeGuardPct = pctOf(stats.assignedGuardsOnJobs, Math.max(fieldGuards, 1));
 
   const cards: OverviewVisualCard[] = [
     {
@@ -274,9 +274,9 @@ export function buildPlatformPulseCards(
         },
         {
           label: 'Assigned & active',
-          value: String(stats.activeGuards),
+          value: String(stats.assignedGuardsOnJobs),
           pct: activeGuardPct,
-          sub: `${stats.activeGuards} guard${stats.activeGuards === 1 ? '' : 's'} on picked-up or live jobs`,
+          sub: `${stats.assignedGuardsOnJobs} guard${stats.assignedGuardsOnJobs === 1 ? '' : 's'} on picked-up or live jobs`,
           tone: 'info',
         },
       ],
