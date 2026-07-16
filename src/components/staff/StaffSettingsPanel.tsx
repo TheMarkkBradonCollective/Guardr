@@ -113,39 +113,6 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const jobsBody = (
-    <div className="space-y-4">
-      <label className="uber-label block mb-1">Job posting review</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.jobReviewMode ?? 'trusted-auto'}
-        disabled={!canEdit}
-        onChange={(e) => {
-          const jobReviewMode = e.target.value as PlatformSettings['jobReviewMode'];
-          void persistSettings({ jobReviewMode });
-        }}
-        aria-describedby="job-review-note"
-      >
-        <option value="staff-all">All jobs require staff review</option>
-        <option value="trusted-auto">Trusted clients auto-publish (with coordinates)</option>
-        <option value="none">No review — all jobs go live immediately</option>
-      </select>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={platformSettings.trustedClientAutoPublish !== false}
-          disabled={!canEdit}
-          onChange={(e) => void persistSettings({ trustedClientAutoPublish: e.target.checked })}
-        />
-        Enable trusted-client auto-publish
-      </label>
-      <p id="job-review-note" className="text-xs text-brand-text-muted">
-        Trusted clients with valid map coordinates skip the approval queue when auto-publish is enabled.
-        Mark clients as trusted from the Clients panel.
-      </p>
-    </div>
-  );
-
   const integrationsBody = (
     <div className="space-y-4">
       <label className="flex items-center gap-2 text-sm">
@@ -188,7 +155,7 @@ export function StaffSettingsPanel({
           <div>
             <p className="adm-card-eyebrow">Platform</p>
             <p className="adm-workbench-subtitle">
-              Homepage messages, jobs, and integrations.
+              Homepage messages and integrations.
             </p>
           </div>
         }
@@ -200,7 +167,6 @@ export function StaffSettingsPanel({
               {companyPlacardBody}
             </DesktopSettingsCard>
           )}
-          <DesktopSettingsCard title="Jobs">{jobsBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
@@ -214,10 +180,6 @@ export function StaffSettingsPanel({
       </AppFormSection>
 
       {companyPlacardBody}
-
-      <AppFormSection title="Jobs">
-        <div className="pb-6">{jobsBody}</div>
-      </AppFormSection>
 
       <AppFormSection title="Integrations">
         <div className="pb-6">{integrationsBody}</div>

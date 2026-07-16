@@ -1716,6 +1716,16 @@ body[data-form-factor="desktop"] .adm-payment-settings-page .adm-table-wrap {
   background: var(--adm-bg);
 }
 
+body[data-form-factor="desktop"] .adm-job-approval-settings-card {
+  padding: 1.15rem 1.25rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-job-approval-settings-card-title {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
 body[data-form-factor="desktop"] .adm-platform-settings-page .adm-ops-page-body {
   overflow-y: auto;
   padding-right: 0.25rem;

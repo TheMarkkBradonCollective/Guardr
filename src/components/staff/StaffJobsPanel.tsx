@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { PlatformFeeConfig } from '../../lib/payments';
-import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
+import { Client, PlatformRole, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import type { PlatformSettings } from '../../lib/platformSettings';
 import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { JobListCard } from '../jobs/JobListCard';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
+import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { useDevice } from '../../lib/platform';
 import { Briefcase, Search } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
@@ -31,6 +34,10 @@ interface StaffJobsPanelProps {
   initialSelectedId?: string | null;
   staffRole?: PlatformRole;
   feeConfig: PlatformFeeConfig;
+  showApprovalSettings?: boolean;
+  currentUser?: SessionUser;
+  platformSettings?: PlatformSettings;
+  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
 }
 
 function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
@@ -64,7 +71,12 @@ export function StaffJobsPanel({
   initialSelectedId = null,
   staffRole,
   feeConfig,
+  showApprovalSettings = false,
+  currentUser,
+  platformSettings,
+  onUpdatePlatformSettings,
 }: StaffJobsPanelProps) {
+  const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
@@ -160,8 +172,20 @@ export function StaffJobsPanel({
     </>
   ) : null;
 
+  const approvalSettings =
+    showApprovalSettings && currentUser && platformSettings && !showDetailOnly ? (
+      <div className={formFactor === 'desktop' ? undefined : '-mx-4 sm:-mx-5'}>
+        <StaffJobApprovalSettings
+          currentUser={currentUser}
+          platformSettings={platformSettings}
+          onUpdatePlatformSettings={onUpdatePlatformSettings}
+        />
+      </div>
+    ) : null;
+
   return (
     <StaffOpsPageShell toolbar={toolbar} data-tour="staff-jobs">
+      {approvalSettings}
       {filtered.length === 0 ? (
         <div className="app-empty-state">
           <div className="app-empty-state-icon">
