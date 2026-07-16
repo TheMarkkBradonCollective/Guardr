@@ -7,7 +7,7 @@ export async function applyNativeThemeChrome(mode: ThemeMode): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   try {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
-    const lightChrome = mode === 'light' || mode === 'grey';
+    const lightChrome = mode === 'light';
     await StatusBar.setStyle({ style: lightChrome ? Style.Light : Style.Dark });
     await StatusBar.setBackgroundColor({ color: THEME_BROWSER_COLORS[mode] });
   } catch (error) {

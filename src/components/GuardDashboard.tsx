@@ -1530,7 +1530,7 @@ export function GuardDashboard({
             <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0">
               <UserSettingsScreen
                 currentUser={currentUser}
-                themeMode={themeMode as 'dark' | 'light' | 'grey'}
+                themeMode={themeMode as 'dark' | 'light'}
                 onChangeTheme={onChangeTheme}
                 onOpenLegal={onOpenLegal}
                 isDbConnected={isDbConnected}

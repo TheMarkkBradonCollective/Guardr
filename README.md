@@ -19,7 +19,7 @@ Guardr is **not** an employer, staffing agency, or licensed security services pr
 
 - Uber-inspired, mobile-first UI
 - Sage green primary brand color (`#7C9A7A` / `#84a279`)
-- Three themes: Dark, Light, Grey
+- Two themes: Dark and Light
 - Large typography, minimal clutter, action-focused flows
 
 ## Tech Stack

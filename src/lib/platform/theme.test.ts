@@ -1,11 +1,24 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_THEME, hasPerUserThemePreference, loadTheme, saveTheme } from './theme.ts';
+import {
+  DEFAULT_THEME,
+  hasPerUserThemePreference,
+  loadTheme,
+  normalizeThemeMode,
+  saveTheme,
+} from './theme.ts';
 import { THEME_ICON_BACKGROUNDS, themeIconAssetPath } from './themeBranding.ts';
 
 describe('theme', () => {
   it('defaults to light (white icon background)', () => {
     assert.equal(DEFAULT_THEME, 'light');
+  });
+
+  it('migrates legacy grey/shade preference to light', () => {
+    assert.equal(normalizeThemeMode('grey'), 'light');
+    assert.equal(normalizeThemeMode('dark'), 'dark');
+    assert.equal(normalizeThemeMode('light'), 'light');
+    assert.equal(normalizeThemeMode('shade'), null);
   });
 
   it('persists theme choice locally', () => {
@@ -26,8 +39,8 @@ describe('theme', () => {
     try {
       saveTheme('dark', 'user-1');
       assert.equal(loadTheme('user-1'), 'dark');
-      saveTheme('grey', 'user-1');
-      assert.equal(loadTheme('user-1'), 'grey');
+      storage.set('guardr_theme_mode_user-1', 'grey');
+      assert.equal(loadTheme('user-1'), 'light');
       assert.equal(hasPerUserThemePreference('user-1'), true);
       assert.equal(hasPerUserThemePreference('user-2'), false);
     } finally {

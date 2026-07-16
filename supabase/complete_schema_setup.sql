@@ -102,7 +102,7 @@ ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_theme_preference_check;
 ALTER TABLE guards ADD CONSTRAINT guards_theme_preference_check
-  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey'));
+  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light'));
 
 -- Backfill name parts from display name where empty
 UPDATE guards
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS staff (
     CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   password TEXT,
   must_change_password BOOLEAN NOT NULL DEFAULT false,
-  theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey')),
+  theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   migrated_from_guards_at TIMESTAMPTZ
 );
@@ -235,7 +235,7 @@ ALTER TABLE clients ADD CONSTRAINT clients_account_status_check
 
 ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_theme_preference_check;
 ALTER TABLE clients ADD CONSTRAINT clients_theme_preference_check
-  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey'));
+  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light'));
 
 UPDATE clients
 SET
