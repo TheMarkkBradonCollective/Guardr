@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
-import { openGuardPayoutInvoices } from '../../lib/guardPayoutInvoiceStorage';
+import { openGuardPayoutInvoices, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
+  pipelineStageRequests,
   type PaymentPipelineStage,
 } from '../../lib/paymentPipeline';
 import { computeOperationalFinancials } from '../../lib/operationalFinancials';
@@ -180,14 +181,16 @@ function queueItemPrimary(item: PaymentQueueItem): string {
 
 function queueItemSecondary(item: PaymentQueueItem, guards: SecurityGuard[]): string {
   if (item.kind === 'invoice') {
-    return `${item.invoice.lines.length} job${item.invoice.lines.length === 1 ? '' : 's'} · $${item.invoice.total.toFixed(2)}`;
+    const lines = guardPayoutInvoiceLines(item.invoice);
+    const total = guardPayoutInvoiceTotal(item.invoice);
+    return `${lines.length} job${lines.length === 1 ? '' : 's'} · $${total.toFixed(2)}`;
   }
   const guard = guards.find((g) => g.id === item.req.assignedGuardId);
   return `${item.req.clientName} · ${guard?.name || 'No guard'}`;
 }
 
 function queueItemAmount(item: PaymentQueueItem): string {
-  if (item.kind === 'invoice') return `$${item.invoice.total.toFixed(2)}`;
+  if (item.kind === 'invoice') return `$${guardPayoutInvoiceTotal(item.invoice).toFixed(2)}`;
   return staffJobMoneySummary(item.req).headline;
 }
 
@@ -252,8 +255,7 @@ export function StaffPaymentsPanel({
       invoice,
     }));
     for (const stage of PIPELINE_STAGE_ORDER) {
-      const stageItems = summary[stage];
-      for (const req of stageItems) {
+      for (const req of pipelineStageRequests(summary, stage)) {
         items.push({ kind: 'job', id: req.id, req, stage });
       }
     }
@@ -267,7 +269,7 @@ export function StaffPaymentsPanel({
       invoice,
     }));
     for (const stage of ACTION_STAGES) {
-      for (const req of summary[stage]) {
+      for (const req of pipelineStageRequests(summary, stage)) {
         items.push({ kind: 'job', id: req.id, req, stage });
       }
     }
@@ -342,7 +344,7 @@ export function StaffPaymentsPanel({
       ...PIPELINE_STAGE_ORDER.map((stage) => ({
         id: stage as PaymentsFilter,
         label: PIPELINE_SECTION_META[stage].title,
-        count: summary[stage].length,
+        count: pipelineStageRequests(summary, stage).length,
       })),
     ];
 

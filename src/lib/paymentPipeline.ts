@@ -72,6 +72,33 @@ export const PIPELINE_SECTION_META: Record<
   },
 };
 
+export type PaymentPipelineGroupKey =
+  | 'awaitingClient'
+  | 'cashDepositPending'
+  | 'clientPaidActive'
+  | 'awaitingGuardPayout'
+  | 'guardCollectionPending'
+  | 'settled';
+
+export const PIPELINE_STAGE_TO_GROUP_KEY: Record<
+  Exclude<PaymentPipelineStage, 'closed'>,
+  PaymentPipelineGroupKey
+> = {
+  'awaiting-client': 'awaitingClient',
+  'cash-deposit-pending': 'cashDepositPending',
+  'client-paid-active': 'clientPaidActive',
+  'awaiting-guard-payout': 'awaitingGuardPayout',
+  'guard-collection-pending': 'guardCollectionPending',
+  settled: 'settled',
+};
+
+export function pipelineStageRequests(
+  summary: ReturnType<typeof paymentPipelineSummary>,
+  stage: Exclude<PaymentPipelineStage, 'closed'>
+): SecurityRequest[] {
+  return summary[PIPELINE_STAGE_TO_GROUP_KEY[stage]];
+}
+
 export function groupRequestsByPipeline(requests: SecurityRequest[]) {
   const awaitingClient: SecurityRequest[] = [];
   const cashDepositPending: SecurityRequest[] = [];
