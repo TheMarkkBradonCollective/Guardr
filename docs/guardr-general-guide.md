@@ -23,10 +23,10 @@ Use it as the operating manual for the whole app:
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Settings**, **Profile**, **Guide** |
+| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline. **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** remain blocked until **active**. |
-| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
+| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -536,6 +536,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Bottom navigation (active guards only) | Job chats, support tickets, support reports |
 | **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
+| **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
 | **Settings** | Account menu | Theme, push notifications, notification sound (APK), legal pages, sign out — available on activation screen too |
 | **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
 | **Vehicle** | Account menu (active guards, when driving jobs apply) | Vehicle profile, insurance link, staff approval for driving priority |
@@ -1290,7 +1291,7 @@ Available from **Messages** for all users. Use for safety concerns, formal compl
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.68**, build **168**).
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.69**, build **169**).
 
 | Surface | How to install |
 |---------|----------------|
