@@ -5,9 +5,9 @@ Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [gu
 ## Download
 
 - **Install page:** [https://guardr.co/download/](https://guardr.co/download/)
-- **Direct APK (QR code):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk)
+- **Direct APK (QR code):** [https://www.guardr.co/download/guardr.apk?v=167](https://www.guardr.co/download/guardr.apk?v=167) — append `?v=<build>` to bust cache after updates
 
-The install page compares your **APK** vs **Save to Home Screen (PWA)** install, checks whether an APK update is needed, and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
+The install page compares your **APK** vs **Save to Home Screen (PWA)** install, checks whether an APK update is needed (reads the version inside your installed APK), and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
 
 Share the install page with guards in the Signature Security network.
 
@@ -97,6 +97,8 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
    - Paste the full JSON file contents as the env var value (single line is fine)
    - Use the **Firebase Cloud Messaging API (V1)** — the legacy Server key is deprecated and disabled on new projects
 4. Rebuild the APK: `npm run android:apk` (fails if Firebase config is missing unless `ALLOW_APK_WITHOUT_FCM=1`)
+
+**Important:** Always ship the CI-built APK (or a local build with Firebase) so `versionName` / `versionCode` inside the binary match `package.json`. Copying an older CI artifact while bumping `version.json` alone will make guards see the wrong version after install.
 
 **CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.
 

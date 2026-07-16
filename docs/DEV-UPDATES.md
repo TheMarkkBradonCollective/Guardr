@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Thursday, July 16, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.51**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.67**
 
 ---
 
@@ -402,6 +402,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jun 24** | 25 | Favourites, direct requests, filters |
 | **Jun 25** | 6+ | IC marketplace, Founder, Guide sections |
 | **Jun 26 – Jul 14** | 300+ | Applications/Credentials, redesign, PWA/APK |
+| **Jul 16** | 50+ | Push/FCM fix, APK parity, invoices, realtime sync, notification sound, v1.0.67 |
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 
 ---
@@ -432,5 +433,41 @@ Unified the Jobs experience across guard and client roles and finished the crew 
 **Release**
 - **v1.0.51** — web bundle; APK build when Android SDK is available.
 
-**Test coverage:** 306 unit tests, lint and build clean.
+**Test coverage:** 404 unit tests, lint and build clean.
+
+---
+
+## Thursday, July 16, 2026 (afternoon) — Push, APK parity, full merge → v1.0.67
+
+Second big push day — fixed native push, stopped APK version mismatches, merged five open PRs into one release.
+
+### Push notifications & APK
+
+- **#575** — Bundled `/api/push/vapid-public-key` for Vercel (was crashing with `FUNCTION_INVOCATION_FAILED` on production). Extended `/api/health` with `hasVapid` and `hasFcm`.
+- **#576** — Shipped the **correct** FCM-enabled APK binary. Prior release bumped `version.json` to 1.0.66 but the APK inside was still build **165** — Android kept reporting v1.0.65. Added `?v=<build>` cache-busting on download URLs and no-cache headers for the APK.
+- CI builds with `GOOGLE_SERVICES_JSON` → `VITE_NATIVE_FCM_CONFIGURED=true`. Server needs `FCM_SERVICE_ACCOUNT_JSON` on Vercel for delivery.
+
+### Full platform merge (**#583** → **v1.0.67**)
+
+| PR | What shipped |
+|----|--------------|
+| **#577** | Staff roster pages (Applications, Incidents) fit mobile viewport — no awkward full-page scroll |
+| **#578** | Real-time sync — audit log, user notifications, live location update without manual refresh |
+| **#580** | Configurable Android notification sound in Settings (Guardr tone vs system picker) |
+| **#581** | Client **Invoices** page — view/download PDF, pay when due, invoice-ready push alerts |
+| **#582** | Community chat sync respects database message deletions (no ghost messages after staff clear) |
+
+Skipped **#570** / **#572** — premium priority + standing/driving tabs already on `main` from earlier vehicle/performance work.
+
+### Earlier Jul 16 (morning)
+
+- Staff ops cleanup — removed duplicate job detail panels; role permissions guide tweak.
+- **v1.0.66** interim release with FCM APK fix.
+
+### Release
+
+- **v1.0.67** — web + APK (build **167**), FCM-enabled, download at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=167)
+- Run `supabase/complete_schema_setup.sql` in prod if `client_invoices` or new notification columns are missing.
+
+**Test coverage:** 404 unit tests, lint and build clean.
 
