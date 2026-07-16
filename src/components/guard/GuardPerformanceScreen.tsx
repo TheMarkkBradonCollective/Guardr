@@ -10,18 +10,22 @@ import {
   type PerformanceFactorId,
 } from '../../lib/guardPerformanceFactorDetail';
 import {
-  jobTypePreferenceLabel,
-  normalizeJobTypePreferences,
-} from '../../lib/guardJobPreferences';
+  getJobTypeRatingCard,
+  isJobTypeMetricId,
+  type JobTypeMetricId,
+  type JobTypeRatingCard,
+} from '../../lib/guardJobTypeRatingMetrics';
+import { jobTypePreferenceLabel, normalizeJobTypePreferences } from '../../lib/guardJobPreferences';
 import { buildGuardContractViolations } from '../../lib/guardContractViolations';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
+import { GuardJobTypeMetricDetail } from './GuardJobTypeMetricDetail';
 import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
-import { GuardContractViolationsList } from './GuardContractViolationsList';
 import {
   GuardContractViolationDetail,
   GuardContractViolationDisputeStatus,
 } from './GuardContractViolationDetail';
+import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
@@ -61,6 +65,11 @@ export function GuardPerformanceScreen({
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
   const [subview, setSubview] = useState<PerformanceSubview>('main');
   const [selectedViolationId, setSelectedViolationId] = useState<string | null>(null);
+  const [selectedJobTypeMetric, setSelectedJobTypeMetric] = useState<{
+    jobType: JobType;
+    metricId: JobTypeMetricId;
+    card: JobTypeRatingCard;
+  } | null>(null);
 
   const enabledJobTypes = useMemo(
     () => normalizeJobTypePreferences(guard.jobTypePreferences),
@@ -70,6 +79,7 @@ export function GuardPerformanceScreen({
   useEffect(() => {
     if (activeTab !== 'overall' && !enabledJobTypes.includes(activeTab)) {
       setActiveTab('overall');
+      setSelectedJobTypeMetric(null);
     }
   }, [activeTab, enabledJobTypes]);
 
@@ -114,6 +124,7 @@ export function GuardPerformanceScreen({
     setActiveTab(tab);
     setSubview('main');
     setSelectedViolationId(null);
+    setSelectedJobTypeMetric(null);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
@@ -121,6 +132,14 @@ export function GuardPerformanceScreen({
 
   const openViolations = () => {
     setSubview('violations');
+    setSelectedViolationId(null);
+    setSelectedJobTypeMetric(null);
+    onPerformanceFactorChange?.(null);
+  };
+
+  const handleMetricSelect = (jobType: JobType, metricId: JobTypeMetricId, card: JobTypeRatingCard) => {
+    setSelectedJobTypeMetric({ jobType, metricId, card });
+    setSubview('main');
     setSelectedViolationId(null);
     onPerformanceFactorChange?.(null);
   };
@@ -137,24 +156,22 @@ export function GuardPerformanceScreen({
     ) : null;
 
   const overallContent = (
-    <>
-      <GuardRatingSection
-        guard={guard}
-        requests={requests}
-        performance={performance}
-        skillRatings={skillRatings}
-        variant="full"
-        pinnedLayout
-        toolbar={performanceTabs}
-        onFactorSelect={(factor) => {
-          if (isPerformanceFactorId(factor.id)) {
-            onPerformanceFactorChange?.(factor.id);
-          }
-        }}
-        onOpenViolations={openViolations}
-        className="guard-performance-screen-card"
-      />
-    </>
+    <GuardRatingSection
+      guard={guard}
+      requests={requests}
+      performance={performance}
+      skillRatings={skillRatings}
+      variant="full"
+      pinnedLayout
+      toolbar={performanceTabs}
+      onFactorSelect={(factor) => {
+        if (isPerformanceFactorId(factor.id)) {
+          onPerformanceFactorChange?.(factor.id);
+        }
+      }}
+      onOpenViolations={openViolations}
+      className="guard-performance-screen-card"
+    />
   );
 
   const jobTypeContent =
@@ -166,11 +183,29 @@ export function GuardPerformanceScreen({
         skillRating={skillByJobType.get(activeTab)}
         pinnedLayout
         toolbar={performanceTabs}
+        onMetricSelect={(metricId, card) => handleMetricSelect(activeTab, metricId, card)}
         className="guard-performance-screen-card"
       />
     ) : null;
 
   const tabbedContent = activeTab === 'overall' ? overallContent : jobTypeContent;
+
+  const selectedJobTypeMetricResolved = useMemo(() => {
+    if (!selectedJobTypeMetric) return null;
+    const card =
+      getJobTypeRatingCard(
+        guard.id,
+        selectedJobTypeMetric.jobType,
+        selectedJobTypeMetric.metricId,
+        requests
+      ) ?? selectedJobTypeMetric.card;
+    if (!isJobTypeMetricId(selectedJobTypeMetric.metricId)) return null;
+    return {
+      jobType: selectedJobTypeMetric.jobType,
+      metricId: selectedJobTypeMetric.metricId,
+      card,
+    };
+  }, [guard.id, requests, selectedJobTypeMetric]);
 
   const violationSubview =
     subview === 'violations' ? (
@@ -225,12 +260,23 @@ export function GuardPerformanceScreen({
                 onBack={() => onPerformanceFactorChange?.(null)}
               />
             </div>
+          ) : selectedJobTypeMetricResolved ? (
+            <div className="adm-workbench-detail-inner">
+              <GuardJobTypeMetricDetail
+                card={selectedJobTypeMetricResolved.card}
+                metricId={selectedJobTypeMetricResolved.metricId}
+                jobType={selectedJobTypeMetricResolved.jobType}
+                guardId={guard.id}
+                requests={requests}
+                onBack={() => setSelectedJobTypeMetric(null)}
+              />
+            </div>
           ) : (
             <div className="adm-empty adm-empty--detail">
               <p>
                 {activeTab === 'overall'
                   ? 'Select a performance factor to see the breakdown'
-                  : `Viewing ${performanceTabLabel(activeTab)} specialty ratings`}
+                  : `Select a ${performanceTabLabel(activeTab)} rating card to see details`}
               </p>
             </div>
           )}
@@ -253,6 +299,21 @@ export function GuardPerformanceScreen({
           guardId={guard.id}
           requests={requests}
           onBack={() => onPerformanceFactorChange?.(null)}
+        />
+      </AppScreen>
+    );
+  }
+
+  if (selectedJobTypeMetricResolved) {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        <GuardJobTypeMetricDetail
+          card={selectedJobTypeMetricResolved.card}
+          metricId={selectedJobTypeMetricResolved.metricId}
+          jobType={selectedJobTypeMetricResolved.jobType}
+          guardId={guard.id}
+          requests={requests}
+          onBack={() => setSelectedJobTypeMetric(null)}
         />
       </AppScreen>
     );

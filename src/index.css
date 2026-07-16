@@ -9399,6 +9399,91 @@ html.theme-dark .wf-badge-success {
   min-height: 8.5rem;
 }
 
+.guard-jobtype-metric-card-interactive {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guard-jobtype-metric-card-interactive:hover {
+  border-color: rgba(74, 107, 78, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.guard-jobtype-metric-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.guard-jobtype-metric-detail-window {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--brand-text-muted);
+}
+
+.guard-jobtype-metric-detail-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.guard-jobtype-metric-detail-rate {
+  margin: 0;
+  font-size: 2.75rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #4a6b4e;
+}
+
+.guard-jobtype-metric-detail-track-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.guard-jobtype-metric-detail-track {
+  position: relative;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--brand-bg-sec);
+  overflow: visible;
+}
+
+.guard-jobtype-metric-detail-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6d9b71 0%, #4a6b4e 100%);
+}
+
+.guard-jobtype-metric-detail-marker {
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 0.35rem solid transparent;
+  border-right: 0.35rem solid transparent;
+  border-bottom: 0.45rem solid var(--brand-text-muted);
+  transform: translate(-50%, -120%);
+}
+
+.guard-jobtype-metric-detail-track-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.guard-jobtype-metric-detail-target {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-text-muted);
+}
+
 .guard-jobtype-metric-label {
   margin: 0;
   font-size: 0.75rem;
