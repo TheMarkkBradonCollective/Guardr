@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Check, ChevronRight, Star } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Check, ChevronRight, Info, Star } from 'lucide-react';
 import type { JobType, SecurityGuard, SecurityRequest } from '../../types';
 import {
   computeClientReviewStatsForJobType,
@@ -14,7 +14,9 @@ import {
   type JobTypeMetricId,
   type JobTypeRatingCard,
 } from '../../lib/guardJobTypeRatingMetrics';
+import { buildJobTypePremiumPriorityProgress } from '../../lib/guardPremiumJobPriority';
 import { JOB_TYPE_ICONS } from './guardJobTypeIcons';
+import { JobTypePremiumPriorityInfoSheet } from './JobTypePremiumPriorityInfoSheet';
 
 export interface GuardJobTypeRatingSectionProps {
   guard: SecurityGuard;
@@ -25,6 +27,26 @@ export interface GuardJobTypeRatingSectionProps {
   toolbar?: React.ReactNode;
   onMetricSelect?: (metricId: JobTypeMetricId, card: JobTypeRatingCard) => void;
   className?: string;
+}
+
+function PremiumPriorityChecks({
+  targets,
+}: {
+  targets: Array<{ id: string; met: boolean }>;
+}) {
+  return (
+    <div className="guard-premium-priority-checks" aria-label="Premium priority requirements">
+      {targets.map((target) => (
+        <span
+          key={target.id}
+          className={`guard-premium-priority-check ${target.met ? 'guard-premium-priority-check-met' : ''}`}
+          aria-hidden
+        >
+          {target.met ? <Check className="guard-premium-priority-check-icon" /> : null}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function JobTypeMetricCard({
@@ -86,6 +108,7 @@ export function GuardJobTypeRatingSection({
   onMetricSelect,
   className = '',
 }: GuardJobTypeRatingSectionProps) {
+  const [priorityInfoOpen, setPriorityInfoOpen] = useState(false);
   const displayName = jobTypeRatingDisplayName(jobType);
   const Icon = JOB_TYPE_ICONS[jobType];
 
@@ -101,18 +124,47 @@ export function GuardJobTypeRatingSection({
     () => buildJobTypeRatingCards(guard.id, jobType, requests),
     [guard.id, jobType, requests]
   );
+  const premiumProgress = useMemo(
+    () => buildJobTypePremiumPriorityProgress(jobType, cards),
+    [jobType, cards]
+  );
 
   const averageRating = skillRating?.rating ?? clientReviews.average;
   const reviewCount = skillRating?.reviewCount ?? clientReviews.count;
 
   const heroBlock = (
-    <div className="guard-jobtype-hero">
+    <div className="guard-jobtype-hero guard-jobtype-hero-premium">
       <div className="guard-jobtype-hero-glow" aria-hidden />
       <div className="guard-jobtype-hero-icon-wrap" aria-hidden>
         <Icon className="guard-jobtype-hero-icon" />
       </div>
       <h2 className="guard-jobtype-hero-name">{displayName}</h2>
-      <div className="guard-jobtype-hero-score-row">
+
+      <div className="guard-premium-priority-progress-row">
+        <p className="guard-premium-priority-progress-label">
+          {premiumProgress.isQualified ? premiumProgress.qualifiedLabel : premiumProgress.progressLabel}
+        </p>
+        <button
+          type="button"
+          className="guard-premium-priority-info-btn"
+          aria-label={`How premium priority works for ${displayName}`}
+          onClick={() => setPriorityInfoOpen(true)}
+        >
+          <Info className="guard-premium-priority-info-icon" aria-hidden />
+        </button>
+      </div>
+
+      <PremiumPriorityChecks targets={premiumProgress.targets} />
+
+      <button
+        type="button"
+        className="guard-premium-priority-rewards-btn"
+        onClick={() => setPriorityInfoOpen(true)}
+      >
+        View premium job priority
+      </button>
+
+      <div className="guard-jobtype-hero-score-row guard-jobtype-hero-score-row-compact">
         <Star className="guard-jobtype-hero-star" aria-hidden />
         <span className="guard-jobtype-hero-score">
           {averageRating > 0 ? averageRating.toFixed(1) : '—'}
@@ -126,6 +178,13 @@ export function GuardJobTypeRatingSection({
             ? formatShiftSampleCount(metrics.jobsSampled)
             : `Building your ${displayName.toLowerCase()} profile`}
       </p>
+
+      <JobTypePremiumPriorityInfoSheet
+        jobType={jobType}
+        totalTargets={premiumProgress.totalCount}
+        open={priorityInfoOpen}
+        onClose={() => setPriorityInfoOpen(false)}
+      />
     </div>
   );
 

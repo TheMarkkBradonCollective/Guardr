@@ -6578,7 +6578,7 @@ export default function App() {
       });
     }
     if (currentUser && req.status === 'open') {
-      notifyOpenJobToGuards(currentUser, req, verifiedGuards, standingCrewMembers);
+      notifyOpenJobToGuards(currentUser, req, verifiedGuards, standingCrewMembers, requests);
     }
   };
 
