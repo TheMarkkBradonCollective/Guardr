@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    DESKTOP ADMIN — XORIC-style dashboard (≥1024px only)
-   Left sidebar · top search bar · brand hero band · white card grid
+   Overlay sidebar · header branding · brand hero band · white card grid
    Uses company brand green (--brand-primary) for accents
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -64,6 +64,36 @@ body[data-form-factor="desktop"] .adm-sidebar {
   border-right: 1px solid var(--adm-border);
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+body[data-form-factor="desktop"] .adm-sidebar--drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+  transform: translateX(-100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+}
+
+body[data-form-factor="desktop"] .adm-sidebar--drawer.adm-sidebar--open {
+  transform: translateX(0);
+}
+
+body[data-form-factor="desktop"] .adm-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.28);
+  cursor: default;
+}
+
+html.theme-dark body[data-form-factor="desktop"] .adm-sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.45);
 }
 
 body[data-form-factor="desktop"] .adm-sidebar-brand {
@@ -207,6 +237,36 @@ body[data-form-factor="desktop"] .adm-header {
   background: var(--adm-card);
   border-bottom: 1px solid var(--adm-border);
   flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-header-wordmark {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--adm-text);
+}
+
+body[data-form-factor="desktop"] .adm-header-suite {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+  line-height: 1.2;
 }
 
 body[data-form-factor="desktop"] .adm-search {
