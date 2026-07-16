@@ -194,12 +194,12 @@ export function StaffSettingsPanel({
         }
       >
         <div className="adm-platform-settings-grid">
+          <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
           {companyPlacardBody && (
             <DesktopSettingsCard title="Company public placard" className="adm-platform-settings-card--full">
               {companyPlacardBody}
             </DesktopSettingsCard>
           )}
-          <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Approval rules">{approvalRulesBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
         </div>
@@ -209,11 +209,11 @@ export function StaffSettingsPanel({
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
-      {companyPlacardBody}
-
       <AppFormSection title="Homepage messages">
         <div className="pb-6">{homepageMessagesBody}</div>
       </AppFormSection>
+
+      {companyPlacardBody}
 
       <AppFormSection title="Approval rules">
         <div className="pb-6">{approvalRulesBody}</div>
