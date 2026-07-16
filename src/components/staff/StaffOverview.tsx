@@ -117,6 +117,7 @@ const QUICK_LINK_META: Record<
   crews: { label: 'Crews', icon: UsersRound },
   incidents: { label: 'Incidents', icon: AlertTriangle },
   violations: { label: 'Violations', icon: ShieldAlert },
+  stats: { label: 'Stats', icon: BarChart3 },
   messages: { label: 'Messages', icon: MessagesSquare },
   support: { label: 'Messages', icon: MessagesSquare },
   'team-chat': { label: 'Messages', icon: MessagesSquare },

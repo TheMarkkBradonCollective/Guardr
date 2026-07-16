@@ -76,6 +76,7 @@ import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffViolationsPanel } from './staff/StaffViolationsPanel';
+import { StaffStatsPanel } from './staff/StaffStatsPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
@@ -943,6 +944,18 @@ export function StaffDashboard({
             violations={shiftViolations}
             onResolveAuditViolation={showDisputes ? onResolveAuditViolation : undefined}
             onOpenJob={openJob}
+          />
+        );
+      case 'stats':
+        return (
+          <StaffStatsPanel
+            guards={guards}
+            requests={requests}
+            onOpenGuard={(guardId) => {
+              onStaffGuardTabChange?.('performance');
+              navigateSection('guards', { guardId });
+            }}
+            onOpenViolations={() => navigateSection('violations')}
           />
         );
       case 'disputes':
