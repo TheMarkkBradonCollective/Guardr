@@ -1590,6 +1590,7 @@ export default function App() {
 
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
+      loadAppDataRef.current();
       navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
     };
     window.addEventListener('pageshow', onPageShow);
