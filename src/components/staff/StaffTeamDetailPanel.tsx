@@ -12,20 +12,30 @@ import {
   ROLE_LABELS,
   getAssignableStaffRoles,
   canModerateStaffMember,
+  canAssignStaffCityAccess,
   platformStaffRank,
   staffRoleRank,
 } from '../../lib/permissions';
+import type { PlatformCity } from '../../lib/platformCities';
+import { normalizeManagedCities } from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
+  platformCities?: PlatformCity[];
+  managerOptions?: SecurityGuard[];
   currentUserId: string;
   currentUserRole: PlatformRole;
+  actorManagedCities?: string[];
   canManageStaff: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffCityAccess?: (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
+  ) => Promise<void>;
   onBack?: () => void;
 }
 
@@ -51,11 +61,15 @@ function staffModerationBlockedReason(
 
 export function StaffTeamDetailPanel({
   member,
+  platformCities = [],
+  managerOptions = [],
   currentUserId,
   currentUserRole,
+  actorManagedCities = [],
   canManageStaff,
   onUpdateUserStatus,
   onUpdateStaffRole,
+  onUpdateStaffCityAccess,
   onBack,
 }: StaffTeamDetailPanelProps) {
   const accountStatus = member.userStatus || 'active';
@@ -63,18 +77,63 @@ export function StaffTeamDetailPanel({
   const [roleMsg, setRoleMsg] = useState('');
   const [roleError, setRoleError] = useState('');
   const [savingRole, setSavingRole] = useState(false);
+  const [managedCities, setManagedCities] = useState<string[]>(member.managedCities ?? []);
+  const [assignedManagerIds, setAssignedManagerIds] = useState<string[]>(
+    member.assignedManagerIds ?? []
+  );
+  const [cityMsg, setCityMsg] = useState('');
+  const [cityError, setCityError] = useState('');
+  const [savingCities, setSavingCities] = useState(false);
 
   useEffect(() => {
     setRole(member.staffRole || 'Moderator');
     setRoleMsg('');
     setRoleError('');
-  }, [member.id, member.staffRole]);
+    setManagedCities(member.managedCities ?? []);
+    setAssignedManagerIds(member.assignedManagerIds ?? []);
+    setCityMsg('');
+    setCityError('');
+  }, [member.id, member.staffRole, member.managedCities, member.assignedManagerIds]);
 
   const platformRole = staffRoleToPlatformRole(role);
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
   const canModifyMember =
     canManageStaff && canModerateStaffMember(currentUserRole, currentUserId, member);
   const blockedReason = staffModerationBlockedReason(currentUserRole, currentUserId, member);
+  const canEditCityAccess =
+    canModifyMember &&
+    canAssignStaffCityAccess({ role: currentUserRole }) &&
+    Boolean(onUpdateStaffCityAccess);
+  const assignableCityNames = normalizeManagedCities(
+    currentUserRole === 'manager'
+      ? actorManagedCities
+      : platformCities.map((city) => city.name),
+    platformCities
+  );
+
+  const toggleManagedCity = (cityName: string) => {
+    setManagedCities((prev) =>
+      prev.includes(cityName) ? prev.filter((city) => city !== cityName) : [...prev, cityName]
+    );
+  };
+
+  const handleCityAccessSave = async () => {
+    if (!onUpdateStaffCityAccess) return;
+    setCityError('');
+    setCityMsg('');
+    setSavingCities(true);
+    try {
+      await onUpdateStaffCityAccess(member.id, {
+        managedCities: normalizeManagedCities(managedCities, platformCities),
+        assignedManagerIds,
+      });
+      setCityMsg('City access updated.');
+    } catch (err) {
+      setCityError(err instanceof Error ? err.message : 'Could not update city access.');
+    } finally {
+      setSavingCities(false);
+    }
+  };
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
@@ -171,6 +230,63 @@ export function StaffTeamDetailPanel({
           <p className="text-sm text-brand-text-muted">{blockedReason}</p>
         )}
       </section>
+
+      {canEditCityAccess && assignableCityNames.length > 0 && (
+        <section className="staff-detail-section space-y-3">
+          <h3 className="text-sm font-semibold">City access</h3>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Choose which cities this staff member may manage. Directors control manager city
+            assignments; managers may assign cities within their own scope.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {assignableCityNames.map((cityName) => (
+              <button
+                key={cityName}
+                type="button"
+                onClick={() => toggleManagedCity(cityName)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  managedCities.includes(cityName)
+                    ? 'bg-brand-primary text-white border-brand-primary'
+                    : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                }`}
+              >
+                {cityName}
+              </button>
+            ))}
+          </div>
+          {currentUserRole === 'owner' || currentUserRole === 'director' ? (
+            <div className="space-y-2">
+              <label className="uber-label block">Assigned managers</label>
+              <select
+                multiple
+                value={assignedManagerIds}
+                onChange={(e) =>
+                  setAssignedManagerIds(
+                    Array.from(e.target.selectedOptions).map((option) => option.value)
+                  )
+                }
+                className="uber-select w-full min-h-[6rem]"
+              >
+                {managerOptions.map((manager) => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.badgeNumber || manager.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void handleCityAccessSave()}
+            disabled={savingCities}
+            className="app-button-primary app-btn-sm"
+          >
+            {savingCities ? 'Saving…' : 'Save city access'}
+          </button>
+          {cityError && <p className="text-sm text-red-400">{cityError}</p>}
+          {cityMsg && <p className="text-sm text-brand-primary">{cityMsg}</p>}
+        </section>
+      )}
 
       {canModifyMember ? (
         <section className="staff-detail-section space-y-2">

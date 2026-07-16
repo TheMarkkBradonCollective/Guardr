@@ -24,6 +24,7 @@ interface DesktopStaffAdminShellProps {
   showFinance: boolean;
   showSettings: boolean;
   showDisputes: boolean;
+  showCities: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
   headerActions?: React.ReactNode;
@@ -39,7 +40,7 @@ const MENU_GROUPS: { label: string; ids: StaffSection[] }[] = [
   },
   { label: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { label: 'Risk', ids: ['incidents', 'disputes'] },
-  { label: 'Platform', ids: ['settings', 'guide', 'dev-updates'] },
+  { label: 'Platform', ids: ['cities', 'settings', 'guide', 'dev-updates'] },
 ];
 
 export function DesktopStaffAdminShell({
@@ -55,19 +56,21 @@ export function DesktopStaffAdminShell({
   showFinance,
   showSettings,
   showDisputes,
+  showCities,
   onOpenLegal,
   hideHeader = false,
   headerActions,
   headerExtension,
   headerOverride,
 }: DesktopStaffAdminShellProps) {
-  const accessFlags = { showFinance, showSettings, showDisputes };
+  const accessFlags = { showFinance, showSettings, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesSection(activeSection);
 
   const visible = (item: StaffNavItem) => {
     if (item.financeOnly && !showFinance) return false;
     if (item.settingsOnly && !showSettings) return false;
+    if (item.citiesOnly && !showCities) return false;
     if (item.disputesOnly && !showDisputes) return false;
     return true;
   };

@@ -7,7 +7,8 @@ import {
   locationStatusLabel,
   newClientLocationDraft,
 } from '../../lib/clientLocations';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
+import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
+import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { MapPin, Plus } from 'lucide-react';
 
 interface ClientLocationsPanelProps {
@@ -17,6 +18,7 @@ interface ClientLocationsPanelProps {
 }
 
 export function ClientLocationsPanel({ client, locations, onSave }: ClientLocationsPanelProps) {
+  const selectableClientCities = getSelectableCityNamesForClients();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [state, setState] = useState(DEFAULT_CALIFORNIA_CITY);
@@ -89,7 +91,7 @@ export function ClientLocationsPanel({ client, locations, onSave }: ClientLocati
           onChange={(e) => setAddress(e.target.value)}
         />
         <select className="uber-select w-full rounded-xl" value={state} onChange={(e) => setState(resolveJobCity(e.target.value))}>
-          {CALIFORNIA_CITIES.map((city) => (
+          {selectableClientCities.map((city) => (
             <option key={city} value={city}>{city}</option>
           ))}
         </select>

@@ -47,10 +47,12 @@ export type Permission =
   // Director (+ all administrator)
   | 'director.manage_administrators'
   | 'director.manage_moderators'
+  | 'director.manage_city_markets'
   | 'director.view_all_financial_data'
   | 'director.access_audit_logs'
   | 'director.override_restrictions'
   | 'director.manage_company_operations'
+  | 'director.recommend_city_open'
   // Founder (+ all director) — platform governance overseer
   | 'owner.manage_directors'
   | 'owner.manage_owners'
@@ -113,12 +115,14 @@ const MANAGER_PERMISSIONS: Permission[] = [
   'director.view_all_financial_data',
   'director.access_audit_logs',
   'director.manage_company_operations',
+  'director.recommend_city_open',
 ];
 
 const DIRECTOR_PERMISSIONS: Permission[] = [
   ...MANAGER_PERMISSIONS,
   'director.manage_administrators',
   'director.manage_moderators',
+  'director.manage_city_markets',
   'director.override_restrictions',
 ];
 
@@ -376,6 +380,24 @@ export function canSetTrustedStatus(user: Pick<SessionUser, 'role'>): boolean {
 /** Director and Founder create jobs for clients and assign guards */
 export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_company_operations');
+}
+
+/** Manager+ may view city markets; Director+ may change open/closed/waitlist status */
+export function canViewCityMarkets(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'director.recommend_city_open');
+}
+
+export function canManageCityMarkets(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'director.manage_city_markets');
+}
+
+export function canRecommendCityOpen(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'director.recommend_city_open');
+}
+
+/** Director+ assign which cities managers and lower staff may manage */
+export function canAssignStaffCityAccess(user: Pick<SessionUser, 'role'>): boolean {
+  return canManageCityMarkets(user) || user.role === 'manager';
 }
 
 /** Director and Founder may edit job listings (any non-closed job) */

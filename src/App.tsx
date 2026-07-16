@@ -501,12 +501,22 @@ import {
   type PlatformSettings,
 } from './lib/platformSettings';
 import {
+  buildDefaultPlatformCities,
+  platformCityFromRow,
+  platformCityToDbRow,
+  setPlatformCitiesCache,
+  staffCanManageCity,
+  type CityMarketStatus,
+  type CityWaitlistAudience,
+  type PlatformCity,
+} from './lib/platformCities';
+import {
   companyPublicDocumentFromRow,
   companyPublicDocumentToDbRow,
   getCompanyPlacardPublicItems,
   type CompanyPublicDocument,
 } from './lib/companyPlacard';
-import { canEditJobListingDetails } from './lib/permissions';
+import { canEditJobListingDetails, canManageCityMarkets } from './lib/permissions';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -630,6 +640,11 @@ export default function App() {
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() =>
     loadPlatformSettingsFromStorage()
   );
+  const [platformCities, setPlatformCities] = useState<PlatformCity[]>(() => {
+    const defaults = buildDefaultPlatformCities();
+    setPlatformCitiesCache(defaults);
+    return defaults;
+  });
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
   const [crewJoinRequests, setCrewJoinRequests] = useState<GuardCrewJoinRequest[]>([]);
@@ -1777,6 +1792,10 @@ export default function App() {
         .select('*')
         .eq('id', 'default')
         .maybeSingle();
+      const { data: dbPlatformCities, error: platformCitiesErr } = await supabase
+        .from('platform_cities')
+        .select('*')
+        .order('sort_order', { ascending: true });
       const { data: dbInsurance, error: insuranceErr } = await supabase
         .from('guard_insurance_policies')
         .select('*');
@@ -1847,6 +1866,9 @@ export default function App() {
       }
       if (platformSettingsErr && platformSettingsErr.code !== '42P01') {
         console.warn('Platform settings load (run migration if missing):', platformSettingsErr);
+      }
+      if (platformCitiesErr && platformCitiesErr.code !== '42P01') {
+        console.warn('Platform cities load (run migration if missing):', platformCitiesErr);
       }
       if (guardsErr && clientsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr });
@@ -2392,6 +2414,24 @@ export default function App() {
         const loaded = platformSettingsFromDbRow(dbPlatformSettings);
         setPlatformSettings(loaded);
         savePlatformSettingsToStorage(loaded);
+      }
+
+      if (!platformCitiesErr) {
+        let loadedCities = (dbPlatformCities ?? []).map((row: Record<string, unknown>) =>
+          platformCityFromRow(row)
+        );
+        if (loadedCities.length === 0) {
+          loadedCities = buildDefaultPlatformCities();
+          try {
+            await supabase
+              .from('platform_cities')
+              .upsert(loadedCities.map((city) => platformCityToDbRow(city)));
+          } catch (seedErr) {
+            console.warn('Platform cities seed:', seedErr);
+          }
+        }
+        setPlatformCities(loadedCities);
+        setPlatformCitiesCache(loadedCities);
       }
 
       try {
@@ -4777,7 +4817,8 @@ export default function App() {
   const handleAddStaffProfile = async (
     email: string,
     badgeNumber: string,
-    staffRole: StaffRole
+    staffRole: StaffRole,
+    options?: { managedCities?: string[]; assignedManagerIds?: string[] }
   ): Promise<string> => {
     if (!currentUser || !canProposeStaffAccounts(currentUser)) {
       throw new Error('You do not have permission to add staff.');
@@ -4790,6 +4831,8 @@ export default function App() {
     const staffId = badgeNumber.trim();
     const requiresApproval = !canApproveStaffAccounts(currentUser);
     const userStatus = requiresApproval ? ('pending' as const) : ('active' as const);
+    const managedCities = options?.managedCities ?? [];
+    const assignedManagerIds = options?.assignedManagerIds ?? [];
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
       name: staffId,
@@ -4810,6 +4853,8 @@ export default function App() {
       hourlyRateRequirement: 0,
       isStaff: true,
       staffRole,
+      managedCities,
+      assignedManagerIds,
       userStatus,
       password,
       mustChangePassword,
@@ -4830,6 +4875,8 @@ export default function App() {
           bio: newStaff.bio,
           staff_role: staffRole,
           user_status: userStatus,
+          managed_cities: managedCities,
+          assigned_manager_ids: assignedManagerIds,
           password,
           must_change_password: mustChangePassword,
         });
@@ -4938,6 +4985,96 @@ export default function App() {
         throw new Error('Could not update staff role in the database.');
       }
     }
+  };
+
+  const handleUpdatePlatformCity = async (
+    cityId: string,
+    patch: {
+      status?: CityMarketStatus;
+      waitlistAudience?: CityWaitlistAudience;
+      recommendOpen?: boolean;
+    }
+  ) => {
+    if (!currentUser) throw new Error('Sign in required.');
+    const city = platformCities.find((entry) => entry.id === cityId);
+    if (!city) throw new Error('City not found.');
+    const actor = guards.find((g) => g.id === currentUser.id && g.isStaff);
+    const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
+    if (isStatusChange && !canManageCityMarkets(currentUser)) {
+      throw new Error('Only Directors and Founders can change city market status.');
+    }
+    if (!staffCanManageCity(currentUser.role, actor?.managedCities, city.name)) {
+      throw new Error('You are not assigned to manage this city.');
+    }
+
+    const updated: PlatformCity = {
+      ...city,
+      status: patch.status ?? city.status,
+      waitlistAudience: patch.waitlistAudience ?? city.waitlistAudience,
+      recommendOpen: patch.recommendOpen ?? city.recommendOpen,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser.id,
+    };
+
+    setPlatformCities((prev) => {
+      const next = prev.map((entry) => (entry.id === cityId ? updated : entry));
+      setPlatformCitiesCache(next);
+      return next;
+    });
+
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('platform_cities')
+        .upsert(platformCityToDbRow(updated));
+      if (error) {
+        setPlatformCities((prev) => {
+          const next = prev.map((entry) => (entry.id === cityId ? city : entry));
+          setPlatformCitiesCache(next);
+          return next;
+        });
+        throw new Error(error.message || 'Could not update city market.');
+      }
+    }
+
+    void writeAuditLog(currentUser, 'city_market_updated', 'platform_city', cityId, {
+      name: city.name,
+      status: updated.status,
+      waitlistAudience: updated.waitlistAudience,
+      recommendOpen: updated.recommendOpen,
+    });
+  };
+
+  const handleUpdateStaffCityAccess = async (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
+  ) => {
+    if (!currentUser) throw new Error('Sign in required.');
+    const member = guards.find((g) => g.id === staffId && g.isStaff);
+    if (!member) throw new Error('Staff account not found.');
+
+    const managedCities = patch.managedCities ?? member.managedCities ?? [];
+    const assignedManagerIds = patch.assignedManagerIds ?? member.assignedManagerIds ?? [];
+    const updated: SecurityGuard = { ...member, managedCities, assignedManagerIds };
+
+    setGuards((prev) => prev.map((g) => (g.id === staffId ? updated : g)));
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('staff')
+        .update({
+          managed_cities: managedCities,
+          assigned_manager_ids: assignedManagerIds,
+        })
+        .eq('id', staffId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
+        throw new Error(error.message || 'Could not update staff city access.');
+      }
+    }
+
+    void writeAuditLog(currentUser, 'staff_city_access_updated', 'staff', staffId, {
+      managedCities,
+      assignedManagerIds,
+    });
   };
 
   const handleApproveClient = async (clientId: string) => {
@@ -12095,6 +12232,9 @@ export default function App() {
           onMarkCashDepositManually={handleMarkCashDepositManually}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           platformSettings={platformSettings}
+          platformCities={platformCities}
+          onUpdatePlatformCity={handleUpdatePlatformCity}
+          onUpdateStaffCityAccess={handleUpdateStaffCityAccess}
           onUpdatePlatformSettings={handleUpdatePlatformSettings}
           isDbConnected={isDbConnected}
           currentUser={currentUser}

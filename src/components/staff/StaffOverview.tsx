@@ -125,6 +125,7 @@ const QUICK_LINK_META: Record<
   disputes: { label: 'Disputes', icon: AlertTriangle },
   analytics: { label: 'Analytics', icon: BarChart3 },
   settings: { label: 'Settings', icon: Settings },
+  cities: { label: 'City markets', icon: MapPin },
   guide: { label: 'Guide', icon: LayoutDashboard },
   'dev-updates': { label: 'Dev notes', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },

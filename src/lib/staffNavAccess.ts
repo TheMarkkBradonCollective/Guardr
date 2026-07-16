@@ -4,6 +4,7 @@ export interface StaffNavAccessFlags {
   showFinance: boolean;
   showSettings: boolean;
   showDisputes: boolean;
+  showCities: boolean;
 }
 
 export interface StaffNavAccessNotice {
@@ -20,6 +21,7 @@ const FINANCE_SECTIONS = new Set<StaffSection>([
 ]);
 
 const SETTINGS_SECTIONS = new Set<StaffSection>(['settings']);
+const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
 
 export function getStaffNavAccessNotice(
@@ -38,6 +40,13 @@ export function getStaffNavAccessNotice(
       title: 'Administrator access required',
       message:
         'Platform settings are limited to Administrator roles and above. Ask your Director to update approval rules, integrations, or other system-wide controls.',
+    };
+  }
+  if (CITIES_SECTIONS.has(section) && !flags.showCities) {
+    return {
+      title: 'Manager access required',
+      message:
+        'City market controls are limited to Manager roles and above. Ask your Director if you need access.',
     };
   }
   if (DISPUTES_SECTIONS.has(section) && !flags.showDisputes) {
@@ -91,6 +100,11 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     title: 'Settings',
     message:
       'Platform settings are limited to Administrator roles and above. Ask your Director to update approval rules, integrations, or other system-wide controls.',
+  },
+  cities: {
+    title: 'City markets',
+    message:
+      'City rollout controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
   },
   applications: {
     title: 'No access',

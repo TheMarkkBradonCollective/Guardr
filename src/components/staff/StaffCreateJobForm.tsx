@@ -17,7 +17,8 @@ import {
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
+import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
+import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -70,6 +71,7 @@ interface StaffCreateJobFormProps {
 }
 
 export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCreate, onCreated }: StaffCreateJobFormProps) {
+  const selectableClientCities = getSelectableCityNamesForClients();
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
@@ -338,7 +340,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             onChange={(e) => setJobState(resolveJobCity(e.target.value))}
             className="uber-input w-full"
           >
-            {CALIFORNIA_CITIES.map((city) => (
+            {selectableClientCities.map((city) => (
               <option key={city} value={city}>
                 {city}
               </option>

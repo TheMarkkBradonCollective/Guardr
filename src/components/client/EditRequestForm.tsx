@@ -4,7 +4,8 @@ import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
 import { computeGuardPay } from '../../lib/payments';
-import { CALIFORNIA_CITIES, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity, type CaliforniaCity } from '../../lib/californiaCities';
+import { cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity, type CaliforniaCity } from '../../lib/californiaCities';
+import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { listingFieldsFromJob } from '../../lib/jobListing';
 import { JobLocationCoordsFields, type JobLocationCoordsFieldsHandle } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -33,6 +34,7 @@ export function EditRequestForm({
   onCancel,
   sheet = false,
 }: EditRequestFormProps) {
+  const selectableClientCities = getSelectableCityNamesForClients();
   const [title, setTitle] = useState(request.title);
   const [siteName, setSiteName] = useState(request.siteName || '');
   const [address, setAddress] = useState(request.address || request.location);
@@ -187,7 +189,7 @@ export function EditRequestForm({
         <div>
           <label className="uber-label block mb-1">City</label>
           <select value={state} onChange={(e) => setState(resolveJobCity(e.target.value))} className="uber-input w-full">
-            {CALIFORNIA_CITIES.map((city) => (
+            {selectableClientCities.map((city) => (
               <option key={city} value={city}>{city}</option>
             ))}
           </select>

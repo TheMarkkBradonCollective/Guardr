@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
+import type { PlatformCity } from '../../lib/platformCities';
 import {
   matchesStaffTeamFilter,
   staffRosterSortRank,
@@ -16,8 +17,10 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
+  platformCities?: PlatformCity[];
   currentUserId: string;
   currentUserRole: PlatformRole;
+  actorManagedCities?: string[];
   canManageStaff: boolean;
   canProposeStaff: boolean;
   requiresDirectorApproval?: boolean;
@@ -26,8 +29,14 @@ interface StaffTeamPanelProps {
     email: string;
     badgeNumber: string;
     staffRole: StaffRole;
+    managedCities?: string[];
+    assignedManagerIds?: string[];
   }) => Promise<string>;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffCityAccess?: (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
+  ) => Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
@@ -35,14 +44,17 @@ interface StaffTeamPanelProps {
 
 export function StaffTeamPanel({
   guards,
+  platformCities = [],
   currentUserId,
   currentUserRole,
+  actorManagedCities = [],
   canManageStaff,
   canProposeStaff,
   requiresDirectorApproval = false,
   onUpdateUserStatus,
   onAddStaff,
   onUpdateStaffRole,
+  onUpdateStaffCityAccess,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
@@ -90,6 +102,9 @@ export function StaffTeamPanel({
               <StaffAddStaffForm
                 assignableRoles={assignableRoles}
                 requiresDirectorApproval={requiresDirectorApproval}
+                platformCities={platformCities}
+                actorManagedCities={actorManagedCities}
+                managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
                 onAdd={onAddStaff}
                 onCreated={(staffId) => {
                   setSearch('');
@@ -162,11 +177,15 @@ export function StaffTeamPanel({
           renderDetail={(member, options) => (
             <StaffTeamDetailPanel
               member={member}
+              platformCities={platformCities}
+              managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
               currentUserId={currentUserId}
               currentUserRole={currentUserRole}
+              actorManagedCities={actorManagedCities}
               canManageStaff={canManageStaff}
               onUpdateUserStatus={onUpdateUserStatus}
               onUpdateStaffRole={onUpdateStaffRole}
+              onUpdateStaffCityAccess={onUpdateStaffCityAccess}
               onBack={options?.onBack}
             />
           )}
