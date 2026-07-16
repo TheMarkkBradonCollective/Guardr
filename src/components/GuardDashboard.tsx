@@ -82,7 +82,7 @@ import {
 import { isGuardTrusted } from '../lib/guardTrust';
 import {
   canRequestCrewLead,
-  getPendingCrewLeadRequest,
+  shouldShowPendingCrewLeadRequest,
 } from '../lib/guardCrewJoinRequest';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
@@ -620,7 +620,11 @@ export function GuardDashboard({
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
     [standingCrewMembers, guard.id]
   );
-  const pendingCrewLeadRequest = !!getPendingCrewLeadRequest(crewJoinRequests, guard.id);
+  const pendingCrewLeadRequest = shouldShowPendingCrewLeadRequest(
+    guard,
+    standingCrewMembers,
+    crewJoinRequests
+  );
   const canRequestLead = useMemo(
     () => canRequestCrewLead(guard, standingCrewMembers, crewJoinRequests),
     [guard, standingCrewMembers, crewJoinRequests]
