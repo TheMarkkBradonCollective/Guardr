@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   acceptStandingCrewInvite,
+  defaultCrewHubTab,
   dissolveStandingCrewForUntrustedGuard,
   getPendingStandingCrewIncoming,
+  guardIsInStandingCrew,
   inviteToStandingCrew,
   shouldOfferTeamCodeJoin,
 } from './guardStandingCrew';
@@ -123,5 +125,56 @@ test('dissolveStandingCrewForUntrustedGuard frees roster members and removes lea
   assert.equal(
     dissolved.members.filter((m) => m.status === 'active' || m.status === 'pending').length,
     0
+  );
+});
+
+test('guardIsInStandingCrew is true for leads and active members', () => {
+  const invited = inviteToStandingCrew([], trustedLead(), 'member-1');
+  assert.ok(!('error' in invited));
+  if ('error' in invited) return;
+
+  assert.equal(guardIsInStandingCrew(trustedLead(), invited.members), true);
+  assert.equal(
+    guardIsInStandingCrew({ id: 'member-1' } as SecurityGuard, invited.members),
+    true
+  );
+  assert.equal(
+    guardIsInStandingCrew({ id: 'outsider' } as SecurityGuard, invited.members),
+    false
+  );
+});
+
+test('defaultCrewHubTab opens Active when not in a standing crew', () => {
+  assert.equal(
+    defaultCrewHubTab({
+      pendingInviteCount: 0,
+      inStandingCrew: false,
+      coordinatingJobCount: 0,
+    }),
+    'active'
+  );
+  assert.equal(
+    defaultCrewHubTab({
+      pendingInviteCount: 1,
+      inStandingCrew: false,
+      coordinatingJobCount: 0,
+    }),
+    'team'
+  );
+  assert.equal(
+    defaultCrewHubTab({
+      pendingInviteCount: 0,
+      inStandingCrew: true,
+      coordinatingJobCount: 0,
+    }),
+    'team'
+  );
+  assert.equal(
+    defaultCrewHubTab({
+      pendingInviteCount: 0,
+      inStandingCrew: true,
+      coordinatingJobCount: 2,
+    }),
+    'active'
   );
 });

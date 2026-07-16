@@ -223,6 +223,29 @@ export function guardLeadsOwnStandingCrew(
   );
 }
 
+export function guardIsInStandingCrew(
+  guard: Pick<SecurityGuard, 'id' | 'standingCrewName' | 'standingCrewDescription'>,
+  members: GuardStandingCrewMember[]
+): boolean {
+  return (
+    guardLeadsOwnStandingCrew(guard, members) ||
+    guardIsMemberOfStandingCrew(members, guard.id)
+  );
+}
+
+export type CrewHubTab = 'team' | 'active';
+
+/** Default Crew hub segment: Active when not on a standing crew (unless invites pending). */
+export function defaultCrewHubTab(input: {
+  pendingInviteCount: number;
+  inStandingCrew: boolean;
+  coordinatingJobCount: number;
+}): CrewHubTab {
+  if (input.pendingInviteCount > 0) return 'team';
+  if (!input.inStandingCrew) return 'active';
+  return input.coordinatingJobCount > 0 ? 'active' : 'team';
+}
+
 /** Crew codes are only for guards not already tied to a standing crew (as lead or member). */
 export function shouldOfferTeamCodeJoin(
   guard: SecurityGuard,

@@ -3,7 +3,12 @@ import type { GuardStandingCrewMember, SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getCrewDisplayName } from '../../lib/guardTeams';
-import { getPendingStandingCrewIncoming } from '../../lib/guardStandingCrew';
+import {
+  defaultCrewHubTab,
+  getPendingStandingCrewIncoming,
+  guardIsInStandingCrew,
+  type CrewHubTab,
+} from '../../lib/guardStandingCrew';
 import { GuardTeamPanel } from './GuardTeamPanel';
 import { GuardStandingCrewPanel } from './GuardStandingCrewPanel';
 import {
@@ -18,7 +23,7 @@ import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import { formatTeamCodeDisplay } from '../../lib/teamCode';
 
-export type CrewHubTab = 'team' | 'active';
+export type { CrewHubTab };
 
 interface GuardCrewHubPanelProps {
   guard: SecurityGuard;
@@ -184,6 +189,11 @@ export function GuardCrewHubPanel({
     [standingCrewMembers, guard.id]
   );
 
+  const inStandingCrew = useMemo(
+    () => guardIsInStandingCrew(guard, standingCrewMembers),
+    [guard, standingCrewMembers]
+  );
+
   const tabOptions = useMemo(
     () => [
       { id: 'team' as const, label: 'My team' },
@@ -193,7 +203,11 @@ export function GuardCrewHubPanel({
   );
 
   const [activeTab, setActiveTab] = useState<CrewHubTab>(() =>
-    pendingInvites.length > 0 ? 'team' : coordinatingJobs.length > 0 ? 'active' : 'team'
+    defaultCrewHubTab({
+      pendingInviteCount: pendingInvites.length,
+      inStandingCrew,
+      coordinatingJobCount: coordinatingJobs.length,
+    })
   );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
