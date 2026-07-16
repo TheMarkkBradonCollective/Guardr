@@ -3,8 +3,7 @@ import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { getStaffNavAccessNotice } from '../../lib/staffNavAccess';
-import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
-import { LegalFooterLinks } from '../legal/LegalFooterLinks';
+import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
@@ -12,7 +11,8 @@ import { AppHeaderToolbar } from '../layouts/AppHeaderToolbar';
 import { NavMenuPopover } from '../layouts/NavMenuPopover';
 import { AccountMenu } from '../layouts/AccountMenu';
 import { showAppAlert } from '../ui/AppConfirm';
-import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
+import { useDevice } from '../../lib/platform';
+import { StaffDesktopShell } from '../layouts/desktop/StaffDesktopShell';
 import {
   AlertTriangle,
   BarChart3,
@@ -101,7 +101,7 @@ export function StaffOpsLayout({
   headerExtension,
   headerOverride,
 }: StaffOpsLayoutProps) {
-  const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
+  const { formFactor } = useDevice();
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -168,40 +168,44 @@ export function StaffOpsLayout({
     onNavigate(section);
   };
 
-  const navMenu = !dockedSidebar ? (
+  const navMenu = (
     <NavMenuPopover items={popoverItems} activeId={navHighlight} onNavigate={handlePopoverNavigate} />
-  ) : null;
+  );
 
   const brandingTrailing = isDbConnected ? (
     <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
   ) : null;
 
-  const sidebarPanel = (
-    <div className="staff-sidebar-inner">
-      <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
-        <StaffSidebarNav
-          items={navItems}
-          activeSection={navHighlight}
-          onNavigate={onNavigate}
-          showFinance={showFinance}
-          showSettings={showSettings}
-          showDisputes={showDisputes}
-        />
-      </div>
-      <div className="staff-sidebar-footer">
-        {onOpenLegal && (
-          <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-        )}
-      </div>
-    </div>
-  );
+  if (formFactor === 'desktop') {
+    return (
+      <StaffDesktopShell
+        currentUser={currentUser}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+        themeMode={themeMode}
+        onChangeTheme={onChangeTheme}
+        onSignOut={onSignOut}
+        isDbConnected={isDbConnected}
+        navItems={navItems}
+        screenTitle={screenTitle}
+        navHighlight={navHighlight}
+        showFinance={showFinance}
+        showSettings={showSettings}
+        showDisputes={showDisputes}
+        bleed={bleed}
+        onOpenLegal={onOpenLegal}
+        hideHeader={hideHeader}
+        headerActions={headerActions}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+      >
+        {children}
+      </StaffDesktopShell>
+    );
+  }
 
   return (
-    <div
-      className={`staff-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
-        dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
-      }`}
-    >
+    <div className="staff-shell staff-shell--compact page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
           <header className="staff-main-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
@@ -244,10 +248,6 @@ export function StaffOpsLayout({
           </div>
         </main>
       </div>
-
-      {dockedSidebar ? (
-        <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
-      ) : null}
     </div>
   );
 }

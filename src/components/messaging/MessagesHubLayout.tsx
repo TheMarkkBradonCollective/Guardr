@@ -40,7 +40,8 @@ export function MessagesHubLayout({
   shellInboxHeader = false,
 }: MessagesHubLayoutProps) {
   const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+  const splitView = formFactor === 'tablet';
+  const desktopView = formFactor === 'desktop';
   const inboxHeader = shellInboxHeader ? null : header;
 
   const emptyDetail = (
@@ -49,6 +50,27 @@ export function MessagesHubLayout({
       emptyDetailHint={emptyDetailHint}
     />
   );
+
+  if (desktopView) {
+    return (
+      <div className="desktop-messages-workbench h-full min-h-0">
+        <div className="desktop-messages-inbox">
+          {inboxHeader ? <div className="flex-shrink-0">{inboxHeader}</div> : null}
+          <div className="desktop-messages-inbox-body">{list}</div>
+        </div>
+        <div className="desktop-messages-thread">
+          {hasSelection ? detail : (
+            <div className="desktop-messages-empty">
+              <MessagesHubEmptyDetail
+                emptyDetailTitle={emptyDetailTitle}
+                emptyDetailHint={emptyDetailHint}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (splitView) {
     return (

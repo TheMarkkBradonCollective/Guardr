@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
+import { DesktopLandingPage } from './landing/desktop/DesktopLandingPage';
 import { useDevice } from '../lib/platform';
 import type { FormFactor } from '../lib/platform/device';
 import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
@@ -190,6 +191,21 @@ export function HomePage({
   const isMobile = formFactor === 'mobile';
   const isTablet = formFactor === 'tablet';
   const isDesktop = formFactor === 'desktop';
+
+  if (isDesktop) {
+    return (
+      <DesktopLandingPage
+        onNavigateToAuth={onNavigateToAuth}
+        themeMode={themeMode}
+        onChangeTheme={onChangeTheme}
+        onOpenLegal={onOpenLegal}
+        onOpenGuide={onOpenGuide}
+        ownerMessage={ownerMessage}
+        directorMessage={directorMessage}
+        companyPlacardDocuments={companyPlacardDocuments}
+      />
+    );
+  }
 
   return (
     <div

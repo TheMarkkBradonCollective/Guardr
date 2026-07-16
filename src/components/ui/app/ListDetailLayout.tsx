@@ -1,5 +1,5 @@
 import React from 'react';
-import { BREAKPOINTS, useMediaQuery } from '../../../lib/platform';
+import { useDevice } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
 
 export type ListDetailMobilePresentation = 'inline' | 'page';
@@ -26,10 +26,13 @@ export function useSplitListDetail(
   selectedId: string | null,
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
-  const splitView = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
-  const showDetailOnly = mobilePresentation === 'page' && Boolean(selectedId && !splitView);
+  const { formFactor } = useDevice();
+  const desktopView = formFactor === 'desktop';
+  const splitView = formFactor === 'tablet';
+  const showDetailOnly =
+    mobilePresentation === 'page' && Boolean(selectedId && !splitView && !desktopView);
 
-  return { splitView, showDetailOnly };
+  return { splitView, desktopView, showDetailOnly };
 }
 
 export function ListDetailLayout<T>({
@@ -45,21 +48,44 @@ export function ListDetailLayout<T>({
   detailClassName = 'staff-detail-pane space-y-4',
   mobilePresentation = 'inline',
 }: ListDetailLayoutProps<T>) {
-  const { splitView, showDetailOnly } = useSplitListDetail(selectedId, mobilePresentation);
+  const { splitView, desktopView, showDetailOnly } = useSplitListDetail(selectedId, mobilePresentation);
 
   const resolvedSelectedId =
     selectedId ??
-    (splitView && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
+    ((splitView || desktopView) && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
 
   const selected = items.find((item) => getItemId(item) === resolvedSelectedId) ?? null;
 
   const handleSelect = (id: string) => {
-    if (mobilePresentation === 'inline' && !splitView && id === selectedId) {
+    if (mobilePresentation === 'inline' && !splitView && !desktopView && id === selectedId) {
       onSelectId(null);
       return;
     }
     onSelectId(id);
   };
+
+  if (desktopView) {
+    return (
+      <div className="desktop-master-detail">
+        <div className={`desktop-master-detail-list ${listScrollClassName}`}>
+          <AppItemCardStack>
+            {items.map((item) => {
+              const id = getItemId(item);
+              const isSelected = resolvedSelectedId === id;
+              return (
+                <React.Fragment key={id}>
+                  {renderItem(item, isSelected, () => handleSelect(id))}
+                </React.Fragment>
+              );
+            })}
+          </AppItemCardStack>
+        </div>
+        <div className={`desktop-master-detail-detail min-h-0 ${detailClassName}`}>
+          {selected ? renderDetail(selected) : emptyDetail}
+        </div>
+      </div>
+    );
+  }
 
   if (splitView) {
     return (

@@ -90,7 +90,8 @@ export function GuardBottomSheet({
   onAcceptPriceOffer,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
-  const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
+  const isSidePanel = formFactor === 'tablet';
+  const isDesktopInspector = formFactor === 'desktop';
   const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'half' : 'peek');
   const startSnap = useRef<SheetSnap>('peek');
   const vh = useViewportHeight();
@@ -140,6 +141,17 @@ export function GuardBottomSheet({
       onAcceptPriceOffer={onAcceptPriceOffer}
     />
   );
+
+  if (isDesktopInspector) {
+    return (
+      <aside className="desktop-map-inspector" aria-label={sheetLabel}>
+        <div className="desktop-map-inspector-header">
+          <p className="desktop-map-inspector-header-label">{sheetLabel}</p>
+        </div>
+        <div className="desktop-map-inspector-body guard-scroll-panel">{panelContent}</div>
+      </aside>
+    );
+  }
 
   if (isSidePanel) {
     return (
