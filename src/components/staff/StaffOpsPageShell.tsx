@@ -25,9 +25,14 @@ export function StaffOpsPageShell({
   }
 
   return (
-    <div className={`animate-fade-in space-y-4 ${className}`.trim()} {...rest}>
-      {toolbar}
-      {children}
+    <div
+      className={`staff-ops-mobile-shell animate-fade-in flex flex-col h-full min-h-0 min-w-0 ${className}`.trim()}
+      {...rest}
+    >
+      {toolbar ? <div className="staff-ops-mobile-toolbar shrink-0">{toolbar}</div> : null}
+      <div className="staff-ops-mobile-body flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain">
+        {children}
+      </div>
     </div>
   );
 }

@@ -113,30 +113,33 @@ export function StaffIncidentsPanel({
 
   if (selectedIncident && selectedDetail) {
     return (
-      <div className="animate-fade-in -mx-4 sm:-mx-5 app-full-page-detail">
-        <AppSubScreenHeader
-          title={selectedIncident.location}
-          onBack={() => setSelectedId(null)}
-          backLabel="Incidents"
-        />
-        <div className="pb-8 space-y-4">
-          <IncidentReportDetailView report={selectedDetail} compact />
-          {onOpenJob && (
-            <button
-              type="button"
-              onClick={() => onOpenJob(selectedIncident.requestId)}
-              className="app-button-outline app-btn-sm"
-            >
-              Open job
-            </button>
-          )}
+      <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in">
+        <div className="-mx-4 sm:-mx-5 app-full-page-detail flex-1 min-h-0">
+          <AppSubScreenHeader
+            title={selectedIncident.location}
+            onBack={() => setSelectedId(null)}
+            backLabel="Incidents"
+          />
+          <div className="pb-8 space-y-4">
+            <IncidentReportDetailView report={selectedDetail} compact />
+            {onOpenJob && (
+              <button
+                type="button"
+                onClick={() => onOpenJob(selectedIncident.requestId)}
+                className="app-button-outline app-btn-sm"
+              >
+                Open job
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in">
+      <div className="staff-ops-mobile-body flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-4 sm:-mx-5">
       {incidents.length === 0 ? (
         <div className="app-empty-state">
           <div className="app-empty-state-icon">
@@ -176,6 +179,7 @@ export function StaffIncidentsPanel({
           })}
         </AppList>
       )}
+      </div>
     </div>
   );
 }
