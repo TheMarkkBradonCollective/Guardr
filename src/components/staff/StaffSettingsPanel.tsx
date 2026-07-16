@@ -204,6 +204,7 @@ export function StaffSettingsPanel({
       <StaffAddStaffForm
         assignableRoles={assignableRoles}
         requiresDirectorApproval={requiresDirectorApproval}
+        actorRole={currentUser.role}
         onAdd={(input) => onAddStaffProfile(input.email, input.badgeNumber, input.staffRole)}
       />
     </div>
