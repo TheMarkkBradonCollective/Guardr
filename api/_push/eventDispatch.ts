@@ -39,6 +39,17 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
       ? `${event.guardName} arrived${event.location ? ` at ${event.location}` : ''}`
       : 'Your guard arrived on site',
   }),
+  guard_en_route: (event) => ({
+    title: 'Guard en route',
+    body: event.body
+      ?? (event.guardName
+        ? `${event.guardName} is heading to${event.location ? ` ${event.location}` : ' site'}`
+        : 'Your guard is en route to the job site'),
+  }),
+  standing_crew_invite: (event) => ({
+    title: event.title ?? 'Standing crew invitation',
+    body: event.body || 'You have a standing crew update',
+  }),
   guard_left_site: (event) => ({
     title: 'Guard left job site',
     body: event.guardName
@@ -101,6 +112,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
   guard_application: (event) => ({
     title: 'Guard application',
     body: event.body || 'A guard applied to an open job offer',
+  }),
+  crew_lead_request: (event) => ({
+    title: 'Crew lead request',
+    body: event.body || 'A trusted guard requested approval to lead their own standing crew',
   }),
   guard_pending_approval: (event) => ({
     title: 'Guard pending approval',
@@ -165,6 +180,18 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
   team_chat_message: (event) => ({
     title: 'Crew chat',
     body: event.body || 'New message in crew chat',
+  }),
+  account_update: (event) => ({
+    title: event.title ?? 'Account update',
+    body: event.body || 'Your Guardr account was updated',
+  }),
+  job_status_update: (event) => ({
+    title: event.title ?? 'Job update',
+    body: event.body || 'A job you are involved with was updated',
+  }),
+  payout_ready: (event) => ({
+    title: event.title ?? 'Payout ready',
+    body: event.body || 'Earnings are ready to collect in Pay',
   }),
   company_placard_expiry: (event) => ({
     title: event.title ?? 'Company placard reminder',
@@ -332,6 +359,20 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, userId: event.recipientUserId }];
   }
 
+  if (event.type === 'account_update' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'payout_ready') {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    if (event.guardId) {
+      return [{ ...payload, userId: event.guardId }];
+    }
+    return [];
+  }
+
   if (event.type === 'company_placard_expiry' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
@@ -342,14 +383,32 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, userId }];
   }
 
+  if (event.type === 'job_status_update') {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.clientId) payloads.push({ ...payload, userId: event.clientId });
+    if (event.guardId) payloads.push({ ...payload, userId: event.guardId });
+    else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
+    return payloads;
+  }
+
   if (
     (event.type === 'guard_trusted_status' ||
       event.type === 'client_trusted_status' ||
       event.type === 'job_relisted' ||
-      event.type === 'job_schedule_changed') &&
+      event.type === 'job_schedule_changed' ||
+      event.type === 'standing_crew_invite' ||
+      event.type === 'crew_lead_request') &&
     event.recipientUserId
   ) {
     return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'crew_lead_request') {
+    return [{ ...payload, role: 'dispatch' }];
+  }
+
+  if (event.type === 'standing_crew_invite' && event.guardId && !event.recipientUserId) {
+    return [{ ...payload, userId: event.guardId }];
   }
 
   if (event.type === 'team_chat_message') {
@@ -427,6 +486,17 @@ export async function buildEventDispatchPayloads(
 
   if (event.type === 'client_message') {
     return [{ ...payload, role: 'client' }];
+  }
+
+  if (event.type === 'guard_en_route') {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.requestId) {
+      const { clientId } = await loadJobParticipants(db, event.requestId);
+      if (clientId) payloads.push({ ...payload, userId: clientId });
+    } else if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    }
+    return payloads;
   }
 
   if (

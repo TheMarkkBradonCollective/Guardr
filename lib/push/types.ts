@@ -5,6 +5,7 @@ export type PushNotificationType =
   | 'guard_checkin'
   | 'guard_clockout'
   | 'guard_arrived'
+  | 'guard_en_route'
   | 'guard_break_start'
   | 'guard_break_end'
   | 'guard_left_site'

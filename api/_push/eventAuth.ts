@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PushNotificationType } from './types';
-import type { VerifiedSession } from './accountSessionAuth';
+import type { VerifiedSession } from '../accountSessionAuth';
 
 const STAFF_ROLES = new Set(['moderator', 'administrator', 'director', 'owner', 'staff', 'auditor']);
 
@@ -95,6 +95,11 @@ export async function authorizePushEvent(
       if (session.platformRole === 'guard' && event.guardId === session.userId) return null;
       return 'Only staff or the applying guard can send application notifications';
 
+    case 'crew_lead_request':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard' && event.guardId === session.userId) return null;
+      return 'Only staff or the requesting guard can send crew lead requests';
+
     case 'guard_message':
       if (isStaffSession(session)) return null;
       if (session.platformRole === 'guard') return null;
@@ -108,6 +113,7 @@ export async function authorizePushEvent(
     case 'guard_checkin':
     case 'guard_clockout':
     case 'guard_arrived':
+    case 'guard_en_route':
     case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
@@ -194,6 +200,21 @@ export async function authorizePushEvent(
 
     case 'support_ticket_status':
       return isStaffSession(session) ? null : 'Only staff can send support status updates';
+
+    case 'account_update':
+      return isStaffSession(session) ? null : 'Only staff can send account update notifications';
+
+    case 'payout_ready':
+      return isStaffSession(session) ? null : 'Only staff can send payout ready notifications';
+
+    case 'job_status_update':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'client' || session.platformRole === 'guard') {
+        if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+          return null;
+        }
+      }
+      return 'Not authorized to send job status updates for this context';
 
     case 'dispute_update':
       if (isStaffSession(session)) return null;

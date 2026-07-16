@@ -329,3 +329,25 @@ export function hasListingPostOrders(job: Partial<JobListingLike>): boolean {
       job.contactPhone?.trim()
   );
 }
+
+/** True when listing/briefing fields changed (excluding schedule and billing). */
+export function hasOperationalListingChange(
+  existing: SecurityRequest,
+  merged: SecurityRequest
+): boolean {
+  const changed = (a?: string, b?: string) => (a ?? '').trim() !== (b ?? '').trim();
+  return (
+    changed(existing.title, merged.title) ||
+    changed(existing.location, merged.location) ||
+    changed(existing.description, merged.description) ||
+    changed(existing.siteInstructions, merged.siteInstructions) ||
+    changed(existing.uniformRequirements, merged.uniformRequirements) ||
+    changed(existing.equipmentRequirements, merged.equipmentRequirements) ||
+    changed(existing.parkingInstructions, merged.parkingInstructions) ||
+    changed(existing.accessInstructions, merged.accessInstructions) ||
+    changed(existing.contactName, merged.contactName) ||
+    changed(existing.contactPhone, merged.contactPhone) ||
+    JSON.stringify(existing.operationalDetails ?? null) !==
+      JSON.stringify(merged.operationalDetails ?? null)
+  );
+}

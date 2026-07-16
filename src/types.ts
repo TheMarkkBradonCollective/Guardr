@@ -1238,6 +1238,10 @@ export interface NotificationPreferences {
   guardTrustedStatus: boolean;
   clientTrustedStatus: boolean;
   jobRelisted: boolean;
+  jobScheduleChanged: boolean;
+  preShiftBriefing: boolean;
+  standingCrewInvite: boolean;
+  crewLeadRequest: boolean;
   teamChatMessage: boolean;
   companyPlacardExpiry: boolean;
   updatedAt: string;

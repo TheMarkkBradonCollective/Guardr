@@ -1,5 +1,25 @@
 import type { SecurityRequest, SessionUser } from '../types';
 import { reportPushEvent } from './pushApi';
+import { guardsToNotifyForScheduleChange } from './jobScheduleChange';
+
+/** Notify every assigned / pending / crew guard on a job. */
+export function notifyAssignedGuards(
+  actor: SessionUser,
+  job: Pick<SecurityRequest, 'id' | 'title' | 'location'>,
+  title: string,
+  body: string
+): void {
+  for (const guardId of guardsToNotifyForScheduleChange(job as SecurityRequest)) {
+    void reportPushEvent(actor, {
+      type: 'assignment',
+      recipientUserId: guardId,
+      requestId: job.id,
+      location: job.location,
+      title,
+      body,
+    });
+  }
+}
 
 /** Account, credential, and profile updates for guards and clients. */
 export function notifyAccountUpdate(

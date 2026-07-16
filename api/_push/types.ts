@@ -5,6 +5,7 @@ export type PushNotificationType =
   | 'guard_checkin'
   | 'guard_clockout'
   | 'guard_arrived'
+  | 'guard_en_route'
   | 'guard_break_start'
   | 'guard_break_end'
   | 'guard_left_site'
@@ -34,8 +35,12 @@ export type PushNotificationType =
   | 'job_schedule_changed'
   | 'team_chat_message'
   | 'standing_crew_invite'
+  | 'account_update'
+  | 'job_status_update'
+  | 'payout_ready'
   | 'company_placard_expiry'
   | 'pre_shift_briefing'
+  | 'crew_lead_request'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

@@ -1248,6 +1248,10 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_schedule_chang
 COMMENT ON COLUMN notification_preferences.job_schedule_changed IS 'Alert when a job schedule changes (client, guard, or staff)';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS standing_crew_invite BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.standing_crew_invite IS 'Guard alert for standing crew invites and crew updates';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS crew_lead_request BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.crew_lead_request IS 'Guard/staff alert for crew lead request outcomes';
 
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';

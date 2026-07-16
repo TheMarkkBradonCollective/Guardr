@@ -38,6 +38,14 @@ var EVENT_DEFAULTS = {
     title: "Guard arrived on site",
     body: event.guardName ? `${event.guardName} arrived${event.location ? ` at ${event.location}` : ""}` : "Your guard arrived on site"
   }),
+  guard_en_route: (event) => ({
+    title: "Guard en route",
+    body: event.body ?? (event.guardName ? `${event.guardName} is heading to${event.location ? ` ${event.location}` : " site"}` : "Your guard is en route to the job site")
+  }),
+  standing_crew_invite: (event) => ({
+    title: event.title ?? "Standing crew invitation",
+    body: event.body || "You have a standing crew update"
+  }),
   guard_left_site: (event) => ({
     title: "Guard left job site",
     body: event.guardName ? `${event.guardName} left the job site${event.location ? ` at ${event.location}` : ""}` : "A guard left the job site during an active shift"
@@ -89,6 +97,10 @@ var EVENT_DEFAULTS = {
   guard_application: (event) => ({
     title: "Guard application",
     body: event.body || "A guard applied to an open job offer"
+  }),
+  crew_lead_request: (event) => ({
+    title: "Crew lead request",
+    body: event.body || "A trusted guard requested approval to lead their own standing crew"
   }),
   guard_pending_approval: (event) => ({
     title: "Guard pending approval",
@@ -153,6 +165,18 @@ var EVENT_DEFAULTS = {
   team_chat_message: (event) => ({
     title: "Crew chat",
     body: event.body || "New message in crew chat"
+  }),
+  account_update: (event) => ({
+    title: event.title ?? "Account update",
+    body: event.body || "Your Guardr account was updated"
+  }),
+  job_status_update: (event) => ({
+    title: event.title ?? "Job update",
+    body: event.body || "A job you are involved with was updated"
+  }),
+  payout_ready: (event) => ({
+    title: event.title ?? "Payout ready",
+    body: event.body || "Earnings are ready to collect in Pay"
   }),
   company_placard_expiry: (event) => ({
     title: event.title ?? "Company placard reminder",
@@ -279,6 +303,18 @@ async function buildEventDispatchPayloads(db, event) {
   if (event.type === "support_ticket_status" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
+  if (event.type === "account_update" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "payout_ready") {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    if (event.guardId) {
+      return [{ ...payload, userId: event.guardId }];
+    }
+    return [];
+  }
   if (event.type === "company_placard_expiry" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
@@ -287,8 +323,21 @@ async function buildEventDispatchPayloads(db, event) {
     if (!userId) return [];
     return [{ ...payload, userId }];
   }
-  if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed") && event.recipientUserId) {
+  if (event.type === "job_status_update") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.clientId) payloads.push({ ...payload, userId: event.clientId });
+    if (event.guardId) payloads.push({ ...payload, userId: event.guardId });
+    else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
+    return payloads;
+  }
+  if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed" || event.type === "standing_crew_invite" || event.type === "crew_lead_request") && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "crew_lead_request") {
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "standing_crew_invite" && event.guardId && !event.recipientUserId) {
+    return [{ ...payload, userId: event.guardId }];
   }
   if (event.type === "team_chat_message") {
     if (event.recipientUserId) {
@@ -346,6 +395,16 @@ async function buildEventDispatchPayloads(db, event) {
   if (event.type === "client_message") {
     return [{ ...payload, role: "client" }];
   }
+  if (event.type === "guard_en_route") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.requestId) {
+      const { clientId } = await loadJobParticipants(db, event.requestId);
+      if (clientId) payloads.push({ ...payload, userId: clientId });
+    } else if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    }
+    return payloads;
+  }
   if (event.type === "guard_checkin" || event.type === "guard_clockout" || event.type === "guard_arrived" || event.type === "guard_break_start" || event.type === "guard_break_end" || event.type === "guard_left_site") {
     const payloads = [{ ...payload, role: "dispatch" }];
     if (event.requestId) {
@@ -387,6 +446,7 @@ function resolveNotificationUrl(type, options = {}) {
     case "guard_checkin":
     case "guard_clockout":
     case "guard_arrived":
+    case "guard_en_route":
     case "guard_left_site":
     case "guard_break_start":
     case "guard_break_end":
@@ -418,9 +478,11 @@ function resolveNotificationUrl(type, options = {}) {
     case "client_message":
       return "/client/messages";
     case "job_submitted":
-      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=job-offers";
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
     case "guard_application":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "crew_lead_request":
+      return "/staff/crews";
     case "guard_pending_approval":
       return options.guardId ? `/staff/applications?g=${encodeURIComponent(options.guardId)}` : "/staff/applications";
     case "client_pending_approval":
@@ -431,7 +493,13 @@ function resolveNotificationUrl(type, options = {}) {
       return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
     case "support_ticket":
     case "support_ticket_status":
-      return options.ticketId ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}` : "/staff/messages?mtab=support";
+      return options.ticketId ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}` : "/staff/messages";
+    case "account_update":
+      return "/staff/settings";
+    case "job_status_update":
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "payout_ready":
+      return "/guard/earnings";
     case "dispute_update":
       return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
     case "guard_trusted_status":
@@ -460,6 +528,7 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
   const isStaff = role === "moderator" || role === "administrator" || role === "director" || role === "owner";
   switch (type) {
     case "guard_arrived":
+    case "guard_en_route":
     case "guard_left_site":
       if (role === "client") {
         return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
@@ -543,12 +612,26 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
         return `/client/requests?jc=${encodeURIComponent(options.requestId)}`;
       }
       if (role === "client") {
-        return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
+        return options.ticketId ? `/client/messages?st=${encodeURIComponent(options.ticketId)}` : "/client/messages";
       }
       if (role === "guard") {
-        return options.ticketId ? `/guard/support?st=${encodeURIComponent(options.ticketId)}` : "/guard/support";
+        return options.ticketId ? `/guard/messages?st=${encodeURIComponent(options.ticketId)}` : "/guard/messages";
       }
-      return options.ticketId ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}` : "/staff/messages?mtab=support";
+      return options.ticketId ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}` : "/staff/messages";
+    case "account_update":
+      if (role === "client") return "/client/settings";
+      if (role === "guard") return "/guard/settings";
+      return "/staff/settings";
+    case "job_status_update":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "payout_ready":
+      return role === "guard" ? "/guard/earnings" : "/staff/payments";
     case "dispute_update":
       if (role === "client") {
         return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
@@ -596,6 +679,7 @@ function rolesForNotificationType(type) {
     case "guard_checkin":
     case "guard_clockout":
     case "guard_arrived":
+    case "guard_en_route":
     case "guard_left_site":
     case "guard_break_start":
     case "guard_break_end":
@@ -609,6 +693,8 @@ function rolesForNotificationType(type) {
     case "assignment":
       return ["guard"];
     case "guard_application":
+      return ["dispatch", "admin"];
+    case "crew_lead_request":
       return ["dispatch", "admin"];
     case "emergency_alert":
       return ["guard", "client", "dispatch", "admin"];
@@ -896,9 +982,15 @@ var PREF_COLUMN = {
   guard_trusted_status: "guard_trusted_status",
   client_trusted_status: "client_trusted_status",
   job_relisted: "job_relisted",
-  job_schedule_changed: "assignment",
+  job_schedule_changed: "job_schedule_changed",
   team_chat_message: "team_chat_message",
-  standing_crew_invite: "assignment",
+  standing_crew_invite: "standing_crew_invite",
+  crew_lead_request: "crew_lead_request",
+  pre_shift_briefing: "pre_shift_briefing",
+  guard_en_route: "guard_arrived",
+  account_update: "support_ticket_status",
+  job_status_update: "assignment",
+  payout_ready: "assignment",
   company_placard_expiry: "company_placard_expiry"
 };
 async function isTypeEnabledForUser(db, userId, type) {
