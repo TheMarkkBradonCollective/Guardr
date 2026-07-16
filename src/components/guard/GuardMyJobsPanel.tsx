@@ -80,6 +80,13 @@ interface GuardMyJobsPanelProps {
   onViewBriefing?: (jobId: string) => void;
 }
 
+function jobsHeroClass(scheduledCount: number, availableCount: number): string {
+  if (scheduledCount >= 3) return 'guard-tier-hero-professional';
+  if (scheduledCount > 0 || availableCount >= 2) return 'guard-tier-hero-rising';
+  if (availableCount > 0) return 'guard-tier-hero-rising';
+  return 'guard-tier-hero-starting';
+}
+
 function JobRow({
   job,
   onSelect,
@@ -190,6 +197,24 @@ export function GuardMyJobsPanel({
     [availableJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
   );
 
+  const nextScheduled = useMemo(() => {
+    if (scheduledJobs.length === 0) return null;
+    return [...scheduledJobs].sort(
+      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    )[0];
+  }, [scheduledJobs]);
+
+  const jobsHeroSubtitle = useMemo(() => {
+    if (nextScheduled) {
+      const timeUntil = formatTimeUntilShift(nextScheduled.startDate);
+      return `Next: ${nextScheduled.title} — ${timeUntil}`;
+    }
+    if (availableJobs.length > 0) {
+      return `${availableJobs.length} open shift${availableJobs.length === 1 ? '' : 's'} waiting for you.`;
+    }
+    return 'Browse the map or check back for new shifts near you.';
+  }, [nextScheduled, availableJobs.length]);
+
   const allJobs = useMemo(
     () => [...availableJobs, ...scheduledJobs, ...completedJobs, ...missedJobs],
     [availableJobs, scheduledJobs, completedJobs, missedJobs]
@@ -245,11 +270,43 @@ export function GuardMyJobsPanel({
   }
 
   return (
-    <AppScreen>
-      <div className="px-4 pt-4">
+    <AppScreen className="guard-tiered-screen">
+      <div className="guard-tiered-screen-pinned">
+        <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
+          <div
+            className={`guard-tier-hero guard-jobs-tier-hero ${jobsHeroClass(
+              scheduledJobs.length,
+              availableJobs.length
+            )}`}
+          >
+            <div className="guard-tier-hero-glow" aria-hidden />
+            <div className="guard-pref-tier-medal" aria-hidden>
+              <div className="guard-pref-tier-medal-ring">
+                <Briefcase className="guard-pref-tier-medal-icon" />
+              </div>
+            </div>
+            <p className="guard-tier-hero-eyebrow">Your shifts</p>
+            <h2 className="guard-tier-hero-name">My jobs</h2>
+            <div className="guard-tier-hero-score-row">
+              <span className="guard-tier-hero-score-label">Scheduled</span>
+              <span className="guard-tier-hero-score-value">
+                {scheduledJobs.length}
+                {availableJobs.length > 0 ? (
+                  <span className="guard-pref-hero-score-total"> · {availableJobs.length} open</span>
+                ) : null}
+              </span>
+            </div>
+            <p className="guard-tier-hero-subtitle">{jobsHeroSubtitle}</p>
+          </div>
+        </section>
+      </div>
+
+      <div className="guard-tiered-screen-toolbar px-4 pt-2">
         <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
       </div>
 
+      <div className="guard-tiered-screen-scroll">
+        <div className="guard-rating-body">
       {activeTab === 'available' && (
         <div className="app-section-body pt-2">
           {availableJobs.length === 0 ? (
@@ -344,6 +401,8 @@ export function GuardMyJobsPanel({
           )}
         </div>
       )}
+        </div>
+      </div>
     </AppScreen>
   );
 }

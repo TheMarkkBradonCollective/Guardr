@@ -296,19 +296,73 @@ export function GuardStandingCrewPanel({
     </div>
   );
 
-  if (!trusted && pendingIncoming.length === 0) {
+  const defaultHubHero = (() => {
+    const pendingTotal = pendingIncoming.length + pendingOutgoing.length;
+    const heroClass = crewHeroClass(active.length, pendingTotal);
+
+    let title = 'Crew hub';
+    let subtitle =
+      'Coordinate with trusted guards on standing teams and coordinated job crews.';
+    let scoreLabel: string | null = null;
+    let scoreValue: string | null = null;
+
+    if (!trusted && pendingIncoming.length === 0) {
+      subtitle =
+        'When a trusted guard invites you to their standing crew, it will show up here.';
+    } else if (pendingIncoming.length > 0) {
+      title =
+        pendingIncoming.length === 1 ? '1 invitation' : `${pendingIncoming.length} invitations`;
+      scoreLabel = 'Pending invites';
+      scoreValue = String(pendingIncoming.length);
+      subtitle = 'Accept an invite to join a coordinator\u2019s standing team.';
+    } else if (trusted && (canRequestCrewLead || pendingCrewLeadRequest)) {
+      title = 'Build your team';
+      subtitle = pendingCrewLeadRequest
+        ? 'Your crew lead request is pending staff review.'
+        : 'Request approval to lead your own standing crew, or join another team with a code.';
+    } else if (trusted) {
+      title = 'Your crew';
+      subtitle = 'Use Join a crew below to link up with a coordinator\u2019s standing team.';
+    }
+
     return (
-      <>
-        {embedded && afterHero ? (
-          <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div>
-        ) : null}
-        <div className="guard-tiered-screen-scroll">
-          <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
-            When a trusted guard invites you to their standing crew, it will show up here.
-          </AppEmptyState>
+      <div className={`guard-tier-hero guard-crew-tier-hero ${heroClass}`}>
+        <div className="guard-tier-hero-glow" aria-hidden />
+        <div className="guard-pref-tier-medal" aria-hidden>
+          <div className="guard-pref-tier-medal-ring">
+            <Users className="guard-pref-tier-medal-icon" />
+          </div>
         </div>
-      </>
+        <p className="guard-tier-hero-eyebrow">Standing crew</p>
+        <h2 className="guard-tier-hero-name guard-crew-hero-name">{title}</h2>
+        {scoreLabel && scoreValue ? (
+          <div className="guard-tier-hero-score-row">
+            <span className="guard-tier-hero-score-label">{scoreLabel}</span>
+            <span className="guard-tier-hero-score-value">{scoreValue}</span>
+          </div>
+        ) : active.length > 0 ? (
+          <div className="guard-tier-hero-score-row">
+            <span className="guard-tier-hero-score-label">Active members</span>
+            <span className="guard-tier-hero-score-value">{active.length}</span>
+          </div>
+        ) : null}
+        <p className="guard-tier-hero-subtitle">{subtitle}</p>
+      </div>
     );
+  })();
+
+  if (!trusted && pendingIncoming.length === 0) {
+    const emptyBody = (
+      <AppEmptyState icon={<Users className="w-5 h-5" />} title="No team invitations">
+        When a trusted guard invites you to their standing crew, it will show up here.
+      </AppEmptyState>
+    );
+
+    if (embedded) {
+      return renderEmbeddedLayout(defaultHubHero, embeddedBody ?? emptyBody);
+    }
+
+    return emptyBody;
   }
 
   if (trusted && isStandingTeamMember && !leadsStandingCrew) {
@@ -566,17 +620,7 @@ export function GuardStandingCrewPanel({
   }
 
   if (embedded) {
-    return (
-      <>
-        {afterHero ? <div className="guard-tiered-screen-toolbar crew-hub-sticky-head">{afterHero}</div> : null}
-        <div className="guard-tiered-screen-scroll">
-          <div className="crew-hub-team-body">
-            {scrollPrefix}
-            {embeddedBody ?? bodyContent}
-          </div>
-        </div>
-      </>
-    );
+    return renderEmbeddedLayout(defaultHubHero, embeddedBody ?? bodyContent);
   }
 
   return (
