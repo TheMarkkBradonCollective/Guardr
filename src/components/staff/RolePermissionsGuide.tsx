@@ -34,7 +34,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Manage Administrators & Moderators (not other Directors)',
       'Payments, payment settings, agreements & audit log',
       'View all financial data & override system restrictions',
-      'Cash payments, job creation & guard assignment',
+      'Cash payments & job creation',
     ],
   },
   {

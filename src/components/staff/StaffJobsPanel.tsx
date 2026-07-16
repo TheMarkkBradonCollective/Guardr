@@ -24,7 +24,6 @@ interface StaffJobsPanelProps {
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
-  onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -61,7 +60,6 @@ export function StaffJobsPanel({
   onApproveRequest,
   onDenyRequest,
   onCreateJob,
-  onAssignGuard,
   onEditJobListing,
   canEditJobListing = false,
   onApproveGuardApplication,
@@ -119,11 +117,9 @@ export function StaffJobsPanel({
       <StaffJobDetailPanel
         req={req}
         guards={guards}
-        canManageJobs={canManageJobs}
         canEditJobListing={canEditJobListing}
         onApproveRequest={onApproveRequest}
         onDenyRequest={onDenyRequest}
-        onAssignGuard={onAssignGuard}
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}

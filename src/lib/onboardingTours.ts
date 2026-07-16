@@ -177,7 +177,7 @@ export const STAFF_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Jobs & live ops',
       body: 'Manage open jobs, assignments, and live shifts.',
       detail:
-        'Edit listings, assign guards, and jump into job chats from the Jobs section.',
+        'Edit listings and jump into job chats from the Jobs section.',
       targetSelector: '[data-tour="staff-jobs"]',
       navigate: { staffSection: 'jobs' },
     },

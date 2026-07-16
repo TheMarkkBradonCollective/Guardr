@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { JobStatusBadge } from '../jobs/JobStatusBadge';
-import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { rankApplicantGuards } from '../../lib/jobApplications';
 import { rankGuardsForJob } from '../../lib/guardQualificationMatching';
 import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
-import { hasDirectorStaffOverride } from '../../lib/permissions';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
-import { isGuardAccountActive } from '../../lib/guardAccountActivation';
 import {
   canStaffEditJobTitleAndLocation,
   canStaffEditJobMapCoordinates,
@@ -15,26 +13,22 @@ import {
   canStaffReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
-import { WfBadge, WfListCard } from '../ui/wireframe';
-import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
 
 export interface StaffJobDetailPanelProps {
   req: SecurityRequest;
   guards: SecurityGuard[];
-  canManageJobs?: boolean;
   canEditJobListing?: boolean;
   staffRole?: PlatformRole;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
-  onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -46,11 +40,9 @@ export interface StaffJobDetailPanelProps {
 export function StaffJobDetailPanel({
   req,
   guards,
-  canManageJobs,
   canEditJobListing,
   onApproveRequest,
   onDenyRequest,
-  onAssignGuard,
   onEditJobListing,
   onApproveGuardApplication,
   onDenyGuardApplication,
@@ -58,8 +50,6 @@ export function StaffJobDetailPanel({
   staffRole,
   showStatusHeader = true,
 }: StaffJobDetailPanelProps) {
-  const [assignGuardId, setAssignGuardId] = useState('');
-  const [assigning, setAssigning] = useState(false);
   const [editing, setEditing] = useState(false);
   useEffect(() => setEditing(false), [req.id]);
   const scheduleLocked = isJobScheduleLocked(req);
@@ -72,21 +62,6 @@ export function StaffJobDetailPanel({
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isAwaitingClientGuardApproval(req);
-  const canAssign =
-    canManageJobs &&
-    onAssignGuard &&
-    staffRole &&
-    hasDirectorStaffOverride({ role: staffRole }) &&
-    !req.assignedGuardId &&
-    !awaitingClientGuard &&
-    (req.status === 'open' || req.status === 'pending-review');
-  const assignableGuards = useMemo(
-    () =>
-      guards
-        .filter((g) => isGuardAccountActive(g))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [guards]
-  );
   const rankedApplicants = useMemo(
     () => (req.status === 'open' && !req.assignedGuardId ? rankApplicantGuards(req, guards) : []),
     [req, guards]
@@ -98,17 +73,6 @@ export function StaffJobDetailPanel({
         : [],
     [req, guards]
   );
-
-  const handleAssign = async () => {
-    if (!assignGuardId || !onAssignGuard) return;
-    setAssigning(true);
-    try {
-      await onAssignGuard(req.id, assignGuardId);
-      setAssignGuardId('');
-    } finally {
-      setAssigning(false);
-    }
-  };
 
   return (
     <div className="staff-detail-pane space-y-4">
@@ -185,36 +149,6 @@ export function StaffJobDetailPanel({
             {rankedMatchScores.map((score, index) => (
               <GuardMatchScoreRow key={score.guard.id} score={score} rank={index + 1} />
             ))}
-          </div>
-        </div>
-      )}
-      {canAssign && (
-        <div className="pt-2 border-t border-brand-border space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-            Director safety override
-          </p>
-          <div className="app-action-row--equal">
-            <select
-              value={assignGuardId}
-              onChange={(e) => setAssignGuardId(e.target.value)}
-              className="uber-input flex-1 min-w-[12rem] !h-9 !text-sm"
-            >
-              <option value="">Select guard…</option>
-              {assignableGuards.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={handleAssign}
-              disabled={!assignGuardId || assigning}
-              className="app-button-primary app-btn-sm gap-1.5"
-            >
-              {assigning ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-              Select guard
-            </button>
           </div>
         </div>
       )}

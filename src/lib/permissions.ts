@@ -377,7 +377,7 @@ export function canSetTrustedStatus(user: Pick<SessionUser, 'role'>): boolean {
   return hasExecutivePaymentControls(user);
 }
 
-/** Director and Founder create jobs for clients and assign guards */
+/** Director and Founder create jobs for clients */
 export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_company_operations');
 }
