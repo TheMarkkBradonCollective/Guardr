@@ -13,6 +13,7 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../layouts/Accou
 import { showAppAlert } from '../ui/AppConfirm';
 import { useDevice } from '../../lib/platform';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
+import { TabletStaffAdminShell } from '../layouts/tablet/TabletStaffAdminShell';
 import {
   AlertTriangle,
   BarChart3,
@@ -218,6 +219,32 @@ export function StaffOpsLayout({
       >
         {children}
       </DesktopStaffAdminShell>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    return (
+      <TabletStaffAdminShell
+        currentUser={currentUser}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+        onSignOut={onSignOut}
+        isDbConnected={isDbConnected}
+        navItems={navItems}
+        screenTitle={screenTitle}
+        navHighlight={navHighlight}
+        showFinance={showFinance}
+        showSettings={true}
+        showPermissions={showPermissions}
+        showDisputes={showDisputes}
+        showCities={showCities}
+        hideHeader={hideHeader}
+        accountNotifications={accountNotifications}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+      >
+        {children}
+      </TabletStaffAdminShell>
     );
   }
 

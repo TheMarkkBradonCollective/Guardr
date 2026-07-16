@@ -4,6 +4,9 @@
 @import "./styles/desktop-app.css";
 @import "./styles/desktop-landing.css";
 @import "./styles/desktop-auth.css";
+@import "./styles/tablet-app.css";
+@import "./styles/app-pwa.css";
+@import "./styles/app-native.css";
 
 @theme {--font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;

@@ -1,0 +1,210 @@
+/* Tablet merge shell — desktop rail + command bar + mobile touch content.
+   Applies to browser, PWA, and APK at tablet widths (768–1023px). */
+
+body[data-form-factor="tablet"] .tablet-admin-shell {
+  display: flex;
+  flex-direction: row;
+  background: var(--brand-bg);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail {
+  display: flex;
+  flex-direction: column;
+  width: 4.75rem;
+  flex-shrink: 0;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0 max(0.75rem, env(safe-area-inset-bottom, 0px));
+  border-right: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  z-index: 20;
+}
+
+html.theme-dark body[data-form-factor="tablet"] .tablet-admin-rail {
+  background: color-mix(in srgb, var(--brand-bg) 88%, #000);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail--staff {
+  width: 5rem;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem 0.85rem;
+  position: relative;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-label {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  text-align: center;
+  line-height: 1.1;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-live {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.65rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-surface);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-height: 0;
+  padding: 0 0.45rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-nav--scroll {
+  scrollbar-width: none;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-nav--scroll::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.85rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-item:hover {
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-text);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-item--active {
+  background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  color: var(--brand-primary);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-item-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-item-badge {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: var(--status-danger);
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  line-height: 1rem;
+  text-align: center;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.35rem 0;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-footer .account-menu-trigger {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-main {
+  min-width: 0;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-header-slot {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-content {
+  background: var(--brand-bg);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-shell--map .tablet-admin-content,
+body[data-form-factor="tablet"] .tablet-admin-shell--map .desktop-command-bar--map {
+  background: var(--brand-bg);
+}
+
+/* Tablet command bar — slightly denser than desktop */
+body[data-form-factor="tablet"] .tablet-admin-shell .desktop-command-bar {
+  padding: 0.65rem 1rem 0.55rem;
+}
+
+body[data-form-factor="tablet"] .tablet-admin-shell .desktop-command-bar-title {
+  font-size: 1.125rem;
+}
+
+/* App welcome tablet split — hero left, sign-in dock right */
+body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-main--tablet {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0 1.75rem 1.25rem;
+}
+
+body[data-form-factor="tablet"] .app-welcome-hero--tablet {
+  max-width: none;
+  padding-top: 1rem;
+}
+
+body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-headline {
+  font-size: clamp(1.75rem, 3.2vw, 2.35rem);
+}
+
+body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-dock {
+  margin: 0;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+body[data-form-factor="tablet"] .app-welcome-shell-badge {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--brand-border);
+}
+
+body[data-form-factor="tablet"] .app-welcome-shell-badge--pwa {
+  color: var(--brand-primary);
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+}
+
+body[data-form-factor="tablet"] .app-welcome-shell-badge--native {
+  color: var(--brand-accent-text);
+  background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}

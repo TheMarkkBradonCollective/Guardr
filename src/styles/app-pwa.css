@@ -1,0 +1,70 @@
+/* PWA standalone shell — mobile + tablet installed web app.
+   Targets body[data-shell="pwa"] and body.shell-pwa. */
+
+body[data-shell="pwa"],
+body.shell-pwa {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-shell="pwa"] .app-welcome,
+body.shell-pwa .app-welcome {
+  background: var(--brand-bg);
+}
+
+body[data-shell="pwa"] .app-welcome-header,
+body.shell-pwa .app-welcome-header {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--brand-bg) 82%, transparent);
+}
+
+body[data-shell="pwa"] .app-welcome-dock,
+body.shell-pwa .app-welcome-dock {
+  border-top: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-bg) 0%, transparent) 0%,
+    color-mix(in srgb, var(--brand-surface) 88%, var(--brand-bg)) 24%
+  );
+}
+
+body[data-shell="pwa"] .auth-sheet-panel,
+body.shell-pwa .auth-sheet-panel {
+  border-top-left-radius: 1.5rem !important;
+  border-top-right-radius: 1.5rem !important;
+}
+
+body[data-shell="pwa"] .role-app-shell--compact,
+body.shell-pwa .role-app-shell--compact {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+body[data-shell="pwa"] .bottom-nav-bar,
+body.shell-pwa .bottom-nav-bar {
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+body[data-shell="pwa"] .tablet-admin-rail,
+body.shell-pwa .tablet-admin-rail {
+  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+}
+
+body[data-shell="pwa"] .app-welcome-shell-badge--pwa,
+body.shell-pwa .app-welcome-shell-badge--pwa {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 25%, transparent);
+}
+
+/* PWA tablet — softer card chrome */
+body[data-view-surface="pwa-tablet"] .app-welcome--tablet .app-welcome-dock {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
+    var(--shadow-md);
+}
+
+body[data-view-surface="pwa-tablet"] .tablet-admin-rail-item:active,
+body[data-view-surface="pwa-mobile"] .bottom-nav-item:active {
+  transform: scale(0.96);
+  transition: transform 0.12s ease;
+}

@@ -30,11 +30,42 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 | Device | Primary users | UI behavior |
 |--------|---------------|-------------|
 | Phone | Guards, clients | Single column, bottom nav, big actions |
-| Tablet | Staff, guards, clients | Sidebar from `md` breakpoint; split list/detail panels |
-| Desktop / Chromebook | Staff, clients, admin | Full dashboards, analytics, financial controls |
-| PWA standalone | All | No browser chrome; safe-area padding; sage theme color |
+| Tablet | Staff, guards, clients | **Merge shell** — icon rail + command bar + touch content (`TabletAdminShell`) |
+| Desktop / Chromebook | Staff, clients, admin | Full dashboards, analytics, financial controls (`DesktopAdminShell`) |
+| PWA standalone | All | No browser chrome; safe-area padding; `app-pwa.css` styling |
+| Native APK | All | Capacitor shell; native safe areas; `app-native.css` styling |
 
 Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevice()` / `body[data-form-factor]`.
+
+### View surface model (`/viewit`)
+
+Guardr uses a **two-axis** layout model:
+
+```
+shellKind (browser | pwa | native)  ×  formFactor (mobile | tablet | desktop)  →  viewSurface
+```
+
+| Surface | Example |
+|---------|---------|
+| `browser-desktop` | Advanced marketing + admin workspace |
+| `browser-tablet` | Landing merge + `TabletAdminShell` |
+| `browser-mobile` | Simple mobile website |
+| `pwa-mobile` / `pwa-tablet` | Installed PWA welcome + app chrome |
+| `native-mobile` / `native-tablet` | APK welcome + native touch/safe-area |
+
+Central files:
+
+```
+src/lib/platform/shellKind.ts       — browser | pwa | native
+src/lib/platform/viewSurface.ts     — combined surface resolver
+src/components/layouts/tablet/      — TabletAdminShell, TabletStaffAdminShell
+src/styles/tablet-app.css           — tablet merge styles
+src/styles/app-pwa.css              — PWA overrides
+src/styles/app-native.css           — APK overrides
+.cursor/commands/viewit.md          — slash command for surface work
+```
+
+`DeviceProvider` sets `body[data-shell]`, `body[data-view-surface]`, and `body[data-form-factor]` for CSS targeting.
 
 ## Theme System
 
@@ -73,9 +104,18 @@ Design foundation in `src/lib/platform/offlineQueue.ts`:
 ```
 src/lib/platform/
   device.ts           — breakpoints, standalone detection
+  shellKind.ts        — browser | pwa | native
+  viewSurface.ts      — combined surface id (e.g. pwa-tablet)
   theme.ts            — theme load/save/apply
   offlineQueue.ts     — IndexedDB offline queue
   DeviceProvider.tsx  — React context + body data attributes
+src/components/layouts/tablet/
+  TabletAdminShell.tsx
+  TabletStaffAdminShell.tsx
+src/styles/
+  tablet-app.css      — tablet merge shell
+  app-pwa.css         — PWA standalone overrides
+  app-native.css      — APK native overrides
 capacitor.config.ts   — native wrapper config (when Capacitor added)
 public/manifest.json  — PWA manifest
 public/sw.js          — service worker shell cache
@@ -88,4 +128,5 @@ public/sw.js          — service worker shell cache
 - [x] Add Capacitor FCM push notification plugin (native APK; Web/PWA still uses Web Push)
 - [ ] Generate PNG icon set (192, 512) for store requirements
 - [ ] Tablet split panels for staff live jobs (staff-ops branch)
+- [x] Tablet merge shells (`TabletAdminShell`, `TabletStaffAdminShell`) + view surface model
 - [ ] E2E test PWA install on iOS Safari + Android Chrome
