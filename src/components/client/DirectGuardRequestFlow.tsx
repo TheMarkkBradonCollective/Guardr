@@ -15,7 +15,8 @@ import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEd
 import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
 import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
+import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
+import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -56,6 +57,7 @@ export function DirectGuardRequestFlow({
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
+  const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => getDefaultShiftStart(), []);
   const [step, setStep] = useState<FlowStep>(1);
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
@@ -299,7 +301,7 @@ export function DirectGuardRequestFlow({
             <div>
               <label className="uber-label block mb-1">City</label>
               <select value={jobState} onChange={(e) => setJobState(resolveJobCity(e.target.value))} className="uber-select w-full" required>
-                {CALIFORNIA_CITIES.map((city) => (
+                {selectableClientCities.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>

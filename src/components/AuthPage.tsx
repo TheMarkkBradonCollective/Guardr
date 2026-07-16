@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY } from '../lib/californiaCities';
+import {
+  checkCityAccessForRole,
+  defaultSelectableCity,
+  getSignupCityNames,
+} from '../lib/platformCities';
 import { Logo } from './Logo';
 import {
   Shield,
@@ -281,7 +286,9 @@ export function AuthPage({
   const [guardYearsExperience, setGuardYearsExperience] = useState('');
   const [guardSpecialties, setGuardSpecialties] = useState<string[]>([]);
   const [guardArmedPreference, setGuardArmedPreference] = useState<GuardArmedPreference | ''>('');
-  const [guardPrimaryCity, setGuardPrimaryCity] = useState<string>(DEFAULT_CALIFORNIA_CITY);
+  const [guardPrimaryCity, setGuardPrimaryCity] = useState<string>(() =>
+    defaultSelectableCity('guard')
+  );
   const [guardExtraCities, setGuardExtraCities] = useState('');
   const [guardSummary, setGuardSummary] = useState('');
   const [guardAvailabilityNotes, setGuardAvailabilityNotes] = useState('');
@@ -303,7 +310,9 @@ export function AuthPage({
   const [serviceFrequencies, setServiceFrequencies] = useState<string[]>([]);
   const [estimatedStartDate, setEstimatedStartDate] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
-  const [serviceCity, setServiceCity] = useState<string>(DEFAULT_CALIFORNIA_CITY);
+  const [serviceCity, setServiceCity] = useState<string>(() => defaultSelectableCity('client'));
+  const [guardCityAccessMsg, setGuardCityAccessMsg] = useState('');
+  const [clientCityAccessMsg, setClientCityAccessMsg] = useState('');
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [referredByText, setReferredByText] = useState('');
   const [referredById, setReferredById] = useState('');
@@ -319,6 +328,28 @@ export function AuthPage({
     setIsSignUp(initialMode === 'sign-up');
     setErrorMsg('');
   }, [initialRole, initialMode]);
+
+  const signupCities = getSignupCityNames();
+
+  const handleGuardCityChange = (city: string) => {
+    setGuardPrimaryCity(city);
+    const access = checkCityAccessForRole(city, 'guard');
+    if (access.allowed === false) {
+      setGuardCityAccessMsg(access.message);
+      return;
+    }
+    setGuardCityAccessMsg('');
+  };
+
+  const handleClientCityChange = (city: string) => {
+    setServiceCity(city);
+    const access = checkCityAccessForRole(city, 'client');
+    if (access.allowed === false) {
+      setClientCityAccessMsg(access.message);
+      return;
+    }
+    setClientCityAccessMsg('');
+  };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -374,6 +405,11 @@ export function AuthPage({
           setErrorMsg('Select your primary service area.');
           return;
         }
+        const guardCityAccess = checkCityAccessForRole(guardPrimaryCity, 'guard');
+        if (guardCityAccess.allowed === false) {
+          setErrorMsg(guardCityAccess.message);
+          return;
+        }
         if (!guardCardStatus) {
           setErrorMsg('Tell us your current guard card status.');
           return;
@@ -404,6 +440,11 @@ export function AuthPage({
       const randomId = `${role}-${Date.now()}`;
 
       if (role === 'client') {
+        const clientCityAccess = checkCityAccessForRole(serviceCity, 'client');
+        if (clientCityAccess.allowed === false) {
+          setErrorMsg(clientCityAccess.message);
+          return;
+        }
         const company = clientCompanyName.trim();
         const clientProfile: Client = {
           id: randomId,
@@ -888,10 +929,10 @@ export function AuthPage({
                         <select
                           required
                           value={guardPrimaryCity}
-                          onChange={(e) => setGuardPrimaryCity(e.target.value)}
+                          onChange={(e) => handleGuardCityChange(e.target.value)}
                           className="uber-input pl-10 appearance-none pr-8"
                         >
-                          {CALIFORNIA_CITIES.map((city) => (
+                          {signupCities.map((city) => (
                             <option key={city} value={city}>
                               {city}
                             </option>
@@ -899,6 +940,9 @@ export function AuthPage({
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                       </div>
+                      {guardCityAccessMsg ? (
+                        <p className="text-xs text-amber-400 mt-1.5">{guardCityAccessMsg}</p>
+                      ) : null}
                     </div>
                     <div>
                       <label className="uber-label block mb-2">
@@ -1212,15 +1256,18 @@ export function AuthPage({
                       <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                       <select
                         value={serviceCity}
-                        onChange={(e) => setServiceCity(e.target.value)}
+                        onChange={(e) => handleClientCityChange(e.target.value)}
                         className="uber-select pl-10"
                       >
-                        {CALIFORNIA_CITIES.map((city) => (
+                        {signupCities.map((city) => (
                           <option key={city} value={city}>{city}, CA</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                     </div>
+                    {clientCityAccessMsg && (
+                      <p className="text-xs text-amber-400 mt-1.5">{clientCityAccessMsg}</p>
+                    )}
                     <p className="text-xs text-brand-text-muted mt-1.5">Guardr operates in California only. All licensing follows CA BSIS rules.</p>
                   </div>
                   <div>

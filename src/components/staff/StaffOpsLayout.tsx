@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { getStaffNavAccessNotice } from '../../lib/staffNavAccess';
 import { StaffNavItem } from './StaffSidebarNav';
@@ -34,6 +34,7 @@ import {
   UserCheck,
   Users,
   UsersRound,
+  MapPinned,
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -78,6 +79,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   disputes: 'Disputes',
   analytics: 'Analytics',
   settings: 'System Settings',
+  cities: 'City markets',
   guide: 'Guide',
   'dev-updates': 'Dev notes',
   profile: 'Profile',
@@ -105,6 +107,7 @@ export function StaffOpsLayout({
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
+  const showCities = canViewCityMarkets(currentUser);
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
@@ -130,10 +133,11 @@ export function StaffOpsLayout({
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
+    { id: 'cities', label: 'City markets', icon: MapPinned, citiesOnly: true },
     { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];
 
-  const accessFlags = { showFinance, showSettings, showDisputes };
+  const accessFlags = { showFinance, showSettings, showDisputes, showCities };
   const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
 
@@ -190,6 +194,7 @@ export function StaffOpsLayout({
         showFinance={showFinance}
         showSettings={showSettings}
         showDisputes={showDisputes}
+        showCities={showCities}
         onOpenLegal={onOpenLegal}
         hideHeader={hideHeader}
         headerActions={headerActions}

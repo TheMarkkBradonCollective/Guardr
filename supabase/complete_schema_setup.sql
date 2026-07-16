@@ -98,7 +98,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_description TEXT DEFAU
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
 ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check
-  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator'));
+  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator'));
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_theme_preference_check;
 ALTER TABLE guards ADD CONSTRAINT guards_theme_preference_check
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS staff (
   phone TEXT NOT NULL DEFAULT '',
   bio TEXT NOT NULL DEFAULT '',
   staff_role TEXT NOT NULL
-    CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator')),
+    CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator')),
   user_status TEXT NOT NULL DEFAULT 'active'
     CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   password TEXT,
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS staff (
 
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_staff_role_check;
 ALTER TABLE staff ADD CONSTRAINT staff_staff_role_check
-  CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator'));
+  CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator'));
 
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_user_status_check;
 ALTER TABLE staff ADD CONSTRAINT staff_user_status_check
@@ -982,6 +982,32 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL
 
 INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
+-- ── PLATFORM CITIES (market rollout controls) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS platform_cities (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  state_code TEXT NOT NULL DEFAULT 'CA',
+  status TEXT NOT NULL DEFAULT 'open'
+    CHECK (status IN ('open', 'closed', 'waitlist')),
+  waitlist_audience TEXT NOT NULL DEFAULT 'both'
+    CHECK (waitlist_audience IN ('guard', 'client', 'both')),
+  recommend_open BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_by TEXT
+);
+
+COMMENT ON TABLE platform_cities IS 'Director-controlled city rollout — open, closed, or waitlist with audience targeting.';
+COMMENT ON COLUMN platform_cities.status IS 'open = live; closed = deny applications; waitlist = accept but hold staff release';
+COMMENT ON COLUMN platform_cities.waitlist_audience IS 'Which role sees waitlist messaging when status is waitlist';
+COMMENT ON COLUMN platform_cities.recommend_open IS 'Manager recommendation for directors to open a city';
+
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS managed_cities JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS assigned_manager_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+COMMENT ON COLUMN staff.managed_cities IS 'California cities this staff member may operate or manage';
+COMMENT ON COLUMN staff.assigned_manager_ids IS 'Manager staff IDs supervising this account (set by Director+)';
+
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS verified_guard_self_serve BOOLEAN NOT NULL DEFAULT TRUE;
@@ -1333,7 +1359,7 @@ BEGIN
     'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
-    'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
+    'platform_settings', 'platform_cities', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
     'user_legal_acceptances', 'guard_insurance_policies', 'company_public_documents',
     'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
   ]
