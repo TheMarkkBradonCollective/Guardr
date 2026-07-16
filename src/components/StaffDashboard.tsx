@@ -23,7 +23,6 @@ import {
 import {
   canAccessFinancialControls,
   canAccessStaffPermissions,
-  canAccessStaffSettings,
   canEditJobListingDetails,
   canHandleDisputes,
   canManageClients,
@@ -228,6 +227,24 @@ interface StaffDashboardProps {
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  onUpdatePublicInformation?: (
+    patch: Pick<
+      PlatformSettings,
+      'ownerMessage' | 'directorMessage' | 'ownerMessageUpdatedAt' | 'directorMessageUpdatedAt'
+    >
+  ) => void | Promise<void>;
+  onUpdateStaffIntegrations?: (
+    patch: Partial<
+      Pick<
+        PlatformSettings,
+        | 'paymentStripeEnabled'
+        | 'paymentSquareEnabled'
+        | 'smsNotificationsEnabled'
+        | 'backgroundCheckProvider'
+        | 'insuranceVerificationMode'
+      >
+    >
+  ) => void | Promise<void>;
   onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
   onAddStaffProfile: (
     email: string,
@@ -397,6 +414,8 @@ export function StaffDashboard({
   onUpdatePlatformCity,
   onUpdateStaffCityAccess,
   onUpdatePlatformSettings,
+  onUpdatePublicInformation,
+  onUpdateStaffIntegrations,
   onUpdateStaffPermissions,
   onAddStaffProfile,
   onApproveStaffAccount,
@@ -553,7 +572,6 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
-  const showSettings = canAccessStaffSettings(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
@@ -576,11 +594,11 @@ export function StaffDashboard({
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
-    const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
+    const accessFlags = { showFinance, showSettings: true, showPermissions, showDisputes, showCities };
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showSettings, showPermissions, showDisputes, showCities]);
+  }, [section, showFinance, showPermissions, showDisputes, showCities]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -1080,34 +1098,22 @@ export function StaffDashboard({
           />
         );
       case 'settings':
-        return showSettings ? (
+        return (
           <StaffSettingsPanel
             currentUser={currentUser}
             platformSettings={platformSettings}
-            onUpdatePlatformSettings={onUpdatePlatformSettings}
+            onUpdatePublicInformation={onUpdatePublicInformation}
             companyPublicDocuments={companyPublicDocuments}
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
           />
-        ) : (
-          <AppBlockedAccessScreen
-            title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
-            message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Homepage messages', 'Platform controls']}
-          />
         );
       case 'integrations':
-        return showSettings ? (
+        return (
           <StaffIntegrationsPanel
             currentUser={currentUser}
             platformSettings={platformSettings}
-            onUpdatePlatformSettings={onUpdatePlatformSettings}
-          />
-        ) : (
-          <AppBlockedAccessScreen
-            title={STAFF_SECTION_ACCESS_MESSAGES.integrations!.title}
-            message={STAFF_SECTION_ACCESS_MESSAGES.integrations!.message}
-            placeholders={['Payment methods', 'SMS (Twilio)', 'Background checks']}
+            onUpdateStaffIntegrations={onUpdateStaffIntegrations}
           />
         );
       case 'profile':

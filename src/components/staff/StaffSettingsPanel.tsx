@@ -1,7 +1,6 @@
 import React from 'react';
 import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
-import { canManagePlatformSettings } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
@@ -11,7 +10,12 @@ import type { CompanyPublicDocument } from '../../lib/companyPlacard';
 interface StaffSettingsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
-  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
+  onUpdatePublicInformation?: (
+    patch: Pick<
+      PlatformSettings,
+      'ownerMessage' | 'directorMessage' | 'ownerMessageUpdatedAt' | 'directorMessageUpdatedAt'
+    >
+  ) => void | Promise<void>;
   companyPublicDocuments?: CompanyPublicDocument[];
   onSaveCompanyPublicDocument?: (doc: CompanyPublicDocument) => Promise<void>;
   onSetCompanyPlacardPublicEnabled?: (enabled: boolean) => Promise<void>;
@@ -37,13 +41,12 @@ function DesktopSettingsCard({
 export function StaffSettingsPanel({
   currentUser,
   platformSettings,
-  onUpdatePlatformSettings,
+  onUpdatePublicInformation,
   companyPublicDocuments = [],
   onSaveCompanyPublicDocument,
   onSetCompanyPlacardPublicEnabled,
 }: StaffSettingsPanelProps) {
   const { formFactor } = useDevice();
-  const canEdit = canManagePlatformSettings(currentUser);
   const isDesktop = formFactor === 'desktop';
 
   const companyPlacardBody =
@@ -66,9 +69,8 @@ export function StaffSettingsPanel({
           value={platformSettings.ownerMessage ?? ''}
           disabled={currentUser.role !== 'owner'}
           onChange={(e) =>
-            canEdit &&
-            onUpdatePlatformSettings?.({
-              ...platformSettings,
+            currentUser.role === 'owner' &&
+            onUpdatePublicInformation?.({
               ownerMessage: e.target.value,
               ownerMessageUpdatedAt: new Date().toISOString(),
             })
@@ -85,8 +87,7 @@ export function StaffSettingsPanel({
           disabled={currentUser.role !== 'owner' && currentUser.role !== 'director'}
           onChange={(e) =>
             (currentUser.role === 'owner' || currentUser.role === 'director') &&
-            onUpdatePlatformSettings?.({
-              ...platformSettings,
+            onUpdatePublicInformation?.({
               directorMessage: e.target.value,
               directorMessageUpdatedAt: new Date().toISOString(),
             })

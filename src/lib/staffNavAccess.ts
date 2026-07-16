@@ -21,7 +21,6 @@ const FINANCE_SECTIONS = new Set<StaffSection>([
   'dev-updates',
 ]);
 
-const SETTINGS_SECTIONS = new Set<StaffSection>(['settings', 'integrations']);
 const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
@@ -35,13 +34,6 @@ export function getStaffNavAccessNotice(
       title: 'Director access required',
       message:
         'Financial controls, payment settings, agreements, audit log, and dev notes are limited to Director and Founder roles. Ask your Director if you need access.',
-    };
-  }
-  if (SETTINGS_SECTIONS.has(section) && !flags.showSettings) {
-    return {
-      title: 'Administrator access required',
-      message:
-        'Platform settings are limited to Administrator roles and above. Ask your Director to update homepage messages or other system-wide controls.',
     };
   }
   if (PERMISSIONS_SECTIONS.has(section) && !flags.showPermissions) {
@@ -129,12 +121,12 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   settings: {
     title: 'Public Information',
     message:
-      'Platform settings are limited to Administrator roles and above. Ask your Director to update homepage messages or other system-wide controls.',
+      'Public information is viewable by all staff. Manager roles and above can update the company placard and other platform content.',
   },
   integrations: {
     title: 'Integrations',
     message:
-      'Third-party integrations and payment methods are limited to Administrator roles and above. Only the Founder can change these settings.',
+      'Integrations are viewable by all staff. Manager roles and above can change payment, SMS, and verification settings.',
   },
   permissions: {
     title: 'Permissions',

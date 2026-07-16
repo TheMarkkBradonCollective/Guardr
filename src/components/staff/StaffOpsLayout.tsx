@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canAccessStaffSettings, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../lib/staffNavAccess';
 import { StaffNavItem } from './StaffSidebarNav';
@@ -112,7 +112,6 @@ export function StaffOpsLayout({
 }: StaffOpsLayoutProps) {
   const { formFactor } = useDevice();
   const showFinance = canAccessFinancialControls(currentUser);
-  const showSettings = canAccessStaffSettings(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
@@ -145,11 +144,11 @@ export function StaffOpsLayout({
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
     { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
-    { id: 'settings', label: 'Public Information', icon: Settings, settingsOnly: true },
-    { id: 'integrations', label: 'Integrations', icon: Plug, settingsOnly: true },
+    { id: 'settings', label: 'Public Information', icon: Settings },
+    { id: 'integrations', label: 'Integrations', icon: Plug },
   ];
 
-  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
+  const accessFlags = { showFinance, showSettings: true, showPermissions, showDisputes, showCities };
   const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
 
@@ -207,7 +206,7 @@ export function StaffOpsLayout({
         screenTitle={screenTitle}
         navHighlight={navHighlight}
         showFinance={showFinance}
-        showSettings={showSettings}
+        showSettings={true}
         showPermissions={showPermissions}
         showDisputes={showDisputes}
         showCities={showCities}

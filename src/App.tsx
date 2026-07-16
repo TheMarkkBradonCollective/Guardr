@@ -38,7 +38,7 @@ import {
   GuardCrewJoinRequest,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -7576,9 +7576,78 @@ export default function App() {
     appToast('Permissions saved.', 'success');
   };
 
+  const handleUpdatePublicInformation = async (
+    patch: Pick<
+      PlatformSettings,
+      'ownerMessage' | 'directorMessage' | 'ownerMessageUpdatedAt' | 'directorMessageUpdatedAt'
+    >
+  ) => {
+    if (!currentUser || !isStaffRole(currentUser.role)) return;
+    if (patch.ownerMessage !== undefined && currentUser.role !== 'owner') {
+      appToast('Only the Founder can edit the Founder message.', 'error');
+      return;
+    }
+    if (
+      patch.directorMessage !== undefined &&
+      currentUser.role !== 'owner' &&
+      currentUser.role !== 'director'
+    ) {
+      appToast('Only the Director or Founder can edit the Director message.', 'error');
+      return;
+    }
+    const next = normalizePlatformSettings({
+      ...platformSettings,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
+    if (!next) {
+      appToast('Unable to save public information.', 'error');
+      return;
+    }
+    setPlatformSettings(next);
+    savePlatformSettingsToStorage(next);
+    if (isDbConnected) {
+      await supabase.from('platform_settings').upsert(platformSettingsToDbRow(next));
+    }
+    appToast('Public information saved.', 'success');
+  };
+
+  const handleUpdateStaffIntegrations = async (
+    patch: Partial<
+      Pick<
+        PlatformSettings,
+        | 'paymentStripeEnabled'
+        | 'paymentSquareEnabled'
+        | 'smsNotificationsEnabled'
+        | 'backgroundCheckProvider'
+        | 'insuranceVerificationMode'
+      >
+    >
+  ) => {
+    if (!currentUser || !canManageStaffPlatformContent(currentUser)) {
+      appToast('Manager access or above is required to change integrations.', 'error');
+      return;
+    }
+    const next = normalizePlatformSettings({
+      ...platformSettings,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
+    if (!next) {
+      appToast('Enable at least one payment method.', 'error');
+      return;
+    }
+    setPlatformSettings(next);
+    savePlatformSettingsToStorage(next);
+    if (isDbConnected) {
+      await supabase.from('platform_settings').upsert(platformSettingsToDbRow(next));
+    }
+    appToast('Integrations saved.', 'success');
+  };
+
   const handleSaveCompanyPublicDocument = async (doc: CompanyPublicDocument) => {
-    if (!currentUser || !hasExecutivePaymentControls(currentUser)) {
-      appToast('Only Directors and the Founder can edit company placard credentials.', 'error');
+    if (!currentUser || !canManageStaffPlatformContent(currentUser)) {
+      appToast('Manager access or above is required to edit company placard credentials.', 'error');
       return;
     }
     const row = companyPublicDocumentToDbRow({
@@ -7602,8 +7671,8 @@ export default function App() {
   };
 
   const handleSetCompanyPlacardPublicEnabled = async (enabled: boolean) => {
-    if (!currentUser || !hasExecutivePaymentControls(currentUser)) {
-      appToast('Only Directors and the Founder can change the public placard.', 'error');
+    if (!currentUser || !canManageStaffPlatformContent(currentUser)) {
+      appToast('Manager access or above is required to change the public placard.', 'error');
       return;
     }
     const next = {
@@ -12936,6 +13005,8 @@ export default function App() {
           onUpdatePlatformCity={handleUpdatePlatformCity}
           onUpdateStaffCityAccess={handleUpdateStaffCityAccess}
           onUpdatePlatformSettings={handleUpdatePlatformSettings}
+          onUpdatePublicInformation={handleUpdatePublicInformation}
+          onUpdateStaffIntegrations={handleUpdateStaffIntegrations}
           onUpdateStaffPermissions={handleUpdateStaffPermissions}
           isDbConnected={isDbConnected}
           currentUser={currentUser}

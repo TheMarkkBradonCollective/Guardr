@@ -336,6 +336,9 @@ export function canAccessStaffPermissions(user: Pick<SessionUser, 'role'>): bool
 
 export const canManageStaffPermissions = canAccessStaffPermissions;
 
+/** Manager+ may edit public information and integrations (all staff may view). */
+export const canManageStaffPlatformContent = canAccessStaffPermissions;
+
 /** Directors manage moderators and administrators; Founders manage all staff tiers */
 export function canManageStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {
   return hasAnyPermission(user, [

@@ -207,7 +207,7 @@ export function StaffCompanyPlacardPanel({
 
         {!canEdit && (
           <p className="text-xs text-brand-text-muted">
-            Only Directors and the Founder can upload or edit company placard credentials.
+            View-only — Manager access or above is required to upload or edit company placard credentials.
           </p>
         )}
       </div>
