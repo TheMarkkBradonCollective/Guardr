@@ -4,6 +4,7 @@ import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewIncoming,
   getPendingStandingCrewOutgoing,
+  guardLeadsOwnStandingCrew,
   listActiveGuardsForStandingCrewInvite,
 } from '../../lib/guardStandingCrew';
 import type { GuardStandingCrewMember } from '../../types';
@@ -12,6 +13,7 @@ import { AppEmptyState } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
+import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import { getStandingCrewDisplayName } from '../../lib/guardTeams';
 import type { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
@@ -41,6 +43,7 @@ interface GuardStandingCrewPanelProps {
   onRequestCrewLead?: () => void | Promise<void>;
   canRequestCrewLead?: boolean;
   pendingCrewLeadRequest?: boolean;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 function guardName(guards: SecurityGuard[], id: string): string {
@@ -159,6 +162,7 @@ export function GuardStandingCrewPanel({
   onRequestCrewLead,
   canRequestCrewLead = false,
   pendingCrewLeadRequest = false,
+  onJoinTeamWithCode,
 }: GuardStandingCrewPanelProps) {
   const [search, setSearch] = useState('');
   const [invitingId, setInvitingId] = useState<string | null>(null);
@@ -201,12 +205,8 @@ export function GuardStandingCrewPanel({
   );
 
   const leadsStandingCrew = useMemo(
-    () =>
-      members.some(
-        (m) =>
-          m.leadGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
-      ) || !!guard.standingCrewName?.trim(),
-    [members, guard.id, guard.standingCrewName]
+    () => guardLeadsOwnStandingCrew(guard, members),
+    [guard, members]
   );
 
   const crewDisplayName = getStandingCrewDisplayName(guard);
@@ -315,6 +315,14 @@ export function GuardStandingCrewPanel({
       scoreLabel = 'Pending invites';
       scoreValue = String(pendingIncoming.length);
       subtitle = 'Accept an invite to join a coordinator\u2019s standing team.';
+    } else if (trusted && leadsStandingCrew) {
+      title = crewDisplayName;
+      scoreLabel = 'Active members';
+      scoreValue = String(active.length);
+      subtitle =
+        active.length > 0
+          ? 'Your standing roster is ready for coordinated jobs.'
+          : 'Invite guards below to build your standing team.';
     } else if (trusted && (canRequestCrewLead || pendingCrewLeadRequest)) {
       title = 'Build your team';
       subtitle = pendingCrewLeadRequest
@@ -471,6 +479,8 @@ export function GuardStandingCrewPanel({
 
       {trusted && !leadsStandingCrew && (
         <>
+          {onJoinTeamWithCode && <GuardCrewJoinSection onJoin={onJoinTeamWithCode} />}
+
           {(canRequestCrewLead || pendingCrewLeadRequest) && (
             <CrewSection
               title="Lead your own crew"
@@ -480,8 +490,7 @@ export function GuardStandingCrewPanel({
                 <p className="text-xs text-brand-text-muted leading-relaxed">
                   Want to coordinate your own standing team? Request crew lead approval from Guardr
                   staff. To join another coordinator&apos;s crew instead, use{' '}
-                  <span className="font-semibold text-brand-text">Join a crew</span> at the top of
-                  this page.
+                  <span className="font-semibold text-brand-text">Join a crew</span> above.
                 </p>
                 {pendingCrewLeadRequest ? (
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>

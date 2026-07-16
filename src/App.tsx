@@ -8517,7 +8517,7 @@ export default function App() {
   };
 
   const handleStaffApproveCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
+    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
       appToast('You do not have permission to manage crew lead requests.', 'error');
       return;
     }
@@ -8547,7 +8547,7 @@ export default function App() {
   };
 
   const handleStaffDeclineCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
+    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
       appToast('You do not have permission to manage crew lead requests.', 'error');
       return;
     }

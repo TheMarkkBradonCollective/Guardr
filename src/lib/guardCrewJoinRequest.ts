@@ -23,6 +23,28 @@ export function getPendingCrewLeadRequests(
   return requests.filter((r) => r.status === 'pending');
 }
 
+/** Pending requests where the guard still needs staff to set up crew lead status. */
+export function getActionableCrewLeadRequests(
+  requests: GuardCrewJoinRequest[],
+  guards: Pick<SecurityGuard, 'id' | 'name' | 'standingCrewName' | 'standingCrewDescription'>[],
+  standingCrewMembers: GuardStandingCrewMember[]
+): GuardCrewJoinRequest[] {
+  return getPendingCrewLeadRequests(requests).filter((request) => {
+    const guard = guards.find((g) => g.id === request.guardId);
+    if (!guard) return false;
+    return !guardLeadsOwnStandingCrew(guard, standingCrewMembers);
+  });
+}
+
+export function shouldShowPendingCrewLeadRequest(
+  guard: SecurityGuard,
+  standingCrewMembers: GuardStandingCrewMember[],
+  crewLeadRequests: GuardCrewJoinRequest[]
+): boolean {
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
+  return !!getPendingCrewLeadRequest(crewLeadRequests, guard.id);
+}
+
 export function countPendingCrewLeadRequests(requests: GuardCrewJoinRequest[]): number {
   return getPendingCrewLeadRequests(requests).length;
 }
@@ -117,6 +139,12 @@ export function makeGuardCrewLeadProfile(
   }
   if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) {
     return { error: 'Leave your current standing crew before leading your own team.' };
+  }
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) {
+    return {
+      standingCrewName: guard.standingCrewName?.trim() || `${guard.name}'s Crew`,
+      standingCrewDescription: guard.standingCrewDescription?.trim() || '',
+    };
   }
   const standingCrewName = guard.standingCrewName?.trim() || `${guard.name}'s Crew`;
   const standingCrewDescription = guard.standingCrewDescription?.trim() || '';

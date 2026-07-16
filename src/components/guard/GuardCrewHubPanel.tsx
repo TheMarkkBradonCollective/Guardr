@@ -6,7 +6,6 @@ import { getCrewDisplayName } from '../../lib/guardTeams';
 import { getPendingStandingCrewIncoming } from '../../lib/guardStandingCrew';
 import { GuardTeamPanel } from './GuardTeamPanel';
 import { GuardStandingCrewPanel } from './GuardStandingCrewPanel';
-import { GuardCrewJoinSection } from './GuardCrewJoinSection';
 import {
   AppEmptyState,
   AppItemCard,
@@ -284,9 +283,7 @@ export function GuardCrewHubPanel({
     variant: 'embedded' as const,
     afterHero: tabBar,
     embeddedBody: activeTabBody,
-    scrollPrefix: onJoinTeamWithCode ? (
-      <GuardCrewJoinSection onJoin={onJoinTeamWithCode} />
-    ) : undefined,
+    onJoinTeamWithCode,
     onUpdateStandingCrewProfile,
     onInvite: onInviteStandingCrew,
     onRemove: onRemoveStandingCrew,
