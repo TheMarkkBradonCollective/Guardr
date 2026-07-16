@@ -9,6 +9,8 @@ import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
 import { AppEmptyState, AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
 import { Banknote, CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
+import { GuardEarningsDesktop } from './GuardEarningsDesktop';
 
 interface GuardEarningsPanelProps {
   breakdown: GuardEarningsBreakdown;
@@ -48,6 +50,7 @@ export function GuardEarningsPanel({
   openStripeInvoices = 0,
   payments = [],
 }: GuardEarningsPanelProps) {
+  const { formFactor } = useDevice();
   const paymentByJobId = useMemo(
     () => new Map(payments.map((p) => [p.jobId, p])),
     [payments]
@@ -65,6 +68,26 @@ export function GuardEarningsPanel({
   const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
   const needsBankForOnline =
     !stripeReady && (breakdown.onlineAvailable > 0 || (breakdown.cashAvailable ?? 0) === 0);
+
+  if (formFactor === 'desktop') {
+    return (
+      <GuardEarningsDesktop
+        breakdown={breakdown}
+        completedJobs={completedJobs}
+        stripeConnected={stripeConnected}
+        stripeReady={stripeReady}
+        connectPending={connectPending}
+        onConnectStripe={onConnectStripe}
+        onRequestStripePayout={onRequestStripePayout}
+        onRequestCashPayout={onRequestCashPayout}
+        stripeRequestPending={stripeRequestPending}
+        cashRequestPending={cashRequestPending}
+        openCashInvoices={openCashInvoices}
+        openStripeInvoices={openStripeInvoices}
+        payments={payments}
+      />
+    );
+  }
 
   const payHeroActions = (
     <section className="guard-pay-actions-section" aria-label="Payout actions">

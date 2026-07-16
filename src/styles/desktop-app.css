@@ -1000,6 +1000,245 @@ body[data-form-factor="desktop"] .adm-span-3 {
   grid-column: span 3;
 }
 
+/* ─── Generic admin pages ───────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .adm-page {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .adm-page--flush {
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .adm-page--calendar {
+  padding: 1rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-form-page {
+  max-width: min(40rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 0 2rem;
+}
+
+body[data-form-factor="desktop"] .adm-form-page-head {
+  margin-bottom: 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-form-page-body .app-form-section,
+body[data-form-factor="desktop"] .adm-form-page-body section {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-profile-page {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-profile-sidebar {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  align-self: start;
+  position: sticky;
+  top: 0;
+}
+
+body[data-form-factor="desktop"] .adm-profile-main {
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .adm-profile-sections .app-dashboard-zone,
+body[data-form-factor="desktop"] .adm-profile-sections section {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-pending-page {
+  max-width: min(42rem, 100%);
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-pending-page > div:first-child {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-guards-workbench {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-workbench-list--flat {
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+body[data-form-factor="desktop"] .adm-workbench-split--performance {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .adm-guide-workbench {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .map-selection-layer--desktop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-app .client-form-shell,
+body[data-form-factor="desktop"] .adm-app .client-content-shell {
+  max-width: min(52rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-app .guard-tiered-screen-pinned {
+  display: none;
+}
+
+body[data-form-factor="desktop"] .adm-app .guard-tiered-screen-toolbar {
+  position: static;
+  background: transparent;
+  border: none;
+  padding: 0 0 0.75rem;
+}
+
+/* Form wizards (post job, direct hire) */
+body[data-form-factor="desktop"] .adm-form-wizard {
+  max-width: min(52rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0;
+}
+
+body[data-form-factor="desktop"] .adm-form-wizard .guard-scroll-panel {
+  padding-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-form-wizard-actions {
+  position: static;
+  padding: 1rem 0 1.5rem;
+  border-top: 1px solid var(--adm-border);
+  margin-top: 1rem;
+}
+
+/* Guard profile in workbench detail */
+body[data-form-factor="desktop"] .adm-guard-profile {
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .adm-guard-profile-body {
+  max-width: none;
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .adm-guard-profile-actions {
+  position: static;
+  max-width: none;
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Locations, settings forms */
+body[data-form-factor="desktop"] .adm-locations-panel .wf-list-card,
+body[data-form-factor="desktop"] .adm-settings-panel .app-form-section {
+  background: var(--adm-card);
+  border-color: var(--adm-border);
+}
+
+/* SLA / analytics metric grids */
+body[data-form-factor="desktop"] .adm-dashboard-grid--metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-sla-dashboard .rounded-xl,
+body[data-form-factor="desktop"] .adm-dashboard-grid--metrics .adm-card {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-mt-md {
+  margin-top: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-week-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 8rem;
+  margin-top: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-week-chart-bar {
+  flex: 1;
+  min-width: 0;
+  background: var(--adm-sand-band);
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+/* Payments pipeline */
+body[data-form-factor="desktop"] .adm-payments-workbench .staff-payments-pipeline,
+body[data-form-factor="desktop"] .adm-payments-pipeline {
+  margin-top: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-payments-pipeline section {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Dev notes */
+body[data-form-factor="desktop"] .adm-dev-notes-page {
+  max-width: min(48rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-dev-notes .rounded-xl {
+  background: var(--adm-card);
+  border-color: var(--adm-border);
+}
+
+/* Crew workbench */
+body[data-form-factor="desktop"] .adm-crew-workbench {
+  height: 100%;
+  min-height: 0;
+}
+
 /* Hide legacy shells */
 body[data-form-factor="desktop"] .dsk-app,
 body[data-form-factor="desktop"] .desktop-workspace {

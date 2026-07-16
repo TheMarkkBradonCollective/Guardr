@@ -10,7 +10,8 @@ import {
   SUPPORT_PRIORITY_OPTIONS,
 } from '../../lib/support';
 import { AppPageTransition } from '../ui/motion/AppMotion';
-import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 
 interface SupportReportPageProps {
   relatedRequests?: Pick<SecurityRequest, 'id' | 'title' | 'location'>[];
@@ -53,10 +54,10 @@ export function SupportReportPage({
 
   return (
     <AppPageTransition motionKey="support-report" className="h-full min-h-0">
-      <AppScreen className="client-form-shell">
+      <ResponsivePage screenClassName="client-form-shell">
         <AppSubScreenHeader title="File a report" onBack={onBack} />
-
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 px-5 pb-24">
+        <ResponsiveFormPage title="File a report" subtitle="Staff will review and follow up in Messages">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>
             <label className="uber-label block mb-1">Category</label>
             <select
@@ -126,7 +127,8 @@ export function SupportReportPage({
             Submit report to staff
           </button>
         </form>
-      </AppScreen>
+        </ResponsiveFormPage>
+      </ResponsivePage>
     </AppPageTransition>
   );
 }

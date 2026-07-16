@@ -17,6 +17,7 @@ import { MarkdownDoc } from './MarkdownDoc';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { useDevice } from '../../lib/platform';
 import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
 import type { PlatformRole } from '../../types';
 
@@ -410,6 +411,7 @@ export function AppGuidePage({
   onStartTutorial,
   onEnterPracticeMode,
 }: AppGuidePageProps) {
+  const { formFactor } = useDevice();
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
 
   const tabs = useMemo(
@@ -429,6 +431,43 @@ export function AppGuidePage({
   const handleBack = useCallback(() => {
     setActiveSection(null);
   }, []);
+
+  if (formFactor === 'desktop') {
+    return (
+      <div className="adm-workbench-split adm-guide-workbench">
+        <div className="adm-workbench-list adm-workbench-list--flat">
+          <GuideHub
+            sections={ALL_SECTIONS}
+            tabs={tabs}
+            initialAudience={
+              initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
+                ? initialAudience
+                : 'all'
+            }
+            highlightAudience={highlightAudience}
+            onSelect={handleSelect}
+            tutorialAvailable={tutorialAvailable}
+            tutorialCompleted={tutorialCompleted}
+            tutorialActive={tutorialActive}
+            onStartTutorial={onStartTutorial}
+            onEnterPracticeMode={onEnterPracticeMode}
+          />
+        </div>
+        <div className="adm-workbench-detail">
+          {activeSection ? (
+            <div className="adm-workbench-detail-inner">
+              <SectionDetail section={activeSection} onBack={handleBack} />
+            </div>
+          ) : (
+            <div className="adm-empty adm-empty--detail">
+              <BookOpen className="w-10 h-10 adm-muted-icon" />
+              <p>Select a guide section to read</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (activeSection) {
     return <SectionDetail section={activeSection} onBack={handleBack} />;

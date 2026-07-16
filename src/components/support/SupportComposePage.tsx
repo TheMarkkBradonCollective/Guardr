@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CreateSupportTicketInput } from '../../types';
 import { AppPageTransition } from '../ui/motion/AppMotion';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 
 interface SupportComposePageProps {
   onBack: () => void;
@@ -34,10 +35,10 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
 
   return (
     <AppPageTransition motionKey="support-compose" className="h-full min-h-0">
-      <AppScreen className="client-form-shell">
+      <ResponsivePage screenClassName="client-form-shell">
         <AppSubScreenHeader title="Contact support" onBack={onBack} />
-
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 px-5 pb-24">
+        <ResponsiveFormPage title="Contact support" subtitle="Guardr staff will respond in Messages">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>
             <label className="uber-label block mb-1">Subject</label>
             <input
@@ -62,7 +63,8 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
             Send to Guardr staff
           </button>
         </form>
-      </AppScreen>
+        </ResponsiveFormPage>
+      </ResponsivePage>
     </AppPageTransition>
   );
 }

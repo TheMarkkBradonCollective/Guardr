@@ -6,6 +6,8 @@ import {
   getAssignableStaffRoles,
 } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { ResponsiveFormPage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import type { CompanyPublicDocument } from '../../lib/companyPlacard';
@@ -37,6 +39,7 @@ export function StaffSettingsPanel({
   onSaveCompanyPublicDocument,
   onSetCompanyPlacardPublicEnabled,
 }: StaffSettingsPanelProps) {
+  const { formFactor } = useDevice();
   const assignableRoles = getAssignableStaffRoles(currentUser.role);
   const canEdit = canManagePlatformSettings(currentUser);
 
@@ -49,8 +52,8 @@ export function StaffSettingsPanel({
     });
   };
 
-  return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+  const body = (
+    <div className={formFactor === 'desktop' ? 'adm-settings-panel' : 'animate-fade-in -mx-4 sm:-mx-5'}>
       {onSaveCompanyPublicDocument && onSetCompanyPlacardPublicEnabled && (
         <StaffCompanyPlacardPanel
           currentUser={currentUser}
@@ -190,4 +193,14 @@ export function StaffSettingsPanel({
       )}
     </div>
   );
+
+  if (formFactor === 'desktop') {
+    return (
+      <ResponsiveFormPage title="Platform settings" subtitle="Homepage, approvals, integrations, and staff onboarding">
+        {body}
+      </ResponsiveFormPage>
+    );
+  }
+
+  return body;
 }

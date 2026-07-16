@@ -5,6 +5,8 @@ import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { AppEmptyState, AppList, AppListRow, AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { ChevronRight, FileText } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
+import { ClientReportsDesktop } from './ClientReportsDesktop';
 
 interface ClientReportsScreenProps {
   reports: ClientReportCard[];
@@ -27,9 +29,21 @@ export function ClientReportsScreen({
   onSelectIncident,
   onBack,
 }: ClientReportsScreenProps) {
+  const { formFactor } = useDevice();
   const selectedIncident = selectedIncidentId
     ? incidentDetails.find((d) => d.id === selectedIncidentId) ?? null
     : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <ClientReportsDesktop
+        reports={reports}
+        incidentDetails={incidentDetails}
+        selectedIncidentId={selectedIncidentId}
+        onSelectIncident={onSelectIncident}
+      />
+    );
+  }
 
   if (selectedIncident) {
     return (

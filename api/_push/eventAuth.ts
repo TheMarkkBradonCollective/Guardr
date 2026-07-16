@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PushNotificationType } from './types';
-import type { VerifiedSession } from '../accountSessionAuth';
+import type { VerifiedSession } from './accountSessionAuth';
 
 const STAFF_ROLES = new Set(['moderator', 'administrator', 'director', 'owner', 'staff', 'auditor']);
 

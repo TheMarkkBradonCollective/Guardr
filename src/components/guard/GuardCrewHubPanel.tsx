@@ -22,6 +22,7 @@ import {
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import { formatTeamCodeDisplay } from '../../lib/teamCode';
+import { useDevice } from '../../lib/platform';
 
 export type { CrewHubTab };
 
@@ -102,6 +103,58 @@ function CrewJobListRow({
   );
 }
 
+function CrewJobDetailBody({
+  job,
+  guard,
+  coworkerGuards,
+  scheduleRequests,
+  onInviteGuard,
+  onRemoveGuard,
+  onUpdateCrewProfile,
+  onAcceptInvite,
+  onDeclineInvite,
+}: {
+  job: GuardJobView;
+  guard: SecurityGuard;
+  coworkerGuards: SecurityGuard[];
+  scheduleRequests?: ScheduleJob[];
+  onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onRemoveGuard?: (guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => void | Promise<void>;
+  onAcceptInvite?: () => void | Promise<void>;
+  onDeclineInvite?: () => void | Promise<void>;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-brand-border bg-brand-surface/50 px-3 py-3">
+        <p className="text-sm text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
+        <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
+          <MapPin className="w-3.5 h-3.5 shrink-0" />
+          {job.siteName || job.location}
+        </p>
+      </div>
+      <GuardTeamPanel
+        job={job}
+        guard={guard}
+        coworkerGuards={coworkerGuards}
+        onInviteGuard={onInviteGuard}
+        onRemoveGuard={onRemoveGuard}
+        onUpdateCrewProfile={onUpdateCrewProfile}
+        onAcceptInvite={onAcceptInvite}
+        onDeclineInvite={onDeclineInvite}
+        scheduleRequests={scheduleRequests}
+      />
+      <p className="text-xs text-brand-text-muted flex items-center gap-1.5 px-1">
+        <MessageCircle className="w-3.5 h-3.5 shrink-0 text-brand-primary" />
+        Crew chat is in Messages → Teams.
+      </p>
+    </div>
+  );
+}
+
 function CrewJobDetail({
   job,
   guard,
@@ -133,29 +186,18 @@ function CrewJobDetail({
   return (
     <AppScreen className="app-full-page-detail">
       <AppSubScreenHeader title={title} onBack={onBack} />
-      <div className="app-section-body px-4 pb-8 space-y-4">
-        <div className="rounded-lg border border-brand-border bg-brand-surface/50 px-3 py-3">
-          <p className="text-sm text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
-          <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            {job.siteName || job.location}
-          </p>
-        </div>
-        <GuardTeamPanel
+      <div className="app-section-body px-4 pb-8">
+        <CrewJobDetailBody
           job={job}
           guard={guard}
           coworkerGuards={coworkerGuards}
+          scheduleRequests={scheduleRequests}
           onInviteGuard={onInviteGuard}
           onRemoveGuard={onRemoveGuard}
           onUpdateCrewProfile={onUpdateCrewProfile}
           onAcceptInvite={onAcceptInvite}
           onDeclineInvite={onDeclineInvite}
-          scheduleRequests={scheduleRequests}
         />
-        <p className="text-xs text-brand-text-muted flex items-center gap-1.5 px-1">
-          <MessageCircle className="w-3.5 h-3.5 shrink-0 text-brand-primary" />
-          Crew chat is in Messages → Teams.
-        </p>
       </div>
     </AppScreen>
   );
@@ -184,6 +226,7 @@ export function GuardCrewHubPanel({
   onDetailOpenChange,
   onJoinTeamWithCode,
 }: GuardCrewHubPanelProps) {
+  const { formFactor } = useDevice();
   const pendingInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
     [standingCrewMembers, guard.id]
@@ -224,35 +267,6 @@ export function GuardCrewHubPanel({
   }, [pendingInvites.length]);
 
   const selectedJob = coordinatingJobs.find((j) => j.id === selectedJobId) ?? null;
-
-  if (selectedJob) {
-    return (
-      <CrewJobDetail
-        job={selectedJob}
-        guard={guard}
-        coworkerGuards={coworkerGuards}
-        scheduleRequests={scheduleRequests}
-        onBack={() => setSelectedJobId(null)}
-        onInviteGuard={
-          onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
-        }
-        onRemoveGuard={
-          onRemoveGuard ? (guardId) => void onRemoveGuard(selectedJob.id, guardId) : undefined
-        }
-        onUpdateCrewProfile={
-          onUpdateCrewProfile
-            ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
-            : undefined
-        }
-        onAcceptInvite={
-          onAcceptInvite ? () => void onAcceptInvite(selectedJob.id) : undefined
-        }
-        onDeclineInvite={
-          onDeclineInvite ? () => void onDeclineInvite(selectedJob.id) : undefined
-        }
-      />
-    );
-  }
 
   const tabBar = (
     <AppSegmentedControl<CrewHubTab>
@@ -307,6 +321,125 @@ export function GuardCrewHubPanel({
     canRequestCrewLead,
     pendingCrewLeadRequest,
   };
+
+  if (formFactor === 'desktop') {
+    return (
+      <div className="adm-workbench adm-crew-workbench">
+        <div className="adm-workbench-toolbar">
+          {tabBar}
+        </div>
+        {activeTab === 'active' ? (
+          <div className="adm-workbench-split">
+            <div className="adm-workbench-list">
+              {coordinatingJobs.length === 0 ? (
+                <div className="adm-empty">
+                  <Users className="w-8 h-8 adm-muted-icon" />
+                  <p>No active crews</p>
+                  <p className="adm-workbench-subtitle">Apply as team lead on a multi-guard job from the map.</p>
+                </div>
+              ) : (
+                <table className="adm-table adm-table--list">
+                  <thead>
+                    <tr>
+                      <th>Crew / job</th>
+                      <th>When</th>
+                      <th>Guards</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {coordinatingJobs.map((job) => {
+                      const slotCount = job.guardSlots?.filter((s) => s.guardId).length ?? 0;
+                      const needed = job.guardsNeeded ?? 1;
+                      return (
+                        <tr
+                          key={job.id}
+                          className={`adm-table-row--click${selectedJobId === job.id ? ' adm-table-row--selected' : ''}`}
+                          onClick={() => setSelectedJobId(job.id)}
+                        >
+                          <td>
+                            <p className="adm-table-primary">{crewJobLabel(job, guard, coworkerGuards)}</p>
+                            <p className="adm-table-secondary">{job.siteName || job.location}</p>
+                          </td>
+                          <td className="adm-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
+                          <td className="adm-table-secondary">{slotCount}/{needed}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="adm-workbench-detail">
+              {selectedJob ? (
+                <div className="adm-workbench-detail-inner">
+                  <h2 className="adm-card-title">{crewJobLabel(selectedJob, guard, coworkerGuards)}</h2>
+                  <CrewJobDetailBody
+                    job={selectedJob}
+                    guard={guard}
+                    coworkerGuards={coworkerGuards}
+                    scheduleRequests={scheduleRequests}
+                    onInviteGuard={
+                      onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
+                    }
+                    onRemoveGuard={
+                      onRemoveGuard ? (guardId) => void onRemoveGuard(selectedJob.id, guardId) : undefined
+                    }
+                    onUpdateCrewProfile={
+                      onUpdateCrewProfile
+                        ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+                        : undefined
+                    }
+                    onAcceptInvite={
+                      onAcceptInvite ? () => void onAcceptInvite(selectedJob.id) : undefined
+                    }
+                    onDeclineInvite={
+                      onDeclineInvite ? () => void onDeclineInvite(selectedJob.id) : undefined
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="adm-empty adm-empty--detail">
+                  <Users className="w-10 h-10 adm-muted-icon" />
+                  <p>Select a crew job to manage members</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <GuardStandingCrewPanel {...standingCrewPanelProps} />
+        )}
+      </div>
+    );
+  }
+
+  if (selectedJob) {
+    return (
+      <CrewJobDetail
+        job={selectedJob}
+        guard={guard}
+        coworkerGuards={coworkerGuards}
+        scheduleRequests={scheduleRequests}
+        onBack={() => setSelectedJobId(null)}
+        onInviteGuard={
+          onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
+        }
+        onRemoveGuard={
+          onRemoveGuard ? (guardId) => void onRemoveGuard(selectedJob.id, guardId) : undefined
+        }
+        onUpdateCrewProfile={
+          onUpdateCrewProfile
+            ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+            : undefined
+        }
+        onAcceptInvite={
+          onAcceptInvite ? () => void onAcceptInvite(selectedJob.id) : undefined
+        }
+        onDeclineInvite={
+          onDeclineInvite ? () => void onDeclineInvite(selectedJob.id) : undefined
+        }
+      />
+    );
+  }
 
   return (
     <AppScreen className="crew-hub-screen guard-tiered-screen">

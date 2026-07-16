@@ -34,6 +34,7 @@ import {
   computeGuardSkillRatings,
 } from '../../lib/guardPerformance';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { useDevice } from '../../lib/platform';
 import {
   BookOpen,
   Briefcase,
@@ -85,6 +86,7 @@ export function GuardProfileScreen({
   isFavorite = false,
   onToggleFavorite,
 }: GuardProfileScreenProps) {
+  const { formFactor } = useDevice();
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
     [guard.id, clientId, requests]
@@ -130,9 +132,9 @@ export function GuardProfileScreen({
   );
 
   return (
-    <AppScreen className="app-full-page-detail">
+    <AppScreen className={`app-full-page-detail${formFactor === 'desktop' ? ' adm-guard-profile' : ''}`}>
       <AppSubScreenHeader title={guard.name} onBack={onBack} backLabel="Guards" />
-      <div className="px-4 py-4 space-y-6 pb-28 max-w-3xl mx-auto">
+      <div className={`px-4 py-4 space-y-6 max-w-3xl mx-auto${formFactor === 'desktop' ? ' adm-guard-profile-body' : ' pb-28'}`}>
           <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 overflow-hidden p-0">
             <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
               <div className="flex items-start gap-4">
@@ -359,7 +361,7 @@ export function GuardProfileScreen({
           </section>
         </div>
 
-      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
+      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2${formFactor === 'desktop' ? ' adm-guard-profile-actions' : ''}`}>
         {canMessageFromProfile && messageableRequest && (
           <button
             type="button"

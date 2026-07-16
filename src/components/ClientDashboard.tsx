@@ -27,6 +27,7 @@ import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppScreen, AppStatusBanner } from './ui/app/AppPrimitives';
+import { ResponsivePage } from './layouts/desktop/DesktopPageShell';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import type { MessagesChrome } from '../lib/messagesChrome';
 
@@ -428,13 +429,13 @@ export function ClientDashboard({
   if (view === 'locations' && clientRecord && onSaveClientLocation) {
     return page(
       'locations',
-      <AppScreen>
+      <ResponsivePage>
         <ClientLocationsPanel
           client={clientRecord}
           locations={clientLocations}
           onSave={onSaveClientLocation}
         />
-      </AppScreen>
+      </ResponsivePage>
     );
   }
 
@@ -458,6 +459,56 @@ export function ClientDashboard({
   }
 
   if (view === 'guards') {
+    if (formFactor === 'desktop') {
+      return page(
+        'guards',
+        <>
+          {tutorialDemoBanner}
+          <div className="adm-guards-workbench adm-workbench-split">
+            <div className="adm-workbench-list adm-workbench-list--flat">
+              <GuardDirectoryScreen
+                guards={guards}
+                onSelectGuard={setSelectedGuard}
+                favoriteGuardIds={favoriteGuardIds}
+                onToggleFavorite={onToggleFavoriteGuard}
+                clientId={clientId}
+                requests={requests}
+                standingCrewMembers={standingCrewMembers}
+                onRequestGuard={startDirectGuardRequest}
+                onTeamDetailOpenChange={onTeamDetailOpenChange}
+              />
+            </div>
+            <div className="adm-workbench-detail">
+              {selectedGuard ? (
+                <div className="adm-workbench-detail-inner">
+                  <GuardProfileScreen
+                    guard={selectedGuard}
+                    clientId={clientId}
+                    requests={requests}
+                    platformRequests={platformRequests}
+                    onBack={() => setSelectedGuard(null)}
+                    onRequestGuard={startDirectGuardRequest}
+                    jobChatThreads={jobChatThreads}
+                    currentUser={currentUser}
+                    onSendJobChatMessage={onSendJobChatMessage}
+                    onOpenJobChat={onOpenJobChat ?? openMessages}
+                    isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
+                    onToggleFavorite={
+                      onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="adm-empty adm-empty--detail">
+                  <p>Select a guard or team to view profile and hire options</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>,
+        'client-guards',
+      );
+    }
     if (selectedGuard) {
       return page(
         `guards-${selectedGuard.id}`,

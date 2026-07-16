@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
+import { useDevice } from '../../lib/platform';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
@@ -22,15 +24,10 @@ interface MapSelectionExperienceProps {
   bottomOffsetClass?: string;
   guardId?: string;
   guards?: SecurityGuard[];
-  /** Client billing settings for full detail */
   crewSettings?: import('../../lib/platformSettings').PlatformSettings;
-  /** Client approvals / payments in expanded card */
   clientActions?: React.ReactNode;
-  /** Guard full detail + controls in expanded card */
   guardFullBody?: React.ReactNode;
-  /** @deprecated Use guardFullBody */
   detailActions?: React.ReactNode;
-  /** Staff ops detail + controls in expanded card */
   staffActions?: React.ReactNode;
 }
 
@@ -51,14 +48,16 @@ export function MapSelectionExperience({
   detailActions,
   staffActions,
 }: MapSelectionExperienceProps) {
-  const [expanded, setExpanded] = useState(false);
-  const cardInsetRef = useMapBottomOverlayInset(true);
+  const { formFactor } = useDevice();
+  const isDesktop = formFactor === 'desktop';
+  const [expanded, setExpanded] = useState(isDesktop);
+  const cardInsetRef = useMapBottomOverlayInset(!isDesktop);
   const selected = useMemo(() => job, [job?.id]);
   const guardBody = guardFullBody ?? detailActions;
 
   React.useEffect(() => {
-    setExpanded(false);
-  }, [selected?.id]);
+    setExpanded(isDesktop);
+  }, [selected?.id, isDesktop]);
 
   if (!selected) return null;
 
@@ -80,6 +79,57 @@ export function MapSelectionExperience({
       ? !!selected.operationalBriefingLocked
       : false;
   const jobStatus = 'status' in selected ? selected.status : undefined;
+
+  const detailBody = (
+    <div className="space-y-4">
+      {role === 'client' && (
+        <JobListingProfile
+          job={selected}
+          showClientHeader={false}
+          showBadges={false}
+          distanceMiles={route?.distanceMiles}
+          payLine={payLine}
+          operationalDetails={operationalDetails}
+          operationalBriefingLocked={operationalBriefingLocked}
+          jobStatus={jobStatus}
+        />
+      )}
+      {role === 'guard' && guardBody}
+      {role === 'staff' && staffActions}
+      {role === 'client' && clientActions}
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <aside className="desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop" aria-label="Job details">
+        <div className="desktop-map-inspector-header">
+          <p className="desktop-map-inspector-header-label">
+            {'title' in selected ? selected.title : 'Job details'}
+          </p>
+          <button type="button" className="adm-header-icon-btn" onClick={onClose} aria-label="Close">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="desktop-map-inspector-body guard-scroll-panel">
+          <MapJobPeekSummary
+            role={role}
+            job={selected}
+            route={route}
+            loadingRoute={loadingRoute}
+            guardId={guardId}
+            guards={guards}
+          />
+          {onPrimaryAction && primaryLabel ? (
+            <button type="button" className="adm-btn adm-btn--sand adm-btn--sm adm-mt-sm" onClick={onPrimaryAction}>
+              {primaryLabel}
+            </button>
+          ) : null}
+          {detailBody}
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <div className={`map-selection-layer ${bottomOffsetClass}`}>
@@ -104,25 +154,7 @@ export function MapSelectionExperience({
         onPrimaryAction={!expanded ? onPrimaryAction : undefined}
         primaryLabel={!expanded ? primaryLabel : undefined}
       >
-        {expanded && (
-          <div className="space-y-4">
-            {role === 'client' && (
-              <JobListingProfile
-                job={selected}
-                showClientHeader={false}
-                showBadges={false}
-                distanceMiles={route?.distanceMiles}
-                payLine={payLine}
-                operationalDetails={operationalDetails}
-                operationalBriefingLocked={operationalBriefingLocked}
-                jobStatus={jobStatus}
-              />
-            )}
-            {role === 'guard' && guardBody}
-            {role === 'staff' && staffActions}
-            {role === 'client' && clientActions}
-          </div>
-        )}
+        {expanded && detailBody}
       </MapOfferCard>
     </div>
   );

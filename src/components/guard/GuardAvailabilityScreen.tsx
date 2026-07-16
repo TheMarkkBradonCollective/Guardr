@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SecurityGuard } from '../../types';
 import { GuardAvailabilityCalendar } from './GuardAvailabilityCalendar';
-import { AppScreen } from '../ui/app/AppPrimitives';
+import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 
 interface GuardAvailabilityScreenProps {
   guard: SecurityGuard;
@@ -9,8 +9,8 @@ interface GuardAvailabilityScreenProps {
 
 export function GuardAvailabilityScreen({ guard }: GuardAvailabilityScreenProps) {
   return (
-    <AppScreen className="guard-tiered-screen">
+    <ResponsivePage screenClassName="guard-tiered-screen" className="adm-page--calendar">
       <GuardAvailabilityCalendar guardId={guard.id} />
-    </AppScreen>
+    </ResponsivePage>
   );
 }
