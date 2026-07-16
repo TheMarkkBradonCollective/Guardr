@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import {
   buildDefaultPlatformCities,
   checkCityAccessForRole,
+  defaultSelectableCity,
   filterCitiesForStaffActor,
   getSelectableCityNamesForClients,
   getSelectableCityNamesForGuards,
+  GUARDR_LAUNCH_CITY,
   normalizeManagedCities,
   setPlatformCitiesCache,
   staffCanManageCity,
@@ -53,10 +55,22 @@ const sampleCities: PlatformCity[] = [
 ];
 
 describe('platform city access', () => {
-  it('defaults all California cities to open', () => {
+  it('defaults Sacramento open and all other cities closed', () => {
     const defaults = buildDefaultPlatformCities();
     assert.ok(defaults.length >= 60);
-    assert.equal(defaults.every((city) => city.status === 'open'), true);
+    const sacramento = defaults.find((city) => city.name === GUARDR_LAUNCH_CITY);
+    assert.equal(sacramento?.status, 'open');
+    assert.equal(
+      defaults.filter((city) => city.status === 'open').length,
+      1
+    );
+    assert.equal(defaults.filter((city) => city.status === 'closed').length, defaults.length - 1);
+  });
+
+  it('prefers Sacramento as the default selectable city', () => {
+    setPlatformCitiesCache(buildDefaultPlatformCities());
+    assert.equal(defaultSelectableCity('guard'), GUARDR_LAUNCH_CITY);
+    assert.equal(defaultSelectableCity('client'), GUARDR_LAUNCH_CITY);
   });
 
   it('blocks closed cities for guards and clients', () => {
