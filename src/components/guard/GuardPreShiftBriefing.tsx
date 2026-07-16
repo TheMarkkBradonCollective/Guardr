@@ -13,6 +13,7 @@ import {
   msUntilEnRouteUnlock,
 } from '../../lib/preShiftBriefing';
 import { Clock, DollarSign, FileText, Navigation, X } from 'lucide-react';
+import { MapDesktopInspector, MapMobileBottomSheet } from '../map/MapDesktopInspector';
 
 interface GuardPreShiftBriefingProps {
   job: GuardJobView;
@@ -52,15 +53,7 @@ export function GuardPreShiftBriefing({
       ? 'Acknowledge post orders below before heading to site.'
       : enRouteBlocked ?? 'Review the briefing, then start heading when the slide unlocks.';
 
-  const sheetClassName =
-    layout === 'modal'
-      ? 'relative w-full max-h-[92vh] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden'
-      : 'absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden';
-
-  return (
-    <div className={sheetClassName}>
-      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
-
+  const panelBody = (
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -151,6 +144,22 @@ export function GuardPreShiftBriefing({
           />
         </div>
       </div>
-    </div>
+  );
+
+  if (layout === 'modal') {
+    return (
+      <div className="relative w-full max-h-[92vh] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
+        <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
+        {panelBody}
+      </div>
+    );
+  }
+
+  return (
+    <MapDesktopInspector label="Pre-shift briefing">
+      <MapMobileBottomSheet className="guardr-active-shift">
+        {panelBody}
+      </MapMobileBottomSheet>
+    </MapDesktopInspector>
   );
 }

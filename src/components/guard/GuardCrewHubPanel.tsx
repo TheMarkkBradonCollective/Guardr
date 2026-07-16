@@ -406,7 +406,9 @@ export function GuardCrewHubPanel({
             </div>
           </div>
         ) : (
-          <GuardStandingCrewPanel {...standingCrewPanelProps} />
+          <div className="adm-crew-team-workbench">
+            <GuardStandingCrewPanel {...standingCrewPanelProps} />
+          </div>
         )}
       </div>
     );

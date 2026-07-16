@@ -94,7 +94,7 @@ export function DevNotesPage() {
 
   const content = (
     <>
-      <AppScreenTitle>Dev notes</AppScreenTitle>
+      {formFactor !== 'desktop' ? <AppScreenTitle>Dev notes</AppScreenTitle> : null}
       <div className={formFactor === 'desktop' ? 'adm-dev-notes' : 'px-4 pb-8'}>
         <DevActivityGrid grid={activityGrid} />
         {milestones ? <MarkdownDoc source={milestones} /> : null}

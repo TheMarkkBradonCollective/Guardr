@@ -786,7 +786,7 @@ body[data-form-factor="desktop"] .adm-app .guard-map-layout:has(.desktop-map-ins
   right: 22rem !important;
 }
 
-body[data-form-factor="desktop"] .adm-app .client-map-layout:has(.map-selection-layer) .guardr-map-root {
+body[data-form-factor="desktop"] .adm-app .client-map-layout:has(.map-selection-layer, .desktop-map-inspector) .guardr-map-root {
   right: min(22rem, 32vw) !important;
 }
 
@@ -1404,6 +1404,149 @@ body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td {
 
 body[data-form-factor="desktop"] .adm-finance-audit-table .adm-table td:nth-child(3) {
   white-space: normal;
+}
+
+/* Cities platform page */
+body[data-form-factor="desktop"] .adm-cities-toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .adm-cities-search {
+  min-width: min(100%, 14rem);
+}
+
+body[data-form-factor="desktop"] .adm-cities-sort {
+  min-width: 10rem;
+}
+
+body[data-form-factor="desktop"] .adm-cities-count {
+  margin: 0 0 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-city-detail .adm-btn.is-active {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Guard availability + preferences workbench */
+body[data-form-factor="desktop"] .adm-availability-workbench,
+body[data-form-factor="desktop"] .adm-pref-workbench,
+body[data-form-factor="desktop"] .adm-reports-workbench {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .guard-tiered-screen-scroll,
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-tiered-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .availability-day-row {
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .availability-day-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-availability-workbench .guard-pref-body,
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-body {
+  max-width: none;
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-performance-stats.guard-pref-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-pref-workbench .guard-pref-category {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Guard crew — My team tab on desktop */
+body[data-form-factor="desktop"] .adm-crew-team-workbench {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .guard-tiered-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-hub-team-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 0 1rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-section,
+body[data-form-factor="desktop"] .adm-crew-team-workbench .crew-invite-list {
+  margin: 0;
+}
+
+/* Client reports + invoices */
+body[data-form-factor="desktop"] .adm-reports-tabs {
+  margin: 0;
+}
+
+body[data-form-factor="desktop"] .adm-reports-invoices {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: 0.5rem;
+  padding: 1.15rem 1.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-invoice-panel .adm-invoice-list {
+  max-width: min(36rem, 100%);
+}
+
+/* Active shift map inspector */
+body[data-form-factor="desktop"] .desktop-map-inspector .guardr-active-shift,
+body[data-form-factor="desktop"] .desktop-map-inspector .client-active-shift {
+  position: static;
+  max-height: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector .guard-scroll-panel {
+  padding-bottom: 1.25rem;
 }
 
 /* Hide legacy shells */

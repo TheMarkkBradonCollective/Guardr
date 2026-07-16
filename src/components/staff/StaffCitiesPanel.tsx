@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SessionUser } from '../../types';
 import {
   canManageCityMarkets,
@@ -19,7 +19,9 @@ import {
   type PlatformCity,
 } from '../../lib/platformCities';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { useDevice } from '../../lib/platform';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { MapPin } from 'lucide-react';
 
 interface StaffCitiesPanelProps {
@@ -50,17 +52,117 @@ const SORT_OPTIONS: { id: CityMarketSort; label: string }[] = [
   { id: 'updated-desc', label: 'Recently updated' },
 ];
 
+function CityDetailPanel({
+  city,
+  busy,
+  canManageStatus,
+  canRecommend,
+  onUpdate,
+}: {
+  city: PlatformCity;
+  busy: boolean;
+  canManageStatus: boolean;
+  canRecommend: boolean;
+  onUpdate: (
+    patch: {
+      status?: CityMarketStatus;
+      waitlistAudience?: CityWaitlistAudience;
+      recommendOpen?: boolean;
+    }
+  ) => void;
+}) {
+  return (
+    <div className="adm-city-detail space-y-4">
+      <div>
+        <p className="adm-card-eyebrow">{city.stateCode}</p>
+        <h3 className="adm-card-title">{city.name}</h3>
+        <p className="adm-workbench-subtitle">{CITY_STATUS_DESCRIPTIONS[city.status]}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
+        {city.recommendOpen && <WfBadge tone="primary">Recommended open</WfBadge>}
+        {city.status === 'waitlist' && (
+          <span className="text-xs text-brand-text-muted capitalize">Wait list: {city.waitlistAudience}</span>
+        )}
+      </div>
+
+      {canManageStatus ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {(['open', 'closed', 'waitlist'] as CityMarketStatus[]).map((status) => (
+              <button
+                key={status}
+                type="button"
+                disabled={busy || city.status === status}
+                onClick={() => onUpdate({ status })}
+                className={`adm-btn adm-btn--outline adm-btn--sm capitalize ${
+                  city.status === status ? 'is-active' : ''
+                }`}
+              >
+                {CITY_STATUS_LABELS[status]}
+              </button>
+            ))}
+          </div>
+          {city.status === 'waitlist' && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-brand-text-muted">Wait list applies to:</span>
+              {(['guard', 'client', 'both'] as CityWaitlistAudience[]).map((audience) => (
+                <button
+                  key={audience}
+                  type="button"
+                  disabled={busy || city.waitlistAudience === audience}
+                  onClick={() => onUpdate({ waitlistAudience: audience })}
+                  className={`adm-btn adm-btn--outline adm-btn--sm capitalize ${
+                    city.waitlistAudience === audience ? 'is-active' : ''
+                  }`}
+                >
+                  {audience}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onUpdate({ recommendOpen: !city.recommendOpen })}
+            className="adm-btn adm-btn--outline adm-btn--sm"
+          >
+            {city.recommendOpen ? 'Clear recommendation flag' : 'Flag manager recommendation'}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onUpdate({ recommendOpen: !city.recommendOpen })}
+          className="adm-btn adm-btn--outline adm-btn--sm"
+        >
+          {city.recommendOpen ? 'Withdraw recommendation' : 'Recommend open'}
+        </button>
+      )}
+
+      {!canManageStatus && canRecommend && (
+        <p className="text-xs text-brand-text-muted">
+          As a Manager you can recommend cities to open. Directors and Founders control market status.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function StaffCitiesPanel({
   currentUser,
   cities,
   actorManagedCities = [],
   onUpdateCity,
 }: StaffCitiesPanelProps) {
+  const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CityMarketStatusFilter>('all');
   const [sort, setSort] = useState<CityMarketSort>('name-asc');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const canManageStatus = canManageCityMarkets(currentUser);
   const canRecommend = canRecommendCityOpen(currentUser);
@@ -85,6 +187,19 @@ export function StaffCitiesPanel({
     [visibleCities, search, statusFilter, sort]
   );
 
+  useEffect(() => {
+    if (formFactor !== 'desktop') return;
+    if (filtered.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !filtered.some((city) => city.id === selectedId)) {
+      setSelectedId(filtered[0].id);
+    }
+  }, [formFactor, filtered, selectedId]);
+
+  const selectedCity = filtered.find((city) => city.id === selectedId) ?? null;
+
   const applyUpdate = async (
     city: PlatformCity,
     patch: {
@@ -104,25 +219,135 @@ export function StaffCitiesPanel({
     }
   };
 
-  if (!canRecommend) {
+  const emptyNoAccess = (
+    <div className={formFactor === 'desktop' ? 'adm-empty' : 'app-empty-state app-empty-state--dashed'}>
+      <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>City markets unavailable</p>
+      <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
+        Market controls are limited to Manager roles and above.
+      </p>
+    </div>
+  );
+
+  if (!canRecommend) return emptyNoAccess;
+
+  if (visibleCities.length === 0) {
     return (
-      <div className="app-empty-state app-empty-state--dashed">
-        <p className="app-empty-state-title">City markets unavailable</p>
-        <p className="app-empty-state-body">
-          Market controls are limited to Manager roles and above.
+      <div className={formFactor === 'desktop' ? 'adm-empty' : 'app-empty-state app-empty-state--dashed'}>
+        <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>No assigned cities</p>
+        <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
+          Ask a Director to assign cities you can manage before changing market status.
         </p>
       </div>
     );
   }
 
-  if (visibleCities.length === 0) {
+  const filterTabs = (
+    <StaffListFilterTabs
+      aria-label="City market status"
+      activeId={statusFilter}
+      onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
+      tabs={[
+        { id: 'all', label: 'All', count: filterCounts.all },
+        { id: 'open', label: 'Open', count: filterCounts.open },
+        { id: 'closed', label: 'Closed', count: filterCounts.closed },
+        { id: 'waitlist', label: 'Wait list', count: filterCounts.waitlist },
+        { id: 'recommended', label: 'Recommended', count: filterCounts.recommended },
+      ]}
+    />
+  );
+
+  if (formFactor === 'desktop') {
     return (
-      <div className="app-empty-state app-empty-state--dashed">
-        <p className="app-empty-state-title">No assigned cities</p>
-        <p className="app-empty-state-body">
-          Ask a Director to assign cities you can manage before changing market status.
+      <StaffOpsPageShell className="adm-finance-page adm-cities-page">
+        <div className="adm-workbench-toolbar adm-finance-toolbar">
+          <div>
+            <p className="adm-card-eyebrow">Platform</p>
+            <p className="adm-workbench-subtitle">
+              Control where Guardr accepts guard and client applications.
+            </p>
+          </div>
+          <div className="adm-cities-toolbar-controls">
+            <WfSearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search cities..."
+              className="adm-cities-search"
+            />
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as CityMarketSort)}
+              className="uber-select adm-cities-sort"
+              aria-label="Sort cities"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {filterTabs}
+        <p className="adm-workbench-subtitle adm-cities-count">
+          Showing {filtered.length} of {visibleCities.length} cities
         </p>
-      </div>
+        {error && <p className="text-sm text-red-400">{error}</p>}
+
+        {filtered.length === 0 ? (
+          <div className="adm-empty">
+            <p>No cities match your filters.</p>
+          </div>
+        ) : (
+          <div className="adm-workbench-split adm-finance-split">
+            <div className="adm-workbench-list">
+              <table className="adm-table adm-table--list">
+                <thead>
+                  <tr>
+                    <th>City</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((city) => (
+                    <tr
+                      key={city.id}
+                      className={`adm-table-row--click${selectedId === city.id ? ' adm-table-row--selected' : ''}`}
+                      onClick={() => setSelectedId(city.id)}
+                    >
+                      <td>
+                        <p className="adm-table-primary">{city.name}</p>
+                        <p className="adm-table-secondary">{city.stateCode}</p>
+                      </td>
+                      <td>
+                        <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="adm-workbench-detail">
+              {selectedCity ? (
+                <div className="adm-workbench-detail-inner">
+                  <CityDetailPanel
+                    city={selectedCity}
+                    busy={savingId === selectedCity.id}
+                    canManageStatus={canManageStatus}
+                    canRecommend={canRecommend}
+                    onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
+                  />
+                </div>
+              ) : (
+                <div className="adm-empty adm-empty--detail">
+                  <MapPin className="w-10 h-10 adm-muted-icon" />
+                  <p>Select a city to manage</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </StaffOpsPageShell>
     );
   }
 
@@ -166,18 +391,7 @@ export function StaffCitiesPanel({
         </label>
       </div>
 
-      <StaffListFilterTabs
-        aria-label="City market status"
-        activeId={statusFilter}
-        onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
-        tabs={[
-          { id: 'all', label: 'All', count: filterCounts.all },
-          { id: 'open', label: 'Open', count: filterCounts.open },
-          { id: 'closed', label: 'Closed', count: filterCounts.closed },
-          { id: 'waitlist', label: 'Wait list', count: filterCounts.waitlist },
-          { id: 'recommended', label: 'Recommended', count: filterCounts.recommended },
-        ]}
-      />
+      {filterTabs}
 
       <p className="text-xs text-brand-text-muted">
         Showing {filtered.length} of {visibleCities.length} cities
