@@ -30,15 +30,11 @@ const WAITLIST_MESSAGE =
 
 let cachedPlatformCities: PlatformCity[] | null = null;
 
-/** Active launch market — all other seeded cities default to closed. */
+/** Preferred default city label when no markets are open yet. */
 export const GUARDR_LAUNCH_CITY = 'Sacramento';
 
-export function isLaunchCity(name: string | undefined): boolean {
-  return formatCityLabel(name ?? '').toLowerCase() === GUARDR_LAUNCH_CITY.toLowerCase();
-}
-
-export function defaultCityMarketStatus(name: string): CityMarketStatus {
-  return isLaunchCity(name) ? 'open' : 'closed';
+export function defaultCityMarketStatus(_name: string): CityMarketStatus {
+  return 'closed';
 }
 
 export function buildDefaultPlatformCities(): PlatformCity[] {
