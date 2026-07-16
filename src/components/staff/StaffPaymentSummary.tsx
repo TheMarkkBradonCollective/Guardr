@@ -8,12 +8,66 @@ import { StaffSummaryCell } from './StaffSummaryCell';
 interface StaffPaymentSummaryProps {
   summary: ReturnType<typeof paymentPipelineSummary>;
   financials?: OperationalFinancials;
+  variant?: 'default' | 'desktop';
 }
 
-export function StaffPaymentSummary({ summary, financials }: StaffPaymentSummaryProps) {
+export function StaffPaymentSummary({ summary, financials, variant = 'default' }: StaffPaymentSummaryProps) {
   const platformFeeOnlyDeposits =
     summary.cashDepositPending.length > 0 &&
     summary.cashDepositPending.every((req) => isPlatformFeeOnlyDeposit(req));
+
+  if (variant === 'desktop') {
+    const chips = [
+      ...(financials
+        ? [
+            {
+              label: 'Gross income',
+              value: formatOperationalMoney(financials.grossIncome),
+              accent: financials.grossIncome > 0,
+            },
+            {
+              label: 'Company earnings',
+              value: formatOperationalMoney(financials.platformFeesCollected),
+              accent: financials.platformFeesCollected > 0,
+            },
+          ]
+        : []),
+      {
+        label: 'Client still owes',
+        value: `$${summary.awaitingClientTotal.toFixed(2)}`,
+        accent: summary.awaitingClient.length > 0,
+      },
+      {
+        label: 'Guard pay to release',
+        value: `$${summary.guardPayoutDue.toFixed(2)}`,
+        accent: summary.awaitingGuardPayout.length > 0,
+      },
+      {
+        label: platformFeeOnlyDeposits ? 'Platform fees due' : 'Stripe deposit due',
+        value: `$${summary.cashDepositTotal.toFixed(2)}`,
+        accent: summary.cashDepositPending.length > 0,
+      },
+      {
+        label: 'Paid to guards',
+        value: `$${summary.settledGuardTotal.toFixed(2)}`,
+        accent: summary.settledGuardTotal > 0,
+      },
+    ];
+
+    return (
+      <div className="adm-payment-stats-grid" aria-label="Payment pipeline summary">
+        {chips.map((chip) => (
+          <article
+            key={chip.label}
+            className={`adm-card adm-payment-stat${chip.accent ? ' adm-payment-stat--accent' : ''}`}
+          >
+            <p className="adm-card-eyebrow">{chip.label}</p>
+            <p className="adm-stat-value adm-stat-value--sm">{chip.value}</p>
+          </article>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="staff-payment-stats-wrap">

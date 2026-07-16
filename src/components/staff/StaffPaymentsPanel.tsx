@@ -347,22 +347,26 @@ export function StaffPaymentsPanel({
     ];
 
     return (
-      <StaffOpsPageShell className="adm-finance-page adm-payments-workbench">
-        <div className="adm-workbench-toolbar adm-finance-toolbar">
-          <div className="adm-finance-toolbar-summary">
-            <p className="adm-card-eyebrow">Finance</p>
-            <p className="adm-workbench-subtitle">Payment pipeline — client billing through guard payout.</p>
-            <div className="adm-finance-stats">
-              <StaffPaymentSummary summary={summary} financials={financials} />
+      <StaffOpsPageShell
+        className="adm-finance-page adm-payments-workbench"
+        toolbar={
+          <>
+            <div>
+              <p className="adm-card-eyebrow">Finance</p>
+              <p className="adm-workbench-subtitle">
+                Payment pipeline — client billing through guard payout.
+              </p>
             </div>
-          </div>
-          {exportButton}
-        </div>
-
+            {exportButton}
+          </>
+        }
+      >
         {allQueueItems.length === 0 ? (
           emptyState
         ) : (
           <>
+            <StaffPaymentSummary summary={summary} financials={financials} variant="desktop" />
+
             <div className="adm-finance-filter-tabs staff-list-filter-tabs">
               {filterTabs.map((tab) =>
                 tab.count === 0 && tab.id !== 'all' && tab.id !== 'action' ? null : (
@@ -384,7 +388,7 @@ export function StaffPaymentsPanel({
                 <p>No items in this queue.</p>
               </div>
             ) : (
-              <div className="adm-workbench-split adm-finance-split">
+              <div className="adm-workbench-split adm-finance-split adm-ops-list-detail">
                 <div className="adm-workbench-list">
                   <table className="adm-table adm-table--list">
                     <thead>
