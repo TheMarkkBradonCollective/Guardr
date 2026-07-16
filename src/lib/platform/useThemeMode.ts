@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { readThemeFromDocument, ThemeMode } from './theme';
 
-/** Reactive theme — updates when user toggles Dark / Light / Shade */
+/** Reactive theme — updates when user toggles Dark / Light */
 export function useThemeMode(): ThemeMode {
   const [mode, setMode] = useState<ThemeMode>(readThemeFromDocument);
 

@@ -99,7 +99,7 @@ import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
 
-type ThemeMode = 'dark' | 'light' | 'grey';
+import type { ThemeMode } from '../lib/platform/theme';
 
 export interface StaffSectionSelection {
   guardId?: string | null;

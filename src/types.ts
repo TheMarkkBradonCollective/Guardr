@@ -212,7 +212,7 @@ export interface Client {
   accountStatus?: 'pending' | 'active' | 'suspended';
   rating?: number;
   createdAt?: string;
-  themePreference?: 'dark' | 'light' | 'grey';
+  themePreference?: 'dark' | 'light';
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
   /** PBKDF2 hash — replaces plaintext password after migration */
@@ -456,7 +456,7 @@ export interface SecurityGuard {
   assignedManagerIds?: string[];
   userStatus?: 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
-  themePreference?: 'dark' | 'light' | 'grey';
+  themePreference?: 'dark' | 'light';
   stripeConnectAccountId?: string;
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;

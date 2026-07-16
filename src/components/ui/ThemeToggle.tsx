@@ -1,11 +1,10 @@
 import React from 'react';
-import { Moon, Sun, Cloud } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 
 const MODES: { id: ThemeMode; label: string; icon: typeof Moon }[] = [
   { id: 'dark', label: 'Dark', icon: Moon },
   { id: 'light', label: 'Light', icon: Sun },
-  { id: 'grey', label: 'Shade', icon: Cloud },
 ];
 
 interface ThemeToggleProps {

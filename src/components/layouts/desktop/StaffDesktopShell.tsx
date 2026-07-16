@@ -9,7 +9,7 @@ import { DesktopCommandBar } from './DesktopCommandBar';
 import { StaffDesktopNav } from './StaffDesktopNav';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 
-type ThemeMode = 'dark' | 'light' | 'grey';
+import type { ThemeMode } from '../../../lib/platform/theme';
 
 interface StaffDesktopShellProps {
   children: React.ReactNode;

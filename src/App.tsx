@@ -274,7 +274,7 @@ import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient }
 import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
-import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
+import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, loadTheme, normalizeThemeMode, saveTheme } from './lib/platform/theme';
 import { isAppExperience } from './lib/platform/appExperience';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
@@ -1943,7 +1943,7 @@ export default function App() {
         userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: false }),
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
-        themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
+        themePreference: normalizeThemeMode(g.theme_preference) ?? undefined,
         password: g.password ?? undefined,
         passwordHash: g.password_hash ?? undefined,
         mustChangePassword: g.must_change_password ?? false,
@@ -2022,7 +2022,7 @@ export default function App() {
         approved: c.account_status === 'active' || (c.approved ?? false),
         accountStatus: c.account_status || (c.approved === false ? 'suspended' : 'active'),
         rating: c.rating != null ? Number(c.rating) : undefined,
-        themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
+        themePreference: normalizeThemeMode(c.theme_preference) ?? undefined,
         password: c.password ?? undefined,
         passwordHash: c.password_hash ?? undefined,
         mustChangePassword: c.must_change_password ?? false,

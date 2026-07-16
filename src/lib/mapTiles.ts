@@ -6,8 +6,6 @@ export function mapTileUrl(theme: ThemeMode): string {
   switch (theme) {
     case 'dark':
       return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    case 'grey':
-      return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
     case 'light':
     default:
       return 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
@@ -22,8 +20,6 @@ export function mapUserLocationColors(theme: ThemeMode): {
   switch (theme) {
     case 'dark':
       return { ring: '#6B8F6E', fill: '#6B8F6E', fillOpacity: 0.1 };
-    case 'grey':
-      return { ring: '#5E7B61', fill: '#5E7B61', fillOpacity: 0.14 };
     case 'light':
     default:
       return { ring: '#5E7B61', fill: '#5E7B61', fillOpacity: 0.12 };
@@ -35,7 +31,7 @@ export function mapRoutePathOptions(theme: ThemeMode): {
   dash: PathOptions;
 } {
   const sage = theme === 'dark' ? '#84a279' : '#5E7B61';
-  const dashColor = theme === 'dark' ? '#ffffff' : theme === 'grey' ? '#f8faf8' : '#ffffff';
+  const dashColor = '#ffffff';
   return {
     main: {
       color: sage,

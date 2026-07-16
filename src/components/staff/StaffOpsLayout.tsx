@@ -37,7 +37,7 @@ import {
   MapPinned,
 } from 'lucide-react';
 
-type ThemeMode = 'dark' | 'light' | 'grey';
+import type { ThemeMode } from '../../lib/platform/theme';
 
 interface StaffOpsLayoutProps {
   children: React.ReactNode;

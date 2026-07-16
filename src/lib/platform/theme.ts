@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { applyThemeBranding } from './themeBranding';
 import { applyNativeThemeChrome } from './nativeThemeChrome';
 
-export type ThemeMode = 'dark' | 'light' | 'grey';
+export type ThemeMode = 'dark' | 'light';
 
 export {
   THEME_ICON_BACKGROUNDS,
@@ -11,12 +11,11 @@ export {
   themeIconAssetPath,
 } from './themeBranding';
 
-export const THEME_MODES: ThemeMode[] = ['dark', 'light', 'grey'];
+export const THEME_MODES: ThemeMode[] = ['dark', 'light'];
 
 export const THEME_LABELS: Record<ThemeMode, string> = {
   dark: 'Dark',
   light: 'Light',
-  grey: 'Shade',
 };
 
 /** Default for PWA / web — white install icon and field-readable UI. */
@@ -34,25 +33,37 @@ function defaultThemeForPlatform(): ThemeMode {
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 
+/** Legacy shade theme — migrated to light on read. */
+const LEGACY_THEME_ALIASES: Record<string, ThemeMode> = {
+  grey: 'light',
+};
+
 function userThemeKey(userId: string): string {
   return `${LEGACY_STORAGE_KEY}_${userId}`;
 }
 
+export function normalizeThemeMode(value: string | null | undefined): ThemeMode | null {
+  if (!value) return null;
+  if (value in LEGACY_THEME_ALIASES) return LEGACY_THEME_ALIASES[value];
+  if (value === 'dark' || value === 'light') return value;
+  return null;
+}
+
 export function hasPerUserThemePreference(userId: string): boolean {
-  return isThemeMode(localStorage.getItem(userThemeKey(userId)));
+  return normalizeThemeMode(localStorage.getItem(userThemeKey(userId))) !== null;
 }
 
 export function isThemeMode(value: string | null | undefined): value is ThemeMode {
-  return value === 'dark' || value === 'light' || value === 'grey';
+  return value === 'dark' || value === 'light';
 }
 
 export function loadTheme(userId?: string | null): ThemeMode {
   if (userId) {
-    const perUser = localStorage.getItem(userThemeKey(userId));
-    if (isThemeMode(perUser)) return perUser;
+    const perUser = normalizeThemeMode(localStorage.getItem(userThemeKey(userId)));
+    if (perUser) return perUser;
   }
-  const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-  if (isThemeMode(legacy)) return legacy;
+  const legacy = normalizeThemeMode(localStorage.getItem(LEGACY_STORAGE_KEY));
+  if (legacy) return legacy;
   return defaultThemeForPlatform();
 }
 
@@ -68,9 +79,10 @@ export function applyThemeToDocument(mode: ThemeMode): void {
   for (const m of THEME_MODES) {
     html.classList.remove(`theme-${m}`);
   }
+  html.classList.remove('theme-grey');
   html.classList.add(`theme-${mode}`);
   html.dataset.theme = mode;
-  html.style.colorScheme = mode === 'light' || mode === 'grey' ? 'light' : 'dark';
+  html.style.colorScheme = mode === 'light' ? 'light' : 'dark';
   applyThemeBranding(mode);
   void applyNativeThemeChrome(mode);
 }
@@ -78,8 +90,8 @@ export function applyThemeToDocument(mode: ThemeMode): void {
 /** Read active theme from the document root (for maps, etc.) */
 export function readThemeFromDocument(): ThemeMode {
   if (typeof document === 'undefined') return DEFAULT_THEME;
-  const fromDataset = document.documentElement.dataset.theme;
-  if (isThemeMode(fromDataset)) return fromDataset;
+  const fromDataset = normalizeThemeMode(document.documentElement.dataset.theme);
+  if (fromDataset) return fromDataset;
   for (const m of THEME_MODES) {
     if (document.documentElement.classList.contains(`theme-${m}`)) return m;
   }

@@ -2,14 +2,12 @@ import type { ThemeMode } from './theme';
 export const THEME_ICON_BACKGROUNDS: Record<ThemeMode, string> = {
   light: '#FFFFFF',
   dark: '#000000',
-  grey: '#101417',
 };
 
 /** Browser UI accent (status bar, PWA theme_color). */
 export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   light: '#FFFFFF',
   dark: '#000000',
-  grey: '#101417',
 };
 
 const ICON_LINK_IDS = {
