@@ -948,7 +948,7 @@ COMMENT ON COLUMN notification_preferences.team_chat_message IS 'Crew chat messa
 
 CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
-  payment_cash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  payment_cash_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   fee_config JSONB NOT NULL DEFAULT '{
     "model": "flat",
@@ -967,7 +967,11 @@ CREATE TABLE IF NOT EXISTS platform_settings (
 );
 
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS payment_square_enabled BOOLEAN NOT NULL DEFAULT FALSE;
-UPDATE platform_settings SET payment_cash_enabled = FALSE WHERE id = 'default';
+UPDATE platform_settings
+SET payment_cash_enabled = FALSE,
+    payment_stripe_enabled = TRUE,
+    payment_square_enabled = COALESCE(payment_square_enabled, FALSE)
+WHERE id = 'default';
 
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL DEFAULT '{
   "model": "flat",
@@ -983,7 +987,9 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL
   ]
 }'::jsonb;
 
-INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
+INSERT INTO platform_settings (id, payment_cash_enabled, payment_stripe_enabled, payment_square_enabled)
+VALUES ('default', FALSE, TRUE, FALSE)
+ON CONFLICT (id) DO NOTHING;
 
 -- ── PLATFORM CITIES (market rollout controls) ────────────────────────────────
 CREATE TABLE IF NOT EXISTS platform_cities (
@@ -1874,7 +1880,7 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'platform_settings'
-  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'fee_config',
+  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'payment_square_enabled', 'fee_config',
     'auto_stripe_payout_enabled', 'auto_stripe_payout_delay_hours', 'verified_guard_self_serve',
     'team_lead_bonus_per_guard_per_hour', 'team_lead_bonus_client_share_percent',
     'team_lead_bonus_platform_share_percent', 'owner_message', 'director_message',
