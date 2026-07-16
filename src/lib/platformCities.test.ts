@@ -8,6 +8,7 @@ import {
   getSelectableCityNamesForClients,
   getSelectableCityNamesForGuards,
   GUARDR_LAUNCH_CITY,
+  mergeMissingPlatformCities,
   normalizeManagedCities,
   setPlatformCitiesCache,
   staffCanManageCity,
@@ -59,6 +60,22 @@ describe('platform city access', () => {
     const defaults = buildDefaultPlatformCities();
     assert.ok(defaults.length >= 60);
     assert.equal(defaults.every((city) => city.status === 'closed'), true);
+  });
+
+  it('adds newly canonical cities to an existing platform snapshot', () => {
+    const merged = mergeMissingPlatformCities([
+      {
+        id: 'sacramento',
+        name: 'Sacramento',
+        stateCode: 'CA',
+        status: 'open',
+        waitlistAudience: 'both',
+        recommendOpen: false,
+        sortOrder: 0,
+      },
+    ]);
+    assert.ok(merged.some((city) => city.name === 'Chico'));
+    assert.ok(merged.some((city) => city.name === 'Sacramento'));
   });
 
   it('falls back to Sacramento when no markets are open', () => {

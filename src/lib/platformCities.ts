@@ -49,6 +49,17 @@ export function buildDefaultPlatformCities(): PlatformCity[] {
   }));
 }
 
+/** Add canonical cities missing from a loaded platform_cities snapshot. */
+export function mergeMissingPlatformCities(loaded: PlatformCity[]): PlatformCity[] {
+  const merged = new Map(loaded.map((city) => [city.id, city]));
+  for (const city of buildDefaultPlatformCities()) {
+    if (!merged.has(city.id)) {
+      merged.set(city.id, city);
+    }
+  }
+  return [...merged.values()].sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 export function cityIdFromName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-');
 }

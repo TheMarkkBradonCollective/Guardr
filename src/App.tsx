@@ -502,6 +502,7 @@ import {
 } from './lib/platformSettings';
 import {
   buildDefaultPlatformCities,
+  mergeMissingPlatformCities,
   platformCityFromRow,
   platformCityToDbRow,
   setPlatformCitiesCache,
@@ -2428,6 +2429,19 @@ export default function App() {
               .upsert(loadedCities.map((city) => platformCityToDbRow(city)));
           } catch (seedErr) {
             console.warn('Platform cities seed:', seedErr);
+          }
+        } else {
+          const merged = mergeMissingPlatformCities(loadedCities);
+          const missing = merged.filter((city) => !loadedCities.some((row) => row.id === city.id));
+          if (missing.length > 0) {
+            loadedCities = merged;
+            try {
+              await supabase
+                .from('platform_cities')
+                .upsert(missing.map((city) => platformCityToDbRow(city)));
+            } catch (seedErr) {
+              console.warn('Platform cities sync:', seedErr);
+            }
           }
         }
         setPlatformCities(loadedCities);
