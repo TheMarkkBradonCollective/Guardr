@@ -16747,6 +16747,17 @@ html.theme-dark .landing-wordmark {
   color: var(--brand-text-muted);
 }
 
+.guard-pref-type-vehicle-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--status-warning, #b45309);
+}
+
+.guard-pref-type-card-vehicle-blocked {
+  opacity: 0.92;
+}
+
 .guard-pref-badge {
   display: inline-flex;
   align-items: center;

@@ -179,11 +179,21 @@ export function serviceListingPlaceholders(serviceId: ClientServiceId): JobListi
         parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
         accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
       };
-    case 'patrol':
+    case 'foot-patrol':
       return {
-        description: 'e.g. Mobile patrol — perimeter checks and visible deterrence',
+        description: 'e.g. Foot patrol — perimeter walks, interior rounds, and visible deterrence',
         uniformRequirements: 'e.g. Standard black uniform with duty belt; reflective gear at night',
         equipmentRequirements: 'e.g. Radio, flashlight, keys/access cards, patrol log',
+        siteInstructions: 'e.g. Complete all checkpoints each round on foot; note hazards',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
+      };
+    case 'vehicle-patrol':
+    case 'patrol':
+      return {
+        description: 'e.g. Vehicle patrol — mobile perimeter checks and visible deterrence',
+        uniformRequirements: 'e.g. Standard black uniform with duty belt; reflective gear at night',
+        equipmentRequirements: 'e.g. Radio, flashlight, keys/access cards, patrol log, approved vehicle',
         siteInstructions: 'e.g. Complete all checkpoints each round; note hazards',
         parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
         accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,

@@ -20,6 +20,24 @@ describe('normalizeJobTypePreferences', () => {
   it('keeps only supported job types', () => {
     assert.deepEqual(normalizeJobTypePreferences(['event-wedding', 'invalid']), ['event-wedding']);
   });
+
+  it('migrates legacy patrol preference to vehicle-patrol', () => {
+    assert.deepEqual(normalizeJobTypePreferences(['patrol']), ['vehicle-patrol']);
+    assert.deepEqual(normalizeJobTypePreferences(['patrol', 'vehicle-patrol']), ['vehicle-patrol']);
+  });
+});
+
+describe('legacy patrol preference matching', () => {
+  const vehiclePatrolGuard = {
+    jobTypePreferences: ['vehicle-patrol'],
+  } as SecurityGuard;
+
+  it('matches legacy patrol jobs to vehicle-patrol preference', () => {
+    assert.equal(guardWantsJobType(vehiclePatrolGuard, 'patrol'), true);
+    assert.equal(guardWantsJobType(vehiclePatrolGuard, 'vehicle-patrol'), true);
+    assert.equal(guardWantsJobType(vehiclePatrolGuard, 'foot-patrol'), false);
+    assert.equal(guardMatchesJobPreferences(vehiclePatrolGuard, { type: 'patrol' }), true);
+  });
 });
 
 describe('guard job type matching', () => {

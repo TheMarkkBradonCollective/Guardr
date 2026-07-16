@@ -80,6 +80,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   preferences: 'preferences',
   performance: 'performance',
   availability: 'availability',
+  vehicle: 'vehicle',
 };
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
@@ -97,6 +98,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   preferences: 'preferences',
   performance: 'performance',
   availability: 'availability',
+  vehicle: 'vehicle',
 };
 
 /** Guards need active status plus loaded credentials before non-activation tabs unlock. */

@@ -31,6 +31,8 @@ function completedJob(overrides: Partial<SecurityRequest> = {}): SecurityRequest
 test('jobTypeRatingCategory maps corporate events to events profile', () => {
   assert.equal(jobTypeRatingCategory('event-corporate'), 'events');
   assert.equal(jobTypeRatingCategory('nightclub-bar'), 'nightlife');
+  assert.equal(jobTypeRatingCategory('foot-patrol'), 'sites');
+  assert.equal(jobTypeRatingCategory('vehicle-patrol'), 'sites');
   assert.equal(jobTypeRatingCategory('patrol'), 'sites');
 });
 

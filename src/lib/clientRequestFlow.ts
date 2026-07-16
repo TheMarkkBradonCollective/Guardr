@@ -2,6 +2,9 @@ import { JobType } from '../types';
 
 export type ClientServiceId =
   | 'standing-guard'
+  | 'foot-patrol'
+  | 'vehicle-patrol'
+  /** @deprecated Legacy service id — maps to vehicle patrol. */
   | 'patrol'
   | 'fire-watch'
   | 'construction'
@@ -97,11 +100,27 @@ export const CLIENT_SERVICE_OPTIONS: ClientServiceOption[] = [
     defaultTitle: 'Standing Guard Post',
   },
   {
-    id: 'patrol',
+    id: 'foot-patrol',
     emoji: '🚶',
+    label: 'Foot patrol',
+    description: 'On-foot perimeter checks and scheduled rounds',
+    jobType: 'foot-patrol',
+    defaultTitle: 'Foot Patrol Coverage',
+  },
+  {
+    id: 'vehicle-patrol',
+    emoji: '🚗',
+    label: 'Vehicle patrol',
+    description: 'Mobile patrol routes using a guard vehicle',
+    jobType: 'vehicle-patrol',
+    defaultTitle: 'Vehicle Patrol Coverage',
+  },
+  {
+    id: 'patrol',
+    emoji: '🚗',
     label: 'Patrol services',
     description: 'Mobile perimeter checks and scheduled rounds',
-    jobType: 'patrol',
+    jobType: 'vehicle-patrol',
     defaultTitle: 'Site Patrol Coverage',
   },
   {

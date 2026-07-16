@@ -15,7 +15,7 @@ export const CLIENT_SERVICE_GROUPS: ClientServiceGroup[] = [
   },
   {
     label: 'Sites & patrol',
-    serviceIds: ['standing-guard', 'patrol', 'construction', 'property', 'fire-watch'],
+    serviceIds: ['standing-guard', 'foot-patrol', 'vehicle-patrol', 'construction', 'property', 'fire-watch'],
   },
   {
     label: 'Specialized',

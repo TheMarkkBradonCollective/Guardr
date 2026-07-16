@@ -16,6 +16,12 @@ import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import { guardHasValidInsurance, guardInsuranceBlockedMessage } from './guardInsurance';
 import { guardMeetsRateRequirement } from './guardMarketplace';
 import { guardCanAcceptJobType, guardMatchesJobPreferences, jobTypePreferenceLabel } from './guardJobPreferences';
+import { isJobTypeOnboarded } from './guardJobTypeOnboarding';
+import {
+  guardCanEnableJobTypePreference,
+  guardVehicleRequiredBlockMessage,
+  jobTypeRequiresVerifiedVehicle,
+} from './guardJobTypeVehicleRequirements';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -34,6 +40,8 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   'event-corporate': 'Event venue — corporate',
   'event-private': 'Event venue — private party',
   event: 'Event security',
+  'foot-patrol': 'Foot patrol',
+  'vehicle-patrol': 'Vehicle patrol',
   patrol: 'Patrol',
   construction: 'Construction site',
   'fire-watch': 'Fire watch',
@@ -86,7 +94,11 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
     case 'standing':
       return job.type === 'standing-guard' || job.type === 'bodyguard' || job.type === 'asset-protection';
     case 'patrol':
-      return job.type === 'patrol';
+      return (
+        job.type === 'patrol' ||
+        job.type === 'foot-patrol' ||
+        job.type === 'vehicle-patrol'
+      );
     case 'concert':
       return (
         job.type === 'event-concert' ||
@@ -220,9 +232,19 @@ export function checkJobRequirements(
   const onboardedForType = guardCanAcceptJobType(guard, job.type);
   checks.push({
     label: `${jobTypePreferenceLabel(job.type)} onboarding completed`,
-    met: onboardedForType,
+    met: isJobTypeOnboarded(guard, job.type),
   });
   if (!onboardedForType) {
+    if (
+      isJobTypeOnboarded(guard, job.type) &&
+      jobTypeRequiresVerifiedVehicle(job.type) &&
+      !guardCanEnableJobTypePreference(guard, job.type)
+    ) {
+      checks.push({
+        label: guardVehicleRequiredBlockMessage(guard, job.type),
+        met: false,
+      });
+    }
     canAccept = false;
   }
 

@@ -20,7 +20,7 @@ describe('jobTypeOnboardingSpeechText', () => {
 });
 
 describe('jobTypeOnboardingRequiredMs', () => {
-  const types: JobType[] = ['patrol', 'nightclub-bar', 'other'];
+  const types: JobType[] = ['foot-patrol', 'vehicle-patrol', 'patrol', 'nightclub-bar', 'other'];
 
   for (const type of types) {
     it(`enforces a minimum read time for ${type}`, () => {

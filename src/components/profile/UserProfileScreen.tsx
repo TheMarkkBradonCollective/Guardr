@@ -55,6 +55,9 @@ interface UserProfileScreenProps {
   onSaveInsurance?: (
     policy: Partial<GuardInsurancePolicy> & { guardId: string }
   ) => Promise<void>;
+  onSaveVehicleInsurance?: (
+    policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
 }
 
 export function UserProfileScreen({
@@ -70,6 +73,7 @@ export function UserProfileScreen({
   onAddEducation,
   onSubmitIdentityVerification,
   onSaveInsurance,
+  onSaveVehicleInsurance,
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
@@ -332,6 +336,7 @@ export function UserProfileScreen({
           onAddEducation={onAddEducation}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
           onSaveInsurance={onSaveInsurance}
+          onSaveVehicleInsurance={onSaveVehicleInsurance}
           onEditCredentialFullPage={!editing ? () => setEditing(true) : undefined}
         />
         </section>

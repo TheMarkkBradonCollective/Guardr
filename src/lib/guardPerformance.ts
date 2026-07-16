@@ -2,6 +2,7 @@ import { countGuardViolationReports } from './clientViolations';
 import { countActiveShiftAuditViolations } from './shiftAuditViolations';
 import { ALL_JOB_TYPES } from './guardJobPreferences';
 import { JOB_TYPE_LABELS } from './guardJobs';
+import { jobTypesForModality, type WorkModality } from './guardWorkModality';
 import type { SecurityGuard, SecurityRequest, ShiftReport, JobType } from '../types';
 
 export interface GuardPerformanceMetrics {
@@ -213,6 +214,118 @@ export function computeClientReviewStatsForJobType(
   jobType: JobType
 ): ClientReviewStats {
   const ratings = guardCompletedJobsForType(guardId, requests, jobType)
+    .map((j) => j.ratingGiven)
+    .filter((r): r is number => typeof r === 'number' && r > 0);
+
+  if (!ratings.length) {
+    return { average: 0, count: 0 };
+  }
+
+  const average = Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1));
+  return { average, count: ratings.length };
+}
+
+function guardCompletedJobsForModality(
+  guardId: string,
+  requests: SecurityRequest[],
+  modality: WorkModality
+): SecurityRequest[] {
+  const types = new Set(jobTypesForModality(modality));
+  return guardCompletedJobs(guardId, requests).filter((job) =>
+    types.has((job.type ?? 'other') as JobType)
+  );
+}
+
+export function computeGuardPerformanceForModality(
+  guardId: string,
+  requests: SecurityRequest[],
+  modality: WorkModality,
+  reports: ShiftReport[] = []
+): GuardPerformanceMetrics {
+  const jobs = guardCompletedJobsForModality(guardId, requests, modality);
+  if (!jobs.length) {
+    return {
+      overallScore: 0,
+      onTimeRate: 0,
+      checkInCompletionRate: 0,
+      uniformComplianceRate: 0,
+      attendanceRate: 0,
+      incidentPenalty: 0,
+      jobsSampled: 0,
+    };
+  }
+
+  let onTime = 0;
+  let checkedIn = 0;
+  let uniformOk = 0;
+  let attended = 0;
+
+  for (const job of jobs) {
+    const noShow = (job as SecurityRequest & { noShow?: boolean }).noShow === true;
+    if (!noShow) attended += 1;
+
+    if (job.checkInAudit?.checkedAt) {
+      checkedIn += 1;
+      const startMs = new Date(job.startDate).getTime();
+      const checkMs = new Date(job.checkInAudit.checkedAt).getTime();
+      if (checkMs <= startMs + ON_TIME_GRACE_MS) onTime += 1;
+
+      const uniform = job.checkInAudit.uniform;
+      if (
+        uniform?.uniformPresent &&
+        uniform?.blackShoes &&
+        uniform?.professionalAppearance
+      ) {
+        uniformOk += 1;
+      }
+    }
+  }
+
+  const incidentCount = reports.filter(
+    (r) => r.guardId === guardId && r.type === 'incident'
+  ).length;
+  const incidentPenalty = Math.min(1, incidentCount / Math.max(jobs.length, 1));
+
+  const onTimeRate = onTime / jobs.length;
+  const checkInCompletionRate = checkedIn / jobs.length;
+  const uniformComplianceRate = checkedIn ? uniformOk / checkedIn : 0;
+  const attendanceRate = attended / jobs.length;
+
+  const starRatings = jobs
+    .map((j) => j.ratingGiven)
+    .filter((r): r is number => typeof r === 'number' && r > 0);
+  const reviewAvg = starRatings.length
+    ? starRatings.reduce((a, b) => a + b, 0) / starRatings.length
+    : 3.5;
+
+  const behaviorScore =
+    onTimeRate * 0.25 +
+    checkInCompletionRate * 0.2 +
+    uniformComplianceRate * 0.15 +
+    attendanceRate * 0.25 +
+    (1 - incidentPenalty) * 0.15;
+
+  const overallScore = Number(
+    Math.min(5, Math.max(1, reviewAvg * 0.55 + behaviorScore * 5 * 0.45)).toFixed(1)
+  );
+
+  return {
+    overallScore,
+    onTimeRate,
+    checkInCompletionRate,
+    uniformComplianceRate,
+    attendanceRate,
+    incidentPenalty,
+    jobsSampled: jobs.length,
+  };
+}
+
+export function computeClientReviewStatsForModality(
+  guardId: string,
+  requests: SecurityRequest[],
+  modality: WorkModality
+): ClientReviewStats {
+  const ratings = guardCompletedJobsForModality(guardId, requests, modality)
     .map((j) => j.ratingGiven)
     .filter((r): r is number => typeof r === 'number' && r > 0);
 

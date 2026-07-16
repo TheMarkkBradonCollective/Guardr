@@ -160,6 +160,8 @@ interface StaffDashboardProps {
     status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => void | Promise<void>;
+  onApproveVehicle?: (guardId: string) => void | Promise<void>;
+  onRejectVehicle?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
   onRequestCertUpdate?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onRevokeGuardIdentityVerification?: (guardId: string) => void | Promise<void>;
@@ -350,6 +352,8 @@ export function StaffDashboard({
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
+  onApproveVehicle,
+  onRejectVehicle,
   onRequestCoiUpdate,
   onRequestCertUpdate,
   onRevokeGuardIdentityVerification,

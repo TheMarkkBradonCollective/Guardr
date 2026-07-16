@@ -2,10 +2,18 @@ import type { JobType, SecurityRequest } from '../types';
 import { JOB_TYPE_PREFERENCE_CATEGORIES } from './guardJobPreferences';
 import {
   computeClientReviewStatsForJobType,
+  computeClientReviewStatsForModality,
   computeGuardPerformanceForJobType,
+  computeGuardPerformanceForModality,
   type GuardPerformanceMetrics,
   type PerformanceFactorStatus,
 } from './guardPerformance';
+import {
+  jobTypesForModality,
+  representativeJobTypeForModality,
+  workModalityLabel,
+  type WorkModality,
+} from './guardWorkModality';
 
 export type JobTypeRatingCategory = 'nightlife' | 'events' | 'sites' | 'specialized';
 
@@ -40,6 +48,8 @@ export const JOB_TYPE_RATING_DISPLAY_NAMES: Record<JobType, string> = {
   'event-corporate': 'Corporate events',
   'event-private': 'Private events',
   event: 'Events',
+  'foot-patrol': 'Foot patrol',
+  'vehicle-patrol': 'Vehicle patrol',
   patrol: 'Patrol',
   construction: 'Construction',
   'fire-watch': 'Fire watch',
@@ -401,6 +411,7 @@ function starDisplay(avg: number): string {
 }
 
 export function jobTypeRatingCategory(jobType: JobType): JobTypeRatingCategory {
+  if (jobType === 'patrol') return 'sites';
   const match = JOB_TYPE_PREFERENCE_CATEGORIES.find((category) => category.types.includes(jobType));
   return (match?.id as JobTypeRatingCategory | undefined) ?? 'specialized';
 }
@@ -491,6 +502,75 @@ export function buildJobTypeRatingCards(
   });
 }
 
+const MODALITY_METRIC_LABELS: Record<
+  WorkModality,
+  Record<JobTypeMetricId, string>
+> = {
+  standing: {
+    'on-time': 'Post readiness',
+    'check-ins': 'Site check-ins',
+    uniform: 'Uniform compliance',
+    attendance: 'Attendance',
+    'incident-free': 'Incident-free record',
+    'client-rating': 'Client rating',
+    'lifetime-shifts': 'Lifetime standing shifts',
+  },
+  driving: {
+    'on-time': 'Route readiness',
+    'check-ins': 'Patrol check-ins',
+    uniform: 'Uniform compliance',
+    attendance: 'Attendance',
+    'incident-free': 'Incident-free record',
+    'client-rating': 'Client rating',
+    'lifetime-shifts': 'Lifetime patrol shifts',
+  },
+};
+
+export function buildModalityRatingCards(
+  guardId: string,
+  modality: WorkModality,
+  requests: SecurityRequest[]
+): JobTypeRatingCard[] {
+  const representativeType = representativeJobTypeForModality(modality);
+  const category = jobTypeRatingCategory(representativeType);
+  const templates = METRIC_TEMPLATES[category];
+  const metrics = computeGuardPerformanceForModality(guardId, requests, modality);
+  const clientReviews = computeClientReviewStatsForModality(guardId, requests, modality);
+  const labels = MODALITY_METRIC_LABELS[modality];
+
+  return templates.map((template) => {
+    const rate = metricRateForTemplate(template, metrics, clientReviews);
+    const status = factorStatus(rate);
+    return {
+      id: template.id,
+      label: labels[template.id],
+      valueDisplay: metricValueDisplay(template, metrics, clientReviews),
+      targetLabel: template.targetLabel,
+      rate,
+      meetsTarget: metricMeetsTarget(template, metrics, clientReviews),
+      status: status.status,
+      statusLabel: status.statusLabel,
+    };
+  });
+}
+
+function completedJobsForModality(
+  guardId: string,
+  requests: SecurityRequest[],
+  modality: WorkModality
+): SecurityRequest[] {
+  const modalityTypes = new Set(jobTypesForModality(modality));
+
+  return requests
+    .filter(
+      (request) =>
+        request.assignedGuardId === guardId &&
+        (request.status === 'completed' || request.status === 'closed') &&
+        modalityTypes.has((request.type ?? 'other') as JobType)
+    )
+    .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+}
+
 function completedJobsForType(
   guardId: string,
   requests: SecurityRequest[],
@@ -549,6 +629,35 @@ export function computeJobTypeMetricBreakdown(
   requests: SecurityRequest[]
 ): { positiveCount: number; negativeCount: number; excludedCount: number; windowSize: number } {
   const jobs = completedJobsForType(guardId, requests, jobType).slice(0, 40);
+  let positiveCount = 0;
+  let negativeCount = 0;
+  let excludedCount = 0;
+
+  for (const job of jobs) {
+    const result = shiftPassesMetric(job, metricId);
+    if (result == null) {
+      excludedCount += 1;
+      continue;
+    }
+    if (result) positiveCount += 1;
+    else negativeCount += 1;
+  }
+
+  return {
+    positiveCount,
+    negativeCount,
+    excludedCount,
+    windowSize: jobs.length,
+  };
+}
+
+export function computeModalityMetricBreakdown(
+  guardId: string,
+  modality: WorkModality,
+  metricId: JobTypeMetricId,
+  requests: SecurityRequest[]
+): { positiveCount: number; negativeCount: number; excludedCount: number; windowSize: number } {
+  const jobs = completedJobsForModality(guardId, requests, modality).slice(0, 40);
   let positiveCount = 0;
   let negativeCount = 0;
   let excludedCount = 0;
@@ -644,4 +753,112 @@ export function getJobTypeRatingCard(
   requests: SecurityRequest[]
 ): JobTypeRatingCard | null {
   return buildJobTypeRatingCards(guardId, jobType, requests).find((card) => card.id === metricId) ?? null;
+}
+
+export function buildModalityMetricDetailCopy(
+  guardId: string,
+  modality: WorkModality,
+  metricId: JobTypeMetricId,
+  card: JobTypeRatingCard,
+  requests: SecurityRequest[]
+): JobTypeMetricDetailCopy {
+  const displayName = workModalityLabel(modality).toLowerCase();
+  const breakdown = computeModalityMetricBreakdown(guardId, modality, metricId, requests);
+  const windowLabel =
+    breakdown.windowSize > 0 ? `LAST ${breakdown.windowSize} SHIFTS` : 'NO SHIFTS YET';
+  const targetLevelLabel =
+    metricId === 'client-rating'
+      ? 'Pro level: 4.5 ★'
+      : metricId === 'lifetime-shifts'
+        ? 'Pro level: 5 shifts'
+        : `Pro level: ${card.targetLabel.replace('Stay above ', '').replace('Requires ', '')}`;
+
+  const aboutBody =
+    breakdown.windowSize > 0
+      ? `You scored ${card.valueDisplay} on ${card.label.toLowerCase()} across your recent ${displayName} shifts. ${breakdown.positiveCount} of ${breakdown.windowSize} counted shifts met the target, with ${breakdown.negativeCount} needing improvement.`
+      : `Complete ${displayName} shifts to start tracking ${card.label.toLowerCase()}. Your cards will show 0% until you have shift history in this category.`;
+
+  const standingTips: Record<JobTypeMetricId, string[]> = {
+    'on-time': [
+      'Arrive at your post early so you are ready before the client expects coverage.',
+      'Review post orders before clocking in so you know the exact check-in location.',
+    ],
+    'check-ins': [
+      'Check in from your assigned post as soon as you are in position.',
+      'Complete self-audit photos when prompted — missed check-ins hurt this score.',
+    ],
+    uniform: [
+      'Lay out uniform items the night before so nothing is missing at shift start.',
+      'Use the pre-shift self-audit to catch appearance issues before you clock in.',
+    ],
+    attendance: [
+      'Accept only standing shifts you can fully cover.',
+      'Message the client early if an emergency could affect your arrival.',
+    ],
+    'incident-free': [
+      'Follow post orders and de-escalation steps documented in the shift briefing.',
+      'Report incidents promptly so they are documented accurately on the shift record.',
+    ],
+    'client-rating': [
+      'Greet the client contact professionally at arrival and before departure.',
+      'Stay visible and attentive at your post throughout the shift.',
+    ],
+    'lifetime-shifts': [
+      'Enable standing job alerts in Preferences to see more matching shifts.',
+      'Complete at least five standing shifts to unlock priority offers.',
+    ],
+  };
+
+  const drivingTips: Record<JobTypeMetricId, string[]> = {
+    'on-time': [
+      'Plan your route before leaving so you reach the first checkpoint on time.',
+      'Factor in traffic and parking when accepting patrol shifts.',
+    ],
+    'check-ins': [
+      'Complete patrol checkpoints as you move through the route.',
+      'Log each stop promptly so dispatch sees your progress.',
+    ],
+    uniform: [
+      'Lay out uniform items the night before so nothing is missing at shift start.',
+      'Use the pre-shift self-audit to catch appearance issues before you clock in.',
+    ],
+    attendance: [
+      'Accept only driving shifts you can fully cover.',
+      'Message the client early if vehicle or traffic issues could affect your route.',
+    ],
+    'incident-free': [
+      'Follow patrol orders and report hazards promptly while on route.',
+      'Document incidents accurately before continuing your patrol.',
+    ],
+    'client-rating': [
+      'Check in with the client contact at the start and end of your route.',
+      'Keep patrol logs complete so clients see thorough coverage.',
+    ],
+    'lifetime-shifts': [
+      'Enable patrol job alerts in Preferences to see more driving shifts.',
+      'Complete at least five patrol shifts to unlock priority offers.',
+    ],
+  };
+
+  const tipsByMetric = modality === 'standing' ? standingTips : drivingTips;
+
+  return {
+    windowLabel,
+    aboutBody,
+    targetLevelLabel,
+    excludedLabel:
+      breakdown.excludedCount === 1
+        ? 'shift excluded from this calculation'
+        : 'shifts excluded from this calculation',
+    tips: tipsByMetric[metricId],
+  };
+}
+
+export function getModalityRatingCard(
+  guardId: string,
+  modality: WorkModality,
+  metricId: JobTypeMetricId,
+  requests: SecurityRequest[]
+): JobTypeRatingCard | null {
+  return buildModalityRatingCards(guardId, modality, requests).find((card) => card.id === metricId) ?? null;
 }

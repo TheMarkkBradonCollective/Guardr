@@ -186,7 +186,7 @@ test('computeGuardPerformanceRating includes tier and violations', () => {
 test('computeGuardSkillRatings can include every job type', () => {
   const guard = { ...baseGuard, rating: 4.5 };
   const ratings = computeGuardSkillRatings(guard, [], { includeAllJobTypes: true });
-  assert.equal(ratings.length, 15);
+  assert.equal(ratings.length, 17);
   assert.ok(ratings.every((row) => row.reviewCount === 0));
   assert.ok(ratings.some((row) => row.skill === 'Nightclub & bar'));
 });

@@ -1,4 +1,4 @@
-import type { Certification, GuardInsurancePolicy, SecurityGuard } from '../types';
+import type { Certification, GuardInsurancePolicy, GuardVehicleInsurancePolicy, SecurityGuard } from '../types';
 import { getGuardUserStatus, isGuardUserStatusActive } from './accountStatus';
 import { credentialRequiresExpiry, resolveCertCatalogId } from './certCatalog';
 import { certHasPendingUpdate } from './certRevisionHistory';
@@ -15,6 +15,10 @@ import {
   resolveInsuranceStatus,
 } from './guardInsurance';
 import {
+  guardVehicleInsuranceSubmitted,
+  isVehicleInsuranceExpired,
+} from './guardVehicleInsurance';
+import {
   guardHasExpiredGuardCard,
   guardHasExpiredIdOnFile,
   guardHasVerifiedIdForWork,
@@ -22,7 +26,7 @@ import {
 } from './guardQualification';
 import { buildAutoExpiryUpdateRequestReason } from './staffDocumentReview';
 
-export type ExpiredCredentialKind = 'government_id' | 'coi' | 'cert';
+export type ExpiredCredentialKind = 'government_id' | 'coi' | 'vehicle_insurance' | 'cert';
 
 export interface ExpiredCredentialEnforcementItem {
   kind: ExpiredCredentialKind;
@@ -35,6 +39,7 @@ export interface GuardExpiryEnforcementPatch {
   guard: SecurityGuard;
   certUpdates: Array<{ certId: string; cert: Certification }>;
   insurancePolicy?: GuardInsurancePolicy;
+  vehicleInsurancePolicy?: GuardVehicleInsurancePolicy;
   notifications: Array<{ title: string; body: string }>;
   changed: boolean;
 }
@@ -99,6 +104,20 @@ export function listExpiredCredentialsForEnforcement(
       kind: 'coi',
       label: 'Certificate of Insurance',
       blocksWork: true,
+    });
+  }
+
+  const vehiclePolicy = guard.vehicleInsurancePolicy;
+  if (
+    vehiclePolicy &&
+    guardVehicleInsuranceSubmitted(guard) &&
+    isVehicleInsuranceExpired(vehiclePolicy) &&
+    (vehiclePolicy.status === 'verified' || vehiclePolicy.status === 'expired')
+  ) {
+    items.push({
+      kind: 'vehicle_insurance',
+      label: 'Vehicle insurance',
+      blocksWork: false,
     });
   }
 
@@ -204,6 +223,18 @@ function applyAutoCoiExpiryUpdate(policy: GuardInsurancePolicy): GuardInsuranceP
   };
 }
 
+function applyAutoVehicleInsuranceExpiryUpdate(
+  policy: GuardVehicleInsurancePolicy
+): GuardVehicleInsurancePolicy {
+  const requestedAt = new Date().toISOString();
+  return {
+    ...policy,
+    status: 'expired',
+    updateRequestedAt: requestedAt,
+    updateRequestNote: buildAutoExpiryUpdateRequestReason('Vehicle insurance', policy.expiryDate),
+  };
+}
+
 function buildExpiryNotification(
   item: ExpiredCredentialEnforcementItem,
   guard: SecurityGuard
@@ -217,7 +248,9 @@ function buildExpiryNotification(
       : `${item.label} expired — update required`;
   const body = item.blocksWork
     ? `${item.label} expired. Upload and verify a replacement to work jobs again. Your current verified copy stays on file until staff approves the update.`
-    : `${item.label} expired. Upload an updated document when ready.`;
+    : item.kind === 'vehicle_insurance'
+      ? `${item.label} expired. Upload updated insurance in Credentials to restore vehicle patrol and driving access.`
+      : `${item.label} expired. Upload an updated document when ready.`;
   return { title, body };
 }
 
@@ -297,6 +330,23 @@ export function applyGuardCredentialExpiryEnforcement(
     if (item) notifications.push(buildExpiryNotification(item, nextGuard));
   }
 
+  const vehiclePolicy = nextGuard.vehicleInsurancePolicy;
+  if (
+    vehiclePolicy &&
+    guardVehicleInsuranceSubmitted(nextGuard) &&
+    isVehicleInsuranceExpired(vehiclePolicy) &&
+    (vehiclePolicy.status === 'verified' || vehiclePolicy.status === 'expired') &&
+    !vehiclePolicy.updateRequestedAt
+  ) {
+    nextGuard = {
+      ...nextGuard,
+      vehicleInsurancePolicy: applyAutoVehicleInsuranceExpiryUpdate(vehiclePolicy),
+    };
+    changed = true;
+    const item = expiredItems.find((entry) => entry.kind === 'vehicle_insurance');
+    if (item) notifications.push(buildExpiryNotification(item, nextGuard));
+  }
+
   const certsToUpdate = new Map<string, Certification>();
   const guardCardCert = guardCardCertNeedsAutoExpiryUpdate(nextGuard, state);
   if (guardCardCert && certNeedsAutoExpiryUpdate(guardCardCert)) {
@@ -330,7 +380,14 @@ export function applyGuardCredentialExpiryEnforcement(
     changed = true;
   }
 
-  return { guard: nextGuard, certUpdates, insurancePolicy: nextGuard.insurancePolicy, notifications, changed };
+  return {
+    guard: nextGuard,
+    certUpdates,
+    insurancePolicy: nextGuard.insurancePolicy,
+    vehicleInsurancePolicy: nextGuard.vehicleInsurancePolicy,
+    notifications,
+    changed,
+  };
 }
 
 export function processGuardCredentialExpiryBatch(
