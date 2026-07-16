@@ -1,21 +1,38 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from './supabase';
 
-const SYNC_TABLES = [
+/** Core tables — any change triggers a debounced full app data reload. */
+export const SYNC_TABLES = [
   'guards',
+  'staff',
   'clients',
   'certifications',
   'experience',
   'education',
   'security_requests',
   'payments',
+  'guard_payout_invoices',
   'support_tickets',
   'support_messages',
   'job_chat_threads',
   'job_chat_messages',
+  'team_chat_threads',
+  'team_chat_messages',
+  'job_guard_slots',
   'staff_messages',
   'guard_messages',
   'client_messages',
+  'user_legal_acceptances',
+  'guard_insurance_policies',
+  'guard_vehicle_insurance_policies',
+  'guard_vehicle_profiles',
+  'guard_standing_crew_members',
+  'guard_crew_join_requests',
+  'user_notifications',
+  'platform_settings',
+  'platform_cities',
+  'client_locations',
+  'company_public_documents',
 ] as const;
 
 const DEBOUNCE_MS = 300;

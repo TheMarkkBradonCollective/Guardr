@@ -1490,8 +1490,9 @@ BEGIN
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
-    'guard_vehicle_profiles', 'team_chat_messages', 'job_guard_slots',
-    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
+    'guard_vehicle_profiles', 'team_chat_threads', 'team_chat_messages', 'job_guard_slots',
+    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
+    'platform_settings', 'platform_cities', 'client_locations', 'company_public_documents'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
