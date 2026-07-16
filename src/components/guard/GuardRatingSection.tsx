@@ -38,6 +38,12 @@ export interface GuardRatingSectionProps {
   variant?: 'full' | 'compact';
   /** Pin tier hero; scroll body content underneath */
   pinnedLayout?: boolean;
+  /** Show every job type in specialty ratings (zeros for no history) */
+  includeAllJobTypes?: boolean;
+  /** Reorder factor cards by id */
+  factorOrder?: string[];
+  /** Navigate to factor detail when a card is tapped */
+  onFactorSelect?: (factor: PerformanceFactor) => void;
   className?: string;
 }
 
@@ -127,11 +133,18 @@ function TierProgressBar({
   );
 }
 
-function FactorCard({ factor }: { factor: PerformanceFactor }) {
+function FactorCard({
+  factor,
+  onSelect,
+}: {
+  factor: PerformanceFactor;
+  onSelect?: (factor: PerformanceFactor) => void;
+}) {
   const fillPercent = factor.pointsMax > 0 ? Math.round((factor.pointsEarned / factor.pointsMax) * 100) : 0;
+  const interactive = !!onSelect;
 
-  return (
-    <article className={`guard-factor-card guard-factor-card-${factor.status}`}>
+  const content = (
+    <>
       <p className="guard-factor-card-label">{factor.label}</p>
       <p className="guard-factor-card-rate">{factor.rateDisplay}</p>
       <div className="guard-factor-card-bar" role="presentation" aria-hidden>
@@ -147,6 +160,25 @@ function FactorCard({ factor }: { factor: PerformanceFactor }) {
           {factor.statusLabel}
         </span>
       </div>
+      {interactive ? <ChevronRight className="guard-factor-card-chevron" aria-hidden /> : null}
+    </>
+  );
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        className={`guard-factor-card guard-factor-card-interactive guard-factor-card-${factor.status}`}
+        onClick={() => onSelect?.(factor)}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <article className={`guard-factor-card guard-factor-card-${factor.status}`}>
+      {content}
     </article>
   );
 }
@@ -211,9 +243,15 @@ function RatingBarRow({
       <div className="guard-rating-bar-label-row">
         <span className="guard-rating-bar-label">{label}</span>
         <span className="guard-rating-bar-score">
-          {score.toFixed(1)}
-          {reviewCount != null && reviewCount > 0 && (
-            <span className="guard-rating-bar-count"> ({reviewCount})</span>
+          {reviewCount != null && reviewCount <= 0 ? (
+            '—'
+          ) : (
+            <>
+              {score.toFixed(1)}
+              {reviewCount != null && reviewCount > 0 && (
+                <span className="guard-rating-bar-count"> ({reviewCount})</span>
+              )}
+            </>
           )}
         </span>
       </div>
@@ -231,6 +269,9 @@ export function GuardRatingSection({
   skillRatings,
   variant = 'full',
   pinnedLayout = false,
+  includeAllJobTypes = false,
+  factorOrder,
+  onFactorSelect,
   className = '',
 }: GuardRatingSectionProps) {
   const clientReviews = useMemo(
@@ -242,6 +283,16 @@ export function GuardRatingSection({
     () => computeGuardPerformanceRating(guard, requests),
     [guard, requests]
   );
+
+  const orderedFactors = useMemo(() => {
+    if (!factorOrder?.length) return rating.factors;
+    const byId = new Map(rating.factors.map((f) => [f.id, f]));
+    const ordered = factorOrder.map((id) => byId.get(id)).filter((f): f is PerformanceFactor => !!f);
+    const remaining = rating.factors.filter((f) => !factorOrder.includes(f.id));
+    return [...ordered, ...remaining];
+  }, [rating.factors, factorOrder]);
+
+  const displayedSkills = includeAllJobTypes ? skillRatings : skillRatings.slice(0, 6);
 
   const overall = displayOverallScore(performance, guard);
   const breakdown = buildPerformanceBreakdown(performance, clientReviews);
@@ -282,8 +333,8 @@ export function GuardRatingSection({
         </div>
         {rating.factors.length > 0 && (
           <div className="guard-factors-grid guard-factors-grid-compact">
-            {rating.factors.slice(0, 3).map((factor) => (
-              <FactorCard key={factor.id} factor={factor} />
+            {orderedFactors.slice(0, 3).map((factor) => (
+              <FactorCard key={factor.id} factor={factor} onSelect={onFactorSelect} />
             ))}
           </div>
         )}
@@ -324,33 +375,33 @@ export function GuardRatingSection({
         <ViolationsCard violations={rating.violations} summary={violationSummary} />
       )}
 
-      {rating.factors.length > 0 && (
+      {orderedFactors.length > 0 && (
         <section className="guard-factors-section">
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Your rating factors</h3>
             <p className="guard-factors-subheading">Points earned from recent shift behavior</p>
           </div>
           <div className="guard-factors-grid">
-            {rating.factors.map((factor) => (
-              <FactorCard key={factor.id} factor={factor} />
+            {orderedFactors.map((factor) => (
+              <FactorCard key={factor.id} factor={factor} onSelect={onFactorSelect} />
             ))}
           </div>
         </section>
       )}
 
-      {hasSkills && (
+      {displayedSkills.length > 0 && (
         <section className="guard-skills-section">
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Specialty ratings</h3>
             <p className="guard-factors-subheading">Average scores by job type</p>
           </div>
           <div className="guard-skills-list">
-            {skillRatings.slice(0, 6).map((skill) => (
+            {displayedSkills.map((skill) => (
               <RatingBarRow
-                key={skill.skill}
+                key={skill.jobType ?? skill.skill}
                 label={skill.skill}
                 score={skill.rating}
-                percent={rateToBarPercent(skill.rating)}
+                percent={skill.reviewCount > 0 ? rateToBarPercent(skill.rating) : 0}
                 reviewCount={skill.reviewCount}
               />
             ))}

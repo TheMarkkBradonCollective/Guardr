@@ -23,6 +23,8 @@ import {
   type GuardRosterFilter,
 } from '../../lib/staffListFilters';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
+import type { StaffGuardDetailTab } from '../../lib/appNavigation';
+import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -81,6 +83,10 @@ interface StaffGuardsPanelProps {
   onSelectedIdChange?: (id: string | null) => void;
   staffEdit?: boolean;
   onStaffEditChange?: (editing: boolean) => void;
+  staffGuardTab?: StaffGuardDetailTab;
+  onStaffGuardTabChange?: (tab: StaffGuardDetailTab) => void;
+  performanceFactorId?: PerformanceFactorId | null;
+  onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
   onOpenGuardApplication?: (guardId: string) => void;
@@ -123,6 +129,10 @@ export function StaffGuardsPanel({
   onSelectedIdChange,
   staffEdit,
   onStaffEditChange,
+  staffGuardTab = 'profile',
+  onStaffGuardTabChange,
+  performanceFactorId = null,
+  onPerformanceFactorChange,
   initialSelectedId = null,
   onOpenJob,
   onOpenGuardApplication,
@@ -308,6 +318,10 @@ export function StaffGuardsPanel({
               {...buildDetailProps(guard)}
               editing={staffEdit}
               onEditingChange={onStaffEditChange}
+              staffGuardTab={staffGuardTab}
+              onStaffGuardTabChange={onStaffGuardTabChange}
+              performanceFactorId={performanceFactorId}
+              onPerformanceFactorChange={onPerformanceFactorChange}
               onBack={options?.onBack}
             />
           )}

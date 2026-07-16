@@ -120,6 +120,7 @@ import {
 import type { IncidentReportFormInput } from '../lib/incidentReports';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import { useUserLocation } from '../lib/useUserLocation';
+import type { PerformanceFactorId } from '../lib/guardPerformanceFactorDetail';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
@@ -225,6 +226,8 @@ interface GuardDashboardProps {
   onOpenSupportCompose?: () => void;
   onOpenSupportReport?: () => void;
   onCloseSupportForm?: () => void;
+  performanceFactorId?: PerformanceFactorId | null;
+  onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
@@ -355,6 +358,8 @@ export function GuardDashboard({
   onOpenSupportCompose,
   onOpenSupportReport,
   onCloseSupportForm,
+  performanceFactorId = null,
+  onPerformanceFactorChange,
   variant = 'standalone',
   shiftTab = 'map',
   initialTab = 'map',
@@ -1559,6 +1564,8 @@ export function GuardDashboard({
                 <GuardPerformanceScreen
                   guard={guard}
                   requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}
+                  performanceFactorId={performanceFactorId}
+                  onPerformanceFactorChange={onPerformanceFactorChange}
                 />
               </div>
             </div>

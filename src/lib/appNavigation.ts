@@ -3,6 +3,8 @@ import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
 import { isGuardUserStatusActive } from './accountStatus';
 import { isGuardAccountActive } from './guardAccountActivation';
+import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
+import { isPerformanceFactorId } from './guardPerformanceFactorDetail';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
 
@@ -10,6 +12,8 @@ export type AppRole = 'staff' | 'guard' | 'client';
 
 export type AuthViewMode = 'sign-in' | 'sign-up';
 export type AuthViewRole = 'guard' | 'client';
+
+export type StaffGuardDetailTab = 'profile' | 'performance';
 
 export interface AppRoute {
   role: AppRole;
@@ -29,6 +33,10 @@ export interface AppRoute {
   staffCredentialItemId?: string;
   /** Staff guard profile edit mode */
   staffEdit?: boolean;
+  /** Staff guard detail tab */
+  staffGuardTab?: StaffGuardDetailTab;
+  /** Guard or staff performance factor drill-down */
+  performanceFactorId?: PerformanceFactorId;
   /** Client guards directory — viewing a guard profile */
   clientGuardId?: string;
   /** Client direct-request flow — target guard */
@@ -176,6 +184,8 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const staffTeamId = searchParams.get('t');
   const staffCredentialItemId = searchParams.get('ci');
   const staffEdit = searchParams.get('edit');
+  const staffGuardTab = searchParams.get('gtab');
+  const performanceFactor = searchParams.get('pf');
   const clientGuardId = searchParams.get('pg');
   const clientDirectGuardId = searchParams.get('dr');
   const jobChatRequestId = searchParams.get('jc');
@@ -195,6 +205,12 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffCredentialItemId) nested.staffCredentialItemId = staffCredentialItemId;
   if (staffTeamId) nested.staffTeamId = staffTeamId;
   if (staffEdit === '1' || staffEdit === 'true') nested.staffEdit = true;
+  if (staffGuardTab === 'profile' || staffGuardTab === 'performance') {
+    nested.staffGuardTab = staffGuardTab;
+  }
+  if (performanceFactor && isPerformanceFactorId(performanceFactor)) {
+    nested.performanceFactorId = performanceFactor;
+  }
   if (clientGuardId) nested.clientGuardId = clientGuardId;
   if (clientDirectGuardId) nested.clientDirectGuardId = clientDirectGuardId;
   if (teamChatRequestId) nested.teamChatRequestId = teamChatRequestId;
@@ -237,6 +253,8 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffCredentialItemId) params.set('ci', route.staffCredentialItemId);
   if (route.staffTeamId) params.set('t', route.staffTeamId);
   if (route.staffEdit) params.set('edit', '1');
+  if (route.staffGuardTab) params.set('gtab', route.staffGuardTab);
+  if (route.performanceFactorId) params.set('pf', route.performanceFactorId);
   if (route.clientGuardId) params.set('pg', route.clientGuardId);
   if (route.clientDirectGuardId) params.set('dr', route.clientDirectGuardId);
   if (route.teamChatRequestId) params.set('tc', route.teamChatRequestId);
@@ -545,6 +563,8 @@ export function routeHasNestedSelection(route: AppRoute): boolean {
       route.staffCredentialItemId ||
       route.staffTeamId ||
       route.staffEdit ||
+      route.staffGuardTab ||
+      route.performanceFactorId ||
       route.clientGuardId ||
       route.clientDirectGuardId ||
       route.jobChatRequestId ||
@@ -567,6 +587,8 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     staffCredentialItemId: undefined,
     staffTeamId: undefined,
     staffEdit: undefined,
+    staffGuardTab: undefined,
+    performanceFactorId: undefined,
     clientGuardId: undefined,
     clientDirectGuardId: undefined,
     jobChatRequestId: undefined,
