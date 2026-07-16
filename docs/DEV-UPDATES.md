@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Thursday, July 16, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.68**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.69**
 
 ---
 
@@ -483,6 +483,21 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - Schema realtime publication aligned
 
 **Release:** **v1.0.68** (build **168**) — web + PWA cache bust + CI FCM APK
+
+**Test coverage:** 404 unit tests, lint and build clean.
+
+---
+
+## Thursday, July 16, 2026 (afternoon) — /updateit → v1.0.69
+
+**Notifications UX (#590)**
+- Account menu: **Profile → Notifications → Settings** — inbox opens on click (not inline in dropdown)
+- Unread badge on avatar and Notifications row; Back navigation in sub-view
+
+**PR cleanup**
+- Skipped/closed **#570** / **#572** — premium priority + standing/driving tabs already on `main`
+
+**Release:** **v1.0.69** (build **169**) — web + PWA cache bust (`guardr-cache-v1-0-69`) + CI FCM APK
 
 **Test coverage:** 404 unit tests, lint and build clean.
 
