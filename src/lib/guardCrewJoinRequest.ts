@@ -130,6 +130,29 @@ export function declineCrewLeadRequest(
   };
 }
 
+/** Cancel pending crew lead requests when trusted status is removed. */
+export function revokeCrewLeadRequestsForGuard(
+  requests: GuardCrewJoinRequest[],
+  guardId: string,
+  staffId: string,
+  now = new Date()
+): { requests: GuardCrewJoinRequest[]; revoked: GuardCrewJoinRequest[] } {
+  const resolvedAt = now.toISOString();
+  const revoked: GuardCrewJoinRequest[] = [];
+  const next = requests.map((request) => {
+    if (request.guardId !== guardId || request.status !== 'pending') return request;
+    const updated: GuardCrewJoinRequest = {
+      ...request,
+      status: 'declined',
+      resolvedAt,
+      resolvedByStaffId: staffId,
+    };
+    revoked.push(updated);
+    return updated;
+  });
+  return { requests: next, revoked };
+}
+
 export function makeGuardCrewLeadProfile(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[] = []

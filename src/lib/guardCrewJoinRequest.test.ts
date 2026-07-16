@@ -6,6 +6,7 @@ import {
   declineCrewLeadRequest,
   getActionableCrewLeadRequests,
   makeGuardCrewLeadProfile,
+  revokeCrewLeadRequestsForGuard,
   shouldShowPendingCrewLeadRequest,
   submitCrewLeadRequest,
 } from './guardCrewJoinRequest';
@@ -145,4 +146,19 @@ test('makeGuardCrewLeadProfile is idempotent for guards who already lead', () =>
   if ('error' in result) return;
   assert.equal(result.standingCrewName, 'Night Watch');
   assert.equal(result.standingCrewDescription, 'Elite');
+});
+
+test('revokeCrewLeadRequestsForGuard declines pending requests', () => {
+  const requests: GuardCrewJoinRequest[] = [
+    {
+      id: 'clr-g1',
+      guardId: 'g1',
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    },
+  ];
+  const result = revokeCrewLeadRequestsForGuard(requests, 'g1', 'staff-1');
+  assert.equal(result.revoked.length, 1);
+  assert.equal(result.revoked[0]?.status, 'declined');
+  assert.equal(result.requests[0]?.status, 'declined');
 });
