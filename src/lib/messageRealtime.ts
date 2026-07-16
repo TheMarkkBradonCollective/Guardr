@@ -66,6 +66,8 @@ export interface MessageRealtimeHandlers {
   onGuardMessage: (message: GuardMessage) => void;
   onClientMessage: (message: ClientMessage) => void;
   onSupportMessage: (message: SupportMessage) => void;
+  /** Fired when rows are deleted from any subscribed message table (e.g. staff DB clear). */
+  onMessageDeleted?: (table: string, id: string) => void;
 }
 
 /**
@@ -130,6 +132,26 @@ export function useMessageRealtimeSync(handlers: MessageRealtimeHandlers, enable
         handlersRef.current.onSupportMessage(mapDbSupportMessage(payload.new as Record<string, unknown>));
       }
     );
+
+    const messageTables = [
+      'job_chat_messages',
+      'team_chat_messages',
+      'staff_messages',
+      'guard_messages',
+      'client_messages',
+      'support_messages',
+    ] as const;
+
+    for (const table of messageTables) {
+      channel.on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table },
+        (payload) => {
+          const id = String((payload.old as Record<string, unknown>)?.id ?? '');
+          if (id) handlersRef.current.onMessageDeleted?.(table, id);
+        }
+      );
+    }
 
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {

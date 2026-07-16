@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Thursday, July 16, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.67**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.68**
 
 ---
 
@@ -468,6 +468,21 @@ Skipped **#570** / **#572** — premium priority + standing/driving tabs already
 
 - **v1.0.67** — web + APK (build **167**), FCM-enabled, download at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=167)
 - Run `supabase/complete_schema_setup.sql` in prod if `client_invoices` or new notification columns are missing.
+
+**Test coverage:** 404 unit tests, lint and build clean.
+
+---
+
+## Thursday, July 16, 2026 (midday) — /runit → v1.0.68
+
+No new PRs to merge (#570 / #572 superseded — close on GitHub).
+
+**Realtime everywhere**
+- `client_invoices`, `message_reactions`, `guard_availability` added to core realtime sync
+- Message **DELETE** events sync all chat tables instantly (community, staff, client, job, support)
+- Schema realtime publication aligned
+
+**Release:** **v1.0.68** (build **168**) — web + PWA cache bust + CI FCM APK
 
 **Test coverage:** 404 unit tests, lint and build clean.
 

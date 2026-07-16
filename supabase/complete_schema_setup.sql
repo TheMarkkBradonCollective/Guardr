@@ -1492,7 +1492,8 @@ BEGIN
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
     'guard_vehicle_profiles', 'team_chat_threads', 'team_chat_messages', 'job_guard_slots',
     'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
-    'platform_settings', 'platform_cities', 'client_locations', 'company_public_documents'
+    'platform_settings', 'platform_cities', 'client_locations', 'company_public_documents',
+    'client_invoices', 'message_reactions', 'guard_availability', 'guard_availability_date_overrides'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
