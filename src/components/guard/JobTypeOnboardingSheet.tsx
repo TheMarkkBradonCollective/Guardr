@@ -168,9 +168,9 @@ export function JobTypeOnboardingSheet({
               checked={acknowledged}
               disabled={!reader.readComplete}
               onChange={(e) => setAcknowledged(e.target.checked)}
-              className="mt-1"
+              className="app-checkbox mt-0.5"
             />
-            <span className="text-sm text-brand-text leading-relaxed">{content.acknowledgment}</span>
+            <span className="text-brand-text leading-relaxed">{content.acknowledgment}</span>
           </label>
 
           {!reader.readComplete && (

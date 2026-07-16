@@ -326,3 +326,44 @@ export function buildPlatformPulseCards(
 
   return cards;
 }
+
+export function buildQueuePieSegments(stats: PlatformStats): OverviewSegment[] {
+  const segments: OverviewSegment[] = [
+    { label: 'Job offers', value: stats.pendingJobApprovals, tone: 'warning' },
+    { label: 'Schedule changes', value: stats.pendingScheduleChanges, tone: 'info' },
+    { label: 'Credentials', value: stats.pendingCertApprovals, tone: 'primary' },
+    { label: 'Applications', value: stats.pendingAccountApplications, tone: 'success' },
+    { label: 'Payments', value: stats.paymentsNeedingAction, tone: 'muted' },
+  ];
+  return segments.filter((segment) => segment.value > 0);
+}
+
+export function buildPlatformHealthPieSegments(stats: PlatformStats): OverviewSegment[] {
+  const healthy = stats.platformHealthy ? 1 : 0;
+  const segments: OverviewSegment[] = [
+    { label: 'Healthy', value: healthy, tone: 'success' },
+    { label: 'Review queue', value: stats.pendingReviews, tone: 'warning' },
+    { label: 'Incidents', value: stats.activeIncidents, tone: 'primary' },
+    { label: 'Payments', value: stats.paymentsNeedingAction, tone: 'info' },
+  ];
+  return segments.filter((segment) => segment.value > 0);
+}
+
+export function buildClientCoveragePieSegments(
+  active: number,
+  onDuty: number,
+  arriving: number,
+  open: number,
+  scheduled: number,
+  completed: number,
+): OverviewSegment[] {
+  const segments: OverviewSegment[] = [
+    { label: 'Live', value: active, tone: 'success' },
+    { label: 'On duty', value: onDuty, tone: 'primary' },
+    { label: 'Arriving', value: arriving, tone: 'info' },
+    { label: 'Open', value: open, tone: 'warning' },
+    { label: 'Scheduled', value: scheduled, tone: 'muted' },
+    { label: 'Completed', value: completed, tone: 'muted' },
+  ];
+  return segments.filter((segment) => segment.value > 0);
+}

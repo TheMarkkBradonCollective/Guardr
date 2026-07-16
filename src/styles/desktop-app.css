@@ -2190,3 +2190,247 @@ body[data-form-factor="desktop"] .adm-dashboard .overview-visual-title {
   font-size: 0.8125rem;
   font-weight: 700;
 }
+
+/* Rich status panel */
+body[data-form-factor="desktop"] .adm-card--status-rich {
+  gap: 0.85rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-rich-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+body[data-form-factor="desktop"] .adm-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-grid--rich {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-top: 0.85rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-metric {
+  display: block;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+  text-align: left;
+}
+
+body[data-form-factor="desktop"] .adm-status-metric--click {
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .adm-status-metric--click:hover {
+  background: var(--adm-sand-light);
+  border-color: color-mix(in srgb, var(--adm-sand-dark) 20%, var(--adm-border));
+}
+
+body[data-form-factor="desktop"] .adm-status-grid-value--ok {
+  color: var(--status-success);
+}
+
+body[data-form-factor="desktop"] .adm-status-grid-value--warn {
+  color: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-status-grid-value--accent {
+  color: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-status-meters {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .adm-status-meter--click {
+  cursor: pointer;
+  border-radius: 0.35rem;
+  padding: 0.35rem;
+  margin: -0.35rem;
+  transition: background 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .adm-status-meter--click:hover {
+  background: color-mix(in srgb, var(--adm-sand-light) 60%, transparent);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--adm-text);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-value {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-track {
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--adm-border) 80%, transparent);
+  overflow: hidden;
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.2s ease;
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-fill--primary {
+  background: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-fill--success {
+  background: var(--status-success);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-fill--warning {
+  background: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-fill--muted {
+  background: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-status-meter-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown,
+body[data-form-factor="desktop"] .adm-status-pipeline {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--adm-border);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 0.35rem;
+  background: var(--adm-bg);
+  text-align: left;
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-row--click {
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-row--click:hover {
+  background: var(--adm-sand-light);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--adm-text);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-value {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--adm-sand-dark);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-value--warn {
+  color: var(--status-warning);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-value--ok {
+  color: var(--status-success);
+}
+
+body[data-form-factor="desktop"] .adm-status-breakdown-detail {
+  grid-column: 1 / -1;
+  font-size: 0.6875rem;
+  color: var(--adm-muted);
+}
+
+body[data-form-factor="desktop"] .adm-charts-section {
+  margin-top: 0.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid {
+  gap: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .adm-card {
+  min-height: 12rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .overview-pie-layout {
+  justify-content: center;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .overview-line-chart-wrap,
+body[data-form-factor="desktop"] .adm-charts-grid .overview-week-chart {
+  min-height: 8rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-pipeline .overview-pie-layout {
+  margin-top: 0.35rem;
+}
+
+body[data-form-factor="desktop"] .adm-card-body--tight {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+  max-width: none;
+}

@@ -4,6 +4,7 @@ import type { SecurityGuard, SecurityRequest, GuardCrewJoinRequest, GuardStandin
 import { buildStaffShiftViolations } from '../../lib/staffOps';
 import {
   STAFF_GUARD_STAT_SORT_OPTIONS,
+  buildPerformanceTierPercentBars,
   buildStaffGuardStatRows,
   buildStaffStatsPlatformSummary,
   compareStaffGuardStatRows,
@@ -20,6 +21,7 @@ import {
 } from '../../lib/staffGuardEligibility';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
 
 type StatsTab = 'overview' | 'guards' | 'compare' | 'violations';
 
@@ -340,6 +342,7 @@ export function StaffStatsPanel({
     () => buildStaffStatsPlatformSummary(statRows, shiftViolations),
     [statRows, shiftViolations]
   );
+  const tierPercentBars = useMemo(() => buildPerformanceTierPercentBars(statRows), [statRows]);
   const compareRows = useMemo(
     () => compareStaffGuardStatRows(statRows, [...selectedIds]),
     [statRows, selectedIds]
@@ -387,11 +390,15 @@ export function StaffStatsPanel({
       </div>
 
       <div className="staff-stats-two-col">
-        <BucketList
-          title="Tier distribution"
-          buckets={summary.tierDistribution.map((b) => ({ label: b.tierName, count: b.count }))}
-          emptyLabel="No guard performance tiers yet."
-        />
+        <section className="staff-stats-bucket-card">
+          <h3 className="staff-stats-section-title">Performance level mix</h3>
+          <p className="staff-stats-section-sub">Percent of field guards at each tier.</p>
+          <PerformanceTierProgressBars
+            bars={tierPercentBars}
+            totalGuards={statRows.length}
+            showPie
+          />
+        </section>
         <BucketList
           title="Violations by checkpoint"
           buckets={summary.violationsByCheckpoint}

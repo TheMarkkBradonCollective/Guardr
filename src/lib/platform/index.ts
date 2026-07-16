@@ -1,4 +1,6 @@
 export * from './device';
+export * from './shellKind';
+export * from './viewSurface';
 export * from './appExperience';
 export * from './theme';
 export * from './nativePermissions';

@@ -1409,12 +1409,12 @@ export function AuthPage({
 
 
               {isSignUp && (
-                <label className="flex items-start gap-3 text-xs text-brand-text-muted leading-relaxed cursor-pointer">
+                <label className="legal-accept-row cursor-pointer">
                   <input
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 rounded border-brand-border"
+                    className="app-checkbox mt-0.5"
                   />
                   <span>
                     I agree to the{' '}

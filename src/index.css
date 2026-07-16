@@ -4,6 +4,9 @@
 @import "./styles/desktop-app.css";
 @import "./styles/desktop-landing.css";
 @import "./styles/desktop-auth.css";
+@import "./styles/tablet-app.css";
+@import "./styles/app-pwa.css";
+@import "./styles/app-native.css";
 
 @theme {--font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
@@ -772,7 +775,7 @@ h1, h2, h3, h4 {
   inset: 0;
   border-radius: inherit;
   background: conic-gradient(
-    var(--brand-primary) calc(var(--overview-ring-pct, 0) * 1%),
+    var(--overview-ring-color, var(--brand-primary)) calc(var(--overview-ring-pct, 0) * 1%),
     var(--brand-bg-sec) 0
   );
 }
@@ -842,6 +845,216 @@ h1, h2, h3, h4 {
 
 .overview-week-day {
   font-size: 0.625rem;
+  color: var(--brand-text-muted);
+}
+
+.overview-pie-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.overview-pie-layout--sm .overview-pie {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.overview-pie-layout--md .overview-pie {
+  width: 7rem;
+  height: 7rem;
+}
+
+.overview-pie-layout--lg .overview-pie {
+  width: 8.5rem;
+  height: 8.5rem;
+}
+
+.overview-pie {
+  position: relative;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.overview-pie-hole {
+  position: absolute;
+  inset: 18%;
+  border-radius: inherit;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.overview-pie-center-value {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.overview-pie-center-sub {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+}
+
+.overview-pie-legend {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.overview-line-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.overview-line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.overview-line-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.overview-line-chart-count {
+  display: block;
+  font-size: 0.625rem;
+  color: var(--brand-primary);
+}
+
+.overview-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.overview-donut-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+}
+
+.overview-ring--sm {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.overview-ring--sm::after {
+  inset: 0.4rem;
+}
+
+.overview-ring--sm .overview-ring-value {
+  font-size: 0.75rem;
+}
+
+.overview-donut-grid-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+.overview-tier-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.overview-tier-progress-pie {
+  display: flex;
+  justify-content: center;
+}
+
+.overview-tier-progress-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-tier-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.overview-tier-progress-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.overview-tier-progress-label--starting { color: var(--brand-text-muted); }
+.overview-tier-progress-label--rising { color: #60a5fa; }
+.overview-tier-progress-label--professional { color: var(--brand-primary); }
+.overview-tier-progress-label--elite { color: #34d399; }
+
+.overview-tier-progress-meta {
+  font-size: 0.6875rem;
+  color: var(--brand-text-muted);
+}
+
+.overview-tier-progress-meta strong {
+  color: var(--brand-text);
+  font-weight: 800;
+}
+
+.overview-tier-progress-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--brand-border) 80%, transparent);
+  overflow: hidden;
+}
+
+.overview-tier-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.overview-tier-progress-fill--starting {
+  background: color-mix(in srgb, var(--brand-text-muted) 70%, var(--brand-border));
+}
+
+.overview-tier-progress-fill--rising {
+  background: #60a5fa;
+}
+
+.overview-tier-progress-fill--professional {
+  background: var(--brand-primary);
+}
+
+.overview-tier-progress-fill--elite {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+
+.overview-tier-progress-stack {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+.overview-tier-progress-stack-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--brand-text-muted);
 }
 
@@ -15773,11 +15986,12 @@ html.theme-light .theme-toggle {
   font-size: 0.9375rem;
 }
 
-.app-checkbox {
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 0.3125rem;
-  border: 1.5px solid var(--brand-border);
+.app-checkbox,
+.legal-accept-row input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  border: 2px solid var(--brand-border);
   background: var(--brand-bg-sec);
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
@@ -15788,24 +16002,33 @@ html.theme-light .theme-toggle {
   place-content: center;
 }
 
-.app-checkbox:checked {
+.app-checkbox:checked,
+.legal-accept-row input[type="checkbox"]:checked {
   background: var(--brand-primary);
   border-color: var(--brand-primary);
 }
 
-.app-checkbox:checked::after {
+.app-checkbox:checked::after,
+.legal-accept-row input[type="checkbox"]:checked::after {
   content: "";
-  width: 5px;
-  height: 8px;
-  border: 2px solid #fff;
+  width: 7px;
+  height: 11px;
+  border: 2.5px solid #fff;
   border-top: none;
   border-left: none;
   transform: rotate(45deg) translateY(-1px);
 }
 
-.app-checkbox:focus-visible {
+.app-checkbox:focus-visible,
+.legal-accept-row input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
+}
+
+.app-checkbox:disabled,
+.legal-accept-row input[type="checkbox"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .app-progress-track {
@@ -17056,11 +17279,16 @@ html.theme-dark .landing-wordmark {
 .legal-accept-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
   border-radius: var(--radius-app-lg);
   background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg-sec));
   border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+.legal-accept-row span {
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 .crew-member-card {
