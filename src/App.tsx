@@ -493,8 +493,8 @@ import {
   clientPaymentGates,
   loadPlatformSettingsFromStorage,
   normalizePlatformSettings,
-  platformAllowsCash,
   platformAllowsStripe,
+  platformAllowsCash,
   platformSettingsFromDbRow,
   platformSettingsToDbRow,
   savePlatformSettingsToStorage,
@@ -5020,7 +5020,7 @@ export default function App() {
     const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
     const isRecommendChange = patch.recommendOpen !== undefined;
     if (isStatusChange && !canManageCityMarkets(currentUser)) {
-      throw new Error('Only Directors and Founders can change city market status.');
+      throw new Error('Only Directors and Founders can change operations status.');
     }
     if (isRecommendChange && !canRecommendCityMarket(currentUser)) {
       throw new Error('Only Managers can recommend cities.');
@@ -5054,7 +5054,7 @@ export default function App() {
           setPlatformCitiesCache(next);
           return next;
         });
-        throw new Error(error.message || 'Could not update city market.');
+        throw new Error(error.message || 'Could not update operations.');
       }
     }
 
@@ -5089,7 +5089,7 @@ export default function App() {
         .eq('id', staffId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
-        throw new Error(error.message || 'Could not update staff city access.');
+        throw new Error(error.message || 'Could not update operations access.');
       }
     }
 
@@ -6996,8 +6996,8 @@ export default function App() {
       appToast('Overtime is not ready for payment yet.', 'error');
       return;
     }
-    if (!gates.allowCash) {
-      appToast('Cash payments are not enabled.', 'error');
+    if (!gates.allowSquare) {
+      appToast('Square payments are not enabled.', 'error');
       return;
     }
     const overtimeAmount = req.overtimeAmount ?? 0;
@@ -12104,10 +12104,8 @@ export default function App() {
               onAddReview={handleAddReview}
               onReportViolation={handleReportClientViolation}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
-              onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}
               onDisputeOvertime={handleClientDisputeOvertime}
-              onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApproveScheduleChange={handleClientApproveScheduleChange}
               onRejectScheduleChange={handleClientRejectScheduleChange}
               onApprovePendingGuard={handleClientApprovePendingGuard}

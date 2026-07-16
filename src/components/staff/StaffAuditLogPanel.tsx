@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollText, RefreshCw } from 'lucide-react';
-import { loadAuditLog, type AuditLogEntry } from '../../lib/auditLog';
+import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../lib/auditLog';
 import { useDevice } from '../../lib/platform';
 import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -16,7 +16,7 @@ function formatAuditTime(iso: string): string {
 }
 
 function formatAuditAction(action: string): string {
-  return action.replace(/_/g, ' ');
+  return formatAuditActionLabel(action);
 }
 
 function AuditLogCard({ entry }: { entry: AuditLogEntry }) {

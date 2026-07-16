@@ -48,15 +48,15 @@ test('isValidTipCents enforces one dollar minimum', () => {
 
 test('canClientLeaveTip requires stripe, completed job, and connect account', () => {
   assert.equal(
-    canClientLeaveTip(baseRequest(), { allowStripe: true, allowCash: true }, guardWithStripe),
+    canClientLeaveTip(baseRequest(), { allowStripe: true, allowSquare: false }, guardWithStripe),
     true
   );
   assert.equal(
-    canClientLeaveTip(baseRequest({ tipPaymentStatus: 'paid' }), { allowStripe: true, allowCash: true }, guardWithStripe),
+    canClientLeaveTip(baseRequest({ tipPaymentStatus: 'paid' }), { allowStripe: true, allowSquare: false }, guardWithStripe),
     false
   );
   assert.equal(
-    canClientLeaveTip(baseRequest(), { allowStripe: false, allowCash: true }, guardWithStripe),
+    canClientLeaveTip(baseRequest(), { allowStripe: false, allowSquare: true }, guardWithStripe),
     false
   );
 });

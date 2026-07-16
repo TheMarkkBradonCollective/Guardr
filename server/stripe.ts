@@ -1052,4 +1052,22 @@ export function registerStripeRoutes(app: Express) {
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
     });
   });
+
+  app.get('/api/payments/health', (_req: Request, res: Response) => {
+    const squareToken = process.env.SQUARE_ACCESS_TOKEN?.trim();
+    const squareLocationId = process.env.SQUARE_LOCATION_ID?.trim();
+    const squareConfigured =
+      !!squareToken && squareToken !== 'sq0atp_placeholder' && !!squareLocationId;
+    res.json({
+      stripe: {
+        configured: !!stripe,
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
+      },
+      square: {
+        configured: squareConfigured,
+        applicationId: process.env.SQUARE_APPLICATION_ID || null,
+        locationId: process.env.SQUARE_LOCATION_ID || null,
+      },
+    });
+  });
 }

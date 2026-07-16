@@ -48,10 +48,8 @@ interface ClientRequestsListProps {
   ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: import('./ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
-  onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
-  onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
   onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
@@ -121,10 +119,8 @@ export function ClientRequestsList({
   onAddReview,
   onReportViolation,
   onConfirmSelfAudit,
-  onRequestCashPayment,
   onApproveOvertime,
   onDisputeOvertime,
-  onRequestOvertimeCash,
   onApproveScheduleChange,
   onRejectScheduleChange,
   onApprovePendingGuard,
@@ -270,10 +266,8 @@ export function ClientRequestsList({
         onAddReview={onAddReview}
         onReportViolation={onReportViolation}
         onConfirmSelfAudit={onConfirmSelfAudit}
-        onRequestCashPayment={onRequestCashPayment}
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}
-        onRequestOvertimeCash={onRequestOvertimeCash}
         onApproveScheduleChange={onApproveScheduleChange}
         onRejectScheduleChange={onRejectScheduleChange}
         onApprovePendingGuard={onApprovePendingGuard}
@@ -330,10 +324,8 @@ export function ClientRequestsList({
           onAddReview={onAddReview}
           onReportViolation={onReportViolation}
           onConfirmSelfAudit={onConfirmSelfAudit}
-          onRequestCashPayment={onRequestCashPayment}
           onApproveOvertime={onApproveOvertime}
           onDisputeOvertime={onDisputeOvertime}
-          onRequestOvertimeCash={onRequestOvertimeCash}
           onApproveScheduleChange={onApproveScheduleChange}
           onRejectScheduleChange={onRejectScheduleChange}
           onApprovePendingGuard={onApprovePendingGuard}

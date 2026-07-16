@@ -13,7 +13,7 @@ export interface StaffNavItem {
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
   settingsOnly?: boolean;
-  /** Visible to Manager and above (city market controls) */
+  /** Visible to Manager and above (Operations controls) */
   citiesOnly?: boolean;
   /** Visible to Administrator and above (dispute resolution) */
   disputesOnly?: boolean;
@@ -43,7 +43,7 @@ const OPERATIONS_IDS: StaffSection[] = [
 const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
-const PLATFORM_IDS: StaffSection[] = ['cities', 'settings'];
+const PLATFORM_IDS: StaffSection[] = ['cities', 'settings', 'integrations'];
 
 function NavGroup({
   title,

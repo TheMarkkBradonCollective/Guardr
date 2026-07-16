@@ -121,3 +121,14 @@ export async function loadAuditLog(limit = 100): Promise<AuditLogEntry[]> {
   }
   return loadLocal().slice(-limit).reverse();
 }
+
+const AUDIT_ACTION_LABELS: Partial<Record<AuditAction, string>> = {
+  city_market_updated: 'Operations updated',
+  staff_city_access_updated: 'Operations access updated',
+};
+
+export function formatAuditActionLabel(action: AuditAction | string): string {
+  const label = AUDIT_ACTION_LABELS[action as AuditAction];
+  if (label) return label;
+  return action.replace(/_/g, ' ');
+}

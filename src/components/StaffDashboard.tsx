@@ -82,12 +82,14 @@ import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
 import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
+import { clientPaymentGates } from '../lib/platformSettings';
 import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
@@ -901,10 +903,7 @@ export function StaffDashboard({
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
             canManagePayments={showFinance}
-            paymentGates={{
-              allowCash: platformSettings.paymentCashEnabled,
-              allowStripe: platformSettings.paymentStripeEnabled,
-            }}
+            paymentGates={clientPaymentGates(platformSettings)}
             onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
@@ -986,7 +985,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.message}
-            placeholders={['Payment methods', 'Platform fees', 'Crew pay rules']}
+            placeholders={['Platform fees', 'Crew pay rules']}
           />
         );
       case 'agreements':
@@ -1025,7 +1024,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
-            placeholders={['Open markets', 'Wait list cities', 'Manager recommendations']}
+            placeholders={['Open cities', 'Wait list', 'Recommendations']}
           />
         );
       case 'settings':
@@ -1042,7 +1041,21 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Homepage messages', 'Integrations', 'Platform controls']}
+            placeholders={['Homepage messages', 'Platform controls']}
+          />
+        );
+      case 'integrations':
+        return showSettings ? (
+          <StaffIntegrationsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.integrations!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.integrations!.message}
+            placeholders={['Payment methods', 'SMS (Twilio)', 'Background checks']}
           />
         );
       case 'profile':

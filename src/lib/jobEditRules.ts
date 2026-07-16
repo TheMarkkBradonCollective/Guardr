@@ -23,30 +23,36 @@ export function isJobPaid(req: Pick<SecurityRequest, 'paymentStatus'>): boolean 
   return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
 }
 
-/** Client checkout is only available after staff approves the job offer */
+/** Client Stripe checkout is only available after staff approves the job offer */
+export function canClientPayWithStripe(
+  req: Pick<SecurityRequest, 'status' | 'paymentStatus'>,
+  gates: ClientPaymentGates
+): boolean {
+  return gates.allowStripe && req.status === 'open' && !isJobPaid(req);
+}
+
+/** Client Square checkout is only available after staff approves the job offer */
+export function canClientPayWithSquare(
+  req: Pick<SecurityRequest, 'status' | 'paymentStatus'>,
+  gates: ClientPaymentGates
+): boolean {
+  return gates.allowSquare && req.status === 'open' && !isJobPaid(req);
+}
+
+/** @deprecated Cash payments removed from the platform. */
+export function canClientRequestCashPayment(
+  _req: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'clientCashPaymentRequested'>,
+  _gates: ClientPaymentGates
+): boolean {
+  return false;
+}
+
+/** @deprecated Use canClientPayWithStripe */
 export function canClientPayForJob(
   req: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'clientCashPaymentRequested'>,
   gates: ClientPaymentGates
 ): boolean {
-  return (
-    gates.allowStripe &&
-    req.status === 'open' &&
-    !isJobPaid(req) &&
-    !req.clientCashPaymentRequested
-  );
-}
-
-/** Client may request to pay in cash on open unpaid jobs */
-export function canClientRequestCashPayment(
-  req: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'clientCashPaymentRequested'>,
-  gates: ClientPaymentGates
-): boolean {
-  return (
-    gates.allowCash &&
-    req.status === 'open' &&
-    !isJobPaid(req) &&
-    !req.clientCashPaymentRequested
-  );
+  return canClientPayWithStripe(req, gates);
 }
 
 export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {
