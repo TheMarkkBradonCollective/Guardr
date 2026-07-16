@@ -377,6 +377,132 @@ async function markOvertimePaid(
   }
 }
 
+async function markTipPaid(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = await getSupabaseAdmin();
+  if (!db) return;
+
+  const amount = amountCents / 100;
+  const paidAt = new Date().toISOString();
+
+  const { data: job } = await db
+    .from('security_requests')
+    .select('assigned_guard_id, tip_payment_status')
+    .eq('id', jobId)
+    .maybeSingle();
+
+  if (job?.tip_payment_status === 'paid') return;
+
+  const guardId = job?.assigned_guard_id;
+  let connectAccountId: string | null = null;
+  if (guardId) {
+    const { data: guard } = await db
+      .from('guards')
+      .select('stripe_connect_account_id')
+      .eq('id', guardId)
+      .maybeSingle();
+    connectAccountId = guard?.stripe_connect_account_id ?? null;
+  }
+
+  await db
+    .from('security_requests')
+    .update({
+      tip_amount: amount,
+      tip_payment_status: 'paid',
+      tip_stripe_session_id: sessionId,
+      tip_stripe_payment_intent_id: paymentIntentId,
+      tip_paid_at: paidAt,
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount,
+        payment_method: 'stripe',
+        updated_at: paidAt,
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-tip-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+  }
+
+  if (connectAccountId && amountCents > 0) {
+    try {
+      const stripe = await getStripe();
+      if (stripe) {
+        const transfer = await stripe.transfers.create({
+          amount: amountCents,
+          currency: 'usd',
+          destination: connectAccountId,
+          metadata: { job_id: jobId, checkout_type: 'tip' },
+        });
+        await db
+          .from('payments')
+          .update({
+            stripe_transfer_id: transfer.id,
+            status: 'released',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_session_id', sessionId);
+      }
+    } catch (err) {
+      console.error('Tip transfer failed:', err);
+    }
+  }
+
+  try {
+    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: `Tip received — $${amount.toFixed(2)}`,
+    });
+  } catch (err) {
+    console.warn('Tip payment push notification failed:', err);
+  }
+
+  if (guardId) {
+    try {
+      const { dispatchPushNotification } = await import('../../lib/push/delivery');
+      const { data: request } = await db
+        .from('security_requests')
+        .select('title')
+        .eq('id', jobId)
+        .maybeSingle();
+      await dispatchPushNotification(db, {
+        userId: guardId,
+        title: 'You received a tip',
+        body: `A client left a $${amount.toFixed(2)} tip on "${request?.title ?? 'your shift'}".`,
+        type: 'payout_ready',
+        requestId: jobId,
+      });
+    } catch (err) {
+      console.warn('Tip guard notification failed:', err);
+    }
+  }
+}
+
 async function markJobReleased(jobId: string, transferId: string) {
   const db = await getSupabaseAdmin();
   if (!db) return;
@@ -423,6 +549,8 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
         await markOvertimePaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else if (session.metadata?.checkout_type === 'schedule_change') {
         await applyPaidScheduleChange(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      } else if (session.metadata?.checkout_type === 'tip') {
+        await markTipPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else {
         await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       }
@@ -499,6 +627,14 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
           intent.id,
           intent.amount_received ?? intent.amount
         );
+        break;
+      }
+
+      if (intent.metadata?.checkout_type === 'tip') {
+        const db = await getSupabaseAdmin();
+        if (db) {
+          await markTipPaid(jobId, intent.id, intent.id, intent.amount_received ?? intent.amount);
+        }
         break;
       }
 

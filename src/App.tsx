@@ -273,7 +273,7 @@ import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
-import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
+import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { isAppExperience } from './lib/platform/appExperience';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -2178,6 +2178,11 @@ export default function App() {
           applicants: r.applicants || [],
           ratingGiven: r.rating_given ?? undefined,
           reviewText: r.review_text ?? undefined,
+          tipAmount: r.tip_amount != null ? Number(r.tip_amount) : undefined,
+          tipPaymentStatus: r.tip_payment_status ?? undefined,
+          tipStripeSessionId: r.tip_stripe_session_id ?? undefined,
+          tipStripePaymentIntentId: r.tip_stripe_payment_intent_id ?? undefined,
+          tipPaidAt: r.tip_paid_at ?? undefined,
           stripePaymentIntentId: r.stripe_payment_intent_id || undefined,
           paymentStatus: r.payment_status || 'unpaid',
           clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
@@ -7370,7 +7375,12 @@ export default function App() {
     appToast(`Recorded $${depositAmount.toFixed(2)} manual deposit.`, 'success');
   };
 
-  const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
+  const handleAddReview = async (
+    requestId: string,
+    rating: number,
+    reviewText: string,
+    tipCents?: number
+  ): Promise<string | void> => {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ratingGiven: rating, reviewText } : r));
     const req = requests.find(r => r.id === requestId);
     if (req?.assignedGuardId) {
@@ -7390,6 +7400,19 @@ export default function App() {
           'New client review',
           `You received a ${rating}-star review on "${req.title}".`
         );
+      }
+    }
+
+    if (tipCents && tipCents >= 100 && req && currentUser?.email && clientPaymentGatesMemo.allowStripe) {
+      const guard = guards.find((g) => g.id === req.assignedGuardId);
+      if (guard?.stripeConnectAccountId) {
+        const { url } = await createTipCheckoutSession({
+          jobId: requestId,
+          clientEmail: currentUser.email,
+          jobTitle: req.title,
+          amountCents: tipCents,
+        });
+        return url;
       }
     }
   };
@@ -10511,6 +10534,7 @@ export default function App() {
     const paymentResult = params.get('payment');
     const jobId = params.get('job_id');
     const depositResult = params.get('deposit');
+    const tipResult = params.get('tip');
     const stripeConnect = params.get('stripe_connect');
 
     const clearEphemeralQuery = () => {
@@ -10560,6 +10584,25 @@ export default function App() {
       clearEphemeralQuery();
     } else if (depositResult === 'cancelled') {
       showAppToast('Deposit cancelled', { tone: 'info' });
+      clearEphemeralQuery();
+    }
+
+    if (tipResult === 'success' && jobId) {
+      void loadFromSupabase();
+      if (currentUser?.role === 'client') {
+        setClientViewState('requests');
+        syncAppRoute({ role: 'client', clientView: 'requests' }, true);
+      }
+      showAppToast('Tip sent', {
+        body: 'Thank you — your guard will receive the tip shortly.',
+        tone: 'success',
+      });
+      clearEphemeralQuery();
+    } else if (tipResult === 'cancelled') {
+      showAppToast('Tip checkout cancelled', {
+        body: 'Your review was saved. You can leave a tip later from the job if needed.',
+        tone: 'info',
+      });
       clearEphemeralQuery();
     }
 

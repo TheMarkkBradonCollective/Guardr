@@ -84,6 +84,22 @@ export async function createScheduleChangeCheckoutSession(params: {
   return data;
 }
 
+export async function createTipCheckoutSession(params: {
+  jobId: string;
+  clientEmail: string;
+  jobTitle: string;
+  amountCents: number;
+}): Promise<{ url: string; sessionId: string }> {
+  const res = await fetch(apiUrl('/api/stripe/checkout/tip-charge'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await parseApiResponse<{ url: string; sessionId: string; error?: string }>(res);
+  if (!res.ok) throw new Error(data.error || 'Failed to create tip checkout session');
+  return data;
+}
+
 export async function createConnectAccount(params: {
   guardId: string;
   email: string;

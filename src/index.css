@@ -10221,6 +10221,55 @@ button.guard-factor-card {
 }
 
 /* ─── 50d. CLIENT VIOLATION REPORT SHEET ───────────────────── */
+.client-tip-section {
+  padding: 0.85rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-bg-sec) 70%, var(--brand-surface));
+}
+
+.client-tip-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.client-tip-section-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.client-tip-section-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.client-tip-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.client-tip-preset {
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-text);
+  cursor: pointer;
+}
+
+.client-tip-preset-active {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-surface));
+  color: var(--brand-primary);
+}
+
 .client-violation-sheet {
   display: flex;
   flex-direction: column;

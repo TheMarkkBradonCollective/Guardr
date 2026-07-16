@@ -9,7 +9,7 @@ import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSet
 import type { PlatformFeeConfig } from '../../lib/payments';
 import { isOpenContractPricing } from '../../lib/agreementPricing';
 import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
-import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession } from '../../lib/stripeApi';
+import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession, createTipCheckoutSession } from '../../lib/stripeApi';
 import {
   canClientApproveOvertime,
   canClientPayOvertimeStripe,
@@ -58,6 +58,13 @@ import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { GuardMatchScoreRow } from '../guard/GuardMatchScoreRow';
 import { rankGuardsForJob } from '../../lib/guardQualificationMatching';
 import {
+  canClientLeaveTip,
+  formatTipAmountCents,
+  isValidTipCents,
+  parseTipDollarsToCents,
+  TIP_PRESET_CENTS,
+} from '../../lib/clientTips';
+import {
   computeGuardPerformance,
   formatPerformanceScore,
 } from '../../lib/guardPerformance';
@@ -77,6 +84,7 @@ import {
   Pencil,
   Star,
   X,
+  DollarSign,
 } from 'lucide-react';
 
 export interface ClientJobActionsPanelProps {
@@ -94,7 +102,12 @@ export interface ClientJobActionsPanelProps {
   onCancelRequest?: (requestId: string) => void;
   onRequestEdit?: (requestId: string) => void;
   onUpdateStatus?: (requestId: string, status: SecurityRequest['status']) => void;
-  onAddReview?: (requestId: string, rating: number, reviewText: string) => void;
+  onAddReview?: (
+    requestId: string,
+    rating: number,
+    reviewText: string,
+    tipCents?: number
+  ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
@@ -186,6 +199,8 @@ export function ClientJobActionsPanel({
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [selectedTipCents, setSelectedTipCents] = useState<number | null>(null);
+  const [customTip, setCustomTip] = useState('');
   const [violationOpen, setViolationOpen] = useState(false);
   const [replacementBusy, setReplacementBusy] = useState(false);
 
@@ -212,6 +227,24 @@ export function ClientJobActionsPanel({
     req.hourlyRate,
     req.guardsNeeded ?? 1
   );
+
+  const tipEnabled = canClientLeaveTip(req, paymentGates, hiredGuard);
+  const customTipCents = parseTipDollarsToCents(customTip);
+  const resolvedTipCents =
+    selectedTipCents != null
+      ? selectedTipCents
+      : customTipCents != null && isValidTipCents(customTipCents)
+        ? customTipCents
+        : 0;
+
+  const openReviewSheet = () => {
+    setReviewSubmitting(false);
+    setReviewRating(0);
+    setReviewNote('');
+    setSelectedTipCents(null);
+    setCustomTip('');
+    setReviewOpen(true);
+  };
 
   const handlePayNow = async () => {
     setPayingJobId(req.id);
@@ -789,14 +822,17 @@ export function ClientJobActionsPanel({
             </button>
           )}
 
+        {req.status === 'completed' && hiredGuard && req.ratingGiven && req.tipPaymentStatus === 'paid' && (req.tipAmount ?? 0) > 0 && (
+          <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3 w-full">
+            You left a {formatTipAmountCents(Math.round((req.tipAmount ?? 0) * 100))} tip for {hiredGuard.name}.
+          </p>
+        )}
+
         {req.status === 'completed' && hiredGuard && !req.ratingGiven && onAddReview && (
           <div className="border-t border-brand-border pt-3 w-full">
             <button
               type="button"
-              onClick={() => {
-                setReviewSubmitting(false);
-                setReviewOpen(true);
-              }}
+              onClick={openReviewSheet}
               className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
             >
               <Award className="w-3.5 h-3.5" /> Rate guard
@@ -920,18 +956,100 @@ export function ClientJobActionsPanel({
             className="uber-input w-full min-h-[100px] resize-y"
             rows={3}
           />
+          {tipEnabled && (
+            <div className="client-tip-section space-y-3">
+              <div className="client-tip-section-head">
+                <DollarSign className="w-4 h-4 text-brand-primary" aria-hidden />
+                <div>
+                  <p className="client-tip-section-title">Add a tip (optional)</p>
+                  <p className="client-tip-section-subtitle">100% goes to {hiredGuard?.name ?? 'your guard'}</p>
+                </div>
+              </div>
+              <div className="client-tip-presets">
+                <button
+                  type="button"
+                  className={`client-tip-preset ${selectedTipCents === 0 && !customTip ? 'client-tip-preset-active' : ''}`}
+                  onClick={() => {
+                    setSelectedTipCents(0);
+                    setCustomTip('');
+                  }}
+                >
+                  No tip
+                </button>
+                {TIP_PRESET_CENTS.map((cents) => (
+                  <button
+                    key={cents}
+                    type="button"
+                    className={`client-tip-preset ${selectedTipCents === cents ? 'client-tip-preset-active' : ''}`}
+                    onClick={() => {
+                      setSelectedTipCents(cents);
+                      setCustomTip('');
+                    }}
+                  >
+                    {formatTipAmountCents(cents)}
+                  </button>
+                ))}
+              </div>
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-brand-text-muted">Custom amount</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="$15.00"
+                  value={customTip}
+                  onChange={(e) => {
+                    setCustomTip(e.target.value);
+                    setSelectedTipCents(null);
+                  }}
+                  className="uber-input w-full"
+                />
+              </label>
+              {customTip && customTipCents != null && !isValidTipCents(customTipCents) && (
+                <p className="text-xs text-amber-500">Minimum tip is $1.00</p>
+              )}
+            </div>
+          )}
           <button
             type="button"
-            disabled={reviewSubmitting}
-            onClick={() => {
+            disabled={
+              reviewSubmitting ||
+              (customTip.length > 0 && customTipCents != null && !isValidTipCents(customTipCents))
+            }
+            onClick={async () => {
               if (reviewSubmitting) return;
               setReviewSubmitting(true);
-              onAddReview?.(req.id, reviewRating || 5, reviewNote || 'Good work.');
-              setReviewOpen(false);
+              try {
+                const tipCents = resolvedTipCents > 0 ? resolvedTipCents : undefined;
+                const redirectUrl = await onAddReview?.(
+                  req.id,
+                  reviewRating || 5,
+                  reviewNote || 'Good work.',
+                  tipCents
+                );
+                setReviewOpen(false);
+                if (redirectUrl) {
+                  window.location.href = redirectUrl;
+                  return;
+                }
+                showAppToast(
+                  tipCents
+                    ? 'Review saved. Complete card checkout to send your tip.'
+                    : 'Review submitted. Thank you!',
+                  { tone: 'success' }
+                );
+              } catch (e: unknown) {
+                showAppToast(e instanceof Error ? e.message : 'Could not submit review', { tone: 'error' });
+              } finally {
+                setReviewSubmitting(false);
+              }
             }}
             className="app-button-primary w-full disabled:opacity-50"
           >
-            Submit review
+            {reviewSubmitting
+              ? 'Submitting…'
+              : resolvedTipCents > 0
+                ? `Submit review & tip ${formatTipAmountCents(resolvedTipCents)}`
+                : 'Submit review'}
           </button>
         </div>
       </AppFormSheet>

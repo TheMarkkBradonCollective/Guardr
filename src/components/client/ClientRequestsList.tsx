@@ -38,7 +38,12 @@ interface ClientRequestsListProps {
   onCancelRequest: (requestId: string) => void;
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
-  onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  onAddReview: (
+    requestId: string,
+    rating: number,
+    reviewText: string,
+    tipCents?: number
+  ) => Promise<string | void> | void;
   onReportViolation?: (requestId: string, input: import('./ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
