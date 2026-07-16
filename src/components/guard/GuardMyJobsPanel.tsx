@@ -6,15 +6,16 @@ import { getGuardHourlyPay } from '../../lib/guardJobs';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
-import { JobsTallyStrip } from '../jobs/JobsTallyStrip';
+import { JobsShiftPieChart, type JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import {
   AppEmptyState,
   AppItemCard,
   AppItemCardStack,
   AppScreen,
+  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
-import { Briefcase, Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
 /** Format time until a shift in a human-friendly way. */
@@ -86,6 +87,13 @@ function jobsHeroClass(scheduledCount: number, availableCount: number): string {
   if (availableCount > 0) return 'guard-tier-hero-rising';
   return 'guard-tier-hero-starting';
 }
+
+const JOBS_PIE_COLORS: Record<GuardJobsBrowseTab, string> = {
+  available: '#6ee7a8',
+  scheduled: '#7ec8ff',
+  completed: '#f5e6a8',
+  missed: '#ffb38a',
+};
 
 function JobRow({
   job,
@@ -183,19 +191,36 @@ export function GuardMyJobsPanel({
   }, [activeTabProp]);
 
   const tallies = useMemo(
-    () => [
-      { id: 'available' as const, label: JOB_TALLY_LABELS.available, value: availableJobs.length },
-      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled, value: scheduledJobs.length },
-      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed, value: completedJobs.length },
-      {
-        id: 'missed' as const,
-        label: JOB_TALLY_LABELS.missed,
-        value: missedJobs.length,
-        sub: 'No call / no show',
-      },
-    ],
+    () => ({
+      available: availableJobs.length,
+      scheduled: scheduledJobs.length,
+      completed: completedJobs.length,
+      missed: missedJobs.length,
+    }),
     [availableJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
   );
+
+  const pieSegments = useMemo<JobsPieSegment[]>(
+    () => [
+      { id: 'available', label: JOB_TALLY_LABELS.available, value: tallies.available, color: JOBS_PIE_COLORS.available },
+      { id: 'scheduled', label: JOB_TALLY_LABELS.scheduled, value: tallies.scheduled, color: JOBS_PIE_COLORS.scheduled },
+      { id: 'completed', label: JOB_TALLY_LABELS.completed, value: tallies.completed, color: JOBS_PIE_COLORS.completed },
+      { id: 'missed', label: JOB_TALLY_LABELS.missed, value: tallies.missed, color: JOBS_PIE_COLORS.missed },
+    ],
+    [tallies]
+  );
+
+  const tabOptions = useMemo(
+    () => [
+      { id: 'available' as const, label: JOB_TALLY_LABELS.available },
+      { id: 'scheduled' as const, label: JOB_TALLY_LABELS.scheduled },
+      { id: 'completed' as const, label: JOB_TALLY_LABELS.completed },
+      { id: 'missed' as const, label: JOB_TALLY_LABELS.missed },
+    ],
+    []
+  );
+
+  const jobTotal = tallies.available + tallies.scheduled + tallies.completed + tallies.missed;
 
   const nextScheduled = useMemo(() => {
     if (scheduledJobs.length === 0) return null;
@@ -209,11 +234,14 @@ export function GuardMyJobsPanel({
       const timeUntil = formatTimeUntilShift(nextScheduled.startDate);
       return `Next: ${nextScheduled.title} — ${timeUntil}`;
     }
-    if (availableJobs.length > 0) {
-      return `${availableJobs.length} open shift${availableJobs.length === 1 ? '' : 's'} waiting for you.`;
+    if (tallies.available > 0) {
+      return `${tallies.available} open shift${tallies.available === 1 ? '' : 's'} on the map.`;
     }
-    return 'Browse the map or check back for new shifts near you.';
-  }, [nextScheduled, availableJobs.length]);
+    if (jobTotal === 0) {
+      return 'Browse the map or check back for new shifts near you.';
+    }
+    return 'Tap a tab below to browse your shifts.';
+  }, [nextScheduled, tallies.available, jobTotal]);
 
   const allJobs = useMemo(
     () => [...availableJobs, ...scheduledJobs, ...completedJobs, ...missedJobs],
@@ -274,35 +302,47 @@ export function GuardMyJobsPanel({
       <div className="guard-tiered-screen-pinned">
         <section className="guard-rating-section guard-rating-section-tiered guard-tier-hero-card">
           <div
-            className={`guard-tier-hero guard-jobs-tier-hero ${jobsHeroClass(
-              scheduledJobs.length,
-              availableJobs.length
+            className={`guard-tier-hero guard-jobs-tier-hero guard-tier-hero-dense ${jobsHeroClass(
+              tallies.scheduled,
+              tallies.available
             )}`}
           >
             <div className="guard-tier-hero-glow" aria-hidden />
-            <div className="guard-pref-tier-medal" aria-hidden>
-              <div className="guard-pref-tier-medal-ring">
-                <Briefcase className="guard-pref-tier-medal-icon" />
+            <div className="guard-jobs-hero-main">
+              <JobsShiftPieChart segments={pieSegments} activeId={activeTab} />
+              <div className="guard-jobs-hero-copy">
+                <p className="guard-tier-hero-eyebrow">Your shifts</p>
+                <h2 className="guard-tier-hero-name guard-jobs-hero-name">My jobs</h2>
+                <div className="guard-jobs-hero-legend" aria-label="Shift breakdown">
+                  {pieSegments.map((segment) => (
+                    <div
+                      key={segment.id}
+                      className={`guard-jobs-hero-legend-item ${
+                        activeTab === segment.id ? 'guard-jobs-hero-legend-item-active' : ''
+                      }`}
+                    >
+                      <span
+                        className="guard-jobs-hero-legend-dot"
+                        style={{ backgroundColor: segment.color }}
+                      />
+                      <span className="guard-jobs-hero-legend-label">{segment.label}</span>
+                      <span className="guard-jobs-hero-legend-value">{segment.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <p className="guard-tier-hero-eyebrow">Your shifts</p>
-            <h2 className="guard-tier-hero-name">My jobs</h2>
-            <div className="guard-tier-hero-score-row">
-              <span className="guard-tier-hero-score-label">Scheduled</span>
-              <span className="guard-tier-hero-score-value">
-                {scheduledJobs.length}
-                {availableJobs.length > 0 ? (
-                  <span className="guard-pref-hero-score-total"> · {availableJobs.length} open</span>
-                ) : null}
-              </span>
-            </div>
-            <p className="guard-tier-hero-subtitle">{jobsHeroSubtitle}</p>
+            <p className="guard-tier-hero-subtitle guard-jobs-hero-subtitle">{jobsHeroSubtitle}</p>
           </div>
         </section>
       </div>
 
-      <div className="guard-tiered-screen-toolbar jobs-hub-sticky-head">
-        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
+      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar">
+        <AppSegmentedControl<GuardJobsBrowseTab>
+          options={tabOptions}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
       <div className="guard-tiered-screen-scroll">
