@@ -46,9 +46,18 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Track applications & shifts',
       body: 'My Jobs lists everything you applied to or are scheduled for.',
       detail:
-        'After activation you can apply from the map, get approved by staff, and clock in here for active shifts.',
+        'The shift breakdown chart shows available, scheduled, completed, and missed work. Tap a tab or legend item to filter. Trusted guards also get a Crew tab for standing teams.',
       targetSelector: '[data-tour="guard-my-jobs"]',
       navigate: { guardTab: 'myJobs' },
+    },
+    {
+      id: 'crew',
+      title: 'Standing crews (trusted guards)',
+      body: 'Trusted guards can build a standing team and coordinate multi-guard jobs.',
+      detail:
+        'Open Crew to request crew-lead approval, invite members, join with a team code, or manage active job crews. You can only be on one standing crew at a time.',
+      targetSelector: '[data-tour="guard-crew"]',
+      navigate: { guardTab: 'crew' },
     },
     {
       id: 'messages',
@@ -98,8 +107,8 @@ export const CLIENT_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Create a job request',
       body: 'Requests describe the site, schedule, armed needs, and budget.',
       detail:
-        'Trusted clients can open jobs instantly; others go through staff approval first. Your tutorial draft shows what that looks like.',
-      targetSelector: '[data-tour="client-request"]',
+        'The Jobs page shows a breakdown of open, scheduled, completed, and missed coverage. Tap a tab or legend item to filter your postings.',
+      targetSelector: '[data-tour="client-jobs"]',
       navigate: { clientView: 'requests' },
     },
     {
