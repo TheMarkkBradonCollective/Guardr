@@ -10,7 +10,6 @@ import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import {
   JobsScreenHero,
   JOBS_PIE_COLORS,
-  jobsHeroTierClass,
 } from '../jobs/JobsScreenHero';
 import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import {
@@ -278,7 +277,6 @@ export function GuardMyJobsPanel({
           subtitle={jobsHeroSubtitle}
           segments={pieSegments}
           activeId={activeTab}
-          heroClass={jobsHeroTierClass(tallies.scheduled, tallies.available)}
           onSegmentSelect={(id) => setActiveTab(id)}
         />
       </div>

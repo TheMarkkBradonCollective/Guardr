@@ -23,7 +23,6 @@ import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import {
   JobsScreenHero,
   JOBS_PIE_COLORS,
-  jobsHeroTierClass,
 } from '../jobs/JobsScreenHero';
 import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
@@ -331,7 +330,6 @@ export function ClientRequestsList({
           subtitle={jobsHeroSubtitle}
           segments={pieSegments}
           activeId={activeTab}
-          heroClass={jobsHeroTierClass(tallies.scheduled, tallies.open)}
           onSegmentSelect={(id) => setActiveTab(id)}
           totalLabel="jobs"
         />

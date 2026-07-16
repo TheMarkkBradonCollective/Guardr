@@ -78,12 +78,6 @@ function memberDisplay(guards: SecurityGuard[], memberGuardId: string): Security
   );
 }
 
-function crewHeroClass(activeCount: number, pendingCount: number): string {
-  if (activeCount >= 4) return 'guard-tier-hero-elite';
-  if (activeCount >= 2) return 'guard-tier-hero-professional';
-  if (activeCount > 0 || pendingCount > 0) return 'guard-tier-hero-rising';
-  return 'guard-tier-hero-starting';
-}
 
 function CrewArmedHeroProgress({
   stats,
@@ -355,7 +349,7 @@ export function GuardStandingCrewPanel({
 
   const leadHero = (
     <div
-      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(active.length, pendingOutgoing.length)}`}
+      className="guard-tier-hero guard-crew-tier-hero guard-tier-hero-brand"
     >
       <div className="guard-tier-hero-glow" aria-hidden />
       <div className="guard-pref-tier-medal" aria-hidden>
@@ -389,7 +383,7 @@ export function GuardStandingCrewPanel({
 
   const renderMemberHero = (leadName: string) => (
     <div
-      className={`guard-tier-hero guard-crew-tier-hero ${crewHeroClass(0, pendingIncoming.length)}`}
+      className="guard-tier-hero guard-crew-tier-hero guard-tier-hero-brand"
     >
       <div className="guard-tier-hero-glow" aria-hidden />
       <div className="guard-pref-tier-medal" aria-hidden>
@@ -408,9 +402,6 @@ export function GuardStandingCrewPanel({
   );
 
   const defaultHubHero = (() => {
-    const pendingTotal = pendingIncoming.length + pendingOutgoing.length;
-    const heroClass = crewHeroClass(active.length, pendingTotal);
-
     let title = 'Crew hub';
     let subtitle =
       'Coordinate with trusted guards on standing teams and coordinated job crews.';
@@ -445,7 +436,7 @@ export function GuardStandingCrewPanel({
     }
 
     return (
-      <div className={`guard-tier-hero guard-crew-tier-hero ${heroClass}`}>
+      <div className="guard-tier-hero guard-crew-tier-hero guard-tier-hero-brand">
         <div className="guard-tier-hero-glow" aria-hidden />
         <div className="guard-pref-tier-medal" aria-hidden>
           <div className="guard-pref-tier-medal-ring">
