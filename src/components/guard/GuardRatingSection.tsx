@@ -137,7 +137,7 @@ function TierProgressBar({
   );
 }
 
-function FactorCard({
+export function FactorCard({
   factor,
   onSelect,
 }: {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildJobTypePerformanceFactors,
   buildJobTypeRatingMetrics,
   buildPerformanceBreakdown,
   buildPerformanceFactors,
@@ -225,4 +226,24 @@ test('buildJobTypeRatingMetrics includes lifetime shifts row', () => {
 
   assert.ok(rows.some((row) => row.id === 'lifetime-shifts'));
   assert.ok(rows.some((row) => row.id === 'client-reviews'));
+});
+
+test('buildJobTypeRatingMetrics returns zero-state cards when no shifts exist', () => {
+  const metrics = computeGuardPerformanceForJobType('guard-1', [], 'event-corporate');
+  const clientReviews = computeClientReviewStatsForJobType('guard-1', [], 'event-corporate');
+  const rows = buildJobTypeRatingMetrics(metrics, clientReviews);
+
+  assert.equal(rows.length, 7);
+  assert.equal(rows.find((row) => row.id === 'on-time')?.valueDisplay, '0%');
+  assert.equal(rows.find((row) => row.id === 'client-reviews')?.valueDisplay, '—');
+  assert.equal(rows.find((row) => row.id === 'lifetime-shifts')?.valueDisplay, '0');
+});
+
+test('buildJobTypePerformanceFactors returns zero-state factor cards when no shifts exist', () => {
+  const factors = buildJobTypePerformanceFactors('guard-1', 'event-corporate', []);
+
+  assert.equal(factors.length, 4);
+  assert.ok(factors.every((factor) => factor.rateDisplay === '0%'));
+  assert.ok(factors.every((factor) => factor.pointsEarned === 0));
+  assert.ok(factors.every((factor) => factor.statusLabel === 'Very low'));
 });
