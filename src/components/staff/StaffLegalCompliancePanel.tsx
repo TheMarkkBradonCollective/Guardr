@@ -165,7 +165,7 @@ export function StaffLegalCompliancePanel({
         <div className="adm-workbench-toolbar adm-finance-toolbar">
           <div>
             <p className="adm-card-eyebrow">Compliance</p>
-            <p className="adm-workbench-subtitle">Marketplace agreements accepted by guards and clients.</p>
+            <p className="adm-workbench-subtitle">Agreements accepted by guards and clients.</p>
           </div>
           {filterButtons}
         </div>
@@ -231,7 +231,7 @@ export function StaffLegalCompliancePanel({
   }
 
   return (
-    <AppFormSection title="Marketplace agreements">
+    <AppFormSection title="Agreements">
       {filterButtons}
       <div className="rounded-xl border border-brand-border overflow-x-auto mt-4">
         <table className="w-full min-w-[720px] text-left">

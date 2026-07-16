@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { SessionUser } from '../../types';
 import {
   canManageCityMarkets,
-  canRecommendCityOpen,
+  canRecommendCityMarket,
+  canViewCityMarkets,
 } from '../../lib/permissions';
 import {
   countCityMarketsByFilter,
@@ -11,16 +12,14 @@ import {
   type CityMarketStatusFilter,
 } from '../../lib/cityMarketList';
 import {
-  CITY_STATUS_DESCRIPTIONS,
   CITY_STATUS_LABELS,
   filterCitiesForStaffActor,
   type CityMarketStatus,
   type CityWaitlistAudience,
   type PlatformCity,
 } from '../../lib/platformCities';
-import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
-import { MapPin } from 'lucide-react';
 
 interface StaffCitiesPanelProps {
   currentUser: SessionUser;
@@ -43,12 +42,51 @@ const STATUS_TONES: Record<CityMarketStatus, 'success' | 'danger' | 'warning'> =
   waitlist: 'warning',
 };
 
+type DirectorActionValue =
+  | CityMarketStatus
+  | `waitlist:${CityWaitlistAudience}`;
+
+type ManagerActionValue = 'recommend' | 'no-recommend';
+
+const DIRECTOR_ACTION_OPTIONS: { value: DirectorActionValue; label: string }[] = [
+  { value: 'open', label: 'Open' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'waitlist:guard', label: 'Wait list — guards' },
+  { value: 'waitlist:client', label: 'Wait list — clients' },
+  { value: 'waitlist:both', label: 'Wait list — both' },
+];
+
+const MANAGER_ACTION_OPTIONS: { value: ManagerActionValue; label: string }[] = [
+  { value: 'no-recommend', label: 'No recommendation' },
+  { value: 'recommend', label: 'Recommend' },
+];
+
 const SORT_OPTIONS: { id: CityMarketSort; label: string }[] = [
   { id: 'name-asc', label: 'Name A–Z' },
   { id: 'name-desc', label: 'Name Z–A' },
   { id: 'status', label: 'Status' },
   { id: 'updated-desc', label: 'Recently updated' },
 ];
+
+function getDirectorActionValue(city: PlatformCity): DirectorActionValue {
+  if (city.status === 'waitlist') return `waitlist:${city.waitlistAudience}`;
+  return city.status;
+}
+
+function getManagerActionValue(city: PlatformCity): ManagerActionValue {
+  return city.recommendOpen ? 'recommend' : 'no-recommend';
+}
+
+function parseDirectorAction(value: DirectorActionValue): {
+  status?: CityMarketStatus;
+  waitlistAudience?: CityWaitlistAudience;
+} {
+  if (value.startsWith('waitlist:')) {
+    const audience = value.slice('waitlist:'.length) as CityWaitlistAudience;
+    return { status: 'waitlist', waitlistAudience: audience };
+  }
+  return { status: value };
+}
 
 export function StaffCitiesPanel({
   currentUser,
@@ -63,7 +101,8 @@ export function StaffCitiesPanel({
   const [error, setError] = useState('');
 
   const canManageStatus = canManageCityMarkets(currentUser);
-  const canRecommend = canRecommendCityOpen(currentUser);
+  const canRecommend = canRecommendCityMarket(currentUser);
+  const canView = canViewCityMarkets(currentUser);
 
   const visibleCities = useMemo(
     () => filterCitiesForStaffActor(cities, currentUser.role, actorManagedCities),
@@ -104,12 +143,12 @@ export function StaffCitiesPanel({
     }
   };
 
-  if (!canRecommend) {
+  if (!canView) {
     return (
       <div className="app-empty-state app-empty-state--dashed">
-        <p className="app-empty-state-title">City markets unavailable</p>
+        <p className="app-empty-state-title">Operations unavailable</p>
         <p className="app-empty-state-body">
-          Market controls are limited to Manager roles and above.
+          Operations controls are limited to Manager roles and above.
         </p>
       </div>
     );
@@ -129,15 +168,15 @@ export function StaffCitiesPanel({
   return (
     <div className="animate-fade-in space-y-4">
       <div className="rounded-xl border border-brand-border bg-brand-surface/60 p-4 space-y-2">
-        <h2 className="text-sm font-semibold">City markets</h2>
+        <h2 className="text-sm font-semibold">Operations</h2>
         <p className="text-sm text-brand-text-muted leading-relaxed">
           Control where Guardr accepts guard and client applications. Closed cities show an instant
           denial. Wait list cities still collect applications but hold release to staff until the
           market is fully active.
         </p>
-        {!canManageStatus && (
+        {canRecommend && (
           <p className="text-xs text-amber-400">
-            As a Manager you can recommend cities to open. Directors and Founders control open,
+            As a Manager you can recommend cities for review. Directors and Founders control open,
             closed, and wait list status.
           </p>
         )}
@@ -167,7 +206,7 @@ export function StaffCitiesPanel({
       </div>
 
       <StaffListFilterTabs
-        aria-label="City market status"
+        aria-label="Operations city status"
         activeId={statusFilter}
         onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
         tabs={[
@@ -193,97 +232,76 @@ export function StaffCitiesPanel({
           </p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="rounded-xl border border-brand-border bg-brand-surface/40 max-h-[70vh] overflow-y-auto divide-y divide-brand-border">
           {filtered.map((city) => {
             const busy = savingId === city.id;
+            const directorValue = getDirectorActionValue(city);
+            const managerValue = getManagerActionValue(city);
+
             return (
               <div
                 key={city.id}
-                className="rounded-xl border border-brand-border bg-brand-surface/40 p-4 space-y-3"
+                className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3"
               >
-                <WfListCard
-                  avatar={
-                    <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-brand-primary" />
-                    </div>
-                  }
-                  title={city.name}
-                  subtitle={`${city.stateCode} · ${CITY_STATUS_DESCRIPTIONS[city.status]}`}
-                  meta={
-                    <div className="flex flex-wrap items-center gap-2">
-                      <WfBadge tone={STATUS_TONES[city.status]}>
-                        {CITY_STATUS_LABELS[city.status]}
-                      </WfBadge>
-                      {city.recommendOpen && <WfBadge tone="primary">Recommended open</WfBadge>}
-                      {city.status === 'waitlist' && (
-                        <span className="text-xs text-brand-text-muted capitalize">
-                          Wait list: {city.waitlistAudience}
-                        </span>
-                      )}
-                    </div>
-                  }
-                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="text-sm font-semibold leading-snug truncate">{city.name}</p>
+                    <span className="text-xs text-brand-text-muted shrink-0">{city.stateCode}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <WfBadge tone={STATUS_TONES[city.status]}>
+                      {CITY_STATUS_LABELS[city.status]}
+                    </WfBadge>
+                    {city.recommendOpen && <WfBadge tone="primary">Recommended</WfBadge>}
+                    {city.status === 'waitlist' && (
+                      <span className="text-xs text-brand-text-muted capitalize">
+                        {city.waitlistAudience}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
                 {canManageStatus ? (
-                  <div className="flex flex-wrap gap-2">
-                    {(['open', 'closed', 'waitlist'] as CityMarketStatus[]).map((status) => (
-                      <button
-                        key={status}
-                        type="button"
-                        disabled={busy || city.status === status}
-                        onClick={() => void applyUpdate(city, { status })}
-                        className={`app-button-outline app-btn-sm capitalize ${
-                          city.status === status ? 'border-brand-primary text-brand-primary' : ''
-                        }`}
-                      >
-                        {CITY_STATUS_LABELS[status]}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void applyUpdate(city, { recommendOpen: !city.recommendOpen })}
-                    className="app-button-outline app-btn-sm"
-                  >
-                    {city.recommendOpen ? 'Withdraw recommendation' : 'Recommend open'}
-                  </button>
-                )}
-
-                {canManageStatus && city.status === 'waitlist' && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-brand-text-muted">Wait list applies to:</span>
-                    {(['guard', 'client', 'both'] as CityWaitlistAudience[]).map((audience) => (
-                      <button
-                        key={audience}
-                        type="button"
-                        disabled={busy || city.waitlistAudience === audience}
-                        onClick={() => void applyUpdate(city, { waitlistAudience: audience })}
-                        className={`app-button-outline app-btn-sm capitalize ${
-                          city.waitlistAudience === audience
-                            ? 'border-brand-primary text-brand-primary'
-                            : ''
-                        }`}
-                      >
-                        {audience}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {canManageStatus && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void applyUpdate(city, { recommendOpen: !city.recommendOpen })}
-                    className="app-button-outline app-btn-sm"
-                  >
-                    {city.recommendOpen
-                      ? 'Clear recommendation flag'
-                      : 'Flag manager recommendation'}
-                  </button>
-                )}
+                  <label className="flex shrink-0 flex-col gap-1 sm:w-52">
+                    <span className="sr-only">Set market status for {city.name}</span>
+                    <select
+                      value={directorValue}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const next = e.target.value as DirectorActionValue;
+                        if (next === directorValue) return;
+                        void applyUpdate(city, parseDirectorAction(next));
+                      }}
+                      className="uber-select w-full text-sm"
+                    >
+                      {DIRECTOR_ACTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : canRecommend ? (
+                  <label className="flex shrink-0 flex-col gap-1 sm:w-44">
+                    <span className="sr-only">Recommend {city.name}</span>
+                    <select
+                      value={managerValue}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const next = e.target.value as ManagerActionValue;
+                        if (next === managerValue) return;
+                        void applyUpdate(city, { recommendOpen: next === 'recommend' });
+                      }}
+                      className="uber-select w-full text-sm"
+                    >
+                      {MANAGER_ACTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </div>
             );
           })}
