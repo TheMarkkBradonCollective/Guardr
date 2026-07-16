@@ -1,13 +1,31 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CALIFORNIA_CITIES,
+  cityFromGeocode,
   formatServiceAreaLabel,
   guardServesJobCity,
+  isCaliforniaCity,
   licenseStatesMatch,
   normalizeGuardServiceAreas,
   resolveGuardCardLicenseState,
   resolveJobLicenseState,
 } from './californiaCities.ts';
+
+describe('California incorporated cities', () => {
+  it('includes all 483 municipalities', () => {
+    assert.equal(CALIFORNIA_CITIES.length, 483);
+  });
+
+  it('recognizes smaller markets like Chico and Mountain House', () => {
+    assert.equal(isCaliforniaCity('Chico'), true);
+    assert.equal(isCaliforniaCity('Mountain House'), true);
+  });
+
+  it('prefers the longest city name in geocode text', () => {
+    assert.equal(cityFromGeocode('100 Main St, South San Francisco, CA'), 'South San Francisco');
+  });
+});
 
 describe('resolveGuardCardLicenseState', () => {
   it('maps California cities to CA license jurisdiction', () => {
