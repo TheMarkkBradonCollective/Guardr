@@ -8996,11 +8996,6 @@ html.theme-grey .wf-badge-success {
   display: none;
 }
 
-.guard-tier-hero .guard-tier-medal-ring,
-.guard-tier-hero .guard-pref-tier-medal-ring {
-  border-radius: 0;
-}
-
 .guard-tier-hero-dense {
   gap: 0.2rem;
   padding: 1rem 1.15rem 1.05rem;
@@ -9204,7 +9199,7 @@ html.theme-grey .wf-badge-success {
   gap: 0.45rem;
   margin: 0.2rem 0 0.35rem;
   padding: 0.35rem 0.75rem;
-  border-radius: 0;
+  border-radius: 999px;
   background: rgba(0, 0, 0, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
