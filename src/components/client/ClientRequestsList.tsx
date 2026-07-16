@@ -270,7 +270,7 @@ export function ClientRequestsList({
   return (
     <AppScreen>
       <div className="px-4 pt-4">
-        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={setActiveTab} />
+        <JobsTallyStrip tallies={tallies} activeId={activeTab} onSelect={(id) => setActiveTab(id as JobTab)} />
       </div>
 
       {activeTab === 'open' && (

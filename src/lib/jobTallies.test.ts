@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import type { SecurityRequest } from '../types';
-import { isJobMissed, splitCompletedAndMissed } from './jobTallies';
+import { isJobMissed, splitCompletedAndMissed } from './jobTallies.ts';
 
 function job(partial: Partial<SecurityRequest> & Pick<SecurityRequest, 'id'>): SecurityRequest {
   return {
@@ -24,26 +25,42 @@ function job(partial: Partial<SecurityRequest> & Pick<SecurityRequest, 'id'>): S
 
 describe('isJobMissed', () => {
   it('flags explicit no-show', () => {
-    expect(isJobMissed(job({ id: '1', noShow: true }))).toBe(true);
+    assert.equal(isJobMissed(job({ id: '1', noShow: true })), true);
   });
 
   it('flags call-off and no-show replacement reasons', () => {
-    expect(
+    assert.equal(
       isJobMissed(
         job({
           id: '2',
-          replacementRequest: { reason: 'call-off', status: 'offering', offeredGuardIds: [] },
+          replacementRequest: {
+            id: 'rep-1',
+            requestedAt: '2026-08-01T10:00:00.000Z',
+            requestedBy: 'client',
+            reason: 'call-off',
+            status: 'offering',
+            offeredGuardIds: [],
+          },
         })
-      )
-    ).toBe(true);
-    expect(
+      ),
+      true
+    );
+    assert.equal(
       isJobMissed(
         job({
           id: '3',
-          replacementRequest: { reason: 'no-show', status: 'filled', offeredGuardIds: [] },
+          replacementRequest: {
+            id: 'rep-2',
+            requestedAt: '2026-08-01T10:00:00.000Z',
+            requestedBy: 'system',
+            reason: 'no-show',
+            status: 'filled',
+            offeredGuardIds: [],
+          },
         })
-      )
-    ).toBe(true);
+      ),
+      true
+    );
   });
 
   it('splits completed and missed jobs', () => {
@@ -52,7 +69,13 @@ describe('isJobMissed', () => {
       job({ id: 'missed', status: 'completed', noShow: true }),
     ];
     const { completed, missed } = splitCompletedAndMissed(jobs);
-    expect(completed.map((j) => j.id)).toEqual(['ok']);
-    expect(missed.map((j) => j.id)).toEqual(['missed']);
+    assert.deepEqual(
+      completed.map((j) => j.id),
+      ['ok']
+    );
+    assert.deepEqual(
+      missed.map((j) => j.id),
+      ['missed']
+    );
   });
 });

@@ -30,6 +30,7 @@ import {
 } from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
+import { isJobMissed } from '../lib/jobTallies';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
@@ -571,7 +572,13 @@ export function GuardDashboard({
       const kind = guardMapPinKind(guard.id, job as unknown as SecurityRequest);
       if (kind === 'available') handleBrowseTabChange('available');
       else if (kind === 'scheduled') handleBrowseTabChange('scheduled');
-      else if (kind === 'past') handleBrowseTabChange('past');
+      else if (kind === 'past') {
+        handleBrowseTabChange(
+          isJobMissed(job as unknown as SecurityRequest, { guardId: guard.id })
+            ? 'missed'
+            : 'completed'
+        );
+      }
     },
     [browseJobLists.all, guard.id, handleBrowseTabChange]
   );
