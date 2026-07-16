@@ -66,6 +66,8 @@ test('isPremiumOpenJob detects high pay, multi-guard, and crew jobs', () => {
 
 test('workModalityForJobType maps standing and driving job types', () => {
   assert.equal(workModalityForJobType('standing-guard'), 'standing');
+  assert.equal(workModalityForJobType('foot-patrol'), 'standing');
+  assert.equal(workModalityForJobType('vehicle-patrol'), 'driving');
   assert.equal(workModalityForJobType('patrol'), 'driving');
   assert.equal(workModalityForJobType('event-corporate'), null);
 });

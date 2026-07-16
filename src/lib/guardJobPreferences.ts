@@ -1,5 +1,9 @@
 import type { JobType, SecurityGuard, SecurityRequest } from '../types';
 import { isJobTypeOnboarded } from './guardJobTypeOnboarding';
+import {
+  guardCanEnableJobTypePreference,
+  jobTypeRequiresVerifiedVehicle,
+} from './guardJobTypeVehicleRequirements';
 
 export interface JobTypePreferenceOption {
   type: JobType;
@@ -7,7 +11,8 @@ export interface JobTypePreferenceOption {
   description: string;
 }
 
-export const ALL_JOB_TYPES: JobType[] = [
+/** Job types shown in guard Preferences — excludes legacy `patrol`. */
+export const PREFERENCE_JOB_TYPES: JobType[] = [
   'nightclub-bar',
   'event-wedding',
   'event-concert',
@@ -15,7 +20,8 @@ export const ALL_JOB_TYPES: JobType[] = [
   'event-corporate',
   'event-private',
   'event',
-  'patrol',
+  'foot-patrol',
+  'vehicle-patrol',
   'construction',
   'fire-watch',
   'standing-guard',
@@ -24,6 +30,9 @@ export const ALL_JOB_TYPES: JobType[] = [
   'asset-protection',
   'other',
 ];
+
+/** All supported job types including legacy values stored in the database. */
+export const ALL_JOB_TYPES: JobType[] = [...PREFERENCE_JOB_TYPES, 'patrol'];
 
 export const ALL_JOB_TYPE_PREFERENCES = ALL_JOB_TYPES;
 
@@ -58,7 +67,14 @@ export const JOB_TYPE_PREFERENCE_CATEGORIES: JobTypePreferenceCategory[] = [
     id: 'sites',
     label: 'Sites & patrol',
     description: 'Fixed posts, patrols, construction, and property coverage.',
-    types: ['patrol', 'construction', 'fire-watch', 'standing-guard', 'asset-protection'],
+    types: [
+      'foot-patrol',
+      'vehicle-patrol',
+      'construction',
+      'fire-watch',
+      'standing-guard',
+      'asset-protection',
+    ],
   },
   {
     id: 'specialized',
@@ -105,9 +121,14 @@ export const JOB_TYPE_PREFERENCE_OPTIONS: JobTypePreferenceOption[] = [
     description: 'General event posts when the venue type is not listed above.',
   },
   {
-    type: 'patrol',
-    label: 'Patrol',
-    description: 'Mobile perimeter checks and scheduled site rounds.',
+    type: 'foot-patrol',
+    label: 'Foot patrol',
+    description: 'On-foot perimeter checks, interior rounds, and scheduled site walks.',
+  },
+  {
+    type: 'vehicle-patrol',
+    label: 'Vehicle patrol',
+    description: 'Mobile patrol routes using your approved guard vehicle.',
   },
   {
     type: 'construction',
@@ -150,6 +171,26 @@ const JOB_TYPE_LABEL_MAP = Object.fromEntries(
   JOB_TYPE_PREFERENCE_OPTIONS.map((option) => [option.type, option.label])
 ) as Record<JobType, string>;
 
+const PREFERENCE_JOB_TYPE_SET = new Set(PREFERENCE_JOB_TYPES);
+
+/** Preference keys that satisfy a job's type (handles legacy patrol aliases). */
+export function jobTypePreferenceMatchKeys(jobType: JobType): JobType[] {
+  switch (jobType) {
+    case 'patrol':
+    case 'vehicle-patrol':
+      return ['vehicle-patrol', 'patrol'];
+    case 'foot-patrol':
+      return ['foot-patrol'];
+    default:
+      return [jobType];
+  }
+}
+
+function migrateLegacyPreferenceType(value: string): JobType | null {
+  const normalized = value === 'patrol' ? 'vehicle-patrol' : (value as JobType);
+  return PREFERENCE_JOB_TYPE_SET.has(normalized) ? normalized : null;
+}
+
 export function isJobType(value: string): value is JobType {
   return ALL_JOB_TYPES.includes(value as JobType);
 }
@@ -157,13 +198,20 @@ export function isJobType(value: string): value is JobType {
 /** Empty or missing preferences mean all job types are off until the guard opts in. */
 export function normalizeJobTypePreferences(values: string[] | undefined): JobType[] {
   if (!values?.length) return [];
-  const allowed = new Set(ALL_JOB_TYPES);
-  return values.filter((v): v is JobType => allowed.has(v as JobType));
+  const seen = new Set<JobType>();
+  const next: JobType[] = [];
+  for (const value of values) {
+    const migrated = migrateLegacyPreferenceType(value);
+    if (!migrated || seen.has(migrated)) continue;
+    seen.add(migrated);
+    next.push(migrated);
+  }
+  return next;
 }
 
 export function guardWantsJobType(guard: Pick<SecurityGuard, 'jobTypePreferences'>, jobType: JobType): boolean {
-  const prefs = normalizeJobTypePreferences(guard.jobTypePreferences);
-  return prefs.includes(jobType);
+  const prefs = new Set(normalizeJobTypePreferences(guard.jobTypePreferences));
+  return jobTypePreferenceMatchKeys(jobType).some((key) => prefs.has(key));
 }
 
 export function guardMatchesJobPreferences(
@@ -174,13 +222,18 @@ export function guardMatchesJobPreferences(
 }
 
 export function guardCanAcceptJobType(
-  guard: Pick<SecurityGuard, 'jobTypeOnboarding'>,
+  guard: Pick<SecurityGuard, 'jobTypeOnboarding' | 'vehicleProfile'>,
   jobType: JobType
 ): boolean {
-  return isJobTypeOnboarded(guard, jobType);
+  if (!isJobTypeOnboarded(guard, jobType)) return false;
+  if (jobTypeRequiresVerifiedVehicle(jobType) && !guardCanEnableJobTypePreference(guard, jobType)) {
+    return false;
+  }
+  return true;
 }
 
 export function jobTypePreferenceLabel(type: JobType): string {
+  if (type === 'patrol') return 'Patrol';
   return JOB_TYPE_LABEL_MAP[type] ?? type;
 }
 

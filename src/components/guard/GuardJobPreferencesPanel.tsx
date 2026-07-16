@@ -15,6 +15,11 @@ import {
   type JobTypePreferenceOption,
 } from '../../lib/guardJobPreferences';
 import { isJobTypeOnboarded, GENERAL_ONBOARDING_INTRO } from '../../lib/guardJobTypeOnboarding';
+import {
+  guardCanEnableJobTypePreference,
+  guardVehicleRequiredBlockMessage,
+  jobTypeRequiresVerifiedVehicle,
+} from '../../lib/guardJobTypeVehicleRequirements';
 import { AppSwitch } from '../ui/AppSwitch';
 import { JobTypeOnboardingSheet } from './JobTypeOnboardingSheet';
 import { JOB_TYPE_ICONS } from './guardJobTypeIcons';
@@ -102,6 +107,9 @@ export function GuardJobPreferencesPanel({
   const heroStyle = heroColorVars as React.CSSProperties;
 
   const setPreference = (type: JobType, enabled: boolean) => {
+    if (enabled && jobTypeRequiresVerifiedVehicle(type) && !guardCanEnableJobTypePreference(guard, type)) {
+      return;
+    }
     const next = enabled
       ? [...new Set([...selected, type])]
       : [...selected].filter((value) => value !== type);
@@ -114,6 +122,9 @@ export function GuardJobPreferencesPanel({
       setOnboardingType(type);
       return;
     }
+    if (!selected.has(type) && jobTypeRequiresVerifiedVehicle(type) && !guardCanEnableJobTypePreference(guard, type)) {
+      return;
+    }
     setPreference(type, !selected.has(type));
   };
 
@@ -122,7 +133,9 @@ export function GuardJobPreferencesPanel({
     try {
       await onCompleteOnboarding(type);
       setOnboardingType(null);
-      setPreference(type, true);
+      if (guardCanEnableJobTypePreference(guard, type) || !jobTypeRequiresVerifiedVehicle(type)) {
+        setPreference(type, true);
+      }
     } finally {
       setOnboardingBusy(false);
     }
@@ -211,13 +224,16 @@ export function GuardJobPreferencesPanel({
                   const option = OPTION_BY_TYPE[type];
                   const active = selected.has(type);
                   const onboarded = isJobTypeOnboarded(guard, type);
+                  const vehicleRequired = jobTypeRequiresVerifiedVehicle(type);
+                  const vehicleBlocked =
+                    vehicleRequired && !guardCanEnableJobTypePreference(guard, type);
                   const Icon = JOB_TYPE_ICONS[type];
                   return (
                     <article
                       key={type}
                       className={`guard-pref-type-card ${active ? 'guard-pref-type-card-active' : ''} ${
                         !onboarded ? 'guard-pref-type-card-setup' : ''
-                      }`}
+                      }${vehicleBlocked ? ' guard-pref-type-card-vehicle-blocked' : ''}`}
                     >
                       <div className="guard-pref-type-card-top">
                         <div className="guard-pref-type-icon-wrap" aria-hidden>
@@ -229,10 +245,15 @@ export function GuardJobPreferencesPanel({
                             <JobTypeStatusBadge active={active} onboarded={onboarded} />
                           </div>
                           <p className="guard-pref-type-desc">{option.description}</p>
+                          {vehicleBlocked ? (
+                            <p className="guard-pref-type-vehicle-note">
+                              {guardVehicleRequiredBlockMessage(type)}
+                            </p>
+                          ) : null}
                         </div>
                         <AppSwitch
                           checked={active}
-                          disabled={saving || onboardingBusy}
+                          disabled={saving || onboardingBusy || vehicleBlocked}
                           onChange={() => handleToggle(type)}
                           ariaLabel={`${option.label} job alerts`}
                         />

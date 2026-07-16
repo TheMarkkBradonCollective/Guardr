@@ -16,6 +16,9 @@ export type {
 };
 
 export type JobType =
+  | 'foot-patrol'
+  | 'vehicle-patrol'
+  /** @deprecated Legacy DB value — maps to vehicle-patrol for preferences and driving work. */
   | 'patrol'
   | 'construction'
   | 'fire-watch'

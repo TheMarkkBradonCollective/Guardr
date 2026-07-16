@@ -8,9 +8,10 @@ export const STANDING_JOB_TYPES: JobType[] = [
   'fire-watch',
   'asset-protection',
   'bodyguard',
+  'foot-patrol',
 ];
 
-export const DRIVING_JOB_TYPES: JobType[] = ['patrol', 'armed-escort'];
+export const DRIVING_JOB_TYPES: JobType[] = ['vehicle-patrol', 'armed-escort', 'patrol'];
 
 export const PERFORMANCE_MODALITIES: WorkModality[] = ['standing', 'driving'];
 
@@ -39,5 +40,5 @@ export function workModalitySubtitle(modality: WorkModality): string {
 }
 
 export function representativeJobTypeForModality(modality: WorkModality): JobType {
-  return modality === 'standing' ? 'standing-guard' : 'patrol';
+  return modality === 'standing' ? 'standing-guard' : 'vehicle-patrol';
 }

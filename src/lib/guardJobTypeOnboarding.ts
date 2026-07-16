@@ -173,6 +173,50 @@ export const JOB_TYPE_ONBOARDING: Record<JobType, JobTypeOnboardingContent> = {
     acknowledgment:
       'I understand general event posts require careful review of each listing and clear communication before acceptance.',
   },
+  'foot-patrol': {
+    title: 'Foot patrol',
+    summary:
+      'Provide highly visible on-foot patrol services designed to deter crime, identify hazards, and protect client property through regular walking inspections and documentation.',
+    expectations: [
+      'Complete scheduled foot patrols according to post orders.',
+      'Inspect buildings, parking lots, gates, fences, and other designated areas on foot.',
+      'Report suspicious activity, maintenance issues, safety hazards, or criminal activity immediately.',
+      'Complete electronic checkpoints and patrol reports as required.',
+      'Maintain communication with dispatch throughout your shift.',
+      'Remain alert and vary patrol routines whenever practical.',
+      'Secure doors, gates, and windows according to client closing procedures.',
+    ],
+    beforeAccepting: [
+      'Ensure you understand the patrol route and reporting requirements.',
+      'Confirm whether the assignment is foot patrol only or includes interior rounds.',
+      'Inspect all assigned equipment before beginning your shift.',
+      'Confirm checkpoint locations and required photo or scan procedures.',
+    ],
+    acknowledgment:
+      'I understand foot patrol posts require timely rounds, reliable reporting, and consistent communication with dispatch.',
+  },
+  'vehicle-patrol': {
+    title: 'Vehicle patrol',
+    summary:
+      'Provide mobile patrol services using an approved guard vehicle to deter crime, cover larger sites, and protect client property through scheduled route inspections and documentation.',
+    expectations: [
+      'Complete scheduled vehicle patrols according to post orders.',
+      'Drive assigned routes safely while inspecting perimeters, lots, gates, and other designated areas.',
+      'Report suspicious activity, maintenance issues, safety hazards, or criminal activity immediately.',
+      'Complete electronic checkpoints and patrol reports as required.',
+      'Maintain communication with dispatch throughout your shift.',
+      'Keep your approved vehicle roadworthy and follow all traffic laws.',
+      'Secure doors, gates, and windows according to client closing procedures.',
+    ],
+    beforeAccepting: [
+      'Ensure you understand the patrol route and reporting requirements.',
+      'Confirm your approved vehicle is available and meets post requirements.',
+      'Inspect all assigned equipment and vehicle condition before beginning your shift.',
+      'Factor in traffic, parking, and fuel when planning your route.',
+    ],
+    acknowledgment:
+      'I understand vehicle patrol posts require a staff-approved vehicle, timely rounds, and consistent communication with dispatch.',
+  },
   patrol: {
     title: 'Patrol',
     summary:
@@ -368,7 +412,19 @@ export function isJobTypeOnboarded(
   guard: Pick<SecurityGuard, 'jobTypeOnboarding'>,
   jobType: JobType
 ): boolean {
-  return Boolean(guard.jobTypeOnboarding?.[jobType]);
+  return onboardingKeysForJobType(jobType).some((key) => Boolean(guard.jobTypeOnboarding?.[key]));
+}
+
+function onboardingKeysForJobType(jobType: JobType): JobType[] {
+  switch (jobType) {
+    case 'vehicle-patrol':
+    case 'patrol':
+      return ['vehicle-patrol', 'patrol'];
+    case 'foot-patrol':
+      return ['foot-patrol'];
+    default:
+      return [jobType];
+  }
 }
 
 export function jobTypeOnboardingContent(jobType: JobType): JobTypeOnboardingContent {

@@ -48,6 +48,8 @@ export const JOB_TYPE_RATING_DISPLAY_NAMES: Record<JobType, string> = {
   'event-corporate': 'Corporate events',
   'event-private': 'Private events',
   event: 'Events',
+  'foot-patrol': 'Foot patrol',
+  'vehicle-patrol': 'Vehicle patrol',
   patrol: 'Patrol',
   construction: 'Construction',
   'fire-watch': 'Fire watch',
@@ -409,6 +411,7 @@ function starDisplay(avg: number): string {
 }
 
 export function jobTypeRatingCategory(jobType: JobType): JobTypeRatingCategory {
+  if (jobType === 'patrol') return 'sites';
   const match = JOB_TYPE_PREFERENCE_CATEGORIES.find((category) => category.types.includes(jobType));
   return (match?.id as JobTypeRatingCategory | undefined) ?? 'specialized';
 }
