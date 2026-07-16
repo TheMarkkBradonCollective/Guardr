@@ -7,6 +7,7 @@ import {
 } from '../../lib/platformSettings';
 import { canManagePlatformSettings } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { showAppToast } from '../ui/AppToast';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -147,15 +148,15 @@ export function StaffIntegrationsPanel({
 
   const integrationsBody = (
     <div className="space-y-4">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>SMS notifications (Twilio — configure in env)</span>
+        <AppSwitch
           checked={platformSettings.smsNotificationsEnabled === true}
           disabled={!canEdit}
-          onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
+          onChange={(checked) => void persistSettings({ smsNotificationsEnabled: checked })}
+          ariaLabel="SMS notifications"
         />
-        SMS notifications (Twilio — configure in env)
-      </label>
+      </div>
       <label className="uber-label block">Background check provider</label>
       <select
         className="uber-input w-full"

@@ -12,6 +12,7 @@ import {
 } from '../../lib/companyPlacard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppSwitch } from '../ui/AppSwitch';
 import { showAppToast } from '../ui/AppToast';
 
 interface StaffCompanyPlacardPanelProps {
@@ -156,15 +157,15 @@ export function StaffCompanyPlacardPanel({
           </div>
         )}
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span>Show company placard on public homepage</span>
+          <AppSwitch
             checked={publicEnabled}
             disabled={!canEdit}
-            onChange={(e) => void onSetPublicEnabled(e.target.checked)}
+            onChange={(checked) => void onSetPublicEnabled(checked)}
+            ariaLabel="Show company placard on public homepage"
           />
-          Show company placard on public homepage
-        </label>
+        </div>
 
         <div className="space-y-3">
           {checklist.map((item) => (
@@ -307,14 +308,14 @@ function CompanyDocumentEditor({
         label="Document photo (registration, COI, or certificate)"
         previewAlt={`${typeDef.title} preview`}
       />
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>Show on public homepage placard</span>
+        <AppSwitch
           checked={displayOnHomepage}
-          onChange={(e) => setDisplayOnHomepage(e.target.checked)}
+          onChange={setDisplayOnHomepage}
+          ariaLabel="Show on public homepage placard"
         />
-        Show on public homepage placard
-      </label>
+      </div>
       <label className="block space-y-1">
         <span className="uber-label">Internal notes (staff only)</span>
         <textarea
