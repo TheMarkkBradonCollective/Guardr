@@ -81,15 +81,17 @@ function TierProgressBar({
   overallRating,
   tier,
   nextTier,
+  compact = false,
 }: {
   overallRating: number;
   tier: PerformanceTier;
   nextTier: PerformanceTier | null;
+  compact?: boolean;
 }) {
   const fillPercent = Math.min(100, overallRating);
 
   return (
-    <div className="guard-tier-progress">
+    <div className={`guard-tier-progress ${compact ? 'guard-tier-progress-compact' : ''}`}>
       <div className="guard-tier-progress-markers" aria-hidden>
         {PERFORMANCE_TIERS.map((t) => {
           const isActive = overallRating >= t.threshold;
@@ -293,7 +295,7 @@ export function GuardRatingSection({
   }
 
   const heroBlock = (
-    <div className={`guard-tier-hero ${tierHeroClass(rating.tier)}`}>
+    <div className={`guard-tier-hero guard-tier-hero-dense ${tierHeroClass(rating.tier)}`}>
       <div className="guard-tier-hero-glow" aria-hidden />
       <TierMedal tier={rating.tier} size="lg" />
       <p className="guard-tier-hero-eyebrow">Current level</p>
@@ -307,6 +309,7 @@ export function GuardRatingSection({
         overallRating={rating.overallRating}
         tier={rating.tier}
         nextTier={rating.nextTier}
+        compact
       />
       <p className="guard-tier-hero-subtitle">
         {clientReviews.count > 0

@@ -8945,9 +8945,110 @@ html.theme-grey .wf-badge-success {
 
 .guard-tier-hero .guard-pref-tier-medal,
 .guard-tier-hero .guard-tier-medal-lg {
-  width: 3.5rem;
-  height: 4rem;
-  margin: 0 auto 0.25rem;
+  width: 3.25rem;
+  height: 3.65rem;
+  margin: 0 auto 0.1rem;
+}
+
+.guard-pref-tier-medal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.65rem;
+  margin: 0 auto 0.1rem;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.guard-pref-tier-medal-ring {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72%;
+  height: 72%;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+.guard-pref-tier-medal-icon {
+  width: 42%;
+  height: 42%;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.guard-tier-hero .guard-tier-medal {
+  margin: 0 auto 0.1rem;
+}
+
+.guard-tier-hero .guard-tier-medal-ribbon,
+.guard-tier-hero .guard-pref-hero-medal-ribbon {
+  display: none;
+}
+
+.guard-tier-hero-dense {
+  gap: 0.2rem;
+  padding: 1rem 1.15rem 1.05rem;
+}
+
+.guard-tier-hero-dense .guard-tier-hero-score-row {
+  margin: 0.1rem 0 0.15rem;
+  padding: 0.28rem 0.65rem;
+}
+
+.guard-tier-hero-dense .guard-tier-hero-subtitle {
+  margin: 0.1rem 0 0;
+  -webkit-line-clamp: 1;
+}
+
+.guard-tier-progress-compact {
+  max-width: 17.5rem;
+  margin-top: 0.05rem;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-markers {
+  height: 1.75rem;
+  margin-bottom: 0.15rem;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-node-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-width: 1.5px;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-node-icon svg {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-node-label {
+  font-size: 0.5625rem;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-track {
+  height: 0.4rem;
+}
+
+.guard-tier-progress-compact .guard-tier-progress-hint {
+  font-size: 0.625rem;
+  margin-top: 0.2rem;
+  line-height: 1.25;
+}
+
+.guard-pref-hero-score-total {
+  font-size: 0.875rem;
+  font-weight: 700;
+  opacity: 0.82;
 }
 
 .guard-tier-hero .guard-pref-onboard-progress,
@@ -15651,6 +15752,63 @@ html.theme-grey .landing-wordmark {
 .guard-pref-body {
   background: var(--brand-bg-sec);
   padding-bottom: calc(1.5rem + var(--app-safe-bottom));
+}
+
+.guard-pref-intro {
+  padding: 1rem 1rem 0;
+}
+
+.guard-pref-intro-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--brand-text-muted);
+}
+
+.guard-pref-intro-welcome {
+  color: var(--brand-text);
+}
+
+.guard-pref-intro-read-more {
+  margin-top: 0.45rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+  cursor: pointer;
+}
+
+.guard-pref-intro-read-more:hover {
+  color: color-mix(in srgb, var(--brand-primary) 80%, black);
+}
+
+.guard-pref-intro .guard-pref-progress {
+  margin: 0.85rem 0 0;
+  max-width: none;
+}
+
+.guard-pref-intro .guard-pref-progress-hint {
+  color: var(--brand-text-muted);
+}
+
+.guard-pref-intro .guard-pref-progress-hint strong {
+  color: var(--brand-text);
+}
+
+.guard-pref-intro .guard-pref-progress-track {
+  background: var(--brand-border);
+}
+
+.guard-pref-intro .guard-pref-progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--brand-primary),
+    color-mix(in srgb, var(--brand-primary) 72%, white)
+  );
 }
 
 .guard-pref-empty-banner {

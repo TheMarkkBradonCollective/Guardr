@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Bell,
   BellOff,
   Building2,
   ChevronRight,
@@ -11,6 +10,7 @@ import {
   Music,
   PartyPopper,
   Shield,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Truck,
@@ -142,38 +142,28 @@ export function GuardJobPreferencesPanel({
     <>
       <div className="guard-tiered-screen-pinned">
         <section className="guard-preferences-panel guard-preferences-panel-tiered guard-tier-hero-card">
-          <div className="guard-pref-hero guard-pref-hero-tiered">
+          <div className="guard-tier-hero guard-pref-hero-tiered guard-tier-hero-dense">
             <div className="guard-pref-hero-glow" aria-hidden />
-            <div className="guard-pref-hero-medal" aria-hidden>
-              <div className="guard-pref-hero-medal-ring">
-                <Bell className="guard-pref-hero-medal-icon" />
+            <div className="guard-pref-tier-medal" aria-hidden>
+              <div className="guard-pref-tier-medal-ring">
+                <SlidersHorizontal className="guard-pref-tier-medal-icon" />
               </div>
-              <div className="guard-pref-hero-medal-ribbon" />
             </div>
-            <p className="guard-pref-hero-eyebrow">Job alerts</p>
-            <h2 className="guard-pref-hero-title">Your alert profile</h2>
-            <div className="guard-pref-hero-subtitle-block">
-              <p className="guard-pref-hero-subtitle">
-                Turn on the job types you want. Complete the read-aloud onboarding once per type, then
-                toggle alerts anytime.
-                {welcomeExpanded ? (
-                  <span className="guard-pref-hero-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
-                ) : null}
-              </p>
-              <button
-                type="button"
-                className="guard-pref-hero-read-more"
-                onClick={() => setWelcomeExpanded((open) => !open)}
-                aria-expanded={welcomeExpanded}
-              >
-                {welcomeExpanded ? 'Read less' : 'Read more'}
-              </button>
+            <p className="guard-tier-hero-eyebrow">Job alerts</p>
+            <h2 className="guard-tier-hero-name">Your alert profile</h2>
+            <div className="guard-tier-hero-score-row">
+              <span className="guard-tier-hero-score-label">Onboarded</span>
+              <span className="guard-tier-hero-score-value">
+                {stats.onboarded}
+                <span className="guard-pref-hero-score-total"> / {stats.total}</span>
+              </span>
             </div>
-            <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
-            <p className="guard-pref-hero-footnote">
+            <p className="guard-tier-hero-subtitle">
               {stats.active > 0
                 ? `${stats.active} alert${stats.active === 1 ? '' : 's'} active right now`
-                : 'Enable alerts after you complete onboarding for each type'}
+                : stats.setupNeeded > 0
+                  ? `${stats.setupNeeded} type${stats.setupNeeded === 1 ? '' : 's'} need setup`
+                  : 'Toggle alerts for each job type below'}
             </p>
           </div>
         </section>
@@ -181,6 +171,24 @@ export function GuardJobPreferencesPanel({
 
       <div className="guard-tiered-screen-scroll">
         <div className="guard-pref-body">
+        <div className="guard-pref-intro">
+          <p className="guard-pref-intro-text">
+            Turn on the job types you want. Complete the read-aloud onboarding once per type, then
+            toggle alerts anytime.
+            {welcomeExpanded ? (
+              <span className="guard-pref-intro-welcome"> {GENERAL_ONBOARDING_INTRO}</span>
+            ) : null}
+          </p>
+          <button
+            type="button"
+            className="guard-pref-intro-read-more"
+            onClick={() => setWelcomeExpanded((open) => !open)}
+            aria-expanded={welcomeExpanded}
+          >
+            {welcomeExpanded ? 'Read less' : 'Read more'}
+          </button>
+          <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
+        </div>
         {stats.active === 0 && (
           <div className="guard-pref-empty-banner">
             <div className="guard-pref-empty-banner-icon-wrap">

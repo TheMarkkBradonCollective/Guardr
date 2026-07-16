@@ -23,7 +23,7 @@ export function GuardPerformanceScreen({ guard, requests }: GuardPerformanceScre
   );
 
   return (
-    <AppScreen className="guard-tiered-screen">
+    <AppScreen className="guard-tiered-screen h-full min-h-0">
       <GuardRatingSection
         guard={guard}
         requests={requests}

@@ -15,7 +15,7 @@ export function GuardPreferencesScreen({
   onCompleteJobTypeOnboarding,
 }: GuardPreferencesScreenProps) {
   return (
-    <AppScreen className="guard-tiered-screen">
+    <AppScreen className="guard-tiered-screen h-full min-h-0">
       {onSaveJobPreferences && onCompleteJobTypeOnboarding ? (
         <GuardJobPreferencesPanel
           guard={guard}
