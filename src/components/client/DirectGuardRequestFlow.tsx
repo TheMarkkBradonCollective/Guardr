@@ -35,6 +35,8 @@ import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
+import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -57,6 +59,7 @@ export function DirectGuardRequestFlow({
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
+  const { formFactor } = useDevice();
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => getDefaultShiftStart(), []);
   const [step, setStep] = useState<FlowStep>(1);
@@ -199,7 +202,8 @@ export function DirectGuardRequestFlow({
   };
 
   return (
-    <div className="h-full flex flex-col client-content-shell client-form-shell animate-fade-in">
+    <ResponsivePage screenClassName="h-full min-h-0">
+    <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' adm-form-wizard' : ''}`}>
       <div className="shrink-0 px-4 pt-4 space-y-4">
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
           <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
@@ -475,8 +479,18 @@ export function DirectGuardRequestFlow({
         )}
       </div>
 
-      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95">
-        {step < 8 ? (
+      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' adm-form-wizard-actions' : ''}`}>
+        {formFactor === 'desktop' ? (
+          step < 8 ? (
+            <button type="button" onClick={goNext} disabled={!canNext()} className="adm-btn adm-btn--sand gap-2 disabled:opacity-40">
+              Continue <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button type="button" onClick={handleSubmit} className="adm-btn adm-btn--sand gap-2">
+              Send request to {guard.name.split(' ')[0]}
+            </button>
+          )
+        ) : step < 8 ? (
           <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">
             Continue <ArrowRight className="w-4 h-4" />
           </button>
@@ -489,6 +503,7 @@ export function DirectGuardRequestFlow({
         )}
       </div>
     </div>
+    </ResponsivePage>
   );
 }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import type { SessionUser } from '../../types';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { LegalInfoCards } from '../legal/LegalInfoCards';
 import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
@@ -26,8 +27,8 @@ export function UserSettingsScreen({
   isDbConnected = false,
   onOpenLegal,
 }: UserSettingsScreenProps) {
-  return (
-    <AppScreen className="guard-settings-screen">
+  const formContent = (
+    <>
       {currentUser.role === 'guard' && (
         <AppFormSection title="Work preferences">
           <p className="text-sm text-brand-text-muted leading-relaxed">
@@ -68,6 +69,14 @@ export function UserSettingsScreen({
           </p>
         )}
       </AppFormSection>
-    </AppScreen>
+    </>
+  );
+
+  return (
+    <ResponsivePage screenClassName="guard-settings-screen">
+      <ResponsiveFormPage title="Settings" subtitle="Appearance, notifications, and legal">
+        {formContent}
+      </ResponsiveFormPage>
+    </ResponsivePage>
   );
 }

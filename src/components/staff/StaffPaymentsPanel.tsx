@@ -12,6 +12,7 @@ import { buildPayoutExportRows, downloadPayoutCsv } from '../../lib/payoutExport
 import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
+import { useDevice } from '../../lib/platform';
 import { JobPaymentRow } from './JobPaymentRow';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
 import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
@@ -165,6 +166,7 @@ export function StaffPaymentsPanel({
   onMarkCashDepositManually,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
+  const { formFactor } = useDevice();
   const summary = paymentPipelineSummary(requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const openInvoices = useMemo(() => openGuardPayoutInvoices(payoutInvoices), [payoutInvoices]);
@@ -196,18 +198,34 @@ export function StaffPaymentsPanel({
     summary.awaitingClient.length;
 
   return (
-    <div className="animate-fade-in staff-payments-panel">
-      <div className="staff-payments-summary">
+    <div className={`animate-fade-in staff-payments-panel${formFactor === 'desktop' ? ' adm-payments-workbench' : ''}`}>
+      <div className={formFactor === 'desktop' ? 'adm-dashboard-grid adm-span-12' : 'staff-payments-summary'}>
+        {formFactor === 'desktop' ? (
+          <>
+            {actionCount > 0 && (
+              <article className="adm-card adm-span-12">
+                <p className="adm-card-eyebrow">Attention needed</p>
+                <p className="adm-stat-value adm-stat-value--sm">{actionCount} job{actionCount === 1 ? '' : 's'}</p>
+              </article>
+            )}
+            <article className="adm-card adm-span-12">
+              <StaffPaymentSummary summary={summary} financials={financials} />
+            </article>
+          </>
+        ) : (
+          <>
         {actionCount > 0 && (
           <p className="staff-payments-attention">
             {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
           </p>
         )}
         <StaffPaymentSummary summary={summary} financials={financials} />
+          </>
+        )}
         {canManagePayments && (
           <button
             type="button"
-            className="app-button-outline app-btn-sm gap-2 staff-payments-export"
+            className={formFactor === 'desktop' ? 'adm-btn adm-btn--outline adm-btn--sm adm-mt-sm' : 'app-button-outline app-btn-sm gap-2 staff-payments-export'}
             onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
           >
             <Download className="w-4 h-4" />
@@ -216,11 +234,11 @@ export function StaffPaymentsPanel({
         )}
       </div>
 
-      <div className="staff-payments-body">
+      <div className={formFactor === 'desktop' ? 'adm-payments-pipeline' : 'staff-payments-body'}>
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
-            <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+            <AppItemCardStack className={formFactor === 'desktop' ? '' : '-mx-4 sm:-mx-5 px-4 sm:px-5'}>
               {openInvoices.map((invoice) => (
                 <StaffPayoutInvoiceRow
                   key={invoice.id}

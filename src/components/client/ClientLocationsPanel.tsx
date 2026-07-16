@@ -10,6 +10,8 @@ import {
 import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { MapPin, Plus } from 'lucide-react';
+import { ResponsiveFormPage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 
 interface ClientLocationsPanelProps {
   client: Client;
@@ -18,6 +20,7 @@ interface ClientLocationsPanelProps {
 }
 
 export function ClientLocationsPanel({ client, locations, onSave }: ClientLocationsPanelProps) {
+  const { formFactor } = useDevice();
   const selectableClientCities = getSelectableCityNamesForClients();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -45,8 +48,8 @@ export function ClientLocationsPanel({ client, locations, onSave }: ClientLocati
     }
   };
 
-  return (
-    <div className="space-y-5">
+  const content = (
+    <div className={formFactor === 'desktop' ? 'adm-locations-panel' : 'space-y-5'}>
       <div>
         <h3 className="text-lg font-bold tracking-tight">My Locations</h3>
         <p className="text-sm text-brand-text-muted mt-1">
@@ -122,6 +125,16 @@ export function ClientLocationsPanel({ client, locations, onSave }: ClientLocati
       </div>
     </div>
   );
+
+  if (formFactor === 'desktop') {
+    return (
+      <ResponsiveFormPage title="My locations" subtitle="Save sites for faster job posting">
+        {content}
+      </ResponsiveFormPage>
+    );
+  }
+
+  return content;
 }
 
 interface StaffClientLocationsPanelProps {

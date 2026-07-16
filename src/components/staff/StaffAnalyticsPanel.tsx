@@ -8,6 +8,7 @@ import {
 import { computeAnalytics, computePlatformStats, computeWeeklyCompletedJobs } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { useDevice } from '../../lib/platform';
 
 interface StaffAnalyticsPanelProps {
   guards: SecurityGuard[];
@@ -17,6 +18,7 @@ interface StaffAnalyticsPanelProps {
 }
 
 export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials }: StaffAnalyticsPanelProps) {
+  const { formFactor } = useDevice();
   const data = computeAnalytics(guards, clients, requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const weeklyTrend = computeWeeklyCompletedJobs(requests);
@@ -45,6 +47,50 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
       ? [{ label: 'Avg Guard Earnings / Job', value: formatOperationalMoney(data.avgGuardEarnings), pct: null }]
       : []),
   ];
+
+  if (formFactor === 'desktop') {
+    return (
+      <div className="adm-dashboard adm-analytics-dashboard">
+        <div className="adm-workbench-toolbar">
+          <div>
+            <p className="adm-card-eyebrow">Insights</p>
+            <p className="adm-card-title">Platform analytics</p>
+          </div>
+        </div>
+        {showFinancials && (
+          <div className="adm-dashboard-grid adm-span-12">
+            {buildDirectorFinancialCells(financials).map(({ label, value, sub }) => (
+              <article key={label} className="adm-card adm-span-3">
+                <p className="adm-card-eyebrow">{label}</p>
+                <p className="adm-stat-value adm-stat-value--sm">{value}</p>
+                <p className="adm-stat-delta">{sub}</p>
+              </article>
+            ))}
+          </div>
+        )}
+        <div className="adm-dashboard-grid adm-dashboard-grid--metrics adm-mt-md">
+          {metrics.map(({ label, value }) => (
+            <article key={label} className="adm-card adm-span-3">
+              <p className="adm-card-eyebrow">{label}</p>
+              <p className="adm-stat-value adm-stat-value--sm">{value}</p>
+            </article>
+          ))}
+        </div>
+        <article className="adm-card adm-span-12 adm-mt-md">
+          <p className="adm-card-heading">Completed jobs trend</p>
+          {hasWeeklyData ? (
+            <div className="adm-week-chart">
+              {weeklyTrend.map((h, i) => (
+                <div key={i} className="adm-week-chart-bar" style={{ height: `${Math.min(100, h)}%` }} />
+              ))}
+            </div>
+          ) : (
+            <p className="adm-card-body">No completed jobs this week yet.</p>
+          )}
+        </article>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">

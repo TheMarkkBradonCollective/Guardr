@@ -7727,7 +7727,7 @@ export default function App() {
       });
     }
 
-    if (updated.clientId && updated.status !== 'open') {
+    if (updated.clientId) {
       void reportPushEvent(actor, {
         type: 'job_status_update',
         requestId: updated.id,

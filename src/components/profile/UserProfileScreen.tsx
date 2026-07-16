@@ -10,6 +10,8 @@ import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
+import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import {
@@ -69,6 +71,7 @@ export function UserProfileScreen({
   onSubmitIdentityVerification,
   onSaveInsurance,
 }: UserProfileScreenProps) {
+  const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
@@ -215,64 +218,66 @@ export function UserProfileScreen({
   const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
   const heroTitle = isStaffAccount && !displayName.trim() ? staffBadgeId || '—' : displayName;
 
-  return (
-    <AppScreen className="app-profile-screen">
-      <ProfileHero
-        kicker={roleLabel}
-        title={heroTitle}
-        subtitle={
-          isStaffAccount ? (
-            <p className="text-sm text-brand-text-muted">Staff ID: {staffBadgeId || '—'}</p>
-          ) : undefined
-        }
-        email={currentUser.email}
-        avatar={<ProfileAvatar src={avatar} name={heroTitle} size="xl" />}
-        photoControls={
-          <>
-            <label
-              className={`absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-lg ${
-                photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:opacity-90 transition-opacity'
-              }`}
-              title="Change profile photo"
-            >
-              <Camera className="w-4 h-4" />
-              <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
-            </label>
-            {photoError && <p className="text-xs text-red-500 mt-2">{photoError}</p>}
-            {avatar && !photoSaving && (
-              <button
-                type="button"
-                onClick={() => void handleRemovePhoto()}
-                disabled={photoSaving}
-                className="mt-2 text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 disabled:opacity-50 transition-colors"
-              >
-                <X className="w-3 h-3" />
-                Remove photo
-              </button>
-            )}
-            {photoSaving && <p className="text-xs text-brand-text-muted mt-2">Saving photo…</p>}
-          </>
-        }
-        actions={
-          <>
+  const profileSidebar = (
+    <ProfileHero
+      kicker={roleLabel}
+      title={heroTitle}
+      subtitle={
+        isStaffAccount ? (
+          <p className="text-sm text-brand-text-muted">Staff ID: {staffBadgeId || '—'}</p>
+        ) : undefined
+      }
+      email={currentUser.email}
+      avatar={<ProfileAvatar src={avatar} name={heroTitle} size="xl" />}
+      photoControls={
+        <>
+          <label
+            className={`absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-lg ${
+              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:opacity-90 transition-opacity'
+            }`}
+            title="Change profile photo"
+          >
+            <Camera className="w-4 h-4" />
+            <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
+          </label>
+          {photoError && <p className="text-xs text-red-500 mt-2">{photoError}</p>}
+          {avatar && !photoSaving && (
             <button
               type="button"
-              onClick={() => (editing ? void handleSave() : setEditing(true))}
-              disabled={saving}
-              className="app-button-primary disabled:opacity-50"
+              onClick={() => void handleRemovePhoto()}
+              disabled={photoSaving}
+              className="mt-2 text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 disabled:opacity-50 transition-colors"
             >
-              {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
-              {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+              <X className="w-3 h-3" />
+              Remove photo
             </button>
-            {editing && (
-              <button type="button" onClick={() => setEditing(false)} className="app-button-outline app-btn-md">
-                Cancel
-              </button>
-            )}
-          </>
-        }
-      />
+          )}
+          {photoSaving && <p className="text-xs text-brand-text-muted mt-2">Saving photo…</p>}
+        </>
+      }
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => (editing ? void handleSave() : setEditing(true))}
+            disabled={saving}
+            className="app-button-primary disabled:opacity-50"
+          >
+            {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
+            {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+          </button>
+          {editing && (
+            <button type="button" onClick={() => setEditing(false)} className="app-button-outline app-btn-md">
+              Cancel
+            </button>
+          )}
+        </>
+      }
+    />
+  );
 
+  const profileBody = (
+    <>
       <AppDashboardZone title="Contact & account">
         <PersonNameFields
           firstName={firstName}
@@ -331,6 +336,21 @@ export function UserProfileScreen({
         />
         </section>
       )}
+    </>
+  );
+
+  if (formFactor === 'desktop') {
+    return (
+      <ResponsiveProfilePage sidebar={profileSidebar}>
+        <div className="adm-profile-sections">{profileBody}</div>
+      </ResponsiveProfilePage>
+    );
+  }
+
+  return (
+    <AppScreen className="app-profile-screen">
+      {profileSidebar}
+      {profileBody}
     </AppScreen>
   );
 }

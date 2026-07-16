@@ -41,6 +41,8 @@ import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
+import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -71,6 +73,7 @@ export function RequestSecurityFlow({
   clientId,
   defaultAssignmentMode = 'client-approve',
 }: RequestSecurityFlowProps) {
+  const { formFactor } = useDevice();
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => {
     if (preset === 'schedule' || preset === 'recurring') {
@@ -291,7 +294,8 @@ export function RequestSecurityFlow({
   };
 
   return (
-    <div className="h-full flex flex-col animate-fade-in client-content-shell client-form-shell">
+    <ResponsivePage screenClassName="h-full min-h-0">
+    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' adm-form-wizard' : ''}`}>
       <div className="flex items-center gap-3 mb-7 shrink-0 px-1">
         <button type="button" onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-bg-sec transition-colors shrink-0 -ml-1" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
@@ -831,9 +835,30 @@ export function RequestSecurityFlow({
         )}
       </div>
 
-      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
+      <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' adm-form-wizard-actions' : ''}`}>
         <div className="client-form-shell mx-auto">
-          {step < 9 ? (
+          {formFactor === 'desktop' ? (
+            step < 9 ? (
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!canNext()}
+                className="adm-btn adm-btn--sand gap-2 disabled:opacity-40"
+              >
+                Continue
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="adm-btn adm-btn--sand gap-2"
+              >
+                Post job offer
+                <Check className="w-4 h-4" />
+              </button>
+            )
+          ) : step < 9 ? (
             <button
               type="button"
               onClick={goNext}
@@ -853,5 +878,6 @@ export function RequestSecurityFlow({
         </div>
       </div>
     </div>
+    </ResponsivePage>
   );
 }

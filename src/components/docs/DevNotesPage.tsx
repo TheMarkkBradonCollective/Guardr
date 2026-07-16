@@ -3,6 +3,8 @@ import devNotesMarkdown from '../../../docs/DEV-UPDATES.md?raw';
 import { parseDevActivityGrid } from '../../lib/devActivityGrid';
 import { MarkdownDoc } from './MarkdownDoc';
 import { AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
+import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
+import { useDevice } from '../../lib/platform';
 
 const MILESTONES_HEADING = '## Major platform milestones';
 
@@ -82,6 +84,7 @@ function DevActivityGrid({ grid }: { grid: number[][] }) {
 }
 
 export function DevNotesPage() {
+  const { formFactor } = useDevice();
   const activityGrid = useMemo(() => parseDevActivityGrid(devNotesMarkdown), []);
   const { beforeMilestones, milestones, afterMilestones } = useMemo(
     () => splitDevNotesMarkdown(devNotesMarkdown),
@@ -89,14 +92,28 @@ export function DevNotesPage() {
   );
   const mainNotes = [beforeMilestones, afterMilestones].filter(Boolean).join('\n\n');
 
-  return (
-    <AppScreen className="h-full overflow-y-auto overscroll-contain max-w-3xl">
+  const content = (
+    <>
       <AppScreenTitle>Dev notes</AppScreenTitle>
-      <div className="px-4 pb-8">
+      <div className={formFactor === 'desktop' ? 'adm-dev-notes' : 'px-4 pb-8'}>
         <DevActivityGrid grid={activityGrid} />
         {milestones ? <MarkdownDoc source={milestones} /> : null}
         <MarkdownDoc source={mainNotes} />
       </div>
+    </>
+  );
+
+  if (formFactor === 'desktop') {
+    return (
+      <ResponsivePage className="adm-dev-notes-page">
+        {content}
+      </ResponsivePage>
+    );
+  }
+
+  return (
+    <AppScreen className="h-full overflow-y-auto overscroll-contain max-w-3xl">
+      {content}
     </AppScreen>
   );
 }

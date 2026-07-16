@@ -13,6 +13,7 @@ import {
   type IdentityVerificationSubmitResult,
 } from '../profile/GuardIdentityVerificationPanel';
 import { AppScreen } from '../ui/app/AppPrimitives';
+import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -75,7 +76,7 @@ export function AccountPendingScreen({
     : 'Your account is pending staff approval.';
 
   return (
-    <AppScreen className="flex flex-col min-h-full overflow-y-auto overscroll-contain">
+    <ResponsivePage screenClassName="flex flex-col min-h-full overflow-y-auto overscroll-contain" className="adm-pending-page">
       <div className="px-5 pt-8 pb-6 border-b border-brand-border shrink-0 text-center">
         {isGuard && restricted ? (
           <span className="w-14 h-14 rounded-full border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mx-auto mb-5">
@@ -154,6 +155,6 @@ export function AccountPendingScreen({
           </button>
         </div>
       )}
-    </AppScreen>
+    </ResponsivePage>
   );
 }
