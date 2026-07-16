@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, BellOff, Send } from 'lucide-react';
+import { Bell, BellOff, Music2, Send } from 'lucide-react';
 import type { NotificationPreferences, SessionUser } from '../../types';
 import {
   getExistingPushSubscription,
@@ -16,6 +16,16 @@ import {
   unsubscribeFromPush,
 } from '../../lib/push';
 import { primeWalkieChirpSound } from '../../lib/walkieChirpSound';
+import {
+  getNotificationSoundPreference,
+  isSystemNotificationSoundPickerAvailable,
+  labelForNotificationSoundMode,
+  pickSystemNotificationSound,
+  previewNotificationSound,
+  setNotificationSoundMode,
+  type NotificationSoundMode,
+  type NotificationSoundPreference,
+} from '../../lib/notificationSound';
 import { sendTestPush, subscribePush, unsubscribePush } from '../../lib/pushApi';
 import {
   defaultNotificationPreferences,
@@ -52,6 +62,8 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   const [prefs, setPrefs] = useState<NotificationPreferences>(() =>
     loadNotificationPreferencesFromStorage(currentUser.id)
   );
+  const [soundPref, setSoundPref] = useState<NotificationSoundPreference | null>(null);
+  const [soundBusy, setSoundBusy] = useState(false);
 
   const role = roleCategory(currentUser.role);
   const typeOptions = optionsForRole(role);
@@ -92,6 +104,19 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     setServerSynced(active);
     setStateReady(true);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const pref = await getNotificationSoundPreference();
+      if (!cancelled) setSoundPref(pref);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,6 +260,64 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     }
   };
 
+  const handleSoundModeChange = async (mode: NotificationSoundMode) => {
+    if (soundBusy) return;
+    setSoundBusy(true);
+    setMessage(null);
+    try {
+      const next = await setNotificationSoundMode(mode);
+      setSoundPref(next);
+      setMessage(`Notification sound set to ${next.label}.`);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Could not update notification sound');
+    } finally {
+      setSoundBusy(false);
+    }
+  };
+
+  const handlePickSystemSound = async () => {
+    if (soundBusy) return;
+    setSoundBusy(true);
+    setMessage(null);
+    try {
+      const next = await pickSystemNotificationSound();
+      setSoundPref(next);
+      setMessage(`Notification sound set to ${next.label}.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not pick notification sound';
+      if (!msg.toLowerCase().includes('cancel')) {
+        setMessage(msg);
+      }
+    } finally {
+      setSoundBusy(false);
+    }
+  };
+
+  const handlePreviewSound = async () => {
+    if (soundBusy) return;
+    setSoundBusy(true);
+    try {
+      await previewNotificationSound(soundPref ?? undefined);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Could not preview notification sound');
+    } finally {
+      setSoundBusy(false);
+    }
+  };
+
+  const soundOptions: Array<{ mode: NotificationSoundMode; label: string; description: string }> = [
+    {
+      mode: 'guardr',
+      label: 'Guardr tone',
+      description: 'Motorola-style walkie-talkie chirp',
+    },
+    {
+      mode: 'system_default',
+      label: 'System default',
+      description: 'Your device default notification sound',
+    },
+  ];
+
   if (!supported) {
     return (
       <AppFormSection>
@@ -301,6 +384,86 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             }`}
           />
         </button>
+      </div>
+
+      <div className="space-y-3 border-t border-brand-border pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="uber-label">Notification sound</p>
+            <p className="text-xs text-brand-text-muted mt-1">
+              {soundPref?.label ?? labelForNotificationSoundMode('guardr')}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={soundBusy}
+            onClick={() => void handlePreviewSound()}
+            className="flex items-center gap-1.5 text-xs app-button-outline !h-9 !px-3 disabled:opacity-50"
+          >
+            <Music2 className="w-3.5 h-3.5" />
+            Preview
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {soundOptions.map((opt) => {
+            const selected = (soundPref?.mode ?? 'guardr') === opt.mode;
+            return (
+              <label
+                key={opt.mode}
+                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                  selected ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="notification-sound"
+                  checked={selected}
+                  disabled={soundBusy}
+                  onChange={() => void handleSoundModeChange(opt.mode)}
+                  className="mt-1"
+                />
+                <span className="min-w-0">
+                  <span className="text-sm font-medium block">{opt.label}</span>
+                  <span className="text-xs text-brand-text-muted">{opt.description}</span>
+                </span>
+              </label>
+            );
+          })}
+
+          {isSystemNotificationSoundPickerAvailable() && (
+            <label
+              className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                soundPref?.mode === 'system_custom'
+                  ? 'border-brand-primary bg-brand-primary/5'
+                  : 'border-brand-border'
+              }`}
+            >
+              <input
+                type="radio"
+                name="notification-sound"
+                checked={soundPref?.mode === 'system_custom'}
+                disabled={soundBusy}
+                onChange={() => void handlePickSystemSound()}
+                className="mt-1"
+              />
+              <span className="min-w-0">
+                <span className="text-sm font-medium block">Choose system tone</span>
+                <span className="text-xs text-brand-text-muted">
+                  Pick any notification sound installed on this device
+                  {soundPref?.mode === 'system_custom' && soundPref.label ? ` — ${soundPref.label}` : ''}
+                </span>
+              </span>
+            </label>
+          )}
+        </div>
+
+        {nativeApp && (
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Android uses a notification channel for alert sounds. Changing the tone updates the Guardr alerts channel on
+            this device.
+          </p>
+        )}
       </div>
 
       {enabled && typeOptions.length > 0 && (
