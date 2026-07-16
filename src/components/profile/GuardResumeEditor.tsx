@@ -19,7 +19,6 @@ import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardWeaponGearPanel } from './GuardWeaponGearPanel';
 import { GuardEquipmentGearPanel } from './GuardEquipmentGearPanel';
-import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface GuardResumeSavePayload {
@@ -154,8 +153,6 @@ export function GuardResumeEditor({
 
   return (
     <div className="space-y-5">
-      {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
-
       <section className="app-form-section space-y-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
