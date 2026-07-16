@@ -1,6 +1,6 @@
 import React from 'react';
 import { StaffSection } from '../../lib/staffOps';
-import { getStaffNavAccessNotice, type StaffNavAccessFlags } from '../../lib/staffNavAccess';
+import { getStaffNavAccessNotice, isStaffNavItemVisible, type StaffNavAccessFlags } from '../../lib/staffNavAccess';
 import { showAppAlert } from '../ui/AppConfirm';
 import { LayoutDashboard } from 'lucide-react';
 
@@ -39,11 +39,11 @@ const OPERATIONS_IDS: StaffSection[] = [
   'crews',
   'team',
   'messages',
-  'payments',
 ];
+const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
-const PLATFORM_IDS: StaffSection[] = ['payment-settings', 'agreements', 'audit-log', 'cities', 'settings'];
+const PLATFORM_IDS: StaffSection[] = ['cities', 'settings'];
 
 function NavGroup({
   title,
@@ -62,7 +62,7 @@ function NavGroup({
 }) {
   const groupItems = itemIds
     .map((id) => items.find((item) => item.id === id))
-    .filter((item): item is StaffNavItem => !!item);
+    .filter((item): item is StaffNavItem => !!item && isStaffNavItemVisible(item, accessFlags));
 
   if (groupItems.length === 0) return null;
 
@@ -81,16 +81,14 @@ function NavGroup({
         {title}
       </p>
       <div className="uber-side-nav">
-        {groupItems.map(({ id, label, icon: Icon, badge }) => {
-          const locked = getStaffNavAccessNotice(id, accessFlags) != null;
-          return (
+        {groupItems.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
               type="button"
               onClick={() => handleSelect(id)}
               className={`uber-side-nav-item w-full flex items-center gap-2.5 text-left transition-colors ${
                 activeSection === id ? 'uber-side-nav-item-active' : ''
-              }${locked ? ' uber-side-nav-item--locked' : ''}`}
+              }`}
             >
               <Icon className="w-[1.125rem] h-[1.125rem] shrink-0" />
               <span className="flex-1 truncate">{label}</span>
@@ -100,8 +98,7 @@ function NavGroup({
                 </span>
               )}
             </button>
-          );
-        })}
+          ))}
       </div>
     </div>
   );
@@ -131,6 +128,14 @@ export function StaffSidebarNav({
       <NavGroup
         title="Operations"
         itemIds={OPERATIONS_IDS}
+        items={items}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+        accessFlags={accessFlags}
+      />
+      <NavGroup
+        title="Finance"
+        itemIds={FINANCE_IDS}
         items={items}
         activeSection={activeSection}
         onNavigate={onNavigate}

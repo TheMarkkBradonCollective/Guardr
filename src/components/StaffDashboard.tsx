@@ -93,7 +93,7 @@ import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
-import { STAFF_SECTION_ACCESS_MESSAGES } from '../lib/staffNavAccess';
+import { STAFF_SECTION_ACCESS_MESSAGES, isStaffNavSectionAccessible } from '../lib/staffNavAccess';
 import { DevNotesPage } from './docs/DevNotesPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
@@ -553,6 +553,13 @@ export function StaffDashboard({
   const canSuspend = canSuspendUsers(currentUser);
   const showCities = canViewCityMarkets(currentUser);
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
+
+  useEffect(() => {
+    const accessFlags = { showFinance, showSettings, showDisputes, showCities };
+    if (!isStaffNavSectionAccessible(section, accessFlags)) {
+      navigateSection('overview');
+    }
+  }, [section, showFinance, showSettings, showDisputes, showCities]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);

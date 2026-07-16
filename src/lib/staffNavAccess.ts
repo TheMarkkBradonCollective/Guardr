@@ -63,6 +63,25 @@ export function isStaffNavSectionAccessible(section: StaffSection, flags: StaffN
   return getStaffNavAccessNotice(section, flags) == null;
 }
 
+export interface StaffNavItemAccess {
+  financeOnly?: boolean;
+  settingsOnly?: boolean;
+  citiesOnly?: boolean;
+  disputesOnly?: boolean;
+}
+
+/** Hide nav items the current role cannot use (desktop already did this; mobile menu did not). */
+export function isStaffNavItemVisible(
+  item: StaffNavItemAccess,
+  flags: StaffNavAccessFlags,
+): boolean {
+  if (item.financeOnly && !flags.showFinance) return false;
+  if (item.settingsOnly && !flags.showSettings) return false;
+  if (item.citiesOnly && !flags.showCities) return false;
+  if (item.disputesOnly && !flags.showDisputes) return false;
+  return true;
+}
+
 export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNavAccessNotice>> = {
   messages: {
     title: 'Messages unavailable',

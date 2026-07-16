@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
-import { getStaffNavAccessNotice } from '../../lib/staffNavAccess';
+import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../lib/staffNavAccess';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
@@ -153,13 +153,15 @@ export function StaffOpsLayout({
 
   const popoverItems = useMemo(
     () =>
-      navItems.map((item) => ({
-        id: item.id,
-        label: item.label,
-        icon: item.icon,
-        badge: item.badge,
-      })),
-    [navItems],
+      navItems
+        .filter((item) => isStaffNavItemVisible(item, accessFlags))
+        .map((item) => ({
+          id: item.id,
+          label: item.label,
+          icon: item.icon,
+          badge: item.badge,
+        })),
+    [navItems, accessFlags],
   );
 
   const handlePopoverNavigate = (id: string) => {
