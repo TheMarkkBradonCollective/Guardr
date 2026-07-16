@@ -12,11 +12,13 @@ import { useDevice } from '../lib/platform';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates, PlatformSettings } from '../lib/platformSettings';
 import type { PlatformFeeConfig } from '../lib/payments';
+import type { ClientInvoice } from '../lib/clientInvoicing';
 import type { OvertimeDisputeInput } from '../lib/shiftBilling';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
+import { ClientInvoiceScreen } from './client/ClientInvoiceScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
@@ -37,6 +39,7 @@ export type ClientView =
   | 'direct-request'
   | 'messages'
   | 'reports'
+  | 'invoices'
   | 'requests'
   | 'guards'
   | 'locations'
@@ -131,6 +134,9 @@ interface ClientDashboardProps {
   onOpenSupportReport?: () => void;
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
   requestsSelectedId?: string | null;
+  clientInvoices?: ClientInvoice[];
+  onInvoiceRequestIdChange?: (requestId: string | null) => void;
+  invoiceRequestId?: string | null;
   onMessagesDetailOpenChange?: (open: boolean) => void;
   onMessagesChromeChange?: (chrome: MessagesChrome) => void;
   messagesShellHeaderTrailing?: React.ReactNode;
@@ -212,6 +218,9 @@ export function ClientDashboard({
   onOpenSupportReport,
   onRequestsSelectedIdChange,
   requestsSelectedId = null,
+  clientInvoices = [],
+  onInvoiceRequestIdChange,
+  invoiceRequestId = null,
   onMessagesDetailOpenChange,
   onMessagesChromeChange,
   messagesShellHeaderTrailing,
@@ -356,7 +365,7 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home' && view !== 'guide') {
+  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home' && view !== 'guide' && view !== 'invoices') {
     return page(
       'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
@@ -626,6 +635,21 @@ export function ClientDashboard({
         }}
         client={clientRecord}
         requests={requests}
+      />
+    );
+  }
+
+  if (view === 'invoices' && clientRecord) {
+    return page(
+      'invoices',
+      <ClientInvoiceScreen
+        client={clientRecord}
+        clientEmail={clientEmail}
+        requests={requests}
+        invoices={clientInvoices}
+        paymentGates={paymentGates}
+        selectedRequestId={invoiceRequestId}
+        onSelectRequestId={onInvoiceRequestIdChange}
       />
     );
   }

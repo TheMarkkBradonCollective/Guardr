@@ -201,6 +201,9 @@ export async function authorizePushEvent(
     case 'support_ticket_status':
       return isStaffSession(session) ? null : 'Only staff can send support status updates';
 
+    case 'client_invoice_ready':
+      return isStaffSession(session) ? null : 'Only staff can send client invoice notifications';
+
     case 'account_update':
       return isStaffSession(session) ? null : 'Only staff can send account update notifications';
 
