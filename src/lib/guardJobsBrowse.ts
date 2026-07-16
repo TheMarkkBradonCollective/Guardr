@@ -1,5 +1,6 @@
-import type { SecurityRequest } from '../types';
+import type { SecurityGuard, SecurityRequest } from '../types';
 import type { GuardJobView } from './guardJobView';
+import { guardJobInServiceArea } from './guardOpenJobNotify';
 import { isJobMissed } from './jobTallies';
 import {
   guardJobMatchesMapStatusFilter,
@@ -23,16 +24,19 @@ export interface GuardBrowseJobLists {
 
 /** Jobs visible on map / Jobs tab (excludes in-progress — active shift uses overlay). */
 export function getGuardBrowseJobLists(
-  guardId: string,
+  guard: Pick<SecurityGuard, 'id' | 'serviceAreas'>,
   jobs: GuardJobView[]
 ): GuardBrowseJobLists {
+  const guardId = guard.id;
   const requests = jobs as unknown as SecurityRequest[];
   const all = guardVisibleMapJobs(guardId, requests, jobs).filter(
     (job) => job.status !== 'in-progress'
   );
 
   const available = all.filter(
-    (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'available'
+    (job) =>
+      guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'available' &&
+      guardJobInServiceArea(guard, job as unknown as SecurityRequest)
   );
 
   const booked = all.filter(

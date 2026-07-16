@@ -6,13 +6,15 @@ import type {
 } from '../types';
 import { reportPushEvent } from './pushApi';
 import { findPriorityCrewLeadsForJob } from './priorityCrewNotify';
-import { guardMatchesJobPreferences } from './guardJobPreferences';
-import { guardIsAvailableForJob } from './guardAvailability';
+import { guardShouldNotifyForOpenJob } from './guardOpenJobNotify';
 
-/** Notify trusted crew leads first, then guards who match preferences and availability. */
+/** Notify trusted crew leads first, then guards who match preferences, service area, and availability. */
 export function notifyOpenJobToGuards(
   actor: SessionUser,
-  job: Pick<SecurityRequest, 'id' | 'title' | 'location' | 'guardsNeeded' | 'type' | 'startDate' | 'endDate'>,
+  job: Pick<
+    SecurityRequest,
+    'id' | 'title' | 'location' | 'guardsNeeded' | 'type' | 'startDate' | 'endDate' | 'state'
+  >,
   guards: SecurityGuard[],
   standingCrewMembers: GuardStandingCrewMember[]
 ): void {
@@ -20,7 +22,7 @@ export function notifyOpenJobToGuards(
   const notified = new Set<string>();
 
   const leads = findPriorityCrewLeadsForJob(job, guards, standingCrewMembers).filter(({ guard }) =>
-    guardMatchesJobPreferences(guard, job) && guardIsAvailableForJob(guard.id, job)
+    guardShouldNotifyForOpenJob(guard, job)
   );
 
   for (const { guard, crewSize } of leads) {
@@ -38,8 +40,7 @@ export function notifyOpenJobToGuards(
 
   for (const guard of guards) {
     if (notified.has(guard.id)) continue;
-    if (!guardMatchesJobPreferences(guard, job)) continue;
-    if (!guardIsAvailableForJob(guard.id, job)) continue;
+    if (!guardShouldNotifyForOpenJob(guard, job)) continue;
     notified.add(guard.id);
     void reportPushEvent(actor, {
       type: 'job_open_to_guards',

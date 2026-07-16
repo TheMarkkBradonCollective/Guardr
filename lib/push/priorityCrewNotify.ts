@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { isPushConfigured } from './config';
 import { dispatchPushNotification } from './delivery';
+import { findGuardsToNotifyForOpenJob } from './guardOpenJobRecipients';
 
 interface PriorityCrewLeadRow {
   id: string;
@@ -9,7 +10,8 @@ interface PriorityCrewLeadRow {
 
 async function findPriorityCrewLeadIds(
   db: SupabaseClient,
-  guardsNeeded: number
+  guardsNeeded: number,
+  eligibleLeadIds: Set<string>
 ): Promise<PriorityCrewLeadRow[]> {
   const needed = Math.max(1, guardsNeeded);
 
@@ -20,7 +22,9 @@ async function findPriorityCrewLeadIds(
     .neq('is_staff', true);
 
   if (guardError) throw new Error(guardError.message);
-  const leadIds = (trustedGuards ?? []).map((g) => g.id).filter(Boolean);
+  const leadIds = (trustedGuards ?? [])
+    .map((g) => g.id as string)
+    .filter((id) => id && eligibleLeadIds.has(id));
   if (!leadIds.length) return [];
 
   const { data: crewRows, error: crewError } = await db
@@ -55,18 +59,23 @@ export async function notifyPriorityCrewForOpenJob(
     title: string;
     location?: string;
     guardsNeeded: number;
+    eligibleLeadIds: Set<string>;
   }
-): Promise<number> {
-  if (!isPushConfigured()) return 0;
+): Promise<string[]> {
+  if (!isPushConfigured()) return [];
 
-  const leads = await findPriorityCrewLeadIds(db, options.guardsNeeded);
-  if (!leads.length) return 0;
+  const leads = await findPriorityCrewLeadIds(
+    db,
+    options.guardsNeeded,
+    options.eligibleLeadIds
+  );
+  if (!leads.length) return [];
 
   const needed = Math.max(1, options.guardsNeeded);
-  let sent = 0;
+  const notified: string[] = [];
 
   for (const lead of leads) {
-    const result = await dispatchPushNotification(db, {
+    await dispatchPushNotification(db, {
       userId: lead.id,
       title: 'Priority job — your crew qualifies',
       body: `"${options.title}" needs ${needed} guard${needed > 1 ? 's' : ''} — your crew of ${lead.crewSize} qualifies. Apply early.`,
@@ -75,10 +84,10 @@ export async function notifyPriorityCrewForOpenJob(
       siteId: options.location,
       priority: 'high',
     });
-    sent += result.sent;
+    notified.push(lead.id);
   }
 
-  return sent;
+  return notified;
 }
 
 export async function notifyOpenJobToGuards(
@@ -89,25 +98,45 @@ export async function notifyOpenJobToGuards(
     body: string;
     location?: string;
     guardsNeeded?: number;
+    type: string;
+    state?: string | null;
+    startDate: string;
+    endDate: string;
   }
 ): Promise<void> {
   if (!isPushConfigured()) return;
 
+  const recipients = await findGuardsToNotifyForOpenJob(db, {
+    type: options.type,
+    state: options.state,
+    startDate: options.startDate,
+    endDate: options.endDate,
+  });
+  if (!recipients.length) return;
+
+  const recipientSet = new Set(recipients);
+  const notified = new Set<string>();
+
   if (options.guardsNeeded != null && options.guardsNeeded > 0) {
-    await notifyPriorityCrewForOpenJob(db, {
+    const priorityLeads = await notifyPriorityCrewForOpenJob(db, {
       requestId: options.requestId,
       title: options.title,
       location: options.location,
       guardsNeeded: options.guardsNeeded,
+      eligibleLeadIds: recipientSet,
     });
+    for (const leadId of priorityLeads) notified.add(leadId);
   }
 
-  await dispatchPushNotification(db, {
-    role: 'guard',
-    title: 'New job on the map',
-    body: options.body,
-    type: 'job_open_to_guards',
-    requestId: options.requestId,
-    siteId: options.location,
-  });
+  for (const guardId of recipients) {
+    if (notified.has(guardId)) continue;
+    await dispatchPushNotification(db, {
+      userId: guardId,
+      title: 'New job on the map',
+      body: options.body,
+      type: 'job_open_to_guards',
+      requestId: options.requestId,
+      siteId: options.location,
+    });
+  }
 }

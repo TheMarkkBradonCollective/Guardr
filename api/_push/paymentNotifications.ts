@@ -34,7 +34,17 @@ export async function notifyStripePaymentComplete(
 
 export async function notifyJobOpenToGuards(
   db: SupabaseClient,
-  options: { requestId: string; body: string; location?: string; title?: string; guardsNeeded?: number }
+  options: {
+    requestId: string;
+    body: string;
+    location?: string;
+    title?: string;
+    guardsNeeded?: number;
+    type: string;
+    state?: string | null;
+    startDate: string;
+    endDate: string;
+  }
 ): Promise<void> {
   const { notifyOpenJobToGuards } = await import('../../lib/push/priorityCrewNotify');
   await notifyOpenJobToGuards(db, {
@@ -43,5 +53,9 @@ export async function notifyJobOpenToGuards(
     body: options.body,
     location: options.location,
     guardsNeeded: options.guardsNeeded,
+    type: options.type,
+    state: options.state,
+    startDate: options.startDate,
+    endDate: options.endDate,
   });
 }
