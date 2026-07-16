@@ -5020,7 +5020,7 @@ export default function App() {
     const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
     const isRecommendChange = patch.recommendOpen !== undefined;
     if (isStatusChange && !canManageCityMarkets(currentUser)) {
-      throw new Error('Only Directors and Founders can change city market status.');
+      throw new Error('Only Directors and Founders can change operations status.');
     }
     if (isRecommendChange && !canRecommendCityMarket(currentUser)) {
       throw new Error('Only Managers can recommend cities.');
@@ -5054,7 +5054,7 @@ export default function App() {
           setPlatformCitiesCache(next);
           return next;
         });
-        throw new Error(error.message || 'Could not update city market.');
+        throw new Error(error.message || 'Could not update operations.');
       }
     }
 
@@ -5089,7 +5089,7 @@ export default function App() {
         .eq('id', staffId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
-        throw new Error(error.message || 'Could not update staff city access.');
+        throw new Error(error.message || 'Could not update operations access.');
       }
     }
 

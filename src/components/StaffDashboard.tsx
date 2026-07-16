@@ -1021,7 +1021,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
-            placeholders={['Open markets', 'Wait list cities', 'Manager recommendations']}
+            placeholders={['Open cities', 'Wait list', 'Recommendations']}
           />
         );
       case 'settings':

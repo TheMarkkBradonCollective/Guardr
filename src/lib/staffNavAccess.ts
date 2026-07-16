@@ -123,7 +123,7 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   cities: {
     title: 'Operations',
     message:
-      'City rollout controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
+      'Operations controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
   },
   applications: {
     title: 'No access',

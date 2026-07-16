@@ -382,7 +382,7 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
   return hasPermission(user, 'director.manage_company_operations');
 }
 
-/** Manager+ may view city markets; Director+ may change open/closed/waitlist status */
+/** Manager+ may view Operations; Director+ may change open/closed/waitlist status */
 export function canViewCityMarkets(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.recommend_city_open');
 }
