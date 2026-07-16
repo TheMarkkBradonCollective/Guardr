@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { credentialRequiresExpiry, getCertCatalogEntry } from '../../lib/certCatalog';
@@ -21,6 +21,11 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { showAppToast } from '../ui/AppToast';
 
 type WizardStep = 'type' | 'details' | 'upload' | 'preview';
+
+export interface StaffCredentialAddWizardSheetMeta {
+  title: string;
+  subtitle?: string;
+}
 
 export function SelectedGuardBanner({
   guard,
@@ -94,21 +99,56 @@ function WizardFooter({
   );
 }
 
-interface StaffGuardCredentialAddWizardProps {
+function getWizardSheetMeta(
+  step: WizardStep,
+  guard: SecurityGuard,
+  selectedSectionMeta?: { title: string }
+): StaffCredentialAddWizardSheetMeta {
+  switch (step) {
+    case 'type':
+      return {
+        title: 'Add credential',
+        subtitle: `Step 1 — Choose a credential type for ${guard.name}`,
+      };
+    case 'details':
+      return {
+        title: selectedSectionMeta?.title ?? 'Credential details',
+        subtitle: 'Step 2 — Enter license or certificate information',
+      };
+    case 'upload':
+      return {
+        title: 'Upload proof',
+        subtitle: 'Step 3 — Photo or scan of the credential document',
+      };
+    case 'preview':
+      return {
+        title: 'Review credential',
+        subtitle: 'Step 4 — Confirm before adding to the guard profile',
+      };
+    default:
+      return { title: 'Add credential' };
+  }
+}
+
+interface StaffGuardCredentialAddWizardFlowProps {
   guard: SecurityGuard;
-  open: boolean;
+  active: boolean;
   onClose: () => void;
   onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onAdded?: () => void;
+  onChangeGuard?: () => void;
+  onSheetMetaChange?: (meta: StaffCredentialAddWizardSheetMeta) => void;
 }
 
-export function StaffGuardCredentialAddWizard({
+function StaffGuardCredentialAddWizardFlow({
   guard,
-  open,
+  active,
   onClose,
   onAddCertification,
   onAdded,
-}: StaffGuardCredentialAddWizardProps) {
+  onChangeGuard,
+  onSheetMetaChange,
+}: StaffGuardCredentialAddWizardFlowProps) {
   const [step, setStep] = useState<WizardStep>('type');
   const [selectedSection, setSelectedSection] = useState<CredentialViewSectionId | null>(null);
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
@@ -145,6 +185,20 @@ export function StaffGuardCredentialAddWizard({
     setFormError('');
     setSaving(false);
   };
+
+  useEffect(() => {
+    if (!active) {
+      resetFlow();
+    }
+  }, [active, guard.id]);
+
+  const sheetMeta = getWizardSheetMeta(step, guard, selectedSectionMeta);
+
+  useEffect(() => {
+    if (active) {
+      onSheetMetaChange?.(sheetMeta);
+    }
+  }, [active, onSheetMetaChange, sheetMeta.subtitle, sheetMeta.title]);
 
   const handleClose = () => {
     resetFlow();
@@ -236,36 +290,11 @@ export function StaffGuardCredentialAddWizard({
     }
   };
 
-  const sheetMeta = (() => {
-    switch (step) {
-      case 'type':
-        return {
-          title: 'Add credential',
-          subtitle: `Step 1 — Choose a credential type for ${guard.name}`,
-        };
-      case 'details':
-        return {
-          title: selectedSectionMeta?.title ?? 'Credential details',
-          subtitle: 'Step 2 — Enter license or certificate information',
-        };
-      case 'upload':
-        return {
-          title: 'Upload proof',
-          subtitle: 'Step 3 — Photo or scan of the credential document',
-        };
-      case 'preview':
-        return {
-          title: 'Review credential',
-          subtitle: 'Step 4 — Confirm before adding to the guard profile',
-        };
-      default:
-        return { title: 'Add credential' };
-    }
-  })();
+  if (!active) return null;
 
   return (
-    <AppFormSheet open={open} onClose={handleClose} title={sheetMeta.title} subtitle={sheetMeta.subtitle}>
-      <SelectedGuardBanner guard={guard} />
+    <>
+      <SelectedGuardBanner guard={guard} onChangeGuard={onChangeGuard} />
 
       {step === 'type' && (
         <ul className="space-y-2">
@@ -464,6 +493,56 @@ export function StaffGuardCredentialAddWizard({
           />
         </div>
       )}
+    </>
+  );
+}
+
+interface StaffGuardCredentialAddWizardProps {
+  guard: SecurityGuard;
+  open: boolean;
+  onClose: () => void;
+  onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onAdded?: () => void;
+  /** Render wizard body only — parent owns the surrounding AppFormSheet. */
+  embedded?: boolean;
+  onChangeGuard?: () => void;
+  onSheetMetaChange?: (meta: StaffCredentialAddWizardSheetMeta) => void;
+}
+
+export function StaffGuardCredentialAddWizard({
+  guard,
+  open,
+  onClose,
+  onAddCertification,
+  onAdded,
+  embedded = false,
+  onChangeGuard,
+  onSheetMetaChange,
+}: StaffGuardCredentialAddWizardProps) {
+  const [sheetMeta, setSheetMeta] = useState<StaffCredentialAddWizardSheetMeta>({
+    title: 'Add credential',
+    subtitle: `Step 1 — Choose a credential type for ${guard.name}`,
+  });
+
+  const flow = (
+    <StaffGuardCredentialAddWizardFlow
+      guard={guard}
+      active={open}
+      onClose={onClose}
+      onAddCertification={onAddCertification}
+      onAdded={onAdded}
+      onChangeGuard={onChangeGuard}
+      onSheetMetaChange={embedded ? onSheetMetaChange ?? setSheetMeta : setSheetMeta}
+    />
+  );
+
+  if (embedded) {
+    return flow;
+  }
+
+  return (
+    <AppFormSheet open={open} onClose={onClose} title={sheetMeta.title} subtitle={sheetMeta.subtitle}>
+      {flow}
     </AppFormSheet>
   );
 }
