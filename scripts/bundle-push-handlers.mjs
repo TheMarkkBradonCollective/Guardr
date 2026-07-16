@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild';
 
 const routes = [
+  { entry: 'api/_push/entries/vapid-public-key.ts', outfile: 'api/push/vapid-public-key.ts' },
   { entry: 'api/_push/entries/subscribe.ts', outfile: 'api/push/subscribe.ts' },
   { entry: 'api/_push/entries/unsubscribe.ts', outfile: 'api/push/unsubscribe.ts' },
   { entry: 'api/_push/entries/test.ts', outfile: 'api/push/test.ts' },
