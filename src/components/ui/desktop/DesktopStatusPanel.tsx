@@ -1,6 +1,6 @@
 import React from 'react';
 import { OverviewSegment } from '../../../lib/overviewVisuals';
-import { OverviewSegmentBar } from '../../staff/overview/OverviewCharts';
+import { OverviewPieChart, OverviewSegmentBar } from '../../staff/overview/OverviewCharts';
 
 export type DesktopStatusVariant = 'ok' | 'warn' | 'muted';
 
@@ -49,6 +49,7 @@ interface DesktopStatusPanelProps {
   breakdown?: DesktopStatusBreakdownRow[];
   breakdownTitle?: string;
   pipelineSegments?: OverviewSegment[];
+  queuePieSegments?: OverviewSegment[];
   actions?: DesktopStatusAction[];
   className?: string;
 }
@@ -78,6 +79,7 @@ export function DesktopStatusPanel({
   breakdown = [],
   breakdownTitle = 'Queue breakdown',
   pipelineSegments,
+  queuePieSegments,
   actions = [],
   className = '',
 }: DesktopStatusPanelProps) {
@@ -186,7 +188,31 @@ export function DesktopStatusPanel({
 
       {pipelineSegments && pipelineSegments.length > 0 ? (
         <div className="adm-status-pipeline">
-          <p className="adm-status-breakdown-title">Pipeline mix</p>
+          <p className="adm-status-breakdown-title">Pipeline pie</p>
+          <OverviewPieChart
+            segments={pipelineSegments}
+            centerLabel={String(pipelineSegments.reduce((sum, segment) => sum + segment.value, 0))}
+            centerSub="jobs"
+            size="sm"
+          />
+        </div>
+      ) : null}
+
+      {queuePieSegments && queuePieSegments.length > 0 ? (
+        <div className="adm-status-pipeline">
+          <p className="adm-status-breakdown-title">Queue pie</p>
+          <OverviewPieChart
+            segments={queuePieSegments}
+            centerLabel={String(queuePieSegments.reduce((sum, segment) => sum + segment.value, 0))}
+            centerSub="items"
+            size="sm"
+          />
+        </div>
+      ) : null}
+
+      {pipelineSegments && pipelineSegments.length > 0 ? (
+        <div className="adm-status-pipeline">
+          <p className="adm-status-breakdown-title">Pipeline bars</p>
           <OverviewSegmentBar segments={pipelineSegments} />
         </div>
       ) : null}

@@ -17,7 +17,10 @@ import {
 import {
   buildJobPipelineSegments,
   buildOperationsSnapshotCards,
+  buildPlatformHealthPieSegments,
   buildPlatformPulseCards,
+  buildPeopleSegments,
+  buildQueuePieSegments,
   computeWeeklyJobSeries,
 } from '../../lib/overviewVisuals';
 import {
@@ -48,6 +51,9 @@ import {
 } from 'lucide-react';
 import { StaffSummaryCell } from './StaffSummaryCell';
 import {
+  OverviewDonutGrid,
+  OverviewLineChart,
+  OverviewPieChart,
   OverviewSegmentBar,
   OverviewVisualCardBody,
   OverviewVisualGrid,
@@ -194,6 +200,9 @@ export function StaffOverviewDesktop({
   );
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
+  const queuePieSegments = useMemo(() => buildQueuePieSegments(stats), [stats]);
+  const healthPieSegments = useMemo(() => buildPlatformHealthPieSegments(stats), [stats]);
+  const peopleSegments = useMemo(() => buildPeopleSegments(guards, clients), [guards, clients]);
 
   const queueBreakdown = [
     {
@@ -359,6 +368,7 @@ export function StaffOverviewDesktop({
           ]}
           breakdown={queueBreakdown}
           pipelineSegments={jobPipelineSegments}
+          queuePieSegments={queuePieSegments}
           actions={[
             { id: 'map', label: 'Open map', onClick: () => onNavigate('map'), variant: 'sand' },
             { id: 'queue', label: 'Review queue', onClick: () => onNavigate('applications'), variant: 'outline' },
@@ -379,6 +389,114 @@ export function StaffOverviewDesktop({
             );
           })}
         </nav>
+
+        {/* Charts dashboard */}
+        <section className="adm-span-12 adm-charts-section">
+          <p className="adm-section-eyebrow">Charts & graphs</p>
+          <div className="adm-dashboard-grid adm-charts-grid">
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Job pipeline pie</p>
+              <OverviewPieChart
+                segments={jobPipelineSegments}
+                centerLabel={String(jobPipelineSegments.reduce((sum, s) => sum + s.value, 0))}
+                centerSub="jobs"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Review queue pie</p>
+              <OverviewPieChart
+                segments={queuePieSegments}
+                centerLabel={String(stats.pendingReviews)}
+                centerSub="in queue"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">Platform health</p>
+              <OverviewPieChart
+                segments={healthPieSegments}
+                centerLabel={stats.platformHealthy ? 'OK' : 'Review'}
+                centerSub="status"
+                size="sm"
+              />
+            </article>
+
+            <article className="adm-card adm-span-3">
+              <p className="adm-card-heading">People mix</p>
+              <OverviewPieChart segments={peopleSegments} centerLabel={String(clients.length + guards.length)} centerSub="accounts" size="sm" />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Completed jobs trend</p>
+              <OverviewLineChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Weekly bar chart</p>
+              <OverviewWeekChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Pipeline bars</p>
+              {jobPipelineSegments.length > 0 ? (
+                <OverviewSegmentBar segments={jobPipelineSegments} />
+              ) : (
+                <p className="adm-card-body">No jobs in the pipeline yet.</p>
+              )}
+            </article>
+
+            <article className="adm-card adm-span-8">
+              <p className="adm-card-heading">Field & queue gauges</p>
+              <OverviewDonutGrid
+                items={[
+                  {
+                    id: 'coverage',
+                    label: 'Field coverage',
+                    value: `${stats.onDutyGuards}`,
+                    pct: clampPct(stats.onDutyGuards, Math.max(stats.activeGuards, 1)),
+                    tone: 'primary',
+                  },
+                  {
+                    id: 'approvals',
+                    label: 'Approvals',
+                    value: String(stats.pendingApprovals),
+                    pct: clampPct(stats.pendingApprovals, 20),
+                    tone: stats.pendingApprovals > 5 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'payments',
+                    label: 'Payments',
+                    value: String(stats.paymentsNeedingAction),
+                    pct: clampPct(stats.paymentsNeedingAction, 15),
+                    tone: stats.paymentsNeedingAction > 0 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'incidents',
+                    label: 'Incidents',
+                    value: String(stats.activeIncidents),
+                    pct: clampPct(stats.activeIncidents, 10),
+                    tone: stats.activeIncidents > 0 ? 'warning' : 'success',
+                  },
+                  {
+                    id: 'live',
+                    label: 'Live jobs',
+                    value: String(liveJobs.length),
+                    pct: clampPct(liveJobs.length, Math.max(stats.activeJobs, 1)),
+                    tone: 'info',
+                  },
+                  {
+                    id: 'completed',
+                    label: 'Completed',
+                    value: String(stats.completedJobs),
+                    pct: clampPct(stats.completedJobs, Math.max(requests.length, 1)),
+                    tone: 'muted',
+                  },
+                ]}
+              />
+            </article>
+          </div>
+        </section>
 
         {/* All metrics */}
         <section className="adm-span-12">

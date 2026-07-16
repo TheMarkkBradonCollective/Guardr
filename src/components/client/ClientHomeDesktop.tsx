@@ -10,9 +10,15 @@ import { getClientLiveJobs, inferClientShiftPhase, CLIENT_SHIFT_PHASE_LABELS } f
 import { canClientApproveStaffScheduleChange } from '../../lib/jobScheduleChange';
 import { canClientApproveOvertime } from '../../lib/shiftBilling';
 import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClientConfirmed } from '../../lib/selfAuditPhotos';
-import { buildJobPipelineSegments, computeWeeklyJobSeries } from '../../lib/overviewVisuals';
+import { buildClientCoveragePieSegments, buildJobPipelineSegments, computeWeeklyJobSeries } from '../../lib/overviewVisuals';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { OverviewSegmentBar, OverviewWeekChart } from '../staff/overview/OverviewCharts';
+import {
+  OverviewDonutGrid,
+  OverviewLineChart,
+  OverviewPieChart,
+  OverviewSegmentBar,
+  OverviewWeekChart,
+} from '../staff/overview/OverviewCharts';
 import { clampPct, DesktopStatusPanel } from '../ui/desktop/DesktopStatusPanel';
 import {
   ArrowUpRight,
@@ -93,6 +99,18 @@ export function ClientHomeDesktop({
   const pendingActions = useMemo(() => clientActionCount(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
+  const coveragePieSegments = useMemo(
+    () =>
+      buildClientCoveragePieSegments(
+        coverage.activeAssignments,
+        coverage.guardsOnDuty,
+        coverage.guardsArriving,
+        openCount,
+        upcoming.length,
+        completedCount,
+      ),
+    [coverage, openCount, upcoming.length, completedCount],
+  );
   const hasLiveCoverage = coverage.activeAssignments > 0;
 
   const run = (action: ClientHomeAction) => {
@@ -245,6 +263,7 @@ export function ClientHomeDesktop({
           breakdown={statusBreakdown}
           breakdownTitle="Live jobs on site"
           pipelineSegments={jobPipelineSegments}
+          queuePieSegments={jobPipelineSegments}
           actions={[
             { id: 'map', label: 'Open map', onClick: () => run('map'), variant: 'sand' },
             { id: 'jobs', label: 'View jobs', onClick: () => run('requests'), variant: 'outline' },
@@ -304,22 +323,86 @@ export function ClientHomeDesktop({
           </button>
         </article>
 
-        {/* Charts row */}
-        <article className="adm-card adm-span-6">
-          <p className="adm-card-heading">Job pipeline breakdown</p>
-          {jobPipelineSegments.length > 0 ? (
-            <OverviewSegmentBar segments={jobPipelineSegments} />
-          ) : (
-            <p className="adm-card-body">No jobs in the pipeline yet. Post a job to get started.</p>
-          )}
-        </article>
+        {/* Charts dashboard */}
+        <section className="adm-span-12 adm-charts-section">
+          <p className="adm-section-eyebrow">Charts & graphs</p>
+          <div className="adm-dashboard-grid adm-charts-grid">
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Coverage pie</p>
+              <OverviewPieChart
+                segments={coveragePieSegments}
+                centerLabel={String(coverage.activeAssignments)}
+                centerSub="live"
+              />
+            </article>
 
-        <article className="adm-card adm-span-6">
-          <p className="adm-card-heading">Completed jobs this week</p>
-          <OverviewWeekChart series={weeklySeries} />
-        </article>
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Job pipeline pie</p>
+              <OverviewPieChart
+                segments={jobPipelineSegments}
+                centerLabel={String(jobPipelineSegments.reduce((sum, s) => sum + s.value, 0))}
+                centerSub="jobs"
+              />
+            </article>
 
-        {/* Operations status list */}
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Coverage gauges</p>
+              <OverviewDonutGrid
+                items={[
+                  {
+                    id: 'live',
+                    label: 'Live',
+                    value: String(coverage.activeAssignments),
+                    pct: livePct,
+                    tone: 'success',
+                  },
+                  {
+                    id: 'duty',
+                    label: 'On duty',
+                    value: String(coverage.guardsOnDuty),
+                    pct: clampPct(coverage.guardsOnDuty, Math.max(coverage.activeAssignments, 1)),
+                    tone: 'primary',
+                  },
+                  {
+                    id: 'open',
+                    label: 'Open jobs',
+                    value: String(openCount),
+                    pct: clampPct(openCount, Math.max(openCount + upcoming.length, 1)),
+                    tone: 'warning',
+                  },
+                  {
+                    id: 'scheduled',
+                    label: 'Scheduled',
+                    value: String(upcoming.length),
+                    pct: clampPct(upcoming.length, Math.max(openCount + upcoming.length, 1)),
+                    tone: 'info',
+                  },
+                ]}
+              />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Completed jobs trend</p>
+              <OverviewLineChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-6">
+              <p className="adm-card-heading">Weekly bar chart</p>
+              <OverviewWeekChart series={weeklySeries} />
+            </article>
+
+            <article className="adm-card adm-span-12">
+              <p className="adm-card-heading">Pipeline breakdown bars</p>
+              {jobPipelineSegments.length > 0 ? (
+                <OverviewSegmentBar segments={jobPipelineSegments} />
+              ) : (
+                <p className="adm-card-body">No jobs in the pipeline yet. Post a job to get started.</p>
+              )}
+            </article>
+          </div>
+        </section>
+
+        {/* Key metrics */}
         <article className="adm-card adm-span-4">
           <p className="adm-card-eyebrow">Operations status</p>
           <h3 className="adm-card-heading">At a glance</h3>

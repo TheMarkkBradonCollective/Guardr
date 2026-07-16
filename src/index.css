@@ -772,7 +772,7 @@ h1, h2, h3, h4 {
   inset: 0;
   border-radius: inherit;
   background: conic-gradient(
-    var(--brand-primary) calc(var(--overview-ring-pct, 0) * 1%),
+    var(--overview-ring-color, var(--brand-primary)) calc(var(--overview-ring-pct, 0) * 1%),
     var(--brand-bg-sec) 0
   );
 }
@@ -842,6 +842,126 @@ h1, h2, h3, h4 {
 
 .overview-week-day {
   font-size: 0.625rem;
+  color: var(--brand-text-muted);
+}
+
+.overview-pie-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.overview-pie-layout--sm .overview-pie {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.overview-pie-layout--md .overview-pie {
+  width: 7rem;
+  height: 7rem;
+}
+
+.overview-pie-layout--lg .overview-pie {
+  width: 8.5rem;
+  height: 8.5rem;
+}
+
+.overview-pie {
+  position: relative;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.overview-pie-hole {
+  position: absolute;
+  inset: 18%;
+  border-radius: inherit;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.overview-pie-center-value {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.overview-pie-center-sub {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+}
+
+.overview-pie-legend {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.overview-line-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.overview-line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.overview-line-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.overview-line-chart-count {
+  display: block;
+  font-size: 0.625rem;
+  color: var(--brand-primary);
+}
+
+.overview-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.overview-donut-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+}
+
+.overview-ring--sm {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.overview-ring--sm::after {
+  inset: 0.4rem;
+}
+
+.overview-ring--sm .overview-ring-value {
+  font-size: 0.75rem;
+}
+
+.overview-donut-grid-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
   color: var(--brand-text-muted);
 }
 

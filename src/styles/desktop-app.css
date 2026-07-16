@@ -2403,3 +2403,28 @@ body[data-form-factor="desktop"] .adm-status-breakdown-detail {
   font-size: 0.6875rem;
   color: var(--adm-muted);
 }
+
+body[data-form-factor="desktop"] .adm-charts-section {
+  margin-top: 0.25rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid {
+  gap: 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .adm-card {
+  min-height: 12rem;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .overview-pie-layout {
+  justify-content: center;
+}
+
+body[data-form-factor="desktop"] .adm-charts-grid .overview-line-chart-wrap,
+body[data-form-factor="desktop"] .adm-charts-grid .overview-week-chart {
+  min-height: 8rem;
+}
+
+body[data-form-factor="desktop"] .adm-status-pipeline .overview-pie-layout {
+  margin-top: 0.35rem;
+}
