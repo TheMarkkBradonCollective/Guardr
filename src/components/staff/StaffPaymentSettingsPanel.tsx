@@ -9,13 +9,10 @@ import {
 } from '../../lib/payments';
 import {
   PlatformSettings,
-  platformPaymentModeDescription,
-  platformPaymentModeLabel,
 } from '../../lib/platformSettings';
-import { canManagePlatformSettings, hasExecutivePaymentControls } from '../../lib/permissions';
+import { hasExecutivePaymentControls } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
-import { showAppToast } from '../ui/AppToast';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffPaymentSettingsPanelProps {
@@ -76,22 +73,13 @@ export function StaffPaymentSettingsPanel({
   onUpdatePlatformSettings,
 }: StaffPaymentSettingsPanelProps) {
   const { formFactor } = useDevice();
-  const canEditPaymentModes = canManagePlatformSettings(currentUser);
   const canEditFees = hasExecutivePaymentControls(currentUser);
-  const [cashEnabled, setCashEnabled] = useState(platformSettings.paymentCashEnabled);
-  const [stripeEnabled, setStripeEnabled] = useState(platformSettings.paymentStripeEnabled);
-  const [savingModes, setSavingModes] = useState(false);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
   const [crewPayBumpRate, setCrewPayBumpRate] = useState(
     platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
   );
   const [savingCrewPayBump, setSavingCrewPayBump] = useState(false);
-
-  useEffect(() => {
-    setCashEnabled(platformSettings.paymentCashEnabled);
-    setStripeEnabled(platformSettings.paymentStripeEnabled);
-  }, [platformSettings.paymentCashEnabled, platformSettings.paymentStripeEnabled]);
 
   useEffect(() => {
     setFeeDraft(platformSettings.feeConfig);
@@ -111,25 +99,6 @@ export function StaffPaymentSettingsPanel({
     () => JSON.stringify(feeDraft) !== JSON.stringify(platformSettings.feeConfig),
     [feeDraft, platformSettings.feeConfig]
   );
-
-  const persistPaymentModes = async (nextCash: boolean, nextStripe: boolean) => {
-    if (!onUpdatePlatformSettings) return;
-    if (!nextCash && !nextStripe) {
-      showAppToast('Enable at least one payment method.', { tone: 'error' });
-      return;
-    }
-    setSavingModes(true);
-    try {
-      await onUpdatePlatformSettings({
-        ...platformSettings,
-        paymentCashEnabled: nextCash,
-        paymentStripeEnabled: nextStripe,
-        updatedAt: new Date().toISOString(),
-      });
-    } finally {
-      setSavingModes(false);
-    }
-  };
 
   const persistFeeConfig = async () => {
     if (!onUpdatePlatformSettings || !canEditFees) return;
@@ -163,75 +132,9 @@ export function StaffPaymentSettingsPanel({
     }
   };
 
-  const toggleCash = async () => {
-    if (!canEditPaymentModes || savingModes) return;
-    const next = !cashEnabled;
-    setCashEnabled(next);
-    await persistPaymentModes(next, stripeEnabled);
-  };
-
-  const toggleStripe = async () => {
-    if (!canEditPaymentModes || savingModes) return;
-    const next = !stripeEnabled;
-    setStripeEnabled(next);
-    await persistPaymentModes(cashEnabled, next);
-  };
-
   const setFeeModel = (model: PlatformFeeModel) => {
     setFeeDraft((prev) => ({ ...prev, model }));
   };
-
-  const paymentMethodsBody = (
-    <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-        Current mode: {platformPaymentModeLabel(platformSettings)}
-      </p>
-      <p className="text-sm text-brand-text-muted leading-relaxed">
-        {platformPaymentModeDescription(platformSettings)}
-      </p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <label
-          className={`flex items-start gap-3 rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 ${
-            canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'
-          }`}
-        >
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={stripeEnabled}
-            onChange={() => void toggleStripe()}
-            disabled={!canEditPaymentModes || savingModes}
-          />
-          <span>
-            <span className="text-sm font-semibold block">Card (Stripe)</span>
-            <span className="text-xs text-brand-text-muted">Primary — recommended for all jobs</span>
-          </span>
-        </label>
-        <label
-          className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
-            canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'
-          }`}
-        >
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={cashEnabled}
-            onChange={() => void toggleCash()}
-            disabled={!canEditPaymentModes || savingModes}
-          />
-          <span>
-            <span className="text-sm font-semibold block">Cash</span>
-            <span className="text-xs text-brand-text-muted">
-              Secondary — client requests; staff confirms payment received
-            </span>
-          </span>
-        </label>
-      </div>
-      {!canEditPaymentModes && (
-        <p className="text-xs text-brand-text-muted">Only the Founder can change payment methods.</p>
-      )}
-    </div>
-  );
 
   const platformFeesBody = (
     <div className="space-y-4">
@@ -373,13 +276,12 @@ export function StaffPaymentSettingsPanel({
           <div>
             <p className="adm-card-eyebrow">Finance</p>
             <p className="adm-workbench-subtitle">
-              Payment methods, platform fees, and crew pay bump defaults.
+              Platform fees and crew pay bump defaults.
             </p>
           </div>
         }
       >
         <div className="adm-payment-settings-grid">
-          <DesktopSettingsCard title="Payment methods">{paymentMethodsBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Platform fees">
             {platformFeesBody}
           </DesktopSettingsCard>
@@ -391,7 +293,6 @@ export function StaffPaymentSettingsPanel({
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <AppFormSection title="Payment methods">{paymentMethodsBody}</AppFormSection>
       <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
       <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
     </div>

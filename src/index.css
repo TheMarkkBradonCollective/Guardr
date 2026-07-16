@@ -12976,10 +12976,11 @@ html:has(#guardr-auth-root) #root {
   top: max(1rem, env(safe-area-inset-top, 1rem));
   left: 0;
   right: 0;
+  transform: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 1rem;
+  padding: 0 max(1rem, env(safe-area-inset-right, 0px)) 0 max(1rem, env(safe-area-inset-left, 0px));
   z-index: 9999;
   pointer-events: none;
 }
@@ -12988,6 +12989,7 @@ html:has(#guardr-auth-root) #root {
   pointer-events: auto;
   width: 100%;
   max-width: min(calc(100vw - 2rem), 28rem);
+  box-sizing: border-box;
 }
 
 .slideout-panel-title {

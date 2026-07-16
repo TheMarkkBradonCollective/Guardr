@@ -1,14 +1,10 @@
 import React from 'react';
-import { SessionUser, StaffRole } from '../../types';
+import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
-import {
-  canManagePlatformSettings,
-  getAssignableStaffRoles,
-} from '../../lib/permissions';
+import { canManagePlatformSettings } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
-import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import type { CompanyPublicDocument } from '../../lib/companyPlacard';
@@ -17,13 +13,6 @@ interface StaffSettingsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
-  showStaffOnboard: boolean;
-  requiresDirectorApproval?: boolean;
-  onAddStaffProfile: (
-    email: string,
-    badgeNumber: string,
-    staffRole: StaffRole
-  ) => Promise<string>;
   companyPublicDocuments?: CompanyPublicDocument[];
   onSaveCompanyPublicDocument?: (doc: CompanyPublicDocument) => Promise<void>;
   onSetCompanyPlacardPublicEnabled?: (enabled: boolean) => Promise<void>;
@@ -50,15 +39,11 @@ export function StaffSettingsPanel({
   currentUser,
   platformSettings,
   onUpdatePlatformSettings,
-  showStaffOnboard,
-  requiresDirectorApproval = false,
-  onAddStaffProfile,
   companyPublicDocuments = [],
   onSaveCompanyPublicDocument,
   onSetCompanyPlacardPublicEnabled,
 }: StaffSettingsPanelProps) {
   const { formFactor } = useDevice();
-  const assignableRoles = getAssignableStaffRoles(currentUser.role);
   const canEdit = canManagePlatformSettings(currentUser);
   const isDesktop = formFactor === 'desktop';
 
@@ -129,7 +114,7 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const approvalRulesBody = (
+  const jobsBody = (
     <div className="space-y-4">
       <label className="uber-label block mb-1">Job posting review</label>
       <select
@@ -162,54 +147,6 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  const integrationsBody = (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span>SMS notifications (Twilio — configure in env)</span>
-        <AppSwitch
-          checked={platformSettings.smsNotificationsEnabled === true}
-          disabled={!canEdit}
-          onChange={(checked) => void persistSettings({ smsNotificationsEnabled: checked })}
-          ariaLabel="SMS notifications"
-        />
-      </div>
-      <label className="uber-label block">Background check provider</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.backgroundCheckProvider ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
-      >
-        <option value="manual">Manual staff review</option>
-        <option value="checkr">Checkr (API key required)</option>
-      </select>
-      <label className="uber-label block">Insurance verification</label>
-      <select
-        className="uber-input w-full"
-        value={platformSettings.insuranceVerificationMode ?? 'manual'}
-        disabled={!canEdit}
-        onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
-      >
-        <option value="manual">Manual COI review</option>
-        <option value="api">Automated verification API</option>
-      </select>
-    </div>
-  );
-
-  const onboardStaffBody = (
-    <div>
-      <p className="text-sm text-brand-text-muted mb-4">
-        Submit new staff with a Staff ID and email. Administrators need Director approval before the
-        account can sign in.
-      </p>
-      <StaffAddStaffForm
-        assignableRoles={assignableRoles}
-        requiresDirectorApproval={requiresDirectorApproval}
-        onAdd={(input) => onAddStaffProfile(input.email, input.badgeNumber, input.staffRole)}
-      />
-    </div>
-  );
-
   if (isDesktop) {
     return (
       <StaffOpsPageShell
@@ -217,9 +154,7 @@ export function StaffSettingsPanel({
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
-              Homepage messages, approval rules, integrations, and staff onboarding.
-            </p>
+            <p className="adm-workbench-subtitle">Homepage messages and jobs.</p>
           </div>
         }
       >
@@ -230,13 +165,7 @@ export function StaffSettingsPanel({
               {companyPlacardBody}
             </DesktopSettingsCard>
           )}
-          <DesktopSettingsCard title="Approval rules">{approvalRulesBody}</DesktopSettingsCard>
-          <DesktopSettingsCard title="Integrations">{integrationsBody}</DesktopSettingsCard>
-          {showStaffOnboard && assignableRoles.length > 0 && (
-            <DesktopSettingsCard title="Onboard staff" className="adm-platform-settings-card--full">
-              {onboardStaffBody}
-            </DesktopSettingsCard>
-          )}
+          <DesktopSettingsCard title="Jobs">{jobsBody}</DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
     );
@@ -250,19 +179,9 @@ export function StaffSettingsPanel({
 
       {companyPlacardBody}
 
-      <AppFormSection title="Approval rules">
-        <div className="pb-6">{approvalRulesBody}</div>
+      <AppFormSection title="Jobs">
+        <div className="pb-6">{jobsBody}</div>
       </AppFormSection>
-
-      <AppFormSection title="Integrations">
-        <div className="pb-6">{integrationsBody}</div>
-      </AppFormSection>
-
-      {showStaffOnboard && assignableRoles.length > 0 && (
-        <AppFormSection title="Onboard staff">
-          <div className="pb-6">{onboardStaffBody}</div>
-        </AppFormSection>
-      )}
     </div>
   );
 }

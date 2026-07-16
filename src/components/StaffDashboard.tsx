@@ -88,6 +88,7 @@ import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
@@ -982,7 +983,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.message}
-            placeholders={['Payment methods', 'Platform fees', 'Crew pay rules']}
+            placeholders={['Platform fees', 'Crew pay rules']}
           />
         );
       case 'agreements':
@@ -1030,9 +1031,6 @@ export function StaffDashboard({
             currentUser={currentUser}
             platformSettings={platformSettings}
             onUpdatePlatformSettings={onUpdatePlatformSettings}
-            showStaffOnboard={canProposeStaff}
-            requiresDirectorApproval={requiresDirectorApproval}
-            onAddStaffProfile={onAddStaffProfile}
             companyPublicDocuments={companyPublicDocuments}
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
@@ -1041,7 +1039,21 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Approval rules', 'Integrations', 'Platform controls']}
+            placeholders={['Jobs', 'Homepage messages', 'Platform controls']}
+          />
+        );
+      case 'integrations':
+        return showSettings ? (
+          <StaffIntegrationsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.integrations!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.integrations!.message}
+            placeholders={['Payment methods', 'SMS (Twilio)', 'Background checks']}
           />
         );
       case 'profile':

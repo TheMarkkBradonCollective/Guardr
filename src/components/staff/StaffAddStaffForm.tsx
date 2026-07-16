@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { StaffRole } from '../../types';
+import { StaffRole, PlatformRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import type { PlatformCity } from '../../lib/platformCities';
-import { normalizeManagedCities } from '../../lib/platformCities';
+import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
 
 export interface StaffAddStaffInput {
   email: string;
@@ -17,6 +17,7 @@ export interface StaffAddStaffInput {
 interface StaffAddStaffFormProps {
   assignableRoles: StaffRole[];
   requiresDirectorApproval?: boolean;
+  actorRole: PlatformRole;
   platformCities?: PlatformCity[];
   actorManagedCities?: string[];
   managerOptions?: Array<{ id: string; badgeNumber?: string; name: string }>;
@@ -27,6 +28,7 @@ interface StaffAddStaffFormProps {
 export function StaffAddStaffForm({
   assignableRoles,
   requiresDirectorApproval = false,
+  actorRole,
   platformCities = [],
   actorManagedCities = [],
   managerOptions = [],
@@ -44,14 +46,8 @@ export function StaffAddStaffForm({
   const [saving, setSaving] = useState(false);
 
   const assignableCityNames = useMemo(
-    () =>
-      normalizeManagedCities(
-        actorManagedCities.length > 0
-          ? actorManagedCities
-          : platformCities.map((city) => city.name),
-        platformCities
-      ),
-    [actorManagedCities, platformCities]
+    () => getAssignableCityNamesForStaffAccess(platformCities, actorRole, actorManagedCities),
+    [actorManagedCities, actorRole, platformCities]
   );
 
   const reset = () => {
