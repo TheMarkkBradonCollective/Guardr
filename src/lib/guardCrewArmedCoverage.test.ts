@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { SecurityGuard } from '../types';
-import { computeStandingCrewArmedStats } from './guardCrewArmedCoverage';
+import { computeStandingCrewArmedStats, isLeadOnlyStandingCrew } from './guardCrewArmedCoverage';
 
 function verifiedCert(
   catalogId: string,
@@ -44,9 +44,10 @@ function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
 }
 
 describe('computeStandingCrewArmedStats', () => {
-  it('counts only the lead when the roster is empty', () => {
+  it('treats an empty active roster as lead-only', () => {
     const lead = baseGuard({ id: 'lead' });
     const stats = computeStandingCrewArmedStats(lead, [], [lead]);
+    assert.equal(isLeadOnlyStandingCrew(0), true);
     assert.equal(stats.total, 1);
     assert.equal(stats.armedCapablePercent, 0);
     assert.equal(stats.unarmed, 1);
