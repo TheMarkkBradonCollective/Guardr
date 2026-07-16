@@ -8942,6 +8942,332 @@ html.theme-dark .wf-badge-success {
   font-weight: 600;
 }
 
+.guard-factors-section .guard-violations-wrap {
+  padding: 0 0 0.875rem;
+}
+
+.guard-contract-violations-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--brand-bg);
+}
+
+.guard-contract-violations-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1rem 2rem;
+}
+
+.guard-contract-violations-intro {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--brand-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.guard-contract-violations-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.guard-contract-violations-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--brand-border);
+}
+
+.guard-contract-violations-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--brand-border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.guard-contract-violations-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.guard-contract-violations-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.guard-contract-violations-row-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.guard-contract-violations-row-date {
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+  flex-shrink: 0;
+}
+
+.guard-contract-violations-row-job {
+  margin: 0.2rem 0 0.45rem;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violations-row-chevron {
+  width: 1rem;
+  height: 1rem;
+  color: var(--brand-text-muted);
+  flex-shrink: 0;
+}
+
+.guard-contract-violation-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.guard-contract-violation-status-open,
+.guard-contract-violation-status-neutral {
+  background: color-mix(in srgb, var(--brand-text-muted) 12%, transparent);
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-status-review {
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+  color: var(--status-warning);
+}
+
+.guard-contract-violation-status-rejected {
+  background: color-mix(in srgb, var(--status-danger) 12%, transparent);
+  color: var(--status-danger);
+}
+
+.guard-contract-violation-status-accepted {
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
+}
+
+.guard-contract-violations-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violations-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.45;
+}
+
+.guard-contract-violation-detail-card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+}
+
+.guard-contract-violation-detail-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.guard-contract-violation-detail-card-subtitle {
+  margin: 0.35rem 0 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-detail-rows {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.guard-contract-violation-detail-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.guard-contract-violation-detail-row dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-detail-row dd {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--brand-text);
+}
+
+.guard-contract-violation-detail-row-highlight {
+  font-weight: 800;
+  color: var(--status-danger);
+}
+
+.guard-contract-violation-avoid {
+  margin-bottom: 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  overflow: hidden;
+  background: var(--brand-surface);
+}
+
+.guard-contract-violation-avoid-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 0;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--brand-text);
+  cursor: pointer;
+}
+
+.guard-contract-violation-avoid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.guard-contract-violation-avoid-list li {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-avoid-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  color: var(--brand-primary);
+}
+
+.guard-contract-violation-dispute-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.guard-contract-violation-dispute-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.guard-contract-violation-dispute-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.guard-contract-violation-dispute-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  margin: 1rem 0 1.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-warning) 12%, transparent);
+}
+
+.guard-contract-violation-dispute-illustration-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--status-warning);
+}
+
+.guard-contract-violation-dispute-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.guard-contract-violation-dispute-copy {
+  margin: 0 0 1.25rem;
+  max-width: 24rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-dispute-summary {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.95rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  text-align: left;
+}
+
+.guard-contract-violation-dispute-summary-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.guard-contract-violation-dispute-summary-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.guard-contract-violation-dispute-summary-job,
+.guard-contract-violation-dispute-summary-date {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.guard-contract-violation-dispute-actions {
+  display: grid;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 24rem;
+}
+
 .guard-factors-section,
 .guard-skills-section {
   padding: 1.125rem 1rem 0.25rem;
@@ -9799,6 +10125,271 @@ button.guard-factor-card {
 
 .staff-guard-performance-panel .guard-tiered-screen-pinned {
   position: relative;
+}
+
+.staff-stats-workbench,
+.staff-stats-mobile {
+  min-height: 0;
+}
+
+.staff-stats-tabbar {
+  padding: 0 0 1rem;
+}
+
+.staff-stats-mobile-head {
+  margin-bottom: 0.75rem;
+}
+
+.staff-stats-mobile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.staff-stats-mobile-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.staff-stats-mobile-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-panel-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.staff-stats-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.staff-stats-metric-card {
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+}
+
+.staff-stats-metric-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-metric-value {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.staff-stats-metric-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-two-col {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.staff-stats-bucket-card,
+.staff-stats-leaderboard {
+  padding: 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+}
+
+.staff-stats-section-head {
+  margin-bottom: 0.75rem;
+}
+
+.staff-stats-section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.staff-stats-section-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-bucket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.staff-stats-bucket-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.35rem;
+}
+
+.staff-stats-bucket-bar {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-border) 70%, transparent);
+  overflow: hidden;
+}
+
+.staff-stats-bucket-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-primary), color-mix(in srgb, var(--brand-primary) 70%, #fff));
+}
+
+.staff-stats-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.staff-stats-sort {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.staff-stats-sort span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-toolbar-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-guard-cards {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.staff-stats-guard-card {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  text-align: left;
+}
+
+.staff-stats-guard-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.staff-stats-guard-card-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.staff-stats-guard-card-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-guard-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-pill,
+.staff-stats-pill-warn {
+  margin-left: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.staff-stats-pill {
+  background: color-mix(in srgb, var(--brand-text-muted) 12%, transparent);
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-pill-warn {
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+  color: var(--status-warning);
+}
+
+.staff-stats-cell-warn {
+  color: var(--status-warning);
+  font-weight: 700;
+}
+
+.staff-stats-compare-wrap {
+  overflow-x: auto;
+}
+
+.staff-stats-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.staff-stats-compare-table th,
+.staff-stats-compare-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--brand-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.staff-stats-compare-table thead th {
+  font-weight: 800;
+}
+
+.staff-stats-compare-table tbody th {
+  color: var(--brand-text-muted);
+  font-weight: 700;
+  width: 11rem;
+}
+
+.staff-stats-empty-copy {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+@media (min-width: 900px) {
+  .staff-stats-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .staff-stats-two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .guard-rating-section-tiered .guard-rating-breakdown {

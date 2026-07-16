@@ -50,6 +50,7 @@ import {
   buildOverviewActionQueue,
   buildOverviewLiveJobs,
   buildPlatformActivityFeed,
+  buildStaffShiftViolations,
   computePlatformStats,
   computeWeeklyCompletedJobs,
   countPendingCredentialReviews,
@@ -74,6 +75,8 @@ import { StaffGuardCrewsPanel } from './staff/StaffGuardCrewsPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
+import { StaffViolationsPanel } from './staff/StaffViolationsPanel';
+import { StaffStatsPanel } from './staff/StaffStatsPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
@@ -575,6 +578,7 @@ export function StaffDashboard({
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
   const incidentDetails = useMemo(() => buildIncidentReportViews(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards, supportTickets), [requests, guards, supportTickets]);
+  const shiftViolations = useMemo(() => buildStaffShiftViolations(requests, guards), [requests, guards]);
   const overviewActions = useMemo(
     () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
     [stats, requests, incidents, supportTickets, guards, clients]
@@ -595,13 +599,14 @@ export function StaffDashboard({
       clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
+      violations: shiftViolations.filter((v) => v.needsReview).length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
       messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
       crews: countStaffCrewsNeedingReview(requests) + countPendingCrewLeadRequests(crewJoinRequests),
     }),
-    [guards, stats, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests]
+    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests]
   );
 
   const renderSection = () => {
@@ -933,13 +938,32 @@ export function StaffDashboard({
             placeholders={['Pending payouts', 'Client payments', 'Guard payouts', 'Platform fees']}
           />
         );
+      case 'violations':
+        return (
+          <StaffViolationsPanel
+            violations={shiftViolations}
+            onResolveAuditViolation={showDisputes ? onResolveAuditViolation : undefined}
+            onOpenJob={openJob}
+          />
+        );
+      case 'stats':
+        return (
+          <StaffStatsPanel
+            guards={guards}
+            requests={requests}
+            onOpenGuard={(guardId) => {
+              onStaffGuardTabChange?.('performance');
+              navigateSection('guards', { guardId });
+            }}
+            onOpenViolations={() => navigateSection('violations')}
+          />
+        );
       case 'disputes':
         return showDisputes ? (
           <StaffDisputesPanel
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
-            onResolveAuditViolation={onResolveAuditViolation}
           />
         ) : (
           <AppBlockedAccessScreen

@@ -16,15 +16,26 @@ import {
   type JobTypeRatingCard,
 } from '../../lib/guardJobTypeRatingMetrics';
 import { jobTypePreferenceLabel, normalizeJobTypePreferences } from '../../lib/guardJobPreferences';
+import { buildGuardContractViolations } from '../../lib/guardContractViolations';
 import { GuardRatingSection } from './GuardRatingSection';
 import { GuardJobTypeRatingSection } from './GuardJobTypeRatingSection';
 import { GuardJobTypeMetricDetail } from './GuardJobTypeMetricDetail';
 import { GuardPerformanceFactorDetail } from './GuardPerformanceFactorDetail';
-import { GuardShiftAuditDisputes } from './GuardShiftAuditDisputes';
+import {
+  GuardContractViolationDetail,
+  GuardContractViolationDisputeStatus,
+} from './GuardContractViolationDetail';
+import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
 export type PerformanceViewTab = 'overall' | JobType;
+
+type PerformanceSubview =
+  | 'main'
+  | 'violations'
+  | 'violation-detail'
+  | 'violation-dispute-status';
 
 interface GuardPerformanceScreenProps {
   guard: SecurityGuard;
@@ -52,6 +63,8 @@ export function GuardPerformanceScreen({
 }: GuardPerformanceScreenProps) {
   const { formFactor } = useDevice();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
+  const [subview, setSubview] = useState<PerformanceSubview>('main');
+  const [selectedViolationId, setSelectedViolationId] = useState<string | null>(null);
   const [selectedJobTypeMetric, setSelectedJobTypeMetric] = useState<{
     jobType: JobType;
     metricId: JobTypeMetricId;
@@ -93,6 +106,14 @@ export function GuardPerformanceScreen({
     () => new Map(skillRatings.map((skill) => [skill.jobType, skill])),
     [skillRatings]
   );
+  const contractViolations = useMemo(
+    () => buildGuardContractViolations(guard, requests),
+    [guard, requests]
+  );
+  const selectedViolation = useMemo(
+    () => contractViolations.find((v) => v.id === selectedViolationId) ?? null,
+    [contractViolations, selectedViolationId]
+  );
   const selectedFactor = useMemo(() => {
     if (!performanceFactorId) return null;
     const rating = computeGuardPerformanceRating(guard, requests);
@@ -101,14 +122,25 @@ export function GuardPerformanceScreen({
 
   const handleTabChange = (tab: PerformanceViewTab) => {
     setActiveTab(tab);
+    setSubview('main');
+    setSelectedViolationId(null);
     setSelectedJobTypeMetric(null);
     if (tab !== 'overall') {
       onPerformanceFactorChange?.(null);
     }
   };
 
+  const openViolations = () => {
+    setSubview('violations');
+    setSelectedViolationId(null);
+    setSelectedJobTypeMetric(null);
+    onPerformanceFactorChange?.(null);
+  };
+
   const handleMetricSelect = (jobType: JobType, metricId: JobTypeMetricId, card: JobTypeRatingCard) => {
     setSelectedJobTypeMetric({ jobType, metricId, card });
+    setSubview('main');
+    setSelectedViolationId(null);
     onPerformanceFactorChange?.(null);
   };
 
@@ -124,28 +156,22 @@ export function GuardPerformanceScreen({
     ) : null;
 
   const overallContent = (
-    <>
-      <GuardRatingSection
-        guard={guard}
-        requests={requests}
-        performance={performance}
-        skillRatings={skillRatings}
-        variant="full"
-        pinnedLayout
-        toolbar={performanceTabs}
-        onFactorSelect={(factor) => {
-          if (isPerformanceFactorId(factor.id)) {
-            onPerformanceFactorChange?.(factor.id);
-          }
-        }}
-        className="guard-performance-screen-card"
-      />
-      <GuardShiftAuditDisputes
-        guardId={guard.id}
-        requests={requests}
-        onDispute={onDisputeShiftAuditViolation}
-      />
-    </>
+    <GuardRatingSection
+      guard={guard}
+      requests={requests}
+      performance={performance}
+      skillRatings={skillRatings}
+      variant="full"
+      pinnedLayout
+      toolbar={performanceTabs}
+      onFactorSelect={(factor) => {
+        if (isPerformanceFactorId(factor.id)) {
+          onPerformanceFactorChange?.(factor.id);
+        }
+      }}
+      onOpenViolations={openViolations}
+      className="guard-performance-screen-card"
+    />
   );
 
   const jobTypeContent =
@@ -180,6 +206,39 @@ export function GuardPerformanceScreen({
       card,
     };
   }, [guard.id, requests, selectedJobTypeMetric]);
+
+  const violationSubview =
+    subview === 'violations' ? (
+      <GuardContractViolationsList
+        violations={contractViolations}
+        onBack={() => setSubview('main')}
+        onSelect={(violationId) => {
+          setSelectedViolationId(violationId);
+          setSubview('violation-detail');
+        }}
+      />
+    ) : subview === 'violation-detail' && selectedViolation ? (
+      <GuardContractViolationDetail
+        violation={selectedViolation}
+        onBack={() => setSubview('violations')}
+        onOpenDisputeStatus={() => setSubview('violation-dispute-status')}
+        onDispute={onDisputeShiftAuditViolation}
+      />
+    ) : subview === 'violation-dispute-status' && selectedViolation ? (
+      <GuardContractViolationDisputeStatus
+        violation={selectedViolation}
+        onBack={() => setSubview('main')}
+        onOpenDetails={() => setSubview('violation-detail')}
+      />
+    ) : null;
+
+  if (violationSubview) {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        {violationSubview}
+      </AppScreen>
+    );
+  }
 
   if (formFactor === 'desktop') {
     return (

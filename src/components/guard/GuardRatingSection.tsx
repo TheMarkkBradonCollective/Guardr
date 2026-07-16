@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   AlertTriangle,
   Award,
@@ -20,14 +20,16 @@ import {
   formatPerformanceScore,
   formatReviewCount,
   formatShiftSampleCount,
-  formatViolationSummary,
   PERFORMANCE_TIERS,
   type GuardPerformanceMetrics,
   type GuardSkillRating,
   type PerformanceFactor,
   type PerformanceTier,
-  type PerformanceViolation,
 } from '../../lib/guardPerformance';
+import {
+  buildGuardContractViolations,
+  formatContractViolationSummary,
+} from '../../lib/guardContractViolations';
 
 export interface GuardRatingSectionProps {
   guard: SecurityGuard;
@@ -46,6 +48,8 @@ export interface GuardRatingSectionProps {
   factorOrder?: string[];
   /** Navigate to factor detail when a card is tapped */
   onFactorSelect?: (factor: PerformanceFactor) => void;
+  /** Open the DoorDash-style contract violations list */
+  onOpenViolations?: () => void;
   /** Renders between the pinned hero and scrollable body (e.g. performance tabs) */
   toolbar?: React.ReactNode;
   className?: string;
@@ -188,43 +192,23 @@ export function FactorCard({
 }
 
 function ViolationsCard({
-  violations,
   summary,
+  onOpen,
 }: {
-  violations: PerformanceViolation[];
   summary: string;
+  onOpen?: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div className="guard-violations-wrap">
-      <button
-        type="button"
-        className="guard-violations-card"
-        onClick={() => setExpanded((open) => !open)}
-        aria-expanded={expanded}
-      >
+      <button type="button" className="guard-violations-card" onClick={onOpen}>
         <div className="guard-violations-card-icon-wrap">
           <AlertTriangle className="guard-violations-card-icon" aria-hidden />
         </div>
         <div className="guard-violations-card-copy">
           <p className="guard-violations-card-title">{summary}</p>
-          <p className="guard-violations-card-subtitle">
-            Client reports and policy issues affect your tier progress
-          </p>
         </div>
-        <ChevronRight className={`guard-violations-card-chevron ${expanded ? 'guard-violations-card-chevron-open' : ''}`} aria-hidden />
+        <ChevronRight className="guard-violations-card-chevron" aria-hidden />
       </button>
-      {expanded && (
-        <ul className="guard-violations-list">
-          {violations.map((violation) => (
-            <li key={violation.id} className="guard-violations-list-item">
-              <span className="guard-violations-list-count">{violation.count}</span>
-              <span className="guard-violations-list-label">{violation.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
@@ -277,6 +261,7 @@ export function GuardRatingSection({
   showSpecialtyRatings = false,
   factorOrder,
   onFactorSelect,
+  onOpenViolations,
   toolbar,
   className = '',
 }: GuardRatingSectionProps) {
@@ -305,7 +290,11 @@ export function GuardRatingSection({
   const hasSkills = skillRatings.length > 0;
   const hasBreakdown = breakdown.length > 0;
   const isCompact = variant === 'compact';
-  const violationSummary = formatViolationSummary(rating.violations);
+  const contractViolations = useMemo(
+    () => buildGuardContractViolations(guard, requests),
+    [guard, requests]
+  );
+  const violationSummary = formatContractViolationSummary(contractViolations.length);
   const hasRatingData = rating.overallRating > 0 || performance.jobsSampled > 0;
 
   if (!hasRatingData && !hasBreakdown && !hasSkills) {
@@ -377,16 +366,15 @@ export function GuardRatingSection({
 
   const bodyBlock = (
     <div className="guard-rating-body">
-      {violationSummary && (
-        <ViolationsCard violations={rating.violations} summary={violationSummary} />
-      )}
-
       {orderedFactors.length > 0 && (
         <section className="guard-factors-section">
           <div className="guard-factors-header">
             <h3 className="guard-factors-heading">Your rating factors</h3>
             <p className="guard-factors-subheading">Points earned from recent shift behavior</p>
           </div>
+          {violationSummary ? (
+            <ViolationsCard summary={violationSummary} onOpen={onOpenViolations} />
+          ) : null}
           <div className="guard-factors-grid">
             {orderedFactors.map((factor) => (
               <FactorCard key={factor.id} factor={factor} onSelect={onFactorSelect} />
@@ -394,6 +382,10 @@ export function GuardRatingSection({
           </div>
         </section>
       )}
+
+      {!orderedFactors.length && violationSummary ? (
+        <ViolationsCard summary={violationSummary} onOpen={onOpenViolations} />
+      ) : null}
 
       {showSpecialtyRatings && displayedSkills.length > 0 && (
         <section className="guard-skills-section">
