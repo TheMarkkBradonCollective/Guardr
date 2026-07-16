@@ -1070,4 +1070,19 @@ export function registerStripeRoutes(app: Express) {
       },
     });
   });
+
+  app.get('/api/integrations/health', (_req: Request, res: Response) => {
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID?.trim();
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN?.trim();
+    const twilioFrom = process.env.TWILIO_FROM_NUMBER?.trim();
+    const checkrKey = process.env.CHECKR_API_KEY?.trim();
+    const insuranceKey = process.env.INSURANCE_VERIFICATION_API_KEY?.trim();
+    res.json({
+      twilio: { configured: !!(twilioSid && twilioToken && twilioFrom) },
+      checkr: { configured: !!(checkrKey && checkrKey !== 'checkr_placeholder') },
+      insuranceApi: {
+        configured: !!(insuranceKey && insuranceKey !== 'insurance_api_placeholder'),
+      },
+    });
+  });
 }

@@ -7,6 +7,10 @@ import {
   platformPaymentModeDescription,
   platformPaymentModeLabel,
   platformSettingsFromDbRow,
+  platformSmsModeLabel,
+  platformBackgroundCheckModeLabel,
+  platformInsuranceModeLabel,
+  platformSmsModeDescription,
 } from './platformSettings';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -67,4 +71,22 @@ test('platform payment mode labels describe stripe + square', () => {
   const settings = { ...DEFAULT_PLATFORM_SETTINGS, paymentStripeEnabled: true, paymentSquareEnabled: true };
   assert.equal(platformPaymentModeLabel(settings), 'Stripe + Square');
   assert.match(platformPaymentModeDescription(settings), /Square/i);
+});
+
+test('integration mode labels describe twilio, checkr, and insurance api toggles', () => {
+  const off = { ...DEFAULT_PLATFORM_SETTINGS };
+  assert.equal(platformSmsModeLabel(off), 'Off');
+  assert.match(platformSmsModeDescription(off), /off/i);
+  assert.equal(platformBackgroundCheckModeLabel(off), 'Manual staff review');
+  assert.equal(platformInsuranceModeLabel(off), 'Manual COI review');
+
+  const on = {
+    ...DEFAULT_PLATFORM_SETTINGS,
+    smsNotificationsEnabled: true,
+    backgroundCheckProvider: 'checkr',
+    insuranceVerificationMode: 'api',
+  };
+  assert.equal(platformSmsModeLabel(on), 'Twilio only');
+  assert.equal(platformBackgroundCheckModeLabel(on), 'Checkr only');
+  assert.equal(platformInsuranceModeLabel(on), 'Automated API');
 });
