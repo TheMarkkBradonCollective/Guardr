@@ -187,7 +187,6 @@ export function GuardJobPreferencesPanel({
           >
             {welcomeExpanded ? 'Read less' : 'Read more'}
           </button>
-          <OnboardingProgressBar onboarded={stats.onboarded} total={stats.total} />
         </div>
         {stats.active === 0 && (
           <div className="guard-pref-empty-banner">
