@@ -8850,11 +8850,9 @@ html.theme-grey .wf-badge-success {
   background: var(--brand-bg-sec);
 }
 
-/* Tier hero — fixed height, shield-crest overlap into body, pinned on tiered screens */
+/* Tier hero — fixed height, straight bottom edge, pinned on tiered screens */
 :root {
   --guard-tier-hero-height: 16.5rem;
-  --guard-tier-hero-crest-height: 2.5rem;
-  --guard-tier-hero-crest-overlap: 1.35rem;
 }
 
 .guard-tiered-screen {
@@ -8890,19 +8888,19 @@ html.theme-grey .wf-badge-success {
 }
 
 .guard-tier-hero-card.guard-rating-section-tiered {
-  overflow: visible;
+  overflow: hidden;
 }
 
 .guard-tier-hero,
 .guard-pref-hero-tiered {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   color: #fff;
   box-sizing: border-box;
   height: var(--guard-tier-hero-height);
   min-height: var(--guard-tier-hero-height);
   max-height: var(--guard-tier-hero-height);
-  padding: 1.35rem 1.25rem 1.85rem;
+  padding: 1.35rem 1.25rem;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -8920,34 +8918,6 @@ html.theme-grey .wf-badge-success {
     radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.28), transparent 55%),
     radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.12), transparent 40%);
   pointer-events: none;
-}
-
-.guard-tier-hero::after,
-.guard-pref-hero-tiered::after {
-  content: '';
-  display: block;
-  position: absolute;
-  left: -3%;
-  right: -3%;
-  bottom: calc(-1 * var(--guard-tier-hero-crest-overlap));
-  height: var(--guard-tier-hero-crest-height);
-  background: var(--brand-bg-sec);
-  clip-path: polygon(
-    0% 100%,
-    100% 100%,
-    100% 70%,
-    90% 80%,
-    50% 0%,
-    10% 80%,
-    0% 70%
-  );
-  z-index: 2;
-  pointer-events: none;
-}
-
-.guard-tiered-screen-pinned ~ .guard-tiered-screen-scroll .guard-rating-body,
-.guard-tiered-screen-pinned ~ .guard-tiered-screen-scroll .guard-pref-body {
-  margin-top: calc(-1 * var(--guard-tier-hero-crest-overlap) + 0.35rem);
 }
 
 .guard-tier-hero-starting {
