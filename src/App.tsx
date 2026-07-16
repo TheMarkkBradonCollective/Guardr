@@ -342,9 +342,9 @@ import {
   canPostToGuardChat,
   canReadGuardChat,
   loadGuardMessagesFromStorage,
-  mergeGuardMessages,
   appendGuardMessage,
   saveGuardMessagesToStorage,
+  sortedGuardMessages,
 } from './lib/guardMessenger';
 import { fetchGuardMessagesFromApi, postGuardMessageToApi } from './lib/guardMessagesApi';
 import {
@@ -352,17 +352,17 @@ import {
   canPostToClientChat,
   canReadClientChat,
   loadClientMessagesFromStorage,
-  mergeClientMessages,
   appendClientMessage,
   saveClientMessagesToStorage,
+  sortedClientMessages,
 } from './lib/clientMessenger';
 import { fetchClientMessagesFromApi, postClientMessageToApi } from './lib/clientMessagesApi';
 import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
-  mergeStaffMessages,
   appendStaffMessage,
   saveStaffMessagesToStorage,
+  sortedStaffMessages,
 } from './lib/staffMessenger';
 import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
 import { mapStaffRowToSecurityGuard } from './lib/staffAccounts';
@@ -2433,11 +2433,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setStaffMessages((prev) => {
-          const next = mergeStaffMessages(prev, mappedStaffMessages);
-          saveStaffMessagesToStorage(next);
-          return next;
-        });
+        const nextStaffMessages = sortedStaffMessages(mappedStaffMessages);
+        setStaffMessages(nextStaffMessages);
+        saveStaffMessagesToStorage(nextStaffMessages);
       }
 
       if (!guardMessagesErr && dbGuardMessages != null) {
@@ -2449,11 +2447,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setGuardMessages((prev) => {
-          const next = mergeGuardMessages(prev, mappedGuardMessages);
-          saveGuardMessagesToStorage(next);
-          return next;
-        });
+        const nextGuardMessages = sortedGuardMessages(mappedGuardMessages);
+        setGuardMessages(nextGuardMessages);
+        saveGuardMessagesToStorage(nextGuardMessages);
       }
 
       if (!clientMessagesErr && dbClientMessages != null) {
@@ -2465,11 +2461,9 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setClientMessages((prev) => {
-          const next = mergeClientMessages(prev, mappedClientMessages);
-          saveClientMessagesToStorage(next);
-          return next;
-        });
+        const nextClientMessages = sortedClientMessages(mappedClientMessages);
+        setClientMessages(nextClientMessages);
+        saveClientMessagesToStorage(nextClientMessages);
       }
 
       if (!platformSettingsErr && dbPlatformSettings) {
@@ -2585,8 +2579,8 @@ export default function App() {
     if (!currentUser || !canReadGuardChat(currentUser)) return;
 
     const applyRemote = (remote: GuardMessage[]) => {
+      const next = sortedGuardMessages(remote);
       setGuardMessages((prev) => {
-        const next = mergeGuardMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
@@ -2629,8 +2623,8 @@ export default function App() {
     if (!currentUser || !canReadClientChat(currentUser)) return;
 
     const applyRemote = (remote: ClientMessage[]) => {
+      const next = sortedClientMessages(remote);
       setClientMessages((prev) => {
-        const next = mergeClientMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
@@ -2673,8 +2667,8 @@ export default function App() {
     if (!currentUser || !isStaffRole(currentUser.role)) return;
 
     const applyRemote = (remote: StaffMessage[]) => {
+      const next = sortedStaffMessages(remote);
       setStaffMessages((prev) => {
-        const next = mergeStaffMessages(prev, remote);
         if (
           next.length === prev.length &&
           next.every((message, index) => message.id === prev[index]?.id)
