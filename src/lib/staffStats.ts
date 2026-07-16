@@ -3,6 +3,7 @@ import { buildGuardContractViolations } from './guardContractViolations';
 import {
   computeGuardPerformance,
   computeGuardPerformanceRating,
+  PERFORMANCE_TIERS,
   type PerformanceTier,
 } from './guardPerformance';
 import { buildStaffShiftViolations, type OpsShiftViolation } from './staffOps';
@@ -60,6 +61,38 @@ export interface StaffStatsTierBucket {
   tierId: string;
   tierName: string;
   count: number;
+}
+
+export interface PerformanceTierPercentBar {
+  tierId: string;
+  tierName: string;
+  level: number;
+  count: number;
+  pct: number;
+}
+
+const ORDERED_PERFORMANCE_TIERS = [
+  { id: 'starting', name: 'Starting', level: 0 },
+  ...PERFORMANCE_TIERS.map((tier) => ({ id: tier.id, name: tier.name, level: tier.level })),
+];
+
+export function buildPerformanceTierPercentBars(rows: StaffGuardStatRow[]): PerformanceTierPercentBar[] {
+  const total = rows.length;
+  const tierMap = new Map<string, number>();
+  for (const row of rows) {
+    tierMap.set(row.tier.id, (tierMap.get(row.tier.id) ?? 0) + 1);
+  }
+
+  return ORDERED_PERFORMANCE_TIERS.map((tier) => {
+    const count = tierMap.get(tier.id) ?? 0;
+    return {
+      tierId: tier.id,
+      tierName: tier.name,
+      level: tier.level,
+      count,
+      pct: total > 0 ? Math.round((count / total) * 100) : 0,
+    };
+  });
 }
 
 export interface StaffStatsViolationBucket {

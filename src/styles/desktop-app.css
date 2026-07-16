@@ -2428,3 +2428,9 @@ body[data-form-factor="desktop"] .adm-charts-grid .overview-week-chart {
 body[data-form-factor="desktop"] .adm-status-pipeline .overview-pie-layout {
   margin-top: 0.35rem;
 }
+
+body[data-form-factor="desktop"] .adm-card-body--tight {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+  max-width: none;
+}

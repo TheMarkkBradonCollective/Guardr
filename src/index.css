@@ -965,6 +965,96 @@ h1, h2, h3, h4 {
   color: var(--brand-text-muted);
 }
 
+.overview-tier-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.overview-tier-progress-pie {
+  display: flex;
+  justify-content: center;
+}
+
+.overview-tier-progress-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-tier-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.overview-tier-progress-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.overview-tier-progress-label--starting { color: var(--brand-text-muted); }
+.overview-tier-progress-label--rising { color: #60a5fa; }
+.overview-tier-progress-label--professional { color: var(--brand-primary); }
+.overview-tier-progress-label--elite { color: #34d399; }
+
+.overview-tier-progress-meta {
+  font-size: 0.6875rem;
+  color: var(--brand-text-muted);
+}
+
+.overview-tier-progress-meta strong {
+  color: var(--brand-text);
+  font-weight: 800;
+}
+
+.overview-tier-progress-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--brand-border) 80%, transparent);
+  overflow: hidden;
+}
+
+.overview-tier-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.overview-tier-progress-fill--starting {
+  background: color-mix(in srgb, var(--brand-text-muted) 70%, var(--brand-border));
+}
+
+.overview-tier-progress-fill--rising {
+  background: #60a5fa;
+}
+
+.overview-tier-progress-fill--professional {
+  background: var(--brand-primary);
+}
+
+.overview-tier-progress-fill--elite {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+
+.overview-tier-progress-stack {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+.overview-tier-progress-stack-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
 .staff-overview-feed-card {
   border: 1px solid var(--brand-border);
   border-radius: 0.75rem;

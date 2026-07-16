@@ -28,6 +28,7 @@ import {
   filterOverviewMetrics,
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
+import { buildPerformanceTierPercentBars, buildStaffGuardStatRows } from '../../lib/staffStats';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
   AlertTriangle,
@@ -59,6 +60,7 @@ import {
   OverviewVisualGrid,
   OverviewWeekChart,
 } from './overview/OverviewCharts';
+import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
 import { clampPct, DesktopStatusPanel } from '../ui/desktop/DesktopStatusPanel';
 
 interface StaffOverviewDesktopProps {
@@ -203,6 +205,8 @@ export function StaffOverviewDesktop({
   const queuePieSegments = useMemo(() => buildQueuePieSegments(stats), [stats]);
   const healthPieSegments = useMemo(() => buildPlatformHealthPieSegments(stats), [stats]);
   const peopleSegments = useMemo(() => buildPeopleSegments(guards, clients), [guards, clients]);
+  const guardStatRows = useMemo(() => buildStaffGuardStatRows(guards, requests), [guards, requests]);
+  const tierPercentBars = useMemo(() => buildPerformanceTierPercentBars(guardStatRows), [guardStatRows]);
 
   const queueBreakdown = [
     {
@@ -446,7 +450,19 @@ export function StaffOverviewDesktop({
               )}
             </article>
 
-            <article className="adm-card adm-span-8">
+            <article className="adm-card adm-span-4">
+              <p className="adm-card-heading">Guard performance levels</p>
+              <p className="adm-card-body adm-card-body--tight">
+                Share of field guards at each tier — Starting, Rising, Professional, and Elite.
+              </p>
+              <PerformanceTierProgressBars
+                bars={tierPercentBars}
+                totalGuards={guardStatRows.length}
+                showPie
+              />
+            </article>
+
+            <article className="adm-card adm-span-4">
               <p className="adm-card-heading">Field & queue gauges</p>
               <OverviewDonutGrid
                 items={[
