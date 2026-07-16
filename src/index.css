@@ -14334,6 +14334,14 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
   background: linear-gradient(90deg, #fde047, #eab308);
 }
 
+.crew-armed-progress-segment-unarmed {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.24));
+}
+
+.crew-armed-progress-segment-light-armed {
+  background: linear-gradient(90deg, #fde047, #eab308);
+}
+
 .crew-armed-progress-caption {
   margin-top: 0.35rem;
   margin-bottom: 0;

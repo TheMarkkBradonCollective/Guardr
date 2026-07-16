@@ -50,6 +50,26 @@ describe('computeStandingCrewArmedStats', () => {
     assert.equal(stats.total, 1);
     assert.equal(stats.armedCapablePercent, 0);
     assert.equal(stats.unarmed, 1);
+    assert.equal(stats.unarmedPercent, 100);
+  });
+
+  it('fills 100% armed for a solo credentialed lead', () => {
+    const guardCard = verifiedCert('bsis-guard-card', 'guard-card');
+    const lead = baseGuard({
+      id: 'lead',
+      certifications: [
+        guardCard,
+        verifiedCert('bsis-exposed-firearm', 'bsis-permit'),
+        verifiedCert('bsis-firearms-training'),
+        verifiedCert('bsis-firearms-qualification'),
+      ],
+      listedWeaponGear: ['firearm'],
+    });
+    const stats = computeStandingCrewArmedStats(lead, [], [lead]);
+    assert.equal(stats.total, 1);
+    assert.equal(stats.armed, 1);
+    assert.equal(stats.armedPercent, 100);
+    assert.equal(stats.armedCapablePercent, 100);
   });
 
   it('reports armed-capable percentage across lead and active members', () => {
