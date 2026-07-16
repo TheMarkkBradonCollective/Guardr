@@ -7,6 +7,7 @@ import {
   guardCanSaveVehicleDraft,
   guardCanSubmitVehicleForApproval,
   guardHasApprovedVehicle,
+  guardVehicleAccessBlockedReason,
   VEHICLE_PHOTO_SLOTS,
 } from '../../lib/guardVehicle';
 import { guardVehicleInsuranceOnFile } from '../../lib/guardVehicleInsurance';
@@ -77,8 +78,9 @@ export function GuardVehiclePanel({ guard, onSaveVehicle, onSubmitVehicle }: Gua
   const canSave = guardCanSaveVehicleDraft(draftProfile);
   const submitCheck = guardCanSubmitVehicleForApproval(guard, draftProfile);
   const approved = guardHasApprovedVehicle(guard);
+  const accessBlockedReason = guardVehicleAccessBlockedReason(guard);
   const pending = existing?.status === 'pending';
-  const locked = approved || pending;
+  const locked = approved || pending || (existing?.status === 'verified' && Boolean(accessBlockedReason));
 
   const photoSetters: Record<string, (value: string) => void> = {
     front: setFrontPhotoUrl,
@@ -154,15 +156,23 @@ export function GuardVehiclePanel({ guard, onSaveVehicle, onSubmitVehicle }: Gua
             <p className="text-sm text-brand-text-muted mt-1">
               {approved
                 ? 'Your vehicle is approved for driving priority shifts.'
-                : pending
-                  ? 'Your vehicle is pending staff review.'
-                  : 'Save your vehicle anytime. Submit for approval once vehicle insurance is in Credentials.'}
+                : accessBlockedReason
+                  ? 'Vehicle details are on file, but driving access is paused until insurance is current.'
+                  : pending
+                    ? 'Your vehicle is pending staff review.'
+                    : 'Save your vehicle anytime. Submit for approval once vehicle insurance is in Credentials.'}
             </p>
             {existing ? (
               <p className="text-xs text-brand-text-muted mt-2">{formatVehicleSummaryLine(existing)}</p>
             ) : null}
           </div>
         </div>
+
+        {accessBlockedReason ? (
+          <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
+            {accessBlockedReason}
+          </p>
+        ) : null}
 
         {existing?.status === 'rejected' && existing.rejectionReason ? (
           <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">

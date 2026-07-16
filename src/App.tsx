@@ -2779,6 +2779,15 @@ export default function App() {
                 .update(insurancePolicyToDbRow(patch.insurancePolicy))
                 .eq('guard_id', after.id);
             }
+            if (
+              patch.vehicleInsurancePolicy &&
+              patch.vehicleInsurancePolicy !== before.vehicleInsurancePolicy
+            ) {
+              void supabase
+                .from('guard_vehicle_insurance_policies')
+                .update(vehicleInsurancePolicyToDbRow(patch.vehicleInsurancePolicy))
+                .eq('guard_id', after.id);
+            }
           }
           const actor = currentUserRef.current;
           if (actor && patch.notifications.length > 0) {

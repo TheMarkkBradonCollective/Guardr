@@ -28,6 +28,15 @@ export function resolveVehicleInsuranceStatus(
   return 'pending';
 }
 
+export function guardVehicleInsuranceIsExpired(
+  guard: Pick<SecurityGuard, 'vehicleInsurancePolicy'>
+): boolean {
+  const policy = guard.vehicleInsurancePolicy;
+  if (!policy) return false;
+  if (!guardVehicleInsuranceOnFile(guard) && !guardVehicleInsuranceSubmitted(guard)) return false;
+  return resolveVehicleInsuranceStatus(policy) === 'expired';
+}
+
 export function guardHasVerifiedVehicleInsurance(
   guard: Pick<SecurityGuard, 'vehicleInsurancePolicy'>
 ): boolean {

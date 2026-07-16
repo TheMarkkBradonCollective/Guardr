@@ -2,8 +2,10 @@ import type { GuardVehicleProfile, SecurityGuard } from '../types';
 import { getGuardIdVerificationStatus } from './guardIdentityVerification';
 import {
   guardHasVerifiedVehicleInsurance,
+  guardVehicleInsuranceIsExpired,
   guardVehicleInsuranceOnFile,
   guardVehicleInsuranceSubmitted,
+  isVehicleInsuranceExpired,
 } from './guardVehicleInsurance';
 
 export const VEHICLE_PHOTO_SLOTS = [
@@ -93,6 +95,13 @@ export function guardCanSubmitVehicleForApproval(
       reason: 'Upload vehicle insurance in Credentials before submitting your vehicle for approval.',
     };
   }
+  if (guard.vehicleInsurancePolicy && isVehicleInsuranceExpired(guard.vehicleInsurancePolicy)) {
+    return {
+      ok: false,
+      reason:
+        'Your vehicle insurance has expired. Upload updated insurance in Credentials before submitting your vehicle.',
+    };
+  }
   if (!guardVehicleDetailsComplete(profile)) {
     return { ok: false, reason: 'Enter make, model, plate number, and plate state.' };
   }
@@ -106,9 +115,28 @@ export function guardCanSubmitVehicleForApproval(
 }
 
 export function guardHasApprovedVehicle(
-  guard: Pick<SecurityGuard, 'vehicleProfile'>
+  guard: Pick<SecurityGuard, 'vehicleProfile' | 'vehicleInsurancePolicy'>
 ): boolean {
-  return guard.vehicleProfile?.status === 'verified';
+  if (guard.vehicleProfile?.status !== 'verified') return false;
+  return guardHasVerifiedVehicleInsurance(guard);
+}
+
+export function guardVehicleAccessBlockedReason(
+  guard: Pick<SecurityGuard, 'vehicleProfile' | 'vehicleInsurancePolicy'>
+): string | null {
+  if (guard.vehicleProfile?.status !== 'verified') return null;
+  if (guardHasVerifiedVehicleInsurance(guard)) return null;
+  if (guardVehicleInsuranceIsExpired(guard)) {
+    return 'Your vehicle insurance has expired. Upload updated insurance in Credentials to restore driving and vehicle patrol access.';
+  }
+  if (
+    guard.vehicleInsurancePolicy &&
+    guardVehicleInsuranceSubmitted(guard) &&
+    guard.vehicleInsurancePolicy.status === 'pending'
+  ) {
+    return 'Updated vehicle insurance is pending staff review. Driving access returns once it is approved.';
+  }
+  return 'Verified vehicle insurance is required for driving and vehicle patrol access.';
 }
 
 export function guardVehicleTabVisible(

@@ -142,6 +142,41 @@ describe('guardCredentialExpiryEnforcement', () => {
     assert.equal(guardExpiredRequiredWorkCredentialUnresolved(result.guard), false);
   });
 
+  it('auto-marks expired vehicle insurance without restricting marketplace access', () => {
+    const guard = baseGuard({
+      vehicleInsurancePolicy: {
+        id: 'vins-1',
+        guardId: 'g1',
+        carrier: 'Auto Insurer',
+        policyNumber: 'AUTO-1',
+        expiryDate: '2020-01-01',
+        documentUrl: 'vehicle-insurance.pdf',
+        status: 'verified',
+        submittedAt: '2024-01-01T00:00:00.000Z',
+      },
+      vehicleProfile: {
+        id: 'veh-1',
+        guardId: 'g1',
+        make: 'Toyota',
+        model: 'Camry',
+        plateNumber: 'ABC123',
+        plateState: 'CA',
+        status: 'verified',
+      },
+    });
+
+    const items = listExpiredCredentialsForEnforcement(guard);
+    assert.ok(items.some((item) => item.kind === 'vehicle_insurance' && !item.blocksWork));
+
+    const result = applyGuardCredentialExpiryEnforcement(guard);
+    assert.equal(result.changed, true);
+    assert.equal(result.guard.vehicleInsurancePolicy?.status, 'expired');
+    assert.ok(result.guard.vehicleInsurancePolicy?.updateRequestedAt);
+    assert.equal(result.guard.userStatus, 'active');
+    assert.equal(result.guard.credentialExpiryRestricted, undefined);
+    assert.ok(result.notifications.some((note) => note.body.includes('vehicle patrol')));
+  });
+
   it('does not repeat update requests once already sent', () => {
     const guard = baseGuard({
       idExpiryDate: '2020-01-01',

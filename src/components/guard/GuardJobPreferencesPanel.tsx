@@ -247,7 +247,7 @@ export function GuardJobPreferencesPanel({
                           <p className="guard-pref-type-desc">{option.description}</p>
                           {vehicleBlocked ? (
                             <p className="guard-pref-type-vehicle-note">
-                              {guardVehicleRequiredBlockMessage(type)}
+                              {guardVehicleRequiredBlockMessage(guard, type)}
                             </p>
                           ) : null}
                         </div>

@@ -241,7 +241,7 @@ export function checkJobRequirements(
       !guardCanEnableJobTypePreference(guard, job.type)
     ) {
       checks.push({
-        label: guardVehicleRequiredBlockMessage(job.type),
+        label: guardVehicleRequiredBlockMessage(guard, job.type),
         met: false,
       });
     }
