@@ -1,0 +1,487 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP WORKSPACE — Ground-up desktop shell (≥1024px only)
+   Completely separate from mobile/tablet role shells. Left nav rail + command
+   bar + padded workspace canvas. Nothing recycled from compact/docked layouts.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body[data-form-factor="desktop"] .desktop-workspace {
+  display: grid;
+  grid-template-columns: 17.5rem minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg)) 0%, var(--brand-bg) 28%),
+    var(--brand-bg);
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid color-mix(in srgb, var(--brand-border) 85%, transparent);
+  background:
+    radial-gradient(ellipse 120% 80% at 100% 0%, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent 55%),
+    var(--brand-bg);
+}
+
+/* ─── Left navigation rail ─────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-nav-rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-bg-sec) 92%, #000) 0%, var(--brand-bg-sec) 100%);
+  border-right: none;
+  z-index: 20;
+}
+
+html.theme-dark body[data-form-factor="desktop"] .desktop-nav-rail {
+  background:
+    linear-gradient(180deg, #0d0d0d 0%, #080808 100%);
+}
+
+html.theme-light body[data-form-factor="desktop"] .desktop-nav-rail {
+  background:
+    linear-gradient(180deg, #f8faf8 0%, #f1f4f1 100%);
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.35rem 1.25rem 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-brand-name {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--brand-text);
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-brand-tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  opacity: 0.75;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.85rem 0.75rem 1rem;
+  scrollbar-width: thin;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-section {
+  margin-bottom: 0.35rem;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-section-label {
+  margin: 0.85rem 0.5rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  opacity: 0.55;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: var(--brand-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item:hover:not(.desktop-nav-rail-item--active):not(.desktop-nav-rail-item--locked) {
+  background: color-mix(in srgb, var(--brand-primary) 7%, transparent);
+  color: var(--brand-text);
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item--active {
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, transparent);
+  color: var(--brand-primary);
+  font-weight: 700;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--brand-surface) 70%, transparent);
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item--active .desktop-nav-rail-item-icon-wrap {
+  background: color-mix(in srgb, var(--brand-primary) 16%, var(--brand-surface));
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-item-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  background: var(--status-danger);
+  color: #fff;
+  line-height: 1;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-footer {
+  flex-shrink: 0;
+  padding: 0.85rem 0.9rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-account {
+  width: 100%;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail-account .account-menu-trigger {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* ─── Command bar ───────────────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-command-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: color-mix(in srgb, var(--brand-surface) 88%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar--map {
+  background: color-mix(in srgb, var(--brand-bg) 90%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--brand-border) 55%, transparent);
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-height: 3.75rem;
+  padding: 0.85rem 1.5rem;
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-titles {
+  min-width: 0;
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: var(--brand-text);
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--brand-text-muted);
+  text-transform: uppercase;
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-extension {
+  padding: 0 1.5rem 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--brand-border) 55%, transparent);
+}
+
+body[data-form-factor="desktop"] .desktop-command-bar-slot {
+  border-bottom: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+/* ─── Workspace canvas ──────────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas--bleed {
+  padding: 0;
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas-inner {
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 75%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+    0 18px 40px -28px color-mix(in srgb, #000 28%, transparent);
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas--bleed .desktop-workspace-canvas-inner {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .desktop-workspace--staff .desktop-workspace-canvas-inner {
+  max-width: 96rem;
+  margin-inline: auto;
+  width: 100%;
+}
+
+body[data-form-factor="desktop"] .desktop-workspace--staff .desktop-workspace-canvas:not(.desktop-workspace-canvas--bleed) .desktop-workspace-canvas-inner {
+  padding: 1.25rem 1.5rem 1.75rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ─── Master-detail (staff lists, records) ───────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-master-detail {
+  display: grid;
+  grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+  gap: 0;
+  min-height: calc(100vh - 12rem);
+  height: 100%;
+  border-radius: var(--radius-app-lg);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: var(--brand-surface);
+}
+
+body[data-form-factor="desktop"] .desktop-master-detail-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-bg-sec) 55%, var(--brand-surface));
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .desktop-master-detail-list .app-item-card-stack {
+  gap: 0.5rem;
+  padding: 0.85rem;
+}
+
+body[data-form-factor="desktop"] .desktop-master-detail-detail {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 1.75rem;
+  background: var(--brand-surface);
+}
+
+/* ─── Messages workbench ────────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-messages-workbench {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--brand-bg);
+}
+
+body[data-form-factor="desktop"] .desktop-messages-inbox {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-bg-sec) 60%, var(--brand-surface));
+}
+
+body[data-form-factor="desktop"] .desktop-messages-inbox-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body[data-form-factor="desktop"] .desktop-messages-thread {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--brand-surface);
+}
+
+body[data-form-factor="desktop"] .desktop-messages-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, color-mix(in srgb, var(--brand-primary) 6%, transparent), transparent 70%),
+    var(--brand-surface);
+}
+
+/* ─── Map inspector panel (guard) ───────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-map-inspector {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 26rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: color-mix(in srgb, var(--brand-surface) 96%, transparent);
+  border-left: 1px solid var(--brand-border);
+  box-shadow: -12px 0 32px -20px color-mix(in srgb, #000 35%, transparent);
+  z-index: 30;
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector-header {
+  flex-shrink: 0;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-bg-sec) 40%, var(--brand-surface));
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector-header-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+body[data-form-factor="desktop"] .desktop-map-inspector-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 1.15rem 1.5rem;
+}
+
+body[data-form-factor="desktop"] .guard-map-layout .guardr-map-root {
+  right: 26rem !important;
+}
+
+body[data-form-factor="desktop"] .client-map-layout .guardr-map-root {
+  right: 26rem !important;
+}
+
+body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset {
+  right: 26rem !important;
+  width: auto !important;
+  left: 0 !important;
+}
+
+/* ─── Content width helpers ─────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .client-content-shell {
+  max-width: min(68rem, 100%);
+  margin-inline: auto;
+  padding-inline: 0.5rem;
+}
+
+body[data-form-factor="desktop"] .client-form-shell {
+  max-width: min(44rem, 100%);
+  margin-inline: auto;
+}
+
+body[data-form-factor="desktop"] .staff-ops-root main {
+  max-width: none;
+}
+
+/* Desktop map + inspector sizing lives in styles/desktop-workspace.css */
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas .app-card,
+body[data-form-factor="desktop"] .desktop-workspace-canvas .uber-card,
+body[data-form-factor="desktop"] .desktop-master-detail-detail .app-card {
+  padding: 1.35rem 1.5rem;
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas .app-item-card {
+  border-radius: var(--radius-app);
+}
+
+body[data-form-factor="desktop"] .desktop-workspace-canvas .wf-metric-tile {
+  padding: 1.15rem 1.35rem;
+}
+
+/* ─── Staff desktop nav density ─────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-scroll {
+  padding-top: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-brand {
+  justify-content: space-between;
+}

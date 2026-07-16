@@ -5,7 +5,8 @@ import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { NavMenuPopover } from './NavMenuPopover';
 import { AppHeaderBranding } from './AppHeaderBranding';
 import { AppHeaderToolbar } from './AppHeaderToolbar';
-import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
+import { useDevice } from '../../lib/platform';
+import { DesktopWorkspaceShell } from './desktop/DesktopWorkspaceShell';
 
 interface RoleAppShellProps {
   title: string;
@@ -41,7 +42,31 @@ export function RoleAppShell({
   headerOverride,
   variant = 'default',
 }: RoleAppShellProps) {
-  const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.md}px)`);
+  const { formFactor } = useDevice();
+
+  if (formFactor === 'desktop') {
+    return (
+      <DesktopWorkspaceShell
+        title={title}
+        accountMenu={accountMenu}
+        navItems={navItems}
+        overflowNavItems={overflowNavItems}
+        activeNavId={activeNavId}
+        onNavigate={onNavigate}
+        notifications={notifications}
+        headerRight={headerRight}
+        fullBleed={fullBleed}
+        hideHeader={hideHeader}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+        variant={variant}
+      >
+        {children}
+      </DesktopWorkspaceShell>
+    );
+  }
+
+  const dockedSidebar = formFactor === 'tablet';
   const isMapMode = variant === 'dark';
 
   const allSideNavItems = useMemo(
