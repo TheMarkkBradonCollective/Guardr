@@ -27,5 +27,8 @@ describe('guardPerformanceRewards', () => {
     assert.ok(summary.sections.length >= 4);
     assert.ok(rewardsForTier('elite').length > 0);
     assert.equal(summary.sections[0].unlocked, true);
+    const allRewardIds = summary.sections.flatMap((section) => section.items.map((item) => item.id));
+    assert.equal(allRewardIds.includes('trusted-path'), false);
+    assert.equal(allRewardIds.includes('crew-lead'), false);
   });
 });

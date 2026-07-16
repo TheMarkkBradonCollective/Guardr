@@ -951,6 +951,8 @@ export function StaffDashboard({
           <StaffStatsPanel
             guards={guards}
             requests={requests}
+            standingCrewMembers={standingCrewMembers}
+            crewJoinRequests={crewJoinRequests}
             onOpenGuard={(guardId) => {
               onStaffGuardTabChange?.('performance');
               navigateSection('guards', { guardId });

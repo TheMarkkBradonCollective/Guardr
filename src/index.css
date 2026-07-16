@@ -10373,6 +10373,76 @@ button.guard-factor-card {
   color: var(--brand-text-muted);
 }
 
+.staff-stats-eligibility-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.staff-stats-eligibility-row {
+  width: 100%;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  text-align: left;
+}
+
+.staff-stats-eligibility-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.staff-stats-eligibility-pill {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.staff-stats-eligibility-pill--trusted {
+  color: color-mix(in srgb, var(--brand-primary) 85%, #000);
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+}
+
+.staff-stats-eligibility-pill--crew-lead {
+  color: #7c4a03;
+  background: color-mix(in srgb, #f59e0b 18%, transparent);
+}
+
+.staff-stats-eligibility-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.staff-stats-eligibility-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-stats-eligibility-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.staff-stats-eligibility-summary {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+  line-height: 1.45;
+}
+
 .staff-stats-bucket-list {
   list-style: none;
   margin: 0;
