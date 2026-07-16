@@ -129,7 +129,7 @@ function CityDetailPanel({
 
       {canManageStatus ? (
         <label className="block space-y-1.5">
-          <span className="uber-label">Market status</span>
+          <span className="uber-label">Operations status</span>
           <select
             value={directorValue}
             disabled={busy}
@@ -171,7 +171,7 @@ function CityDetailPanel({
 
       {canRecommend && !canManageStatus && (
         <p className="text-xs text-brand-text-muted">
-          As a Manager you can recommend cities for review. Directors and Founders control market status.
+          As a Manager you can recommend cities for review. Directors and Founders control operations status.
         </p>
       )}
     </div>
@@ -375,8 +375,8 @@ export function StaffCitiesPanel({
         <h2 className="text-sm font-semibold">Operations</h2>
         <p className="text-sm text-brand-text-muted leading-relaxed">
           Control where Guardr accepts guard and client applications. Closed cities show an instant
-          denial. Wait list cities still collect applications but hold release to staff until the
-          market is fully active.
+          denial. Wait list cities still collect applications but hold release to staff until operations
+          are fully active.
         </p>
         {canRecommend && (
           <p className="text-xs text-amber-400">
@@ -456,7 +456,7 @@ export function StaffCitiesPanel({
 
                 {canManageStatus ? (
                   <label className="flex shrink-0 flex-col gap-1 sm:w-52">
-                    <span className="sr-only">Set market status for {city.name}</span>
+                    <span className="sr-only">Set operations status for {city.name}</span>
                     <select
                       value={directorValue}
                       disabled={busy}

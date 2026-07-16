@@ -723,6 +723,10 @@ export function StaffDashboard({
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
             feeConfig={platformSettings.feeConfig}
+            showApprovalSettings={showSettings}
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
           />
           </div>
         );
@@ -1020,7 +1024,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
-            placeholders={['Open markets', 'Wait list cities', 'Manager recommendations']}
+            placeholders={['Open cities', 'Wait list', 'Recommendations']}
           />
         );
       case 'settings':
@@ -1029,9 +1033,6 @@ export function StaffDashboard({
             currentUser={currentUser}
             platformSettings={platformSettings}
             onUpdatePlatformSettings={onUpdatePlatformSettings}
-            showStaffOnboard={canProposeStaff}
-            requiresDirectorApproval={requiresDirectorApproval}
-            onAddStaffProfile={onAddStaffProfile}
             companyPublicDocuments={companyPublicDocuments}
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
@@ -1040,7 +1041,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.settings!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.settings!.message}
-            placeholders={['Approval rules', 'Homepage messages', 'Platform controls']}
+            placeholders={['Homepage messages', 'Platform controls']}
           />
         );
       case 'integrations':

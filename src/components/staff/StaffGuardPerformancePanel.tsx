@@ -122,6 +122,7 @@ export function StaffGuardPerformancePanel({
         variant="full"
         pinnedLayout
         includeAllJobTypes
+        showSpecialtyRatings
         factorOrder={sortedFactors.map((f) => f.id)}
         onFactorSelect={(factor: PerformanceFactor) => {
           if (isPerformanceFactorId(factor.id)) {

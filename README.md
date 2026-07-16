@@ -113,7 +113,7 @@ Supabase schema lives in **`supabase/complete_schema_setup.sql`**. Run that file
 
 - **Supabase Auth bridge** — PBKDF2 password hashing, auth user linking, server-side migration API (`/api/auth/bridge`)
 - **Role-based RLS** — helper functions + policies on new tables (audit log, availability, invoices)
-- **Trusted-client auto-publish** — configurable in Staff → Settings → Approval rules
+- **Trusted-client auto-publish** — configurable in Staff → Jobs → Approval rules
 - **Audit log** — Staff → Settings (immutable action history)
 - **SLA dashboard** — Staff → Analytics (approval time, fill time, no-show rate)
 - **Guard availability calendar** — Guard → Settings

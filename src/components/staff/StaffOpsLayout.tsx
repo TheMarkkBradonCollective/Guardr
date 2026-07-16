@@ -79,7 +79,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   'audit-log': 'Audit log',
   disputes: 'Disputes',
   analytics: 'Analytics',
-  settings: 'System Settings',
+  settings: 'Public Information',
   integrations: 'Integrations',
   cities: 'Operations',
   guide: 'Guide',
@@ -136,7 +136,7 @@ export function StaffOpsLayout({
     { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
-    { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
+    { id: 'settings', label: 'Public Information', icon: Settings, settingsOnly: true },
     { id: 'integrations', label: 'Integrations', icon: Plug, settingsOnly: true },
   ];
 

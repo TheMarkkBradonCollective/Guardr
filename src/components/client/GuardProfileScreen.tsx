@@ -195,6 +195,7 @@ export function GuardProfileScreen({
             performance={performance}
             skillRatings={skillRatings}
             variant="full"
+            showSpecialtyRatings
           />
 
           <GuardWeaponGearClientSection guard={guard} />

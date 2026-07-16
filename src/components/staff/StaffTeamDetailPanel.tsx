@@ -17,9 +17,13 @@ import {
   staffRoleRank,
 } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
-import { normalizeManagedCities } from '../../lib/platformCities';
+import {
+  getAssignableCityNamesForStaffAccess,
+  normalizeManagedCities,
+} from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
+import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { ArrowLeft } from 'lucide-react';
 
 interface StaffTeamDetailPanelProps {
@@ -104,18 +108,11 @@ export function StaffTeamDetailPanel({
     canModifyMember &&
     canAssignStaffCityAccess({ role: currentUserRole }) &&
     Boolean(onUpdateStaffCityAccess);
-  const assignableCityNames = normalizeManagedCities(
-    currentUserRole === 'manager'
-      ? actorManagedCities
-      : platformCities.map((city) => city.name),
-    platformCities
+  const assignableCityNames = getAssignableCityNamesForStaffAccess(
+    platformCities,
+    currentUserRole,
+    actorManagedCities
   );
-
-  const toggleManagedCity = (cityName: string) => {
-    setManagedCities((prev) =>
-      prev.includes(cityName) ? prev.filter((city) => city !== cityName) : [...prev, cityName]
-    );
-  };
 
   const handleCityAccessSave = async () => {
     if (!onUpdateStaffCityAccess) return;
@@ -127,9 +124,9 @@ export function StaffTeamDetailPanel({
         managedCities: normalizeManagedCities(managedCities, platformCities),
         assignedManagerIds,
       });
-      setCityMsg('City access updated.');
+      setCityMsg('Operations access updated.');
     } catch (err) {
-      setCityError(err instanceof Error ? err.message : 'Could not update city access.');
+      setCityError(err instanceof Error ? err.message : 'Could not update operations access.');
     } finally {
       setSavingCities(false);
     }
@@ -233,27 +230,17 @@ export function StaffTeamDetailPanel({
 
       {canEditCityAccess && assignableCityNames.length > 0 && (
         <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">City access</h3>
+          <h3 className="text-sm font-semibold">Operations access</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Choose which cities this staff member may manage. Directors control manager city
-            assignments; managers may assign cities within their own scope.
+            Choose which cities this staff member may manage in Operations. Directors control
+            manager assignments; managers may assign cities within their own scope.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {assignableCityNames.map((cityName) => (
-              <button
-                key={cityName}
-                type="button"
-                onClick={() => toggleManagedCity(cityName)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                  managedCities.includes(cityName)
-                    ? 'bg-brand-primary text-white border-brand-primary'
-                    : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
-                }`}
-              >
-                {cityName}
-              </button>
-            ))}
-          </div>
+          <StaffOperationsAccessPicker
+            id={`staff-ops-access-${member.id}`}
+            cityNames={assignableCityNames}
+            selected={managedCities}
+            onChange={setManagedCities}
+          />
           {currentUserRole === 'owner' || currentUserRole === 'director' ? (
             <div className="space-y-2">
               <label className="uber-label block">Assigned managers</label>
@@ -281,7 +268,7 @@ export function StaffTeamDetailPanel({
             disabled={savingCities}
             className="app-button-primary app-btn-sm"
           >
-            {savingCities ? 'Saving…' : 'Save city access'}
+            {savingCities ? 'Saving…' : 'Save operations access'}
           </button>
           {cityError && <p className="text-sm text-red-400">{cityError}</p>}
           {cityMsg && <p className="text-sm text-brand-primary">{cityMsg}</p>}

@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { StaffRole } from '../../types';
+import { StaffRole, PlatformRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import type { PlatformCity } from '../../lib/platformCities';
-import { normalizeManagedCities } from '../../lib/platformCities';
+import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
+import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 
 export interface StaffAddStaffInput {
   email: string;
@@ -17,6 +18,7 @@ export interface StaffAddStaffInput {
 interface StaffAddStaffFormProps {
   assignableRoles: StaffRole[];
   requiresDirectorApproval?: boolean;
+  actorRole: PlatformRole;
   platformCities?: PlatformCity[];
   actorManagedCities?: string[];
   managerOptions?: Array<{ id: string; badgeNumber?: string; name: string }>;
@@ -27,6 +29,7 @@ interface StaffAddStaffFormProps {
 export function StaffAddStaffForm({
   assignableRoles,
   requiresDirectorApproval = false,
+  actorRole,
   platformCities = [],
   actorManagedCities = [],
   managerOptions = [],
@@ -44,14 +47,8 @@ export function StaffAddStaffForm({
   const [saving, setSaving] = useState(false);
 
   const assignableCityNames = useMemo(
-    () =>
-      normalizeManagedCities(
-        actorManagedCities.length > 0
-          ? actorManagedCities
-          : platformCities.map((city) => city.name),
-        platformCities
-      ),
-    [actorManagedCities, platformCities]
+    () => getAssignableCityNamesForStaffAccess(platformCities, actorRole, actorManagedCities),
+    [actorManagedCities, actorRole, platformCities]
   );
 
   const reset = () => {
@@ -165,29 +162,17 @@ export function StaffAddStaffForm({
 
           {assignableCityNames.length > 0 && (
             <div className="space-y-2">
-              <label className="uber-label block">City access</label>
-              <div className="flex flex-wrap gap-2">
-                {assignableCityNames.map((cityName) => (
-                  <button
-                    key={cityName}
-                    type="button"
-                    onClick={() =>
-                      setManagedCities((prev) =>
-                        prev.includes(cityName)
-                          ? prev.filter((city) => city !== cityName)
-                          : [...prev, cityName]
-                      )
-                    }
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      managedCities.includes(cityName)
-                        ? 'bg-brand-primary text-white border-brand-primary'
-                        : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
-                    }`}
-                  >
-                    {cityName}
-                  </button>
-                ))}
-              </div>
+              <label className="uber-label block">Operations access</label>
+              <p className="text-xs text-brand-text-muted">
+                Assign which cities this staff member may manage in Operations.
+              </p>
+              <StaffOperationsAccessPicker
+                id="add-staff-operations-access"
+                cityNames={assignableCityNames}
+                selected={managedCities}
+                onChange={setManagedCities}
+                maxListHeightClassName="max-h-40"
+              />
             </div>
           )}
 

@@ -13,7 +13,7 @@ export interface StaffNavItem {
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
   settingsOnly?: boolean;
-  /** Visible to Manager and above (city market controls) */
+  /** Visible to Manager and above (Operations controls) */
   citiesOnly?: boolean;
   /** Visible to Administrator and above (dispute resolution) */
   disputesOnly?: boolean;
