@@ -1,16 +1,19 @@
 import React, { useMemo } from 'react';
-import { Star } from 'lucide-react';
+import { Check, ChevronRight, Star } from 'lucide-react';
 import type { JobType, SecurityGuard, SecurityRequest } from '../../types';
 import {
-  buildJobTypePerformanceFactors,
   computeClientReviewStatsForJobType,
   computeGuardPerformanceForJobType,
   formatReviewCount,
   formatShiftSampleCount,
   type GuardSkillRating,
 } from '../../lib/guardPerformance';
-import { jobTypePreferenceLabel } from '../../lib/guardJobPreferences';
-import { FactorCard } from './GuardRatingSection';
+import {
+  buildJobTypeRatingCards,
+  jobTypeRatingDisplayName,
+  type JobTypeMetricId,
+  type JobTypeRatingCard,
+} from '../../lib/guardJobTypeRatingMetrics';
 import { JOB_TYPE_ICONS } from './guardJobTypeIcons';
 
 export interface GuardJobTypeRatingSectionProps {
@@ -20,7 +23,57 @@ export interface GuardJobTypeRatingSectionProps {
   skillRating?: GuardSkillRating;
   pinnedLayout?: boolean;
   toolbar?: React.ReactNode;
+  onMetricSelect?: (metricId: JobTypeMetricId, card: JobTypeRatingCard) => void;
   className?: string;
+}
+
+function JobTypeMetricCard({
+  card,
+  onSelect,
+}: {
+  card: JobTypeRatingCard;
+  onSelect?: (metricId: JobTypeMetricId, card: JobTypeRatingCard) => void;
+}) {
+  const interactive = !!onSelect;
+
+  const content = (
+    <>
+      <p className="guard-jobtype-metric-label">{card.label}</p>
+      <div className="guard-jobtype-metric-value-row">
+        <p className="guard-jobtype-metric-value">{card.valueDisplay}</p>
+        <span
+          className={`guard-jobtype-metric-check ${card.meetsTarget ? 'guard-jobtype-metric-check-ok' : 'guard-jobtype-metric-check-muted'}`}
+          aria-hidden
+        >
+          <Check className="guard-jobtype-metric-check-icon" />
+        </span>
+      </div>
+      <p className="guard-jobtype-metric-target">{card.targetLabel}</p>
+      <span className={`guard-factor-card-status guard-factor-status-${card.status}`}>
+        <span className="guard-factor-status-dot" />
+        {card.statusLabel}
+      </span>
+      {interactive ? <ChevronRight className="guard-factor-card-chevron" aria-hidden /> : null}
+    </>
+  );
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        className={`guard-jobtype-metric-card guard-jobtype-metric-card-interactive guard-factor-card-${card.status}`}
+        onClick={() => onSelect?.(card.id, card)}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <article className={`guard-jobtype-metric-card guard-factor-card-${card.status}`}>
+      {content}
+    </article>
+  );
 }
 
 export function GuardJobTypeRatingSection({
@@ -30,9 +83,10 @@ export function GuardJobTypeRatingSection({
   skillRating,
   pinnedLayout = false,
   toolbar,
+  onMetricSelect,
   className = '',
 }: GuardJobTypeRatingSectionProps) {
-  const label = jobTypePreferenceLabel(jobType);
+  const displayName = jobTypeRatingDisplayName(jobType);
   const Icon = JOB_TYPE_ICONS[jobType];
 
   const metrics = useMemo(
@@ -43,14 +97,13 @@ export function GuardJobTypeRatingSection({
     () => computeClientReviewStatsForJobType(guard.id, requests, jobType),
     [guard.id, requests, jobType]
   );
-  const factors = useMemo(
-    () => buildJobTypePerformanceFactors(guard.id, jobType, requests),
+  const cards = useMemo(
+    () => buildJobTypeRatingCards(guard.id, jobType, requests),
     [guard.id, jobType, requests]
   );
 
   const averageRating = skillRating?.rating ?? clientReviews.average;
   const reviewCount = skillRating?.reviewCount ?? clientReviews.count;
-  const hasShiftHistory = metrics.jobsSampled > 0 || reviewCount > 0;
 
   const heroBlock = (
     <div className="guard-jobtype-hero">
@@ -58,7 +111,7 @@ export function GuardJobTypeRatingSection({
       <div className="guard-jobtype-hero-icon-wrap" aria-hidden>
         <Icon className="guard-jobtype-hero-icon" />
       </div>
-      <h2 className="guard-jobtype-hero-name">{label}</h2>
+      <h2 className="guard-jobtype-hero-name">{displayName}</h2>
       <div className="guard-jobtype-hero-score-row">
         <Star className="guard-jobtype-hero-star" aria-hidden />
         <span className="guard-jobtype-hero-score">
@@ -71,25 +124,21 @@ export function GuardJobTypeRatingSection({
           ? formatReviewCount(reviewCount)
           : metrics.jobsSampled > 0
             ? formatShiftSampleCount(metrics.jobsSampled)
-            : `Building your ${label.toLowerCase()} profile`}
+            : `Building your ${displayName.toLowerCase()} profile`}
       </p>
     </div>
   );
 
   const bodyBlock = (
     <div className="guard-rating-body">
-      <section className="guard-factors-section">
+      <section className="guard-jobtype-metrics-section">
         <div className="guard-factors-header">
-          <h3 className="guard-factors-heading">{label} ratings</h3>
-          <p className="guard-factors-subheading">
-            {hasShiftHistory
-              ? 'Performance for this job type'
-              : 'Points earned from recent shift behavior'}
-          </p>
+          <h3 className="guard-factors-heading">{displayName} ratings</h3>
+          <p className="guard-factors-subheading">Performance metrics for this job type</p>
         </div>
-        <div className="guard-factors-grid">
-          {factors.map((factor) => (
-            <FactorCard key={factor.id} factor={factor} />
+        <div className="guard-jobtype-metrics-grid">
+          {cards.map((card) => (
+            <JobTypeMetricCard key={card.id} card={card} onSelect={onMetricSelect} />
           ))}
         </div>
       </section>
