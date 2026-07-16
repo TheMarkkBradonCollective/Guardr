@@ -146,9 +146,9 @@ export function StaffCitiesPanel({
   if (!canView) {
     return (
       <div className="app-empty-state app-empty-state--dashed">
-        <p className="app-empty-state-title">City markets unavailable</p>
+        <p className="app-empty-state-title">Operations unavailable</p>
         <p className="app-empty-state-body">
-          Market controls are limited to Manager roles and above.
+          Operations controls are limited to Manager roles and above.
         </p>
       </div>
     );
@@ -168,7 +168,7 @@ export function StaffCitiesPanel({
   return (
     <div className="animate-fade-in space-y-4">
       <div className="rounded-xl border border-brand-border bg-brand-surface/60 p-4 space-y-2">
-        <h2 className="text-sm font-semibold">City markets</h2>
+        <h2 className="text-sm font-semibold">Operations</h2>
         <p className="text-sm text-brand-text-muted leading-relaxed">
           Control where Guardr accepts guard and client applications. Closed cities show an instant
           denial. Wait list cities still collect applications but hold release to staff until the
@@ -206,7 +206,7 @@ export function StaffCitiesPanel({
       </div>
 
       <StaffListFilterTabs
-        aria-label="City market status"
+        aria-label="Operations city status"
         activeId={statusFilter}
         onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
         tabs={[

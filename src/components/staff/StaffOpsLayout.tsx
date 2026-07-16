@@ -79,7 +79,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   disputes: 'Disputes',
   analytics: 'Analytics',
   settings: 'System Settings',
-  cities: 'City markets',
+  cities: 'Operations',
   guide: 'Guide',
   'dev-updates': 'Dev notes',
   profile: 'Profile',
@@ -133,7 +133,7 @@ export function StaffOpsLayout({
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
-    { id: 'cities', label: 'City markets', icon: MapPinned, citiesOnly: true },
+    { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
     { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];
 

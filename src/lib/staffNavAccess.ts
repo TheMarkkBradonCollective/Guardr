@@ -46,7 +46,7 @@ export function getStaffNavAccessNotice(
     return {
       title: 'Manager access required',
       message:
-        'City market controls are limited to Manager roles and above. Ask your Director if you need access.',
+        'Operations controls are limited to Manager roles and above. Ask your Director if you need access.',
     };
   }
   if (DISPUTES_SECTIONS.has(section) && !flags.showDisputes) {
@@ -102,7 +102,7 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
       'Platform settings are limited to Administrator roles and above. Ask your Director to update approval rules, integrations, or other system-wide controls.',
   },
   cities: {
-    title: 'City markets',
+    title: 'Operations',
     message:
       'City rollout controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
   },
