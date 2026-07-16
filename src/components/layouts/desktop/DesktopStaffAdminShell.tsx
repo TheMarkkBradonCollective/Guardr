@@ -33,13 +33,13 @@ interface DesktopStaffAdminShellProps {
 }
 
 const MENU_GROUPS: { label: string; ids: StaffSection[] }[] = [
-  { label: 'Command', ids: ['overview', 'map', 'analytics'] },
+  { label: 'Command', ids: ['overview', 'map'] },
   {
     label: 'Operations',
     ids: ['jobs', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team', 'messages'],
   },
   { label: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
-  { label: 'Risk', ids: ['incidents', 'disputes'] },
+  { label: 'Support & insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { label: 'Platform', ids: ['cities', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 

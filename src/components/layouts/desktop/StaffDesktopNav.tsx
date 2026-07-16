@@ -17,13 +17,13 @@ interface StaffDesktopNavProps {
 }
 
 const GROUPS: { title: string; ids: StaffSection[] }[] = [
-  { title: 'Command center', ids: ['overview', 'map', 'analytics'] },
+  { title: 'Command center', ids: ['overview', 'map'] },
   {
     title: 'Field operations',
     ids: ['jobs', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team', 'messages'],
   },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
-  { title: 'Risk & support', ids: ['incidents', 'disputes'] },
+  { title: 'Support & insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { title: 'Platform', ids: ['settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
