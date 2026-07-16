@@ -48,10 +48,7 @@ function displayOverallScore(performance: GuardPerformanceMetrics, guard: Securi
 }
 
 function tierHeroClass(tier: PerformanceTier): string {
-  if (tier.level >= 3) return 'guard-tier-hero-elite';
-  if (tier.level >= 2) return 'guard-tier-hero-professional';
-  if (tier.level >= 1) return 'guard-tier-hero-rising';
-  return 'guard-tier-hero-starting';
+  return `guard-performance-hero-${tier.id}`;
 }
 
 function TierMedal({ tier, size = 'md' }: { tier: PerformanceTier; size?: 'sm' | 'md' | 'lg' }) {

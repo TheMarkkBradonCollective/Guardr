@@ -8834,6 +8834,37 @@ html.theme-grey .wf-badge-success {
   margin-top: 0.25rem;
 }
 
+.guard-performance-hero-starting {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand-primary) 82%, #fff) 0%,
+    var(--brand-primary) 52%,
+    var(--brand-primary-hover) 100%
+  );
+}
+
+.guard-performance-hero-rising {
+  background: linear-gradient(160deg, #8b6b4d 0%, #6d4f34 55%, #5a3f28 100%);
+}
+
+.guard-performance-hero-professional {
+  background: linear-gradient(160deg, #c9a227 0%, #a67c00 52%, #8a6400 100%);
+}
+
+.guard-performance-hero-elite {
+  background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
+}
+
+.guard-tier-medal-starting .guard-tier-medal-ring {
+  border-color: rgba(220, 255, 228, 0.75);
+  background: rgba(180, 230, 190, 0.22);
+}
+
+.guard-tier-medal-rising .guard-tier-medal-ring {
+  border-color: rgba(255, 220, 180, 0.75);
+  background: rgba(210, 170, 130, 0.2);
+}
+
 .guard-rating-section-tiered {
   padding: 0;
   overflow: hidden;
