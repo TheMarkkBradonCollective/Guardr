@@ -10095,15 +10095,6 @@ button.guard-factor-card {
   position: relative;
 }
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-lg);
-  background: var(--brand-surface);
-}
-
 .guard-rating-section-tiered .guard-rating-breakdown {
   padding: 0;
 }
