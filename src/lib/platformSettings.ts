@@ -15,8 +15,8 @@ export { DEFAULT_PLATFORM_FEE_CONFIG, TIERED_PLATFORM_FEE_PRESET } from '../../l
 export type JobReviewMode = 'staff-all' | 'trusted-auto' | 'none';
 
 export interface PlatformSettings {
-  paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
+  paymentSquareEnabled: boolean;
   feeConfig: PlatformFeeConfig;
   /** Job posting review policy */
   jobReviewMode?: JobReviewMode;
@@ -51,8 +51,8 @@ export interface PlatformSettings {
 }
 
 export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
-  paymentCashEnabled: true,
   paymentStripeEnabled: true,
+  paymentSquareEnabled: false,
   feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
   autoStripePayoutEnabled: true,
   autoStripePayoutDelayHours: 48,
@@ -71,49 +71,57 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
 
 const STORAGE_KEY = 'guardr_platform_settings';
 
-/** Cash is a secondary option — enabled when staff turn on paymentCashEnabled. */
-export function platformAllowsCash(settings: PlatformSettings): boolean {
-  return settings.paymentCashEnabled === true;
-}
-
 export function platformAllowsStripe(settings: PlatformSettings): boolean {
   return settings.paymentStripeEnabled;
 }
 
+export function platformAllowsSquare(settings: PlatformSettings): boolean {
+  return settings.paymentSquareEnabled === true;
+}
+
+/** @deprecated Cash payments removed from the platform. */
+export function platformAllowsCash(_settings: PlatformSettings): boolean {
+  return false;
+}
+
 export function platformPaymentModeLabel(settings: PlatformSettings): string {
-  if (settings.paymentStripeEnabled && settings.paymentCashEnabled) return 'Card + cash';
-  if (settings.paymentStripeEnabled) return 'Card only';
-  if (settings.paymentCashEnabled) return 'Cash only';
+  const stripe = settings.paymentStripeEnabled;
+  const square = settings.paymentSquareEnabled;
+  if (stripe && square) return 'Stripe + Square';
+  if (stripe) return 'Stripe only';
+  if (square) return 'Square only';
   return 'Not configured';
 }
 
 export function platformPaymentModeDescription(settings: PlatformSettings): string {
-  if (settings.paymentStripeEnabled && settings.paymentCashEnabled) {
-    return 'Clients pay by card (Stripe) by default. Cash is available as a secondary option — staff confirm when payment is received.';
+  const stripe = settings.paymentStripeEnabled;
+  const square = settings.paymentSquareEnabled;
+  if (stripe && square) {
+    return 'Clients can pay by card through Stripe or Square. Each processor must be connected in env before it can be enabled.';
   }
-  if (settings.paymentStripeEnabled) {
+  if (stripe) {
     return 'Clients pay online by card through Stripe checkout.';
   }
-  if (settings.paymentCashEnabled) {
-    return 'Clients may request cash payment — staff confirm when payment is received.';
+  if (square) {
+    return 'Clients pay online by card through Square checkout.';
   }
-  return 'Enable at least one payment method in Settings.';
+  return 'Enable at least one connected card processor below.';
 }
 
-/** At least one payment method must stay enabled. */
+/** At least one card processor must stay enabled. */
 export function normalizePlatformSettings(
-  input: Partial<PlatformSettings>
+  input: Partial<PlatformSettings> & { paymentCashEnabled?: boolean }
 ): PlatformSettings | null {
   const stripe = input.paymentStripeEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentStripeEnabled;
-  const cash = input.paymentCashEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentCashEnabled;
-  if (!stripe && !cash) return null;
+  const square = input.paymentSquareEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentSquareEnabled;
+  if (!stripe && !square) return null;
   const bumpRate = Math.max(
     0,
     input.crewTeamPayBumpPerHour ?? input.teamLeadBonusPerGuardPerHour ?? 1
   );
   return {
-    paymentCashEnabled: cash,
     paymentStripeEnabled: stripe,
+    paymentSquareEnabled: square,
     feeConfig: normalizePlatformFeeConfig(input.feeConfig),
     autoStripePayoutEnabled: input.autoStripePayoutEnabled ?? true,
     autoStripePayoutDelayHours: input.autoStripePayoutDelayHours ?? 48,
@@ -136,7 +144,11 @@ export function loadPlatformSettingsFromStorage(): PlatformSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PLATFORM_SETTINGS, feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG } };
-    const parsed = JSON.parse(raw) as Partial<PlatformSettings>;
+    const parsed = JSON.parse(raw) as Partial<PlatformSettings> & { paymentCashEnabled?: boolean };
+    if (parsed.paymentCashEnabled != null && parsed.paymentSquareEnabled == null) {
+      parsed.paymentSquareEnabled = false;
+    }
+    delete parsed.paymentCashEnabled;
     return (
       normalizePlatformSettings(parsed) ?? {
         ...DEFAULT_PLATFORM_SETTINGS,
@@ -159,6 +171,7 @@ export function savePlatformSettingsToStorage(settings: PlatformSettings): void 
 export function platformSettingsFromDbRow(row: {
   payment_cash_enabled?: boolean | null;
   payment_stripe_enabled?: boolean | null;
+  payment_square_enabled?: boolean | null;
   fee_config?: unknown;
   team_lead_bonus_per_guard_per_hour?: number | null;
   team_lead_bonus_client_share_percent?: number | null;
@@ -180,8 +193,8 @@ export function platformSettingsFromDbRow(row: {
 }): PlatformSettings {
   return (
     normalizePlatformSettings({
-      paymentCashEnabled: row.payment_cash_enabled ?? true,
       paymentStripeEnabled: row.payment_stripe_enabled ?? true,
+      paymentSquareEnabled: row.payment_square_enabled ?? false,
       feeConfig: normalizePlatformFeeConfig(
         row.fee_config as Partial<PlatformFeeConfig> | null | undefined
       ),
@@ -220,8 +233,9 @@ export function platformSettingsFromDbRow(row: {
 export function platformSettingsToDbRow(settings: PlatformSettings) {
   return {
     id: 'default',
-    payment_cash_enabled: settings.paymentCashEnabled,
+    payment_cash_enabled: false,
     payment_stripe_enabled: settings.paymentStripeEnabled,
+    payment_square_enabled: settings.paymentSquareEnabled,
     fee_config: settings.feeConfig,
     owner_message: settings.ownerMessage ?? null,
     owner_message_updated_at: settings.ownerMessageUpdatedAt ?? null,
@@ -246,12 +260,12 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
 
 export interface ClientPaymentGates {
   allowStripe: boolean;
-  allowCash: boolean;
+  allowSquare: boolean;
 }
 
 export function clientPaymentGates(settings: PlatformSettings): ClientPaymentGates {
   return {
     allowStripe: platformAllowsStripe(settings),
-    allowCash: platformAllowsCash(settings),
+    allowSquare: platformAllowsSquare(settings),
   };
 }

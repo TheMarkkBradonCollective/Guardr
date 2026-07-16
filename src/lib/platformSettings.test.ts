@@ -2,7 +2,8 @@ import {
   clientPaymentGates,
   DEFAULT_PLATFORM_SETTINGS,
   normalizePlatformSettings,
-  platformAllowsCash,
+  platformAllowsSquare,
+  platformAllowsStripe,
   platformPaymentModeDescription,
   platformPaymentModeLabel,
   platformSettingsFromDbRow,
@@ -10,55 +11,60 @@ import {
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-test('platformAllowsCash respects paymentCashEnabled setting', () => {
-  assert.equal(platformAllowsCash({ ...DEFAULT_PLATFORM_SETTINGS, paymentCashEnabled: true }), true);
-  assert.equal(platformAllowsCash({ ...DEFAULT_PLATFORM_SETTINGS, paymentCashEnabled: false }), false);
+test('platformAllowsStripe respects paymentStripeEnabled setting', () => {
+  assert.equal(platformAllowsStripe({ ...DEFAULT_PLATFORM_SETTINGS, paymentStripeEnabled: true }), true);
+  assert.equal(platformAllowsStripe({ ...DEFAULT_PLATFORM_SETTINGS, paymentStripeEnabled: false }), false);
 });
 
-test('normalizePlatformSettings keeps cash as optional secondary when stripe is on', () => {
+test('platformAllowsSquare respects paymentSquareEnabled setting', () => {
+  assert.equal(platformAllowsSquare({ ...DEFAULT_PLATFORM_SETTINGS, paymentSquareEnabled: true }), true);
+  assert.equal(platformAllowsSquare({ ...DEFAULT_PLATFORM_SETTINGS, paymentSquareEnabled: false }), false);
+});
+
+test('normalizePlatformSettings supports stripe and square card processors', () => {
   const both = normalizePlatformSettings({
     paymentStripeEnabled: true,
-    paymentCashEnabled: true,
+    paymentSquareEnabled: true,
   });
   assert.ok(both);
   assert.equal(both!.paymentStripeEnabled, true);
-  assert.equal(both!.paymentCashEnabled, true);
+  assert.equal(both!.paymentSquareEnabled, true);
 
-  const cardOnly = normalizePlatformSettings({
+  const stripeOnly = normalizePlatformSettings({
     paymentStripeEnabled: true,
-    paymentCashEnabled: false,
+    paymentSquareEnabled: false,
   });
-  assert.ok(cardOnly);
-  assert.equal(cardOnly!.paymentCashEnabled, false);
+  assert.ok(stripeOnly);
+  assert.equal(stripeOnly!.paymentSquareEnabled, false);
 });
 
 test('normalizePlatformSettings requires at least one payment method', () => {
   assert.equal(
-    normalizePlatformSettings({ paymentStripeEnabled: false, paymentCashEnabled: false }),
+    normalizePlatformSettings({ paymentStripeEnabled: false, paymentSquareEnabled: false }),
     null
   );
 });
 
-test('platformSettingsFromDbRow reads payment_cash_enabled from database', () => {
+test('platformSettingsFromDbRow reads payment_square_enabled from database', () => {
   const settings = platformSettingsFromDbRow({
     payment_stripe_enabled: true,
-    payment_cash_enabled: true,
+    payment_square_enabled: true,
   });
-  assert.equal(settings.paymentCashEnabled, true);
+  assert.equal(settings.paymentSquareEnabled, true);
   assert.equal(settings.paymentStripeEnabled, true);
 });
 
-test('clientPaymentGates exposes card primary and cash secondary flags', () => {
+test('clientPaymentGates exposes stripe and square flags', () => {
   const gates = clientPaymentGates({
     ...DEFAULT_PLATFORM_SETTINGS,
     paymentStripeEnabled: true,
-    paymentCashEnabled: true,
+    paymentSquareEnabled: true,
   });
-  assert.deepEqual(gates, { allowStripe: true, allowCash: true });
+  assert.deepEqual(gates, { allowStripe: true, allowSquare: true });
 });
 
-test('platform payment mode labels describe card + cash', () => {
-  const settings = { ...DEFAULT_PLATFORM_SETTINGS, paymentStripeEnabled: true, paymentCashEnabled: true };
-  assert.equal(platformPaymentModeLabel(settings), 'Card + cash');
-  assert.match(platformPaymentModeDescription(settings), /secondary/i);
+test('platform payment mode labels describe stripe + square', () => {
+  const settings = { ...DEFAULT_PLATFORM_SETTINGS, paymentStripeEnabled: true, paymentSquareEnabled: true };
+  assert.equal(platformPaymentModeLabel(settings), 'Stripe + Square');
+  assert.match(platformPaymentModeDescription(settings), /Square/i);
 });

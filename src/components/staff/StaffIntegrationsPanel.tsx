@@ -6,6 +6,9 @@ import {
   platformPaymentModeLabel,
 } from '../../lib/platformSettings';
 import { canManagePlatformSettings } from '../../lib/permissions';
+import { fetchPaymentProcessorHealth } from '../../lib/paymentProcessorApi';
+import type { CardPaymentProcessor, PaymentProcessorHealth } from '../../lib/paymentProcessors';
+import { CARD_PROCESSOR_LABELS, processorEnvHint } from '../../lib/paymentProcessors';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { showAppToast } from '../ui/AppToast';
@@ -34,6 +37,20 @@ function DesktopSettingsCard({
   );
 }
 
+function ConnectionBadge({ connected }: { connected: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+        connected
+          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+          : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+      }`}
+    >
+      {connected ? 'Connected' : 'Not connected'}
+    </span>
+  );
+}
+
 export function StaffIntegrationsPanel({
   currentUser,
   platformSettings,
@@ -42,14 +59,39 @@ export function StaffIntegrationsPanel({
   const { formFactor } = useDevice();
   const canEdit = canManagePlatformSettings(currentUser);
   const isDesktop = formFactor === 'desktop';
-  const [cashEnabled, setCashEnabled] = useState(platformSettings.paymentCashEnabled);
   const [stripeEnabled, setStripeEnabled] = useState(platformSettings.paymentStripeEnabled);
+  const [squareEnabled, setSquareEnabled] = useState(platformSettings.paymentSquareEnabled);
   const [savingModes, setSavingModes] = useState(false);
+  const [processorHealth, setProcessorHealth] = useState<PaymentProcessorHealth | null>(null);
+  const [healthLoading, setHealthLoading] = useState(true);
 
   useEffect(() => {
-    setCashEnabled(platformSettings.paymentCashEnabled);
     setStripeEnabled(platformSettings.paymentStripeEnabled);
-  }, [platformSettings.paymentCashEnabled, platformSettings.paymentStripeEnabled]);
+    setSquareEnabled(platformSettings.paymentSquareEnabled);
+  }, [platformSettings.paymentStripeEnabled, platformSettings.paymentSquareEnabled]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHealthLoading(true);
+    void fetchPaymentProcessorHealth()
+      .then((health) => {
+        if (!cancelled) setProcessorHealth(health);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setProcessorHealth({
+            stripe: { configured: false },
+            square: { configured: false },
+          });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setHealthLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const persistSettings = async (patch: Partial<PlatformSettings>) => {
     if (!onUpdatePlatformSettings || !canEdit) return;
@@ -60,9 +102,16 @@ export function StaffIntegrationsPanel({
     });
   };
 
-  const persistPaymentModes = async (nextCash: boolean, nextStripe: boolean) => {
+  const isProcessorConnected = (processor: CardPaymentProcessor): boolean => {
+    if (!processorHealth) return false;
+    return processor === 'stripe'
+      ? processorHealth.stripe.configured
+      : processorHealth.square.configured;
+  };
+
+  const persistPaymentModes = async (nextStripe: boolean, nextSquare: boolean) => {
     if (!onUpdatePlatformSettings) return;
-    if (!nextCash && !nextStripe) {
+    if (!nextStripe && !nextSquare) {
       showAppToast('Enable at least one payment method.', { tone: 'error' });
       return;
     }
@@ -70,8 +119,8 @@ export function StaffIntegrationsPanel({
     try {
       await onUpdatePlatformSettings({
         ...platformSettings,
-        paymentCashEnabled: nextCash,
         paymentStripeEnabled: nextStripe,
+        paymentSquareEnabled: nextSquare,
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -79,18 +128,72 @@ export function StaffIntegrationsPanel({
     }
   };
 
-  const toggleCash = async () => {
+  const toggleProcessor = async (processor: CardPaymentProcessor) => {
     if (!canEdit || savingModes) return;
-    const next = !cashEnabled;
-    setCashEnabled(next);
-    await persistPaymentModes(next, stripeEnabled);
+    const connected = isProcessorConnected(processor);
+    const isStripe = processor === 'stripe';
+    const currentlyEnabled = isStripe ? stripeEnabled : squareEnabled;
+    const next = !currentlyEnabled;
+
+    if (next && !connected) {
+      showAppToast(`${CARD_PROCESSOR_LABELS[processor]} is not connected. ${processorEnvHint(processor)}`, {
+        tone: 'error',
+      });
+      return;
+    }
+
+    if (isStripe) {
+      setStripeEnabled(next);
+      await persistPaymentModes(next, squareEnabled);
+    } else {
+      setSquareEnabled(next);
+      await persistPaymentModes(stripeEnabled, next);
+    }
   };
 
-  const toggleStripe = async () => {
-    if (!canEdit || savingModes) return;
-    const next = !stripeEnabled;
-    setStripeEnabled(next);
-    await persistPaymentModes(cashEnabled, next);
+  const renderProcessorToggle = (processor: CardPaymentProcessor, primary = false) => {
+    const isStripe = processor === 'stripe';
+    const enabled = isStripe ? stripeEnabled : squareEnabled;
+    const connected = isProcessorConnected(processor);
+    const canToggleOn = connected || enabled;
+
+    return (
+      <label
+        key={processor}
+        className={`flex items-start gap-3 rounded-xl border p-4 ${
+          primary ? 'border-brand-primary/30 bg-brand-primary/5' : 'border-brand-border'
+        } ${canEdit && canToggleOn ? 'cursor-pointer' : 'opacity-90'}`}
+      >
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={enabled}
+          onChange={() => void toggleProcessor(processor)}
+          disabled={!canEdit || savingModes || (!canToggleOn && !enabled)}
+        />
+        <span className="flex-1 min-w-0">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">Card ({CARD_PROCESSOR_LABELS[processor]})</span>
+            {!healthLoading && <ConnectionBadge connected={connected} />}
+          </span>
+          <span className="text-xs text-brand-text-muted block mt-1">
+            {primary
+              ? 'Primary card processor — Stripe Checkout + Connect guard payouts'
+              : 'Alternative card processor — Square checkout for client payments'}
+          </span>
+          {!connected && !enabled && (
+            <span className="text-xs text-amber-400/90 block mt-1.5">
+              Connect {CARD_PROCESSOR_LABELS[processor]} in env before enabling.
+            </span>
+          )}
+          {enabled && !connected && (
+            <span className="text-xs text-amber-400/90 block mt-1.5">
+              Enabled but not connected — clients cannot pay until env is configured.
+            </span>
+          )}
+        </span>
+      </label>
+    );
   };
 
   const paymentMethodsBody = (
@@ -102,42 +205,8 @@ export function StaffIntegrationsPanel({
         {platformPaymentModeDescription(platformSettings)}
       </p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <label
-          className={`flex items-start gap-3 rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 ${
-            canEdit ? 'cursor-pointer' : 'opacity-90'
-          }`}
-        >
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={stripeEnabled}
-            onChange={() => void toggleStripe()}
-            disabled={!canEdit || savingModes}
-          />
-          <span>
-            <span className="text-sm font-semibold block">Card (Stripe)</span>
-            <span className="text-xs text-brand-text-muted">Primary — recommended for all jobs</span>
-          </span>
-        </label>
-        <label
-          className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
-            canEdit ? 'cursor-pointer' : 'opacity-90'
-          }`}
-        >
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={cashEnabled}
-            onChange={() => void toggleCash()}
-            disabled={!canEdit || savingModes}
-          />
-          <span>
-            <span className="text-sm font-semibold block">Cash</span>
-            <span className="text-xs text-brand-text-muted">
-              Secondary — client requests; staff confirms payment received
-            </span>
-          </span>
-        </label>
+        {renderProcessorToggle('stripe', true)}
+        {renderProcessorToggle('square')}
       </div>
       {!canEdit && (
         <p className="text-xs text-brand-text-muted">Only the Founder can change payment methods.</p>

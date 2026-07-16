@@ -493,8 +493,8 @@ import {
   clientPaymentGates,
   loadPlatformSettingsFromStorage,
   normalizePlatformSettings,
-  platformAllowsCash,
   platformAllowsStripe,
+  platformAllowsCash,
   platformSettingsFromDbRow,
   platformSettingsToDbRow,
   savePlatformSettingsToStorage,
@@ -6996,8 +6996,8 @@ export default function App() {
       appToast('Overtime is not ready for payment yet.', 'error');
       return;
     }
-    if (!gates.allowCash) {
-      appToast('Cash payments are not enabled.', 'error');
+    if (!gates.allowSquare) {
+      appToast('Square payments are not enabled.', 'error');
       return;
     }
     const overtimeAmount = req.overtimeAmount ?? 0;
@@ -12104,10 +12104,8 @@ export default function App() {
               onAddReview={handleAddReview}
               onReportViolation={handleReportClientViolation}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
-              onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}
               onDisputeOvertime={handleClientDisputeOvertime}
-              onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApproveScheduleChange={handleClientApproveScheduleChange}
               onRejectScheduleChange={handleClientRejectScheduleChange}
               onApprovePendingGuard={handleClientApprovePendingGuard}

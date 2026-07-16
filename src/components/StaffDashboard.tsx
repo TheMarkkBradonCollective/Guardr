@@ -82,6 +82,7 @@ import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
 import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
+import { clientPaymentGates } from '../lib/platformSettings';
 import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
@@ -898,10 +899,7 @@ export function StaffDashboard({
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
             canManagePayments={showFinance}
-            paymentGates={{
-              allowCash: platformSettings.paymentCashEnabled,
-              allowStripe: platformSettings.paymentStripeEnabled,
-            }}
+            paymentGates={clientPaymentGates(platformSettings)}
             onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
