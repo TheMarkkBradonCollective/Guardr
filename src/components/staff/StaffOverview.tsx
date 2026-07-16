@@ -43,6 +43,8 @@ import {
   OverviewVisualGrid,
   OverviewWeekChart,
 } from './overview/OverviewCharts';
+import { useDevice } from '../../lib/platform';
+import { StaffOverviewDesktop } from './StaffOverviewDesktop';
 import {
   AlertTriangle,
   ArrowRight,
@@ -175,6 +177,7 @@ export function StaffOverview({
   staffName,
   staffRole,
 }: StaffOverviewProps) {
+  const { formFactor } = useDevice();
   const config = getStaffOverviewConfig(staffRole);
 
   const metrics = useMemo(
@@ -432,6 +435,24 @@ export function StaffOverview({
         </div>
       </AppDashboardZone>
     ) : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <StaffOverviewDesktop
+        stats={stats}
+        requests={requests}
+        guards={guards}
+        clients={clients}
+        activityFeed={activityFeed}
+        actionItems={actionItems}
+        liveJobs={liveJobs}
+        onNavigate={onNavigate}
+        onOpenJob={onOpenJob}
+        staffName={staffName}
+        staffRole={staffRole}
+      />
+    );
+  }
 
   return (
     <div

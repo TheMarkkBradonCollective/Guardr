@@ -127,6 +127,7 @@ export function ClientAppLayout({
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
+      workspaceLabel="Client workspace"
     >
       {children}
     </RoleAppShell>

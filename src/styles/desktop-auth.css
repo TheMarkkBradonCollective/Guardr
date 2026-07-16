@@ -1,0 +1,190 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP AUTH — split editorial + form (sand tan, matches landing preview)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body[data-form-factor="desktop"] .dsk-auth {
+  min-height: 100vh;
+  background: var(--adm-bg, #EFF1F5);
+  color: var(--adm-text, #2D3748);
+  font-family: var(--adm-font, "IBM Plex Sans", system-ui, sans-serif);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-split {
+  display: grid;
+  grid-template-columns: minmax(24rem, 42%) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-editorial {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2.5rem;
+  background: var(--adm-card, #fff);
+  border-right: 1px solid var(--adm-border, #E2E8F0);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-editorial-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--adm-muted, #718096);
+  cursor: pointer;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-back:hover {
+  color: var(--adm-sand-dark, #9A8B72);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-logo {
+  color: var(--adm-sand-dark, #9A8B72) !important;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-wordmark {
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-accent {
+  color: var(--adm-sand-dark, #9A8B72);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-editorial-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 26rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--adm-sand-dark, #9A8B72);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-headline {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-deck {
+  margin: 1rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--adm-muted, #718096);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-features {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--adm-text, #2D3748);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  background: var(--adm-sand-light, #E8DFD0);
+  color: var(--adm-sand-dark, #9A8B72);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-trust {
+  margin: 1.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--adm-muted, #718096);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-editorial-foot {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--adm-border, #E2E8F0);
+  font-size: 0.6875rem;
+  color: var(--adm-muted, #718096);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  overflow-y: auto;
+  background: var(--adm-bg, #EFF1F5);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-inner {
+  width: min(100%, 28rem);
+  padding: 1.75rem;
+  border-radius: 0.5rem;
+  background: var(--adm-card, #fff);
+  border: 1px solid var(--adm-border, #E2E8F0);
+  box-shadow: 0 8px 32px -12px rgba(0, 0, 0, 0.1);
+}
+
+/* Sand-tan accents inside auth form on desktop */
+body[data-form-factor="desktop"] .dsk-auth .text-brand-primary {
+  color: var(--adm-sand-dark, #9A8B72) !important;
+}
+
+body[data-form-factor="desktop"] .dsk-auth .auth-role-card-active,
+body[data-form-factor="desktop"] .dsk-auth .segmented-control-btn-active {
+  border-color: var(--adm-sand, #C4B5A0) !important;
+  background: color-mix(in srgb, var(--adm-sand, #C4B5A0) 14%, var(--adm-card, #fff)) !important;
+  color: var(--adm-sand-dark, #9A8B72) !important;
+}
+
+body[data-form-factor="desktop"] .dsk-auth .app-button-primary,
+body[data-form-factor="desktop"] .dsk-auth .auth-submit-btn {
+  background: var(--adm-sand-band, #B8A88A) !important;
+  color: #fff !important;
+}
+
+body[data-form-factor="desktop"] .dsk-auth .experience-badge {
+  color: var(--adm-sand-dark, #9A8B72);
+  background: var(--adm-sand-light, #E8DFD0);
+}
+
+/* Hide mobile auth hero when desktop split is active */
+body[data-form-factor="desktop"] .auth-experience:not(.dsk-auth) .auth-hero {
+  display: none;
+}

@@ -14,6 +14,8 @@ import {
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
+import { ClientRequestsDesktop } from './ClientRequestsDesktop';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
@@ -144,6 +146,7 @@ export function ClientRequestsList({
   onAcceptPriceOffer,
   onRequestReplacement,
 }: ClientRequestsListProps) {
+  const { formFactor } = useDevice();
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [activeTab, setActiveTab] = useState<JobTab>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -253,6 +256,47 @@ export function ClientRequestsList({
   };
 
   const selectedRequest = selectedId ? requests.find((r) => r.id === selectedId) ?? null : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <ClientRequestsDesktop
+        requests={requests}
+        guards={guards}
+        clientEmail={clientEmail}
+        paymentGates={paymentGates}
+        onCancelRequest={onCancelRequest}
+        onEditRequest={onEditRequest}
+        onUpdateStatus={onUpdateStatus}
+        onAddReview={onAddReview}
+        onReportViolation={onReportViolation}
+        onConfirmSelfAudit={onConfirmSelfAudit}
+        onRequestCashPayment={onRequestCashPayment}
+        onApproveOvertime={onApproveOvertime}
+        onDisputeOvertime={onDisputeOvertime}
+        onRequestOvertimeCash={onRequestOvertimeCash}
+        onApproveScheduleChange={onApproveScheduleChange}
+        onRejectScheduleChange={onRejectScheduleChange}
+        onApprovePendingGuard={onApprovePendingGuard}
+        onDenyPendingGuard={onDenyPendingGuard}
+        onApproveTeamSlot={onApproveTeamSlot}
+        onDenyTeamSlot={onDenyTeamSlot}
+        onApproveFullTeam={onApproveFullTeam}
+        onDenyFullTeam={onDenyFullTeam}
+        crewSettings={crewSettings}
+        teamLeadSettings={teamLeadSettings}
+        onRequestNew={onRequestNew}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        onOpenJobChat={onOpenJobChat}
+        onSelectedJobIdChange={onSelectedJobIdChange}
+        initialSelectedId={initialSelectedId}
+        feeConfig={feeConfig}
+        onSubmitPriceOffer={onSubmitPriceOffer}
+        onAcceptPriceOffer={onAcceptPriceOffer}
+        onRequestReplacement={onRequestReplacement}
+      />
+    );
+  }
 
   function renderSelectedRequestDetail(req: SecurityRequest) {
     return (

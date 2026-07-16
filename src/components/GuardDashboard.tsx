@@ -1809,6 +1809,7 @@ export function GuardDashboard({
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}
+      workspaceLabel="Guard workspace"
     >
       <div className="relative h-full min-h-0">
         {visibleMainPanel}
