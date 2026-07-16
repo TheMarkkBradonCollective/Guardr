@@ -165,6 +165,53 @@ export function removeStandingCrewMember(
   };
 }
 
+/** When trusted status is removed, dissolve standing crew ties and free roster members. */
+export function dissolveStandingCrewForUntrustedGuard(
+  members: GuardStandingCrewMember[],
+  guardId: string,
+  now = new Date()
+): {
+  members: GuardStandingCrewMember[];
+  updatedRows: GuardStandingCrewMember[];
+  freedMemberIds: string[];
+} {
+  const respondedAt = now.toISOString();
+  const freedMemberIds = new Set<string>();
+  const updatedRows: GuardStandingCrewMember[] = [];
+
+  const next = members.map((member) => {
+    const tied =
+      (member.leadGuardId === guardId || member.memberGuardId === guardId) &&
+      (member.status === 'active' || member.status === 'pending');
+    if (!tied) return member;
+    if (member.leadGuardId === guardId && member.memberGuardId !== guardId) {
+      freedMemberIds.add(member.memberGuardId);
+    }
+    const updated: GuardStandingCrewMember = {
+      ...member,
+      status: 'removed',
+      respondedAt,
+    };
+    updatedRows.push(updated);
+    return updated;
+  });
+
+  return {
+    members: next,
+    updatedRows,
+    freedMemberIds: [...freedMemberIds],
+  };
+}
+
+export function clearStandingCrewProfile(
+  guard: SecurityGuard
+): Pick<SecurityGuard, 'standingCrewName' | 'standingCrewDescription'> {
+  return {
+    standingCrewName: undefined,
+    standingCrewDescription: undefined,
+  };
+}
+
 export function guardLeadsOwnStandingCrew(
   guard: SecurityGuard,
   members: GuardStandingCrewMember[]

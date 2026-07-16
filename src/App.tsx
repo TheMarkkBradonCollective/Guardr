@@ -230,7 +230,10 @@ import {
 } from './lib/guardTeamFlow';
 import {
   acceptStandingCrewInvite,
+  clearStandingCrewProfile,
   declineStandingCrewInvite,
+  dissolveStandingCrewForUntrustedGuard,
+  guardLeadsOwnStandingCrew,
   inviteToStandingCrew,
   removeStandingCrewMember,
 } from './lib/guardStandingCrew';
@@ -240,6 +243,7 @@ import {
   declineCrewLeadRequest,
   getPendingCrewLeadRequest,
   makeGuardCrewLeadProfile,
+  revokeCrewLeadRequestsForGuard,
   submitCrewLeadRequest,
 } from './lib/guardCrewJoinRequest';
 import { loadCrewJoinRequests, persistCrewJoinRequest } from './lib/crewJoinRequestStore';
@@ -4971,6 +4975,8 @@ export default function App() {
     }
     const guard = guards.find((g) => g.id === guardId);
     let relistedCount = 0;
+    let standingCrewFreedCount = 0;
+    let standingCrewCleared = false;
     if (trusted) {
       if (!guard || guard.userStatus !== 'active' || !guard.verified) {
         appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
@@ -5000,18 +5006,81 @@ export default function App() {
           });
         }
       }
-      if (revocationUpdates.length > 0) {
+
+      const dissolved = dissolveStandingCrewForUntrustedGuard(standingCrewMembers, guardId);
+      standingCrewFreedCount = dissolved.freedMemberIds.length;
+      standingCrewCleared =
+        dissolved.updatedRows.length > 0 ||
+        !!guard.standingCrewName?.trim() ||
+        !!guard.standingCrewDescription?.trim() ||
+        guardLeadsOwnStandingCrew(guard, standingCrewMembers) ||
+        getPendingCrewLeadRequest(crewJoinRequests, guardId) != null;
+
+      if (dissolved.updatedRows.length > 0) {
+        setStandingCrewMembers(dissolved.members);
+        for (const row of dissolved.updatedRows) {
+          await persistStandingCrewMember(row, isDbConnected);
+        }
+        for (const freedId of dissolved.freedMemberIds) {
+          if (!currentUser) continue;
+          void reportPushEvent(currentUser, {
+            type: 'standing_crew_invite',
+            recipientUserId: freedId,
+            guardId: freedId,
+            title: 'Standing crew dissolved',
+            body: `${guard.name}'s standing crew was dissolved. You are free to join another crew or lead your own.`,
+            url: '/guard/crew',
+          });
+        }
+      }
+
+      const revokedRequests = revokeCrewLeadRequestsForGuard(
+        crewJoinRequests,
+        guardId,
+        currentUser.id
+      );
+      if (revokedRequests.revoked.length > 0) {
+        setCrewJoinRequests(revokedRequests.requests);
+        for (const request of revokedRequests.revoked) {
+          await persistCrewJoinRequest(request, isDbConnected);
+        }
+      }
+
+      if (revocationUpdates.length > 0 || standingCrewCleared) {
+        const crewNote =
+          standingCrewFreedCount > 0
+            ? ` ${standingCrewFreedCount} standing crew member${standingCrewFreedCount === 1 ? '' : 's'} freed.`
+            : standingCrewCleared
+              ? ' Standing crew profile cleared.'
+              : '';
         appToast(
           relistedCount > 0
-            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.`
-            : `${guard.name} is no longer trusted and was removed from open crew rosters.`,
+            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.${crewNote}`
+            : `${guard.name} is no longer trusted.${crewNote || ' Crew coordination access removed.'}`,
           'success'
         );
       }
     }
-    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              trusted,
+              ...(trusted ? {} : clearStandingCrewProfile(g)),
+            }
+          : g
+      )
+    );
     if (isDbConnected) {
-      const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
+      const dbPatch = trusted
+        ? { trusted }
+        : {
+            trusted,
+            standing_crew_name: '',
+            standing_crew_description: '',
+          };
+      const { error } = await supabase.from('guards').update(dbPatch).eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
         appToast('Could not update guard trusted status.', 'error');
@@ -5037,7 +5106,9 @@ export default function App() {
           body:
             relistedCount > 0
               ? `Your trusted status was removed. ${relistedCount} scheduled job${relistedCount === 1 ? '' : 's'} were re-listed and coordinated crews were dissolved.`
-              : 'Your trusted status was removed. Future applications will require Guardr staff review and you cannot coordinate crews.',
+              : standingCrewCleared
+                ? 'Your trusted status was removed. Your standing crew was dissolved and you can no longer coordinate crews.'
+                : 'Your trusted status was removed. Future applications will require Guardr staff review and you cannot coordinate crews.',
         });
       }
     }
@@ -8517,7 +8588,7 @@ export default function App() {
   };
 
   const handleStaffApproveCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
+    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
       appToast('You do not have permission to manage crew lead requests.', 'error');
       return;
     }
@@ -8547,7 +8618,7 @@ export default function App() {
   };
 
   const handleStaffDeclineCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
+    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
       appToast('You do not have permission to manage crew lead requests.', 'error');
       return;
     }

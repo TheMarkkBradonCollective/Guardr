@@ -4,7 +4,10 @@ import type { GuardCrewJoinRequest, GuardStandingCrewMember, SecurityGuard } fro
 import {
   canRequestCrewLead,
   declineCrewLeadRequest,
+  getActionableCrewLeadRequests,
   makeGuardCrewLeadProfile,
+  revokeCrewLeadRequestsForGuard,
+  shouldShowPendingCrewLeadRequest,
   submitCrewLeadRequest,
 } from './guardCrewJoinRequest';
 
@@ -108,4 +111,54 @@ test('declineCrewLeadRequest resolves pending requests', () => {
   if ('error' in result) return;
   assert.equal(result.request.status, 'declined');
   assert.equal(result.request.resolvedByStaffId, 'staff1');
+});
+
+test('getActionableCrewLeadRequests hides requests for guards who already lead', () => {
+  const guard = trustedGuard({ standingCrewName: 'Night Watch' });
+  const requests: GuardCrewJoinRequest[] = [
+    {
+      id: 'clr-g1',
+      guardId: 'g1',
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    },
+  ];
+  assert.equal(getActionableCrewLeadRequests(requests, [guard], []).length, 0);
+});
+
+test('shouldShowPendingCrewLeadRequest hides stale requests for existing crew leads', () => {
+  const guard = trustedGuard({ standingCrewName: 'Night Watch' });
+  const requests: GuardCrewJoinRequest[] = [
+    {
+      id: 'clr-g1',
+      guardId: 'g1',
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    },
+  ];
+  assert.equal(shouldShowPendingCrewLeadRequest(guard, [], requests), false);
+});
+
+test('makeGuardCrewLeadProfile is idempotent for guards who already lead', () => {
+  const guard = trustedGuard({ standingCrewName: 'Night Watch', standingCrewDescription: 'Elite' });
+  const result = makeGuardCrewLeadProfile(guard, []);
+  assert.ok(!('error' in result));
+  if ('error' in result) return;
+  assert.equal(result.standingCrewName, 'Night Watch');
+  assert.equal(result.standingCrewDescription, 'Elite');
+});
+
+test('revokeCrewLeadRequestsForGuard declines pending requests', () => {
+  const requests: GuardCrewJoinRequest[] = [
+    {
+      id: 'clr-g1',
+      guardId: 'g1',
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    },
+  ];
+  const result = revokeCrewLeadRequestsForGuard(requests, 'g1', 'staff-1');
+  assert.equal(result.revoked.length, 1);
+  assert.equal(result.revoked[0]?.status, 'declined');
+  assert.equal(result.requests[0]?.status, 'declined');
 });

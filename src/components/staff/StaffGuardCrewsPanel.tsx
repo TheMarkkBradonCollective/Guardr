@@ -8,8 +8,9 @@ import {
 import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewOutgoing,
+  guardLeadsOwnStandingCrew,
 } from '../../lib/guardStandingCrew';
-import { getPendingCrewLeadRequests } from '../../lib/guardCrewJoinRequest';
+import { getActionableCrewLeadRequests } from '../../lib/guardCrewJoinRequest';
 import { formatShiftRange } from '../../lib/dates';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
@@ -117,15 +118,15 @@ export function StaffGuardCrewsPanel({
     });
   }, [listings, search, filter]);
 
-  // Standing crews: all trusted guards — even those with no active job
-  const trustedGuards = useMemo(
-    () => guards.filter((g) => g.trusted),
-    [guards]
+  // Standing crews: trusted guards who lead their own crew
+  const standingCrewLeads = useMemo(
+    () => guards.filter((g) => g.trusted && guardLeadsOwnStandingCrew(g, standingCrewMembers)),
+    [guards, standingCrewMembers]
   );
 
   const filteredStanding = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return trustedGuards.filter((g) => {
+    return standingCrewLeads.filter((g) => {
       if (!q) return true;
       return (
         g.name.toLowerCase().includes(q) ||
@@ -134,11 +135,11 @@ export function StaffGuardCrewsPanel({
         (g.badgeNumber ?? '').toLowerCase().includes(q)
       );
     });
-  }, [trustedGuards, search]);
+  }, [standingCrewLeads, search]);
 
   const pendingLeadRequests = useMemo(
-    () => getPendingCrewLeadRequests(crewJoinRequests),
-    [crewJoinRequests]
+    () => getActionableCrewLeadRequests(crewJoinRequests, guards, standingCrewMembers),
+    [crewJoinRequests, guards, standingCrewMembers]
   );
 
   const { showDetailOnly: showJobDetailOnly } = useSplitListDetail(selectedJobId, 'page');
@@ -151,7 +152,7 @@ export function StaffGuardCrewsPanel({
       <div className="space-y-4">
         {options?.onBack && (
           <button type="button" onClick={options.onBack} className="app-button-outline app-btn-sm lg:hidden">
-            Back to teams
+            Back to crews
           </button>
         )}
 
@@ -365,12 +366,12 @@ export function StaffGuardCrewsPanel({
                 <Users className="w-5 h-5" />
               </div>
               <p className="app-empty-state-title">
-                {trustedGuards.length === 0 ? 'No trusted guards yet' : 'No matches'}
+                {standingCrewLeads.length === 0 ? 'No standing crews yet' : 'No matches'}
               </p>
               <p className="app-empty-state-body">
-                {trustedGuards.length === 0
-                  ? 'Standing crews are managed by trusted guards. Mark a guard as trusted in their profile to enable crew coordination.'
-                  : 'No trusted guards match your search.'}
+                {standingCrewLeads.length === 0
+                  ? 'Standing crews appear here once a trusted guard is set up as a crew lead. Approve crew lead requests above or use Make crew lead on a guard profile.'
+                  : 'No standing crews match your search.'}
               </p>
             </div>
           ) : (

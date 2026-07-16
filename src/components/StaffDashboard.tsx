@@ -514,6 +514,7 @@ export function StaffDashboard({
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
+  const canManageCrews = canManageGuardAccounts || canReviewJobs;
   const canResolveDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
@@ -761,7 +762,7 @@ export function StaffDashboard({
             guards={guards}
             standingCrewMembers={standingCrewMembers}
             crewJoinRequests={crewJoinRequests}
-            canManage={canReviewJobs}
+            canManage={canManageCrews}
             selectedJobId={internalCrewJobId}
             onSelectedJobIdChange={setInternalCrewJobId}
             onOpenJob={openJob}
@@ -769,8 +770,8 @@ export function StaffDashboard({
             onApproveCrewMember={canReviewJobs ? onApproveCrewMember : undefined}
             onDenyCrewMember={canReviewJobs ? onDenyCrewMember : undefined}
             onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
-            onApproveCrewLeadRequest={canReviewJobs ? onApproveCrewLeadRequest : undefined}
-            onDeclineCrewLeadRequest={canReviewJobs ? onDeclineCrewLeadRequest : undefined}
+            onApproveCrewLeadRequest={canManageCrews ? onApproveCrewLeadRequest : undefined}
+            onDeclineCrewLeadRequest={canManageCrews ? onDeclineCrewLeadRequest : undefined}
           />
         );
       case 'clients':
