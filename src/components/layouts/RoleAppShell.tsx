@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
-import { BottomNavItem } from './BottomNavBar';
+import { BottomNavBar, BottomNavItem } from './BottomNavBar';
+import { MoreMenuSheet } from './MoreMenuSheet';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
-import { NavMenuPopover } from './NavMenuPopover';
 import { AppHeaderBranding } from './AppHeaderBranding';
 import { AppHeaderToolbar } from './AppHeaderToolbar';
 import { useDevice } from '../../lib/platform';
@@ -28,6 +28,13 @@ interface RoleAppShellProps {
   workspaceLabel?: string;
 }
 
+function splitMobileNav(navItems: BottomNavItem[], overflowNavItems: BottomNavItem[]) {
+  const hasOverflow = overflowNavItems.length > 0 || navItems.length > 4;
+  const bottomPrimary = hasOverflow ? navItems.slice(0, 4) : navItems.slice(0, 5);
+  const moreItems = hasOverflow ? [...navItems.slice(4), ...overflowNavItems] : overflowNavItems;
+  return { bottomPrimary, moreItems, hasOverflow };
+}
+
 export function RoleAppShell({
   title,
   accountMenu,
@@ -46,6 +53,32 @@ export function RoleAppShell({
   workspaceLabel,
 }: RoleAppShellProps) {
   const { formFactor } = useDevice();
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+  const allSideNavItems = useMemo(
+    () => [...navItems, ...overflowNavItems],
+    [navItems, overflowNavItems],
+  );
+
+  const popoverItems = useMemo(
+    () =>
+      allSideNavItems.map(({ id, label, icon, badge }) => ({
+        id,
+        label,
+        icon,
+        badge,
+      })),
+    [allSideNavItems],
+  );
+
+  const { bottomPrimary, moreItems, hasOverflow } = useMemo(
+    () => splitMobileNav(navItems, overflowNavItems),
+    [navItems, overflowNavItems],
+  );
+
+  const moreActive = moreItems.some((item) => item.id === activeNavId);
+  const moreBadge = moreItems.reduce((sum, item) => sum + (item.badge ?? 0), 0);
+  const showBottomNav = navItems.length > 0;
 
   if (formFactor === 'desktop') {
     return (
@@ -94,26 +127,6 @@ export function RoleAppShell({
   const dockedSidebar = false;
   const isMapMode = variant === 'dark';
 
-  const allSideNavItems = useMemo(
-    () => [...navItems, ...overflowNavItems],
-    [navItems, overflowNavItems],
-  );
-
-  const popoverItems = useMemo(
-    () =>
-      allSideNavItems.map(({ id, label, icon, badge }) => ({
-        id,
-        label,
-        icon,
-        badge,
-      })),
-    [allSideNavItems],
-  );
-
-  const navMenu = !dockedSidebar ? (
-    <NavMenuPopover items={popoverItems} activeId={activeNavId} onNavigate={onNavigate} />
-  ) : null;
-
   const sidebarPanel = (
     <>
       <nav className="role-side-nav-items" role="navigation">
@@ -150,9 +163,9 @@ export function RoleAppShell({
 
   return (
     <div
-      className={`role-app-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
+      className={`role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
         dockedSidebar ? 'role-app-shell--docked' : 'role-app-shell--compact'
-      }`}
+      }${showBottomNav ? ' role-app-shell--bottom-nav' : ''}`}
     >
       <div className="role-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
@@ -164,7 +177,6 @@ export function RoleAppShell({
             title={title}
             accountMenu={accountMenu}
             notifications={notifications ?? headerRight}
-            navMenu={navMenu}
             extension={headerExtension}
             hideAccountMenu={dockedSidebar}
             className={isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : undefined}
@@ -176,7 +188,6 @@ export function RoleAppShell({
             </div>
             <AppHeaderToolbar
               showTitle={false}
-              left={navMenu}
               right={
                 <>
                   {notifications ?? headerRight}
@@ -193,6 +204,30 @@ export function RoleAppShell({
           </div>
         </main>
       </div>
+
+      {showBottomNav ? (
+        <BottomNavBar
+          items={bottomPrimary}
+          activeId={activeNavId}
+          onNavigate={onNavigate}
+          showMore={hasOverflow}
+          moreActive={moreActive}
+          moreBadge={moreBadge}
+          onMoreClick={() => setMoreMenuOpen(true)}
+          flat={isMapMode}
+          centerItemId="map"
+        />
+      ) : null}
+
+      {hasOverflow ? (
+        <MoreMenuSheet
+          open={moreMenuOpen}
+          items={moreItems}
+          activeId={activeNavId}
+          onNavigate={onNavigate}
+          onClose={() => setMoreMenuOpen(false)}
+        />
+      ) : null}
 
       {dockedSidebar ? (
         <aside className="role-side-nav role-side-nav--docked" aria-label="Main navigation">

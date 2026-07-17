@@ -29,7 +29,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 
 | Device | Primary users | UI behavior |
 |--------|---------------|-------------|
-| Phone | Guards, clients | Single column, bottom nav, big actions |
+| Phone | Guards, clients | Single column, bottom nav (`BottomNavBar` + `MoreMenuSheet`), big actions |
 | Tablet | Staff, guards, clients | **Merge shell** — icon rail + command bar + touch content (`TabletAdminShell`) |
 | Desktop / Chromebook | Staff, clients, admin | Full dashboards, analytics, financial controls (`DesktopAdminShell`) |
 | PWA standalone | All | No browser chrome; safe-area padding; `app-pwa.css` styling |
@@ -80,9 +80,11 @@ Design foundation in `src/lib/platform/offlineQueue.ts`:
 
 - Queue types: `self-audit`, `incident-report`, `activity-report`, `job-snapshot`
 - Guard can save records offline; sync when `navigator.onLine` returns
-- UI shows offline banner via `body[data-online="false"]`
+- UI shows offline banner via `OfflineBanner` + `body[data-online="false"]`
+- Guard field flows enqueue via `src/lib/platform/guardOfflineCapture.ts`
+- Automatic flush on reconnect via `useOfflineSync` in `App.tsx`
 
-**Not yet implemented:** automatic flush to Supabase on reconnect, conflict resolution.
+**Not yet implemented:** conflict resolution for concurrent offline edits.
 
 ## Product Feel Targets
 
@@ -124,9 +126,14 @@ public/sw.js          — service worker shell cache
 ## Next Steps
 
 - [x] Android APK build + download page (`/download/`)
-- [ ] Wire offline queue flush on `online` event in guard shift flow
-- [x] Add Capacitor FCM push notification plugin (native APK; Web/PWA still uses Web Push)
-- [ ] Generate PNG icon set (192, 512) for store requirements
+- [x] Wire offline queue flush on `online` event in guard shift flow
+- [x] Guard offline enqueue for self-audit, incident, and activity reports
+- [x] Offline connectivity banner (`OfflineBanner`, `useOnlineStatus`)
+- [ ] Conflict resolution for offline sync
+- [x] PNG icon set (192, 512) for store requirements
 - [ ] Tablet split panels for staff live jobs (staff-ops branch)
-- [x] Tablet merge shells (`TabletAdminShell`, `TabletStaffAdminShell`) + view surface model
+- [x] Add Capacitor FCM push notification plugin (native APK; Web/PWA still uses Web Push)
+- [ ] Generate manifest screenshots for install UX
+- [x] Mobile bottom navigation (`BottomNavBar` + `MoreMenuSheet` in `RoleAppShell`, `StaffOpsLayout`)
+- [x] PWA install registration on standalone startup (`registerPwaInstall` in `main.tsx`)
 - [ ] E2E test PWA install on iOS Safari + Android Chrome

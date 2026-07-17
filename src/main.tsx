@@ -5,6 +5,7 @@ import { ensureNativePermissions } from './lib/platform/nativePermissions';
 import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
 import { registerNativeInstall, registerPwaInstall } from './lib/platform/installRegistry';
 import App from './App.tsx';
+import { OfflineBanner } from './components/OfflineBanner';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppToastHost } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
@@ -26,13 +27,13 @@ async function initNativeShell(): Promise<void> {
   await ensureNativePermissions();
   await restoreNativePushIfEnabled();
   await registerNativeInstall();
-  registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
   initNativePushListeners();
 }
 
 void initNativeShell();
 
 if (!Capacitor.isNativePlatform()) {
+  registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
   void registerServiceWorker().catch((error) => {
     console.warn('[pwa] service worker registration failed:', error);
   });
@@ -43,6 +44,7 @@ createRoot(document.getElementById('root')!).render(
     <DeviceProvider>
       <AppMotionProvider>
         <App />
+        <OfflineBanner />
         <AppToastHost />
         <AppConfirmHost />
       </AppMotionProvider>

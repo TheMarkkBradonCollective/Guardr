@@ -8,5 +8,6 @@ export * from './installRegistry';
 export * from './nativeSafeArea';
 export * from './offlineQueue';
 export * from './offlineSync';
+export * from './guardOfflineCapture';
 export { DeviceProvider, useDevice } from './DeviceProvider';
 export { useMediaQuery } from './useMediaQuery';

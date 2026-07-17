@@ -17818,6 +17818,21 @@ html.theme-light .role-side-nav {
   display: none !important;
 }
 
+body[data-form-factor="mobile"] .role-app-shell--bottom-nav > nav.bottom-nav-bar,
+body[data-form-factor="mobile"] .staff-shell--bottom-nav > nav.bottom-nav-bar {
+  display: block !important;
+}
+
+body[data-form-factor="mobile"] .role-app-shell--bottom-nav,
+body[data-form-factor="mobile"] .staff-shell--bottom-nav {
+  flex-direction: column;
+}
+
+body[data-form-factor="mobile"] .offline-banner + .role-app-shell .app-screen-header,
+body[data-form-factor="mobile"] .offline-banner ~ * .app-screen-header {
+  margin-top: 0;
+}
+
 .role-side-nav-brand {
   display: flex;
   align-items: center;

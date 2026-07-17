@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
@@ -8,7 +8,8 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
 import { AppHeaderToolbar } from '../layouts/AppHeaderToolbar';
-import { NavMenuPopover } from '../layouts/NavMenuPopover';
+import { BottomNavBar } from '../layouts/BottomNavBar';
+import { MoreMenuSheet } from '../layouts/MoreMenuSheet';
 import { AccountMenu, type AccountMenuNotificationProps } from '../layouts/AccountMenu';
 import { showAppAlert } from '../ui/AppConfirm';
 import { useDevice } from '../../lib/platform';
@@ -112,6 +113,7 @@ export function StaffOpsLayout({
   headerOverride,
 }: StaffOpsLayoutProps) {
   const { formFactor } = useDevice();
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -164,18 +166,16 @@ export function StaffOpsLayout({
     ...accountNotifications,
   };
 
-  const popoverItems = useMemo(
-    () =>
-      navItems
-        .filter((item) => isStaffNavItemVisible(item, accessFlags))
-        .map((item) => ({
-          id: item.id,
-          label: item.label,
-          icon: item.icon,
-          badge: item.badge,
-        })),
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => isStaffNavItemVisible(item, accessFlags)),
     [navItems, accessFlags],
   );
+
+  const staffBottomPrimary = visibleNavItems.slice(0, 4);
+  const staffMoreItems = visibleNavItems.slice(4);
+  const staffHasOverflow = staffMoreItems.length > 0;
+  const staffMoreActive = staffMoreItems.some((item) => item.id === navHighlight);
+  const staffMoreBadge = staffMoreItems.reduce((sum, item) => sum + (item.badge ?? 0), 0);
 
   const handlePopoverNavigate = (id: string) => {
     const section = id as StaffSection;
@@ -186,10 +186,6 @@ export function StaffOpsLayout({
     }
     onNavigate(section);
   };
-
-  const navMenu = (
-    <NavMenuPopover items={popoverItems} activeId={navHighlight} onNavigate={handlePopoverNavigate} />
-  );
 
   const brandingTrailing = isDbConnected ? (
     <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
@@ -249,7 +245,7 @@ export function StaffOpsLayout({
   }
 
   return (
-    <div className="staff-shell staff-shell--compact page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
+    <div className="staff-shell staff-shell--compact staff-shell--bottom-nav page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {headerOverride ? (
           <header className="staff-main-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
@@ -262,7 +258,6 @@ export function StaffOpsLayout({
             </div>
             <AppHeaderToolbar
               showTitle={false}
-              left={navMenu}
               right={<AccountMenu {...accountMenu} />}
             />
           </header>
@@ -270,7 +265,6 @@ export function StaffOpsLayout({
           <AppScreenHeader
             title={screenTitle}
             accountMenu={accountMenu}
-            navMenu={navMenu}
             extension={headerExtension}
             brandingTrailing={brandingTrailing}
           />
@@ -286,6 +280,28 @@ export function StaffOpsLayout({
           </div>
         </main>
       </div>
+
+      <BottomNavBar
+        items={staffBottomPrimary}
+        activeId={navHighlight}
+        onNavigate={(id) => handlePopoverNavigate(id)}
+        showMore={staffHasOverflow}
+        moreActive={staffMoreActive}
+        moreBadge={staffMoreBadge}
+        onMoreClick={() => setMoreMenuOpen(true)}
+        centerItemId="map"
+      />
+
+      {staffHasOverflow ? (
+        <MoreMenuSheet
+          open={moreMenuOpen}
+          items={staffMoreItems}
+          activeId={navHighlight}
+          onNavigate={(id) => handlePopoverNavigate(id)}
+          onClose={() => setMoreMenuOpen(false)}
+          title="Staff menu"
+        />
+      ) : null}
     </div>
   );
 }
