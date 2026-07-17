@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.74**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.75**
 
 ---
 
@@ -595,5 +595,23 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - Merged **#635** (uberit home/auth); no open PRs at release
 
 **Release:** **v1.0.74** (build **174**) — web + PWA cache bust (`guardr-cache-v1-0-74`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 (late morning) — /updateit → v1.0.75
+
+**/uberitplatforms Phase 1 — PWA/APK welcome + auth (#637)**
+- **App welcome** — `AppWelcomeChrome` with shell-specific hero copy, `GuardrCard` role dock, `AppButton` CTAs for `pwa-mobile/tablet` and `native-mobile/tablet`
+- **Auth sheet** — `auth-sheet--{viewSurface}` + `auth-sheet-panel--{shellKind}` for PWA glass vs APK safe-area chrome
+- **CSS** — `app-pwa.css` / `app-native.css` use `--uber-*` tokens for welcome dock and auth sheet
+- **Design preview** — App welcome · PWA/APK and Auth sheet pages; Browser/PWA/APK shell toggle
+- **Docs** — `CROSS_PLATFORM.md` pre-auth surface matrix
+
+**PR cleanup**
+- Merged **#637** (uberitplatforms); no open PRs at release
+
+**Release:** **v1.0.75** (build **175**) — web + PWA cache bust (`guardr-cache-v1-0-75`) + CI FCM APK
 
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
