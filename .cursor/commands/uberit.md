@@ -1,41 +1,35 @@
-# /uberit — Complete platform UI/UX redesign (Base Web)
+# /uberit — Complete platform UI/UX redesign (Uber Base Web)
 
-## Powered by Uber Base Web & Uber Base Design System
+Completely redesign every user-facing surface using **Uber Base Web** and the **Uber Base Design System** while preserving 100% of existing functionality.
 
-Completely redesign every user-facing aspect of the platform from the ground up.
-
-This is **not** a feature redesign.  
-This is **not** a backend rewrite.  
-This is a complete redesign of the **presentation layer**, interaction model, information hierarchy, navigation, and visual system while preserving all existing functionality.
-
-The finished product should feel like a modern, enterprise-grade application with a consistent, refined, and highly polished experience across every device.
+> **Current migration policy:** Use **stock Uber Base Web themes** (`LightTheme` / `DarkTheme`). Do **not** apply Guardr sage-green or custom `--brand-*` overrides in Base Web components during migration. Brand colors return in a later pass.
 
 ---
 
-## Design references (required)
+## Design references (required reading)
 
-Study and implement design philosophy, component architecture, accessibility, layout, spacing, typography, motion, interaction patterns, and responsive guidelines **before beginning any work**:
+Study before any work:
 
 - https://github.com/uber/baseweb
 - https://github.com/uber/base-design-docs
 - https://github.com/adrianhajdin/uber
+- Internal patterns: `docs/uberit-patterns.md`
+- `docs/guardedesign.md` · `.cursor/commands/uberitplatforms.md` (per-platform specs)
 
-Internal references:
+Implement design philosophy, component architecture, accessibility, layout, spacing, typography, motion, interaction patterns, and responsive guidelines from these resources.
 
-- `docs/guardedesign.md`
-- `docs/uberit-patterns.md`
-- `public/design-preview.html` — 67-screen acceptance checklist
+---
 
-These repositories define the UI framework. Guardr retains its own branding, features, and identity while adopting a design language **inspired by** these systems.
+## Mission
 
-### Brand translation
+Completely redesign every user-facing aspect of the platform from the ground up.
 
-| Uber Base | Guardr |
-|-----------|--------|
-| Uber blue accent | Sage green (`--brand-primary`) |
-| Uber Move font | Plus Jakarta Sans / IBM Plex Sans |
-| Driver/rider copy | Guard / client / staff marketplace language |
-| Uber logos | Guardr branding only |
+This is **not** a feature redesign.  
+This is **not** a backend rewrite.
+
+This is a complete redesign of the **presentation layer**, interaction model, information hierarchy, navigation, and visual system while preserving all existing functionality.
+
+The finished product should feel like a modern, enterprise-grade application with a consistent, refined, highly polished experience across every device.
 
 ---
 
@@ -43,168 +37,32 @@ These repositories define the UI framework. Guardr retains its own branding, fea
 
 Do **NOT** change:
 
-- Business logic, APIs, database schema
-- Authentication, authorization, user roles, permissions
-- Workflows, backend services, data models, integrations
+- Business logic
+- APIs
+- Database schema
+- Authentication / authorization
+- User roles, permissions, workflows
+- Backend services, data models, integrations
 
-Every feature must continue functioning exactly as it does today. Only improve how users interact with those features.
+Every feature must continue functioning exactly as today. Only improve how users interact with those features.
+
+Also preserve:
+
+- Route names and `appNavigation.ts` contracts (aliases only if navigation UX requires)
+- `App.tsx` data layer — restyle at layout/dashboard boundaries
+- Imperative APIs: `showAppToast`, `showAppConfirm`, `closeTopmostDialog`, overlay stack
 
 ---
 
 ## Supported platforms
 
-Every platform receives a **dedicated design** — not a scaled version of another.
+Each surface gets a **dedicated design** — not a scaled copy.
 
-### Website
-- Mobile · Tablet · Laptop · Desktop · Ultra-wide Desktop
-
-### Progressive Web App (PWA)
-- Mobile · Tablet · Desktop
-- Installable · Offline-ready · Native-feeling transitions · Touch-first
-
-### Native APK
-- Phones · Foldables · Tablets
-- Premium native application — not a website in a wrapper
-
-For platform-specific independent design, use `/uberitplatforms`.
-
----
-
-## Complete interface redesign
-
-Nothing is excluded. Evaluate and redesign every:
-
-- Landing page, dashboard, auth, registration, onboarding
-- User and organization profiles, admin panels, analytics, reports
-- Search, filtering, tables, lists, calendars, maps
-- Notifications, messages, chat, settings, forms, wizards
-- Cards, buttons, drawers, sidebars, modals, popovers, menus, tooltips
-- Tabs, accordions, carousels, sliders, media viewers
-- Empty, error, success, loading, skeleton, toast, progress states
-- Permission dialogs, context menus, breadcrumbs, pagination
-- Footer, header, navigation
-
-No existing UI should remain simply because it already works. Every screen should be intentionally redesigned.
-
----
-
-## Navigation system
-
-Create a unified navigation experience:
-
-- Responsive, context-aware navigation
-- Sticky headers, expandable sidebars, collapsible menus
-- Breadcrumb navigation, animated route transitions
-- Floating action buttons where appropriate
-- Multi-level navigation, mobile bottom navigation, gesture navigation
-- Intelligent page hierarchy and predictable user flows
-
----
-
-## Motion system
-
-Develop one unified animation language. All motion follows consistent:
-
-- Duration, easing, velocity, spring behavior, timing, distance, acceleration, deceleration
-
-Use `src/theme/motionTokens.ts`. Animations should never feel random — every transition reinforces hierarchy and usability. Respect `prefers-reduced-motion`.
-
----
-
-## Advanced sliders & carousels
-
-Implement polished, high-performance sliders and carousels (`src/components/baseui/AppCarousel.tsx`):
-
-- Drag, touch gestures, mouse dragging, momentum scrolling, snap-to-position
-- Keyboard controls, wheel scrolling, progress indicators
-- Autoplay (where appropriate), lazy loading, hardware acceleration
-- Hero banners, featured content, tutorials, galleries, stats, announcements
-
----
-
-## Microinteractions
-
-Every interaction provides immediate visual feedback:
-
-- Button press, hover elevation, ripple, animated focus rings
-- Input validation transitions, toggle/checkbox animations
-- Dropdown, modal, drawer, notification entrances
-- Card hover states, pull-to-refresh, swipe gestures, drag feedback
-
----
-
-## Visual effects
-
-Use modern effects thoughtfully:
-
-- Layered elevation, soft shadows, glass overlays (sparingly)
-- Frosted blur, gradient accents, skeleton/shimmer loading
-- Animated counters, expand/collapse, sticky UI, reveal-on-scroll
-- Smooth page transitions — GPU-friendly transforms, no layout thrash
-
----
-
-## Component standards
-
-Use Uber Base Web components wherever practical (`src/components/baseui/`):
-
-- `GuardrButton`, `GuardrCard`, `GuardrInput`, `GuardrTag`, `GuardrSkeleton`
-- `GuardrModal`, `GuardrDrawer`, `GuardrSheet`, `GuardrBottomNav`, `GuardrSideNav`
-
-Maintain consistency for buttons, cards, forms, typography, icons, inputs, menus, drawers, tables, charts, lists, dialogs, navigation, tags, badges, notifications, tooltips, tabs, accordions, data grids.
-
-No custom component should feel disconnected from the system.
-
----
-
-## Typography
-
-Establish a complete hierarchy: Display, Headlines, Section titles, Card titles, Labels, Body, Captions, Helper text, Error text, Navigation text, Button labels.
-
-Maintain consistent spacing, line heights, and readability.
-
----
-
-## Spacing & layout
-
-Adopt a unified spacing system (4px/8px scale):
-
-- Margins, padding, gutters, grid, card/form/section spacing
-- Responsive spacing, container widths, breakpoints
-
----
-
-## Responsive design
-
-Each breakpoint independently optimized:
-
-- Mobile portrait/landscape, tablet portrait/landscape
-- Laptop, desktop, ultra-wide, foldables
-
-Never rely on simple scaling. Use `shellKind × formFactor → viewSurface`.
-
----
-
-## Accessibility
-
-Meet or exceed **WCAG AA**:
-
-- Keyboard navigation, screen readers, semantic HTML, ARIA
-- Visible focus states, high-contrast compatibility
-- Reduced-motion preferences, accessible touch targets (44×44px min)
-- Color contrast compliance, logical tab order
-
----
-
-## Performance
-
-Maintain or improve:
-
-- Lighthouse scores, Core Web Vitals, bundle size
-- FCP, LCP, INP, accessibility score
-- Smooth 60 FPS interactions — GPU transforms, avoid layout reflows
-
-Run `npm run lint` and `npm test` after changes.
+| Platform | Breakpoints |
+|----------|-------------|
+| **Website** | mobile · tablet · laptop · desktop · ultra-wide |
+| **PWA** | mobile · tablet · desktop · installable · offline-ready |
+| **APK** | phones · foldables · tablets · native feel |
 
 ---
 
@@ -212,52 +70,156 @@ Run `npm run lint` and `npm test` after changes.
 
 | Layer | Location |
 |-------|----------|
-| Base Web theme (Guardr sage) | `src/theme/guardrBaseTheme.ts` |
+| **Stock Uber theme** | `src/theme/uberBaseTheme.ts` (`LightTheme` / `DarkTheme`) |
 | Motion tokens | `src/theme/motionTokens.ts` |
 | Provider | `src/components/baseui/BaseUIProvider.tsx` |
 | Adapters | `src/components/baseui/Guardr*.tsx` |
+| App button bridge | `src/components/ui/AppButton.tsx` |
+| Field primitives | `src/components/baseui/primitives/` |
+| Layout shells | `src/components/baseui/layout/` |
+| Global overlays | `src/components/baseui/overlays/` |
+| Carousel | `src/components/baseui/AppCarousel.tsx` |
 | Design preview | `src/design-preview/` |
 | Legacy CSS (migrate off) | `src/index.css`, `src/styles/*` |
 
-## Migration phases
+### Theme rule
 
-1. **Foundation** — theme, provider, adapters, motion, carousel
-2. **Global overlays** — toast, confirm, modal, drawer, sheet
-3. **Layout shells** — RoleAppShell, desktop/tablet/staff shells, public pages
-4. **Shared primitives** — AppPrimitives, wireframe components
-5. **Role dashboards** — client → guard → staff
-6. **PWA/native CSS** — `app-pwa.css`, `app-native.css`
-7. **Preview parity** — design preview uses production baseui
+```ts
+import { uberThemeForMode } from '../theme/uberBaseTheme';
+import { withAppBreakpoints } from '../components/baseui/layout/shellStyles';
+
+const theme = withAppBreakpoints(uberThemeForMode(mode));
+```
+
+- Use `$theme.colors.*` or Styletron token strings (`accent`, `accent50`, `contentSecondary`) in Base Web overrides.
+- **Do not** use `var(--brand-primary)` or sage RGB in new Base Web code.
+- Legacy Tailwind screens may still use `--brand-*` until Phase 5 CSS cleanup.
 
 ---
 
-## Deliverables
+## Migration phases
 
-For every page, view, and component:
+### Phase 0 — Foundation
+- Stock Uber `LightTheme` / `DarkTheme` via `BaseUIProvider`
+- Shared adapters: Button, Card, Input, Tag, Skeleton
+- Motion tokens + `AppCarousel`
+- Design-preview uses same provider stack
 
-- Redesign layout and visual hierarchy
-- Improve navigation and modernize interactions
-- Enhance accessibility and optimize responsiveness
-- Replace styling with cohesive design system
-- Ensure consistent behavior across Website, PWA, and APK
-- Document reusable patterns in `docs/uberit-patterns.md`
+### Phase 1 — Global overlays
+- `AppToast` → Base Web Snackbar
+- `AppConfirm` / `AppModal` → Base Web Modal
+- `AppOverlaySheet` / `AppDrawer` → Base Web Drawer
+- Overlay stack + Escape / system-back preserved
+
+### Phase 2 — Layout shells
+- `RoleAppShell`, `DesktopAdminShell`, `TabletAdminShell`
+- `StaffOpsLayout`, `ClientAppLayout`
+- Public: `HomePage`, `AuthPage`, `AppHomeScreen`
+- Nav active states use `accent` / `accent50` (Uber blue)
+
+### Phase 3 — Shared primitives
+- `AppPrimitives.tsx` form/list exports
+- `wireframe/*` → Base Web Card, Tag, Input
+- `AppButton` maps `.app-button-*` → `GuardrButton`
+
+### Phase 4 — Role dashboards (in progress)
+- **Foundation:** `baseui/dashboard/*` (DashboardHero, DashboardZone, MetricCell, QuickActionTile, UberThemeVars)
+- **CSS bridge:** `--uber-*` custom properties + `.uber-text-accent` utilities
+- **Hub screens migrated:** Client home, Staff overview, Guard earnings, User profile (shared)
+- **Remaining:** Client (15 views), Guard (14 tabs + map), Staff (26 sections), map views last
+
+### Phase 5 — Feature overlays + CSS cleanup (in progress)
+- **Overlay stack:** `dismissable` prop on `GuardrModal` / `GuardrSheet` for non-dismissible gates
+- **Migrated gates:** `LegalAcceptanceModal`, `OnboardingTour` prompt, `GuardPreShiftBriefing` wrapper, `DocumentImageLightbox`
+- **AppFormSheet:** rebuilt with Base Web chrome (no `app-form-sheet-*` classes)
+- **AppButton:** dropped legacy `.app-button-*` CSS class bridge
+- **Removed:** dead `GuardBottomSheet.tsx`
+- **Remaining:** domain modal content restyle, map sheets, `--brand-*` CSS retirement
+
+### Phase 6 — Preview parity (complete)
+- **Provider stack:** design-preview uses `DeviceProvider` + `BaseUIProvider` + `AppMotionProvider` + `AppSnackbarProvider` (matches production)
+- **Shared adapters:** `GuardrModal`, `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`, `GuardrSkeleton`, dashboard kit in preview mocks
+- **Component showcase:** pinned section in `/design-preview.html` + `ComponentShowcase` in `src/components/baseui/showcase/`
+- **Staff live QA:** `/staff/design-qa` (Director/Founder) renders interactive component showcase with toast/modal demos
+
+### Later — Brand pass
+- Re-apply Guardr colors on top of Uber structure (optional `createLightTheme` / `createDarkTheme` overrides)
+
+---
+
+## Navigation system
+
+Unified navigation across roles:
+
+- Responsive navigation · context-aware nav · sticky headers
+- Expandable/collapsible sidebars · breadcrumbs
+- Animated route transitions · mobile bottom nav · gesture nav
+- Multi-level hierarchy · predictable flows
+
+---
+
+## Motion system
+
+One unified animation language (`src/theme/motionTokens.ts`):
+
+- Consistent duration, easing, spring behavior
+- Respect `prefers-reduced-motion`
+- Reinforce hierarchy — never random motion
+
+---
+
+## Carousels & sliders
+
+`AppCarousel`: drag, touch, keyboard, wheel, snap, dots, edge fade, autoplay, loop, lazy-friendly.
+
+---
+
+## Microinteractions & visual effects
+
+Button press, hover elevation, focus rings, validation transitions, modal/drawer/sheet motion, skeleton/shimmer, card hover — all via Base Web + motion tokens.
+
+---
+
+## Component standards
+
+Use Uber Base Web components wherever practical. Consistent language for buttons, cards, forms, typography, inputs, menus, drawers, tables, lists, dialogs, tags, notifications, tabs, accordions.
+
+---
+
+## Typography, spacing, responsive, accessibility
+
+- Typography hierarchy: Display → Headline → Label → Paragraph → Caption
+- 4px/8px spacing scale · responsive gutters per breakpoint
+- WCAG AA · keyboard · screen readers · focus visible · 44px touch targets
+- Independent layouts per breakpoint (never scale-only)
+
+---
+
+## Per-screen checklist
+
+- [ ] Layout redesigned for mobile, tablet, desktop
+- [ ] Navigation consistent with unified shell
+- [ ] Typography hierarchy correct
+- [ ] 4px/8px spacing scale
+- [ ] WCAG AA contrast, keyboard focus, reduced motion
+- [ ] Light + Dark theme tested (stock Uber)
+- [ ] PWA + APK safe-area when touching chrome
+- [ ] Functionality unchanged
 
 ---
 
 ## Branch & PR
 
-- Branch: `cursor/uberit-<descriptive-name>-e760`
+- Branch: `cursor/uberit-<descriptive-name>-9c4c`
+- Base branch: `main`
+
+---
 
 ## Report back
 
 - Phase completed and screens touched
-- Surfaces (desktop / tablet / mobile / PWA / APK)
 - Files changed (theme, baseui, layouts, CSS)
 - Functionality preserved checklist
-- Design preview: `/design-preview.html`
+- Design preview URL: `/design-preview.html`
 - Test/lint status
 - Next recommended phase
-
-## Final goal
-
-A cohesive, premium experience that preserves Guardr's unique branding, colors, content, and functionality while rebuilding the entire presentation layer around Uber Base Web principles. Every user-facing surface evaluated, redesigned, and refined.

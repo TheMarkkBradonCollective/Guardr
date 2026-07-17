@@ -1,5 +1,10 @@
 import React from 'react';
 import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } from 'lucide-react';
+import { FormControl, Input, Notification, Textarea } from '../../baseui/baseuiShims';
+import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../baseui/dashboard';
+import { GuardrCard } from '../../baseui/GuardrCard';
+import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
+import { AppButton } from '../AppButton';
 
 /** Shared type for reply-to context (also exported from ChatThreadPanel) */
 export type ChatReplyContext = { senderName: string; body: string };
@@ -148,9 +153,9 @@ export function AppSection({
       <div className="app-section-head">
         <h2>{title}</h2>
         {actionLabel && onAction && (
-          <button type="button" onClick={onAction} className="app-section-link">
+          <AppButton type="button" variant="ghost" size="inline" onClick={onAction} className="app-section-link">
             {actionLabel}
-          </button>
+          </AppButton>
         )}
       </div>
       <div className={bleed ? 'app-section-body-bleed' : 'app-section-body'}>{children}</div>
@@ -201,16 +206,19 @@ export function AppItemCard({
   className?: string;
   selected?: boolean;
 }) {
-  const Tag = onClick ? 'button' : 'div';
-  return (
-    <Tag
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={`app-item-card app-item-card-align-top ${selected ? 'app-item-card-selected' : ''} ${className}`}
-    >
-      {children}
-    </Tag>
-  );
+  const cardClassName = `app-item-card app-item-card-align-top ${selected ? 'app-item-card-selected' : ''} ${className}`.trim();
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${cardClassName} w-full text-left`}>
+        <GuardrCard interactive noBorder overrides={{ Root: { style: { width: '100%' } } }}>
+          {children}
+        </GuardrCard>
+      </button>
+    );
+  }
+
+  return <GuardrCard className={cardClassName}>{children}</GuardrCard>;
 }
 
 /** Flat row for read-only lists. Use AppItemCard for clickable entities. */
@@ -246,20 +254,40 @@ export function InlineSearch({
 }) {
   return (
     <div className="app-search-inline">
-      <Search className="w-4 h-4 shrink-0 text-brand-text-muted" strokeWidth={1.5} />
-      <input
-        type="search"
-        className="app-search-inline-input"
+      <Input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.currentTarget.value)}
         placeholder={placeholder}
         aria-label={placeholder}
+        type="search"
+        startEnhancer={<Search className="w-4 h-4 shrink-0 text-brand-text-muted" strokeWidth={1.5} />}
+        endEnhancer={
+          onFilterClick ? (
+            <AppButton
+              type="button"
+              variant="ghost"
+              size="inline"
+              onClick={onFilterClick}
+              className="app-search-filter-btn"
+              aria-label="Filter"
+              overrides={{ BaseButton: { style: { minHeight: '32px', padding: '6px' } } }}
+            >
+              <Filter className="w-4 h-4" strokeWidth={1.5} />
+            </AppButton>
+          ) : undefined
+        }
+        overrides={{
+          ...inputOverrides('app-search-inline-input'),
+          Root: {
+            style: {
+              flex: 1,
+              backgroundColor: 'transparent',
+              border: 'none',
+              boxShadow: 'none',
+            },
+          },
+        }}
       />
-      {onFilterClick && (
-        <button type="button" onClick={onFilterClick} className="app-search-filter-btn" aria-label="Filter">
-          <Filter className="w-4 h-4" strokeWidth={1.5} />
-        </button>
-      )}
     </div>
   );
 }
@@ -273,84 +301,21 @@ export function AvatarPlaceholder({ name, size = 'md' }: { name: string; size?: 
 }
 
 /** Confident dashboard hero — greeting + optional status pill */
-export function AppDashboardHero({
-  kicker,
-  title,
-  status,
-}: {
-  kicker?: string;
-  title: string;
-  status?: React.ReactNode;
-}) {
-  return (
-    <header className="app-dashboard-hero">
-      <div className="min-w-0">
-        {kicker && <p className="app-page-lead-kicker">{kicker}</p>}
-        <h1 className="app-dashboard-hero-title">{title}</h1>
-      </div>
-      {status}
-    </header>
-  );
+export function AppDashboardHero(props: React.ComponentProps<typeof DashboardHero>) {
+  return <DashboardHero {...props} />;
 }
 
 /** Grouped overview zone with optional action link */
-export function AppDashboardZone({
-  title,
-  actionLabel,
-  onAction,
-  children,
-  className = '',
-}: {
-  title: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={`app-dashboard-zone ${className}`}>
-      <div className="app-dashboard-zone-head">
-        <h2 className="app-dashboard-zone-title">{title}</h2>
-        {actionLabel && onAction && (
-          <button type="button" onClick={onAction} className="app-section-link">
-            {actionLabel}
-          </button>
-        )}
-      </div>
-      <div className="app-dashboard-zone-body">{children}</div>
-    </section>
-  );
+export function AppDashboardZone(props: React.ComponentProps<typeof DashboardZone>) {
+  return <DashboardZone {...props} />;
 }
 
-export function AppMetricStrip({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`app-metric-strip ${className}`}>{children}</div>;
+export function AppMetricStrip(props: React.ComponentProps<typeof MetricStrip>) {
+  return <MetricStrip {...props} />;
 }
 
-export function AppMetricCell({
-  label,
-  value,
-  sub,
-  onClick,
-  accent = false,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub?: string;
-  onClick?: () => void;
-  accent?: boolean;
-}) {
-  const Tag = onClick ? 'button' : 'div';
-  return (
-    <Tag
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={`app-metric-cell ${accent ? 'app-metric-cell-accent' : ''} ${onClick ? 'app-metric-cell-clickable' : ''}`}
-    >
-      <p className="app-metric-cell-label">{label}</p>
-      <p className="app-metric-cell-value">{value}</p>
-      {sub && <p className="app-metric-cell-sub">{sub}</p>}
-    </Tag>
-  );
+export function AppMetricCell(props: React.ComponentProps<typeof MetricCell>) {
+  return <MetricCell {...props} />;
 }
 
 export function AppSegmentedControl<T extends string>({
@@ -659,17 +624,26 @@ export function AppFormField({
   className?: string;
   htmlFor?: string;
 }) {
+  if (!label) {
+    return (
+      <div className={`app-form-field ${className}`.trim()}>
+        {children}
+        {error && <p className="app-field-error">{error}</p>}
+        {hint && !error && <p className="app-field-hint">{hint}</p>}
+      </div>
+    );
+  }
+
   return (
-    <div className={`app-form-field ${className}`.trim()}>
-      {label && (
-        <label className="app-field-label" htmlFor={htmlFor}>
-          {label}
-        </label>
-      )}
-      {children}
-      {error && <p className="app-field-error">{error}</p>}
-      {hint && !error && <p className="app-field-hint">{hint}</p>}
-    </div>
+    <FormControl
+      label={label}
+      htmlFor={htmlFor}
+      caption={hint && !error ? hint : undefined}
+      error={error}
+      overrides={formControlOverrides}
+    >
+      <div className={`app-form-field ${className}`.trim()}>{children}</div>
+    </FormControl>
   );
 }
 
@@ -677,14 +651,14 @@ export function AppInput({
   className = '',
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={`app-input uber-input ${className}`.trim()} {...props} />;
+  return <Input {...(props as unknown as React.ComponentProps<typeof Input>)} overrides={inputOverrides(className)} />;
 }
 
 export function AppTextarea({
   className = '',
   ...props
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={`app-input app-textarea uber-input ${className}`.trim()} {...props} />;
+  return <Textarea {...(props as unknown as React.ComponentProps<typeof Textarea>)} overrides={textareaOverrides(className)} />;
 }
 
 export function AppSelect({
@@ -729,10 +703,22 @@ export function AppChipGroup({
 
 export function AppErrorBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="app-error-banner" role="alert">
-      <span className="app-error-banner-dot" aria-hidden />
-      <div className="min-w-0 flex-1 text-sm font-medium leading-relaxed">{children}</div>
-    </div>
+    <Notification
+      kind="negative"
+      overrides={{
+        Body: {
+          style: {
+            margin: 0,
+            width: '100%',
+          },
+        },
+      }}
+    >
+      <div className="app-error-banner" role="alert">
+        <span className="app-error-banner-dot" aria-hidden />
+        <div className="min-w-0 flex-1 text-sm font-medium leading-relaxed">{children}</div>
+      </div>
+    </Notification>
   );
 }
 

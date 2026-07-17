@@ -24,7 +24,7 @@ function isTopmostToken(token: symbol): boolean {
  * Registers overlay on the dialog stack; Escape and system back only close when topmost.
  * Returns a gated `onClose` safe for Base Web backdrop handlers.
  */
-export function useOverlayCloseGate(active: boolean, onClose: () => void): () => void {
+export function useOverlayCloseGate(active: boolean, onClose: () => void, dismissable = true): () => void {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const tokenRef = useRef<symbol | null>(null);
@@ -35,12 +35,17 @@ export function useOverlayCloseGate(active: boolean, onClose: () => void): () =>
     tokenRef.current = token;
     const entry: DialogEntry = {
       token,
-      onClose: () => onCloseRef.current(),
+      onClose: () => {
+        if (dismissable) onCloseRef.current();
+      },
     };
     openDialogStack.push(entry);
-    const releaseOverlayHistory = pushOverlayBackHistory(() => onCloseRef.current());
+    const releaseOverlayHistory = dismissable
+      ? pushOverlayBackHistory(() => onCloseRef.current())
+      : () => {};
 
     const onKey = (e: KeyboardEvent) => {
+      if (!dismissable) return;
       if (e.key === 'Escape' && isTopmostToken(token)) {
         onCloseRef.current();
       }
@@ -53,13 +58,14 @@ export function useOverlayCloseGate(active: boolean, onClose: () => void): () =>
       releaseOverlayHistory();
       if (tokenRef.current === token) tokenRef.current = null;
     };
-  }, [active]);
+  }, [active, dismissable]);
 
   return useCallback(() => {
+    if (!dismissable) return;
     if (tokenRef.current && isTopmostToken(tokenRef.current)) {
       onCloseRef.current();
     }
-  }, []);
+  }, [dismissable]);
 }
 
 /** Returns keyboard focus to the element focused before the overlay opened. */

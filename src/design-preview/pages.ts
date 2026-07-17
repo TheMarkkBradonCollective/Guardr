@@ -96,6 +96,7 @@ export const PREVIEW_PAGES: PreviewPage[] = [
   { id: 'staff-integrations', role: 'staff', path: '/staff/integrations', title: 'Integrations', layout: 'staff', type: 'settings', nav: 'integrations' },
   { id: 'staff-guide', role: 'staff', path: '/staff/guide', title: 'Guide', layout: 'staff', type: 'guide', nav: 'guide' },
   { id: 'staff-dev', role: 'staff', path: '/staff/dev-updates', title: 'Dev notes', layout: 'staff', type: 'list', nav: 'dev-updates' },
+  { id: 'staff-design-qa', role: 'staff', path: '/staff/design-qa', title: 'Design QA', layout: 'staff', type: 'list', nav: 'design-qa' },
   { id: 'staff-profile', role: 'staff', path: '/staff/profile', title: 'Profile', layout: 'staff', type: 'profile', nav: 'profile' },
   { id: 'staff-preferences', role: 'staff', path: '/staff/preferences', title: 'Settings', layout: 'staff', type: 'settings', nav: 'preferences' },
 ];

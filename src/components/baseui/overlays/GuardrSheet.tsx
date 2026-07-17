@@ -11,6 +11,7 @@ export interface GuardrSheetProps {
   panelClassName?: string;
   zIndex?: number;
   ariaLabel?: string;
+  dismissable?: boolean;
 }
 
 /** Bottom sheet overlay — More menu, mobile drawers */
@@ -22,8 +23,9 @@ export function GuardrSheet({
   panelClassName = '',
   zIndex = 2100,
   ariaLabel,
+  dismissable = true,
 }: GuardrSheetProps) {
-  const gatedClose = useOverlayCloseGate(open, onClose);
+  const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
   return (
@@ -35,12 +37,16 @@ export function GuardrSheet({
       autoFocus
       closeable={false}
       showBackdrop
-      onClose={() => gatedClose()}
-      onBackdropClick={() => gatedClose()}
-      onEscapeKeyDown={(e) => {
-        e.preventDefault();
-        gatedClose();
-      }}
+      onClose={dismissable ? () => gatedClose() : () => {}}
+      onBackdropClick={dismissable ? () => gatedClose() : undefined}
+      onEscapeKeyDown={
+        dismissable
+          ? (e) => {
+              e.preventDefault();
+              gatedClose();
+            }
+          : (e) => e.preventDefault()
+      }
       overrides={sheetOverrides({ zIndex, panelClassName })}
     >
       <div className={className} role="dialog" aria-label={ariaLabel}>{children}</div>

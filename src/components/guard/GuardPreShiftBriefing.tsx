@@ -181,12 +181,7 @@ export function GuardPreShiftBriefing({
   );
 
   if (layout === 'modal') {
-    return (
-      <div className="relative w-full max-h-[92vh] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
-        <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
-        {panelBody}
-      </div>
-    );
+    return panelBody;
   }
 
   return (

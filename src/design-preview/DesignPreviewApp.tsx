@@ -4,6 +4,7 @@ import { HeadingXSmall, LabelSmall } from 'baseui/typography';
 import { PREVIEW_PAGES, type PreviewPage, type PreviewRole } from './pages';
 import { AppShell, type FrameSize } from './AppShell';
 import { PreviewLayout } from './PreviewLayout';
+import { ComponentShowcase } from '../components/baseui/showcase';
 import type { SiteMapSection } from './PreviewContext';
 
 const ROLE_LABELS: Record<PreviewRole, string> = {
@@ -79,6 +80,37 @@ export function DesignPreviewApp() {
   return (
     <PreviewLayout contextValue={contextValue}>
       <Block ref={scrollRef}>
+        <Block
+          id="preview-showcase"
+          data-preview-id="showcase"
+          marginBottom="scale1000"
+          overrides={{ Block: { style: { scrollMarginTop: '100px' } } }}
+        >
+          <Block display="flex" alignItems="baseline" gridGap="scale400" marginBottom="scale500" flexWrap>
+            <HeadingXSmall margin="0">Component showcase</HeadingXSmall>
+            <LabelSmall $style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>baseui</LabelSmall>
+            <LabelSmall $style={{ color: 'accent' }}>Production adapters</LabelSmall>
+          </Block>
+          <Block
+            margin="0 auto"
+            maxWidth={MAX_WIDTH[frameSize]}
+            backgroundColor="backgroundPrimary"
+            overrides={{
+              Block: {
+                style: {
+                  borderRadius: '14px',
+                  border: '1px solid',
+                  borderColor: 'borderOpaque',
+                  overflow: 'hidden',
+                  boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
+                },
+              },
+            }}
+          >
+            <ComponentShowcase />
+          </Block>
+        </Block>
+
         {visiblePages.map((page) => (
           <Block
             key={page.id}

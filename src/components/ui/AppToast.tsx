@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useStyletron } from 'baseui';
 import { SnackbarProvider, PLACEMENT, useSnackbar } from 'baseui/snackbar';
 import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Block } from 'baseui/block';
@@ -11,7 +12,10 @@ export type AppToastTone = 'success' | 'error' | 'info';
 const TOAST_ENHANCERS: Record<AppToastTone, React.ComponentType<{ size: number }>> = {
   success: ({ size }) => <CheckCircle size={size} color="var(--status-success)" strokeWidth={2} />,
   error: ({ size }) => <AlertCircle size={size} color="var(--status-danger)" strokeWidth={2} />,
-  info: ({ size }) => <Info size={size} color="var(--brand-primary)" strokeWidth={2} />,
+  info: function InfoEnhancer({ size }) {
+    const [, theme] = useStyletron();
+    return <Info size={size} color={theme.colors.accent} strokeWidth={2} />;
+  },
 };
 
 export interface AppToastMessage {

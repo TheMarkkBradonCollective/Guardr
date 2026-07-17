@@ -17895,18 +17895,18 @@ html.theme-dark .role-side-nav-brand {
 }
 
 .role-side-nav-item:hover:not(.role-side-nav-item-active) {
-  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
-  color: var(--brand-text);
+  background: color-mix(in srgb, var(--uber-accent, #276EF1) 8%, transparent);
+  color: var(--uber-text, var(--brand-text));
 }
 
 .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--uber-accent, #276EF1) 14%, transparent);
+  color: var(--uber-accent, var(--brand-primary));
   font-weight: 700;
 }
 
 html.theme-dark .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--uber-accent, #276EF1) 18%, transparent);
 }
 
 .role-side-nav-item-icon {
@@ -21800,3 +21800,14 @@ body.capacitor-native .landing-app-download-btn:active {
 body.capacitor-native .app-welcome .landing-path-grid {
   gap: 0.75rem;
 }
+
+/* /uberit — Base Web theme bridge (synced by UberThemeVars in BaseUIProvider) */
+.uber-text-accent { color: var(--uber-accent, #276EF1); }
+.uber-text-muted { color: var(--uber-text-muted, #6B6B6B); }
+.uber-text { color: var(--uber-text, #000000); }
+.uber-bg { background-color: var(--uber-bg, #FFFFFF); }
+.uber-surface { background-color: var(--uber-surface, #F6F6F6); }
+.uber-border { border-color: var(--uber-border, #E2E2E2); }
+.uber-fill-accent { fill: var(--uber-accent, #276EF1); }
+.uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 12%, transparent); }
+.uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 20%, transparent); }
