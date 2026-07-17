@@ -1,6 +1,8 @@
 import React from 'react';
 import { Block } from 'baseui/block';
-import { ParagraphMedium } from 'baseui/typography';
+import { LabelSmall, ParagraphMedium } from 'baseui/typography';
+import { useStyletron } from 'baseui';
+import { BadgeCheck, Lock, MapPin, Zap } from 'lucide-react';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { LEGAL_ENTITY_NAME } from '../../../lib/siteConfig';
@@ -21,11 +23,61 @@ function toUberFactor(formFactor: FormFactor): UberFormFactor {
   return 'mobile';
 }
 
+const TRUST_ITEMS = [
+  { icon: BadgeCheck, label: 'Licensed guards only' },
+  { icon: MapPin,     label: 'Map-first browsing' },
+  { icon: Zap,        label: 'Direct pay' },
+  { icon: Lock,       label: 'Shift tracking' },
+] as const;
+
+function TrustStrip({ isMobile }: { isMobile: boolean }) {
+  const [, theme] = useStyletron();
+  return (
+    <Block
+      as="section"
+      aria-label="Platform features"
+      className="uber-landing-trust-strip"
+      padding={isMobile ? 'scale500 scale600' : 'scale600 scale800'}
+      backgroundColor="backgroundSecondary"
+    >
+        <Block
+        maxWidth="1280px"
+        margin="0 auto"
+        width="100%"
+        display="flex"
+        gridGap={isMobile ? 'scale600' : 'scale800'}
+        alignItems="center"
+        justifyContent={isMobile ? 'flex-start' : 'center'}
+        overrides={{ Block: { style: { flexWrap: 'wrap' } } }}
+      >
+        {TRUST_ITEMS.map(({ icon: Icon, label }) => (
+          <Block
+            key={label}
+            display="flex"
+            alignItems="center"
+            gridGap="scale300"
+            className="uber-landing-trust-item"
+          >
+            <Icon size={16} aria-hidden color={theme.colors.accent} />
+            <LabelSmall margin={0} $style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+              {label}
+            </LabelSmall>
+          </Block>
+        ))}
+      </Block>
+    </Block>
+  );
+}
+
 interface UberStyleLandingProps extends LandingSectionsProps {
   formFactor: FormFactor;
 }
 
-/** Uber homepage pattern — black nav, booking hero, explore grid, login band. */
+/**
+ * Guardr landing — Uber homepage pattern.
+ * Black nav · booking hero · trust strip · explore grid · login band · footer.
+ * Platform-specific layout: mobile | tablet | desktop.
+ */
 export function UberStyleLandingPage({
   formFactor,
   themeMode,
@@ -60,6 +112,8 @@ export function UberStyleLandingPage({
         heroVisual={showHeroVisual ? <UberLandingHeroVisual /> : undefined}
       />
 
+      <TrustStrip isMobile={isMobile} />
+
       <UberExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
 
       <UberLoginBand
@@ -68,7 +122,13 @@ export function UberStyleLandingPage({
         visual={<UberLandingLoginVisual />}
       />
 
-      <Block padding={isMobile ? 'scale600' : 'scale800'} backgroundColor="backgroundSecondary">
+      {/* App download CTA */}
+      <Block
+        as="section"
+        aria-label="Download the app"
+        padding={isMobile ? 'scale600' : 'scale800'}
+        backgroundColor="backgroundSecondary"
+      >
         <Block maxWidth="1280px" margin="0 auto" $style={{ textAlign: 'center' }}>
           <LandingAppDownloads formFactor={formFactor} variant="cta" />
         </Block>
@@ -80,12 +140,21 @@ export function UberStyleLandingPage({
 
       <Block
         as="footer"
+        role="contentinfo"
         className="uber-landing-footer"
         padding={isMobile ? 'scale600' : 'scale800'}
         backgroundColor="backgroundPrimary"
         overrides={{ Block: { style: { borderTop: '1px solid', borderColor: 'borderOpaque' } } }}
       >
-        <Block maxWidth="1280px" margin="0 auto" display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" gridGap="scale500">
+        <Block
+          maxWidth="1280px"
+          margin="0 auto"
+          display="flex"
+          flexDirection={isMobile ? 'column' : 'row'}
+          justifyContent="space-between"
+          alignItems={isMobile ? 'flex-start' : 'center'}
+          gridGap="scale500"
+        >
           <ParagraphMedium margin={0} color="contentSecondary" $style={{ fontSize: '13px' }}>
             © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
           </ParagraphMedium>

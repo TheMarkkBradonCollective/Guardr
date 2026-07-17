@@ -1,8 +1,9 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { LabelSmall, ParagraphSmall } from 'baseui/typography';
+import { useStyletron } from 'baseui';
+import { ArrowRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { GuardrCard } from '../GuardrCard';
 
 export function QuickActionTile({
   icon: Icon,
@@ -19,30 +20,61 @@ export function QuickActionTile({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  const [, theme] = useStyletron();
+
+  const bgColor = primary ? theme.colors.accent : theme.colors.backgroundPrimary;
+  const borderColor = primary ? 'transparent' : theme.colors.borderOpaque;
+  const textColor = primary ? theme.colors.contentOnColor : theme.colors.contentPrimary;
+  const iconBg = primary ? 'rgba(255,255,255,0.18)' : theme.colors.accent50;
+  const iconColor = primary ? '#fff' : theme.colors.accent;
+  const mutedTextColor = primary ? 'rgba(255,255,255,0.82)' : theme.colors.contentSecondary;
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`client-home-quick-tile ${primary ? 'client-home-quick-tile-primary' : ''} ${disabled ? 'client-home-action-muted' : ''}`}
       aria-disabled={disabled}
+      style={{
+        all: 'unset',
+        display: 'block',
+        width: '100%',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.52 : 1,
+        borderRadius: '12px',
+        overflow: 'hidden',
+        transition: 'transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease',
+      }}
+      onMouseDown={(e) => {
+        if (!disabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
+      }}
+      onMouseUp={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.transform = '';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.transform = '';
+      }}
     >
-      <GuardrCard
-        interactive
-        noBorder
+      <Block
+        display="flex"
+        flexDirection="column"
+        alignItems="flex-start"
+        gridGap="scale300"
+        padding="scale500"
         overrides={{
-          Root: {
+          Block: {
             style: {
-              width: '100%',
-              backgroundColor: primary ? 'accent' : 'backgroundPrimary',
-              color: primary ? 'contentOnColor' : 'contentPrimary',
-              border: primary ? 'none' : '1px solid',
-              borderColor: primary ? 'transparent' : 'borderOpaque',
+              backgroundColor: bgColor,
+              border: `1px solid ${borderColor}`,
+              borderRadius: '12px',
+              minHeight: '120px',
+              justifyContent: 'space-between',
             },
           },
         }}
       >
-        <Block display="flex" flexDirection="column" alignItems="flex-start" gridGap="scale200" padding="scale500">
+        {/* Icon + arrow row */}
+        <Block display="flex" alignItems="flex-start" justifyContent="space-between" width="100%">
           <Block
             display="flex"
             alignItems="center"
@@ -53,22 +85,33 @@ export function QuickActionTile({
               Block: {
                 style: {
                   borderRadius: '10px',
-                  backgroundColor: primary ? 'rgba(255,255,255,0.16)' : 'accent50',
-                  color: primary ? 'contentOnColor' : 'accent',
+                  backgroundColor: iconBg,
+                  flexShrink: 0,
                 },
               },
             }}
           >
-            <Icon className="w-4 h-4" strokeWidth={2} />
+            <Icon size={18} color={iconColor} strokeWidth={2} aria-hidden />
           </Block>
-          <LabelSmall margin={0} $style={{ fontWeight: 700, fontSize: '13px', color: 'inherit' }}>
+          <ArrowRight size={16} color={mutedTextColor} aria-hidden />
+        </Block>
+
+        {/* Label */}
+        <Block>
+          <LabelSmall
+            margin={0}
+            $style={{ fontWeight: 700, fontSize: '13px', color: textColor, lineHeight: 1.3 }}
+          >
             {label}
           </LabelSmall>
-          <ParagraphSmall margin={0} $style={{ fontSize: '11px', opacity: primary ? 0.9 : 0.72, color: 'inherit' }}>
+          <ParagraphSmall
+            margin="4px 0 0"
+            $style={{ fontSize: '11px', color: mutedTextColor, lineHeight: 1.4 }}
+          >
             {sub}
           </ParagraphSmall>
         </Block>
-      </GuardrCard>
+      </Block>
     </button>
   );
 }

@@ -4,15 +4,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] {
-  --adm-accent: var(--uber-accent, #276ef1);
+  --adm-accent: var(--uber-accent, #4A6B4E);
   --adm-accent-hover: var(--uber-accent-hover, #1a5dc8);
   --adm-accent-light: var(--uber-accent-50, #eff4fe);
-  --adm-accent-dark: var(--uber-accent, #276ef1);
-  --adm-accent-band: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
+  --adm-accent-dark: var(--uber-accent, #4A6B4E);
+  --adm-accent-band: var(--uber-accent, #4A6B4E);
+  --adm-sand: var(--uber-accent, #4A6B4E);
   --adm-sand-light: var(--uber-accent-50, #eff4fe);
-  --adm-sand-dark: var(--uber-accent, #276ef1);
-  --adm-sand-band: var(--uber-accent, #276ef1);
+  --adm-sand-dark: var(--uber-accent, #4A6B4E);
+  --adm-sand-band: var(--uber-accent, #4A6B4E);
   --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
   --adm-sidebar-w: 17rem;
   --adm-bg: var(--uber-surface, #f6f6f6);
@@ -33,7 +33,7 @@ html.theme-dark body[data-form-factor="desktop"] {
   --adm-border: var(--uber-border, #333333);
   --adm-accent-light: var(--uber-accent-50, #1a2a42);
   --adm-sand-light: var(--uber-accent-50, #1a2a42);
-  --adm-sand-band: var(--uber-accent, #335ba3);
+  --adm-sand-band: var(--uber-accent, #7AAE7F);
 }
 
 body[data-form-factor="desktop"] .adm-app {

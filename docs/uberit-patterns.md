@@ -4,20 +4,21 @@ Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/c
 
 ## Theme
 
-Production uses stock Uber Base Web themes — **no custom brand colors during migration**:
+Production uses **Guardr-branded Base Web themes** — sage-green accent on stock Uber Base infrastructure:
 
 ```ts
-import { uberThemeForMode } from '../theme/uberBaseTheme';
+import { guardrThemeForMode } from '../theme/guardrBaseTheme';
 import { withAppBreakpoints } from '../components/baseui/layout/shellStyles';
 import { useThemeMode } from '../lib/platform/useThemeMode';
 
-const theme = withAppBreakpoints(uberThemeForMode(useThemeMode()));
+const theme = withAppBreakpoints(guardrThemeForMode(useThemeMode()));
 ```
 
-- **Light:** Uber `LightTheme` — accent `#276EF1`
-- **Dark:** Uber `DarkTheme` — accent `#335BA3`
-- Use `useStyletron()` or Styletron token strings in overrides — **not** `var(--brand-primary)`
-- Legacy Tailwind `--brand-*` CSS remains for unmigrated screens until Phase 5
+- **Light:** Guardr `LightTheme` — sage-green accent `#4A6B4E`, black primary CTA
+- **Dark:** Guardr `DarkTheme` — sage-green accent `#7AAE7F`, white primary CTA
+- `UberThemeVars` syncs theme tokens to CSS custom properties on every render
+- Use `useStyletron()` or Styletron token strings in overrides — **not** raw hex values
+- `--brand-*` CSS variables are bridged from theme tokens via `UberThemeVars`
 
 ## Provider stack
 

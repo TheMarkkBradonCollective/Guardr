@@ -41,15 +41,20 @@ export const shellNavOverrides = {
   },
   NavItem: {
     style: ({ $active }: { $active: boolean }) => ({
-      borderRadius: '8px',
+      borderRadius: '10px',
       marginLeft: '8px',
       marginRight: '8px',
+      marginBottom: '2px',
       paddingLeft: '12px',
       paddingRight: '12px',
-      backgroundColor: $active ? 'backgroundSecondary' : 'transparent',
-      borderLeft: 'none',
+      backgroundColor: $active ? 'accent50' : 'transparent',
+      border: $active ? '1px solid' : '1px solid transparent',
+      borderColor: $active ? 'accent200' : 'transparent',
+      borderLeft: $active ? '3px solid' : '3px solid transparent',
+      borderLeftColor: $active ? 'accent' : 'transparent',
+      transition: 'background-color 120ms ease, border-color 120ms ease',
       ':hover': {
-        backgroundColor: 'backgroundSecondary',
+        backgroundColor: $active ? 'accent50' : 'backgroundSecondary',
       },
     }),
   },
@@ -63,7 +68,8 @@ export const shellNavOverrides = {
       minHeight: '44px',
       display: 'flex',
       alignItems: 'center',
-      color: $active ? 'contentPrimary' : 'contentSecondary',
+      color: $active ? 'accent' : 'contentSecondary',
+      transition: 'color 120ms ease',
     }),
   },
 };
@@ -75,7 +81,7 @@ export function iconRailItemStyle(theme: Theme, active: boolean) {
     minWidth: '48px',
     minHeight: '48px',
     borderRadius: '12px',
-    border: 'none',
+    border: active ? `1px solid ${theme.colors.accent200 ?? theme.colors.accent}` : '1px solid transparent',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -83,7 +89,11 @@ export function iconRailItemStyle(theme: Theme, active: boolean) {
     position: 'relative' as const,
     backgroundColor: active ? theme.colors.accent50 : 'transparent',
     color: active ? theme.colors.accent : theme.colors.contentSecondary,
-    transition: 'background-color 150ms ease, color 150ms ease, transform 150ms ease',
-    ':active': { transform: 'scale(0.96)' },
+    transition: 'background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 120ms ease',
+    ':hover': {
+      backgroundColor: active ? theme.colors.accent50 : theme.colors.backgroundSecondary,
+      color: active ? theme.colors.accent : theme.colors.contentPrimary,
+    },
+    ':active': { transform: 'scale(0.94)' },
   };
 }

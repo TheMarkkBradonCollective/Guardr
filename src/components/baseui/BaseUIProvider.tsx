@@ -3,7 +3,7 @@ import { Client as Styletron, Server as StyletronServer } from 'styletron-engine
 import { Provider as StyletronProvider } from 'styletron-react';
 import { BaseProvider } from 'baseui';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
-import { uberThemeForMode } from '../../theme/uberBaseTheme';
+import { guardrThemeForMode } from '../../theme/guardrBaseTheme';
 import { UberThemeVars } from './dashboard/themeVars';
 import { withAppBreakpoints } from './layout/shellStyles';
 
@@ -22,7 +22,7 @@ function getStyletronEngine(): Styletron | StyletronServer {
 export function BaseUIProvider({ children }: { children: React.ReactNode }) {
   const mode = useThemeMode();
   const engine = useMemo(() => getStyletronEngine(), []);
-  const theme = useMemo(() => withAppBreakpoints(uberThemeForMode(mode)), [mode]);
+  const theme = useMemo(() => withAppBreakpoints(guardrThemeForMode(mode)), [mode]);
 
   return (
     <StyletronProvider value={engine}>

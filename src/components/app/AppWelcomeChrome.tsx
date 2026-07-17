@@ -73,22 +73,22 @@ export function AppWelcomeBackdrop() {
 
 const HERO_COPY: Record<ShellKind, { eyebrow: string; headline: string; accent: string; sub: string }> = {
   browser: {
-    eyebrow: 'Security marketplace',
-    headline: 'Go anywhere with Guardr.',
-    accent: 'Request coverage in minutes.',
-    sub: 'Post jobs, accept shifts, and track live operations — one platform for guards and clients.',
+    eyebrow: 'Independent security marketplace',
+    headline: 'Post coverage. Get qualified. Work securely.',
+    accent: 'Clients and guards, one platform.',
+    sub: 'Post jobs, browse open shifts, and track live operations. Map-first. Direct pay.',
   },
   pwa: {
-    eyebrow: 'Installed · Guardr',
-    headline: 'Go anywhere with Guardr.',
+    eyebrow: 'Guardr · Installed',
+    headline: 'Your security workspace, anywhere.',
     accent: 'Ready on your home screen.',
-    sub: 'Post coverage, pick up shifts, and follow live operations from your installed app.',
+    sub: 'Post coverage, pick up shifts, and manage live operations from your installed app. Works offline.',
   },
   native: {
     eyebrow: 'Guardr for Android',
-    headline: 'Field-ready security ops.',
+    headline: 'Field-ready security operations.',
     accent: 'Built for mobile crews.',
-    sub: 'Map-first jobs, shift tools, messaging, and direct pay — optimized for native Android.',
+    sub: 'Map-first jobs, shift tools, messaging, and direct pay — native Android optimized.',
   },
 };
 

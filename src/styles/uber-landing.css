@@ -1,40 +1,43 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   UBER HOMEPAGE LANDING — black nav, booking hero, explore grid
-   Matches Uber.com marketing pattern (adapted for Guardr security marketplace)
+   GUARDR LANDING — Uber Base Design System homepage pattern
+   Black nav · booking hero · explore grid · sage-green accents
+   Optimised independently for mobile / tablet / desktop
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Shell ─────────────────────────────────────────────────────────────── */
 
 .uber-style-landing {
   font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Navigation ───────────────────────────────────────────────────────── */
+/* ─── Navigation ─────────────────────────────────────────────────────────── */
 
 .uber-landing-nav {
   background: #000000 !important;
   color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-html.theme-dark .uber-landing-nav,
-html.theme-grey .uber-landing-nav {
-  background: #000000 !important;
-}
+html.theme-dark .uber-landing-nav { background: #000000 !important; }
 
 .uber-landing-nav-link {
   appearance: none;
   background: none;
   border: none;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.82);
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
   padding: 8px 4px;
-  transition: opacity 150ms ease;
+  transition: color 120ms ease;
+  white-space: nowrap;
 }
 
-.uber-landing-nav-link:hover {
-  opacity: 0.75;
-}
+.uber-landing-nav-link:hover { color: #ffffff; }
 
 .uber-landing-signup-pill {
   appearance: none;
@@ -44,18 +47,15 @@ html.theme-grey .uber-landing-nav {
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
-  padding: 10px 18px;
+  font-family: inherit;
+  padding: 10px 20px;
   cursor: pointer;
-  transition: transform 150ms ease, opacity 150ms ease;
+  transition: transform 120ms ease, opacity 120ms ease;
+  white-space: nowrap;
 }
 
-.uber-landing-signup-pill:hover {
-  opacity: 0.92;
-}
-
-.uber-landing-signup-pill:active {
-  transform: scale(0.98);
-}
+.uber-landing-signup-pill:hover  { opacity: 0.90; }
+.uber-landing-signup-pill:active { transform: scale(0.97); }
 
 .uber-landing-menu-btn {
   appearance: none;
@@ -66,7 +66,11 @@ html.theme-grey .uber-landing-nav {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  transition: background-color 120ms ease;
 }
+
+.uber-landing-menu-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
 .uber-landing-mobile-menu-item {
   display: block;
@@ -75,45 +79,42 @@ html.theme-grey .uber-landing-nav {
   appearance: none;
   background: none;
   border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   font-size: 16px;
   font-weight: 500;
-  padding: 12px 0;
+  font-family: inherit;
+  padding: 14px 0;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  transition: opacity 120ms ease;
 }
 
-.uber-landing-mobile-menu-item:last-child {
-  border-bottom: none;
-}
+.uber-landing-mobile-menu-item:last-child { border-bottom: none; }
+.uber-landing-mobile-menu-item:hover { opacity: 0.75; }
 
-.uber-landing-logo {
-  filter: brightness(0) invert(1);
-}
+.uber-landing-logo { filter: brightness(0) invert(1); }
 
-/* ─── Hero booking panel ─────────────────────────────────────────────────── */
+/* ─── Hero ───────────────────────────────────────────────────────────────── */
 
 .uber-landing-text-link {
   appearance: none;
   background: none;
   border: none;
   padding: 0;
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #4A6B4E);
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--uber-accent, #4A6B4E) 45%, transparent);
   cursor: pointer;
   text-align: left;
+  transition: opacity 120ms ease;
 }
 
-.uber-landing-text-link:hover {
-  opacity: 0.85;
-}
-
-.uber-landing-text-link--block {
-  align-self: center;
-}
+.uber-landing-text-link:hover { opacity: 0.80; }
+.uber-landing-text-link--block { align-self: center; }
 
 .uber-landing-time-pill {
   display: inline-flex;
@@ -123,21 +124,24 @@ html.theme-grey .uber-landing-nav {
   background: var(--uber-surface, #f3f3f3);
   border: none;
   border-radius: 999px;
-  padding: 10px 16px;
+  padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
   color: var(--uber-text, #000);
+  transition: background-color 120ms ease;
 }
 
+.uber-landing-time-pill:hover { background: var(--uber-border, #e2e2e2); }
 html.theme-dark .uber-landing-time-pill {
   background: var(--uber-surface, #1c1c1c);
   color: var(--uber-text, #f0f0f0);
 }
+html.theme-dark .uber-landing-time-pill:hover { background: var(--uber-elevated, #2b2b2b); }
 
-.uber-landing-input-stack {
-  position: relative;
-}
+/* Booking inputs */
+.uber-landing-input-stack { position: relative; }
 
 .uber-landing-input-row {
   display: flex;
@@ -145,13 +149,15 @@ html.theme-dark .uber-landing-time-pill {
   gap: 12px;
   background: var(--uber-surface, #f3f3f3);
   border-radius: 8px;
-  padding: 0 12px;
-  min-height: 52px;
+  padding: 0 14px;
+  min-height: 54px;
+  transition: background-color 120ms ease;
 }
 
-html.theme-dark .uber-landing-input-row {
-  background: var(--uber-surface, #1c1c1c);
-}
+.uber-landing-input-row:focus-within { background: var(--uber-border, #e2e2e2); }
+
+html.theme-dark .uber-landing-input-row { background: var(--uber-surface, #1c1c1c); }
+html.theme-dark .uber-landing-input-row:focus-within { background: var(--uber-elevated, #2b2b2b); }
 
 .uber-landing-input-icon {
   flex: 0 0 20px;
@@ -171,17 +177,11 @@ html.theme-dark .uber-landing-input-row {
   flex: 0 0 10px;
 }
 
-.uber-landing-input-icon--square {
-  width: 10px;
-  height: 10px;
-  flex: 0 0 10px;
-}
-
 .uber-landing-input-connector {
   width: 2px;
   height: 12px;
   background: var(--uber-border, #c4c4c4);
-  margin-left: 21px;
+  margin-left: 20px;
 }
 
 .uber-landing-input {
@@ -191,14 +191,14 @@ html.theme-dark .uber-landing-input-row {
   background: transparent;
   font-size: 15px;
   font-weight: 400;
+  font-family: inherit;
   color: var(--uber-text, #000);
   outline: none;
-  padding: 14px 0;
+  padding: 16px 0;
+  cursor: pointer;
 }
 
-.uber-landing-input::placeholder {
-  color: var(--uber-text-muted, #6b6b6b);
-}
+.uber-landing-input::placeholder { color: var(--uber-text-muted, #6b6b6b); }
 
 .uber-landing-input-action {
   appearance: none;
@@ -210,58 +210,124 @@ html.theme-dark .uber-landing-input-row {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 6px;
+  transition: color 120ms ease, background-color 120ms ease;
 }
 
 .uber-landing-input-action:hover {
   color: var(--uber-text, #000);
+  background: var(--uber-border, #e2e2e2);
 }
 
-/* ─── Explore cards ────────────────────────────────────────────────────── */
+/* ─── Hero visual ────────────────────────────────────────────────────────── */
 
-.uber-landing-explore-card {
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms ease;
-}
-
-.uber-landing-explore-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.uber-landing-details-pill {
-  appearance: none;
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: opacity 150ms ease;
-}
-
-html.theme-dark .uber-landing-details-pill {
-  background: var(--uber-bg, #141414);
-  color: var(--uber-text, #f0f0f0);
-  border: 1px solid var(--uber-border, #333);
-}
-
-.uber-landing-details-pill:hover {
-  opacity: 0.88;
-}
-
-/* ─── Hero / login visuals ───────────────────────────────────────────────── */
-
+.uber-landing-hero-art,
 .uber-landing-hero-visual,
 .uber-landing-login-visual {
   width: 100%;
 }
 
-.uber-style-landing--mobile .uber-landing-hero {
-  padding-bottom: 24px;
+/* ─── Explore cards ──────────────────────────────────────────────────────── */
+
+.uber-landing-explore-card {
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms ease;
 }
 
-/* Remove old mobile fixed CTA when using Uber pattern */
-.uber-style-landing .mobility-landing-cta-bar {
-  display: none;
+.uber-landing-explore-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+}
+
+.uber-landing-explore-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 3px rgba(74, 107, 78, 0.3));
+}
+
+.uber-landing-details-pill {
+  appearance: none;
+  background: var(--uber-bg, #ffffff);
+  color: var(--uber-text, #000000);
+  border: 1px solid var(--uber-border, #e2e2e2);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.uber-landing-details-pill:hover {
+  background: var(--uber-surface, #f6f6f6);
+  border-color: var(--uber-text-muted, #545454);
+}
+
+html.theme-dark .uber-landing-details-pill {
+  background: var(--uber-bg, #141414);
+  color: var(--uber-text, #f0f0f0);
+  border-color: var(--uber-border, #333);
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+
+.uber-landing-footer a {
+  color: var(--uber-text-muted, #545454);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.uber-landing-footer a:hover { color: var(--uber-text, #000); }
+
+/* ─── Platform-specific adjustments ─────────────────────────────────────── */
+
+/* Mobile — thumb reach, compact hero, full-width CTAs */
+.uber-style-landing--mobile .uber-landing-hero { padding-bottom: 24px; }
+.uber-style-landing--mobile .uber-landing-explore { padding-inline: 20px; }
+
+/* Tablet — 2-col grid, comfortable padding */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .uber-landing-hero { padding-block: 56px 48px; }
+}
+
+/* Desktop — split layout, max-width container, generous whitespace */
+@media screen and (min-width: 1024px) {
+  .uber-landing-hero { padding-block: 80px 72px; }
+  .uber-landing-explore-card { min-height: 220px; }
+}
+
+/* PWA chrome adjustments */
+body[data-view-surface^="pwa"] .uber-style-landing .uber-landing-nav {
+  padding-top: max(14px, env(safe-area-inset-top)) !important;
+}
+
+/* Remove legacy mobile fixed CTA when using this pattern */
+.uber-style-landing .mobility-landing-cta-bar { display: none; }
+
+/* ─── Feature trust strip ────────────────────────────────────────────────── */
+
+.uber-landing-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+}
+
+.uber-landing-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uber-text-muted, #545454);
+  white-space: nowrap;
+}
+
+.uber-landing-trust-item svg {
+  color: var(--uber-accent, #4A6B4E);
+  flex-shrink: 0;
 }

@@ -1,37 +1,62 @@
 /**
- * Unified motion language for /uberit redesign.
- * Aligns with Uber Base motion principles and guardedesign.md §6.
+ * Guardr unified motion language — Uber Base motion principles.
+ * §6 of guardedesign.md: purposeful, 150–300ms, respects prefers-reduced-motion.
  */
 
+// ─── Duration ─────────────────────────────────────────────────────────────────
 export const MOTION_DURATION = {
+  /** Instant micro-feedback (ripples, icon swaps) */
   instant: 100,
+  /** Fast UI transitions (button presses, chip toggles) */
   fast: 150,
+  /** Standard transitions (fade, hover, colour) */
   normal: 200,
+  /** Moderate (panel reveals, tab switches) */
   moderate: 250,
+  /** Slow deliberate motion (page enter, status changes) */
   slow: 300,
+  /** Sheet / drawer entrance */
   sheet: 320,
+  /** Chart / data animation */
   chart: 600,
 } as const;
 
+// ─── Easing ───────────────────────────────────────────────────────────────────
 export const MOTION_EASING = {
-  /** Quintic-style decelerate — enter */
+  /** Quintic decelerate — element entering the screen */
   enter: 'cubic-bezier(0.16, 1, 0.3, 1)',
-  /** Accelerate — exit */
+  /** Accelerate — element leaving the screen */
   exit: 'cubic-bezier(0.4, 0, 1, 1)',
-  /** Standard UI */
+  /** Standard UI (most state changes) */
   standard: 'cubic-bezier(0.2, 0, 0, 1)',
-  /** Spring-like for emphasis */
+  /** Spring-like bounce for emphasis (badges, counters) */
   spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  /** Linear — colour/opacity only, no spatial movement */
+  linear: 'linear',
 } as const;
 
+// ─── Spatial distance ─────────────────────────────────────────────────────────
 export const MOTION_DISTANCE = {
-  sm: 8,
-  md: 16,
+  /** Subtle shift for small elements */
+  sm: 6,
+  /** Standard entry for panels and cards */
+  md: 14,
+  /** Full panel slide */
   lg: 24,
+  /** Full-screen sheet */
   sheet: '100%',
 } as const;
 
-/** CSS transition shorthand helpers */
+// ─── Spring configs (motion/framer-motion) ────────────────────────────────────
+export const MOTION_SPRING = {
+  snappy: { type: 'spring' as const, stiffness: 420, damping: 32 },
+  gentle: { type: 'spring' as const, stiffness: 280, damping: 28 },
+  sheet:  { type: 'spring' as const, stiffness: 320, damping: 34 },
+} as const;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** CSS transition shorthand for multiple properties. */
 export function motionTransition(
   properties: string[] = ['opacity', 'transform'],
   duration: number = MOTION_DURATION.normal,
@@ -40,18 +65,54 @@ export function motionTransition(
   return properties.map((p) => `${p} ${duration}ms ${easing}`).join(', ');
 }
 
+/** Returns true if the user prefers reduced motion. */
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function motionDuration(preferred: number, reduced = MOTION_DURATION.instant): number {
+/**
+ * Returns `preferred` duration unless user prefers reduced motion,
+ * in which case `reduced` is returned (default: instant).
+ */
+export function motionDuration(
+  preferred: number,
+  reduced = MOTION_DURATION.instant,
+): number {
   return prefersReducedMotion() ? reduced : preferred;
 }
 
-/** Framer Motion / motion library spring config */
-export const MOTION_SPRING = {
-  snappy: { type: 'spring' as const, stiffness: 420, damping: 32 },
-  gentle: { type: 'spring' as const, stiffness: 280, damping: 28 },
-  sheet: { type: 'spring' as const, stiffness: 320, damping: 34 },
+// ─── Framer Motion variants ───────────────────────────────────────────────────
+
+/** Fade + subtle slide-up — for page/section enters. */
+export const fadeUpVariants = {
+  hidden:  { opacity: 0, y: MOTION_DISTANCE.sm },
+  visible: { opacity: 1, y: 0, transition: { duration: MOTION_DURATION.slow / 1000, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, y: -MOTION_DISTANCE.sm / 2, transition: { duration: MOTION_DURATION.fast / 1000, ease: [0.4, 0, 1, 1] } },
+};
+
+/** Staggered list — wrap children in this container. */
+export const staggerContainerVariants = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+};
+
+/** Individual staggered item. */
+export const staggerItemVariants = {
+  hidden:  { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } },
+};
+
+/** Sheet enter from bottom. */
+export const sheetVariants = {
+  hidden:  { y: '100%', opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: MOTION_SPRING.sheet },
+  exit:    { y: '100%', opacity: 0, transition: { duration: MOTION_DURATION.normal / 1000, ease: [0.4, 0, 1, 1] } },
+};
+
+/** Sidebar drawer from left. */
+export const drawerVariants = {
+  hidden:  { x: '-100%', opacity: 0 },
+  visible: { x: 0, opacity: 1, transition: MOTION_SPRING.sheet },
+  exit:    { x: '-100%', opacity: 0, transition: { duration: MOTION_DURATION.normal / 1000, ease: [0.4, 0, 1, 1] } },
 };

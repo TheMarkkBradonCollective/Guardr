@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   UBER GLOBAL DESIGN SYSTEM — presentation layer for all surfaces
-   Replaces legacy Guardr sage/IBM visual patterns with Uber.com aesthetics.
-   Black primary CTAs · gray cards · blue accent links · Uber Move typography
+   GUARDR × UBER GLOBAL DESIGN SYSTEM — presentation layer for all surfaces
+   Uber Base architecture · Guardr sage-green accent · black primary CTAs
+   Uber Move typography · flat gray cards · accessible focus rings
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
@@ -180,7 +180,7 @@ a,
 .text-brand-primary,
 .text-brand-accent,
 .adm-accent-text {
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #4A6B4E);
 }
 
 .uber-text-muted,
@@ -300,11 +300,11 @@ body[data-form-factor="desktop"] {
   --adm-text: var(--uber-text, #000000);
   --adm-muted: var(--uber-text-muted, #545454);
   --adm-border: var(--uber-border, #e2e2e2);
-  --adm-accent: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
-  --adm-sand-dark: var(--uber-accent, #276ef1);
+  --adm-accent: var(--uber-accent, #4A6B4E);
+  --adm-sand: var(--uber-accent, #4A6B4E);
+  --adm-sand-dark: var(--uber-accent, #4A6B4E);
   --adm-sand-light: var(--uber-accent-50, #eff4fe);
-  --adm-sand-band: var(--uber-accent, #276ef1);
+  --adm-sand-band: var(--uber-accent, #4A6B4E);
   --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
 }
 
@@ -388,8 +388,12 @@ html.theme-dark .app-welcome-signin-btn {
 .uber-overlay-sheet-title {
   font-weight: 600;
   font-size: 1rem;
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-text, #000);
   margin: 0;
+}
+
+html.theme-dark .uber-overlay-sheet-title {
+  color: var(--uber-text, #fff);
 }
 
 .uber-overlay-sheet-body {

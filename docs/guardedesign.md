@@ -2,11 +2,11 @@
 
 Official visual and interaction specification for Guardr across **Website** (mobile · tablet · desktop), **PWA** (Full · Lite), and **Android APK** (Full · Premium).
 
-**Design system:** [Uber Base Web](https://github.com/uber/baseweb) + [Base Design Docs](https://github.com/uber/base-design-docs) — stock `LightTheme` / `DarkTheme`, Uber Move typography, Uber blue accent. Guardr product name and logo only.
+**Design system:** [Uber Base Web](https://github.com/uber/baseweb) + [Base Design Docs](https://github.com/uber/base-design-docs) — Guardr-branded themes (sage green accent `#4A6B4E` light / `#7AAE7F` dark) on top of `LightTheme` / `DarkTheme`, Uber Move typography, black primary CTAs.
 
 **Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uberit-patterns.md`](./uberit-patterns.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md)
 
-**Implementation:** Base Web React components with stock Uber `LightTheme` / `DarkTheme` across production surfaces.
+**Implementation:** Guardr Base Web custom themes (`src/theme/guardrBaseTheme.ts`) with sage-green accent applied across all production surfaces. Styletron CSS-in-JS engine syncs tokens to CSS custom properties via `UberThemeVars`.
 
 ---
 
