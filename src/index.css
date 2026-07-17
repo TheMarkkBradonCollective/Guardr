@@ -21812,6 +21812,49 @@ body.capacitor-native .app-welcome .landing-path-grid {
 .uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 12%, transparent); }
 .uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 20%, transparent); }
 
+/* /uberit — unified drawer shell (all roles, all breakpoints) */
+.uber-app-shell {
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.uber-app-shell .uber-shell-content {
+  color: var(--uber-text, #000000);
+}
+
+.uber-app-shell .uber-shell-content .bg-brand-bg,
+.uber-app-shell .uber-shell-content .staff-main-content,
+.uber-app-shell .uber-shell-content .role-main {
+  background-color: var(--uber-bg, #FFFFFF) !important;
+  color: var(--uber-text, #000000);
+}
+
+.uber-app-shell .uber-shell-content .bg-brand-surface,
+.uber-app-shell .uber-shell-content .bg-brand-elevated {
+  background-color: var(--uber-surface, #F6F6F6) !important;
+}
+
+.uber-app-shell .uber-shell-content .text-brand-text,
+.uber-app-shell .uber-shell-content .text-brand-primary {
+  color: var(--uber-text, #000000);
+}
+
+.uber-app-shell .uber-shell-content .text-brand-text-muted,
+.uber-app-shell .uber-shell-content .text-brand-muted {
+  color: var(--uber-text-muted, #6B6B6B);
+}
+
+.uber-app-shell .uber-shell-content .border-brand-border {
+  border-color: var(--uber-border, #E2E2E2) !important;
+}
+
+.uber-app-shell .uber-shell-content .text-brand-primary {
+  color: var(--uber-accent, #276EF1) !important;
+}
+
+.uber-app-shell .uber-shell-content .bg-brand-primary {
+  background-color: var(--uber-accent, #276EF1) !important;
+}
+
 /* /uberit — public auth hero uses stock Uber accent */
 .auth-experience--uber .auth-hero {
   background: linear-gradient(

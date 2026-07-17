@@ -1,3 +1,4 @@
+export { GuardrDrawerShell } from './GuardrDrawerShell';
 export { GuardrSideNav, guardrNavItemsFlat, guardrNavItemsFromGroups } from './GuardrSideNav';
 export { GuardrIconRail, GuardrBottomNav, type GuardrBottomNavItem } from './GuardrBottomNav';
 export { PublicPageChrome } from './PublicPageChrome';
