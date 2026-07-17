@@ -2,6 +2,8 @@ export * from './device';
 export * from './shellKind';
 export * from './viewSurface';
 export * from './appExperience';
+export * from './experienceTier';
+export * from './nativeHaptics';
 export * from './theme';
 export * from './nativePermissions';
 export * from './installRegistry';

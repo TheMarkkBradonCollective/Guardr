@@ -76,8 +76,15 @@ body[data-view-surface="pwa-tablet"] .app-welcome--tablet .app-welcome-dock {
     var(--shadow-md);
 }
 
-body[data-view-surface="pwa-tablet"] .tablet-admin-rail-item:active,
-body[data-view-surface="pwa-mobile"] .bottom-nav-item:active {
-  transform: scale(0.96);
-  transition: transform 0.12s ease;
+body[data-shell="pwa"][data-pwa-mode="lite"] .app-welcome-dock,
+body[data-experience-tier="pwa-lite"] .app-welcome-dock {
+  backdrop-filter: none;
+  background: var(--uber-bg, #ffffff);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+}
+
+body[data-shell="pwa"][data-pwa-mode="lite"] .bottom-nav-bar,
+body[data-experience-tier="pwa-lite"] .bottom-nav-bar {
+  backdrop-filter: none;
+  background: var(--uber-bg, #ffffff);
 }

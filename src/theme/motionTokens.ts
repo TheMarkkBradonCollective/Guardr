@@ -1,7 +1,17 @@
 /**
  * Guardr unified motion language — Uber Base motion principles.
  * §6 of guardedesign.md: purposeful, 150–300ms, respects prefers-reduced-motion.
+ * PWA Lite shortens motion; APK Premium allows slightly richer springs.
  */
+
+import {
+  experienceMotionScale,
+  isLiteExperience,
+  resolveExperienceTier,
+  type ExperienceTier,
+} from '../lib/platform/experienceTier';
+import { getShellKind } from '../lib/platform/shellKind';
+import { getViewportWidth, resolveFormFactor } from '../lib/platform/device';
 
 // ─── Duration ─────────────────────────────────────────────────────────────────
 export const MOTION_DURATION = {
@@ -71,15 +81,34 @@ export function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+function currentExperienceTier(override?: ExperienceTier): ExperienceTier {
+  if (override) return override;
+  if (typeof window === 'undefined') return { shell: 'browser', mode: 'standard' };
+  return resolveExperienceTier(getShellKind(), resolveFormFactor(getViewportWidth()));
+}
+
 /**
  * Returns `preferred` duration unless user prefers reduced motion,
  * in which case `reduced` is returned (default: instant).
+ * PWA Lite scales durations down; Premium APK scales slightly up.
  */
 export function motionDuration(
   preferred: number,
   reduced = MOTION_DURATION.instant,
+  tier?: ExperienceTier,
 ): number {
-  return prefersReducedMotion() ? reduced : preferred;
+  if (prefersReducedMotion()) return reduced;
+  const experience = currentExperienceTier(tier);
+  if (isLiteExperience(experience)) {
+    return Math.max(MOTION_DURATION.instant, Math.round(preferred * experienceMotionScale(experience)));
+  }
+  return Math.round(preferred * experienceMotionScale(experience));
+}
+
+/** True when charts/counter animations should be skipped (PWA Lite or reduced motion). */
+export function shouldReduceDecorativeMotion(tier?: ExperienceTier): boolean {
+  if (prefersReducedMotion()) return true;
+  return isLiteExperience(currentExperienceTier(tier));
 }
 
 // ─── Framer Motion variants ───────────────────────────────────────────────────

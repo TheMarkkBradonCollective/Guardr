@@ -3,6 +3,8 @@ import { MotionConfig, AnimatePresence, motion, type Transition, type Variants }
 import { GuardrModal } from '../../baseui/overlays/GuardrModal';
 import { GuardrSheet } from '../../baseui/overlays/GuardrSheet';
 import { GuardrDrawer } from '../../baseui/overlays/GuardrDrawer';
+import { useDevice } from '../../../lib/platform';
+import { experienceMotionScale, isLiteExperience } from '../../../lib/platform/experienceTier';
 export { closeTopmostDialog } from '../../baseui/overlays/overlayStack';
 
 /**
@@ -33,9 +35,10 @@ const pageVariants: Variants = {
   exit:    { opacity: 0, y: -8 },
 };
 
-const pageTransition: Transition = {
-  duration: APP_MOTION_DURATION.page,
-  ease: APP_MOTION_EASE,
+const litePageVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit:    { opacity: 0 },
 };
 
 interface AppPageTransitionProps {
@@ -44,8 +47,16 @@ interface AppPageTransitionProps {
   className?: string;
 }
 
-/** Cross-fade + slide for tab / section / route changes */
+/** Cross-fade + slide for tab / section / route changes — lite skips spatial motion */
 export function AppPageTransition({ motionKey, children, className = '' }: AppPageTransitionProps) {
+  const { experienceTier } = useDevice();
+  const lite = isLiteExperience(experienceTier);
+  const scale = experienceMotionScale(experienceTier);
+  const transition: Transition = {
+    duration: APP_MOTION_DURATION.page * scale,
+    ease: APP_MOTION_EASE,
+  };
+
   return (
     <AnimatePresence mode="sync" initial={false}>
       <motion.div
@@ -53,8 +64,8 @@ export function AppPageTransition({ motionKey, children, className = '' }: AppPa
         initial={false}
         animate="animate"
         exit="exit"
-        variants={pageVariants}
-        transition={pageTransition}
+        variants={lite ? litePageVariants : pageVariants}
+        transition={transition}
         className={`app-page-transition ${className}`.trim()}
         style={{ height: '100%' }}
       >

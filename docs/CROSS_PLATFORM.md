@@ -36,6 +36,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 | Native APK | All | Capacitor shell; native safe areas; `app-native.css` styling |
 
 Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevice()` / `body[data-form-factor]`.
+Experience tiers (PWA Full/Lite, APK Full/Premium) are resolved in `src/lib/platform/experienceTier.ts` and exposed as `useDevice().experienceTier` / `body[data-experience-tier]`.
 
 ### View surface model (`/fixit`)
 
@@ -66,6 +67,34 @@ src/styles/app-native.css           — APK overrides
 ```
 
 `DeviceProvider` sets `body[data-shell]`, `body[data-view-surface]`, and `body[data-form-factor]` for CSS targeting.
+
+### PWA tiers (Full · Lite)
+
+| Tier | Detection | Behavior |
+|------|-----------|----------|
+| **PWA Full** | Default installed PWA | Glass chrome, full motion, decorative welcome art |
+| **PWA Lite** | `saveData` / 2G / ≤2GB RAM, `?pwa=lite`, `localStorage.guardr_pwa_mode`, or `VITE_PWA_EXPERIENCE=lite` | No blur, reduced motion, no hero art — same routes & data |
+
+Body attrs: `data-pwa-mode="full|lite"` · `data-experience-tier="pwa-full|pwa-lite"`
+
+### Android APK tiers (Full · Premium)
+
+| Tier | Detection | Behavior |
+|------|-----------|----------|
+| **APK Full** | Default phones | 48px targets, solid chrome, field-ready |
+| **APK Premium** | Tablets by default; `?apk=premium`, `localStorage.guardr_apk_mode`, or `VITE_APK_EXPERIENCE=premium` | Wider rail, richer cards, haptic confirm on slide-to-confirm |
+
+Body attrs: `data-apk-mode="full|premium"` · `data-experience-tier="apk-full|apk-premium"`
+
+Central files:
+
+```
+src/lib/platform/experienceTier.ts   — tier resolver + capability helpers
+src/lib/platform/nativeHaptics.ts    — Premium APK haptic confirm
+src/lib/platform/DeviceProvider.tsx  — body data attributes
+src/components/baseui/layout/mobilityChrome.ts — tier-aware shell chrome
+src/styles/platform-optimizations.css — per-surface + per-tier CSS
+```
 
 ### Pre-auth surfaces (`/uberitplatforms` — Phase 1)
 
@@ -166,9 +195,10 @@ src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 
 ## Theme System
 
-- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
-- **Themes:** Light (default web/PWA), Dark (default APK) — accent is Uber blue (`#276ef1`), primary CTAs are black/white (Uber.com pattern)
-- **Typography:** Uber Move / Uber Move Text stack — no legacy sage green or IBM Plex
+- **Presentation layer:** Uber Base Web tokens via `guardrBaseTheme.ts` / `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
+- **Themes:** Light (default web/PWA), Dark (default APK) — black/white primary CTAs, monochrome accent system
+- **Experience tiers:** PWA Full/Lite and APK Full/Premium adjust chrome, motion, and haptics without changing feature set
+- **Typography:** Uber Move / Uber Move Text stack
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
 
@@ -220,6 +250,8 @@ src/lib/platform/
   device.ts           — breakpoints, standalone detection
   shellKind.ts        — browser | pwa | native
   viewSurface.ts      — combined surface id (e.g. pwa-tablet)
+  experienceTier.ts   — PWA Full/Lite · APK Full/Premium resolver
+  nativeHaptics.ts    — Premium APK haptic feedback
   theme.ts            — theme load/save/apply
   offlineQueue.ts     — IndexedDB offline queue
   DeviceProvider.tsx  — React context + body data attributes
@@ -227,9 +259,10 @@ src/components/layouts/tablet/
   TabletAdminShell.tsx
   TabletStaffAdminShell.tsx
 src/styles/
-  tablet-app.css      — tablet merge shell
-  app-pwa.css         — PWA standalone overrides
-  app-native.css      — APK native overrides
+  tablet-app.css              — tablet merge shell
+  app-pwa.css                 — PWA standalone overrides
+  app-native.css              — APK native overrides
+  platform-optimizations.css  — per-surface + per-tier CSS
 capacitor.config.ts   — native wrapper config (when Capacitor added)
 public/manifest.json  — PWA manifest
 public/sw.js          — service worker shell cache
