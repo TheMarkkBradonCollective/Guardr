@@ -1,5 +1,7 @@
 import React from 'react';
+import { Block } from 'baseui/block';
 import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } from 'lucide-react';
+import { ParagraphMedium, LabelSmall, HeadingSmall } from 'baseui/typography';
 import { FormControl, Input, Notification, Textarea } from '../../baseui/baseuiShims';
 import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../baseui/dashboard';
 import { GuardrCard } from '../../baseui/GuardrCard';
@@ -26,23 +28,59 @@ export function AppEmptyState({
 }) {
   if (icon || title) {
     return (
-      <div className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}>
-        {icon && <div className="app-empty-state-icon">{icon}</div>}
-        {title && <p className="app-empty-state-title">{title}</p>}
-        {children && <p className="app-empty-state-body">{children}</p>}
+      <Block
+        className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gridGap="scale300"
+        padding="scale800"
+        backgroundColor={dashed ? 'transparent' : 'backgroundPrimary'}
+        overrides={{
+          Block: {
+            style: {
+              borderRadius: '12px',
+              border: dashed ? '1px dashed' : '1px solid',
+              borderColor: 'borderOpaque',
+              textAlign: 'center',
+            },
+          },
+        }}
+      >
+        {icon && <Block className="app-empty-state-icon">{icon}</Block>}
+        {title && (
+          <ParagraphMedium margin={0} className="app-empty-state-title" $style={{ fontWeight: 700 }}>
+            {title}
+          </ParagraphMedium>
+        )}
+        {children && (
+          <LabelSmall margin={0} className="app-empty-state-body" $style={{ color: 'contentSecondary' }}>
+            {children}
+          </LabelSmall>
+        )}
         {action}
-      </div>
+      </Block>
     );
   }
   return (
-    <p className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}>
+    <LabelSmall
+      as="p"
+      margin={0}
+      className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}
+      $style={{ color: 'contentSecondary' }}
+    >
       {children}
-    </p>
+    </LabelSmall>
   );
 }
 
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`app-screen ${className}`}>{children}</div>;
+  return (
+    <Block as="div" className={`app-screen ${className}`} display="flex" flexDirection="column" minHeight={0}>
+      {children}
+    </Block>
+  );
 }
 
 export function AppScreenTitle({ children }: { children: React.ReactNode }) {
@@ -99,14 +137,23 @@ export function AppHeroBand({
   footer?: React.ReactNode;
 }) {
   return (
-    <section className="app-hero-band">
-      <p className="app-hero-band-label">
+    <Block as="section" className="app-hero-band" marginBottom="scale600">
+      <LabelSmall
+        as="p"
+        marginTop={0}
+        marginBottom="scale400"
+        className="app-hero-band-label"
+        $style={{ color: 'accent', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}
+        display="flex"
+        alignItems="center"
+        gridGap="scale300"
+      >
         {icon}
         {label}
-      </p>
+      </LabelSmall>
       {children}
       {footer}
-    </section>
+    </Block>
   );
 }
 
@@ -122,14 +169,32 @@ export function AppStatusBanner({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="app-status-banner">
-      {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
-      <div className="min-w-0 flex-1 space-y-2">
-        <p className="text-sm font-semibold">{title}</p>
+    <Block
+      className="app-status-banner"
+      display="flex"
+      gridGap="scale500"
+      padding="scale500"
+      marginBottom="scale600"
+      backgroundColor="accent50"
+      overrides={{
+        Block: {
+          style: {
+            borderRadius: '12px',
+            border: '1px solid',
+            borderColor: 'accent50',
+          },
+        },
+      }}
+    >
+      {icon && <Block $style={{ flexShrink: 0, marginTop: '2px' }}>{icon}</Block>}
+      <Block minWidth={0} flex="1" display="flex" flexDirection="column" gridGap="scale300">
+        <ParagraphMedium margin={0} $style={{ fontSize: '14px', fontWeight: 600 }}>
+          {title}
+        </ParagraphMedium>
         {children}
         {action}
-      </div>
-    </div>
+      </Block>
+    </Block>
   );
 }
 
@@ -149,17 +214,17 @@ export function AppSection({
   className?: string;
 }) {
   return (
-    <section className={`app-section ${className}`}>
-      <div className="app-section-head">
-        <h2>{title}</h2>
+    <Block as="section" className={`app-section ${className}`} marginBottom="scale700">
+      <Block className="app-section-head" display="flex" alignItems="center" justifyContent="space-between" gridGap="scale400" marginBottom="scale400">
+        <HeadingSmall margin={0}>{title}</HeadingSmall>
         {actionLabel && onAction && (
           <AppButton type="button" variant="ghost" size="inline" onClick={onAction} className="app-section-link">
             {actionLabel}
           </AppButton>
         )}
-      </div>
-      <div className={bleed ? 'app-section-body-bleed' : 'app-section-body'}>{children}</div>
-    </section>
+      </Block>
+      <Block className={bleed ? 'app-section-body-bleed' : 'app-section-body'}>{children}</Block>
+    </Block>
   );
 }
 

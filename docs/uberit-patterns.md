@@ -89,9 +89,12 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 `src/components/baseui/layout/`:
 
+- `GuardrDrawerShell` — Uber-style shell: persistent sidebar (desktop), drawer (mobile/tablet), compact top bar
 - `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`
 - `PublicPageChrome`
 - `shellStyles.ts` — breakpoints + nav overrides
+
+**Surface bridge:** `src/styles/uber-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
 
 ## Dashboard building blocks (Phase 4)
 

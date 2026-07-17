@@ -52,7 +52,7 @@ function ListCardBody({
             {actionLabel}
           </GuardrButton>
         ) : onClick ? (
-          <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" />
+          <ChevronRight className="w-4 h-4 uber-text-muted shrink-0 mt-0.5" />
         ) : null)}
     </Block>
   );

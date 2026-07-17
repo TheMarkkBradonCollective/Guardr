@@ -16,6 +16,7 @@ import { registerServiceWorker, initNativePushListeners } from './lib/push';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
+import './styles/uber-surfaces.css';
 
 applyThemeToDocument(loadTheme());
 
