@@ -1,20 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
-import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../lib/staffNavAccess';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
-import { AppScreenHeader } from '../layouts/AppScreenHeader';
-import { AppHeaderBranding } from '../layouts/AppHeaderBranding';
-import { AppHeaderToolbar } from '../layouts/AppHeaderToolbar';
-import { BottomNavBar } from '../layouts/BottomNavBar';
-import { MoreMenuSheet } from '../layouts/MoreMenuSheet';
-import { AccountMenu, type AccountMenuNotificationProps } from '../layouts/AccountMenu';
-import { showAppAlert } from '../ui/AppConfirm';
-import { useDevice } from '../../lib/platform';
+import type { ThemeMode } from '../../lib/platform/theme';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
-import { TabletStaffAdminShell } from '../layouts/tablet/TabletStaffAdminShell';
 import {
   AlertTriangle,
   BarChart3,
@@ -43,7 +34,7 @@ import {
   Palette,
 } from 'lucide-react';
 
-import type { ThemeMode } from '../../lib/platform/theme';
+import type { AccountMenuNotificationProps } from '../layouts/AccountMenu';
 
 interface StaffOpsLayoutProps {
   children: React.ReactNode;
@@ -102,210 +93,81 @@ export function StaffOpsLayout({
   currentUser,
   activeSection,
   onNavigate,
-  themeMode,
-  onChangeTheme,
+  themeMode: _themeMode,
+  onChangeTheme: _onChangeTheme,
   onSignOut,
   isDbConnected,
   badges = {},
-  fullBleed = false,
+  fullBleed: _fullBleed = false,
   onOpenLegal,
   hideHeader = false,
   accountNotifications,
   headerExtension,
   headerOverride,
 }: StaffOpsLayoutProps) {
-  const { formFactor } = useDevice();
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
-  const bleed =
-    fullBleed ||
-    isStaffOpsMapSection(activeSection) ||
-    isStaffMessagesSection(activeSection);
 
-  const navItems: StaffNavItem[] = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'map', label: 'Map', icon: Map },
-    { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
-    { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
-    { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
-    { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
-    { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
-    { id: 'crews', label: 'Crews', icon: UsersRound, badge: badges.crews },
-    { id: 'team', label: 'Staff', icon: Users },
-    { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
-    { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
-    { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
-    { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
-    { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
-    { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
-    { id: 'violations', label: 'Violations', icon: ShieldAlert, badge: badges.violations },
-    { id: 'stats', label: 'Stats', icon: BarChart3 },
-    { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'guide', label: 'Guide', icon: BookOpen },
-    { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
-    { id: 'design-qa', label: 'Design QA', icon: Palette, financeOnly: true },
-    { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
-    { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
-    { id: 'settings', label: 'Public Information', icon: Settings },
-    { id: 'integrations', label: 'Integrations', icon: Plug },
-  ];
+  const navItems: StaffNavItem[] = useMemo(
+    () => [
+      { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+      { id: 'map', label: 'Map', icon: Map },
+      { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
+      { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
+      { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
+      { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
+      { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
+      { id: 'crews', label: 'Crews', icon: UsersRound, badge: badges.crews },
+      { id: 'team', label: 'Staff', icon: Users },
+      { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
+      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
+      { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
+      { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
+      { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
+      { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
+      { id: 'violations', label: 'Violations', icon: ShieldAlert, badge: badges.violations },
+      { id: 'stats', label: 'Stats', icon: BarChart3 },
+      { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'guide', label: 'Guide', icon: BookOpen },
+      { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
+      { id: 'design-qa', label: 'Design QA', icon: Palette, financeOnly: true },
+      { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
+      { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
+      { id: 'settings', label: 'Public Information', icon: Settings },
+      { id: 'integrations', label: 'Integrations', icon: Plug },
+    ],
+    [badges],
+  );
 
-  const accessFlags = { showFinance, showSettings: true, showPermissions, showDisputes, showCities };
   const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
 
-  const accountMenu = {
-    userName: currentUser.name,
-    userSubtitle: ROLE_LABELS[currentUser.role],
-    avatarUrl: currentUser.avatar,
-    onOpenProfile: () => onNavigate('profile'),
-    onOpenSettings: () => onNavigate('preferences'),
-    onSignOut,
-    active: activeSection === 'profile' || activeSection === 'preferences',
-    ...accountNotifications,
-  };
-
-  const visibleNavItems = useMemo(
-    () => navItems.filter((item) => isStaffNavItemVisible(item, accessFlags)),
-    [navItems, accessFlags],
-  );
-
-  const staffBottomPrimary = visibleNavItems.slice(0, 4);
-  const staffMoreItems = visibleNavItems.slice(4);
-  const staffHasOverflow = staffMoreItems.length > 0;
-  const staffMoreActive = staffMoreItems.some((item) => item.id === navHighlight);
-  const staffMoreBadge = staffMoreItems.reduce((sum, item) => sum + (item.badge ?? 0), 0);
-
-  const handlePopoverNavigate = (id: string) => {
-    const section = id as StaffSection;
-    const notice = getStaffNavAccessNotice(section, accessFlags);
-    if (notice) {
-      void showAppAlert({ title: notice.title, message: notice.message, tone: 'warning' });
-      return;
-    }
-    onNavigate(section);
-  };
-
-  const brandingTrailing = isDbConnected ? (
-    <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
-  ) : null;
-
-  if (formFactor === 'desktop') {
-    return (
-      <DesktopStaffAdminShell
-        currentUser={currentUser}
-        activeSection={activeSection}
-        onNavigate={onNavigate}
-        onSignOut={onSignOut}
-        isDbConnected={isDbConnected}
-        navItems={navItems}
-        screenTitle={screenTitle}
-        navHighlight={navHighlight}
-        showFinance={showFinance}
-        showSettings={true}
-        showPermissions={showPermissions}
-        showDisputes={showDisputes}
-        showCities={showCities}
-        onOpenLegal={onOpenLegal}
-        hideHeader={hideHeader}
-        accountNotifications={accountNotifications}
-        headerExtension={headerExtension}
-        headerOverride={headerOverride}
-      >
-        {children}
-      </DesktopStaffAdminShell>
-    );
-  }
-
-  if (formFactor === 'tablet') {
-    return (
-      <TabletStaffAdminShell
-        currentUser={currentUser}
-        activeSection={activeSection}
-        onNavigate={onNavigate}
-        onSignOut={onSignOut}
-        isDbConnected={isDbConnected}
-        navItems={navItems}
-        screenTitle={screenTitle}
-        navHighlight={navHighlight}
-        showFinance={showFinance}
-        showSettings={true}
-        showPermissions={showPermissions}
-        showDisputes={showDisputes}
-        showCities={showCities}
-        hideHeader={hideHeader}
-        accountNotifications={accountNotifications}
-        headerExtension={headerExtension}
-        headerOverride={headerOverride}
-      >
-        {children}
-      </TabletStaffAdminShell>
-    );
-  }
-
   return (
-    <div className="staff-shell staff-shell--compact staff-shell--bottom-nav page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
-      <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
-        {headerOverride ? (
-          <header className="staff-main-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
-            {headerOverride}
-          </header>
-        ) : hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact app-screen-header shrink-0 border-b border-brand-border">
-            <div className="app-screen-header-brand-row">
-              <AppHeaderBranding trailing={brandingTrailing} logoSize={18} />
-            </div>
-            <AppHeaderToolbar
-              showTitle={false}
-              right={<AccountMenu {...accountMenu} />}
-            />
-          </header>
-        ) : (
-          <AppScreenHeader
-            title={screenTitle}
-            accountMenu={accountMenu}
-            extension={headerExtension}
-            brandingTrailing={brandingTrailing}
-          />
-        )}
-
-        <main
-          className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${
-            bleed ? 'staff-main-content--bleed' : 'staff-main-content--padded'
-          }`}
-        >
-          <div className={`h-full max-w-full min-w-0 ${bleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>
-            {children}
-          </div>
-        </main>
-      </div>
-
-      <BottomNavBar
-        items={staffBottomPrimary}
-        activeId={navHighlight}
-        onNavigate={(id) => handlePopoverNavigate(id)}
-        showMore={staffHasOverflow}
-        moreActive={staffMoreActive}
-        moreBadge={staffMoreBadge}
-        onMoreClick={() => setMoreMenuOpen(true)}
-        centerItemId="map"
-      />
-
-      {staffHasOverflow ? (
-        <MoreMenuSheet
-          open={moreMenuOpen}
-          items={staffMoreItems}
-          activeId={navHighlight}
-          onNavigate={(id) => handlePopoverNavigate(id)}
-          onClose={() => setMoreMenuOpen(false)}
-          title="Staff menu"
-        />
-      ) : null}
-    </div>
+    <DesktopStaffAdminShell
+      currentUser={currentUser}
+      activeSection={activeSection}
+      onNavigate={onNavigate}
+      onSignOut={onSignOut}
+      isDbConnected={isDbConnected}
+      navItems={navItems}
+      screenTitle={screenTitle}
+      navHighlight={navHighlight}
+      showFinance={showFinance}
+      showSettings={true}
+      showPermissions={showPermissions}
+      showDisputes={showDisputes}
+      showCities={showCities}
+      onOpenLegal={onOpenLegal}
+      hideHeader={hideHeader}
+      accountNotifications={accountNotifications}
+      headerExtension={headerExtension}
+      headerOverride={headerOverride}
+    >
+      {children}
+    </DesktopStaffAdminShell>
   );
 }
 

@@ -8,8 +8,7 @@ import { PageContent } from './PageContent';
 import {
   GuardrTag,
   GuardrSideNav,
-  GuardrIconRail,
-  GuardrBottomNav,
+  GuardrDrawerShell,
   PublicPageChrome,
 } from '../components/baseui';
 import { useThemeMode } from '../lib/platform/useThemeMode';
@@ -50,21 +49,40 @@ function UberTopbar({ title }: { title: string }) {
   );
 }
 
-function BrandMark({ layout, compact }: { layout: string; compact?: boolean }) {
+function PreviewDrawerShell({
+  page,
+  frameSize,
+  navItems,
+  activeId,
+}: {
+  page: PreviewPage;
+  frameSize: FrameSize;
+  navItems: ReturnType<typeof toGuardrNavItems>;
+  activeId: string;
+}) {
+  const isMap = page.type.startsWith('map-');
+  const noop = () => undefined;
+
   return (
-    <Block padding="scale600" paddingBottom="scale500" display="flex" alignItems="center" gridGap="scale400">
-      <Block
-        width="32px"
-        height="32px"
-        backgroundColor="accent"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        overrides={{ Block: { style: { borderRadius: '8px', color: '#fff', fontWeight: 800, fontSize: '13px' } } }}
+    <Block minHeight={frameSize === 'mobile' ? '720px' : '680px'} position="relative">
+      <GuardrDrawerShell
+        workspaceLabel={BRAND_LABEL[page.layout]}
+        title={page.title}
+        navGroups={
+          page.layout === 'staff'
+            ? staffNavGroups()
+            : [{ title: 'Menu', items: navItems }]
+        }
+        activeNavId={activeId}
+        onNavigate={noop}
+        accountMenu={
+          <ParagraphMedium $style={{ fontWeight: 600, fontSize: '14px' }}>Hello Alex</ParagraphMedium>
+        }
+        bleed={isMap}
+        hideHeader={isMap}
       >
-        G
-      </Block>
-      {!compact ? <ParagraphMedium $style={{ fontWeight: 800 }}>{BRAND_LABEL[layout]}</ParagraphMedium> : null}
+        <PageContent page={page} frameSize={frameSize} />
+      </GuardrDrawerShell>
     </Block>
   );
 }
@@ -77,10 +95,8 @@ export function AppShell({
   frameSize: FrameSize;
 }) {
   const themeMode = useThemeMode();
-  const isMap = page.type.startsWith('map-');
   const navItems = toGuardrNavItems(navForLayout(page.layout));
   const activeId = page.nav ?? '';
-  const noop = () => undefined;
 
   if (page.layout === 'public' && page.type !== 'app-welcome' && page.type !== 'auth-sheet') {
     return (
@@ -101,102 +117,5 @@ export function AppShell({
     );
   }
 
-  if (frameSize === 'mobile') {
-    return (
-      <Block display="flex" flexDirection="column" minHeight="720px" backgroundColor="backgroundPrimary">
-        <UberTopbar title={page.title} />
-        <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale500'}>
-          <PageContent page={page} frameSize={frameSize} />
-        </Block>
-        <GuardrBottomNav
-          items={navItems.slice(0, 4)}
-          activeId={activeId}
-          onNavigate={noop}
-          flat
-        />
-      </Block>
-    );
-  }
-
-  if (frameSize === 'tablet') {
-    return (
-      <Block display="flex" minHeight="680px" backgroundColor="backgroundPrimary">
-        <GuardrIconRail
-          items={navItems}
-          activeId={activeId}
-          onSelect={noop}
-          brand={<BrandMark layout={page.layout} compact />}
-        />
-        <Block flex="1" display="flex" flexDirection="column" minWidth="0">
-          <UberTopbar title={page.title} />
-          <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale600'}>
-            <PageContent page={page} frameSize={frameSize} />
-          </Block>
-        </Block>
-      </Block>
-    );
-  }
-
-  return (
-    <Block display="flex" minHeight="680px" backgroundColor="backgroundPrimary">
-      <Block
-        overrides={{
-          Block: {
-            style: {
-              width: '228px',
-              flexShrink: 0,
-              backgroundColor: 'inherit',
-              borderRight: '1px solid',
-              borderColor: 'borderOpaque',
-            },
-          },
-        }}
-      >
-        <BrandMark layout={page.layout} />
-        {page.layout === 'staff' ? (
-          <GuardrSideNav groups={staffNavGroups()} activeId={activeId} onSelect={noop} />
-        ) : (
-          <GuardrSideNav items={navItems} activeId={activeId} onSelect={noop} />
-        )}
-        {page.layout === 'guard' && (
-          <Block
-            margin="scale400"
-            padding="scale500"
-            backgroundColor="backgroundSecondary"
-            overrides={{ Block: { style: { borderRadius: '12px', marginLeft: '12px', marginRight: '12px' } } }}
-          >
-            <LabelSmall $style={{ color: 'contentSecondary' }}>STATUS</LabelSmall>
-            <ParagraphMedium $style={{ fontWeight: 700, marginTop: '4px' }}>Online · accepting</ParagraphMedium>
-          </Block>
-        )}
-      </Block>
-      <Block flex="1" display="flex" flexDirection="column" minWidth="0">
-        <UberTopbar title={page.title} />
-        {!isMap && ['dashboard', 'earnings', 'list'].includes(page.type) && (
-          <Block display="flex" paddingLeft="scale600" overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}>
-            {['Overview', 'Details', 'Activity'].map((tab, i) => (
-              <Block
-                key={tab}
-                padding="scale500"
-                overrides={{
-                  Block: {
-                    style: {
-                      borderBottom: i === 0 ? '2px solid' : 'none',
-                      borderColor: 'accent',
-                      color: i === 0 ? 'inherit' : undefined,
-                    },
-                  },
-                }}
-              >
-                <LabelSmall>{tab}</LabelSmall>
-              </Block>
-            ))}
-          </Block>
-        )}
-        <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale600'}>
-          <PageContent page={page} frameSize={frameSize} />
-        </Block>
-      </Block>
-    </Block>
-  );
+  return <PreviewDrawerShell page={page} frameSize={frameSize} navItems={navItems} activeId={activeId} />;
 }
