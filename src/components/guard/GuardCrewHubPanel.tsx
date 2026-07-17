@@ -449,7 +449,7 @@ export function GuardCrewHubPanel({
   }
 
   return (
-    <AppScreen className="crew-hub-screen guard-tiered-screen">
+    <AppScreen className="crew-hub-screen uber-jobs-screen">
       <GuardStandingCrewPanel {...standingCrewPanelProps} />
     </AppScreen>
   );

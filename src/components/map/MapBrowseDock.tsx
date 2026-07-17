@@ -1,5 +1,4 @@
 import React from 'react';
-import { Calendar, MapPin } from 'lucide-react';
 
 export type MapBrowseChipVariant =
   | 'upcoming'
@@ -53,20 +52,25 @@ export function MapBrowseDock({
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
-              className="map-browse-job-card"
+              className="uber-job-row"
             >
-              <span className={`map-browse-job-chip map-browse-job-chip--${item.chipVariant}`}>
-                {item.chip}
+              <span className="uber-job-row-icon" aria-hidden>
+                <svg width="44" height="28" viewBox="0 0 52 32" fill="none">
+                  <rect x="4" y="14" width="44" height="14" rx="5" fill="currentColor" opacity="0.12"/>
+                  <rect x="10" y="8" width="32" height="16" rx="5" fill="currentColor" opacity="0.22"/>
+                  <circle cx="16" cy="28" r="4" fill="currentColor" opacity="0.55"/>
+                  <circle cx="36" cy="28" r="4" fill="currentColor" opacity="0.55"/>
+                </svg>
               </span>
-              <p className="map-browse-job-title">{item.title}</p>
-              <p className="map-browse-job-meta">
-                <MapPin className="w-3 h-3 shrink-0" />
-                <span className="truncate">{item.location}</span>
-              </p>
-              <p className="map-browse-job-meta">
-                <Calendar className="w-3 h-3 shrink-0" />
-                <span className="truncate">{item.schedule}</span>
-              </p>
+              <span className="uber-job-row-body">
+                <p className="uber-job-row-title">{item.title}</p>
+                <p className="uber-job-row-meta">{item.location} · {item.schedule}</p>
+              </span>
+              <span className="uber-job-row-right">
+                <span className={`uber-job-row-badge uber-job-row-badge-${item.chipVariant}`}>
+                  {item.chip}
+                </span>
+              </span>
             </button>
           ))}
         </div>
