@@ -30,12 +30,17 @@ export default defineConfig(() => {
       // Split heavy vendor libraries so the initial app shell loads faster and
       // long-lived dependencies stay cached across deploys.
       rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          designPreview: path.resolve(__dirname, 'public/design-preview.html'),
+        },
         output: {
           manualChunks: {
             'vendor-map': ['leaflet', 'react-leaflet'],
             'vendor-motion': ['motion'],
             'vendor-supabase': ['@supabase/supabase-js'],
             'vendor-icons': ['lucide-react'],
+            'vendor-baseweb': ['baseui', 'styletron-react', 'styletron-engine-monolithic'],
           },
         },
       },
