@@ -7,6 +7,7 @@ import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
 import type { GuardrNavGroup } from './types';
 import { useDevice } from '../../../lib/platform';
+import { prefersReducedMotion } from '../../../theme/motionTokens';
 
 const SIDEBAR_WIDTH = '260px';
 const SIDEBAR_COLLAPSED = '0px';
@@ -72,8 +73,19 @@ export function GuardrDrawerShell({
   };
 
   const showDrawerBackdrop = sidebarOpen && !isDesktop;
-  const sidebarVisible = isDesktop ? sidebarOpen : sidebarOpen;
+  const sidebarVisible = sidebarOpen;
   const sidebarWidth = sidebarVisible ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED;
+
+  useEffect(() => {
+    if (!sidebarOpen || isDesktop) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeSidebar();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [sidebarOpen, isDesktop, closeSidebar]);
+
+  const reducedMotion = prefersReducedMotion();
 
   const iconBtnStyle = {
     width: '40px',
@@ -106,7 +118,7 @@ export function GuardrDrawerShell({
       aria-hidden={!sidebarVisible}
       display="flex"
       flexDirection="column"
-      width={isDesktop ? sidebarWidth : SIDEBAR_WIDTH}
+      width={isDesktop ? sidebarWidth : '0px'}
       backgroundColor="backgroundPrimary"
       overrides={{
         Block: {
@@ -114,9 +126,11 @@ export function GuardrDrawerShell({
             flexShrink: 0,
             borderRight: sidebarVisible ? `1px solid ${theme.colors.borderOpaque}` : 'none',
             overflow: 'hidden',
-            transition: isDesktop
-              ? 'width 220ms cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: reducedMotion
+              ? 'none'
+              : isDesktop
+                ? 'width 220ms cubic-bezier(0.16, 1, 0.3, 1)'
+                : 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
             ...(isDesktop
               ? {
                   position: 'relative',
@@ -189,7 +203,7 @@ export function GuardrDrawerShell({
       right={0}
       bottom={0}
       display="flex"
-      flexDirection={isDesktop ? 'row' : 'column'}
+      flexDirection="row"
       height="100dvh"
       maxHeight="100dvh"
       overflow="hidden"

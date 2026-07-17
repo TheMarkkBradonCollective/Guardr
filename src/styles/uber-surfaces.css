@@ -39,12 +39,14 @@ html.theme-dark .uber-app-shell {
   gap: 1rem;
 }
 
+.uber-app-shell .adm-span-3 { grid-column: span 12; }
 .uber-app-shell .adm-span-4 { grid-column: span 12; }
 .uber-app-shell .adm-span-6 { grid-column: span 12; }
 .uber-app-shell .adm-span-8 { grid-column: span 12; }
 .uber-app-shell .adm-span-12 { grid-column: span 12; }
 
 @media screen and (min-width: 768px) {
+  .uber-app-shell .adm-span-3 { grid-column: span 3; }
   .uber-app-shell .adm-span-4 { grid-column: span 4; }
   .uber-app-shell .adm-span-6 { grid-column: span 6; }
   .uber-app-shell .adm-span-8 { grid-column: span 8; }
@@ -538,4 +540,137 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 
 .uber-app-shell .bg-brand-primary {
   background-color: var(--uber-accent, #276ef1) !important;
+}
+
+/* ─── Dashboard stats, quick links, charts (tablet + mobile inside shell) ─ */
+
+.uber-app-shell .adm-card--stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.uber-app-shell .adm-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.uber-app-shell .adm-stat-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--uber-accent, #276ef1);
+}
+
+.uber-app-shell .adm-stat-label {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--adm-muted);
+}
+
+.uber-app-shell .adm-stat-delta {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--adm-muted);
+}
+
+.uber-app-shell .adm-progress-ring {
+  --adm-progress: 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--uber-accent, #276ef1) var(--adm-progress), var(--adm-accent-light) 0);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.uber-app-shell .adm-mt {
+  margin-top: 0.75rem;
+}
+
+.uber-app-shell .adm-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+}
+
+.uber-app-shell .adm-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  background: var(--adm-bg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--adm-text);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.uber-app-shell .adm-quick-link:hover {
+  background: var(--adm-accent-light);
+  border-color: color-mix(in srgb, var(--uber-accent, #276ef1) 25%, var(--adm-border));
+}
+
+.uber-app-shell .adm-section-eyebrow {
+  margin: 0 0 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+}
+
+.uber-app-shell .adm-charts-section {
+  margin-top: 0.25rem;
+}
+
+.uber-app-shell .adm-charts-grid {
+  gap: 1rem;
+}
+
+.uber-app-shell .adm-overview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.uber-app-shell .adm-overview-focus {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--adm-muted);
+}
+
+.uber-app-shell .adm-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.25rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: var(--adm-accent-light);
+  color: var(--uber-accent, #276ef1);
+}
+
+.uber-app-shell .adm-welcome-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.35;
+  color: var(--uber-accent, #276ef1);
 }
