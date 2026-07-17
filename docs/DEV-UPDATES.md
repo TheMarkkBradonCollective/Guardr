@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.70**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.71**
 
 ---
 
@@ -525,6 +525,23 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - No open PRs at release — all work already on `main`
 
 **Release:** **v1.0.70** (build **170**) — web + PWA cache bust (`guardr-cache-v1-0-70`) + CI FCM APK
+
+**Test coverage:** 409 unit tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 — /updateit → v1.0.71
+
+**Cross-platform production readiness (#611, #612)**
+- **Mobile website** — bottom navigation (`BottomNavBar` + `MoreMenuSheet`) in `RoleAppShell` and `StaffOpsLayout`
+- **PWA** — `registerPwaInstall()` on browser/PWA startup; offline connectivity banner
+- **Offline field mode** — guard self-audit, incident, and activity reports enqueue when offline; sync on reconnect
+- **Settings** — About section distinguishes Android app vs installed PWA vs web
+
+**PR cleanup**
+- Merged #611 via #612; no open PRs at release
+
+**Release:** **v1.0.71** (build **171**) — web + PWA cache bust (`guardr-cache-v1-0-71`) + CI FCM APK
 
 **Test coverage:** 409 unit tests, lint and build clean.
 
