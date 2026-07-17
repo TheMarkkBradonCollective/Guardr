@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.72**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.73**
 
 ---
 
@@ -562,3 +562,21 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Release:** **v1.0.72** (build **172**) — web + PWA cache bust (`guardr-cache-v1-0-72`) + CI FCM APK
 
 **Test coverage:** 415 unit tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 (late morning) — /updateit → v1.0.73
+
+**White-screen hotfix (#632 audit + #633)**
+- **Production build crash** — circular `vendor-map` ↔ `vendor-baseweb` chunk duplicated React; fixed by isolating `vendor-react` in Vite `manualChunks`
+- **Design preview** — `/design-preview.html` now built through Vite (was serving HTML for the module script in production)
+- **Base Web + React 19** — named `Modal`/`Drawer` imports; explicit `hasThumbnail` on `GuardrCard`
+- **PWA** — service worker no longer returns `index.html` for failed JS/CSS asset requests
+- **Security audit (#632)** — manager role session fix, finance gate on Stripe payments, auth bridge secret, health endpoint hardening
+
+**PR cleanup**
+- Merged **#632** (full audit) and **#633** (white screen); no open PRs at release
+
+**Release:** **v1.0.73** (build **173**) — web + PWA cache bust (`guardr-cache-v1-0-73`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
