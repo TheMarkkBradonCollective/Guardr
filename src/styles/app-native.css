@@ -9,7 +9,7 @@ body.shell-native {
 
 body[data-shell="native"] .app-welcome-header,
 body.shell-native .app-welcome-header {
-  background: var(--brand-bg);
+  background: var(--uber-bg, var(--brand-bg));
 }
 
 body[data-shell="native"] .app-welcome-dock,
@@ -38,7 +38,7 @@ body.shell-native .tablet-admin-main {
 body[data-shell="native"] .tablet-admin-rail-item:active,
 body.shell-native .tablet-admin-rail-item:active {
   transform: scale(0.94);
-  background: color-mix(in srgb, var(--brand-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--uber-accent, var(--brand-primary)) 22%, transparent);
 }
 
 body[data-shell="native"] .app-welcome-shell-badge--native,
@@ -54,7 +54,7 @@ body[data-view-surface="native-tablet"] .auth-sheet--native-tablet .auth-sheet-s
 body[data-view-surface="native-tablet"] .app-welcome--tablet .app-welcome-dock {
   border-radius: 1rem;
   box-shadow: none;
-  border: 1px solid var(--brand-border);
+  border: 1px solid var(--uber-border, var(--brand-border));
 }
 
 body[data-view-surface="native-mobile"] .app-welcome--mobile .app-welcome-headline {

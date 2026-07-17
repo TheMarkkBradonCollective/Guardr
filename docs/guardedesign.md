@@ -2,11 +2,9 @@
 
 Official visual and interaction specification for Guardr across **Website** (mobile · tablet · desktop), **PWA** (Full · Lite), and **Android APK** (Full · Premium).
 
-This document captures the *design philosophy* of a premium modular SaaS dashboard (similar in polish to Linear, Stripe, or Notion) while remaining unmistakably **Guardr** — not Uber, not generic fintech, not security-agency cliché.
+**Design system:** [Uber Base Web](https://github.com/uber/baseweb) + [Base Design Docs](https://github.com/uber/base-design-docs) — stock `LightTheme` / `DarkTheme`, Uber Move typography, Uber blue accent. Guardr product name and logo only.
 
-**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`.cursor/commands/designit.md`](../.cursor/commands/designit.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md) · [`uberit-patterns.md`](./uberit-patterns.md)
-
-**External reference (design guidelines only):** [Uber Base design system](https://base.uber.com/) — patterns and principles summarized in Appendix A; not Uber branding.
+**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uberit-patterns.md`](./uberit-patterns.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md)
 
 **Visual preview:** [`/design-preview.html`](/design-preview.html) — Base Web React prototype with stock Uber `LightTheme` / `DarkTheme`, component showcase, sidebar page index, and all role screen mocks. Staff live QA: `/staff/design-qa`.
 
@@ -94,9 +92,13 @@ These are the principles we actively adopt — translated to Guardr’s sage-gre
 
 All colors, radii, shadows, and spacing tokens live in:
 
+**Brand accent:** Uber blue (`--uber-accent` / `#276EF1` light, `#335BA3` dark) via stock Base Web themes.
+
 ```
-src/index.css              — CSS variables (--brand-*, --shadow-*, --radius-*)
-src/lib/platform/theme.ts  — Light / Dark mode apply + persistence
+src/styles/uber-tokens.css   — Canonical Uber Base tokens + --brand-* bridge
+src/theme/uberBaseTheme.ts   — Stock LightTheme / DarkTheme
+src/index.css                — Legacy layout CSS (migrating to Base Web)
+src/lib/platform/theme.ts    — Light / Dark mode apply + persistence
 src/lib/platform/themeBranding.ts — PWA/APK icon + theme-color meta swap
 ```
 
@@ -119,8 +121,8 @@ src/lib/platform/themeBranding.ts — PWA/APK icon + theme-color meta swap
 
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| `--brand-primary` | `#5E7B61` | `#6B8F6E` | Accents, active states, chart lines, CTAs |
-| `--brand-primary-hover` | `#4A6B4E` | `#5A7A5D` | Hover / pressed primary |
+| `--brand-primary` | `#276EF1` | `#335BA3` | Accents, active states, chart lines, CTAs |
+| `--brand-primary-hover` | `#1A5DC8` | `#276EF1` | Hover / pressed primary |
 | `--brand-bg` | `#FFFFFF` | `#000000` | Page canvas |
 | `--brand-surface` | `#FFFFFF` | `#111111` | Cards, panels |
 | `--brand-elevated` | `#F7F9F7` | `#1A1A1A` | Raised cards, inset areas |

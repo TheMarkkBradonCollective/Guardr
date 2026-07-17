@@ -142,8 +142,9 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - **Component showcase:** pinned section in `/design-preview.html` + `ComponentShowcase` in `src/components/baseui/showcase/`
 - **Staff live QA:** `/staff/design-qa` (Director/Founder) renders interactive component showcase with toast/modal demos
 
-### Later — Brand pass
-- Re-apply Guardr colors on top of Uber structure (optional `createLightTheme` / `createDarkTheme` overrides)
+### Later — Domain screen migration
+- Continue migrating remaining role dashboards to Base Web adapters
+- Retire legacy `--brand-*` CSS once all screens use `useStyletron()` tokens
 
 ---
 
