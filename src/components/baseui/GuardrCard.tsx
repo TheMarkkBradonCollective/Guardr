@@ -14,6 +14,7 @@ export type GuardrCardProps = Omit<CardProps, 'overrides'> & {
   action?: React.ReactNode;
   noBorder?: boolean;
   className?: string;
+  onClick?: React.MouseEventHandler<HTMLElement>;
   overrides?: CardProps['overrides'];
 };
 
@@ -24,6 +25,7 @@ export function GuardrCard({
   action,
   noBorder = false,
   className,
+  onClick,
   overrides,
   ...rest
 }: GuardrCardProps) {
@@ -35,6 +37,7 @@ export function GuardrCard({
         Root: {
           props: {
             className,
+            onClick,
             ...(typeof overrides?.Root?.props === 'object' ? overrides.Root.props : {}),
           },
           style: {
