@@ -96,6 +96,10 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 **Surface bridge:** `src/styles/uber-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
 
+**Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — global sage→Uber token remap; independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
+
+**Public landing (browser):** `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage` — each form factor has an independent Base Web layout via `LandingSections.tsx`.
+
 ## Dashboard building blocks (Phase 4)
 
 `src/components/baseui/dashboard/`:

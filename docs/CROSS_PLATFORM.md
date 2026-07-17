@@ -71,14 +71,20 @@ src/styles/app-native.css           — APK overrides
 
 | Surface | Component | Notes |
 |---------|-----------|-------|
-| `browser-*` | `HomePage` + `AuthPage` (page) | Marketing landing; full-page auth with desktop split |
+| `browser-desktop` | `DesktopLandingPage` | Base Web split editorial + preview |
+| `browser-tablet` | `TabletLandingPage` | Touch-first 2-column landing (not scaled desktop) |
+| `browser-mobile` | `MobileLandingPage` | Thumb-first landing + fixed CTA bar |
 | `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Glass dock, “Installed” badge, Uber accent hero copy |
 | `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Solid dock, safe-area padding, native press feedback |
 
 Central files:
 
 ```
-src/components/AppHomeScreen.tsx       — PWA/APK welcome (not browser marketing)
+src/components/HomePage.tsx              — routes to platform-specific landing pages
+src/components/landing/mobile/MobileLandingPage.tsx
+src/components/landing/tablet/TabletLandingPage.tsx
+src/components/landing/desktop/DesktopLandingPage.tsx
+src/components/landing/shared/LandingSections.tsx
 src/components/app/AppWelcomeChrome.tsx — shell-specific hero, dock, badges (Base Web)
 src/components/auth/AuthFormChrome.tsx  — shared sign-in/sign-up chrome
 src/styles/app-pwa.css                  — PWA welcome + auth-sheet overrides (--uber-*)
@@ -110,8 +116,8 @@ src/styles/uber-surfaces.css                     — adm/app legacy bridge insid
 
 ## Theme System
 
-- **Primary brand:** Sage green (`#84a279`)
-- **Themes:** Light (default), Dark, Grey — all keep sage as accent
+- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts` and `uber-mobility.css` global `--brand-*` remap
+- **Themes:** Light (default), Dark, Grey — accent is Uber blue (`#276ef1`), not legacy sage
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
 

@@ -126,17 +126,38 @@ body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobili
   margin: 0 auto;
 }
 
-/* ─── Public marketing — Uber mobility landing (not sage marketing site) ── */
+/* ─── Public marketing — Base Web mobility landing surfaces ────────────── */
 
-body[data-view-surface^="browser"] .landing-preview-pin-active,
-body[data-view-surface^="browser"] .landing-preview-job-rate {
-  background: var(--uber-accent, #276ef1);
-  color: #fff;
+.mobility-landing {
+  background: var(--uber-bg, #ffffff);
+  color: var(--uber-text, #000000);
 }
 
-body[data-view-surface^="browser"] .landing-hero,
-body[data-view-surface^="browser"] [class*="landing-"] {
-  --landing-accent: var(--uber-accent, #276ef1);
+.mobility-landing--mobile {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobility-landing--tablet [data-landing-hero] {
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+}
+
+.mobility-landing-cta-bar {
+  background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+}
+
+/* Desktop workspace dashboards */
+.mobility-workspace {
+  background: var(--uber-surface, #f6f6f6);
+  min-height: 100%;
+}
+
+.mobility-status-panel {
+  height: 100%;
+}
+
+.mobility-status-meter--click:hover {
+  opacity: 0.88;
 }
 
 body[data-view-surface^="browser"] .text-brand-primary,
