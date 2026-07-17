@@ -15,6 +15,12 @@ import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
+import {
+  WorkbenchEmpty,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 import { JobPaymentRow } from './JobPaymentRow';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
@@ -302,18 +308,25 @@ export function StaffPaymentsPanel({
   const selectedItem = filteredQueue.find((item) => item.id === selectedId) ?? null;
 
   const exportButton = canManagePayments ? (
-    <button
-      type="button"
-      className={
-        formFactor === 'desktop'
-          ? 'adm-btn adm-btn--outline adm-btn--sm'
-          : 'app-button-outline app-btn-sm gap-2 staff-payments-export'
-      }
-      onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
-    >
-      <Download className="w-4 h-4" />
-      Export payouts CSV
-    </button>
+    formFactor === 'desktop' ? (
+      <GuardrButton
+        kind="secondary"
+        size="compact"
+        onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
+      >
+        <Download className="w-4 h-4" />
+        Export payouts CSV
+      </GuardrButton>
+    ) : (
+      <button
+        type="button"
+        className="app-button-outline app-btn-sm gap-2 staff-payments-export"
+        onClick={() => downloadPayoutCsv(buildPayoutExportRows(requests, guards, payments))}
+      >
+        <Download className="w-4 h-4" />
+        Export payouts CSV
+      </button>
+    )
   ) : null;
 
   const emptyState = (
@@ -330,7 +343,7 @@ export function StaffPaymentsPanel({
         </div>
       ) : null}
       <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>No payment activity yet</p>
-      <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
+      <p className={formFactor === 'desktop' ? 'uber-workbench-subtitle' : 'app-empty-state-body'}>
         Jobs will appear here once clients post security requests.
       </p>
     </div>
@@ -352,19 +365,15 @@ export function StaffPaymentsPanel({
       <StaffOpsPageShell
         className="adm-finance-page adm-payments-workbench"
         toolbar={
-          <>
-            <div>
-              <p className="adm-card-eyebrow">Finance</p>
-              <p className="adm-workbench-subtitle">
-                Payment pipeline — client billing through guard payout.
-              </p>
-            </div>
-            {exportButton}
-          </>
+          <WorkbenchToolbar
+            eyebrow="Finance"
+            subtitle="Payment pipeline — client billing through guard payout."
+            actions={exportButton}
+          />
         }
       >
         {allQueueItems.length === 0 ? (
-          emptyState
+          <WorkbenchEmpty message="No payment activity yet. Jobs will appear here once clients post security requests." />
         ) : (
           <>
             <StaffPaymentSummary summary={summary} financials={financials} variant="desktop" />
@@ -386,13 +395,12 @@ export function StaffPaymentsPanel({
             </div>
 
             {filteredQueue.length === 0 ? (
-              <div className="adm-empty adm-empty--detail">
-                <p>No items in this queue.</p>
-              </div>
+              <WorkbenchEmpty message="No items in this queue." variant="detail" />
             ) : (
-              <div className="adm-workbench-split adm-finance-split adm-ops-list-detail">
-                <div className="adm-workbench-list">
-                  <table className="adm-table adm-table--list">
+              <WorkbenchSplit
+                className="adm-finance-split adm-ops-list-detail"
+                list={
+                  <table className="uber-workbench-table">
                     <thead>
                       <tr>
                         <th>Job / invoice</th>
@@ -404,57 +412,53 @@ export function StaffPaymentsPanel({
                       {filteredQueue.map((item) => (
                         <tr
                           key={item.id}
-                          className={`adm-table-row--click${selectedId === item.id ? ' adm-table-row--selected' : ''}`}
+                          className={`uber-workbench-table-row${selectedId === item.id ? ' uber-workbench-table-row--selected' : ''}`}
                           onClick={() => setSelectedId(item.id)}
                         >
                           <td>
-                            <p className="adm-table-primary">{queueItemPrimary(item)}</p>
-                            <p className="adm-table-secondary">{queueItemSecondary(item, guards)}</p>
+                            <p className="uber-workbench-table-primary">{queueItemPrimary(item)}</p>
+                            <p className="uber-workbench-table-secondary">{queueItemSecondary(item, guards)}</p>
                           </td>
-                          <td className="adm-table-secondary">{queueItemLabel(item)}</td>
-                          <td className="adm-table-secondary">{queueItemAmount(item)}</td>
+                          <td className="uber-workbench-table-secondary">{queueItemLabel(item)}</td>
+                          <td className="uber-workbench-table-secondary">{queueItemAmount(item)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
-                <div className="adm-workbench-detail">
-                  {selectedItem ? (
-                    <div className="adm-workbench-detail-inner">
-                      {selectedItem.kind === 'invoice' ? (
-                        <StaffPayoutInvoiceRow
-                          invoice={selectedItem.invoice}
-                          requests={requests}
-                          guards={guards}
-                          isDirector={isDirector}
-                          onMarkGuardPaidCash={onMarkGuardPaidCash}
-                          onReleasePayout={onReleasePayout}
-                          onCompleteInvoice={onCompletePayoutInvoice}
-                        />
-                      ) : (
-                        <JobPaymentRow
-                          req={selectedItem.req}
-                          guard={guards.find((g) => g.id === selectedItem.req.assignedGuardId)}
-                          payment={payments.find((p) => p.jobId === selectedItem.req.id)}
-                          isDirector={isDirector}
-                          canManagePayments={canManagePayments}
-                          paymentGates={paymentGates}
-                          readOnly={
-                            selectedItem.stage === 'guard-collection-pending' ||
-                            selectedItem.stage === 'client-paid-active' ||
-                            selectedItem.stage === 'settled'
-                          }
-                          {...sectionProps}
-                        />
-                      )}
-                    </div>
+                }
+                detail={
+                  selectedItem ? (
+                    selectedItem.kind === 'invoice' ? (
+                      <StaffPayoutInvoiceRow
+                        invoice={selectedItem.invoice}
+                        requests={requests}
+                        guards={guards}
+                        isDirector={isDirector}
+                        onMarkGuardPaidCash={onMarkGuardPaidCash}
+                        onReleasePayout={onReleasePayout}
+                        onCompleteInvoice={onCompletePayoutInvoice}
+                      />
+                    ) : (
+                      <JobPaymentRow
+                        req={selectedItem.req}
+                        guard={guards.find((g) => g.id === selectedItem.req.assignedGuardId)}
+                        payment={payments.find((p) => p.jobId === selectedItem.req.id)}
+                        isDirector={isDirector}
+                        canManagePayments={canManagePayments}
+                        paymentGates={paymentGates}
+                        readOnly={
+                          selectedItem.stage === 'guard-collection-pending' ||
+                          selectedItem.stage === 'client-paid-active' ||
+                          selectedItem.stage === 'settled'
+                        }
+                        {...sectionProps}
+                      />
+                    )
                   ) : (
-                    <div className="adm-empty adm-empty--detail">
-                      <p>Select a payment to review</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    <WorkbenchEmpty message="Select a payment to review" variant="detail" />
+                  )
+                }
+              />
             )}
           </>
         )}

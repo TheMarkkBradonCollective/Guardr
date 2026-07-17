@@ -169,3 +169,52 @@ export function WorkbenchCardTitle({ children }: { children: React.ReactNode }) 
     </LabelSmall>
   );
 }
+
+export function WorkbenchTabBar<T extends string>({
+  items,
+  activeId,
+  onSelect,
+  className = '',
+}: {
+  items: { id: T; label: string }[];
+  activeId: T;
+  onSelect: (id: T) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`uber-workbench-tabs ${className}`.trim()} role="tablist">
+      {items.map(({ id, label }) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={activeId === id}
+          className={`uber-workbench-tab${activeId === id ? ' uber-workbench-tab--active' : ''}`}
+          onClick={() => onSelect(id)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Flat split — nav/list on left, detail on right (performance, crew team tab). */
+export function WorkbenchFlatSplit({
+  list,
+  detail,
+  className = '',
+}: {
+  list: React.ReactNode;
+  detail: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`uber-workbench-split uber-workbench-split--flat ${className}`.trim()}>
+      <div className="uber-workbench-list uber-workbench-list--flat">{list}</div>
+      <div className="uber-workbench-detail">
+        <div className="uber-workbench-detail-inner">{detail}</div>
+      </div>
+    </div>
+  );
+}

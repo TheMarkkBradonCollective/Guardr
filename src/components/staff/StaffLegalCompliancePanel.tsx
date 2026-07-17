@@ -11,6 +11,11 @@ import { AppEmptyState, AppFormSection } from '../ui/app/AppPrimitives';
 import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
+import {
+  WorkbenchEmpty,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffLegalCompliancePanelProps {
@@ -44,7 +49,7 @@ function ComplianceDetail({ row, onBack }: { row: LegalComplianceUserRow; onBack
       <div>
         <p className="adm-card-eyebrow">{row.roleLabel}</p>
         <h3 className="adm-card-title">{row.name}</h3>
-        <p className="adm-workbench-subtitle">{row.email}</p>
+        <p className="uber-workbench-subtitle">{row.email}</p>
       </div>
       <div>
         <span
@@ -133,23 +138,23 @@ export function StaffLegalCompliancePanel({
 
   if (formFactor === 'desktop') {
     return (
-      <StaffOpsPageShell className="adm-finance-page">
-        <div className="adm-workbench-toolbar adm-finance-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Compliance</p>
-            <p className="adm-workbench-subtitle">Agreements accepted by guards and clients.</p>
-          </div>
-          {filterButtons}
-        </div>
-
+      <StaffOpsPageShell
+        className="adm-finance-page"
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Compliance"
+            subtitle="Agreements accepted by guards and clients."
+            actions={filterButtons}
+          />
+        }
+      >
         {filtered.length === 0 ? (
-          <div className="adm-empty">
-            <p>No users match this filter.</p>
-          </div>
+          <WorkbenchEmpty message="No users match this filter." />
         ) : (
-          <div className="adm-workbench-split adm-finance-split">
-            <div className="adm-workbench-list">
-              <table className="adm-table adm-table--list">
+          <WorkbenchSplit
+            className="adm-finance-split"
+            list={
+              <table className="uber-workbench-table">
                 <thead>
                   <tr>
                     <th>User</th>
@@ -161,14 +166,14 @@ export function StaffLegalCompliancePanel({
                   {filtered.map((row) => (
                     <tr
                       key={row.userId}
-                      className={`adm-table-row--click${selectedId === row.userId ? ' adm-table-row--selected' : ''}`}
+                      className={`uber-workbench-table-row${selectedId === row.userId ? ' uber-workbench-table-row--selected' : ''}`}
                       onClick={() => setSelectedId(row.userId)}
                     >
                       <td>
-                        <p className="adm-table-primary">{row.name}</p>
-                        <p className="adm-table-secondary">{row.email}</p>
+                        <p className="uber-workbench-table-primary">{row.name}</p>
+                        <p className="uber-workbench-table-secondary">{row.email}</p>
                       </td>
-                      <td className="adm-table-secondary">{row.roleLabel}</td>
+                      <td className="uber-workbench-table-secondary">{row.roleLabel}</td>
                       <td>
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -184,19 +189,15 @@ export function StaffLegalCompliancePanel({
                   ))}
                 </tbody>
               </table>
-            </div>
-            <div className="adm-workbench-detail">
-              {selectedRow ? (
-                <div className="adm-workbench-detail-inner">
-                  <ComplianceDetail row={selectedRow} />
-                </div>
+            }
+            detail={
+              selectedRow ? (
+                <ComplianceDetail row={selectedRow} />
               ) : (
-                <div className="adm-empty adm-empty--detail">
-                  <p>Select a user to review agreements</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <WorkbenchEmpty message="Select a user to review agreements" variant="detail" />
+              )
+            }
+          />
         )}
       </StaffOpsPageShell>
     );

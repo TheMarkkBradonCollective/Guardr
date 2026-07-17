@@ -29,6 +29,7 @@ import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { GuardPerformanceRewards } from './GuardPerformanceRewards';
 import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchEmpty, WorkbenchFlatSplit } from '../baseui/layout/WorkbenchLayout';
 
 export type PerformanceViewTab = 'overall' | WorkModality;
 
@@ -236,46 +237,41 @@ export function GuardPerformanceScreen({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench-split adm-workbench-split--performance">
-        <div className="adm-workbench-list adm-workbench-list--flat">
-          {tabbedContent}
-        </div>
-        <div className="adm-workbench-detail">
-          {activeTab === 'overall' &&
+      <WorkbenchFlatSplit
+        list={tabbedContent}
+        detail={
+          activeTab === 'overall' &&
           performanceFactorId &&
           selectedFactor &&
           isPerformanceFactorId(performanceFactorId) ? (
-            <div className="adm-workbench-detail-inner">
-              <GuardPerformanceFactorDetail
-                factor={selectedFactor}
-                factorId={performanceFactorId}
-                guardId={guard.id}
-                requests={requests}
-                onBack={() => onPerformanceFactorChange?.(null)}
-              />
-            </div>
+            <GuardPerformanceFactorDetail
+              factor={selectedFactor}
+              factorId={performanceFactorId}
+              guardId={guard.id}
+              requests={requests}
+              onBack={() => onPerformanceFactorChange?.(null)}
+            />
           ) : selectedModalityMetric ? (
-            <div className="adm-workbench-detail-inner">
-              <GuardModalityMetricDetail
-                card={selectedModalityMetric.card}
-                metricId={selectedModalityMetric.metricId}
-                modality={selectedModalityMetric.modality}
-                guardId={guard.id}
-                requests={requests}
-                onBack={() => setSelectedModalityMetric(null)}
-              />
-            </div>
+            <GuardModalityMetricDetail
+              card={selectedModalityMetric.card}
+              metricId={selectedModalityMetric.metricId}
+              modality={selectedModalityMetric.modality}
+              guardId={guard.id}
+              requests={requests}
+              onBack={() => setSelectedModalityMetric(null)}
+            />
           ) : (
-            <div className="adm-empty adm-empty--detail">
-              <p>
-                {activeTab === 'overall'
+            <WorkbenchEmpty
+              message={
+                activeTab === 'overall'
                   ? 'Select a performance factor to see the breakdown'
-                  : `Select a ${workModalityLabel(activeTab as WorkModality).toLowerCase()} requirement to see the breakdown`}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+                  : `Select a ${workModalityLabel(activeTab as WorkModality).toLowerCase()} requirement to see the breakdown`
+              }
+              variant="detail"
+            />
+          )
+        }
+      />
     );
   }
 

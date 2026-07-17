@@ -4,6 +4,7 @@ import { parseDevActivityGrid } from '../../lib/devActivityGrid';
 import { MarkdownDoc } from './MarkdownDoc';
 import { AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
+import { WorkbenchSplit } from '../baseui/layout/WorkbenchLayout';
 import { useDevice } from '../../lib/platform';
 
 const SUMMARY_HEADING = '## Quick reference by date';
@@ -119,27 +120,26 @@ export function DevNotesPage() {
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
+            <p className="uber-workbench-subtitle">
               Build history, commit activity heatmap, and release notes.
             </p>
           </div>
         }
       >
-        <div className="adm-workbench-split adm-dev-notes-workbench">
-          <div className="adm-workbench-list adm-dev-notes-sidebar">
-            <DevActivityGrid grid={activityGrid} variant="desktop" />
-            {summary ? (
-              <section className="adm-dev-notes-summary">
-                <MarkdownDoc source={summary} />
-              </section>
-            ) : null}
-          </div>
-          <div className="adm-workbench-detail">
-            <div className="adm-workbench-detail-inner adm-dev-notes-doc">
-              <MarkdownDoc source={mainNotes} />
+        <WorkbenchSplit
+          className="adm-dev-notes-workbench"
+          list={
+            <div className="adm-dev-notes-sidebar">
+              <DevActivityGrid grid={activityGrid} variant="desktop" />
+              {summary ? (
+                <section className="adm-dev-notes-summary">
+                  <MarkdownDoc source={summary} />
+                </section>
+              ) : null}
             </div>
-          </div>
-        </div>
+          }
+          detail={<MarkdownDoc source={mainNotes} />}
+        />
       </StaffOpsPageShell>
     );
   }

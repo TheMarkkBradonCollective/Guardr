@@ -274,3 +274,51 @@ html.theme-dark .uber-stat-chip--active {
   text-transform: uppercase;
   color: var(--uber-text-muted, #545454);
 }
+
+/* Tab bar (reports, violations, etc.) */
+.uber-workbench-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.uber-workbench-tab {
+  appearance: none;
+  background: var(--uber-bg, #fff);
+  border: 1px solid var(--uber-border, #e2e2e2);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--uber-text-muted, #545454);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.uber-workbench-tab:hover {
+  border-color: var(--uber-text, #000);
+  color: var(--uber-text, #000);
+}
+
+.uber-workbench-tab--active {
+  background: var(--uber-text, #000);
+  border-color: var(--uber-text, #000);
+  color: #fff;
+}
+
+html.theme-dark .uber-workbench-tab--active {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+}
+
+/* Flat split — performance, preferences */
+.uber-workbench-split--flat {
+  border-top: none;
+}
+
+.uber-workbench-list--flat {
+  padding: 1rem 1.25rem;
+  background: var(--uber-bg, #fff);
+}

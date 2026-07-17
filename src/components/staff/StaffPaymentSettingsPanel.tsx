@@ -13,6 +13,8 @@ import {
 import { hasExecutivePaymentControls } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffPaymentSettingsPanelProps {
@@ -209,22 +211,46 @@ export function StaffPaymentSettingsPanel({
 
       {canEditFees ? (
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={formFactor === 'desktop' ? 'adm-btn adm-btn--sand' : 'app-button-primary !w-auto !h-10 !px-5'}
-            disabled={!feeDirty || savingFees}
-            onClick={() => void persistFeeConfig()}
-          >
-            {savingFees ? 'Saving…' : 'Save fee settings'}
-          </button>
-          {feeDirty && (
-            <button
-              type="button"
-              className={formFactor === 'desktop' ? 'adm-btn adm-btn--outline' : 'app-button-outline !w-auto !h-10 !px-5'}
-              onClick={() => setFeeDraft(platformSettings.feeConfig)}
-            >
-              Discard changes
-            </button>
+          {formFactor === 'desktop' ? (
+            <>
+              <GuardrButton
+                kind="primary"
+                size="compact"
+                disabled={!feeDirty || savingFees}
+                onClick={() => void persistFeeConfig()}
+              >
+                {savingFees ? 'Saving…' : 'Save fee settings'}
+              </GuardrButton>
+              {feeDirty && (
+                <GuardrButton
+                  kind="secondary"
+                  size="compact"
+                  onClick={() => setFeeDraft(platformSettings.feeConfig)}
+                >
+                  Discard changes
+                </GuardrButton>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="app-button-primary !w-auto !h-10 !px-5"
+                disabled={!feeDirty || savingFees}
+                onClick={() => void persistFeeConfig()}
+              >
+                {savingFees ? 'Saving…' : 'Save fee settings'}
+              </button>
+              {feeDirty && (
+                <button
+                  type="button"
+                  className="app-button-outline !w-auto !h-10 !px-5"
+                  onClick={() => setFeeDraft(platformSettings.feeConfig)}
+                >
+                  Discard changes
+                </button>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -254,14 +280,25 @@ export function StaffPaymentSettingsPanel({
         </label>
       </div>
       {canEditFees ? (
-        <button
-          type="button"
-          className={formFactor === 'desktop' ? 'adm-btn adm-btn--sand' : 'app-button-primary !w-auto !h-10 !px-5'}
-          disabled={!crewPayBumpDirty || savingCrewPayBump}
-          onClick={() => void persistCrewPayBumpSettings()}
-        >
-          {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
-        </button>
+        formFactor === 'desktop' ? (
+          <GuardrButton
+            kind="primary"
+            size="compact"
+            disabled={!crewPayBumpDirty || savingCrewPayBump}
+            onClick={() => void persistCrewPayBumpSettings()}
+          >
+            {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
+          </GuardrButton>
+        ) : (
+          <button
+            type="button"
+            className="app-button-primary !w-auto !h-10 !px-5"
+            disabled={!crewPayBumpDirty || savingCrewPayBump}
+            onClick={() => void persistCrewPayBumpSettings()}
+          >
+            {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
+          </button>
+        )
       ) : (
         <p className="text-xs text-brand-text-muted">Only Directors and Founders can edit crew pay settings.</p>
       )}
@@ -273,12 +310,10 @@ export function StaffPaymentSettingsPanel({
       <StaffOpsPageShell
         className="adm-finance-page adm-payment-settings-page"
         toolbar={
-          <div>
-            <p className="adm-card-eyebrow">Finance</p>
-            <p className="adm-workbench-subtitle">
-              Platform fees and crew pay bump defaults.
-            </p>
-          </div>
+          <WorkbenchToolbar
+            eyebrow="Finance"
+            subtitle="Platform fees and crew pay bump defaults."
+          />
         }
       >
         <div className="adm-payment-settings-grid">

@@ -3,6 +3,12 @@ import { Clock, Users, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-rea
 import { computeSlaMetrics, formatSlaHours } from '../../lib/slaMetrics';
 import type { SecurityRequest, SecurityGuard, Client, SupportTicket } from '../../types';
 import { useDevice } from '../../lib/platform';
+import {
+  WorkbenchGrid,
+  WorkbenchGridCell,
+  WorkbenchPage,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffSlaDashboardProps {
   requests: SecurityRequest[];
@@ -46,54 +52,82 @@ export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: S
     setMetrics(computeSlaMetrics(requests, guards, clients, tickets));
   }, [requests, guards, clients, tickets]);
 
-  const cards = (
-    <>
-      <MetricCard
-        icon={Clock}
-        label="Avg approval time"
-        value={formatSlaHours(metrics.avgTimeToApproveHours)}
-        sub="Job posting → live"
-      />
-      <MetricCard
-        icon={TrendingUp}
-        label="Avg fill time"
-        value={formatSlaHours(metrics.avgTimeToFillHours)}
-        sub="Live → accepted"
-      />
-      <MetricCard
-        icon={AlertTriangle}
-        label="No-show rate"
-        value={`${(metrics.guardNoShowRate * 100).toFixed(1)}%`}
-        tone={metrics.guardNoShowRate > 0.05 ? 'warning' : 'success'}
-      />
-      <MetricCard
-        icon={CheckCircle}
-        label="Completed this week"
-        value={String(metrics.jobsCompletedThisWeek)}
-      />
-      <MetricCard icon={Users} label="Active guards" value={String(metrics.activeGuardsCount)} />
-      <MetricCard icon={Users} label="Active clients" value={String(metrics.activeClientsCount)} />
-      <MetricCard
-        icon={AlertTriangle}
-        label="Pending approvals"
-        value={String(metrics.pendingApprovalsCount)}
-        tone={metrics.pendingApprovalsCount > 5 ? 'warning' : 'default'}
-      />
-      <MetricCard icon={TrendingUp} label="Open jobs" value={String(metrics.openJobsCount)} />
-    </>
-  );
+  const metricItems: {
+    key: string;
+    icon: typeof Clock;
+    label: string;
+    value: string;
+    sub?: string;
+    tone?: 'default' | 'warning' | 'success';
+  }[] = [
+    {
+      key: 'approval',
+      icon: Clock,
+      label: 'Avg approval time',
+      value: formatSlaHours(metrics.avgTimeToApproveHours),
+      sub: 'Job posting → live',
+    },
+    {
+      key: 'fill',
+      icon: TrendingUp,
+      label: 'Avg fill time',
+      value: formatSlaHours(metrics.avgTimeToFillHours),
+      sub: 'Live → accepted',
+    },
+    {
+      key: 'noshow',
+      icon: AlertTriangle,
+      label: 'No-show rate',
+      value: `${(metrics.guardNoShowRate * 100).toFixed(1)}%`,
+      tone: metrics.guardNoShowRate > 0.05 ? 'warning' : 'success',
+    },
+    {
+      key: 'completed',
+      icon: CheckCircle,
+      label: 'Completed this week',
+      value: String(metrics.jobsCompletedThisWeek),
+    },
+    { key: 'guards', icon: Users, label: 'Active guards', value: String(metrics.activeGuardsCount) },
+    { key: 'clients', icon: Users, label: 'Active clients', value: String(metrics.activeClientsCount) },
+    {
+      key: 'pending',
+      icon: AlertTriangle,
+      label: 'Pending approvals',
+      value: String(metrics.pendingApprovalsCount),
+      tone: metrics.pendingApprovalsCount > 5 ? 'warning' : 'default',
+    },
+    { key: 'open', icon: TrendingUp, label: 'Open jobs', value: String(metrics.openJobsCount) },
+  ];
+
+  const cards = metricItems.map((item) => (
+    <MetricCard
+      key={item.key}
+      icon={item.icon}
+      label={item.label}
+      value={item.value}
+      sub={item.sub}
+      tone={item.tone}
+    />
+  ));
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-dashboard adm-sla-dashboard">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Operations</p>
-            <p className="adm-card-title">SLA & operations</p>
-          </div>
-        </div>
-        <div className="adm-dashboard-grid adm-dashboard-grid--metrics">{cards}</div>
-      </div>
+      <WorkbenchPage className="adm-sla-dashboard">
+        <WorkbenchToolbar eyebrow="Operations" subtitle="SLA & operations" />
+        <WorkbenchGrid>
+          {metricItems.map((item) => (
+            <WorkbenchGridCell key={item.key} span={3}>
+              <MetricCard
+                icon={item.icon}
+                label={item.label}
+                value={item.value}
+                sub={item.sub}
+                tone={item.tone}
+              />
+            </WorkbenchGridCell>
+          ))}
+        </WorkbenchGrid>
+      </WorkbenchPage>
     );
   }
 

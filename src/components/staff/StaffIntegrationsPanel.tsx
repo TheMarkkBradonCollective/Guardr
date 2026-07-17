@@ -20,6 +20,7 @@ import { CARD_PROCESSOR_LABELS, processorEnvHint } from '../../lib/paymentProces
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { showAppToast } from '../ui/AppToast';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -412,12 +413,10 @@ export function StaffIntegrationsPanel({
       <StaffOpsPageShell
         className="adm-platform-page adm-integrations-page"
         toolbar={
-          <div>
-            <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
-              Payment methods and third-party service connections.
-            </p>
-          </div>
+          <WorkbenchToolbar
+            eyebrow="Platform"
+            subtitle="Payment methods and third-party service connections."
+          />
         }
       >
         <div className="adm-platform-settings-grid">

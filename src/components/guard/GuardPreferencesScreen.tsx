@@ -3,6 +3,7 @@ import type { JobType, SecurityGuard } from '../../types';
 import { GuardJobPreferencesPanel } from './GuardJobPreferencesPanel';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchBody, WorkbenchPage, WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
 interface GuardPreferencesScreenProps {
   guard: SecurityGuard;
@@ -31,17 +32,13 @@ export function GuardPreferencesScreen({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench adm-pref-workbench">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Job alerts</p>
-            <p className="adm-workbench-subtitle">
-              Turn on job types you want — complete onboarding once per type, then toggle alerts.
-            </p>
-          </div>
-        </div>
-        {panel}
-      </div>
+      <WorkbenchPage className="adm-pref-workbench">
+        <WorkbenchToolbar
+          eyebrow="Job alerts"
+          subtitle="Turn on job types you want — complete onboarding once per type, then toggle alerts."
+        />
+        <WorkbenchBody>{panel}</WorkbenchBody>
+      </WorkbenchPage>
     );
   }
 

@@ -65,7 +65,7 @@ export function ResponsiveFormPage({
         {title ? (
           <header className="adm-form-page-head">
             <h2 className="adm-card-title">{title}</h2>
-            {subtitle ? <p className="adm-workbench-subtitle">{subtitle}</p> : null}
+            {subtitle ? <p className="uber-workbench-subtitle">{subtitle}</p> : null}
           </header>
         ) : null}
         <div className="adm-form-page-body">{children}</div>

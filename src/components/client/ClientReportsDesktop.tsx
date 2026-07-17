@@ -5,6 +5,13 @@ import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { ClientInvoicePanel } from './ClientInvoicePanel';
 import type { Client, SecurityRequest } from '../../types';
 import { FileText } from 'lucide-react';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchTabBar,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 const REPORT_META: Record<ClientReportCard['type'], { emoji: string; label: string; tone: string }> = {
   incident: { emoji: '🚨', label: 'Incident Report', tone: 'danger' },
@@ -45,44 +52,33 @@ export function ClientReportsDesktop({
   }, [reports.length, tab, selectedIncidentId, onSelectIncident, reports]);
 
   return (
-    <div className="adm-workbench adm-reports-workbench">
-      <div className="adm-workbench-toolbar">
-        <div>
-          <p className="adm-card-eyebrow">Coverage</p>
-          <p className="adm-workbench-subtitle">Activity logs, incident reports, and invoices from your jobs.</p>
-        </div>
-        <div className="staff-list-filter-tabs adm-reports-tabs">
-          <button
-            type="button"
-            className={tab === 'reports' ? 'is-active' : undefined}
-            onClick={() => setTab('reports')}
-          >
-            Reports ({reports.length})
-          </button>
-          <button
-            type="button"
-            className={tab === 'invoices' ? 'is-active' : undefined}
-            onClick={() => setTab('invoices')}
-          >
-            Invoices
-          </button>
-        </div>
-      </div>
+    <WorkbenchPage className="adm-reports-workbench">
+      <WorkbenchToolbar
+        eyebrow="Coverage"
+        subtitle="Activity logs, incident reports, and invoices from your jobs."
+        actions={
+          <WorkbenchTabBar<ReportsTab>
+            items={[
+              { id: 'reports', label: `Reports (${reports.length})` },
+              { id: 'invoices', label: 'Invoices' },
+            ]}
+            activeId={tab}
+            onSelect={setTab}
+          />
+        }
+      />
 
       {tab === 'invoices' ? (
-        <div className="adm-reports-invoices">
+        <div className="adm-reports-invoices p-4">
           <ClientInvoicePanel client={client} requests={requests} desktop />
         </div>
       ) : (
-        <div className="adm-workbench-split">
-          <div className="adm-workbench-list">
-            {reports.length === 0 ? (
-              <div className="adm-empty">
-                <FileText className="w-8 h-8 adm-muted-icon" />
-                <p>No reports yet</p>
-              </div>
+        <WorkbenchSplit
+          list={
+            reports.length === 0 ? (
+              <WorkbenchEmpty icon={FileText} message="No reports yet" />
             ) : (
-              <table className="adm-table adm-table--list">
+              <table className="uber-workbench-table">
                 <thead>
                   <tr>
                     <th>Report</th>
@@ -97,16 +93,16 @@ export function ClientReportsDesktop({
                     return (
                       <tr
                         key={report.id}
-                        className={`adm-table-row--click${
-                          isIncident && selectedIncidentId === report.incidentId ? ' adm-table-row--selected' : ''
+                        className={`uber-workbench-table-row${
+                          isIncident && selectedIncidentId === report.incidentId ? ' uber-workbench-table-row--selected' : ''
                         }`}
                         onClick={isIncident ? () => onSelectIncident(report.incidentId!) : undefined}
                       >
                         <td>
-                          <p className="adm-table-primary">{report.title}</p>
-                          <p className="adm-table-secondary">{report.summary.slice(0, 80)}…</p>
+                          <p className="uber-workbench-table-primary">{report.title}</p>
+                          <p className="uber-workbench-table-secondary">{report.summary.slice(0, 80)}…</p>
                         </td>
-                        <td className="adm-table-secondary">{report.siteName}</td>
+                        <td className="uber-workbench-table-secondary">{report.siteName}</td>
                         <td>
                           <span className={`adm-pill adm-pill--${meta.tone}`}>
                             {meta.emoji} {meta.label}
@@ -117,23 +113,17 @@ export function ClientReportsDesktop({
                   })}
                 </tbody>
               </table>
-            )}
-          </div>
-
-          <div className="adm-workbench-detail">
-            {selectedIncident ? (
-              <div className="adm-workbench-detail-inner">
-                <IncidentReportDetailView report={selectedIncident} />
-              </div>
+            )
+          }
+          detail={
+            selectedIncident ? (
+              <IncidentReportDetailView report={selectedIncident} />
             ) : (
-              <div className="adm-empty adm-empty--detail">
-                <FileText className="w-10 h-10 adm-muted-icon" />
-                <p>Select an incident report to view details</p>
-              </div>
-            )}
-          </div>
-        </div>
+              <WorkbenchEmpty icon={FileText} message="Select an incident report to view details" variant="detail" />
+            )
+          }
+        />
       )}
-    </div>
+    </WorkbenchPage>
   );
 }

@@ -6,6 +6,13 @@ import { WfBadge } from '../ui/wireframe';
 import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AlertTriangle } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffIncidentsPanelProps {
   incidents: OpsIncident[];
@@ -40,22 +47,14 @@ export function StaffIncidentsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Risk & compliance</p>
-            <p className="adm-workbench-subtitle">Incident reports from active shifts.</p>
-          </div>
-        </div>
-        <div className="adm-workbench-split">
-          <div className="adm-workbench-list">
-            {incidents.length === 0 ? (
-              <div className="adm-empty">
-                <AlertTriangle className="w-8 h-8 adm-muted-icon" />
-                <p>No incidents on file</p>
-              </div>
+      <WorkbenchPage>
+        <WorkbenchToolbar eyebrow="Risk & compliance" subtitle="Incident reports from active shifts." />
+        <WorkbenchSplit
+          list={
+            incidents.length === 0 ? (
+              <WorkbenchEmpty icon={AlertTriangle} message="No incidents on file" />
             ) : (
-              <table className="adm-table adm-table--list">
+              <table className="uber-workbench-table">
                 <thead>
                   <tr>
                     <th>Location</th>
@@ -67,47 +66,44 @@ export function StaffIncidentsPanel({
                   {incidents.map((inc) => (
                     <tr
                       key={inc.id}
-                      className={`adm-table-row--click${selectedId === inc.id ? ' adm-table-row--selected' : ''}`}
+                      className={`uber-workbench-table-row${selectedId === inc.id ? ' uber-workbench-table-row--selected' : ''}`}
                       onClick={() => setSelectedId(inc.id)}
                     >
                       <td>
-                        <p className="adm-table-primary">{inc.location}</p>
-                        <p className="adm-table-secondary">{inc.guardName}</p>
+                        <p className="uber-workbench-table-primary">{inc.location}</p>
+                        <p className="uber-workbench-table-secondary">{inc.guardName}</p>
                       </td>
                       <td>
                         <span className={`adm-pill adm-pill--${SEVERITY_TONE[inc.severity] === 'danger' ? 'danger' : 'warn'}`}>
                           {inc.severity}
                         </span>
                       </td>
-                      <td className="adm-table-secondary">
+                      <td className="uber-workbench-table-secondary">
                         {new Date(inc.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            )}
-          </div>
-          <div className="adm-workbench-detail">
-            {selectedIncident && selectedDetail ? (
-              <div className="adm-workbench-detail-inner">
-                <h2 className="adm-card-title">{selectedIncident.location}</h2>
+            )
+          }
+          detail={
+            selectedIncident && selectedDetail ? (
+              <div className="space-y-4">
+                <h2 className="text-lg font-bold m-0">{selectedIncident.location}</h2>
                 <IncidentReportDetailView report={selectedDetail} compact />
                 {onOpenJob ? (
-                  <button type="button" className="adm-btn adm-btn--outline adm-btn--sm adm-mt-sm" onClick={() => onOpenJob(selectedIncident.requestId)}>
+                  <GuardrButton kind="secondary" size="compact" onClick={() => onOpenJob(selectedIncident.requestId)}>
                     Open job
-                  </button>
+                  </GuardrButton>
                 ) : null}
               </div>
             ) : (
-              <div className="adm-empty adm-empty--detail">
-                <AlertTriangle className="w-10 h-10 adm-muted-icon" />
-                <p>Select an incident to review details</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+              <WorkbenchEmpty icon={AlertTriangle} message="Select an incident to review details" variant="detail" />
+            )
+          }
+        />
+      </WorkbenchPage>
     );
   }
 

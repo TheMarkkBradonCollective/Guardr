@@ -21,6 +21,7 @@ import {
 } from '../../lib/staffGuardEligibility';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchPage, WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
 
 type StatsTab = 'overview' | 'guards' | 'compare' | 'violations';
@@ -168,7 +169,7 @@ function GuardTable({
 
   if (formFactor === 'desktop') {
     return (
-      <table className="adm-table adm-table--list staff-stats-guard-table">
+      <table className="uber-workbench-table staff-stats-guard-table">
         <thead>
           <tr>
             {showSelect ? <th /> : null}
@@ -186,7 +187,7 @@ function GuardTable({
           {rows.map((row) => (
             <tr
               key={row.guardId}
-              className="adm-table-row--click"
+              className="uber-workbench-table-row"
               onClick={() => onOpenGuard?.(row.guardId)}
             >
               {showSelect ? (
@@ -200,8 +201,8 @@ function GuardTable({
                 </td>
               ) : null}
               <td>
-                <p className="adm-table-primary">{row.guardName}</p>
-                <p className="adm-table-secondary">{row.badgeNumber}</p>
+                <p className="uber-workbench-table-primary">{row.guardName}</p>
+                <p className="uber-workbench-table-secondary">{row.badgeNumber}</p>
               </td>
               <td>{row.tier.name}</td>
               <td>{row.overallRating > 0 ? row.overallRating : '—'}</td>
@@ -542,19 +543,14 @@ export function StaffStatsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench staff-stats-workbench">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Accountability</p>
-            <p className="adm-card-title">Stats</p>
-            <p className="adm-workbench-subtitle">
-              Performance, violations, and guard comparisons across the platform.
-            </p>
-          </div>
-        </div>
+      <WorkbenchPage className="staff-stats-workbench">
+        <WorkbenchToolbar
+          eyebrow="Accountability"
+          subtitle="Performance, violations, and guard comparisons across the platform."
+        />
         <div className="staff-stats-tabbar">{tabBar}</div>
         {content}
-      </div>
+      </WorkbenchPage>
     );
   }
 

@@ -3,6 +3,12 @@ import { Loader2, ShieldAlert } from 'lucide-react';
 import { OpsShiftViolation } from '../../lib/staffOps';
 import { WfBadge } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffViolationsPanelProps {
   violations: OpsShiftViolation[];
@@ -208,27 +214,43 @@ export function StaffViolationsPanel({
     </div>
   );
 
-  const emptyState = (
-    <div className={formFactor === 'desktop' ? 'adm-empty' : 'app-empty-state'}>
-      {formFactor !== 'desktop' ? (
+  const emptyMessage = tab === 'open' ? 'No open violations' : 'No violations on file';
+  const emptyBody =
+    'Skipped checkpoints, briefing not-ready flags, and client shift reviews appear here.';
+
+  const emptyState =
+    formFactor === 'desktop' ? (
+      <WorkbenchEmpty
+        icon={ShieldAlert}
+        message={emptyMessage}
+        variant="detail"
+        action={<p className="uber-workbench-subtitle text-center max-w-md">{emptyBody}</p>}
+      />
+    ) : (
+      <div className="app-empty-state">
         <div className="app-empty-state-icon">
           <ShieldAlert className="w-5 h-5" />
         </div>
-      ) : (
-        <ShieldAlert className="w-8 h-8 adm-muted-icon" />
-      )}
-      <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>
-        {tab === 'open' ? 'No open violations' : 'No violations on file'}
-      </p>
-      <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
-        Skipped checkpoints, briefing not-ready flags, and client shift reviews appear here.
-      </p>
-    </div>
-  );
+        <p className="app-empty-state-title">{emptyMessage}</p>
+        <p className="app-empty-state-body">{emptyBody}</p>
+      </div>
+    );
 
   if (filtered.length === 0) {
+    if (formFactor === 'desktop') {
+      return (
+        <WorkbenchPage>
+          <WorkbenchToolbar
+            eyebrow="Accountability"
+            subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
+          />
+          {tabBar}
+          {emptyState}
+        </WorkbenchPage>
+      );
+    }
     return (
-      <div className={formFactor === 'desktop' ? 'adm-workbench' : 'animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5'}>
+      <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
         {tabBar}
         {emptyState}
       </div>
@@ -239,19 +261,15 @@ export function StaffViolationsPanel({
     const selected = filtered.find((v) => v.id === selectedId) ?? filtered[0];
 
     return (
-      <div className="adm-workbench">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Accountability</p>
-            <p className="adm-workbench-subtitle">
-              Shift checkpoint skips, briefing readiness, and client verification flags.
-            </p>
-          </div>
-        </div>
+      <WorkbenchPage>
+        <WorkbenchToolbar
+          eyebrow="Accountability"
+          subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
+        />
         {tabBar}
-        <div className="adm-workbench-split">
-          <div className="adm-workbench-list">
-            <table className="adm-table adm-table--list">
+        <WorkbenchSplit
+          list={
+            <table className="uber-workbench-table">
               <thead>
                 <tr>
                   <th>Violation</th>
@@ -265,33 +283,30 @@ export function StaffViolationsPanel({
                   return (
                     <tr
                       key={v.id}
-                      className={`adm-table-row--click${selected?.id === v.id ? ' adm-table-row--selected' : ''}`}
+                      className={`uber-workbench-table-row${selected?.id === v.id ? ' uber-workbench-table-row--selected' : ''}`}
                       onClick={() => setSelectedId(v.id)}
                     >
                       <td>
-                        <p className="adm-table-primary">{v.label}</p>
-                        <p className="adm-table-secondary">{v.jobTitle}</p>
+                        <p className="uber-workbench-table-primary">{v.label}</p>
+                        <p className="uber-workbench-table-secondary">{v.jobTitle}</p>
                       </td>
-                      <td className="adm-table-secondary">{v.guardName}</td>
-                      <td className="adm-table-secondary">{statusLabel(status)}</td>
+                      <td className="uber-workbench-table-secondary">{v.guardName}</td>
+                      <td className="uber-workbench-table-secondary">{statusLabel(status)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
-          <div className="adm-workbench-detail">
-            {selected ? (
-              <div className="adm-workbench-detail-inner">{renderViolationCard(selected)}</div>
+          }
+          detail={
+            selected ? (
+              renderViolationCard(selected)
             ) : (
-              <div className="adm-empty adm-empty--detail">
-                <ShieldAlert className="w-10 h-10 adm-muted-icon" />
-                <p>Select a violation to review</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+              <WorkbenchEmpty icon={ShieldAlert} message="Select a violation to review" variant="detail" />
+            )
+          }
+        />
+      </WorkbenchPage>
     );
   }
 

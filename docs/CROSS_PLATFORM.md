@@ -103,6 +103,22 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | `pwa-*` | Glass header blur, safe-area padding |
 | `native-*` | 48px touch targets, edge safe areas, solid chrome |
 
+**Phase 3 dashboard migration** — remaining role dashboards migrated to `WorkbenchLayout`:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Guard earnings desktop | `GuardEarningsDesktop` | Migrated — `WorkbenchGrid`, `GuardrCard`, `GuardrButton` |
+| Guard crew hub | `GuardCrewHubPanel` | Migrated — `WorkbenchPage` + `WorkbenchSplit` |
+| Guard performance | `GuardPerformanceScreen` | Migrated — `WorkbenchFlatSplit` |
+| Guard preferences / availability | `GuardPreferencesScreen`, `GuardAvailabilityScreen` | Migrated — `WorkbenchPage` + toolbar |
+| Client reports desktop | `ClientReportsDesktop` | Migrated — `WorkbenchTabBar` + `WorkbenchSplit` |
+| Client invoice panel | `ClientInvoicePanel` | Migrated — `GuardrButton`, Uber table typography |
+| Client guard directory | `ClientDashboard` (guards view) | Migrated — `WorkbenchFlatSplit` |
+| Staff incidents / violations / disputes | `StaffIncidentsPanel`, etc. | Migrated — `WorkbenchPage` + `WorkbenchSplit` |
+| Staff payments / legal / cities / audit | Staff ops panels | Migrated — workbench adapters |
+| Staff analytics / SLA | `StaffAnalyticsPanel`, `StaffSlaDashboard` | Migrated — `WorkbenchGrid` + `GuardrCard` |
+| Platform guide / dev notes | `AppGuidePage`, `DevNotesPage` | Migrated — `WorkbenchSplit` |
+
 **Phase 2 dashboard migration** — Base Web adapters replace legacy `adm-workbench` markup:
 
 | Screen | Component | Status |
