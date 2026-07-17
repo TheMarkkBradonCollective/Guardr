@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guardr Design Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand-primary: #6B8F6E;
+      --brand-primary-bright: #9AE09F;
+      --brand-primary-hover: #5A7A5D;
+      --brand-bg: #000000;
+      --brand-bg-sec: #000000;
+      --brand-surface: #000000;
+      --brand-elevated: #060606;
+      --brand-border: #1A2A1A;
+      --brand-text: #7DB882;
+      --brand-text-muted: #3D5C40;
+      --brand-on-primary: #000000;
+      --chrome: #000000;
+      --status-success: #7DBB82;
+      --status-warning: #C9A24D;
+      --glow: 0 0 24px color-mix(in srgb, var(--brand-primary-bright) 65%, transparent);
+      --glow-strong: 0 0 40px color-mix(in srgb, var(--brand-primary-bright) 85%, transparent), 0 0 80px color-mix(in srgb, var(--brand-primary-bright) 35%, transparent);
+      --radius-card: 16px;
+      --radius-pill: 999px;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background: #000;
+      color: var(--brand-text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .preview-chrome {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 20px;
+      background: #000;
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .preview-chrome h1 { font-size: 14px; font-weight: 800; color: var(--brand-text); }
+    .preview-chrome p { font-size: 11px; color: var(--brand-text-muted); }
+    .toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+    .toolbar button {
+      font: 600 11px/1 "Plus Jakarta Sans", sans-serif;
+      padding: 7px 12px; border-radius: var(--radius-pill); cursor: pointer;
+      border: 1px solid var(--brand-border); background: #000; color: var(--brand-text-muted); transition: .2s;
+    }
+    .toolbar button.active { border-color: var(--brand-primary-bright); color: var(--brand-primary-bright); box-shadow: var(--glow); }
+
+    .stage { padding: 16px; display: flex; justify-content: center; }
+    .frame {
+      width: 100%; max-width: 1280px;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--brand-border);
+      box-shadow: 0 32px 100px rgba(0,0,0,.8);
+      transition: max-width .35s cubic-bezier(.16,1,.3,1);
+      background: var(--brand-bg);
+    }
+    .frame.tablet { max-width: 820px; }
+    .frame.mobile { max-width: 390px; border-radius: 32px; }
+
+    /* ─── Uber Pro shell ─── */
+    .app { display: flex; min-height: 780px; background: var(--brand-bg); }
+    .sidebar {
+      width: 232px; flex-shrink: 0;
+      background: var(--chrome);
+      border-right: 1px solid var(--brand-border);
+      display: flex; flex-direction: column;
+      padding: 16px 0 12px;
+    }
+    .sidebar-brand {
+      padding: 4px 20px 28px;
+      font-size: 16px; font-weight: 800; letter-spacing: -.04em;
+      display: flex; align-items: center; gap: 10px;
+      color: var(--brand-text);
+    }
+    .sidebar-brand span {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      display: grid; place-items: center; font-size: 14px; font-weight: 800;
+    }
+    .nav-item {
+      position: relative;
+      display: flex; align-items: center; gap: 14px;
+      width: 100%; padding: 13px 22px;
+      border: none; background: transparent;
+      font: 600 14px/1 "Plus Jakarta Sans", sans-serif;
+      color: var(--brand-text-muted); cursor: pointer; text-align: left;
+      transition: color .2s, background .2s;
+    }
+    .nav-item:hover { color: var(--brand-text); }
+    .nav-item.active {
+      color: var(--brand-text);
+      background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+    }
+    .nav-item.active::before {
+      content: "";
+      position: absolute; left: 0; top: 6px; bottom: 6px; width: 4px;
+      background: var(--brand-primary-bright);
+      border-radius: 0 4px 4px 0;
+      box-shadow: var(--glow);
+    }
+    .nav-icon { width: 22px; text-align: center; font-size: 15px; opacity: .9; }
+    .nav-badge {
+      margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px;
+      border-radius: var(--radius-pill); background: var(--brand-primary-bright);
+      color: var(--brand-on-primary); font-size: 10px; font-weight: 800;
+      display: grid; place-items: center;
+    }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-status {
+      margin: 12px 16px 0; padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--brand-elevated);
+      border: 1px solid var(--brand-border);
+    }
+    .sidebar-status-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand-text-muted); }
+    .sidebar-status-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--brand-primary-bright);
+      box-shadow: var(--glow);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+    .sidebar-status-text { font-size: 13px; font-weight: 700; color: var(--brand-text); }
+
+    .workspace { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 24px;
+      background: color-mix(in srgb, var(--chrome) 94%, transparent);
+      backdrop-filter: blur(24px) saturate(1.3);
+      border-bottom: 1px solid var(--brand-border);
+      flex-wrap: wrap;
+    }
+    .market-select {
+      font: 700 13px/1 "Plus Jakarta Sans", sans-serif;
+      padding: 9px 16px 9px 14px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border);
+      background: var(--brand-elevated); color: var(--brand-text);
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237DB882' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .ticker-wrap {
+      flex: 1; min-width: 140px; overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    }
+    .ticker {
+      display: flex; gap: 56px;
+      animation: ticker 28s linear infinite;
+      white-space: nowrap; font-size: 12px; color: var(--brand-text-muted); font-weight: 500;
+    }
+    .ticker strong { color: var(--status-warning); font-weight: 800; }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .topbar-actions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+    .earnings-chip {
+      display: none;
+      padding: 6px 12px; border-radius: var(--radius-pill);
+      background: var(--brand-elevated); border: 1px solid var(--brand-border);
+      font-size: 12px; font-weight: 700; color: var(--brand-text);
+    }
+    .earnings-chip strong { color: var(--brand-primary-bright); }
+    .bell { position: relative; font-size: 18px; cursor: pointer; opacity: .9; }
+    .bell-badge {
+      position: absolute; top: -6px; right: -8px;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      font-size: 10px; font-weight: 800; border-radius: var(--radius-pill);
+      display: grid; place-items: center;
+    }
+    .greeting { font-size: 14px; font-weight: 700; color: var(--brand-text); }
+    .greeting span { color: var(--brand-text-muted); font-weight: 500; }
+    .avatar-wrap { position: relative; }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(145deg, #0a0a0a, #000);
+      border: 2px solid var(--brand-primary-bright);
+      box-shadow: var(--glow);
+    }
+    .avatar-ring {
+      position: absolute; inset: -3px; border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--brand-primary-bright);
+      border-right-color: color-mix(in srgb, var(--brand-primary-bright) 40%, transparent);
+      transform: rotate(-45deg);
+    }
+
+    .subnav {
+      display: flex; gap: 4px; padding: 0 24px;
+      border-bottom: 1px solid var(--brand-border);
+      background: var(--brand-bg);
+      overflow-x: auto;
+    }
+    .subnav-tab {
+      padding: 14px 16px; border: none; background: none;
+      font: 600 13px/1 "Plus Jakarta Sans", sans-serif;
+      color: var(--brand-text-muted); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: .2s;
+    }
+    .subnav-tab:hover { color: var(--brand-text); }
+    .subnav-tab.active {
+      color: var(--brand-text);
+      border-bottom-color: var(--brand-primary-bright);
+    }
+
+    .dashboard {
+      flex: 1; padding: 18px 24px 24px;
+      overflow: auto;
+      background: var(--brand-bg);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: var(--radius-card);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand-primary-bright) 6%, transparent);
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--brand-text-muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .card-link {
+      font-size: 11px; font-weight: 700; color: var(--brand-primary-bright);
+      background: none; border: none; cursor: pointer;
+    }
+    .kpi-xl {
+      font-size: 56px; font-weight: 800;
+      letter-spacing: -.06em; line-height: .95;
+      color: var(--brand-text);
+    }
+    .kpi-md { font-size: 40px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--brand-text); }
+    .kpi-unit { font-size: .38em; font-weight: 600; letter-spacing: 0; }
+    .trend-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 12px; padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 800;
+      background: color-mix(in srgb, var(--brand-primary-bright) 18%, transparent);
+      color: var(--brand-primary-bright);
+      box-shadow: var(--glow);
+    }
+    .c3 { grid-column: span 3; }
+    .c4 { grid-column: span 4; }
+    .c5 { grid-column: span 5; }
+    .c6 { grid-column: span 6; }
+    .c7 { grid-column: span 7; }
+    .c8 { grid-column: span 8; }
+    .c12 { grid-column: span 12; }
+
+    .rating-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .rating-av {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-elevated), #000);
+      border: 2px solid var(--brand-border);
+    }
+
+    .trip-card { display: flex; align-items: center; justify-content: space-between; }
+    .trip-arc { width: 96px; height: 52px; flex-shrink: 0; }
+    .trip-arc path.glow { filter: drop-shadow(0 0 6px var(--brand-primary-bright)) drop-shadow(0 0 16px var(--brand-primary-bright)); }
+
+    .period-pills { display: flex; gap: 5px; margin-top: 16px; }
+    .pill {
+      font: 700 10px/1 "Plus Jakarta Sans", sans-serif;
+      padding: 7px 11px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border);
+      background: transparent; color: var(--brand-text-muted);
+      cursor: pointer; transition: .2s;
+    }
+    .pill.active {
+      background: var(--brand-primary-bright);
+      border-color: var(--brand-primary-bright);
+      color: var(--brand-on-primary);
+      box-shadow: var(--glow);
+    }
+    .time-chip {
+      display: inline-block; margin-top: 10px;
+      padding: 4px 10px; border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 700;
+      background: color-mix(in srgb, var(--status-success) 18%, transparent);
+      color: var(--status-success);
+    }
+
+    /* Horizontal shift carousel — Uber trip-card row */
+    .carousel-section { margin-bottom: 14px; }
+    .carousel {
+      display: flex; gap: 12px; overflow-x: auto;
+      padding-bottom: 4px; scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .carousel::-webkit-scrollbar { display: none; }
+    .shift-card {
+      flex: 0 0 220px; scroll-snap-align: start;
+      padding: 16px; border-radius: 14px;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      cursor: pointer; transition: border-color .2s;
+    }
+    .shift-card:hover { border-color: var(--brand-primary-bright); }
+    .shift-card.hot {
+      border-color: color-mix(in srgb, var(--brand-primary-bright) 60%, var(--brand-border));
+      box-shadow: var(--glow);
+    }
+    .shift-time { font-size: 11px; font-weight: 700; color: var(--brand-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .shift-title { font-size: 15px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; color: var(--brand-text); }
+    .shift-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .shift-pay { font-size: 18px; font-weight: 800; color: var(--brand-primary-bright); }
+    .shift-dist { font-size: 11px; font-weight: 600; color: var(--brand-text-muted); }
+    .surge-tag {
+      display: inline-block; margin-top: 8px;
+      padding: 3px 8px; border-radius: var(--radius-pill);
+      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+      background: color-mix(in srgb, var(--status-warning) 25%, transparent);
+      color: var(--status-warning);
+    }
+
+    /* Chart */
+    .chart-wrap { position: relative; margin-top: 2px; }
+    .chart-svg { width: 100%; height: 190px; display: block; }
+    .chart-grid line { stroke: var(--brand-border); stroke-width: 1; opacity: .35; }
+    .chart-line {
+      fill: none; stroke: var(--brand-primary-bright);
+      stroke-width: 3.5; stroke-linecap: round;
+      filter: drop-shadow(0 0 6px var(--brand-primary-bright)) drop-shadow(0 0 18px var(--brand-primary-bright)) drop-shadow(0 0 36px color-mix(in srgb, var(--brand-primary-bright) 50%, transparent));
+    }
+    .chart-area { fill: url(#earnGrad); }
+    .chart-dot {
+      fill: var(--brand-primary-bright);
+      filter: drop-shadow(0 0 8px var(--brand-primary-bright)) drop-shadow(0 0 20px var(--brand-primary-bright));
+    }
+    .chart-callout {
+      position: absolute; top: 14%; right: 16%;
+      padding: 8px 14px; border-radius: 10px;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      font-size: 15px; font-weight: 800;
+      box-shadow: var(--glow-strong);
+    }
+    .chart-callout::after { content: " ↑"; font-size: 12px; }
+    .chart-axis {
+      display: flex; justify-content: space-between;
+      margin-top: 8px; font-size: 10px; font-weight: 600;
+      color: var(--brand-text-muted);
+    }
+
+    /* Donut + bars */
+    .donut-wrap { display: flex; align-items: center; gap: 20px; }
+    .donut-svg { width: 108px; height: 108px; flex-shrink: 0; }
+    .donut-ring { fill: none; stroke-width: 9; stroke-linecap: round; }
+    .donut-bg { stroke: var(--brand-border); }
+    .donut-fg {
+      stroke: var(--brand-primary-bright);
+      filter: drop-shadow(0 0 8px var(--brand-primary-bright));
+      transform-origin: 54px 54px;
+      transform: rotate(-90deg);
+      stroke-dasharray: 201; stroke-dashoffset: 80.4;
+    }
+    .donut-center { font-size: 24px; font-weight: 800; fill: var(--brand-text); }
+    .perf-bars { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .perf-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .perf-label { width: 52px; color: var(--brand-text-muted); font-weight: 600; }
+    .perf-track { flex: 1; height: 6px; border-radius: 3px; background: var(--brand-border); overflow: hidden; }
+    .perf-fill {
+      height: 100%; border-radius: 3px;
+      background: var(--brand-primary-bright);
+      box-shadow: var(--glow);
+    }
+    .perf-val { width: 36px; text-align: right; font-weight: 800; color: var(--brand-primary-bright); font-size: 11px; }
+
+    /* Messages */
+    .feed { display: flex; flex-direction: column; gap: 12px; }
+    .feed-item { display: flex; gap: 12px; align-items: flex-start; }
+    .feed-av { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-elevated); flex-shrink: 0; border: 1px solid var(--brand-border); }
+    .feed-name { font-size: 13px; font-weight: 700; color: var(--brand-text); }
+    .feed-time { font-size: 10px; color: var(--brand-text-muted); margin-left: 6px; font-weight: 500; }
+    .feed-msg {
+      margin-top: 4px; padding: 10px 14px;
+      border-radius: 14px 14px 14px 4px; font-size: 13px; line-height: 1.45;
+      background: var(--brand-elevated);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-text);
+    }
+
+    /* Map */
+    .map-card { padding: 0; overflow: hidden; }
+    .map-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 10px; flex-wrap: wrap; gap: 10px;
+    }
+    .map-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .map-chip {
+      font: 700 11px/1 "Plus Jakarta Sans", sans-serif;
+      padding: 8px 14px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border);
+      background: var(--brand-elevated); color: var(--brand-text-muted);
+      cursor: pointer; transition: .2s;
+    }
+    .map-chip.hot {
+      border-color: var(--brand-primary-bright);
+      color: var(--brand-primary-bright);
+      background: color-mix(in srgb, var(--brand-primary-bright) 10%, var(--brand-elevated));
+      box-shadow: var(--glow);
+    }
+    .map-body {
+      height: 260px; position: relative;
+      background:
+        radial-gradient(ellipse 120px 80px at 58% 48%, color-mix(in srgb, var(--brand-primary-bright) 35%, transparent), transparent),
+        radial-gradient(ellipse 80px 60px at 30% 35%, color-mix(in srgb, var(--brand-primary-bright) 15%, transparent), transparent),
+        radial-gradient(ellipse 60px 50px at 75% 60%, color-mix(in srgb, var(--status-warning) 12%, transparent), transparent),
+        linear-gradient(180deg, #000 0%, #000 100%);
+    }
+    .map-grid {
+      position: absolute; inset: 0; opacity: .12;
+      background-image:
+        linear-gradient(var(--brand-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--brand-border) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .map-road {
+      position: absolute; background: #0a120a; opacity: .7;
+    }
+    .map-road.h { height: 2px; left: 0; right: 0; top: 45%; }
+    .map-road.v { width: 2px; top: 10%; bottom: 10%; left: 40%; }
+    .map-pulse {
+      position: absolute; top: 44%; left: 56%;
+      width: 120px; height: 120px; margin: -60px 0 0 -60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary-bright) 30%, transparent) 0%, transparent 70%);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: .7; }
+    }
+    .map-pin {
+      position: absolute; width: 10px; height: 10px;
+      background: var(--brand-primary-bright);
+      border-radius: 50%; box-shadow: var(--glow);
+    }
+    .map-pin::after {
+      content: ""; position: absolute; inset: -4px;
+      border-radius: 50%; border: 2px solid color-mix(in srgb, var(--brand-primary-bright) 40%, transparent);
+    }
+    .map-job-card {
+      position: absolute; bottom: 20px; left: 20px;
+      width: 200px; padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--brand-border);
+      box-shadow: 0 8px 32px rgba(0,0,0,.6), var(--glow);
+    }
+    .map-job-title { font-size: 13px; font-weight: 800; color: var(--brand-text); }
+    .map-job-sub { font-size: 11px; color: var(--brand-text-muted); margin-top: 4px; }
+    .map-job-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .map-job-pay { font-size: 20px; font-weight: 800; color: var(--brand-primary-bright); }
+    .map-job-btn {
+      padding: 8px 16px; border-radius: var(--radius-pill);
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      border: none; font: 800 11px/1 "Plus Jakarta Sans", sans-serif;
+      cursor: pointer; box-shadow: var(--glow);
+    }
+    .map-zoom {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .map-zoom button {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(0,0,0,.85); border: 1px solid var(--brand-border);
+      color: var(--brand-text); font-size: 18px; cursor: pointer;
+    }
+
+    /* Mobile */
+    .frame.mobile .sidebar { display: none; }
+    .frame.mobile .subnav { padding: 0 16px; }
+    .frame.mobile .grid { grid-template-columns: 1fr; }
+    .frame.mobile .c3, .frame.mobile .c4, .frame.mobile .c5,
+    .frame.mobile .c6, .frame.mobile .c7, .frame.mobile .c8, .frame.mobile .c12 { grid-column: span 1; }
+    .frame.mobile .topbar { padding: 10px 16px; }
+    .frame.mobile .market-select { display: none; }
+    .frame.mobile .greeting { display: none; }
+    .frame.mobile .earnings-chip { display: block; }
+    .frame.mobile .kpi-xl { font-size: 44px; }
+    .mobile-header {
+      display: none;
+      align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--brand-border);
+      background: var(--chrome);
+    }
+    .frame.mobile .mobile-header { display: flex; }
+    .online-bar {
+      display: none;
+      align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--brand-border);
+      background: color-mix(in srgb, var(--chrome) 96%, transparent);
+      backdrop-filter: blur(20px);
+    }
+    .frame.mobile .online-bar { display: flex; }
+    .online-toggle {
+      width: 54px; height: 32px; border-radius: var(--radius-pill);
+      background: var(--brand-primary-bright);
+      box-shadow: var(--glow-strong);
+      position: relative; cursor: pointer;
+    }
+    .online-toggle::after {
+      content: ""; position: absolute; top: 3px; right: 3px;
+      width: 26px; height: 26px; border-radius: 50%; background: var(--brand-on-primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+    .online-label { font-size: 15px; font-weight: 800; color: var(--brand-text); }
+    .online-sub { font-size: 11px; color: var(--brand-text-muted); font-weight: 500; }
+    .fab-map {
+      display: none;
+      position: absolute; bottom: 96px; right: 18px;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      border: none; font-size: 22px; cursor: pointer;
+      box-shadow: var(--glow-strong);
+    }
+    .frame.mobile .fab-map { display: grid; place-items: center; }
+    .frame.mobile .app { position: relative; min-height: 820px; }
+    .bottom-tabs {
+      display: none;
+      justify-content: space-around;
+      padding: 8px 0 18px;
+      border-top: 1px solid var(--brand-border);
+      background: var(--chrome);
+    }
+    .frame.mobile .bottom-tabs { display: flex; }
+    .tab-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: none; border: none; color: var(--brand-text-muted);
+      font: 600 10px/1 "Plus Jakarta Sans", sans-serif; cursor: pointer;
+      min-height: 48px; position: relative;
+    }
+    .tab-btn.active { color: var(--brand-primary-bright); }
+    .tab-btn.active::before {
+      content: ""; position: absolute; top: -8px;
+      width: 24px; height: 3px; border-radius: 2px;
+      background: var(--brand-primary-bright); box-shadow: var(--glow);
+    }
+
+    .frame.tablet .sidebar { width: 76px; }
+    .frame.tablet .sidebar-brand span:last-child,
+    .frame.tablet .nav-item span:last-child,
+    .frame.tablet .nav-badge,
+    .frame.tablet .sidebar-status { display: none; }
+    .frame.tablet .sidebar-brand { justify-content: center; padding: 4px 0 24px; }
+    .frame.tablet .nav-item { justify-content: center; padding: 13px; }
+    .frame.tablet .grid { grid-template-columns: repeat(8, 1fr); }
+    .frame.tablet .c3 { grid-column: span 4; }
+    .frame.tablet .c4 { grid-column: span 4; }
+    .frame.tablet .c5 { grid-column: span 4; }
+    .frame.tablet .c6 { grid-column: span 4; }
+    .frame.tablet .c7 { grid-column: span 8; }
+    .frame.tablet .c8 { grid-column: span 8; }
+
+    .tokens-section {
+      max-width: 1280px; margin: 0 auto; padding: 0 20px 40px;
+    }
+    .tokens-section summary {
+      cursor: pointer; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--brand-text-muted); padding: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="preview-chrome">
+    <div>
+      <h1>Guardr · Pure black + sage</h1>
+      <p>Single theme — black canvas, company green typography</p>
+    </div>
+    <div class="toolbar">
+      <button type="button" data-frame="desktop" class="active">Desktop</button>
+      <button type="button" data-frame="tablet">Tablet</button>
+      <button type="button" data-frame="mobile">Mobile</button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="frame desktop" id="frame">
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-brand"><span>G</span> Guardr Pro</div>
+          <button class="nav-item active" type="button"><span class="nav-icon">▦</span><span>Dashboard</span></button>
+          <button class="nav-item" type="button"><span class="nav-icon">◎</span><span>My shifts</span><span class="nav-badge">4</span></button>
+          <button class="nav-item" type="button"><span class="nav-icon">▣</span><span>Calendar</span></button>
+          <button class="nav-item" type="button"><span class="nav-icon">✉</span><span>Messages</span><span class="nav-badge">3</span></button>
+          <button class="nav-item" type="button"><span class="nav-icon">⚙</span><span>Settings</span></button>
+          <div class="sidebar-spacer"></div>
+          <div class="sidebar-status">
+            <div class="sidebar-status-label">Status</div>
+            <div class="sidebar-status-row">
+              <span class="status-dot"></span>
+              <span class="sidebar-status-text">Online · accepting jobs</span>
+            </div>
+          </div>
+          <button class="nav-item" type="button" style="margin-top:12px"><span class="nav-icon">↪</span><span>Log out</span></button>
+        </aside>
+
+        <div class="workspace">
+          <div class="mobile-header">
+            <button type="button" style="background:none;border:none;color:inherit;font-size:20px">☰</button>
+            <strong>Guardr Pro</strong>
+            <div class="avatar-wrap"><div class="avatar-ring"></div><div class="avatar"></div></div>
+          </div>
+
+          <header class="topbar">
+            <select class="market-select" aria-label="Market">
+              <option>Los Angeles</option>
+              <option>San Francisco</option>
+              <option>San Diego</option>
+            </select>
+            <div class="ticker-wrap">
+              <div class="ticker">
+                <span><strong>Traffic</strong> — I-405 accident near LAX · +12 min delays</span>
+                <span><strong>Surge</strong> — Downtown demand 2.1× · 8 open jobs</span>
+                <span><strong>Alert</strong> — Credential audit window closes Friday</span>
+                <span><strong>Traffic</strong> — I-405 accident near LAX · +12 min delays</span>
+                <span><strong>Surge</strong> — Downtown demand 2.1× · 8 open jobs</span>
+                <span><strong>Alert</strong> — Credential audit window closes Friday</span>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <div class="earnings-chip">Today <strong>$186</strong></div>
+              <div class="bell">🔔<span class="bell-badge">3</span></div>
+              <div class="greeting"><span>Hello</span> Alex,</div>
+              <div class="avatar-wrap"><div class="avatar-ring"></div><div class="avatar"></div></div>
+            </div>
+          </header>
+
+          <nav class="subnav" aria-label="Dashboard sections">
+            <button class="subnav-tab active" type="button">Overview</button>
+            <button class="subnav-tab" type="button">Earnings</button>
+            <button class="subnav-tab" type="button">Performance</button>
+            <button class="subnav-tab" type="button">Opportunities</button>
+          </nav>
+
+          <main class="dashboard">
+            <section class="carousel-section">
+              <div class="card-head" style="margin-bottom:10px">
+                <span class="card-label">Upcoming shifts</span>
+                <button class="card-link" type="button">See all →</button>
+              </div>
+              <div class="carousel">
+                <div class="shift-card hot">
+                  <div class="shift-time">Tonight · 6:00 PM</div>
+                  <div class="shift-title">Staples Center</div>
+                  <span class="surge-tag">Surge 1.8×</span>
+                  <div class="shift-meta">
+                    <span class="shift-pay">$42/hr</span>
+                    <span class="shift-dist">2.4 mi</span>
+                  </div>
+                </div>
+                <div class="shift-card">
+                  <div class="shift-time">Sat · 10:00 AM</div>
+                  <div class="shift-title">Retail patrol</div>
+                  <div class="shift-meta">
+                    <span class="shift-pay">$28/hr</span>
+                    <span class="shift-dist">5.1 mi</span>
+                  </div>
+                </div>
+                <div class="shift-card">
+                  <div class="shift-time">Sun · 2:00 PM</div>
+                  <div class="shift-title">Event security</div>
+                  <div class="shift-meta">
+                    <span class="shift-pay">$35/hr</span>
+                    <span class="shift-dist">8.3 mi</span>
+                  </div>
+                </div>
+                <div class="shift-card">
+                  <div class="shift-time">Mon · 7:00 AM</div>
+                  <div class="shift-title">Corporate lobby</div>
+                  <div class="shift-meta">
+                    <span class="shift-pay">$26/hr</span>
+                    <span class="shift-dist">3.7 mi</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div class="grid">
+              <div class="card c3">
+                <div class="card-label">My rating</div>
+                <div class="rating-row">
+                  <div>
+                    <div class="kpi-xl">4.4<span style="font-size:.5em">★</span></div>
+                    <div class="trend-pill">↑ +1.2</div>
+                  </div>
+                  <div class="rating-av"></div>
+                </div>
+              </div>
+
+              <div class="card c3">
+                <div class="card-label">Avg. trip time</div>
+                <div class="trip-card">
+                  <div class="kpi-md">20<span class="kpi-unit"> min</span></div>
+                  <svg class="trip-arc" viewBox="0 0 96 52">
+                    <path d="M8,44 A40,40 0 0 1 88,44" fill="none" stroke="var(--brand-border)" stroke-width="5" stroke-linecap="round"/>
+                    <path class="glow" d="M8,44 A40,40 0 0 1 68,16" fill="none" stroke="var(--brand-primary-bright)" stroke-width="5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="card c3">
+                <div class="card-label">Last shift</div>
+                <div class="kpi-xl">$186</div>
+                <div class="time-chip">Ended 14:15</div>
+                <div class="period-pills">
+                  <button class="pill active" type="button">Day</button>
+                  <button class="pill" type="button">Month</button>
+                  <button class="pill" type="button">Year</button>
+                </div>
+              </div>
+
+              <div class="card c3">
+                <div class="card-head" style="margin-bottom:8px">
+                  <span class="card-label" style="margin:0">Messages</span>
+                  <button class="card-link" type="button">All</button>
+                </div>
+                <div class="feed">
+                  <div class="feed-item">
+                    <div class="feed-av"></div>
+                    <div>
+                      <div class="feed-name">Malika<span class="feed-time">2m</span></div>
+                      <div class="feed-msg">Uniform check looks good. Thanks!</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card c8">
+                <div class="card-head">
+                  <span class="card-label">What I earned</span>
+                  <button class="card-link" type="button">Details →</button>
+                </div>
+                <div class="chart-wrap">
+                  <svg class="chart-svg" viewBox="0 0 560 190" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--brand-primary-bright)" stop-opacity=".5"/>
+                        <stop offset="100%" stop-color="var(--brand-primary-bright)" stop-opacity="0"/>
+                      </linearGradient>
+                    </defs>
+                    <g class="chart-grid">
+                      <line x1="0" y1="38" x2="560" y2="38"/><line x1="0" y1="76" x2="560" y2="76"/>
+                      <line x1="0" y1="114" x2="560" y2="114"/><line x1="0" y1="152" x2="560" y2="152"/>
+                    </g>
+                    <path class="chart-area" d="M0,170 L0,125 C70,115 110,100 170,92 C230,80 290,58 370,38 C430,28 490,22 560,16 L560,170 Z"/>
+                    <path class="chart-line" d="M0,125 C70,115 110,100 170,92 C230,80 290,58 370,38 C430,28 490,22 560,16"/>
+                    <circle class="chart-dot" cx="370" cy="38" r="7"/>
+                  </svg>
+                  <div class="chart-callout">$420</div>
+                </div>
+                <div class="chart-axis">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+              </div>
+
+              <div class="card c4">
+                <div class="card-label">My performance</div>
+                <div class="donut-wrap">
+                  <svg class="donut-svg" viewBox="0 0 108 108">
+                    <circle class="donut-ring donut-bg" cx="54" cy="54" r="42"/>
+                    <circle class="donut-ring donut-fg" cx="54" cy="54" r="42"/>
+                    <text class="donut-center" x="54" y="58" text-anchor="middle">60%</text>
+                  </svg>
+                  <div class="perf-bars">
+                    <div class="perf-row">
+                      <span class="perf-label">Shifts</span>
+                      <div class="perf-track"><div class="perf-fill" style="width:85%"></div></div>
+                      <span class="perf-val">+12</span>
+                    </div>
+                    <div class="perf-row">
+                      <span class="perf-label">On-time</span>
+                      <div class="perf-track"><div class="perf-fill" style="width:94%"></div></div>
+                      <span class="perf-val">94%</span>
+                    </div>
+                    <div class="perf-row">
+                      <span class="perf-label">Cancels</span>
+                      <div class="perf-track"><div class="perf-fill" style="width:20%;background:var(--status-warning)"></div></div>
+                      <span class="perf-val" style="color:var(--status-warning)">−4</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card c12 map-card">
+                <div class="map-head">
+                  <span class="card-label" style="margin:0">Live opportunities</span>
+                  <div class="map-chips">
+                    <button class="map-chip hot" type="button">High demand</button>
+                    <button class="map-chip" type="button">High pay</button>
+                    <button class="map-chip" type="button">Credentials</button>
+                  </div>
+                </div>
+                <div class="map-body">
+                  <div class="map-grid"></div>
+                  <div class="map-road h"></div>
+                  <div class="map-road v"></div>
+                  <div class="map-pulse"></div>
+                  <div class="map-pin" style="top:28%;left:32%"></div>
+                  <div class="map-pin" style="top:52%;left:70%"></div>
+                  <div class="map-pin" style="top:22%;left:78%"></div>
+                  <div class="map-job-card">
+                    <div class="map-job-title">Shok Nagar · Event</div>
+                    <div class="map-job-sub">4 open jobs · 1.8× surge</div>
+                    <div class="map-job-row">
+                      <span class="map-job-pay">$38/hr</span>
+                      <button class="map-job-btn" type="button">Accept</button>
+                    </div>
+                  </div>
+                  <div class="map-zoom">
+                    <button type="button">+</button>
+                    <button type="button">−</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <div class="online-bar">
+            <div>
+              <div class="online-label">You're online</div>
+              <div class="online-sub">Accepting jobs in Los Angeles</div>
+            </div>
+            <div class="online-toggle" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <button class="fab-map" type="button" aria-label="Map">🗺</button>
+          <nav class="bottom-tabs" aria-label="Mobile navigation">
+            <button class="tab-btn active" type="button">▦<span>Home</span></button>
+            <button class="tab-btn" type="button">◎<span>Shifts</span></button>
+            <button class="tab-btn" type="button">✉<span>Chat</span></button>
+            <button class="tab-btn" type="button">$<span>Pay</span></button>
+            <button class="tab-btn" type="button">⋯<span>More</span></button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="tokens-section">
+    <summary>Design tokens & typography (spec reference)</summary>
+    <p style="font-size:12px;color:var(--brand-text-muted);margin-top:8px">See <code>docs/guardedesign.md</code> · sage on black tokens</p>
+  </details>
+
+  <script>
+    const frame = document.getElementById('frame');
+    document.querySelectorAll('[data-frame]').forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll('[data-frame]').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        frame.className = 'frame ' + btn.dataset.frame;
+      };
+    });
+    document.querySelectorAll('.pill').forEach((p) => {
+      p.onclick = () => {
+        p.parentElement.querySelectorAll('.pill').forEach((x) => x.classList.remove('active'));
+        p.classList.add('active');
+      };
+    });
+    document.querySelectorAll('.subnav-tab').forEach((t) => {
+      t.onclick = () => {
+        document.querySelectorAll('.subnav-tab').forEach((x) => x.classList.remove('active'));
+        t.classList.add('active');
+      };
+    });
+    document.querySelectorAll('.map-chip').forEach((c) => {
+      c.onclick = () => {
+        document.querySelectorAll('.map-chip').forEach((x) => x.classList.remove('hot'));
+        c.classList.add('hot');
+      };
+    });
+  </script>
+</body>
+</html>

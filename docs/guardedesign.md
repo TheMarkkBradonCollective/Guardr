@@ -8,6 +8,8 @@ This document captures the *design philosophy* of a premium modular SaaS dashboa
 
 **External reference (design guidelines only):** [Uber Base design system](https://base.uber.com/) — patterns and principles summarized in Appendix A; not Uber branding.
 
+**Visual preview:** [`/design-preview.html`](/design-preview.html) — static mock with Light/Dark and desktop/tablet/mobile frames.
+
 ---
 
 ## 1. Design intent
