@@ -5,6 +5,7 @@ import { ParagraphMedium, LabelSmall, HeadingSmall } from 'baseui/typography';
 import { FormControl, Input, Notification, Textarea } from '../../baseui/baseuiShims';
 import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../baseui/dashboard';
 import { GuardrCard } from '../../baseui/GuardrCard';
+import { GuardrSegmented } from '../../baseui/GuardrSegmented';
 import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
 import { AppButton } from '../AppButton';
 
@@ -392,8 +393,6 @@ export function AppSegmentedControl<T extends string>({
   value: T;
   onChange: (id: T) => void;
 }) {
-  // Uses Base Web SegmentedControl via GuardrSegmented
-  const { GuardrSegmented } = require('../../baseui/GuardrSegmented');
   return (
     <GuardrSegmented
       options={options}
