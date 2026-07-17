@@ -4,6 +4,7 @@ import { Provider as StyletronProvider } from 'styletron-react';
 import { BaseProvider } from 'baseui';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { uberThemeForMode } from '../../theme/uberBaseTheme';
+import { UberThemeVars } from './dashboard/themeVars';
 import { withAppBreakpoints } from './layout/shellStyles';
 
 let clientEngine: Styletron | null = null;
@@ -25,7 +26,10 @@ export function BaseUIProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <StyletronProvider value={engine}>
-      <BaseProvider theme={theme}>{children}</BaseProvider>
+      <BaseProvider theme={theme}>
+        <UberThemeVars />
+        {children}
+      </BaseProvider>
     </StyletronProvider>
   );
 }

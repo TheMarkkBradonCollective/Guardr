@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } from 'lucide-react';
 import { FormControl, Input, Notification, Textarea } from '../../baseui/baseuiShims';
+import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../baseui/dashboard';
 import { GuardrCard } from '../../baseui/GuardrCard';
 import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
 import { AppButton } from '../AppButton';
@@ -300,84 +301,21 @@ export function AvatarPlaceholder({ name, size = 'md' }: { name: string; size?: 
 }
 
 /** Confident dashboard hero — greeting + optional status pill */
-export function AppDashboardHero({
-  kicker,
-  title,
-  status,
-}: {
-  kicker?: string;
-  title: string;
-  status?: React.ReactNode;
-}) {
-  return (
-    <header className="app-dashboard-hero">
-      <div className="min-w-0">
-        {kicker && <p className="app-page-lead-kicker">{kicker}</p>}
-        <h1 className="app-dashboard-hero-title">{title}</h1>
-      </div>
-      {status}
-    </header>
-  );
+export function AppDashboardHero(props: React.ComponentProps<typeof DashboardHero>) {
+  return <DashboardHero {...props} />;
 }
 
 /** Grouped overview zone with optional action link */
-export function AppDashboardZone({
-  title,
-  actionLabel,
-  onAction,
-  children,
-  className = '',
-}: {
-  title: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={`app-dashboard-zone ${className}`}>
-      <div className="app-dashboard-zone-head">
-        <h2 className="app-dashboard-zone-title">{title}</h2>
-        {actionLabel && onAction && (
-          <AppButton type="button" variant="ghost" size="inline" onClick={onAction} className="app-section-link">
-            {actionLabel}
-          </AppButton>
-        )}
-      </div>
-      <div className="app-dashboard-zone-body">{children}</div>
-    </section>
-  );
+export function AppDashboardZone(props: React.ComponentProps<typeof DashboardZone>) {
+  return <DashboardZone {...props} />;
 }
 
-export function AppMetricStrip({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`app-metric-strip ${className}`}>{children}</div>;
+export function AppMetricStrip(props: React.ComponentProps<typeof MetricStrip>) {
+  return <MetricStrip {...props} />;
 }
 
-export function AppMetricCell({
-  label,
-  value,
-  sub,
-  onClick,
-  accent = false,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub?: string;
-  onClick?: () => void;
-  accent?: boolean;
-}) {
-  const Tag = onClick ? 'button' : 'div';
-  return (
-    <Tag
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={`app-metric-cell ${accent ? 'app-metric-cell-accent' : ''} ${onClick ? 'app-metric-cell-clickable' : ''}`}
-    >
-      <p className="app-metric-cell-label">{label}</p>
-      <p className="app-metric-cell-value">{value}</p>
-      {sub && <p className="app-metric-cell-sub">{sub}</p>}
-    </Tag>
-  );
+export function AppMetricCell(props: React.ComponentProps<typeof MetricCell>) {
+  return <MetricCell {...props} />;
 }
 
 export function AppSegmentedControl<T extends string>({

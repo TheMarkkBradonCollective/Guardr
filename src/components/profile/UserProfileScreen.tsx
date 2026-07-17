@@ -10,6 +10,7 @@ import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
@@ -261,19 +262,19 @@ export function UserProfileScreen({
       }
       actions={
         <>
-          <button
+          <AppButton
             type="button"
+            variant="primary"
             onClick={() => (editing ? void handleSave() : setEditing(true))}
             disabled={saving}
-            className="app-button-primary disabled:opacity-50"
           >
             {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
             {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-          </button>
+          </AppButton>
           {editing && (
-            <button type="button" onClick={() => setEditing(false)} className="app-button-outline app-btn-md">
+            <AppButton type="button" variant="outline" onClick={() => setEditing(false)}>
               Cancel
-            </button>
+            </AppButton>
           )}
         </>
       }

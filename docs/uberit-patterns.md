@@ -90,7 +90,21 @@ Global overlays live in `src/components/baseui/overlays/`:
 - `PublicPageChrome`
 - `shellStyles.ts` — breakpoints + nav overrides
 
-## Field primitives
+## Dashboard building blocks (Phase 4)
+
+`src/components/baseui/dashboard/`:
+
+| Component | Use for |
+|-----------|---------|
+| `DashboardHero` | Role hub greeting + status pill |
+| `DashboardZone` | Section with title + action link |
+| `MetricCell` / `MetricStrip` | At-a-glance stats (GuardrCard) |
+| `QuickActionTile` | Client home quick-action grid |
+| `AccentIcon` / `MutedIcon` | Lucide icons using theme colors |
+| `UberThemeVars` | Syncs `--uber-accent` etc. to CSS (auto-mounted in BaseUIProvider) |
+
+Hybrid screens use `.uber-text-accent`, `.uber-text-muted` instead of `text-brand-*`.
+
 
 `src/components/baseui/primitives/fieldStyles.ts`:
 

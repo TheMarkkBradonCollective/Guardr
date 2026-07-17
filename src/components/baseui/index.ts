@@ -6,6 +6,7 @@ export { GuardrTag, type GuardrTagKind } from './GuardrTag';
 export { GuardrSkeleton } from './GuardrSkeleton';
 export { AppCarousel, type AppCarouselProps } from './AppCarousel';
 export { Tag } from './baseuiShims';
+export * from './dashboard';
 export * from './primitives';
 export * from './layout';
 export * from './overlays';

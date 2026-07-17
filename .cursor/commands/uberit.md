@@ -121,8 +121,11 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - `wireframe/*` → Base Web Card, Tag, Input
 - `AppButton` maps `.app-button-*` → `GuardrButton`
 
-### Phase 4 — Role dashboards
-- Client (16 views) → Guard (15 tabs, map last) → Staff (27 sections)
+### Phase 4 — Role dashboards (in progress)
+- **Foundation:** `baseui/dashboard/*` (DashboardHero, DashboardZone, MetricCell, QuickActionTile, UberThemeVars)
+- **CSS bridge:** `--uber-*` custom properties + `.uber-text-accent` utilities
+- **Hub screens migrated:** Client home, Staff overview, Guard earnings, User profile (shared)
+- **Remaining:** Client (15 views), Guard (14 tabs + map), Staff (26 sections), map views last
 
 ### Phase 5 — Feature overlays + CSS cleanup
 - Domain modals/sheets; retire redundant CSS and `--brand-*` bridge
