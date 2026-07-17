@@ -37,6 +37,7 @@ import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -482,13 +483,13 @@ export function DirectGuardRequestFlow({
       <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' adm-form-wizard-actions' : ''}`}>
         {formFactor === 'desktop' ? (
           step < 8 ? (
-            <button type="button" onClick={goNext} disabled={!canNext()} className="adm-btn adm-btn--sand gap-2 disabled:opacity-40">
+            <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()}>
               Continue <ArrowRight className="w-4 h-4" />
-            </button>
+            </GuardrButton>
           ) : (
-            <button type="button" onClick={handleSubmit} className="adm-btn adm-btn--sand gap-2">
+            <GuardrButton kind="primary" onClick={handleSubmit}>
               Send request to {guard.name.split(' ')[0]}
-            </button>
+            </GuardrButton>
           )
         ) : step < 8 ? (
           <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">

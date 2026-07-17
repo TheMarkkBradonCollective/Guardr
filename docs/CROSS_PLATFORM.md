@@ -119,6 +119,18 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | Staff analytics / SLA | `StaffAnalyticsPanel`, `StaffSlaDashboard` | Migrated — `WorkbenchGrid` + `GuardrCard` |
 | Platform guide / dev notes | `AppGuidePage`, `DevNotesPage` | Migrated — `WorkbenchSplit` |
 
+**Phase 4 dashboard kit** — `DashboardHero`, `MetricStrip`, `MetricCell`, `DashboardZone` on remaining hubs:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Staff payment summary | `StaffPaymentSummary` | Migrated — `MetricStrip` + `MetricCell` |
+| Staff SLA dashboard | `StaffSlaDashboard` | Migrated — `MetricCell` grid |
+| Staff analytics | `StaffAnalyticsPanel` | Migrated — `MetricCell` metrics |
+| Staff job approval | `StaffJobApprovalSettings` | Migrated — `GuardrCard` |
+| Staff company placard | `StaffCompanyPlacardPanel` | Migrated — `MetricStrip` + `GuardrButton` |
+| Client request wizards | `RequestSecurityFlow`, `DirectGuardRequestFlow` | Migrated — `GuardrButton` CTAs |
+| Client guard profile | `GuardProfileScreen` | Migrated — `DashboardHero` + `MetricStrip` (desktop) |
+
 **Phase 2 dashboard migration** — Base Web adapters replace legacy `adm-workbench` markup:
 
 | Screen | Component | Status |

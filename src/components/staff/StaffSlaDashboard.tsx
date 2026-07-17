@@ -3,6 +3,7 @@ import { Clock, Users, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-rea
 import { computeSlaMetrics, formatSlaHours } from '../../lib/slaMetrics';
 import type { SecurityRequest, SecurityGuard, Client, SupportTicket } from '../../types';
 import { useDevice } from '../../lib/platform';
+import { MetricCell } from '../baseui/dashboard';
 import {
   WorkbenchGrid,
   WorkbenchGridCell,
@@ -31,15 +32,15 @@ function MetricCard({
   tone?: 'default' | 'warning' | 'success';
 }) {
   const toneClass =
-    tone === 'warning' ? 'text-amber-500' : tone === 'success' ? 'text-emerald-500' : 'text-brand-primary';
+    tone === 'warning' ? 'text-amber-500' : tone === 'success' ? 'text-emerald-500' : 'uber-text-accent';
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface p-4">
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`w-4 h-4 ${toneClass}`} />
-        <span className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium uber-text-muted uppercase tracking-wide">{label}</span>
       </div>
       <p className="text-2xl font-bold text-brand-text">{value}</p>
-      {sub && <p className="text-xs text-brand-text-muted mt-1">{sub}</p>}
+      {sub && <p className="text-xs uber-text-muted mt-1">{sub}</p>}
     </div>
   );
 }
@@ -112,18 +113,12 @@ export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: S
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="adm-sla-dashboard">
+      <WorkbenchPage>
         <WorkbenchToolbar eyebrow="Operations" subtitle="SLA & operations" />
         <WorkbenchGrid>
           {metricItems.map((item) => (
             <WorkbenchGridCell key={item.key} span={3}>
-              <MetricCard
-                icon={item.icon}
-                label={item.label}
-                value={item.value}
-                sub={item.sub}
-                tone={item.tone}
-              />
+              <MetricCell label={item.label} value={item.value} sub={item.sub} accent={item.tone === 'warning'} />
             </WorkbenchGridCell>
           ))}
         </WorkbenchGrid>

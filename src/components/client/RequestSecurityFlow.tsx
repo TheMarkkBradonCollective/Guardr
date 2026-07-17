@@ -43,6 +43,7 @@ import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -839,24 +840,15 @@ export function RequestSecurityFlow({
         <div className="client-form-shell mx-auto">
           {formFactor === 'desktop' ? (
             step < 9 ? (
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!canNext()}
-                className="adm-btn adm-btn--sand gap-2 disabled:opacity-40"
-              >
+              <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()}>
                 Continue
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </GuardrButton>
             ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="adm-btn adm-btn--sand gap-2"
-              >
+              <GuardrButton kind="primary" onClick={handleSubmit}>
                 Post job offer
                 <Check className="w-4 h-4" />
-              </button>
+              </GuardrButton>
             )
           ) : step < 9 ? (
             <button

@@ -3,6 +3,7 @@ import { paymentPipelineSummary } from '../../lib/paymentPipeline';
 import { isPlatformFeeOnlyDeposit } from '../../lib/cashPayments';
 import type { OperationalFinancials } from '../../lib/operationalFinancials';
 import { formatOperationalMoney } from '../../lib/operationalFinancials';
+import { MetricCell, MetricStrip } from '../baseui/dashboard';
 import { StaffSummaryCell } from './StaffSummaryCell';
 
 interface StaffPaymentSummaryProps {
@@ -55,17 +56,11 @@ export function StaffPaymentSummary({ summary, financials, variant = 'default' }
     ];
 
     return (
-      <div className="adm-payment-stats-grid" aria-label="Payment pipeline summary">
+      <MetricStrip className="!px-0" aria-label="Payment pipeline summary">
         {chips.map((chip) => (
-          <article
-            key={chip.label}
-            className={`adm-card adm-payment-stat${chip.accent ? ' adm-payment-stat--accent' : ''}`}
-          >
-            <p className="adm-card-eyebrow">{chip.label}</p>
-            <p className="adm-stat-value adm-stat-value--sm">{chip.value}</p>
-          </article>
+          <MetricCell key={chip.label} label={chip.label} value={chip.value} accent={chip.accent} />
         ))}
-      </div>
+      </MetricStrip>
     );
   }
 

@@ -10,6 +10,7 @@ import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { GuardrCard } from '../baseui/GuardrCard';
+import { MetricCell } from '../baseui/dashboard';
 import {
   WorkbenchCardTitle,
   WorkbenchGrid,
@@ -58,17 +59,13 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="adm-analytics-dashboard">
+      <WorkbenchPage>
         <WorkbenchToolbar eyebrow="Insights" subtitle="Platform analytics" />
         {showFinancials && (
           <WorkbenchGrid>
             {buildDirectorFinancialCells(financials).map(({ label, value, sub }) => (
               <WorkbenchGridCell key={label} span={3}>
-                <GuardrCard>
-                  <p className="uber-workbench-eyebrow">{label}</p>
-                  <p className="text-xl font-bold tracking-tight">{value}</p>
-                  <p className="uber-workbench-subtitle mt-1">{sub}</p>
-                </GuardrCard>
+                <MetricCell label={label} value={value} sub={sub} accent={financials.grossIncome > 0 && label === 'Gross Income'} />
               </WorkbenchGridCell>
             ))}
           </WorkbenchGrid>
@@ -76,10 +73,7 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
         <WorkbenchGrid className="mt-4">
           {metrics.map(({ label, value }) => (
             <WorkbenchGridCell key={label} span={3}>
-              <GuardrCard>
-                <p className="uber-workbench-eyebrow">{label}</p>
-                <p className="text-xl font-bold tracking-tight">{value}</p>
-              </GuardrCard>
+              <MetricCell label={label} value={value} />
             </WorkbenchGridCell>
           ))}
         </WorkbenchGrid>
