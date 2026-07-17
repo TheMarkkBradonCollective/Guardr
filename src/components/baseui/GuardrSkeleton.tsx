@@ -1,58 +1,75 @@
-import React from 'react';
-import { Block } from 'baseui/block';
-import { useStyletron } from 'baseui';
-import { MOTION_DURATION, prefersReducedMotion } from '../../theme/motionTokens';
+/**
+ * GuardrSkeleton — Base Web Skeleton wrapper.
+ * https://baseweb.design/components/skeleton/
+ *
+ * Uber pattern: gray shimmer on #f6f6f6, no colored shimmer.
+ */
 
-export function GuardrSkeleton({
-  width = '100%',
-  height = '12px',
-  circle = false,
-  className,
-}: {
+import React from 'react';
+import { Skeleton } from './baseuiShims';
+import { useStyletron } from 'baseui';
+import { prefersReducedMotion } from '../../theme/motionTokens';
+
+interface GuardrSkeletonProps {
   width?: string;
   height?: string;
   circle?: boolean;
+  rows?: number;
+  animation?: boolean;
   className?: string;
-}) {
+}
+
+export function GuardrSkeleton({
+  width = '100%',
+  height = '14px',
+  circle = false,
+  rows = 1,
+  animation,
+  className,
+}: GuardrSkeletonProps) {
   const [, theme] = useStyletron();
-  const reduced = prefersReducedMotion();
-  const duration = reduced ? 0 : MOTION_DURATION.chart;
+  const animate = animation ?? !prefersReducedMotion();
+
+  if (rows > 1) {
+    return (
+      <Skeleton
+        rows={rows}
+        animation={animate}
+        overrides={{
+          Row: {
+            style: {
+              height,
+              borderRadius: '6px',
+              backgroundColor: theme.colors.backgroundSecondary,
+              marginBottom: theme.sizing.scale300,
+            },
+          },
+          Root: {
+            props: { className },
+            style: { width },
+          },
+        }}
+      />
+    );
+  }
 
   return (
-    <Block
-      className={className}
-      width={width}
-      height={height}
-      backgroundColor="backgroundSecondary"
+    <Skeleton
+      rows={1}
+      animation={animate}
       overrides={{
-        Block: {
+        Row: {
           style: {
+            width,
+            height,
             borderRadius: circle ? '50%' : '6px',
-            animation: duration > 0 ? `uber-shimmer ${duration}ms ease-in-out infinite` : undefined,
-            backgroundImage:
-              duration > 0
-                ? `linear-gradient(90deg, transparent 0%, ${theme.colors.accent50} 50%, transparent 100%)`
-                : undefined,
-            backgroundSize: '200% 100%',
+            backgroundColor: theme.colors.backgroundSecondary,
           },
+        },
+        Root: {
+          props: { className },
         },
       }}
     />
   );
-}
-
-/** Inject shimmer keyframes once */
-if (typeof document !== 'undefined' && !document.getElementById('uber-shimmer-style')) {
-  const style = document.createElement('style');
-  style.id = 'uber-shimmer-style';
-  style.textContent = `
-    @keyframes uber-shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      [class*="uber-shimmer"] { animation: none !important; }
-    }
-  `;
-  document.head.appendChild(style);
 }
