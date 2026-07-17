@@ -61,7 +61,7 @@ body.shell-pwa .tablet-admin-rail {
 
 body[data-shell="pwa"] .app-welcome-shell-badge--pwa,
 body.shell-pwa .app-welcome-shell-badge--pwa {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--uber-accent, #4A6B4E) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--uber-accent, #000000) 25%, transparent);
 }
 
 body[data-view-surface="pwa-mobile"] .auth-sheet--pwa-mobile .auth-sheet-scroll,

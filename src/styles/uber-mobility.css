@@ -18,8 +18,8 @@ body[data-view-surface] {
 html.theme-light,
 html.theme-dark,
 html.theme-grey {
-  --brand-primary: var(--uber-accent, #4A6B4E);
-  --brand-primary-hover: color-mix(in srgb, var(--uber-accent, #4A6B4E) 88%, #000);
+  --brand-primary: var(--uber-accent, #000000);
+  --brand-primary-hover: color-mix(in srgb, var(--uber-accent, #000000) 88%, #000);
   --brand-bg: var(--uber-bg, #ffffff);
   --brand-bg-sec: var(--uber-surface, #f6f6f6);
   --brand-surface: var(--uber-bg, #ffffff);
@@ -162,7 +162,7 @@ body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobili
 
 body[data-view-surface^="browser"] .text-brand-primary,
 body[data-view-surface^="browser"] .bg-brand-primary {
-  color: var(--uber-accent, #4A6B4E);
+  color: var(--uber-accent, #000000);
 }
 
 /* ─── Legacy platform CSS neutralization inside mobility shell ─────────── */
@@ -229,9 +229,9 @@ body[data-form-factor="tablet"] .tablet-admin-rail-label {
 /* ─── Desktop admin legacy remap ───────────────────────────────────────── */
 
 body[data-form-factor="desktop"] {
-  --adm-accent: var(--uber-accent, #4A6B4E);
-  --adm-sand: var(--uber-accent, #4A6B4E);
-  --adm-sand-dark: var(--uber-accent, #4A6B4E);
+  --adm-accent: var(--uber-accent, #000000);
+  --adm-sand: var(--uber-accent, #000000);
+  --adm-sand-dark: var(--uber-accent, #000000);
   --adm-sand-light: var(--uber-accent-50, #eff4fe);
   --adm-bg: var(--uber-surface, #f6f6f6);
   --adm-card: var(--uber-bg, #ffffff);

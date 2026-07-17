@@ -5,6 +5,7 @@ import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 
+/** Icon tinted with current theme accent (black in light, white in dark) */
 export function AccentIcon({
   icon: Icon,
   size = 16,
@@ -17,9 +18,10 @@ export function AccentIcon({
   className?: string;
 }) {
   const [, theme] = useStyletron();
-  return <Icon size={size} strokeWidth={strokeWidth} color={theme.colors.accent} className={className} />;
+  return <Icon size={size} strokeWidth={strokeWidth} color={theme.colors.contentPrimary} className={className} />;
 }
 
+/** Icon tinted with secondary/muted color */
 export function MutedIcon({
   icon: Icon,
   size = 16,
@@ -35,6 +37,7 @@ export function MutedIcon({
   return <Icon size={size} strokeWidth={strokeWidth} color={theme.colors.contentSecondary} className={className} />;
 }
 
+/** Dashboard screen header — real Uber style: large bold title + optional status pill */
 export function DashboardHero({
   kicker,
   title,
@@ -75,9 +78,9 @@ export function DashboardHero({
           </LabelSmall>
         ) : null}
         <motion.div
-          initial={prefersReduced ? false : { opacity: 0, y: 6 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
           <HeadingLarge marginTop={0} marginBottom={subtitle ? 'scale200' : 0} className="app-dashboard-hero-title">
             {title}

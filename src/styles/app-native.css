@@ -66,12 +66,12 @@ body.shell-native .tablet-admin-main {
 body[data-shell="native"] .tablet-admin-rail-item:active,
 body.shell-native .tablet-admin-rail-item:active {
   transform: scale(0.94);
-  background: color-mix(in srgb, var(--uber-accent, #4A6B4E) 22%, transparent);
+  background: color-mix(in srgb, var(--uber-accent, #000000) 22%, transparent);
 }
 
 body[data-shell="native"] .app-welcome-shell-badge--native,
 body.shell-native .app-welcome-shell-badge--native {
-  border-color: color-mix(in srgb, var(--uber-accent, #4A6B4E) 45%, var(--uber-border, var(--brand-border)));
+  border-color: color-mix(in srgb, var(--uber-accent, #000000) 45%, var(--uber-border, var(--brand-border)));
 }
 
 body[data-view-surface="native-mobile"] .auth-sheet--native-mobile .auth-sheet-scroll,

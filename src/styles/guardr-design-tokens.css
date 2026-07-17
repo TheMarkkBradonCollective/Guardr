@@ -149,8 +149,12 @@
   ────────────────────────────────────────────────────────────────────────── */
   --focus-ring-width:  3px;
   --focus-ring-offset: 1px;
-  /* Color set per theme via --uber-accent */
-  --focus-ring: 0 0 0 var(--focus-ring-width) color-mix(in srgb, var(--uber-accent, #4A6B4E) 28%, transparent);
+  /* Uber-style: subtle black outline */
+  --focus-ring: 0 0 0 var(--focus-ring-width) rgba(0, 0, 0, 0.20);
+}
+
+html.theme-dark {
+  --focus-ring: 0 0 0 var(--focus-ring-width) rgba(255, 255, 255, 0.20);
 }
 
 /* ─── Reduced-motion: disable all transitions ─────────────────────────────── */

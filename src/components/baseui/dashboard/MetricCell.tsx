@@ -28,36 +28,34 @@ export function MetricCell({
   sub,
   trend,
   onClick,
-  accent = false,
+  highlight = false,
 }: {
   label: string;
   value: React.ReactNode;
   sub?: string;
   trend?: MetricTrend;
   onClick?: () => void;
+  highlight?: boolean;
+  /** @deprecated use highlight */
   accent?: boolean;
 }) {
   const [, theme] = useStyletron();
   const interactive = typeof onClick === 'function';
 
   const trendIcon =
-    trend === 'up' ? (
-      <TrendingUp size={13} color={theme.colors.positive} />
-    ) : trend === 'down' ? (
-      <TrendingDown size={13} color={theme.colors.negative} />
-    ) : trend === 'neutral' ? (
-      <Minus size={13} color={theme.colors.contentSecondary} />
-    ) : null;
+    trend === 'up'      ? <TrendingUp  size={13} color={theme.colors.positive} /> :
+    trend === 'down'    ? <TrendingDown size={13} color={theme.colors.negative} /> :
+    trend === 'neutral' ? <Minus size={13} color={theme.colors.contentSecondary} /> :
+    null;
 
   const body = (
     <GuardrCard
       interactive={interactive}
       noBorder={false}
+      variant={highlight ? 'service' : 'default'}
       overrides={{
         Root: {
           style: {
-            backgroundColor: accent ? theme.colors.accent50 : theme.colors.backgroundPrimary,
-            borderColor: accent ? theme.colors.accent200 ?? theme.colors.accent : theme.colors.borderOpaque,
             width: '100%',
             textAlign: 'left',
             minHeight: '90px',
@@ -68,17 +66,12 @@ export function MetricCell({
       <LabelSmall
         marginTop={0}
         marginBottom="scale200"
-        color={accent ? 'accent' : 'contentSecondary'}
-        $style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          fontWeight: 700,
-          fontSize: '11px',
-        }}
+        color="contentSecondary"
+        $style={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, fontSize: '11px' }}
       >
         {label}
       </LabelSmall>
-      <HeadingMedium marginTop={0} marginBottom={sub || trendIcon ? 'scale100' : 0} color={accent ? 'accent' : 'contentPrimary'}>
+      <HeadingMedium marginTop={0} marginBottom={sub || trendIcon ? 'scale100' : 0}>
         {value}
       </HeadingMedium>
       {sub || trendIcon ? (
@@ -96,7 +89,12 @@ export function MetricCell({
 
   if (interactive) {
     return (
-      <button type="button" onClick={onClick} className="app-metric-cell app-metric-cell-clickable w-full text-left" aria-label={`${label}: ${value}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className="app-metric-cell app-metric-cell-clickable w-full text-left"
+        aria-label={`${label}: ${String(value)}`}
+      >
         {body}
       </button>
     );

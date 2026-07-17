@@ -1,42 +1,56 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Guardr × Uber Base Web design tokens
-   Canonical source for all surfaces.
-   Sage-green accent on stock Uber LightTheme / DarkTheme infrastructure.
-   See: https://github.com/uber/baseweb · https://github.com/uber/base-design-docs
+   GUARDR × UBER DESIGN TOKENS — real Uber app visual language
+   Black primary · white surfaces · gray inputs · no colored accent
+   Matches the actual Uber mobile UI kit (screenshots reference)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root,
 html.theme-light {
-  /* ─── Typography (Uber Move — Base design system) ─── */
+  /* ─── Typography ─── */
   --uber-font-display: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --uber-font-text:    "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --uber-font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
-  /* ─── Guardr sage-green accent ─── */
-  --uber-accent:        #4A6B4E;
-  --uber-accent-hover:  #3A5540;
-  --uber-accent-50:     #F2F5F2;
-  --uber-accent-100:    #E2E8E2;
-  --uber-accent-200:    #C5D4C6;
+  /* ─── Color system — Uber black/white/gray ─── */
+  --uber-accent:       #000000;   /* primary CTAs, active nav, links */
+  --uber-accent-hover: #333333;
+  --uber-accent-50:    #F6F6F6;   /* chip/tab tint */
+  --uber-accent-100:   #EEEEEE;
+  --uber-accent-200:   #CCCCCC;
 
-  /* ─── Neutrals (Uber Base LightTheme) ─── */
-  --uber-bg:            #ffffff;
-  --uber-surface:       #f6f6f6;
-  --uber-elevated:      #f6f6f6;
-  --uber-text:          #000000;
-  --uber-text-muted:    #545454;
-  --uber-border:        #e2e2e2;
+  /* ─── Surfaces ─── */
+  --uber-bg:           #FFFFFF;
+  --uber-surface:      #F6F6F6;
+  --uber-elevated:     #F6F6F6;
+  --uber-map-overlay:  #FFFFFF;  /* white panel over map */
+
+  /* ─── Text ─── */
+  --uber-text:         #000000;
+  --uber-text-muted:   #767676;  /* Uber uses #767676 for secondary text */
+  --uber-text-placeholder: #AAAAAA;
+
+  /* ─── Borders ─── */
+  --uber-border:       #EEEEEE;
+  --uber-border-dark:  #C4C4C4;
 
   /* ─── Status ─── */
-  --uber-positive:      #048848;
-  --uber-negative:      #e11900;
-  --uber-warning:       #ffc043;
+  --uber-positive:     #048848;
+  --uber-negative:     #E11900;
+  --uber-warning:      #FFC043;
+  --uber-info:         #276EF1;  /* kept for info badges only */
 
-  /* ─── Primary CTA: Uber black ─── */
-  --uber-black:         #000000;
-  --uber-black-hover:   #333333;
+  /* ─── CTA / Uber black ─── */
+  --uber-black:        #000000;
+  --uber-black-hover:  #333333;
 
-  /* ─── Brand bridge (legacy --brand-* aliases) ─── */
+  /* ─── Shadows ─── */
+  --shadow-sm:     0 1px 4px rgba(0,0,0,0.06);
+  --shadow-card:   0 2px 12px rgba(0,0,0,0.08);
+  --shadow-float:  0 8px 32px rgba(0,0,0,0.12);
+  --shadow-panel:  0 -4px 20px rgba(0,0,0,0.10);  /* bottom-sheet lift */
+  --shadow-nav:    0 -1px 0 rgba(0,0,0,0.06);
+
+  /* ─── Legacy --brand-* bridge ─── */
   --brand-primary:        var(--uber-accent);
   --brand-primary-hover:  var(--uber-accent-hover);
   --brand-bg:             var(--uber-bg);
@@ -47,100 +61,97 @@ html.theme-light {
   --brand-text:           var(--uber-text);
   --brand-text-muted:     var(--uber-text-muted);
   --brand-accent:         var(--uber-accent);
-  --brand-accent-text:    #ffffff;
-  --brand-overlay:        rgba(255, 255, 255, 0.92);
+  --brand-accent-text:    #FFFFFF;
+  --brand-overlay:        rgba(255,255,255,0.96);
   --brand-chrome:         var(--uber-bg);
   --brand-chrome-deep:    var(--uber-surface);
   --brand-chrome-text:    var(--uber-text);
   --brand-chrome-muted:   var(--uber-text-muted);
   --brand-chrome-border:  var(--uber-border);
+  --status-success:       var(--uber-positive);
+  --status-warning:       var(--uber-warning);
+  --status-danger:        var(--uber-negative);
+  --status-info:          var(--uber-info);
 
-  /* ─── Focus ring (sage-tinted) ─── */
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--uber-accent) 28%, transparent);
+  /* ─── Focus ring ─── */
+  --focus-ring: 0 0 0 3px rgba(0,0,0,0.20);
 }
 
 html.theme-dark {
-  /* ─── Guardr sage-green accent — brightened for dark backgrounds ─── */
-  --uber-accent:        #7AAE7F;
-  --uber-accent-hover:  #5E7B61;
-  --uber-accent-50:     #1A241B;
-  --uber-accent-100:    #243328;
-  --uber-accent-200:    #354D38;
+  --uber-accent:       #FFFFFF;
+  --uber-accent-hover: #E2E2E2;
+  --uber-accent-50:    #1A1A1A;
+  --uber-accent-100:   #2B2B2B;
+  --uber-accent-200:   #3D3D3D;
 
-  /* ─── Neutrals (Uber Base DarkTheme) ─── */
-  --uber-bg:            #141414;
-  --uber-surface:       #1f1f1f;
-  --uber-elevated:      #2b2b2b;
-  --uber-text:          #ffffff;
-  --uber-text-muted:    #a6a6a6;
-  --uber-border:        #333333;
+  --uber-bg:           #000000;
+  --uber-surface:      #1A1A1A;
+  --uber-elevated:     #2B2B2B;
+  --uber-map-overlay:  #000000;
 
-  /* ─── Status (dark mode variants) ─── */
-  --uber-positive:      #66d19e;
-  --uber-negative:      #f1998e;
-  --uber-warning:       #ffc043;
+  --uber-text:         #FFFFFF;
+  --uber-text-muted:   #9E9E9E;
+  --uber-text-placeholder: #6B6B6B;
 
-  /* ─── Primary CTA: Uber white in dark ─── */
-  --uber-black:         #ffffff;
-  --uber-black-hover:   #e2e2e2;
+  --uber-border:       #2B2B2B;
+  --uber-border-dark:  #3D3D3D;
 
-  /* ─── Brand bridge ─── */
+  --uber-positive:     #66D19E;
+  --uber-negative:     #F1998E;
+  --uber-warning:      #FFC043;
+  --uber-info:         #82AAFF;
+
+  --uber-black:        #FFFFFF;
+  --uber-black-hover:  #E2E2E2;
+
+  --shadow-sm:     0 1px 4px rgba(255,255,255,0.04);
+  --shadow-card:   0 2px 12px rgba(255,255,255,0.06);
+  --shadow-float:  0 8px 32px rgba(0,0,0,0.60);
+  --shadow-panel:  0 -4px 20px rgba(0,0,0,0.50);
+  --shadow-nav:    0 -1px 0 rgba(255,255,255,0.08);
+
   --brand-primary:        var(--uber-accent);
   --brand-primary-hover:  var(--uber-accent-hover);
   --brand-bg:             var(--uber-bg);
-  --brand-bg-sec:         #0a0a0a;
+  --brand-bg-sec:         var(--uber-surface);
   --brand-surface:        var(--uber-surface);
   --brand-elevated:       var(--uber-elevated);
   --brand-border:         var(--uber-border);
   --brand-text:           var(--uber-text);
   --brand-text-muted:     var(--uber-text-muted);
   --brand-accent:         var(--uber-accent);
-  --brand-accent-text:    #ffffff;
-  --brand-overlay:        rgba(0, 0, 0, 0.94);
-  --brand-chrome:         #000000;
-  --brand-chrome-deep:    #000000;
+  --brand-accent-text:    #000000;
+  --brand-overlay:        rgba(0,0,0,0.96);
+  --brand-chrome:         var(--uber-bg);
+  --brand-chrome-deep:    var(--uber-surface);
   --brand-chrome-text:    var(--uber-text);
   --brand-chrome-muted:   var(--uber-text-muted);
-  --brand-chrome-border:  color-mix(in srgb, var(--uber-accent) 28%, var(--uber-border));
+  --brand-chrome-border:  var(--uber-border);
+  --status-success:       var(--uber-positive);
+  --status-warning:       var(--uber-warning);
+  --status-danger:        var(--uber-negative);
+  --status-info:          var(--uber-info);
 
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--uber-accent) 32%, transparent);
+  --focus-ring: 0 0 0 3px rgba(255,255,255,0.18);
 }
 
-/* ─── Typography — Uber Move stack on all surfaces ─── */
+/* ─── Typography ─── */
 html, body,
 .uber-app-shell,
 .landing-page,
 .app-welcome,
 .mobility-platform {
   font-family: var(--uber-font-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6,
 .uber-display,
 .landing-hero-title,
 .landing-section-title,
-.landing-final-title,
 .adm-card-title,
 .adm-card-heading {
   font-family: var(--uber-font-display);
-  letter-spacing: -0.02em;
-}
-
-/* ─── Landing responsive patterns ─── */
-
-.landing-explore-section .landing-container { max-width: 80rem; }
-
-body[data-form-factor="mobile"] .landing-explore-section { padding-block: 3rem; }
-
-body[data-form-factor="tablet"] .landing-hero-inner {
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  padding-block: 3rem 4rem;
-}
-body[data-form-factor="tablet"] .landing-hero-title { font-size: clamp(2.25rem, 5vw, 3rem); }
-body[data-form-factor="tablet"] .landing-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-body[data-form-factor="desktop"] .landing-hero-inner {
-  grid-template-columns: 1fr 1fr;
-  padding-block: 5rem 6rem;
+  letter-spacing: -0.025em;
 }

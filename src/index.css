@@ -71,10 +71,10 @@
 :root,
 html.theme-light {
   /* Uber Base Web LightTheme — canonical tokens (no legacy sage) */
-  --uber-accent: #4A6B4E;
-  --uber-accent-hover: #3A5540;
-  --uber-accent-50: #F2F5F2;
-  --uber-accent-100: #E2E8E2;
+  --uber-accent: #000000;
+  --uber-accent-hover: #333333;
+  --uber-accent-50: #F6F6F6;
+  --uber-accent-100: #EEEEEE;
   --uber-bg: #ffffff;
   --uber-surface: #f6f6f6;
   --uber-elevated: #f6f6f6;
@@ -116,10 +116,10 @@ html.theme-light {
 }
 
 html.theme-dark {
-  --uber-accent: #7AAE7F;
-  --uber-accent-hover: #5E7B61;
-  --uber-accent-50: #1A241B;
-  --uber-accent-100: #243328;
+  --uber-accent: #FFFFFF;
+  --uber-accent-hover: #E2E2E2;
+  --uber-accent-50: #1A1A1A;
+  --uber-accent-100: #2B2B2B;
   --uber-bg: #141414;
   --uber-surface: #1f1f1f;
   --uber-elevated: #2b2b2b;
