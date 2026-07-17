@@ -2,19 +2,14 @@ import React, { useState } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingSmall, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { Briefcase, Map, MessageSquare, Plus } from 'lucide-react';
-import {
-  GuardrButton,
-  GuardrCard,
-  GuardrInput,
-  GuardrSkeleton,
-  GuardrTag,
-  AppCarousel,
-  GuardrModal,
-  DashboardZone,
-  MetricCell,
-  MetricStrip,
-  QuickActionTile,
-} from '..';
+import { GuardrButton } from '../GuardrButton';
+import { GuardrCard } from '../GuardrCard';
+import { GuardrInput } from '../GuardrInput';
+import { GuardrSkeleton } from '../GuardrSkeleton';
+import { GuardrTag } from '../GuardrTag';
+import { AppCarousel } from '../AppCarousel';
+import { GuardrModal } from '../overlays/GuardrModal';
+import { DashboardZone, MetricCell, MetricStrip, QuickActionTile } from '../dashboard';
 import { showAppToast } from '../../ui/AppToast';
 
 function ShowcaseSection({ title, children }: { title: string; children: React.ReactNode }) {
