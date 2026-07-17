@@ -430,11 +430,13 @@ Use **one consistent component family** across surfaces. Prefer existing primiti
 - Service worker caches shell; feature data stays network-first with offline queue for guard field flows
 - Install prompt via `InstallPrompt` — non-blocking
 
-**Lite-specific:**
+**Lite-specific (implemented via `experienceTier.ts` + `platform-optimizations.css`):**
 
-- Skip glow and counter animations
+- Skip glow and counter animations (`shouldReduceDecorativeMotion`)
 - Prefer static chart snapshots until user interacts
 - Smaller map default zoom footprint on cellular (`navigator.connection` when available)
+- No glass blur chrome; solid surfaces for lower paint cost
+- Auto-detect: `saveData`, 2G/`slow-2g`, `deviceMemory ≤ 2`; override with `?pwa=lite` or `VITE_PWA_EXPERIENCE`
 
 ---
 
@@ -454,12 +456,13 @@ Use **one consistent component family** across surfaces. Prefer existing primiti
 - Safe areas: `app-native.css` overrides
 - Status bar / navigation bar sync via `nativeThemeChrome.ts`
 
-**Premium-specific:**
+**Premium-specific (implemented via `experienceTier.ts` + `nativeHaptics.ts`):**
 
 - Shared element transitions on tab change (where Capacitor supports)
-- Pull-to-refresh on list screens
-- Haptic feedback on clock-in / clock-out confirmations
-- Optional biometric re-auth for Pay tab
+- Pull-to-refresh on list screens (`overscroll-behavior-y: contain`)
+- Haptic feedback on slide-to-confirm (clock-in / clock-out / acknowledgements)
+- Optional biometric re-auth for Pay tab (future)
+- Default on native tablet; phones default to Full — override with `?apk=premium` or `VITE_APK_EXPERIENCE`
 
 ---
 

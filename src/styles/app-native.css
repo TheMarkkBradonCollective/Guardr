@@ -93,3 +93,17 @@ body[data-shell="native"] .auth-sheet-panel,
 body.shell-native .auth-sheet-panel {
   padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
+
+/* APK Premium — richer sheet + rail */
+body[data-apk-mode="premium"] .app-welcome-dock,
+body[data-experience-tier="apk-premium"] .app-welcome-dock {
+  border-radius: 1.25rem 1.25rem 0 0;
+  box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0, 0, 0, 0.10));
+}
+
+body[data-apk-mode="premium"] .mobility-icon-btn,
+body[data-experience-tier="apk-premium"] .mobility-icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 14px;
+}

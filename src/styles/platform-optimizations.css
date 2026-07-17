@@ -2,6 +2,14 @@
    GUARDR PLATFORM OPTIMIZATIONS
    Purpose-built experiences for each platform — not stretched desktop.
    Targets: Website (mobile/tablet/desktop) · PWA (Full/Lite) · Android APK (Full/Premium)
+
+   Body attributes (set by DeviceProvider):
+     data-view-surface   browser-mobile | browser-tablet | browser-desktop |
+                         pwa-mobile | pwa-tablet | pwa-desktop |
+                         native-mobile | native-tablet | native-desktop
+     data-experience-tier  website | pwa-full | pwa-lite | apk-full | apk-premium
+     data-pwa-mode         full | lite   (PWA only)
+     data-apk-mode         full | premium (APK only)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── Global platform baseline ─────────────────────────────────────────── */
@@ -27,10 +35,26 @@ body[data-view-surface="browser-desktop"] {
   .uber-workbench-table th { padding: 14px 16px; }
 
   /* Hover states visible on mouse */
-  .app-metric-cell-clickable:hover .guardr-card-root { border-color: var(--uber-accent, #4A6B4E); }
+  .app-metric-cell-clickable:hover .guardr-card-root {
+    border-color: var(--uber-accent, #000000);
+  }
 
   /* Desktop nav persistent sidebar */
   .uber-app-shell .mobility-header { border-bottom-width: 1px; }
+
+  /* Dense multi-column workbench */
+  .uber-workbench-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* Ultra-wide desktop — prevent stretched emptiness */
+@media (min-width: 1600px) {
+  body[data-view-surface="browser-desktop"] .mobility-content-inner {
+    max-width: 1600px;
+    margin-inline: auto;
+  }
 }
 
 /* ─── WEBSITE — TABLET (browser-tablet) ────────────────────────────────── */
@@ -45,6 +69,10 @@ body[data-view-surface="browser-tablet"] {
 
   /* Sidebar rail — not full desktop nav */
   .uber-app-shell aside { width: var(--sidebar-width-tablet, 220px); }
+
+  /* Touch-friendly row height */
+  .uber-workbench-table td,
+  .uber-workbench-table th { padding: 12px 14px; }
 }
 
 /* ─── WEBSITE — MOBILE (browser-mobile) ────────────────────────────────── */
@@ -59,35 +87,46 @@ body[data-view-surface="browser-mobile"] {
 
   /* Bottom nav visible, sidebar hidden */
   .mobility-icon-btn { min-width: 44px; min-height: 44px; }
+
+  /* Thumb-zone primary CTAs */
+  .app-page-actions,
+  .uber-overlay-actions {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
 }
 
-/* ─── PWA — FULL (pwa-mobile / pwa-tablet) ─────────────────────────────── */
+/* ─── PWA — FULL (pwa-* + data-pwa-mode=full) ──────────────────────────── */
 
 body[data-view-surface^="pwa-"] {
-
-  /* Glass chrome on PWA */
-  .mobility-header {
-    background: color-mix(in srgb, var(--uber-bg, #fff) 88%, transparent) !important;
-    backdrop-filter: saturate(180%) blur(20px);
-  }
 
   /* Safe area insets */
   .uber-app-shell { padding-top: env(safe-area-inset-top, 0px); }
   .mobility-content-inner { padding-bottom: max(0px, env(safe-area-inset-bottom, 0px)); }
 }
 
+body[data-shell="pwa"][data-pwa-mode="full"],
+body[data-experience-tier="pwa-full"] {
+
+  /* Glass chrome on PWA Full */
+  .mobility-header {
+    background: color-mix(in srgb, var(--uber-bg, #fff) 88%, transparent) !important;
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .bottom-nav-bar {
+    background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
 /* PWA mobile — thumb-first interactions */
 body[data-view-surface="pwa-mobile"] {
 
-  /* Larger tap targets on PWA mobile */
   .mobility-icon-btn { min-width: 48px; min-height: 48px; }
   .app-metric-cell-clickable { min-height: 80px; }
   button, [role="button"] { min-height: 44px; }
 
-  /* Bottom nav with blur */
   .bottom-nav-bar {
-    background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
-    backdrop-filter: saturate(180%) blur(20px);
     padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
   }
 }
@@ -97,29 +136,65 @@ body[data-view-surface="pwa-tablet"] {
 
   .uber-app-shell aside { width: var(--sidebar-width-tablet, 220px); }
 
-  /* Tablet rail in PWA gets glass effect */
   .tablet-admin-rail {
     backdrop-filter: blur(12px) saturate(150%);
     background: color-mix(in srgb, var(--uber-bg, #fff) 90%, transparent);
   }
 }
 
-/* ─── PWA LITE — compact, offline-ready ────────────────────────────────── */
+/* ─── PWA LITE — compact, offline-ready, low paint budget ──────────────── */
 
-body[data-pwa-mode="lite"] {
+body[data-pwa-mode="lite"],
+body[data-experience-tier="pwa-lite"],
+body.experience-lite {
 
   /* Reduce paint budget for lower-end devices */
   .app-metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .uber-landing-hero-art { display: none; }
-  .uber-landing-login-art { display: none; }
+  .uber-landing-hero-art,
+  .uber-landing-login-art,
+  .app-welcome-backdrop-art { display: none !important; }
 
-  /* Crisp images (no blur filters on lite) */
-  .mobility-header { backdrop-filter: none; }
+  /* Crisp chrome — no blur filters on lite */
+  .mobility-header,
+  .bottom-nav-bar,
+  .tablet-admin-rail,
+  .app-welcome-dock {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--uber-bg, #fff) !important;
+  }
+
+  /* Skip decorative motion / glow */
+  .uber-shimmer,
+  .app-metric-glow,
+  .guard-tier-hero-glow { animation: none !important; box-shadow: none !important; }
+
+  /* Faster perceived transitions */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Allow essential sheet/drawer motion only */
+    .uber-sheet-panel,
+    .uber-drawer-panel,
+    .mobility-sidebar-panel {
+      transition-duration: 180ms !important;
+      animation-duration: 180ms !important;
+    }
+  }
+
+  /* Smaller map footprint hint for cellular */
+  .leaflet-container { will-change: auto; }
 }
 
-/* ─── ANDROID APK — FULL (native-mobile) ───────────────────────────────── */
+/* ─── ANDROID APK — FULL (field-ready) ─────────────────────────────────── */
 
-body[data-view-surface="native-mobile"] {
+body[data-view-surface="native-mobile"],
+body[data-apk-mode="full"][data-view-surface^="native-"] {
 
   /* No overscroll bounce */
   overscroll-behavior: none;
@@ -145,24 +220,57 @@ body[data-view-surface="native-mobile"] {
 
   /* Native tap feedback — scale-down */
   .app-welcome-role-btn:active,
-  .app-welcome-signin-btn:active { transform: scale(0.97); }
+  .app-welcome-signin-btn:active,
+  .mobility-icon-btn:active { transform: scale(0.97); }
 }
 
-/* ─── ANDROID APK — PREMIUM (native-tablet) ────────────────────────────── */
+/* ─── ANDROID APK — PREMIUM (richest native polish) ─────────────────────── */
 
-body[data-view-surface="native-tablet"] {
+body[data-apk-mode="premium"],
+body[data-experience-tier="apk-premium"],
+body.experience-premium {
 
   /* Premium: wider sidebar, richer cards */
   .uber-app-shell aside { width: 260px; }
 
   /* Premium horizontal padding */
   --space-gutter: 1.5rem;
+  --space-card: 1.25rem;
 
-  /* Native safe area for tablets with corners */
+  /* Native safe area for tablets / notched phones */
   .uber-app-shell {
     padding-left: max(0px, env(safe-area-inset-left, 0px));
     padding-right: max(0px, env(safe-area-inset-right, 0px));
   }
+
+  /* Richer card elevation */
+  .guardr-card-root,
+  .app-metric-cell .guardr-card-root {
+    box-shadow: var(--shadow-card, 0 2px 12px rgba(0, 0, 0, 0.08));
+  }
+
+  /* Premium sheet radius */
+  .uber-sheet-panel,
+  .auth-sheet-panel {
+    border-radius: 24px 24px 0 0 !important;
+  }
+
+  /* Shared-element-like tab transitions */
+  .app-page-transition {
+    transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Pull-to-refresh affordance spacing on list screens */
+  .uber-workbench-list,
+  .app-list-scroll {
+    overscroll-behavior-y: contain;
+  }
+}
+
+body[data-view-surface="native-tablet"][data-apk-mode="premium"] {
+  .uber-app-shell aside { width: 260px; }
+  --space-gutter: 1.5rem;
 }
 
 /* ─── High-contrast / forced-colors accessibility ──────────────────────── */

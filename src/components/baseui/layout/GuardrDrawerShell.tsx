@@ -52,8 +52,11 @@ export function GuardrDrawerShell({
   showTitleBand = false,
 }: GuardrDrawerShellProps) {
   const [, theme] = useStyletron();
-  const { viewSurface } = useDevice();
-  const chrome = useMemo(() => resolveMobilityChrome(viewSurface), [viewSurface]);
+  const { viewSurface, experienceTier } = useDevice();
+  const chrome = useMemo(
+    () => resolveMobilityChrome(viewSurface, experienceTier),
+    [viewSurface, experienceTier],
+  );
   const isMobile = chrome.layout === 'mobile';
   const isFlowSidebar = !isMobile;
   const isMapMode = variant === 'dark';
@@ -86,14 +89,14 @@ export function GuardrDrawerShell({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [sidebarOpen, isMobile, closeSidebar]);
 
-  const iconSize = chrome.nativeChrome ? 48 : 40;
+  const iconSize = chrome.touchTargetPx;
 
   const iconBtnStyle = {
     width: `${iconSize}px`,
     height: `${iconSize}px`,
     minWidth: `${iconSize}px`,
     minHeight: `${iconSize}px`,
-    borderRadius: chrome.nativeChrome ? '12px' : '10px',
+    borderRadius: chrome.nativeChrome || chrome.premiumChrome ? '12px' : '10px',
     border: `1px solid ${theme.colors.borderOpaque}`,
     backgroundColor: theme.colors.backgroundPrimary,
     color: theme.colors.contentPrimary,

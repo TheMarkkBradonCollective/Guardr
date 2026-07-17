@@ -1,14 +1,13 @@
 import React from 'react';
 import { Block } from 'baseui/block';
-import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
+import { HeadingLarge, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import { Building2, Shield, ArrowRight, MapPin, Radio } from 'lucide-react';
 import type { ViewSurface } from '../../lib/platform/viewSurface';
 import type { ShellKind } from '../../lib/platform/shellKind';
+import type { ExperienceTier } from '../../lib/platform/experienceTier';
 import { AppButton } from '../ui/AppButton';
-import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrTag } from '../baseui/GuardrTag';
-import { AccentIcon } from '../baseui/dashboard';
 import { LandingBadge } from '../landing/LandingUberPrimitives';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -92,14 +91,55 @@ const HERO_COPY: Record<ShellKind, { eyebrow: string; headline: string; accent: 
   },
 };
 
+const TIER_HERO_COPY: Partial<Record<string, { eyebrow: string; headline: string; accent: string; sub: string }>> = {
+  'pwa-lite': {
+    eyebrow: 'Guardr · Lite',
+    headline: 'Fast. Focused. Ready offline.',
+    accent: 'Lightweight installed app.',
+    sub: 'Same features, lower data and battery use — ideal on cellular or low-power devices.',
+  },
+  'pwa-full': {
+    eyebrow: 'Guardr · Installed',
+    headline: 'Your security workspace, anywhere.',
+    accent: 'Full installed experience.',
+    sub: 'Post coverage, pick up shifts, and manage live operations with glass chrome and offline support.',
+  },
+  'apk-full': {
+    eyebrow: 'Guardr for Android',
+    headline: 'Field-ready security operations.',
+    accent: 'Built for mobile crews.',
+    sub: 'GPS, camera, push alerts, and shift tools — optimized for phones in the field.',
+  },
+  'apk-premium': {
+    eyebrow: 'Guardr Premium',
+    headline: 'Native security operations.',
+    accent: 'Polished for Android.',
+    sub: 'Richer motion, haptic feedback, and premium chrome — map-first jobs with native polish.',
+  },
+};
+
+function resolveWelcomeCopy(shellKind: ShellKind, experienceTier?: ExperienceTier) {
+  if (experienceTier?.shell === 'pwa') {
+    return TIER_HERO_COPY[`pwa-${experienceTier.mode}`] ?? HERO_COPY.pwa;
+  }
+  if (experienceTier?.shell === 'native') {
+    return TIER_HERO_COPY[`apk-${experienceTier.mode}`] ?? HERO_COPY.native;
+  }
+  return HERO_COPY[shellKind];
+}
+
 export function AppWelcomeHero({
   shellKind,
   isTablet,
+  experienceTier,
 }: {
   shellKind: ShellKind;
   isTablet: boolean;
+  experienceTier?: ExperienceTier;
 }) {
-  const copy = HERO_COPY[shellKind];
+  const copy = resolveWelcomeCopy(shellKind, experienceTier);
+  const isLite = experienceTier?.shell === 'pwa' && experienceTier.mode === 'lite';
+  const isPremium = experienceTier?.shell === 'native' && experienceTier.mode === 'premium';
 
   return (
     <Block className={isTablet ? 'app-welcome-hero app-welcome-hero--tablet' : 'app-welcome-hero pt-2 sm:pt-6'}>
@@ -127,13 +167,15 @@ export function AppWelcomeHero({
         {copy.sub}
       </ParagraphMedium>
       {shellKind === 'pwa' ? (
-        <Block marginTop="scale500">
-          <GuardrTag kind="accent">Offline-ready shell</GuardrTag>
+        <Block marginTop="scale500" display="flex" gridGap="scale300" flexWrap>
+          <GuardrTag kind="accent">{isLite ? 'Lite · low data' : 'Offline-ready shell'}</GuardrTag>
+          {isLite ? <GuardrTag kind="neutral">Reduced motion</GuardrTag> : null}
         </Block>
       ) : null}
       {shellKind === 'native' ? (
-        <Block marginTop="scale500">
-          <GuardrTag kind="neutral">Push · GPS · Camera</GuardrTag>
+        <Block marginTop="scale500" display="flex" gridGap="scale300" flexWrap>
+          <GuardrTag kind="neutral">{isPremium ? 'Premium · haptics' : 'Push · GPS · Camera'}</GuardrTag>
+          {isPremium ? <GuardrTag kind="accent">Native polish</GuardrTag> : null}
         </Block>
       ) : null}
     </Block>
@@ -212,18 +254,26 @@ export function AppWelcomeSignInDock({
   );
 }
 
-export function AppWelcomeShellBadge({ shellKind }: { shellKind: ShellKind }) {
+export function AppWelcomeShellBadge({
+  shellKind,
+  experienceTier,
+}: {
+  shellKind: ShellKind;
+  experienceTier?: ExperienceTier;
+}) {
   if (shellKind === 'native') {
+    const premium = experienceTier?.shell === 'native' && experienceTier.mode === 'premium';
     return (
       <GuardrTag kind="accent" closeable={false} overrides={{ Root: { props: { className: 'app-welcome-shell-badge app-welcome-shell-badge--native' } } }}>
-        App
+        {premium ? 'Premium' : 'App'}
       </GuardrTag>
     );
   }
   if (shellKind === 'pwa') {
+    const lite = experienceTier?.shell === 'pwa' && experienceTier.mode === 'lite';
     return (
       <GuardrTag kind="neutral" closeable={false} overrides={{ Root: { props: { className: 'app-welcome-shell-badge app-welcome-shell-badge--pwa' } } }}>
-        Installed
+        {lite ? 'Lite' : 'Installed'}
       </GuardrTag>
     );
   }

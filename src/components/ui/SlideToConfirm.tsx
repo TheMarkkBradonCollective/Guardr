@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronRight } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import { hapticConfirm } from '../../lib/platform/nativeHaptics';
 
 export type SlideToConfirmTone = 'primary' | 'success' | 'amber';
 
@@ -73,6 +74,7 @@ export function SlideToConfirm({
     animate(x, maxDrag, { type: 'spring', stiffness: 420, damping: 32 });
     try {
       await onConfirm();
+      void hapticConfirm();
       setConfirmed(true);
       window.setTimeout(() => {
         setConfirmed(false);

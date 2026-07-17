@@ -74,6 +74,7 @@ Import from `src/theme/motionTokens.ts`:
 | `MOTION_DURATION.sheet` | 320ms | Sheets, drawers |
 
 Always call `prefersReducedMotion()` or `motionDuration()` before animating.
+PWA Lite scales durations via `experienceMotionScale()`; use `shouldReduceDecorativeMotion()` to skip chart/counter animations.
 
 ## Overlays
 
@@ -94,10 +95,15 @@ Global overlays live in `src/components/baseui/overlays/`:
 - `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`
 - `PublicPageChrome`
 - `shellStyles.ts` — breakpoints + nav overrides
+- `mobilityChrome.ts` — per-`viewSurface` + experience-tier chrome (PWA Full/Lite, APK Full/Premium)
+
+**Experience tiers:** `src/lib/platform/experienceTier.ts` — resolves `pwa-full|pwa-lite|apk-full|apk-premium|website` and sets `body[data-experience-tier]`, `data-pwa-mode`, `data-apk-mode`.
 
 **Surface bridge:** `src/styles/uber-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
 
-**Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — global sage→Uber token remap; independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
+**Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
+
+**Platform optimizations:** `src/styles/platform-optimizations.css` — purpose-built CSS for Website · PWA Full/Lite · APK Full/Premium.
 
 **Public landing (browser):** `UberStyleLandingPage` — Uber.com homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
 
