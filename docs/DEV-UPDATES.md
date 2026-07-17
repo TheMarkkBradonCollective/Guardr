@@ -653,3 +653,21 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
 
 **Supabase:** No schema changes — nothing to run.
+
+---
+
+## Friday, July 17, 2026 (evening) — /updateit → v1.0.78
+
+**/runit — Uberit shell audit + surface bridge (#645)**
+- **Mobile layout fix** — drawer sidebar no longer reserves 260px in flex row on phone/tablet
+- **Accessibility** — Escape closes drawer; `prefers-reduced-motion` for sidebar transition
+- **`uber-surfaces.css`** — stat cards, quick links, charts, role badges on all breakpoints inside shell
+
+**PR cleanup**
+- Merged **#645**; no open PRs at release
+
+**Release:** **v1.0.78** (build **178**) — web + PWA cache bust (`guardr-cache-v1-0-78`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
