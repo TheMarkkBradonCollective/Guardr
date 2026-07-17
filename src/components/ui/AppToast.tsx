@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useEffect } from 'react';
+import { SnackbarProvider, PLACEMENT, useSnackbar } from 'baseui/snackbar';
 import { CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Block } from 'baseui/block';
+import { ParagraphMedium, LabelSmall } from 'baseui/typography';
+import { snackbarOverrides } from '../baseui/overlays/overlayStyles';
+import { dequeueSnackbar, enqueueSnackbar, registerSnackbarHandlers } from '../baseui/overlays/snackbarBridge';
 
 export type AppToastTone = 'success' | 'error' | 'info';
 
-const TOAST_ICONS: Record<AppToastTone, React.ReactNode> = {
-  success: <CheckCircle className="w-4 h-4 shrink-0 text-green-500" strokeWidth={2} />,
-  error: <AlertCircle className="w-4 h-4 shrink-0 text-red-500" strokeWidth={2} />,
-  info: <Info className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={2} />,
+const TOAST_ENHANCERS: Record<AppToastTone, React.ComponentType<{ size: number }>> = {
+  success: ({ size }) => <CheckCircle size={size} color="var(--status-success)" strokeWidth={2} />,
+  error: ({ size }) => <AlertCircle size={size} color="var(--status-danger)" strokeWidth={2} />,
+  info: ({ size }) => <Info size={size} color="var(--brand-primary)" strokeWidth={2} />,
 };
 
 export interface AppToastMessage {
@@ -17,75 +21,62 @@ export interface AppToastMessage {
   tone: AppToastTone;
 }
 
-type Listener = (toast: AppToastMessage | null) => void;
-
-let nextId = 1;
-let activeToast: AppToastMessage | null = null;
-const listeners = new Set<Listener>();
-let dismissTimer: ReturnType<typeof setTimeout> | null = null;
-
-function emit() {
-  for (const listener of listeners) listener(activeToast);
-}
-
-export function subscribeAppToast(listener: Listener): () => void {
-  listeners.add(listener);
-  listener(activeToast);
-  return () => listeners.delete(listener);
-}
-
 export function showAppToast(
   title: string,
-  options?: { body?: string; tone?: AppToastTone; durationMs?: number }
+  options?: { body?: string; tone?: AppToastTone; durationMs?: number },
 ) {
-  const toast: AppToastMessage = {
-    id: nextId++,
-    title,
-    body: options?.body,
-    tone: options?.tone ?? 'info',
-  };
-  activeToast = toast;
-  emit();
-  if (dismissTimer) clearTimeout(dismissTimer);
-  dismissTimer = setTimeout(() => {
-    if (activeToast?.id === toast.id) {
-      activeToast = null;
-      emit();
-    }
-  }, options?.durationMs ?? 5200);
+  const tone = options?.tone ?? 'info';
+  enqueueSnackbar(
+    {
+      message: (
+        <Block>
+          <ParagraphMedium $style={{ fontWeight: 600, margin: 0, lineHeight: '20px' }}>{title}</ParagraphMedium>
+          {options?.body ? (
+            <LabelSmall $style={{ marginTop: '4px', color: 'contentSecondary', display: 'block' }}>
+              {options.body}
+            </LabelSmall>
+          ) : null}
+        </Block>
+      ),
+      startEnhancer: TOAST_ENHANCERS[tone] as never,
+    },
+    options?.durationMs ?? 5200,
+  );
 }
 
 export function dismissAppToast() {
-  activeToast = null;
-  emit();
-  if (dismissTimer) {
-    clearTimeout(dismissTimer);
-    dismissTimer = null;
-  }
+  dequeueSnackbar();
 }
 
-export function AppToastHost() {
-  const [toast, setToast] = useState<AppToastMessage | null>(null);
+function SnackbarRegistrar() {
+  const { enqueue, dequeue } = useSnackbar();
 
-  useEffect(() => subscribeAppToast(setToast), []);
+  useEffect(() => {
+    registerSnackbarHandlers(enqueue, dequeue);
+    return () => registerSnackbarHandlers(null, null);
+  }, [enqueue, dequeue]);
 
-  if (!toast) return null;
+  return null;
+}
 
-  const host = (
-    <div className="app-toast-host" role="status" aria-live="polite">
-      <div className={`app-toast app-toast-${toast.tone}`}>
-        {TOAST_ICONS[toast.tone]}
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm leading-snug">{toast.title}</p>
-          {toast.body && <p className="text-xs mt-1 opacity-90 leading-relaxed">{toast.body}</p>}
-        </div>
-        <button type="button" onClick={dismissAppToast} className="app-toast-dismiss" aria-label="Dismiss">
-          ×
-        </button>
-      </div>
-    </div>
+/** Wraps app content with Base Web SnackbarProvider + imperative toast bridge. */
+export function AppSnackbarProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SnackbarProvider placement={PLACEMENT.top} defaultDuration={5200} overrides={snackbarOverrides}>
+      {children}
+      <SnackbarRegistrar />
+    </SnackbarProvider>
   );
+}
 
-  if (typeof document === 'undefined') return host;
-  return createPortal(host, document.body);
+/** @deprecated Use AppSnackbarProvider in main.tsx — kept for import compatibility */
+export function AppToastHost() {
+  return <SnackbarRegistrar />;
+}
+
+// Legacy subscription API — no-op stubs for any external listeners
+type Listener = (toast: AppToastMessage | null) => void;
+
+export function subscribeAppToast(_listener: Listener): () => void {
+  return () => undefined;
 }

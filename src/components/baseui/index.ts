@@ -7,3 +7,4 @@ export { GuardrSkeleton } from './GuardrSkeleton';
 export { AppCarousel, type AppCarouselProps } from './AppCarousel';
 export { Tag } from './baseuiShims';
 export * from './layout';
+export * from './overlays';

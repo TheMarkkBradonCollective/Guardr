@@ -1,6 +1,11 @@
 import React, { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AppModal } from './motion/AppMotion';
+import { Block } from 'baseui/block';
+import { HeadingSmall, ParagraphMedium } from 'baseui/typography';
+import { Textarea } from 'baseui/textarea';
+import { GuardrButton } from '../baseui/GuardrButton';
+import { GuardrInput } from '../baseui/GuardrInput';
+import { GuardrModal } from '../baseui/overlays/GuardrModal';
 
 export type AppConfirmTone = 'default' | 'danger';
 export type AppAlertTone = 'default' | 'warning';
@@ -122,24 +127,22 @@ function ConfirmDialogBody({
   const danger = options.tone === 'danger';
 
   return (
-    <div className="app-confirm-dialog">
-      <h2 id={titleId} className="app-confirm-title">
+    <Block padding="scale800" className="app-confirm-dialog">
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
         {options.title}
-      </h2>
-      {options.message ? <p className="app-confirm-message">{options.message}</p> : null}
-      <div className="app-confirm-actions">
-        <button type="button" onClick={onCancel} className="app-button-outline app-confirm-btn">
+      </HeadingSmall>
+      {options.message ? (
+        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>{options.message}</ParagraphMedium>
+      ) : null}
+      <Block display="flex" gridGap="scale400" justifyContent="flex-end" flexWrap>
+        <GuardrButton kind="secondary" size="compact" onClick={onCancel}>
           {options.cancelLabel ?? 'Cancel'}
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          className={danger ? 'app-button-danger app-confirm-btn' : 'app-button-primary app-confirm-btn'}
-        >
+        </GuardrButton>
+        <GuardrButton kind={danger ? 'danger' : 'primary'} size="compact" onClick={onConfirm}>
           {options.confirmLabel ?? 'Confirm'}
-        </button>
-      </div>
-    </div>
+        </GuardrButton>
+      </Block>
+    </Block>
   );
 }
 
@@ -179,47 +182,47 @@ function PromptDialogBody({
   };
 
   return (
-    <form className="app-confirm-dialog" onSubmit={handleSubmit}>
-      <h2 id={titleId} className="app-confirm-title">
+    <Block as="form" padding="scale800" className="app-confirm-dialog" onSubmit={handleSubmit}>
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
         {options.title}
-      </h2>
-      {options.message ? <p className="app-confirm-message">{options.message}</p> : null}
+      </HeadingSmall>
+      {options.message ? (
+        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale500' }}>{options.message}</ParagraphMedium>
+      ) : null}
       {options.multiline ? (
-        <textarea
-          className="uber-input w-full resize-none min-h-[5.5rem]"
+        <Textarea
           value={value}
           onChange={(e) => {
-            setValue(e.target.value);
+            setValue(e.currentTarget.value);
             setError(null);
           }}
           placeholder={options.placeholder}
-          autoFocus
+          overrides={{ Input: { props: { autoFocus: true } } }}
         />
       ) : (
-        <input
-          className="uber-input w-full"
-          type={options.inputType === 'number' ? 'number' : 'text'}
-          inputMode={options.inputType === 'number' ? 'numeric' : undefined}
-          min={options.inputType === 'number' ? 1 : undefined}
+        <GuardrInput
           value={value}
           onChange={(e) => {
-            setValue(e.target.value);
+            setValue(e.currentTarget.value);
             setError(null);
           }}
           placeholder={options.placeholder}
-          autoFocus
+          type={options.inputType === 'number' ? 'number' : 'text'}
+          overrides={{ Input: { props: { autoFocus: true } } }}
         />
       )}
-      {error ? <p className="text-xs text-red-500 mt-2">{error}</p> : null}
-      <div className="app-confirm-actions">
-        <button type="button" onClick={onCancel} className="app-button-outline app-confirm-btn">
+      {error ? (
+        <ParagraphMedium $style={{ color: 'negative', fontSize: '12px', marginTop: 'scale300' }}>{error}</ParagraphMedium>
+      ) : null}
+      <Block display="flex" gridGap="scale400" justifyContent="flex-end" marginTop="scale600" flexWrap>
+        <GuardrButton kind="secondary" size="compact" type="button" onClick={onCancel}>
           {options.cancelLabel ?? 'Cancel'}
-        </button>
-        <button type="submit" className="app-button-primary app-confirm-btn">
+        </GuardrButton>
+        <GuardrButton kind="primary" size="compact" type="submit">
           {options.confirmLabel ?? 'Continue'}
-        </button>
-      </div>
-    </form>
+        </GuardrButton>
+      </Block>
+    </Block>
   );
 }
 
@@ -234,17 +237,22 @@ function AlertDialogBody({
   const warning = options.tone === 'warning';
 
   return (
-    <div className={`app-confirm-dialog${warning ? ' app-confirm-dialog--warning' : ''}`}>
-      <h2 id={titleId} className="app-confirm-title">
+    <Block
+      padding="scale800"
+      className={`app-confirm-dialog${warning ? ' app-confirm-dialog--warning' : ''}`}
+    >
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
         {options.title}
-      </h2>
-      {options.message ? <p className="app-confirm-message">{options.message}</p> : null}
-      <div className="app-confirm-actions app-confirm-actions--single">
-        <button type="button" onClick={onClose} className="app-button-primary app-confirm-btn">
+      </HeadingSmall>
+      {options.message ? (
+        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>{options.message}</ParagraphMedium>
+      ) : null}
+      <Block display="flex" justifyContent="flex-end">
+        <GuardrButton kind="primary" size="compact" onClick={onClose}>
           {options.confirmLabel ?? 'OK'}
-        </button>
-      </div>
-    </div>
+        </GuardrButton>
+      </Block>
+    </Block>
   );
 }
 
@@ -260,7 +268,7 @@ export function AppConfirmHost() {
   };
 
   const dialog = (
-    <AppModal open align="center" onClose={handleClose} panelClassName="app-confirm-panel" zIndex={2200}>
+    <GuardrModal open align="center" onClose={handleClose} panelClassName="app-confirm-panel" zIndex={2200}>
       {request.kind === 'confirm' ? (
         <ConfirmDialogBody
           options={request.options}
@@ -276,7 +284,7 @@ export function AppConfirmHost() {
       ) : (
         <AlertDialogBody options={request.options} onClose={handleClose} />
       )}
-    </AppModal>
+    </GuardrModal>
   );
 
   return createPortal(dialog, document.body);
