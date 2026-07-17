@@ -17,6 +17,7 @@ import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePu
 import { initSentry } from './lib/sentry';
 import './index.css';
 import './styles/uber-surfaces.css';
+import './styles/uber-mobility.css';
 
 applyThemeToDocument(loadTheme());
 

@@ -69,6 +69,7 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     document.body.classList.toggle('shell-browser', value.shellKind === 'browser');
     document.body.classList.toggle('shell-pwa', value.shellKind === 'pwa');
     document.body.classList.toggle('shell-native', value.shellKind === 'native');
+    document.body.classList.add('mobility-platform');
   }
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;

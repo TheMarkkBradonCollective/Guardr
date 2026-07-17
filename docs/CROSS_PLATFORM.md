@@ -85,9 +85,28 @@ src/styles/app-pwa.css                  — PWA welcome + auth-sheet overrides (
 src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 ```
 
-Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) still branches on **form factor only** — PWA/native deltas are CSS via `data-shell`. Next phase: per-surface signed-in nav.
+Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
 Design preview: `/design-preview.html` → Public → **App welcome · PWA/APK**, **Auth sheet · PWA/APK** (shell toggle in header).
+
+### Uber mobility platform (`/uberitplatforms` Phase 2)
+
+| Surface | Shell behavior |
+|---------|----------------|
+| `*-mobile` | Thumb-first drawer nav, compact header, optional PWA glass header |
+| `*-tablet` | **Persistent** sidebar rail (220–232px), touch padding — not scaled desktop |
+| `*-desktop` | Full workspace sidebar (272px), max-width content column |
+| `pwa-*` | Glass header blur, safe-area padding |
+| `native-*` | 48px touch targets, edge safe areas, solid chrome |
+
+Central files:
+
+```
+src/components/baseui/layout/mobilityChrome.ts   — viewSurface → layout config
+src/components/baseui/layout/GuardrDrawerShell.tsx
+src/styles/uber-mobility.css                     — global brand→Uber remap + per-surface CSS
+src/styles/uber-surfaces.css                     — adm/app legacy bridge inside shell
+```
 
 ## Theme System
 

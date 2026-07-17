@@ -1,16 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingXSmall, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { Menu, Settings } from 'lucide-react';
 import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
+import { resolveMobilityChrome } from './mobilityChrome';
 import type { GuardrNavGroup } from './types';
 import { useDevice } from '../../../lib/platform';
 import { prefersReducedMotion } from '../../../theme/motionTokens';
-
-const SIDEBAR_WIDTH = '260px';
-const SIDEBAR_COLLAPSED = '0px';
 
 export interface GuardrDrawerShellProps {
   workspaceLabel: string;
@@ -30,7 +28,6 @@ export interface GuardrDrawerShellProps {
   onSettingsClick?: () => void;
   children: React.ReactNode;
   ariaLabel?: string;
-  /** Large title band below the top bar (off by default — Uber-style compact chrome). */
   showTitleBand?: boolean;
 }
 
@@ -55,44 +52,48 @@ export function GuardrDrawerShell({
   showTitleBand = false,
 }: GuardrDrawerShellProps) {
   const [, theme] = useStyletron();
-  const { formFactor } = useDevice();
-  const isDesktop = formFactor === 'desktop';
+  const { viewSurface } = useDevice();
+  const chrome = useMemo(() => resolveMobilityChrome(viewSurface), [viewSurface]);
+  const isMobile = chrome.layout === 'mobile';
+  const isFlowSidebar = !isMobile;
   const isMapMode = variant === 'dark';
-  const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
+  const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
 
   useEffect(() => {
-    setSidebarOpen(isDesktop);
-  }, [isDesktop]);
+    setSidebarOpen(chrome.defaultSidebarOpen);
+  }, [chrome.defaultSidebarOpen, viewSurface]);
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
   const handleNavigate = (id: string) => {
     onNavigate(id);
-    if (!isDesktop) closeSidebar();
+    if (isMobile) closeSidebar();
   };
 
-  const showDrawerBackdrop = sidebarOpen && !isDesktop;
   const sidebarVisible = sidebarOpen;
-  const sidebarWidth = sidebarVisible ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED;
+  const showDrawerBackdrop = sidebarVisible && isMobile;
+  const flowSidebarWidth = sidebarVisible ? chrome.sidebarWidth : '0px';
+  const drawerPanelWidth = chrome.drawerWidth;
+  const reducedMotion = prefersReducedMotion();
 
   useEffect(() => {
-    if (!sidebarOpen || isDesktop) return;
+    if (!sidebarOpen || !isMobile) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeSidebar();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [sidebarOpen, isDesktop, closeSidebar]);
+  }, [sidebarOpen, isMobile, closeSidebar]);
 
-  const reducedMotion = prefersReducedMotion();
+  const iconSize = chrome.nativeChrome ? 48 : 40;
 
   const iconBtnStyle = {
-    width: '40px',
-    height: '40px',
-    minWidth: '40px',
-    minHeight: '40px',
-    borderRadius: '10px',
+    width: `${iconSize}px`,
+    height: `${iconSize}px`,
+    minWidth: `${iconSize}px`,
+    minHeight: `${iconSize}px`,
+    borderRadius: chrome.nativeChrome ? '12px' : '10px',
     border: `1px solid ${theme.colors.borderOpaque}`,
     backgroundColor: theme.colors.backgroundPrimary,
     color: theme.colors.contentPrimary,
@@ -102,14 +103,22 @@ export function GuardrDrawerShell({
     cursor: 'pointer',
     padding: 0,
     flexShrink: 0,
-    transition: 'background-color 150ms ease, transform 150ms ease',
+    transition: reducedMotion ? 'none' : 'background-color 150ms ease, transform 150ms ease',
     ':hover': {
       backgroundColor: theme.colors.backgroundSecondary,
     },
     ':active': {
-      transform: 'scale(0.96)',
+      transform: reducedMotion ? 'none' : 'scale(0.96)',
     },
   } as const;
+
+  const contentPadding = bleed
+    ? '0'
+    : chrome.layout === 'mobile'
+      ? 'scale500'
+      : chrome.layout === 'tablet'
+        ? 'scale600'
+        : 'scale800';
 
   const sidebarNode = (
     <Block
@@ -118,7 +127,7 @@ export function GuardrDrawerShell({
       aria-hidden={!sidebarVisible}
       display="flex"
       flexDirection="column"
-      width={isDesktop ? sidebarWidth : '0px'}
+      width={isFlowSidebar ? flowSidebarWidth : '0px'}
       backgroundColor="backgroundPrimary"
       overrides={{
         Block: {
@@ -128,10 +137,10 @@ export function GuardrDrawerShell({
             overflow: 'hidden',
             transition: reducedMotion
               ? 'none'
-              : isDesktop
+              : isFlowSidebar
                 ? 'width 220ms cubic-bezier(0.16, 1, 0.3, 1)'
                 : 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
-            ...(isDesktop
+            ...(isFlowSidebar
               ? {
                   position: 'relative',
                   height: '100%',
@@ -143,6 +152,7 @@ export function GuardrDrawerShell({
                   top: 0,
                   left: 0,
                   bottom: 0,
+                  width: drawerPanelWidth,
                   zIndex: 50,
                   transform: sidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
@@ -165,12 +175,12 @@ export function GuardrDrawerShell({
           Block: {
             style: {
               borderBottom: `1px solid ${theme.colors.borderOpaque}`,
-              minWidth: SIDEBAR_WIDTH,
+              minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
             },
           },
         }}
       >
-        <Logo size={28} className="shrink-0" />
+        <Logo size={chrome.layout === 'mobile' ? 26 : 28} className="shrink-0" />
         <Block flex="1" minWidth="0">
           <ParagraphMedium margin={0} $style={{ fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
             Guard<span className="uber-text-accent">r</span>
@@ -182,12 +192,24 @@ export function GuardrDrawerShell({
         {sidebarBrandExtra}
       </Block>
 
-      <Block flex="1" minHeight={0} overflow="auto" paddingTop="scale300" paddingBottom="scale300" minWidth={SIDEBAR_WIDTH}>
+      <Block
+        flex="1"
+        minHeight={0}
+        overflow="auto"
+        paddingTop="scale300"
+        paddingBottom="scale300"
+        minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
+      >
         <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
       </Block>
 
       {sidebarFooter ? (
-        <Block paddingLeft="scale500" paddingRight="scale500" paddingBottom="scale400" minWidth={SIDEBAR_WIDTH}>
+        <Block
+          paddingLeft="scale500"
+          paddingRight="scale500"
+          paddingBottom="scale400"
+          minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
+        >
           {sidebarFooter}
         </Block>
       ) : null}
@@ -196,7 +218,7 @@ export function GuardrDrawerShell({
 
   return (
     <Block
-      className="uber-app-shell page-shell"
+      className={`uber-app-shell mobility-shell mobility-shell--${chrome.shellKind} page-shell`}
       position="fixed"
       top={0}
       left={0}
@@ -210,8 +232,9 @@ export function GuardrDrawerShell({
       backgroundColor="backgroundPrimary"
       color="contentPrimary"
       data-uber-shell=""
+      data-mobility-layout={chrome.layout}
       data-sidebar-open={sidebarOpen ? 'true' : 'false'}
-      data-form-factor-shell={formFactor}
+      data-view-surface={viewSurface}
     >
       {showDrawerBackdrop ? (
         <Block
@@ -247,10 +270,11 @@ export function GuardrDrawerShell({
         flexDirection="column"
         minWidth={0}
         minHeight={0}
+        className="mobility-content-pane"
         onClick={showDrawerBackdrop ? closeSidebar : undefined}
       >
-
         <Block
+          className={`mobility-header${chrome.headerGlass ? ' mobility-header--glass' : ''}${chrome.nativeChrome ? ' mobility-header--native' : ''}`}
           display="flex"
           alignItems="center"
           justifyContent="space-between"
@@ -266,7 +290,7 @@ export function GuardrDrawerShell({
                 borderBottom: `1px solid ${theme.colors.borderOpaque}`,
                 flexShrink: 0,
                 paddingTop: 'max(10px, env(safe-area-inset-top))',
-                minHeight: '56px',
+                minHeight: 'var(--mobility-header-h, 56px)',
               },
             },
           }}
@@ -275,6 +299,7 @@ export function GuardrDrawerShell({
             <Block
               as="button"
               type="button"
+              className="mobility-icon-btn"
               onClick={toggleSidebar}
               aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
               aria-expanded={sidebarOpen}
@@ -286,9 +311,11 @@ export function GuardrDrawerShell({
               <HeadingXSmall margin={0} $style={{ fontWeight: 700, lineHeight: 1.2 }} className="truncate">
                 {title}
               </HeadingXSmall>
-              <LabelSmall margin={0} $style={{ color: 'contentSecondary' }} className="truncate">
-                {workspaceLabel}
-              </LabelSmall>
+              {chrome.layout !== 'mobile' ? (
+                <LabelSmall margin={0} $style={{ color: 'contentSecondary' }} className="truncate">
+                  {workspaceLabel}
+                </LabelSmall>
+              ) : null}
             </Block>
           </Block>
 
@@ -299,6 +326,7 @@ export function GuardrDrawerShell({
               <Block
                 as="button"
                 type="button"
+                className="mobility-icon-btn"
                 onClick={onSettingsClick}
                 aria-label="Settings"
                 overrides={{ Block: { style: iconBtnStyle } }}
@@ -368,11 +396,14 @@ export function GuardrDrawerShell({
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <Block
+            className="mobility-content-inner"
             height="100%"
-            maxWidth="100%"
+            maxWidth={chrome.contentMaxWidth ?? '100%'}
             minWidth={0}
+            marginLeft="auto"
+            marginRight="auto"
             overflow={bleed ? 'hidden' : 'auto'}
-            padding={bleed ? '0' : ['scale500', 'scale600', 'scale700', 'scale800']}
+            padding={contentPadding}
             overrides={{
               Block: {
                 style: {

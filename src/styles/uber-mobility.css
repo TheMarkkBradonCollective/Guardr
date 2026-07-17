@@ -1,0 +1,220 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER MOBILITY PLATFORM — global presentation layer
+   Replaces Guardr sage/IBM visual system with stock Uber Base Web tokens.
+   Targets all 9 viewSurface cells + public marketing surfaces.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Typography (Uber-inspired stack — not Guardr IBM Plex) ─────────────── */
+
+body.mobility-platform,
+body[data-view-surface] {
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Global token remap: sage brand → Uber accent (entire app) ─────────── */
+
+html.theme-light,
+html.theme-dark,
+html.theme-grey {
+  --brand-primary: var(--uber-accent, #276ef1);
+  --brand-primary-hover: color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #000);
+  --brand-bg: var(--uber-bg, #ffffff);
+  --brand-bg-sec: var(--uber-surface, #f6f6f6);
+  --brand-surface: var(--uber-bg, #ffffff);
+  --brand-elevated: var(--uber-surface, #f6f6f6);
+  --brand-text: var(--uber-text, #000000);
+  --brand-text-muted: var(--uber-text-muted, #6b6b6b);
+  --brand-border: var(--uber-border, #e2e2e2);
+  --brand-chrome: var(--uber-bg, #ffffff);
+  --brand-chrome-text: var(--uber-text, #000000);
+  --brand-chrome-muted: var(--uber-text-muted, #6b6b6b);
+  --brand-chrome-border: var(--uber-border, #e2e2e2);
+  --brand-chrome-deep: var(--uber-surface, #f6f6f6);
+}
+
+html.theme-dark {
+  --brand-bg: var(--uber-bg, #141414);
+  --brand-bg-sec: var(--uber-surface, #1c1c1c);
+  --brand-surface: var(--uber-bg, #141414);
+  --brand-elevated: var(--uber-surface, #1c1c1c);
+  --brand-text: var(--uber-text, #f0f0f0);
+  --brand-chrome: var(--uber-bg, #141414);
+  --brand-chrome-text: var(--uber-text, #f0f0f0);
+}
+
+/* ─── Shell: shared mobility chrome ─────────────────────────────────────── */
+
+.uber-app-shell.mobility-shell {
+  --mobility-header-h: 56px;
+}
+
+.uber-app-shell.mobility-shell .mobility-header--glass {
+  backdrop-filter: saturate(180%) blur(16px);
+  background-color: color-mix(in srgb, var(--uber-bg, #fff) 82%, transparent) !important;
+}
+
+html.theme-dark .uber-app-shell.mobility-shell .mobility-header--glass {
+  background-color: color-mix(in srgb, var(--uber-bg, #141414) 86%, transparent) !important;
+}
+
+.uber-app-shell.mobility-shell.mobility-shell--native .mobility-header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--uber-border, #e2e2e2);
+}
+
+.uber-app-shell.mobility-shell .mobility-content-pane {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* ─── Mobile (browser | pwa | native) — thumb-first drawer app ──────────── */
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell {
+  --mobility-header-h: 52px;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .uber-shell-content {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ─── Tablet — touch merge (persistent rail sidebar, not scaled desktop) ── */
+
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell {
+  --mobility-header-h: 58px;
+}
+
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .uber-shell-content > div {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell aside {
+  backdrop-filter: blur(12px);
+  background-color: color-mix(in srgb, var(--uber-bg, #fff) 94%, transparent) !important;
+}
+
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell aside {
+  padding-left: max(0px, env(safe-area-inset-left));
+}
+
+/* ─── Desktop — multi-column workspace ─────────────────────────────────── */
+
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .uber-shell-content {
+  background-color: var(--uber-surface, #f6f6f6);
+}
+
+body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobility-content-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* ─── Public marketing — Uber mobility landing (not sage marketing site) ── */
+
+body[data-view-surface^="browser"] .landing-preview-pin-active,
+body[data-view-surface^="browser"] .landing-preview-job-rate {
+  background: var(--uber-accent, #276ef1);
+  color: #fff;
+}
+
+body[data-view-surface^="browser"] .landing-hero,
+body[data-view-surface^="browser"] [class*="landing-"] {
+  --landing-accent: var(--uber-accent, #276ef1);
+}
+
+body[data-view-surface^="browser"] .text-brand-primary,
+body[data-view-surface^="browser"] .bg-brand-primary {
+  color: var(--uber-accent, #276ef1);
+}
+
+/* ─── Legacy platform CSS neutralization inside mobility shell ─────────── */
+
+.uber-app-shell.mobility-shell .tablet-admin-shell,
+.uber-app-shell.mobility-shell .adm-app,
+.uber-app-shell.mobility-shell .role-app-shell,
+.uber-app-shell.mobility-shell .staff-shell {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+body[data-shell="pwa"] .uber-app-shell.mobility-shell,
+body[data-shell="native"] .uber-app-shell.mobility-shell {
+  background: var(--uber-bg, #fff);
+}
+
+/* PWA / APK welcome — Uber only, no brand fallbacks */
+body[data-shell="pwa"] .app-welcome,
+body.shell-pwa .app-welcome {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-shell="pwa"] .app-welcome-dock,
+body.shell-pwa .app-welcome-dock {
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  background: var(--uber-surface, #f6f6f6);
+}
+
+body[data-shell="native"] .app-welcome-header,
+body.shell-native .app-welcome-header {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-shell="native"] .app-welcome-dock,
+body.shell-native .app-welcome-dock {
+  background: var(--uber-surface, #f6f6f6);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+}
+
+body[data-shell="native"] .tablet-admin-rail-item:active,
+body.shell-native .tablet-admin-rail-item:active {
+  background: var(--uber-accent-50, color-mix(in srgb, #276ef1 12%, transparent));
+}
+
+body[data-form-factor="tablet"] .tablet-admin-shell {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail {
+  background: var(--uber-bg, #ffffff);
+  border-right-color: var(--uber-border, #e2e2e2);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-live {
+  background: var(--uber-positive, #0e8345);
+  box-shadow: 0 0 0 2px var(--uber-bg, #fff);
+}
+
+body[data-form-factor="tablet"] .tablet-admin-rail-label {
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+/* ─── Desktop admin legacy remap ───────────────────────────────────────── */
+
+body[data-form-factor="desktop"] {
+  --adm-accent: var(--uber-accent, #276ef1);
+  --adm-sand: var(--uber-accent, #276ef1);
+  --adm-sand-dark: var(--uber-accent, #276ef1);
+  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #276ef1) 12%, var(--uber-bg, #fff));
+  --adm-bg: var(--uber-surface, #f6f6f6);
+  --adm-card: var(--uber-bg, #ffffff);
+  --adm-text: var(--uber-text, #000);
+  --adm-muted: var(--uber-text-muted, #6b6b6b);
+  --adm-border: var(--uber-border, #e2e2e2);
+}
