@@ -27,7 +27,7 @@ Use it as the operating manual for the whole app:
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline. **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
-| **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Guide** |
+| **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
 | **Founder** | Everything Directors can do plus platform governance settings (payment modes, homepage messages, top-tier staff management) |
@@ -892,6 +892,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 | **Applications** / **Credentials** | Approve applications | + Verify credentials | ✓ | ✓ |
 | **Guards** / **Clients** | ✓ | + Suspend | + Trusted | ✓ |
 | **Messages** / **Incidents** | ✓ | ✓ | ✓ | ✓ |
+| **Stats** (desktop) | ✓ | ✓ | ✓ | ✓ |
 | **Disputes** | — | ✓ | ✓ | ✓ |
 | **Analytics** | — | ✓ | + Financials | ✓ |
 | **Payments** | — | — | ✓ | ✓ |
@@ -899,6 +900,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 | **Payment settings** | — | — | ✓ | + Payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |
+| **Permissions** | — | — | ✓ | ✓ |
 | **Settings** | — | ✓ | ✓ | ✓ |
 | **Dev notes** | — | — | ✓ | ✓ |
 
@@ -919,12 +921,14 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Overview**, **Map**, **Jobs** | ✓ | ✓ | ✓ | ✓ |
 | **Applications**, **Credentials**, **Guards**, **Clients** | ✓ | ✓ | ✓ | ✓ |
 | **Messages**, **Incidents** | ✓ | ✓ | ✓ | ✓ |
+| **Stats** (desktop) | ✓ | ✓ | ✓ | ✓ |
 | **Disputes**, **Analytics** | — | ✓ | ✓ | ✓ |
 | **Payments** | — | — | ✓ | ✓ |
 | **Staff** (team roster) | — | — | ✓ | + Directors |
 | **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |
+| **Permissions** | — | — | ✓ job approval rules & role toggles | ✓ |
 | **Settings** | — | ✓ | ✓ | ✓ |
 | **Dev notes** | — | — | ✓ | ✓ |
 
@@ -1291,7 +1295,7 @@ Available from **Messages** for all users. Use for safety concerns, formal compl
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.69**, build **169**).
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.70**, build **170**).
 
 | Surface | How to install |
 |---------|----------------|
