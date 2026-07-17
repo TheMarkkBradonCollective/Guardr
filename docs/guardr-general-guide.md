@@ -1295,7 +1295,7 @@ Available from **Messages** for all users. Use for safety concerns, formal compl
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.78**, build **178**).
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.79**, build **179**).
 
 | Surface | How to install |
 |---------|----------------|
