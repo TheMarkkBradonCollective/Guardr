@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Guardr Design Preview</title>
+  <title>Guardr — Full Site Design Preview</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -13,7 +13,6 @@
       --brand-primary-bright: #9AE09F;
       --brand-primary-hover: #5A7A5D;
       --brand-bg: #000000;
-      --brand-bg-sec: #000000;
       --brand-surface: #000000;
       --brand-elevated: #060606;
       --brand-border: #1A2A1A;
@@ -21,883 +20,821 @@
       --brand-text-muted: #3D5C40;
       --brand-on-primary: #000000;
       --chrome: #000000;
-      --status-success: #7DBB82;
       --status-warning: #C9A24D;
       --glow: 0 0 24px color-mix(in srgb, var(--brand-primary-bright) 65%, transparent);
-      --glow-strong: 0 0 40px color-mix(in srgb, var(--brand-primary-bright) 85%, transparent), 0 0 80px color-mix(in srgb, var(--brand-primary-bright) 35%, transparent);
-      --radius-card: 16px;
+      --glow-strong: 0 0 40px color-mix(in srgb, var(--brand-primary-bright) 85%, transparent);
+      --radius-card: 14px;
       --radius-pill: 999px;
+      --index-w: 260px;
     }
     * { box-sizing: border-box; margin: 0; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: "Plus Jakarta Sans", system-ui, sans-serif;
       background: #000;
       color: var(--brand-text);
-      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* ── Preview chrome ── */
     .preview-chrome {
-      position: sticky; top: 0; z-index: 200;
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 20px;
+      position: sticky; top: 0; z-index: 300;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 16px;
       background: #000;
-      backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--brand-border);
     }
-    .preview-chrome h1 { font-size: 14px; font-weight: 800; color: var(--brand-text); }
+    .preview-chrome h1 { font-size: 14px; font-weight: 800; }
     .preview-chrome p { font-size: 11px; color: var(--brand-text-muted); }
-    .toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+    .toolbar { display: flex; gap: 5px; flex-wrap: wrap; }
     .toolbar button {
       font: 600 11px/1 "Plus Jakarta Sans", sans-serif;
-      padding: 7px 12px; border-radius: var(--radius-pill); cursor: pointer;
+      padding: 7px 11px; border-radius: var(--radius-pill); cursor: pointer;
       border: 1px solid var(--brand-border); background: #000; color: var(--brand-text-muted); transition: .2s;
     }
     .toolbar button.active { border-color: var(--brand-primary-bright); color: var(--brand-primary-bright); box-shadow: var(--glow); }
+    .toolbar button.role-btn.active { background: color-mix(in srgb, var(--brand-primary-bright) 12%, transparent); }
 
-    .stage { padding: 16px; display: flex; justify-content: center; }
-    .frame {
-      width: 100%; max-width: 1280px;
-      border-radius: 12px; overflow: hidden;
-      border: 1px solid var(--brand-border);
-      box-shadow: 0 32px 100px rgba(0,0,0,.8);
-      transition: max-width .35s cubic-bezier(.16,1,.3,1);
-      background: var(--brand-bg);
-    }
-    .frame.tablet { max-width: 820px; }
-    .frame.mobile { max-width: 390px; border-radius: 32px; }
-
-    /* ─── Uber Pro shell ─── */
-    .app { display: flex; min-height: 780px; background: var(--brand-bg); }
-    .sidebar {
-      width: 232px; flex-shrink: 0;
-      background: var(--chrome);
+    /* ── Layout ── */
+    .site-layout { display: flex; min-height: calc(100vh - 52px); }
+    .page-index {
+      position: sticky; top: 52px; align-self: flex-start;
+      width: var(--index-w); max-height: calc(100vh - 52px);
+      overflow-y: auto; flex-shrink: 0;
       border-right: 1px solid var(--brand-border);
-      display: flex; flex-direction: column;
-      padding: 16px 0 12px;
+      padding: 12px 0 40px;
+      scrollbar-width: thin;
     }
-    .sidebar-brand {
-      padding: 4px 20px 28px;
-      font-size: 16px; font-weight: 800; letter-spacing: -.04em;
-      display: flex; align-items: center; gap: 10px;
-      color: var(--brand-text);
+    .index-group { margin-bottom: 16px; }
+    .index-group-title {
+      padding: 4px 16px 6px;
+      font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--brand-text-muted);
     }
-    .sidebar-brand span {
-      width: 34px; height: 34px; border-radius: 10px;
+    .index-link {
+      display: block; width: 100%; text-align: left;
+      padding: 7px 16px; border: none; background: none;
+      font: 600 12px/1.3 "Plus Jakarta Sans", sans-serif;
+      color: var(--brand-text-muted); cursor: pointer; transition: .15s;
+    }
+    .index-link:hover { color: var(--brand-text); background: color-mix(in srgb, var(--brand-primary) 6%, transparent); }
+    .index-link.active { color: var(--brand-primary-bright); border-left: 3px solid var(--brand-primary-bright); padding-left: 13px; }
+    .index-link .path { display: block; font-size: 10px; font-weight: 500; opacity: .7; margin-top: 2px; }
+
+    .scroll-stage { flex: 1; padding: 20px 20px 80px; min-width: 0; }
+
+    /* ── Screen blocks ── */
+    .screen-block {
+      margin-bottom: 48px;
+      scroll-margin-top: 68px;
+    }
+    .screen-meta {
+      display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .screen-meta h2 { font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
+    .screen-meta .role-tag {
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+      padding: 3px 8px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border); color: var(--brand-text-muted);
+    }
+    .screen-meta .path-tag { font-size: 11px; color: var(--brand-primary-bright); font-weight: 600; }
+
+    .device-frame {
+      margin: 0 auto;
+      border: 1px solid var(--brand-border);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.7);
+      background: var(--brand-bg);
+      transition: max-width .3s;
+    }
+    .device-frame.desktop { max-width: 1100px; }
+    .device-frame.tablet { max-width: 820px; }
+    .device-frame.mobile { max-width: 390px; border-radius: 28px; }
+
+    /* ── App shell ── */
+    .shell { display: flex; min-height: 640px; background: var(--brand-bg); }
+    .shell.mobile-stack { flex-direction: column; min-height: 720px; }
+    .shell-sidebar {
+      width: 210px; flex-shrink: 0;
+      border-right: 1px solid var(--brand-border);
+      padding: 16px 0; display: flex; flex-direction: column;
+    }
+    .shell-brand {
+      padding: 0 18px 20px; font-size: 14px; font-weight: 800;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .shell-brand .logo {
+      width: 30px; height: 30px; border-radius: 8px;
       background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      display: grid; place-items: center; font-size: 14px; font-weight: 800;
+      display: grid; place-items: center; font-size: 12px; font-weight: 800;
     }
-    .nav-item {
-      position: relative;
-      display: flex; align-items: center; gap: 14px;
-      width: 100%; padding: 13px 22px;
-      border: none; background: transparent;
-      font: 600 14px/1 "Plus Jakarta Sans", sans-serif;
-      color: var(--brand-text-muted); cursor: pointer; text-align: left;
-      transition: color .2s, background .2s;
+    .shell-nav {
+      display: flex; flex-direction: column; gap: 2px;
     }
-    .nav-item:hover { color: var(--brand-text); }
-    .nav-item.active {
+    .shell-nav button {
+      position: relative; display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 11px 18px; border: none; background: none;
+      font: 600 13px/1 "Plus Jakarta Sans", sans-serif;
+      color: var(--brand-text-muted); cursor: default; text-align: left;
+    }
+    .shell-nav button.on {
       color: var(--brand-text);
       background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
     }
-    .nav-item.active::before {
-      content: "";
-      position: absolute; left: 0; top: 6px; bottom: 6px; width: 4px;
-      background: var(--brand-primary-bright);
-      border-radius: 0 4px 4px 0;
-      box-shadow: var(--glow);
+    .shell-nav button.on::before {
+      content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+      background: var(--brand-primary-bright); border-radius: 0 3px 3px 0; box-shadow: var(--glow);
     }
-    .nav-icon { width: 22px; text-align: center; font-size: 15px; opacity: .9; }
-    .nav-badge {
-      margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px;
-      border-radius: var(--radius-pill); background: var(--brand-primary-bright);
-      color: var(--brand-on-primary); font-size: 10px; font-weight: 800;
-      display: grid; place-items: center;
-    }
-    .sidebar-spacer { flex: 1; }
-    .sidebar-status {
-      margin: 12px 16px 0; padding: 14px 16px;
-      border-radius: 12px;
-      background: var(--brand-elevated);
-      border: 1px solid var(--brand-border);
-    }
-    .sidebar-status-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand-text-muted); }
-    .sidebar-status-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--brand-primary-bright);
-      box-shadow: var(--glow);
-      animation: blink 2s ease-in-out infinite;
-    }
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
-    .sidebar-status-text { font-size: 13px; font-weight: 700; color: var(--brand-text); }
-
-    .workspace { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-    .topbar {
-      display: flex; align-items: center; gap: 14px;
-      padding: 10px 24px;
-      background: color-mix(in srgb, var(--chrome) 94%, transparent);
-      backdrop-filter: blur(24px) saturate(1.3);
-      border-bottom: 1px solid var(--brand-border);
-      flex-wrap: wrap;
-    }
-    .market-select {
-      font: 700 13px/1 "Plus Jakarta Sans", sans-serif;
-      padding: 9px 16px 9px 14px; border-radius: var(--radius-pill);
-      border: 1px solid var(--brand-border);
-      background: var(--brand-elevated); color: var(--brand-text);
-      cursor: pointer; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237DB882' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center;
-      padding-right: 32px;
-    }
-    .ticker-wrap {
-      flex: 1; min-width: 140px; overflow: hidden;
-      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-    }
-    .ticker {
-      display: flex; gap: 56px;
-      animation: ticker 28s linear infinite;
-      white-space: nowrap; font-size: 12px; color: var(--brand-text-muted); font-weight: 500;
-    }
-    .ticker strong { color: var(--status-warning); font-weight: 800; }
-    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    .topbar-actions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
-    .earnings-chip {
-      display: none;
-      padding: 6px 12px; border-radius: var(--radius-pill);
-      background: var(--brand-elevated); border: 1px solid var(--brand-border);
-      font-size: 12px; font-weight: 700; color: var(--brand-text);
-    }
-    .earnings-chip strong { color: var(--brand-primary-bright); }
-    .bell { position: relative; font-size: 18px; cursor: pointer; opacity: .9; }
-    .bell-badge {
-      position: absolute; top: -6px; right: -8px;
-      min-width: 18px; height: 18px; padding: 0 5px;
-      background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      font-size: 10px; font-weight: 800; border-radius: var(--radius-pill);
-      display: grid; place-items: center;
-    }
-    .greeting { font-size: 14px; font-weight: 700; color: var(--brand-text); }
-    .greeting span { color: var(--brand-text-muted); font-weight: 500; }
-    .avatar-wrap { position: relative; }
-    .avatar {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: linear-gradient(145deg, #0a0a0a, #000);
-      border: 2px solid var(--brand-primary-bright);
-      box-shadow: var(--glow);
-    }
-    .avatar-ring {
-      position: absolute; inset: -3px; border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--brand-primary-bright);
-      border-right-color: color-mix(in srgb, var(--brand-primary-bright) 40%, transparent);
-      transform: rotate(-45deg);
-    }
-
-    .subnav {
-      display: flex; gap: 4px; padding: 0 24px;
-      border-bottom: 1px solid var(--brand-border);
-      background: var(--brand-bg);
-      overflow-x: auto;
-    }
-    .subnav-tab {
-      padding: 14px 16px; border: none; background: none;
-      font: 600 13px/1 "Plus Jakarta Sans", sans-serif;
-      color: var(--brand-text-muted); cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap; transition: .2s;
-    }
-    .subnav-tab:hover { color: var(--brand-text); }
-    .subnav-tab.active {
-      color: var(--brand-text);
-      border-bottom-color: var(--brand-primary-bright);
-    }
-
-    .dashboard {
-      flex: 1; padding: 18px 24px 24px;
-      overflow: auto;
-      background: var(--brand-bg);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 14px;
-    }
-
-    .card {
-      background: var(--brand-surface);
-      border: 1px solid var(--brand-border);
-      border-radius: var(--radius-card);
-      padding: 18px 20px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand-primary-bright) 6%, transparent);
-    }
-    .card-head {
+    .shell-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .shell-topbar {
+      padding: 10px 18px; border-bottom: 1px solid var(--brand-border);
+      font-size: 14px; font-weight: 700;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px;
     }
-    .card-label {
-      font-size: 11px; font-weight: 700;
-      color: var(--brand-text-muted);
-      letter-spacing: .04em;
-      text-transform: uppercase;
+    .shell-body { flex: 1; padding: 16px 18px; overflow: hidden; }
+    .shell-body.flush { padding: 0; }
+    .shell-bottom {
+      display: flex; justify-content: space-around;
+      padding: 8px 0 14px; border-top: 1px solid var(--brand-border);
     }
-    .card-link {
-      font-size: 11px; font-weight: 700; color: var(--brand-primary-bright);
-      background: none; border: none; cursor: pointer;
+    .shell-bottom button {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: none; border: none; color: var(--brand-text-muted);
+      font: 600 9px/1 "Plus Jakarta Sans", sans-serif; min-height: 44px;
     }
-    .kpi-xl {
-      font-size: 56px; font-weight: 800;
-      letter-spacing: -.06em; line-height: .95;
-      color: var(--brand-text);
-    }
-    .kpi-md { font-size: 40px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--brand-text); }
-    .kpi-unit { font-size: .38em; font-weight: 600; letter-spacing: 0; }
-    .trend-pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      margin-top: 12px; padding: 5px 11px;
-      border-radius: var(--radius-pill);
-      font-size: 11px; font-weight: 800;
-      background: color-mix(in srgb, var(--brand-primary-bright) 18%, transparent);
-      color: var(--brand-primary-bright);
-      box-shadow: var(--glow);
-    }
-    .c3 { grid-column: span 3; }
-    .c4 { grid-column: span 4; }
-    .c5 { grid-column: span 5; }
-    .c6 { grid-column: span 6; }
-    .c7 { grid-column: span 7; }
-    .c8 { grid-column: span 8; }
-    .c12 { grid-column: span 12; }
-
-    .rating-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-    .rating-av {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--brand-elevated), #000);
-      border: 2px solid var(--brand-border);
-    }
-
-    .trip-card { display: flex; align-items: center; justify-content: space-between; }
-    .trip-arc { width: 96px; height: 52px; flex-shrink: 0; }
-    .trip-arc path.glow { filter: drop-shadow(0 0 6px var(--brand-primary-bright)) drop-shadow(0 0 16px var(--brand-primary-bright)); }
-
-    .period-pills { display: flex; gap: 5px; margin-top: 16px; }
-    .pill {
-      font: 700 10px/1 "Plus Jakarta Sans", sans-serif;
-      padding: 7px 11px; border-radius: var(--radius-pill);
-      border: 1px solid var(--brand-border);
-      background: transparent; color: var(--brand-text-muted);
-      cursor: pointer; transition: .2s;
-    }
-    .pill.active {
-      background: var(--brand-primary-bright);
-      border-color: var(--brand-primary-bright);
-      color: var(--brand-on-primary);
-      box-shadow: var(--glow);
-    }
-    .time-chip {
-      display: inline-block; margin-top: 10px;
-      padding: 4px 10px; border-radius: var(--radius-pill);
-      font-size: 11px; font-weight: 700;
-      background: color-mix(in srgb, var(--status-success) 18%, transparent);
-      color: var(--status-success);
-    }
-
-    /* Horizontal shift carousel — Uber trip-card row */
-    .carousel-section { margin-bottom: 14px; }
-    .carousel {
-      display: flex; gap: 12px; overflow-x: auto;
-      padding-bottom: 4px; scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-    }
-    .carousel::-webkit-scrollbar { display: none; }
-    .shift-card {
-      flex: 0 0 220px; scroll-snap-align: start;
-      padding: 16px; border-radius: 14px;
-      background: var(--brand-surface);
-      border: 1px solid var(--brand-border);
-      cursor: pointer; transition: border-color .2s;
-    }
-    .shift-card:hover { border-color: var(--brand-primary-bright); }
-    .shift-card.hot {
-      border-color: color-mix(in srgb, var(--brand-primary-bright) 60%, var(--brand-border));
-      box-shadow: var(--glow);
-    }
-    .shift-time { font-size: 11px; font-weight: 700; color: var(--brand-text-muted); text-transform: uppercase; letter-spacing: .04em; }
-    .shift-title { font-size: 15px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; color: var(--brand-text); }
-    .shift-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-    .shift-pay { font-size: 18px; font-weight: 800; color: var(--brand-primary-bright); }
-    .shift-dist { font-size: 11px; font-weight: 600; color: var(--brand-text-muted); }
-    .surge-tag {
-      display: inline-block; margin-top: 8px;
-      padding: 3px 8px; border-radius: var(--radius-pill);
-      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
-      background: color-mix(in srgb, var(--status-warning) 25%, transparent);
-      color: var(--status-warning);
-    }
-
-    /* Chart */
-    .chart-wrap { position: relative; margin-top: 2px; }
-    .chart-svg { width: 100%; height: 190px; display: block; }
-    .chart-grid line { stroke: var(--brand-border); stroke-width: 1; opacity: .35; }
-    .chart-line {
-      fill: none; stroke: var(--brand-primary-bright);
-      stroke-width: 3.5; stroke-linecap: round;
-      filter: drop-shadow(0 0 6px var(--brand-primary-bright)) drop-shadow(0 0 18px var(--brand-primary-bright)) drop-shadow(0 0 36px color-mix(in srgb, var(--brand-primary-bright) 50%, transparent));
-    }
-    .chart-area { fill: url(#earnGrad); }
-    .chart-dot {
-      fill: var(--brand-primary-bright);
-      filter: drop-shadow(0 0 8px var(--brand-primary-bright)) drop-shadow(0 0 20px var(--brand-primary-bright));
-    }
-    .chart-callout {
-      position: absolute; top: 14%; right: 16%;
-      padding: 8px 14px; border-radius: 10px;
+    .shell-bottom button.on { color: var(--brand-primary-bright); }
+    .shell-bottom .map-fab {
+      width: 44px; height: 44px; border-radius: 50%;
       background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      font-size: 15px; font-weight: 800;
-      box-shadow: var(--glow-strong);
-    }
-    .chart-callout::after { content: " ↑"; font-size: 12px; }
-    .chart-axis {
-      display: flex; justify-content: space-between;
-      margin-top: 8px; font-size: 10px; font-weight: 600;
-      color: var(--brand-text-muted);
-    }
-
-    /* Donut + bars */
-    .donut-wrap { display: flex; align-items: center; gap: 20px; }
-    .donut-svg { width: 108px; height: 108px; flex-shrink: 0; }
-    .donut-ring { fill: none; stroke-width: 9; stroke-linecap: round; }
-    .donut-bg { stroke: var(--brand-border); }
-    .donut-fg {
-      stroke: var(--brand-primary-bright);
-      filter: drop-shadow(0 0 8px var(--brand-primary-bright));
-      transform-origin: 54px 54px;
-      transform: rotate(-90deg);
-      stroke-dasharray: 201; stroke-dashoffset: 80.4;
-    }
-    .donut-center { font-size: 24px; font-weight: 800; fill: var(--brand-text); }
-    .perf-bars { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .perf-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-    .perf-label { width: 52px; color: var(--brand-text-muted); font-weight: 600; }
-    .perf-track { flex: 1; height: 6px; border-radius: 3px; background: var(--brand-border); overflow: hidden; }
-    .perf-fill {
-      height: 100%; border-radius: 3px;
-      background: var(--brand-primary-bright);
+      display: grid; place-items: center; font-size: 16px; margin-top: -18px;
       box-shadow: var(--glow);
     }
-    .perf-val { width: 36px; text-align: right; font-weight: 800; color: var(--brand-primary-bright); font-size: 11px; }
 
-    /* Messages */
-    .feed { display: flex; flex-direction: column; gap: 12px; }
-    .feed-item { display: flex; gap: 12px; align-items: flex-start; }
-    .feed-av { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-elevated); flex-shrink: 0; border: 1px solid var(--brand-border); }
-    .feed-name { font-size: 13px; font-weight: 700; color: var(--brand-text); }
-    .feed-time { font-size: 10px; color: var(--brand-text-muted); margin-left: 6px; font-weight: 500; }
-    .feed-msg {
-      margin-top: 4px; padding: 10px 14px;
-      border-radius: 14px 14px 14px 4px; font-size: 13px; line-height: 1.45;
-      background: var(--brand-elevated);
-      border: 1px solid var(--brand-border);
-      color: var(--brand-text);
+    /* ── Placeholders ── */
+    .sk { background: var(--brand-elevated); border-radius: 8px; border: 1px solid var(--brand-border); }
+    .sk-line { height: 10px; border-radius: 4px; }
+    .sk-line.w60 { width: 60%; } .sk-line.w40 { width: 40%; } .sk-line.w80 { width: 80%; } .sk-line.w30 { width: 30%; }
+    .sk-card { padding: 14px; border-radius: var(--radius-card); border: 1px solid var(--brand-border); }
+    .sk-grid { display: grid; gap: 12px; }
+    .sk-grid.c2 { grid-template-columns: 1fr 1fr; }
+    .sk-grid.c3 { grid-template-columns: repeat(3, 1fr); }
+    .sk-grid.c4 { grid-template-columns: repeat(4, 1fr); }
+    .sk-row { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--brand-border); }
+    .sk-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+    .sk-stat { padding: 16px; text-align: center; }
+    .sk-stat .num { font-size: 28px; font-weight: 800; color: var(--brand-text); margin-bottom: 4px; }
+    .sk-stat .lbl { font-size: 10px; color: var(--brand-text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .sk-hero { padding: 40px 24px; text-align: center; }
+    .sk-hero h3 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .sk-hero p { font-size: 13px; color: var(--brand-text-muted); max-width: 360px; margin: 0 auto 20px; }
+    .sk-btn {
+      display: inline-block; padding: 10px 20px; border-radius: var(--radius-pill);
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      font-size: 12px; font-weight: 800; border: none;
     }
+    .sk-btn.outline { background: transparent; border: 1px solid var(--brand-border); color: var(--brand-text); }
+    .sk-field { margin-bottom: 12px; }
+    .sk-field .lbl { font-size: 10px; font-weight: 700; color: var(--brand-text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .sk-field .inp { height: 40px; width: 100%; }
 
-    /* Map */
-    .map-card { padding: 0; overflow: hidden; }
-    .map-head {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px 10px; flex-wrap: wrap; gap: 10px;
-    }
-    .map-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-    .map-chip {
-      font: 700 11px/1 "Plus Jakarta Sans", sans-serif;
-      padding: 8px 14px; border-radius: var(--radius-pill);
-      border: 1px solid var(--brand-border);
-      background: var(--brand-elevated); color: var(--brand-text-muted);
-      cursor: pointer; transition: .2s;
-    }
-    .map-chip.hot {
-      border-color: var(--brand-primary-bright);
-      color: var(--brand-primary-bright);
-      background: color-mix(in srgb, var(--brand-primary-bright) 10%, var(--brand-elevated));
-      box-shadow: var(--glow);
-    }
-    .map-body {
-      height: 260px; position: relative;
+    /* ── Map mock (shared) ── */
+    .map-mock {
+      position: relative; height: 100%; min-height: 520px;
       background:
-        radial-gradient(ellipse 120px 80px at 58% 48%, color-mix(in srgb, var(--brand-primary-bright) 35%, transparent), transparent),
-        radial-gradient(ellipse 80px 60px at 30% 35%, color-mix(in srgb, var(--brand-primary-bright) 15%, transparent), transparent),
-        radial-gradient(ellipse 60px 50px at 75% 60%, color-mix(in srgb, var(--status-warning) 12%, transparent), transparent),
-        linear-gradient(180deg, #000 0%, #000 100%);
+        radial-gradient(ellipse 140px 90px at 55% 45%, color-mix(in srgb, var(--brand-primary-bright) 30%, transparent), transparent),
+        radial-gradient(ellipse 80px 60px at 28% 35%, color-mix(in srgb, var(--brand-primary-bright) 14%, transparent), transparent),
+        radial-gradient(ellipse 70px 50px at 78% 62%, color-mix(in srgb, var(--status-warning) 12%, transparent), transparent),
+        #000;
     }
-    .map-grid {
-      position: absolute; inset: 0; opacity: .12;
+    .map-mock.tall { min-height: 600px; }
+    .map-grid-bg {
+      position: absolute; inset: 0; opacity: .1;
       background-image:
         linear-gradient(var(--brand-border) 1px, transparent 1px),
         linear-gradient(90deg, var(--brand-border) 1px, transparent 1px);
-      background-size: 48px 48px;
+      background-size: 44px 44px;
     }
-    .map-road {
-      position: absolute; background: #0a120a; opacity: .7;
-    }
-    .map-road.h { height: 2px; left: 0; right: 0; top: 45%; }
-    .map-road.v { width: 2px; top: 10%; bottom: 10%; left: 40%; }
-    .map-pulse {
-      position: absolute; top: 44%; left: 56%;
-      width: 120px; height: 120px; margin: -60px 0 0 -60px;
-      border-radius: 50%;
-      background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary-bright) 30%, transparent) 0%, transparent 70%);
-      animation: pulse 2.2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.15); opacity: .7; }
-    }
+    .map-road { position: absolute; background: #0c140c; opacity: .7; }
+    .map-road.h { height: 2px; left: 0; right: 0; top: 46%; }
+    .map-road.v { width: 2px; top: 8%; bottom: 8%; left: 42%; }
     .map-pin {
-      position: absolute; width: 10px; height: 10px;
-      background: var(--brand-primary-bright);
-      border-radius: 50%; box-shadow: var(--glow);
+      position: absolute; width: 11px; height: 11px; border-radius: 50%;
+      background: var(--brand-primary-bright); box-shadow: var(--glow);
     }
+    .map-pin.warn { background: var(--status-warning); }
     .map-pin::after {
-      content: ""; position: absolute; inset: -4px;
-      border-radius: 50%; border: 2px solid color-mix(in srgb, var(--brand-primary-bright) 40%, transparent);
+      content: ""; position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--brand-primary-bright) 35%, transparent);
     }
-    .map-job-card {
-      position: absolute; bottom: 20px; left: 20px;
-      width: 200px; padding: 14px 16px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.88);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--brand-border);
-      box-shadow: 0 8px 32px rgba(0,0,0,.6), var(--glow);
+    .map-pulse {
+      position: absolute; top: 44%; left: 54%;
+      width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary-bright) 28%, transparent), transparent 70%);
+      animation: pulse 2.4s ease-in-out infinite;
     }
-    .map-job-title { font-size: 13px; font-weight: 800; color: var(--brand-text); }
-    .map-job-sub { font-size: 11px; color: var(--brand-text-muted); margin-top: 4px; }
-    .map-job-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .map-job-pay { font-size: 20px; font-weight: 800; color: var(--brand-primary-bright); }
-    .map-job-btn {
-      padding: 8px 16px; border-radius: var(--radius-pill);
-      background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      border: none; font: 800 11px/1 "Plus Jakarta Sans", sans-serif;
-      cursor: pointer; box-shadow: var(--glow);
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.12);opacity:.7} }
+    .map-filter-bar {
+      position: absolute; top: 12px; left: 12px; right: 12px;
+      display: flex; gap: 6px; flex-wrap: wrap; z-index: 2;
     }
+    .map-chip {
+      padding: 7px 12px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border); background: rgba(0,0,0,.8);
+      font: 700 10px/1 "Plus Jakarta Sans", sans-serif; color: var(--brand-text-muted);
+    }
+    .map-chip.on { border-color: var(--brand-primary-bright); color: var(--brand-primary-bright); box-shadow: var(--glow); }
     .map-zoom {
-      position: absolute; top: 16px; right: 16px;
-      display: flex; flex-direction: column; gap: 4px;
+      position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 2;
     }
     .map-zoom button {
-      width: 36px; height: 36px; border-radius: 10px;
+      width: 34px; height: 34px; border-radius: 8px;
       background: rgba(0,0,0,.85); border: 1px solid var(--brand-border);
-      color: var(--brand-text); font-size: 18px; cursor: pointer;
+      color: var(--brand-text); font-size: 16px;
     }
-
-    /* Mobile */
-    .frame.mobile .sidebar { display: none; }
-    .frame.mobile .subnav { padding: 0 16px; }
-    .frame.mobile .grid { grid-template-columns: 1fr; }
-    .frame.mobile .c3, .frame.mobile .c4, .frame.mobile .c5,
-    .frame.mobile .c6, .frame.mobile .c7, .frame.mobile .c8, .frame.mobile .c12 { grid-column: span 1; }
-    .frame.mobile .topbar { padding: 10px 16px; }
-    .frame.mobile .market-select { display: none; }
-    .frame.mobile .greeting { display: none; }
-    .frame.mobile .earnings-chip { display: block; }
-    .frame.mobile .kpi-xl { font-size: 44px; }
-    .mobile-header {
-      display: none;
-      align-items: center; justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--brand-border);
-      background: var(--chrome);
+    .map-route-banner {
+      position: absolute; top: 52px; left: 12px; right: 12px; z-index: 2;
+      padding: 10px 14px; border-radius: 10px;
+      background: rgba(0,0,0,.88); border: 1px solid var(--brand-border);
+      font-size: 11px; font-weight: 600;
     }
-    .frame.mobile .mobile-header { display: flex; }
+    .map-route-banner strong { color: var(--brand-primary-bright); }
+    .map-dock {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      padding: 12px; display: flex; flex-direction: column; gap: 8px;
+      background: linear-gradient(transparent, rgba(0,0,0,.95) 30%);
+    }
+    .map-card {
+      padding: 14px 16px; border-radius: 14px;
+      background: rgba(0,0,0,.9); border: 1px solid var(--brand-border);
+      backdrop-filter: blur(12px);
+    }
+    .map-card.hot { border-color: color-mix(in srgb, var(--brand-primary-bright) 50%, var(--brand-border)); box-shadow: var(--glow); }
+    .map-card-title { font-size: 13px; font-weight: 800; }
+    .map-card-sub { font-size: 10px; color: var(--brand-text-muted); margin-top: 3px; }
+    .map-card-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .map-card-pay { font-size: 18px; font-weight: 800; color: var(--brand-primary-bright); }
+    .map-card-btn {
+      padding: 8px 14px; border-radius: var(--radius-pill);
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      border: none; font: 800 10px/1 "Plus Jakarta Sans", sans-serif;
+    }
+    .map-side-panel {
+      position: absolute; top: 0; right: 0; bottom: 0; width: 280px; z-index: 2;
+      background: rgba(0,0,0,.94); border-left: 1px solid var(--brand-border);
+      padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .map-fab-row { display: flex; gap: 8px; justify-content: flex-end; }
+    .map-fab {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      border: none; font-size: 18px; box-shadow: var(--glow-strong);
+    }
     .online-bar {
-      display: none;
-      align-items: center; justify-content: space-between;
-      padding: 14px 20px;
-      border-top: 1px solid var(--brand-border);
-      background: color-mix(in srgb, var(--chrome) 96%, transparent);
-      backdrop-filter: blur(20px);
+      padding: 12px 16px; border-top: 1px solid var(--brand-border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,.95);
     }
-    .frame.mobile .online-bar { display: flex; }
     .online-toggle {
-      width: 54px; height: 32px; border-radius: var(--radius-pill);
-      background: var(--brand-primary-bright);
-      box-shadow: var(--glow-strong);
-      position: relative; cursor: pointer;
+      width: 50px; height: 28px; border-radius: var(--radius-pill);
+      background: var(--brand-primary-bright); box-shadow: var(--glow); position: relative;
     }
     .online-toggle::after {
       content: ""; position: absolute; top: 3px; right: 3px;
-      width: 26px; height: 26px; border-radius: 50%; background: var(--brand-on-primary);
-      box-shadow: 0 2px 6px rgba(0,0,0,.3);
-    }
-    .online-label { font-size: 15px; font-weight: 800; color: var(--brand-text); }
-    .online-sub { font-size: 11px; color: var(--brand-text-muted); font-weight: 500; }
-    .fab-map {
-      display: none;
-      position: absolute; bottom: 96px; right: 18px;
-      width: 58px; height: 58px; border-radius: 50%;
-      background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      border: none; font-size: 22px; cursor: pointer;
-      box-shadow: var(--glow-strong);
-    }
-    .frame.mobile .fab-map { display: grid; place-items: center; }
-    .frame.mobile .app { position: relative; min-height: 820px; }
-    .bottom-tabs {
-      display: none;
-      justify-content: space-around;
-      padding: 8px 0 18px;
-      border-top: 1px solid var(--brand-border);
-      background: var(--chrome);
-    }
-    .frame.mobile .bottom-tabs { display: flex; }
-    .tab-btn {
-      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-      background: none; border: none; color: var(--brand-text-muted);
-      font: 600 10px/1 "Plus Jakarta Sans", sans-serif; cursor: pointer;
-      min-height: 48px; position: relative;
-    }
-    .tab-btn.active { color: var(--brand-primary-bright); }
-    .tab-btn.active::before {
-      content: ""; position: absolute; top: -8px;
-      width: 24px; height: 3px; border-radius: 2px;
-      background: var(--brand-primary-bright); box-shadow: var(--glow);
+      width: 22px; height: 22px; border-radius: 50%; background: var(--brand-on-primary);
     }
 
-    .frame.tablet .sidebar { width: 76px; }
-    .frame.tablet .sidebar-brand span:last-child,
-    .frame.tablet .nav-item span:last-child,
-    .frame.tablet .nav-badge,
-    .frame.tablet .sidebar-status { display: none; }
-    .frame.tablet .sidebar-brand { justify-content: center; padding: 4px 0 24px; }
-    .frame.tablet .nav-item { justify-content: center; padding: 13px; }
-    .frame.tablet .grid { grid-template-columns: repeat(8, 1fr); }
-    .frame.tablet .c3 { grid-column: span 4; }
-    .frame.tablet .c4 { grid-column: span 4; }
-    .frame.tablet .c5 { grid-column: span 4; }
-    .frame.tablet .c6 { grid-column: span 4; }
-    .frame.tablet .c7 { grid-column: span 8; }
-    .frame.tablet .c8 { grid-column: span 8; }
-
-    .tokens-section {
-      max-width: 1280px; margin: 0 auto; padding: 0 20px 40px;
+    /* ── Responsive index hide on mobile ── */
+    @media (max-width: 900px) {
+      .page-index { display: none; }
+      .scroll-stage { padding: 12px 10px 60px; }
     }
-    .tokens-section summary {
-      cursor: pointer; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .08em;
-      color: var(--brand-text-muted); padding: 16px 0;
-    }
+    .device-frame.mobile .shell-sidebar { display: none; }
+    .device-frame.mobile .map-side-panel { width: 100%; top: auto; height: 42%; border-left: none; border-top: 1px solid var(--brand-border); }
+    .device-frame.mobile .map-mock { min-height: 480px; }
+    .device-frame.tablet .shell-sidebar { width: 68px; }
+    .device-frame.tablet .shell-nav button span { display: none; }
+    .device-frame.tablet .shell-brand span:last-child { display: none; }
+    .device-frame.tablet .shell-brand { justify-content: center; padding: 0 0 16px; }
   </style>
 </head>
 <body>
   <header class="preview-chrome">
     <div>
-      <h1>Guardr · Pure black + sage</h1>
-      <p>Single theme — black canvas, company green typography</p>
+      <h1>Guardr — full site preview</h1>
+      <p>Scroll every page · pure black + sage · no live data</p>
     </div>
-    <div class="toolbar">
-      <button type="button" data-frame="desktop" class="active">Desktop</button>
-      <button type="button" data-frame="tablet">Tablet</button>
-      <button type="button" data-frame="mobile">Mobile</button>
+    <div class="toolbar" id="role-toolbar">
+      <button type="button" class="role-btn active" data-role="all">All</button>
+      <button type="button" class="role-btn" data-role="public">Public</button>
+      <button type="button" class="role-btn" data-role="client">Client</button>
+      <button type="button" class="role-btn" data-role="guard">Guard</button>
+      <button type="button" class="role-btn" data-role="staff">Staff</button>
+      <span style="width:1px;height:20px;background:var(--brand-border);margin:0 4px"></span>
+      <button type="button" class="frame-btn active" data-frame="desktop">Desktop</button>
+      <button type="button" class="frame-btn" data-frame="tablet">Tablet</button>
+      <button type="button" class="frame-btn" data-frame="mobile">Mobile</button>
     </div>
   </header>
 
-  <div class="stage">
-    <div class="frame desktop" id="frame">
-      <div class="app">
-        <aside class="sidebar">
-          <div class="sidebar-brand"><span>G</span> Guardr Pro</div>
-          <button class="nav-item active" type="button"><span class="nav-icon">▦</span><span>Dashboard</span></button>
-          <button class="nav-item" type="button"><span class="nav-icon">◎</span><span>My shifts</span><span class="nav-badge">4</span></button>
-          <button class="nav-item" type="button"><span class="nav-icon">▣</span><span>Calendar</span></button>
-          <button class="nav-item" type="button"><span class="nav-icon">✉</span><span>Messages</span><span class="nav-badge">3</span></button>
-          <button class="nav-item" type="button"><span class="nav-icon">⚙</span><span>Settings</span></button>
-          <div class="sidebar-spacer"></div>
-          <div class="sidebar-status">
-            <div class="sidebar-status-label">Status</div>
-            <div class="sidebar-status-row">
-              <span class="status-dot"></span>
-              <span class="sidebar-status-text">Online · accepting jobs</span>
-            </div>
-          </div>
-          <button class="nav-item" type="button" style="margin-top:12px"><span class="nav-icon">↪</span><span>Log out</span></button>
-        </aside>
-
-        <div class="workspace">
-          <div class="mobile-header">
-            <button type="button" style="background:none;border:none;color:inherit;font-size:20px">☰</button>
-            <strong>Guardr Pro</strong>
-            <div class="avatar-wrap"><div class="avatar-ring"></div><div class="avatar"></div></div>
-          </div>
-
-          <header class="topbar">
-            <select class="market-select" aria-label="Market">
-              <option>Los Angeles</option>
-              <option>San Francisco</option>
-              <option>San Diego</option>
-            </select>
-            <div class="ticker-wrap">
-              <div class="ticker">
-                <span><strong>Traffic</strong> — I-405 accident near LAX · +12 min delays</span>
-                <span><strong>Surge</strong> — Downtown demand 2.1× · 8 open jobs</span>
-                <span><strong>Alert</strong> — Credential audit window closes Friday</span>
-                <span><strong>Traffic</strong> — I-405 accident near LAX · +12 min delays</span>
-                <span><strong>Surge</strong> — Downtown demand 2.1× · 8 open jobs</span>
-                <span><strong>Alert</strong> — Credential audit window closes Friday</span>
-              </div>
-            </div>
-            <div class="topbar-actions">
-              <div class="earnings-chip">Today <strong>$186</strong></div>
-              <div class="bell">🔔<span class="bell-badge">3</span></div>
-              <div class="greeting"><span>Hello</span> Alex,</div>
-              <div class="avatar-wrap"><div class="avatar-ring"></div><div class="avatar"></div></div>
-            </div>
-          </header>
-
-          <nav class="subnav" aria-label="Dashboard sections">
-            <button class="subnav-tab active" type="button">Overview</button>
-            <button class="subnav-tab" type="button">Earnings</button>
-            <button class="subnav-tab" type="button">Performance</button>
-            <button class="subnav-tab" type="button">Opportunities</button>
-          </nav>
-
-          <main class="dashboard">
-            <section class="carousel-section">
-              <div class="card-head" style="margin-bottom:10px">
-                <span class="card-label">Upcoming shifts</span>
-                <button class="card-link" type="button">See all →</button>
-              </div>
-              <div class="carousel">
-                <div class="shift-card hot">
-                  <div class="shift-time">Tonight · 6:00 PM</div>
-                  <div class="shift-title">Staples Center</div>
-                  <span class="surge-tag">Surge 1.8×</span>
-                  <div class="shift-meta">
-                    <span class="shift-pay">$42/hr</span>
-                    <span class="shift-dist">2.4 mi</span>
-                  </div>
-                </div>
-                <div class="shift-card">
-                  <div class="shift-time">Sat · 10:00 AM</div>
-                  <div class="shift-title">Retail patrol</div>
-                  <div class="shift-meta">
-                    <span class="shift-pay">$28/hr</span>
-                    <span class="shift-dist">5.1 mi</span>
-                  </div>
-                </div>
-                <div class="shift-card">
-                  <div class="shift-time">Sun · 2:00 PM</div>
-                  <div class="shift-title">Event security</div>
-                  <div class="shift-meta">
-                    <span class="shift-pay">$35/hr</span>
-                    <span class="shift-dist">8.3 mi</span>
-                  </div>
-                </div>
-                <div class="shift-card">
-                  <div class="shift-time">Mon · 7:00 AM</div>
-                  <div class="shift-title">Corporate lobby</div>
-                  <div class="shift-meta">
-                    <span class="shift-pay">$26/hr</span>
-                    <span class="shift-dist">3.7 mi</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div class="grid">
-              <div class="card c3">
-                <div class="card-label">My rating</div>
-                <div class="rating-row">
-                  <div>
-                    <div class="kpi-xl">4.4<span style="font-size:.5em">★</span></div>
-                    <div class="trend-pill">↑ +1.2</div>
-                  </div>
-                  <div class="rating-av"></div>
-                </div>
-              </div>
-
-              <div class="card c3">
-                <div class="card-label">Avg. trip time</div>
-                <div class="trip-card">
-                  <div class="kpi-md">20<span class="kpi-unit"> min</span></div>
-                  <svg class="trip-arc" viewBox="0 0 96 52">
-                    <path d="M8,44 A40,40 0 0 1 88,44" fill="none" stroke="var(--brand-border)" stroke-width="5" stroke-linecap="round"/>
-                    <path class="glow" d="M8,44 A40,40 0 0 1 68,16" fill="none" stroke="var(--brand-primary-bright)" stroke-width="5" stroke-linecap="round"/>
-                  </svg>
-                </div>
-              </div>
-
-              <div class="card c3">
-                <div class="card-label">Last shift</div>
-                <div class="kpi-xl">$186</div>
-                <div class="time-chip">Ended 14:15</div>
-                <div class="period-pills">
-                  <button class="pill active" type="button">Day</button>
-                  <button class="pill" type="button">Month</button>
-                  <button class="pill" type="button">Year</button>
-                </div>
-              </div>
-
-              <div class="card c3">
-                <div class="card-head" style="margin-bottom:8px">
-                  <span class="card-label" style="margin:0">Messages</span>
-                  <button class="card-link" type="button">All</button>
-                </div>
-                <div class="feed">
-                  <div class="feed-item">
-                    <div class="feed-av"></div>
-                    <div>
-                      <div class="feed-name">Malika<span class="feed-time">2m</span></div>
-                      <div class="feed-msg">Uniform check looks good. Thanks!</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card c8">
-                <div class="card-head">
-                  <span class="card-label">What I earned</span>
-                  <button class="card-link" type="button">Details →</button>
-                </div>
-                <div class="chart-wrap">
-                  <svg class="chart-svg" viewBox="0 0 560 190" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="var(--brand-primary-bright)" stop-opacity=".5"/>
-                        <stop offset="100%" stop-color="var(--brand-primary-bright)" stop-opacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    <g class="chart-grid">
-                      <line x1="0" y1="38" x2="560" y2="38"/><line x1="0" y1="76" x2="560" y2="76"/>
-                      <line x1="0" y1="114" x2="560" y2="114"/><line x1="0" y1="152" x2="560" y2="152"/>
-                    </g>
-                    <path class="chart-area" d="M0,170 L0,125 C70,115 110,100 170,92 C230,80 290,58 370,38 C430,28 490,22 560,16 L560,170 Z"/>
-                    <path class="chart-line" d="M0,125 C70,115 110,100 170,92 C230,80 290,58 370,38 C430,28 490,22 560,16"/>
-                    <circle class="chart-dot" cx="370" cy="38" r="7"/>
-                  </svg>
-                  <div class="chart-callout">$420</div>
-                </div>
-                <div class="chart-axis">
-                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                </div>
-              </div>
-
-              <div class="card c4">
-                <div class="card-label">My performance</div>
-                <div class="donut-wrap">
-                  <svg class="donut-svg" viewBox="0 0 108 108">
-                    <circle class="donut-ring donut-bg" cx="54" cy="54" r="42"/>
-                    <circle class="donut-ring donut-fg" cx="54" cy="54" r="42"/>
-                    <text class="donut-center" x="54" y="58" text-anchor="middle">60%</text>
-                  </svg>
-                  <div class="perf-bars">
-                    <div class="perf-row">
-                      <span class="perf-label">Shifts</span>
-                      <div class="perf-track"><div class="perf-fill" style="width:85%"></div></div>
-                      <span class="perf-val">+12</span>
-                    </div>
-                    <div class="perf-row">
-                      <span class="perf-label">On-time</span>
-                      <div class="perf-track"><div class="perf-fill" style="width:94%"></div></div>
-                      <span class="perf-val">94%</span>
-                    </div>
-                    <div class="perf-row">
-                      <span class="perf-label">Cancels</span>
-                      <div class="perf-track"><div class="perf-fill" style="width:20%;background:var(--status-warning)"></div></div>
-                      <span class="perf-val" style="color:var(--status-warning)">−4</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card c12 map-card">
-                <div class="map-head">
-                  <span class="card-label" style="margin:0">Live opportunities</span>
-                  <div class="map-chips">
-                    <button class="map-chip hot" type="button">High demand</button>
-                    <button class="map-chip" type="button">High pay</button>
-                    <button class="map-chip" type="button">Credentials</button>
-                  </div>
-                </div>
-                <div class="map-body">
-                  <div class="map-grid"></div>
-                  <div class="map-road h"></div>
-                  <div class="map-road v"></div>
-                  <div class="map-pulse"></div>
-                  <div class="map-pin" style="top:28%;left:32%"></div>
-                  <div class="map-pin" style="top:52%;left:70%"></div>
-                  <div class="map-pin" style="top:22%;left:78%"></div>
-                  <div class="map-job-card">
-                    <div class="map-job-title">Shok Nagar · Event</div>
-                    <div class="map-job-sub">4 open jobs · 1.8× surge</div>
-                    <div class="map-job-row">
-                      <span class="map-job-pay">$38/hr</span>
-                      <button class="map-job-btn" type="button">Accept</button>
-                    </div>
-                  </div>
-                  <div class="map-zoom">
-                    <button type="button">+</button>
-                    <button type="button">−</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
-
-          <div class="online-bar">
-            <div>
-              <div class="online-label">You're online</div>
-              <div class="online-sub">Accepting jobs in Los Angeles</div>
-            </div>
-            <div class="online-toggle" role="switch" aria-checked="true" tabindex="0"></div>
-          </div>
-          <button class="fab-map" type="button" aria-label="Map">🗺</button>
-          <nav class="bottom-tabs" aria-label="Mobile navigation">
-            <button class="tab-btn active" type="button">▦<span>Home</span></button>
-            <button class="tab-btn" type="button">◎<span>Shifts</span></button>
-            <button class="tab-btn" type="button">✉<span>Chat</span></button>
-            <button class="tab-btn" type="button">$<span>Pay</span></button>
-            <button class="tab-btn" type="button">⋯<span>More</span></button>
-          </nav>
-        </div>
-      </div>
-    </div>
+  <div class="site-layout">
+    <nav class="page-index" id="page-index" aria-label="Page index"></nav>
+    <main class="scroll-stage" id="scroll-stage"></main>
   </div>
 
-  <details class="tokens-section">
-    <summary>Design tokens & typography (spec reference)</summary>
-    <p style="font-size:12px;color:var(--brand-text-muted);margin-top:8px">See <code>docs/guardedesign.md</code> · sage on black tokens</p>
-  </details>
-
   <script>
-    const frame = document.getElementById('frame');
-    document.querySelectorAll('[data-frame]').forEach((btn) => {
+    const FRAME = { size: 'desktop', role: 'all' };
+
+  /* ── Page registry ── */
+  const PAGES = [
+    /* PUBLIC */
+    { id: 'landing', role: 'public', path: '/', title: 'Landing', layout: 'public', type: 'landing' },
+    { id: 'auth-signin', role: 'public', path: '/?auth=sign-in', title: 'Sign in', layout: 'public', type: 'auth' },
+    { id: 'auth-signup', role: 'public', path: '/?auth=sign-up', title: 'Sign up', layout: 'public', type: 'auth-signup' },
+    { id: 'guide', role: 'public', path: '/guide', title: 'Product guide', layout: 'public', type: 'guide' },
+    { id: 'legal-terms', role: 'public', path: '/legal/terms', title: 'Terms of Service', layout: 'public', type: 'legal' },
+    { id: 'legal-privacy', role: 'public', path: '/legal/privacy', title: 'Privacy Policy', layout: 'public', type: 'legal' },
+    { id: 'legal-ica', role: 'public', path: '/legal/ica', title: 'ICA', layout: 'public', type: 'legal' },
+    { id: 'legal-client', role: 'public', path: '/legal/client-agreement', title: 'Client Agreement', layout: 'public', type: 'legal' },
+    { id: 'legal-conduct', role: 'public', path: '/legal/guard-conduct', title: 'Guard Conduct', layout: 'public', type: 'legal' },
+
+    /* CLIENT */
+    { id: 'client-home', role: 'client', path: '/client/home', title: 'Home', layout: 'client', type: 'dashboard', nav: 'home' },
+    { id: 'client-map', role: 'client', path: '/client/map', title: 'Map', layout: 'client', type: 'map-client', nav: 'map' },
+    { id: 'client-request', role: 'client', path: '/client/request', title: 'Post job', layout: 'client', type: 'form', nav: 'requests' },
+    { id: 'client-direct', role: 'client', path: '/client/direct-request', title: 'Hire guard', layout: 'client', type: 'form', nav: 'guards' },
+    { id: 'client-requests', role: 'client', path: '/client/requests', title: 'Jobs', layout: 'client', type: 'list', nav: 'requests' },
+    { id: 'client-guards', role: 'client', path: '/client/guards', title: 'Guards', layout: 'client', type: 'grid', nav: 'guards' },
+    { id: 'client-messages', role: 'client', path: '/client/messages', title: 'Messages', layout: 'client', type: 'messages', nav: 'messages' },
+    { id: 'client-support-compose', role: 'client', path: '/client/support-compose', title: 'Contact support', layout: 'client', type: 'form', nav: 'messages' },
+    { id: 'client-support-report', role: 'client', path: '/client/support-report', title: 'File report', layout: 'client', type: 'form', nav: 'messages' },
+    { id: 'client-reports', role: 'client', path: '/client/reports', title: 'Reports', layout: 'client', type: 'list', nav: 'reports' },
+    { id: 'client-invoices', role: 'client', path: '/client/invoices', title: 'Invoices', layout: 'client', type: 'list', nav: 'invoices' },
+    { id: 'client-locations', role: 'client', path: '/client/locations', title: 'Locations', layout: 'client', type: 'list', nav: 'locations' },
+    { id: 'client-profile', role: 'client', path: '/client/profile', title: 'Profile', layout: 'client', type: 'profile', nav: 'settings' },
+    { id: 'client-settings', role: 'client', path: '/client/settings', title: 'Settings', layout: 'client', type: 'settings', nav: 'settings' },
+    { id: 'client-guide', role: 'client', path: '/client/guide', title: 'Guide', layout: 'client', type: 'guide', nav: 'settings' },
+
+    /* GUARD */
+    { id: 'guard-map', role: 'guard', path: '/guard/map', title: 'Map', layout: 'guard', type: 'map-guard', nav: 'map' },
+    { id: 'guard-activation', role: 'guard', path: '/guard/activation', title: 'Activation', layout: 'guard', type: 'activation', nav: 'activation' },
+    { id: 'guard-jobs', role: 'guard', path: '/guard/my-jobs', title: 'Jobs', layout: 'guard', type: 'list', nav: 'myJobs' },
+    { id: 'guard-earnings', role: 'guard', path: '/guard/earnings', title: 'Pay', layout: 'guard', type: 'earnings', nav: 'earnings' },
+    { id: 'guard-messages', role: 'guard', path: '/guard/messages', title: 'Messages', layout: 'guard', type: 'messages', nav: 'messages' },
+    { id: 'guard-crew', role: 'guard', path: '/guard/crew', title: 'Crew', layout: 'guard', type: 'grid', nav: 'crew' },
+    { id: 'guard-preferences', role: 'guard', path: '/guard/preferences', title: 'Preferences', layout: 'guard', type: 'settings', nav: 'preferences' },
+    { id: 'guard-performance', role: 'guard', path: '/guard/performance', title: 'Performance', layout: 'guard', type: 'dashboard', nav: 'performance' },
+    { id: 'guard-availability', role: 'guard', path: '/guard/availability', title: 'Availability', layout: 'guard', type: 'calendar', nav: 'availability' },
+    { id: 'guard-vehicle', role: 'guard', path: '/guard/vehicle', title: 'Vehicle', layout: 'guard', type: 'form', nav: 'vehicle' },
+    { id: 'guard-profile', role: 'guard', path: '/guard/profile', title: 'Profile', layout: 'guard', type: 'profile', nav: 'profile' },
+    { id: 'guard-settings', role: 'guard', path: '/guard/settings', title: 'Settings', layout: 'guard', type: 'settings', nav: 'settings' },
+    { id: 'guard-guide', role: 'guard', path: '/guard/guide', title: 'Guide', layout: 'guard', type: 'guide', nav: 'settings' },
+
+    /* STAFF */
+    { id: 'staff-overview', role: 'staff', path: '/staff/overview', title: 'Overview', layout: 'staff', type: 'dashboard', nav: 'overview' },
+    { id: 'staff-map', role: 'staff', path: '/staff/map', title: 'Operations map', layout: 'staff', type: 'map-staff', nav: 'map' },
+    { id: 'staff-jobs', role: 'staff', path: '/staff/jobs', title: 'Jobs', layout: 'staff', type: 'list', nav: 'jobs' },
+    { id: 'staff-applications', role: 'staff', path: '/staff/applications', title: 'Applications', layout: 'staff', type: 'list', nav: 'applications' },
+    { id: 'staff-credentials', role: 'staff', path: '/staff/credentials', title: 'Credentials', layout: 'staff', type: 'list', nav: 'credentials' },
+    { id: 'staff-guards', role: 'staff', path: '/staff/guards', title: 'Field guards', layout: 'staff', type: 'grid', nav: 'guards' },
+    { id: 'staff-crews', role: 'staff', path: '/staff/crews', title: 'Crews', layout: 'staff', type: 'grid', nav: 'crews' },
+    { id: 'staff-clients', role: 'staff', path: '/staff/clients', title: 'Clients', layout: 'staff', type: 'grid', nav: 'clients' },
+    { id: 'staff-team', role: 'staff', path: '/staff/team', title: 'Staff', layout: 'staff', type: 'grid', nav: 'team' },
+    { id: 'staff-messages', role: 'staff', path: '/staff/messages', title: 'Messages', layout: 'staff', type: 'messages', nav: 'messages' },
+    { id: 'staff-payments', role: 'staff', path: '/staff/payments', title: 'Payments', layout: 'staff', type: 'list', nav: 'payments' },
+    { id: 'staff-payment-settings', role: 'staff', path: '/staff/payment-settings', title: 'Payment settings', layout: 'staff', type: 'settings', nav: 'payment-settings' },
+    { id: 'staff-agreements', role: 'staff', path: '/staff/agreements', title: 'Agreements', layout: 'staff', type: 'list', nav: 'agreements' },
+    { id: 'staff-audit', role: 'staff', path: '/staff/audit-log', title: 'Audit log', layout: 'staff', type: 'list', nav: 'audit-log' },
+    { id: 'staff-incidents', role: 'staff', path: '/staff/incidents', title: 'Incidents', layout: 'staff', type: 'list', nav: 'incidents' },
+    { id: 'staff-violations', role: 'staff', path: '/staff/violations', title: 'Violations', layout: 'staff', type: 'list', nav: 'violations' },
+    { id: 'staff-stats', role: 'staff', path: '/staff/stats', title: 'Stats', layout: 'staff', type: 'dashboard', nav: 'stats' },
+    { id: 'staff-disputes', role: 'staff', path: '/staff/disputes', title: 'Disputes', layout: 'staff', type: 'list', nav: 'disputes' },
+    { id: 'staff-analytics', role: 'staff', path: '/staff/analytics', title: 'Analytics', layout: 'staff', type: 'dashboard', nav: 'analytics' },
+    { id: 'staff-cities', role: 'staff', path: '/staff/cities', title: 'Operations', layout: 'staff', type: 'list', nav: 'cities' },
+    { id: 'staff-permissions', role: 'staff', path: '/staff/permissions', title: 'Permissions', layout: 'staff', type: 'settings', nav: 'permissions' },
+    { id: 'staff-settings', role: 'staff', path: '/staff/settings', title: 'Public information', layout: 'staff', type: 'settings', nav: 'settings' },
+    { id: 'staff-integrations', role: 'staff', path: '/staff/integrations', title: 'Integrations', layout: 'staff', type: 'settings', nav: 'integrations' },
+    { id: 'staff-guide', role: 'staff', path: '/staff/guide', title: 'Guide', layout: 'staff', type: 'guide', nav: 'guide' },
+    { id: 'staff-dev', role: 'staff', path: '/staff/dev-updates', title: 'Dev notes', layout: 'staff', type: 'list', nav: 'dev-updates' },
+    { id: 'staff-profile', role: 'staff', path: '/staff/profile', title: 'Profile', layout: 'staff', type: 'profile', nav: 'profile' },
+    { id: 'staff-preferences', role: 'staff', path: '/staff/preferences', title: 'Settings', layout: 'staff', type: 'settings', nav: 'preferences' },
+  ];
+
+  const NAV = {
+    client: [
+      { id: 'home', label: 'Home', icon: '⌂' },
+      { id: 'requests', label: 'Jobs', icon: '☰' },
+      { id: 'map', label: 'Map', icon: '◎', center: true },
+      { id: 'messages', label: 'Messages', icon: '✉' },
+      { id: 'guards', label: 'Guards', icon: '👤' },
+      { id: 'invoices', label: 'Invoices', icon: '$' },
+      { id: 'locations', label: 'Locations', icon: '📍' },
+      { id: 'reports', label: 'Reports', icon: '📄' },
+      { id: 'settings', label: 'Settings', icon: '⚙' },
+    ],
+    guard: [
+      { id: 'map', label: 'Map', icon: '◎', center: true },
+      { id: 'myJobs', label: 'Jobs', icon: '💼' },
+      { id: 'crew', label: 'Crew', icon: '👥' },
+      { id: 'messages', label: 'Messages', icon: '✉' },
+      { id: 'availability', label: 'Availability', icon: '📅' },
+      { id: 'preferences', label: 'Preferences', icon: '⚙' },
+      { id: 'performance', label: 'Performance', icon: '📊' },
+      { id: 'vehicle', label: 'Vehicle', icon: '🚗' },
+      { id: 'earnings', label: 'Pay', icon: '$' },
+      { id: 'activation', label: 'Activation', icon: '✓' },
+      { id: 'profile', label: 'Profile', icon: '👤' },
+      { id: 'settings', label: 'Settings', icon: '⚙' },
+    ],
+    staff: [
+      { id: 'overview', label: 'Overview', icon: '▦' },
+      { id: 'map', label: 'Map', icon: '◎', center: true },
+      { id: 'jobs', label: 'Jobs', icon: '💼' },
+      { id: 'applications', label: 'Applications', icon: '📋' },
+      { id: 'credentials', label: 'Credentials', icon: '🪪' },
+      { id: 'clients', label: 'Clients', icon: '🏢' },
+      { id: 'guards', label: 'Guards', icon: '👤' },
+      { id: 'crews', label: 'Crews', icon: '👥' },
+      { id: 'team', label: 'Staff', icon: '🧑‍💼' },
+      { id: 'messages', label: 'Messages', icon: '✉' },
+      { id: 'payments', label: 'Payments', icon: '$' },
+      { id: 'payment-settings', label: 'Pay settings', icon: '⚙' },
+      { id: 'agreements', label: 'Agreements', icon: '📜' },
+      { id: 'audit-log', label: 'Audit log', icon: '📋' },
+      { id: 'incidents', label: 'Incidents', icon: '⚠' },
+      { id: 'violations', label: 'Violations', icon: '⛔' },
+      { id: 'stats', label: 'Stats', icon: '📊' },
+      { id: 'disputes', label: 'Disputes', icon: '⚖' },
+      { id: 'analytics', label: 'Analytics', icon: '📈' },
+      { id: 'cities', label: 'Operations', icon: '🌆' },
+      { id: 'permissions', label: 'Permissions', icon: '🔐' },
+      { id: 'settings', label: 'Public info', icon: 'ℹ' },
+      { id: 'integrations', label: 'Integrations', icon: '🔌' },
+      { id: 'guide', label: 'Guide', icon: '📖' },
+      { id: 'dev-updates', label: 'Dev notes', icon: '🛠' },
+      { id: 'profile', label: 'Profile', icon: '👤' },
+      { id: 'preferences', label: 'Settings', icon: '⚙' },
+    ],
+  };
+
+  const BRAND = { client: 'Guardr Client', guard: 'Guardr Pro', staff: 'Guardr Ops' };
+
+  /* ── Content templates ── */
+  function skLines(n = 4) {
+    return Array.from({ length: n }, (_, i) =>
+      `<div class="sk-line sk" style="width:${[90,70,50,80,40][i % 5]}%;margin-bottom:8px"></div>`
+    ).join('');
+  }
+
+  function tplList() {
+    return `<div>${Array.from({ length: 5 }, () => `
+      <div class="sk-row">
+        <div class="sk sk-av"></div>
+        <div style="flex:1">${skLines(2)}</div>
+        <div class="sk sk-line" style="width:48px"></div>
+      </div>`).join('')}</div>`;
+  }
+
+  function tplGrid() {
+    return `<div class="sk-grid c3">${Array.from({ length: 6 }, () => `
+      <div class="sk-card sk">
+        <div class="sk sk-av" style="width:48px;height:48px;margin-bottom:10px"></div>
+        ${skLines(2)}
+      </div>`).join('')}</div>`;
+  }
+
+  function tplDashboard() {
+    return `
+      <div class="sk-grid c4" style="margin-bottom:16px">
+        ${['Jobs','Guards','Revenue','Rating'].map(l => `
+          <div class="sk-card sk-stat sk"><div class="num">—</div><div class="lbl">${l}</div></div>`).join('')}
+      </div>
+      <div class="sk-card sk" style="height:160px;margin-bottom:12px"></div>
+      ${tplList()}`;
+  }
+
+  function tplForm() {
+    return `<div style="max-width:400px">${['Title','Location','Date','Notes'].map(f => `
+      <div class="sk-field"><div class="lbl">${f}</div><div class="sk inp"></div></div>`).join('')}
+      <button class="sk-btn" type="button">Continue</button></div>`;
+  }
+
+  function tplMessages() {
+    return `<div class="sk-grid" style="grid-template-columns:220px 1fr;min-height:400px">
+      <div class="sk-card sk">${tplList()}</div>
+      <div class="sk-card sk" style="display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:16px">
+        <div class="sk sk-line" style="width:55%;align-self:flex-start"></div>
+        <div class="sk sk-line" style="width:45%;align-self:flex-end"></div>
+        <div class="sk sk-line" style="width:60%;align-self:flex-start"></div>
+        <div class="sk inp" style="height:36px;margin-top:12px"></div>
+      </div></div>`;
+  }
+
+  function tplProfile() {
+    return `<div style="text-align:center;padding:20px 0 24px">
+      <div class="sk sk-av" style="width:72px;height:72px;margin:0 auto 12px"></div>
+      ${skLines(2)}
+    </div>${tplForm()}`;
+  }
+
+  function tplSettings() {
+    return Array.from({ length: 6 }, () => `
+      <div class="sk-row" style="justify-content:space-between">
+        <div class="sk sk-line" style="width:40%"></div>
+        <div class="sk" style="width:40px;height:22px;border-radius:11px"></div>
+      </div>`).join('');
+  }
+
+  function tplCalendar() {
+    return `<div class="sk-grid c7" style="grid-template-columns:repeat(7,1fr);gap:6px">
+      ${Array.from({ length: 28 }, () => `<div class="sk" style="height:36px;border-radius:6px"></div>`).join('')}
+    </div>`;
+  }
+
+  function tplEarnings() {
+    return `
+      <div class="sk-card sk-stat sk" style="margin-bottom:16px;text-align:left">
+        <div class="lbl">This week</div><div class="num" style="font-size:40px">$—</div>
+      </div>
+      <div class="sk-card sk" style="height:140px;margin-bottom:12px"></div>
+      ${tplList()}`;
+  }
+
+  function tplActivation() {
+    return `<div style="max-width:420px;margin:40px auto;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">✓</div>
+      <h3 style="font-size:20px;font-weight:800;margin-bottom:8px">Complete activation</h3>
+      <p style="font-size:12px;color:var(--brand-text-muted);margin-bottom:20px">Upload credentials to start accepting jobs</p>
+      ${['Photo ID','Guard card','Liability insurance'].map(s => `
+        <div class="sk-row" style="text-align:left"><div class="sk sk-av" style="width:32px;height:32px"></div><span style="font-size:13px;font-weight:600">${s}</span><div class="sk sk-line" style="width:60px;margin-left:auto"></div></div>`).join('')}
+    </div>`;
+  }
+
+  function tplLanding() {
+    return `<div class="sk-hero">
+      <h3>Security, on demand</h3>
+      <p>Licensed guards for events, retail, corporate, and more.</p>
+      <button class="sk-btn" type="button">Get started</button>
+      <button class="sk-btn outline" type="button" style="margin-left:8px">Sign in</button>
+    </div>
+    <div class="sk-grid c3" style="padding:0 24px 32px">
+      ${['Post a job','Track live','Pay securely'].map(t => `<div class="sk-card sk" style="padding:20px;text-align:center;font-size:12px;font-weight:700">${t}</div>`).join('')}
+    </div>`;
+  }
+
+  function tplAuth(signup) {
+    return `<div style="max-width:360px;margin:48px auto;padding:0 20px">
+      <h3 style="font-size:22px;font-weight:800;margin-bottom:4px">${signup ? 'Create account' : 'Welcome back'}</h3>
+      <p style="font-size:12px;color:var(--brand-text-muted);margin-bottom:24px">${signup ? 'Join as guard or client' : 'Sign in to continue'}</p>
+      ${['Email','Password'].concat(signup ? ['Role'] : []).map(f => `
+        <div class="sk-field"><div class="lbl">${f}</div><div class="sk inp"></div></div>`).join('')}
+      <button class="sk-btn" type="button" style="width:100%;margin-top:8px">${signup ? 'Sign up' : 'Sign in'}</button>
+    </div>`;
+  }
+
+  function tplGuide() {
+    return `<div style="padding:8px 0">${Array.from({ length: 8 }, (_, i) => `
+      <div class="sk-row"><span style="font-size:13px;font-weight:700;width:24px;color:var(--brand-text-muted)">${i+1}</span><div style="flex:1">${skLines(1)}</div></div>`).join('')}</div>`;
+  }
+
+  function tplLegal() {
+    return `<div style="max-width:560px">${Array.from({ length: 12 }, () => `
+      <div class="sk sk-line" style="width:${60+Math.random()*35}%;margin-bottom:10px;height:8px"></div>`).join('')}</div>`;
+  }
+
+  /* ── Map templates (detailed) ── */
+  function mapBase(extra = '') {
+    return `
+      <div class="map-grid-bg"></div>
+      <div class="map-road h"></div><div class="map-road v"></div>
+      <div class="map-pulse"></div>
+      <div class="map-pin" style="top:30%;left:34%"></div>
+      <div class="map-pin" style="top:52%;left:68%"></div>
+      <div class="map-pin warn" style="top:24%;left:76%"></div>
+      <div class="map-pin" style="top:62%;left:28%"></div>
+      <div class="map-zoom"><button type="button">+</button><button type="button">−</button></div>
+      ${extra}`;
+  }
+
+  function tplMapGuard() {
+    return `<div class="map-mock tall">
+      ${mapBase(`
+        <div class="map-filter-bar">
+          ${['Open','Applied','Assigned','Active'].map((c,i) => `<span class="map-chip${i===0?' on':''}">${c}</span>`).join('')}
+        </div>
+        <div class="map-route-banner"><strong>Route</strong> · 12 min · 4.2 mi to selected job</div>
+        <div class="map-dock">
+          <div class="map-card hot">
+            <div class="map-card-title">Event security · Downtown</div>
+            <div class="map-card-sub">Tonight 6:00 PM · Surge 1.8×</div>
+            <div class="map-card-row">
+              <span class="map-card-pay">$42/hr</span>
+              <button class="map-card-btn" type="button">Apply</button>
+            </div>
+          </div>
+          <div class="map-card">
+            <div class="map-card-title">Retail patrol</div>
+            <div class="map-card-sub">Sat 10:00 AM · 2.4 mi</div>
+            <div class="map-card-row">
+              <span class="map-card-pay">$28/hr</span>
+              <button class="map-card-btn" type="button">View</button>
+            </div>
+          </div>
+        </div>`)}
+    </div>
+    <div class="online-bar">
+      <div><div style="font-size:14px;font-weight:800">You're online</div><div style="font-size:10px;color:var(--brand-text-muted)">Accepting jobs</div></div>
+      <div class="online-toggle"></div>
+    </div>`;
+  }
+
+  function tplMapClient() {
+    return `<div class="map-mock tall">
+      ${mapBase(`
+        <div class="map-filter-bar">
+          ${['All','Live','Scheduled','Completed'].map((c,i) => `<span class="map-chip${i===1?' on':''}">${c}</span>`).join('')}
+        </div>
+        <div class="map-fab-row" style="position:absolute;top:52px;right:12px;z-index:2">
+          <button class="map-fab" type="button" title="Post job">+</button>
+        </div>
+        <div class="map-dock">
+          <div class="map-card hot">
+            <div class="map-card-title">Live shift · Guard en route</div>
+            <div class="map-card-sub">Staples Center · ETA 8 min</div>
+            <div class="map-card-row">
+              <span style="font-size:11px;font-weight:700;color:var(--brand-primary-bright)">Track →</span>
+              <button class="map-card-btn" type="button">Chat</button>
+            </div>
+          </div>
+        </div>`)}
+    </div>`;
+  }
+
+  function tplMapStaff() {
+    return `<div class="map-mock tall">
+      ${mapBase(`
+        <div class="map-filter-bar">
+          ${['All jobs','Pending','Live','Needs review'].map((c,i) => `<span class="map-chip${i===0?' on':''}">${c}</span>`).join('')}
+        </div>
+        <div class="map-side-panel">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-text-muted)">Selected job</div>
+          <div class="map-card-title">Corporate lobby · Night shift</div>
+          <div class="map-card-sub">Client: Acme Corp · 3 applicants</div>
+          <div class="sk-row" style="border:none;padding:8px 0"><div class="sk sk-av" style="width:32px;height:32px"></div><div class="sk sk-line" style="flex:1"></div></div>
+          <div class="sk-row" style="border:none;padding:8px 0"><div class="sk sk-av" style="width:32px;height:32px"></div><div class="sk sk-line" style="flex:1"></div></div>
+          <div style="display:flex;gap:8px;margin-top:auto">
+            <button class="map-card-btn" type="button" style="flex:1">Approve</button>
+            <button class="sk-btn outline" type="button" style="flex:1;padding:8px">Deny</button>
+          </div>
+        </div>`)}
+    </div>`;
+  }
+
+  const CONTENT = {
+    landing: tplLanding,
+    auth: () => tplAuth(false),
+    'auth-signup': () => tplAuth(true),
+    guide: tplGuide,
+    legal: tplLegal,
+    dashboard: tplDashboard,
+    list: tplList,
+    grid: tplGrid,
+    form: tplForm,
+    messages: tplMessages,
+    profile: tplProfile,
+    settings: tplSettings,
+    calendar: tplCalendar,
+    earnings: tplEarnings,
+    activation: tplActivation,
+    'map-guard': tplMapGuard,
+    'map-client': tplMapClient,
+    'map-staff': tplMapStaff,
+  };
+
+  function renderNav(layout, activeId) {
+    const items = NAV[layout] || [];
+    return items.map(it => `
+      <button type="button" class="${it.id === activeId ? 'on' : ''}">
+        <span>${it.icon}</span><span>${it.label}</span>
+      </button>`).join('');
+  }
+
+  function renderBottomNav(layout, activeId) {
+    const items = (NAV[layout] || []).filter(it => !['profile','settings','guide','preferences','payment-settings','integrations','dev-updates','permissions','audit-log','agreements','cities'].includes(it.id));
+    const shown = items.slice(0, 4);
+    return shown.map(it => {
+      if (it.center) return `<button type="button" class="${it.id === activeId ? 'on' : ''}"><span class="map-fab">${it.icon}</span><span>${it.label}</span></button>`;
+      return `<button type="button" class="${it.id === activeId ? 'on' : ''}">${it.icon}<span>${it.label}</span></button>`;
+    }).join('') + `<button type="button">⋯<span>More</span></button>`;
+  }
+
+  function renderShell(page, inner) {
+    const { layout, title, nav, type } = page;
+    if (layout === 'public') {
+      return `<div class="shell" style="min-height:560px"><div class="shell-main"><div class="shell-topbar">Guardr <span style="font-size:11px;color:var(--brand-text-muted)">public</span></div><div class="shell-body">${inner}</div></div></div>`;
+    }
+    const isMap = type.startsWith('map-');
+    const mobile = FRAME.size === 'mobile';
+    if (mobile) {
+      return `<div class="shell mobile-stack">
+        <div class="shell-topbar">${BRAND[layout]} · ${title}</div>
+        <div class="shell-body ${isMap ? 'flush' : ''}">${inner}</div>
+        <div class="shell-bottom">${renderBottomNav(layout, nav)}</div>
+      </div>`;
+    }
+    return `<div class="shell">
+      <aside class="shell-sidebar">
+        <div class="shell-brand"><span class="logo">G</span><span>${BRAND[layout]}</span></div>
+        <nav class="shell-nav">${renderNav(layout, nav)}</nav>
+      </aside>
+      <div class="shell-main">
+        <div class="shell-topbar">${title}</div>
+        <div class="shell-body ${isMap ? 'flush' : ''}">${inner}</div>
+      </div>
+    </div>`;
+  }
+
+  function renderPage(page) {
+    const fn = CONTENT[page.type] || tplDashboard;
+    const inner = fn();
+    return `
+      <section class="screen-block" id="${page.id}" data-role="${page.role}">
+        <div class="screen-meta">
+          <h2>${page.title}</h2>
+          <span class="role-tag">${page.role}</span>
+          <span class="path-tag">${page.path}</span>
+        </div>
+        <div class="device-frame ${FRAME.size}">${renderShell(page, inner)}</div>
+      </section>`;
+  }
+
+  function filteredPages() {
+    return FRAME.role === 'all' ? PAGES : PAGES.filter(p => p.role === FRAME.role);
+  }
+
+  function renderIndex() {
+    const index = document.getElementById('page-index');
+    const groups = ['public', 'client', 'guard', 'staff'];
+    index.innerHTML = groups.map(role => {
+      const pages = filteredPages().filter(p => p.role === role);
+      if (!pages.length) return '';
+      return `<div class="index-group" data-role="${role}">
+        <div class="index-group-title">${role}</div>
+        ${pages.map(p => `<button type="button" class="index-link" data-target="${p.id}">
+          ${p.title}<span class="path">${p.path}</span>
+        </button>`).join('')}
+      </div>`;
+    }).join('');
+
+    index.querySelectorAll('.index-link').forEach(btn => {
       btn.onclick = () => {
-        document.querySelectorAll('[data-frame]').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        frame.className = 'frame ' + btn.dataset.frame;
+        document.getElementById(btn.dataset.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
     });
-    document.querySelectorAll('.pill').forEach((p) => {
-      p.onclick = () => {
-        p.parentElement.querySelectorAll('.pill').forEach((x) => x.classList.remove('active'));
-        p.classList.add('active');
-      };
-    });
-    document.querySelectorAll('.subnav-tab').forEach((t) => {
-      t.onclick = () => {
-        document.querySelectorAll('.subnav-tab').forEach((x) => x.classList.remove('active'));
-        t.classList.add('active');
-      };
-    });
-    document.querySelectorAll('.map-chip').forEach((c) => {
-      c.onclick = () => {
-        document.querySelectorAll('.map-chip').forEach((x) => x.classList.remove('hot'));
-        c.classList.add('hot');
-      };
-    });
+  }
+
+  function renderStage() {
+    document.getElementById('scroll-stage').innerHTML = filteredPages().map(renderPage).join('');
+  }
+
+  function render() {
+    renderIndex();
+    renderStage();
+    setupScrollSpy();
+  }
+
+  function setupScrollSpy() {
+    const blocks = document.querySelectorAll('.screen-block');
+    const links = document.querySelectorAll('.index-link');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.toggle('active', l.dataset.target === e.target.id));
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    blocks.forEach(b => obs.observe(b));
+  }
+
+  document.querySelectorAll('.role-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      FRAME.role = btn.dataset.role;
+      render();
+    };
+  });
+
+  document.querySelectorAll('.frame-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.frame-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      FRAME.size = btn.dataset.frame;
+      render();
+    };
+  });
+
+  render();
   </script>
 </body>
 </html>
