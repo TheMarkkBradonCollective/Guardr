@@ -376,21 +376,12 @@ export function StaffCitiesPanel({
   }
 
   return (
-    <div className="animate-fade-in space-y-4">
-      <div className="rounded-xl border border-brand-border bg-brand-surface/60 p-4 space-y-2">
-        <h2 className="text-sm font-semibold">Operations</h2>
-        <p className="text-sm text-brand-text-muted leading-relaxed">
-          Control where Guardr accepts guard and client applications. Closed cities show an instant
-          denial. Wait list cities still collect applications but hold release to staff until operations
-          are fully active.
+    <div className="animate-fade-in space-y-3">
+      {canRecommend && !canManageStatus && (
+        <p className="text-xs text-amber-400 px-1">
+          As a Manager you can recommend cities for review. Directors and Founders control open, closed, and wait list status.
         </p>
-        {canRecommend && (
-          <p className="text-xs text-amber-400">
-            As a Manager you can recommend cities for review. Directors and Founders control open,
-            closed, and wait list status.
-          </p>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <WfSearchBar
@@ -431,37 +422,32 @@ export function StaffCitiesPanel({
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-brand-border bg-brand-surface/40 max-h-[70vh] overflow-y-auto divide-y divide-brand-border">
+        <div className="app-list">
           {filtered.map((city) => {
             const busy = savingId === city.id;
             const directorValue = getDirectorActionValue(city);
             const managerValue = getManagerActionValue(city);
 
             return (
-              <div
-                key={city.id}
-                className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3"
-              >
+              <div key={city.id} className="app-list-row app-list-row-align-top">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold leading-snug truncate">{city.name}</p>
                     <span className="text-xs text-brand-text-muted shrink-0">{city.stateCode}</span>
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <WfBadge tone={STATUS_TONES[city.status]}>
                       {CITY_STATUS_LABELS[city.status]}
                     </WfBadge>
-                    {city.recommendOpen && <WfBadge tone="primary">Recommended</WfBadge>}
-                    {city.status === 'waitlist' && (
-                      <span className="text-xs text-brand-text-muted capitalize">
-                        {city.waitlistAudience}
-                      </span>
-                    )}
+                    {city.recommendOpen && <WfBadge tone="primary">Rec.</WfBadge>}
                   </div>
+                  {city.status === 'waitlist' && (
+                    <p className="text-xs text-brand-text-muted mt-0.5 capitalize">
+                      Wait list · {city.waitlistAudience}
+                    </p>
+                  )}
                 </div>
 
                 {canManageStatus ? (
-                  <label className="flex shrink-0 flex-col gap-1 sm:w-52">
+                  <label className="shrink-0">
                     <span className="sr-only">Set operations status for {city.name}</span>
                     <select
                       value={directorValue}
@@ -471,7 +457,8 @@ export function StaffCitiesPanel({
                         if (next === directorValue) return;
                         void applyUpdate(city, parseDirectorAction(next));
                       }}
-                      className="uber-select w-full text-sm"
+                      className="uber-select text-xs"
+                      style={{ minWidth: 120 }}
                     >
                       {DIRECTOR_ACTION_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -481,7 +468,7 @@ export function StaffCitiesPanel({
                     </select>
                   </label>
                 ) : canRecommend ? (
-                  <label className="flex shrink-0 flex-col gap-1 sm:w-44">
+                  <label className="shrink-0">
                     <span className="sr-only">Recommend {city.name}</span>
                     <select
                       value={managerValue}
@@ -491,7 +478,8 @@ export function StaffCitiesPanel({
                         if (next === managerValue) return;
                         void applyUpdate(city, { recommendOpen: next === 'recommend' });
                       }}
-                      className="uber-select w-full text-sm"
+                      className="uber-select text-xs"
+                      style={{ minWidth: 100 }}
                     >
                       {MANAGER_ACTION_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>

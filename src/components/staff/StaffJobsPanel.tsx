@@ -131,17 +131,17 @@ export function StaffJobsPanel({
           />
         )}
       </div>
-      <div className="app-action-row--equal">
+      <div
+        className="flex flex-nowrap gap-1.5 overflow-x-auto"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      >
         {filters.map((f) => (
           <button
             key={f.id}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              filter === f.id
-                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-            }`}
+            className="staff-filter-pill shrink-0 whitespace-nowrap"
+            data-active={filter === f.id ? 'true' : undefined}
           >
             {f.label}
           </button>
