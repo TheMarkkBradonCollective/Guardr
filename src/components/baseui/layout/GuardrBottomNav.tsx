@@ -35,14 +35,13 @@ export function GuardrIconRail({
           style: {
             width: '72px',
             flexShrink: 0,
-            borderRight: '1px solid',
-            borderColor: 'borderOpaque',
+            borderRight: `1px solid ${theme.colors.borderOpaque}`,
           },
         },
       }}
     >
       {brand ? (
-        <Block padding="scale500" overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}>
+        <Block padding="scale500" overrides={{ Block: { style: { borderBottom: `1px solid ${theme.colors.borderOpaque}` } } }}>
           {brand}
         </Block>
       ) : null}
@@ -81,8 +80,8 @@ export function GuardrIconRail({
                     height: 16,
                     padding: '0 4px',
                     borderRadius: 9999,
-                    background: theme.colors.accent,
-                    color: theme.colors.contentOnColor,
+                    background: theme.colors.contentPrimary,
+                    color: theme.colors.contentInversePrimary,
                     fontSize: 10,
                     fontWeight: 700,
                     lineHeight: '16px',
@@ -116,28 +115,27 @@ interface GuardrBottomNavProps {
   centerItemId?: string;
 }
 
-function BottomNavButton({
+/** Individual bottom nav tab — real Uber style: black active, gray inactive */
+function BottomNavTab({
   label,
   icon: Icon,
   active,
   badge,
   onClick,
-  className = '',
 }: {
   label: string;
   icon: LucideIcon;
   active: boolean;
   badge?: number;
   onClick: () => void;
-  className?: string;
 }) {
   const [, theme] = useStyletron();
+  const color = active ? theme.colors.contentPrimary : theme.colors.contentSecondary;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={className}
       aria-current={active ? 'page' : undefined}
       style={{
         flex: 1,
@@ -146,43 +144,52 @@ function BottomNavButton({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 4,
-        minHeight: '52px',
+        minHeight: '56px',
         padding: '8px 4px',
         border: 'none',
         background: 'transparent',
         cursor: 'pointer',
-        color: active ? theme.colors.accent : theme.colors.contentSecondary,
-        transition: 'color 150ms ease, transform 150ms ease',
+        color,
+        fontFamily: 'inherit',
+        transition: 'color 120ms ease',
       }}
     >
-      <span style={{ position: 'relative' }}>
-        <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+      <span style={{ position: 'relative', display: 'flex' }}>
+        <Icon
+          size={22}
+          strokeWidth={active ? 2.5 : 2}
+          color={color}
+        />
         {badge != null && badge > 0 ? (
           <span
             style={{
               position: 'absolute',
-              top: -6,
+              top: -5,
               right: -8,
               minWidth: 16,
               height: 16,
               padding: '0 4px',
               borderRadius: 9999,
-              background: theme.colors.accent,
-              color: theme.colors.contentOnColor,
+              background: theme.colors.contentPrimary,
+              color: theme.colors.contentInversePrimary,
               fontSize: 10,
               fontWeight: 700,
               lineHeight: '16px',
+              textAlign: 'center',
             }}
           >
             {badge > 9 ? '9+' : badge}
           </span>
         ) : null}
       </span>
-      <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1 }}>{label}</span>
+      <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1, color }}>
+        {label}
+      </span>
     </button>
   );
 }
 
+/** Guardr bottom navigation — real Uber app style */
 export function GuardrBottomNav({
   items,
   activeId,
@@ -197,28 +204,23 @@ export function GuardrBottomNav({
   const [, theme] = useStyletron();
   const primarySlots = showMore ? items.slice(0, 4) : items.slice(0, 5);
   const centerIndex = primarySlots.findIndex((item) => item.id === centerItemId);
-  const hasCenter = centerIndex >= 0;
-  const leftItems = hasCenter ? primarySlots.slice(0, centerIndex) : primarySlots;
-  const centerItem = hasCenter ? primarySlots[centerIndex] : null;
-  const rightItems = hasCenter ? primarySlots.slice(centerIndex + 1) : [];
+  const hasCenter   = centerIndex >= 0;
+  const leftItems   = hasCenter ? primarySlots.slice(0, centerIndex) : primarySlots;
+  const centerItem  = hasCenter ? primarySlots[centerIndex] : null;
+  const rightItems  = hasCenter ? primarySlots.slice(centerIndex + 1) : [];
 
   return (
     <Block
       as="nav"
       aria-label="Main navigation"
-      backgroundColor={flat ? 'backgroundPrimary' : 'backgroundPrimary'}
+      backgroundColor="backgroundPrimary"
       overrides={{
         Block: {
           style: {
             flexShrink: 0,
-            zIndex: 1001,
-            borderTop: '1px solid',
-            borderColor: 'borderOpaque',
-            backdropFilter: flat ? undefined : 'blur(20px) saturate(150%)',
-            backgroundColor: flat
-              ? theme.colors.backgroundPrimary
-              : `${theme.colors.backgroundPrimary}eb`,
-            boxShadow: theme.colors.shadow400,
+            zIndex: 50,
+            borderTop: `1px solid ${theme.colors.borderOpaque}`,
+            backgroundColor: theme.colors.backgroundPrimary,
             paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
           },
         },
@@ -226,7 +228,7 @@ export function GuardrBottomNav({
     >
       <Block display="flex" alignItems="flex-end" justifyContent="space-around" width="100%">
         {leftItems.map((item) => (
-          <BottomNavButton
+          <BottomNavTab
             key={item.id}
             label={item.label}
             icon={item.icon ?? Map}
@@ -237,36 +239,18 @@ export function GuardrBottomNav({
         ))}
 
         {centerItem ? (
-          <button
-            type="button"
+          <BottomNavTab
+            key={centerItem.id}
+            label={centerItem.label}
+            icon={centerItem.icon ?? Map}
+            active={activeId === centerItem.id}
+            badge={centerItem.badge}
             onClick={() => onNavigate(centerItem.id)}
-            aria-current={activeId === centerItem.id ? 'page' : undefined}
-            aria-label={centerItem.label}
-            className="bottom-nav-center-map"
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4,
-              minHeight: 52,
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-            }}
-          >
-            <span
-              className={`bottom-nav-center-map-icon${activeId === centerItem.id ? ' bottom-nav-center-map-active' : ''}`}
-            >
-              <Map size={24} strokeWidth={activeId === centerItem.id ? 2.5 : 2} />
-            </span>
-            <span className="bottom-nav-center-map-label">{centerItem.label}</span>
-          </button>
+          />
         ) : null}
 
         {rightItems.map((item) => (
-          <BottomNavButton
+          <BottomNavTab
             key={item.id}
             label={item.label}
             icon={item.icon ?? Map}
@@ -277,7 +261,7 @@ export function GuardrBottomNav({
         ))}
 
         {showMore ? (
-          <BottomNavButton
+          <BottomNavTab
             label="More"
             icon={LayoutGrid}
             active={moreActive}

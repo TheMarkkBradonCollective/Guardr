@@ -18,8 +18,8 @@ body[data-view-surface] {
 html.theme-light,
 html.theme-dark,
 html.theme-grey {
-  --brand-primary: var(--uber-accent, #276ef1);
-  --brand-primary-hover: color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #000);
+  --brand-primary: var(--uber-accent, #000000);
+  --brand-primary-hover: color-mix(in srgb, var(--uber-accent, #000000) 88%, #000);
   --brand-bg: var(--uber-bg, #ffffff);
   --brand-bg-sec: var(--uber-surface, #f6f6f6);
   --brand-surface: var(--uber-bg, #ffffff);
@@ -162,7 +162,7 @@ body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobili
 
 body[data-view-surface^="browser"] .text-brand-primary,
 body[data-view-surface^="browser"] .bg-brand-primary {
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 /* ─── Legacy platform CSS neutralization inside mobility shell ─────────── */
@@ -205,7 +205,7 @@ body.shell-native .app-welcome-dock {
 
 body[data-shell="native"] .tablet-admin-rail-item:active,
 body.shell-native .tablet-admin-rail-item:active {
-  background: var(--uber-accent-50, color-mix(in srgb, #276ef1 12%, transparent));
+  background: var(--uber-accent-50, color-mix(in srgb, #4A6B4E 12%, transparent));
 }
 
 body[data-form-factor="tablet"] .tablet-admin-shell {
@@ -229,9 +229,9 @@ body[data-form-factor="tablet"] .tablet-admin-rail-label {
 /* ─── Desktop admin legacy remap ───────────────────────────────────────── */
 
 body[data-form-factor="desktop"] {
-  --adm-accent: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
-  --adm-sand-dark: var(--uber-accent, #276ef1);
+  --adm-accent: var(--uber-accent, #000000);
+  --adm-sand: var(--uber-accent, #000000);
+  --adm-sand-dark: var(--uber-accent, #000000);
   --adm-sand-light: var(--uber-accent-50, #eff4fe);
   --adm-bg: var(--uber-surface, #f6f6f6);
   --adm-card: var(--uber-bg, #ffffff);
@@ -272,4 +272,54 @@ html.theme-dark .uber-app-shell .app-button-primary {
 .uber-app-shell input:focus {
   border-color: var(--uber-text, #000);
   box-shadow: none;
+}
+
+/* ─── Desktop header — Uber black bar ────────────────────────────────────── */
+
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .mobility-header {
+  background: #000 !important;
+  border-bottom: none !important;
+  min-height: 60px;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .mobility-header * {
+  color: #fff !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .mobility-icon-btn {
+  background: rgba(255,255,255,0.10) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .mobility-icon-btn:hover {
+  background: rgba(255,255,255,0.18) !important;
+}
+
+/* Desktop sidebar — white body below black header */
+body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell aside {
+  background: #fff;
+  border-right: 1px solid var(--uber-border, #eeeeee);
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell aside {
+  background: #000;
+  border-right-color: var(--uber-border, #1a1a1a);
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .mobility-header {
+  background: #000 !important;
+}
+
+/* Desktop content area: gray surface */
+body[data-view-surface$="-desktop"] .uber-app-shell .uber-shell-content {
+  background: var(--uber-surface, #f6f6f6) !important;
+}
+
+/* ─── Mobile/PWA/native — bottom content pad ─────────────────────────── */
+
+body[data-view-surface^="pwa-"] .uber-app-shell,
+body[data-view-surface^="native-"] .uber-app-shell {
+  background: var(--uber-bg, #fff);
 }

@@ -1,16 +1,16 @@
 /* /uberit — Uber token bridge for legacy adm-*, app-*, and wireframe surfaces inside the shell */
 
 .uber-app-shell {
-  --adm-accent: var(--uber-accent, #276ef1);
-  --adm-accent-hover: color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #000);
-  --adm-accent-light: color-mix(in srgb, var(--uber-accent, #276ef1) 12%, var(--uber-bg, #fff));
-  --adm-accent-dark: var(--uber-accent, #276ef1);
-  --adm-accent-band: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
-  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #276ef1) 12%, var(--uber-bg, #fff));
-  --adm-sand-dark: var(--uber-accent, #276ef1);
-  --adm-sand-band: var(--uber-accent, #276ef1);
-  --adm-sand-hover: color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #000);
+  --adm-accent: var(--uber-accent, #000000);
+  --adm-accent-hover: color-mix(in srgb, var(--uber-accent, #000000) 88%, #000);
+  --adm-accent-light: color-mix(in srgb, var(--uber-accent, #000000) 12%, var(--uber-bg, #fff));
+  --adm-accent-dark: var(--uber-accent, #000000);
+  --adm-accent-band: var(--uber-accent, #000000);
+  --adm-sand: var(--uber-accent, #000000);
+  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #000000) 12%, var(--uber-bg, #fff));
+  --adm-sand-dark: var(--uber-accent, #000000);
+  --adm-sand-band: var(--uber-accent, #000000);
+  --adm-sand-hover: color-mix(in srgb, var(--uber-accent, #000000) 88%, #000);
   --adm-bg: var(--uber-surface, #f6f6f6);
   --adm-card: var(--uber-bg, #ffffff);
   --adm-text: var(--uber-text, #000000);
@@ -20,8 +20,8 @@
 }
 
 html.theme-dark .uber-app-shell {
-  --adm-accent-light: color-mix(in srgb, var(--uber-accent, #335ba3) 18%, var(--uber-bg, #141414));
-  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #335ba3) 18%, var(--uber-bg, #141414));
+  --adm-accent-light: color-mix(in srgb, var(--uber-accent, #FFFFFF) 18%, var(--uber-bg, #141414));
+  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #FFFFFF) 18%, var(--uber-bg, #141414));
 }
 
 /* ─── Dashboard grid + cards (all form factors inside shell) ───────────── */
@@ -61,27 +61,25 @@ html.theme-dark .uber-app-shell {
   box-shadow: none;
 }
 
+/* Uber black welcome card — solid black like real Uber app */
 .uber-app-shell .adm-card--welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--uber-accent, #276ef1) 92%, #000) 0%,
-    color-mix(in srgb, var(--uber-accent, #276ef1) 55%, #0a0a0a) 100%
-  );
+  background: #000000;
   border-color: transparent;
   color: #fff;
 }
 
 html.theme-light .uber-app-shell .adm-card--welcome {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #fff) 0%,
-    color-mix(in srgb, var(--uber-accent, #276ef1) 35%, #f2f4f8) 100%
-  );
-  color: var(--adm-text);
+  background: #000000;
+  color: #fff;
+}
+
+html.theme-dark .uber-app-shell .adm-card--welcome {
+  background: #1a1a1a;
+  color: #fff;
 }
 
 .uber-app-shell .adm-card-eyebrow {
@@ -137,13 +135,13 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 }
 
 .uber-app-shell .adm-btn--sand {
-  background: var(--uber-accent, #276ef1);
+  background: var(--uber-accent, #000000);
   color: #fff;
-  border-color: var(--uber-accent, #276ef1);
+  border-color: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .adm-btn--sand:hover {
-  background: color-mix(in srgb, var(--uber-accent, #276ef1) 88%, #000);
+  background: color-mix(in srgb, var(--uber-accent, #000000) 88%, #000);
 }
 
 .uber-app-shell .adm-btn--outline {
@@ -154,12 +152,12 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 
 .uber-app-shell .adm-btn--outline:hover {
   background: var(--adm-accent-light);
-  border-color: color-mix(in srgb, var(--uber-accent, #276ef1) 35%, var(--adm-border));
+  border-color: color-mix(in srgb, var(--uber-accent, #000000) 35%, var(--adm-border));
 }
 
 .uber-app-shell .adm-btn--soft {
   background: var(--adm-accent-light);
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .adm-btn--sm {
@@ -280,7 +278,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 }
 
 .uber-app-shell .adm-status-metric--click:hover {
-  border-color: color-mix(in srgb, var(--uber-accent, #276ef1) 35%, var(--adm-border));
+  border-color: color-mix(in srgb, var(--uber-accent, #000000) 35%, var(--adm-border));
   background: var(--adm-accent-light);
 }
 
@@ -294,7 +292,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 
 .uber-app-shell .adm-status-grid-value--ok { color: var(--uber-positive, #0e8345); }
 .uber-app-shell .adm-status-grid-value--warn { color: var(--uber-warning, #bc8b2c); }
-.uber-app-shell .adm-status-grid-value--accent { color: var(--uber-accent, #276ef1); }
+.uber-app-shell .adm-status-grid-value--accent { color: var(--uber-accent, #000000); }
 
 .uber-app-shell .adm-status-grid-label {
   margin: 0;
@@ -312,7 +310,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 .uber-app-shell .adm-status-meter-fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--uber-accent, #276ef1);
+  background: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .adm-status-meter-fill--success { background: var(--uber-positive, #0e8345); }
@@ -360,7 +358,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 }
 
 .uber-app-shell .adm-accent-text {
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 /* ─── App screen primitives ─────────────────────────────────────────────── */
@@ -459,7 +457,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .app-status-banner {
@@ -467,8 +465,8 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   gap: 0.75rem;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--uber-accent, #276ef1) 25%, var(--uber-border, #e2e2e2));
-  background: color-mix(in srgb, var(--uber-accent, #276ef1) 8%, var(--uber-bg, #fff));
+  border: 1px solid color-mix(in srgb, var(--uber-accent, #000000) 25%, var(--uber-border, #e2e2e2));
+  background: color-mix(in srgb, var(--uber-accent, #000000) 8%, var(--uber-bg, #fff));
   margin-bottom: 1rem;
 }
 
@@ -526,7 +524,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 }
 
 .uber-app-shell .text-brand-primary {
-  color: var(--uber-accent, #276ef1) !important;
+  color: var(--uber-accent, #000000) !important;
 }
 
 .uber-app-shell .text-brand-text-muted,
@@ -539,7 +537,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 }
 
 .uber-app-shell .bg-brand-primary {
-  background-color: var(--uber-accent, #276ef1) !important;
+  background-color: var(--uber-accent, #000000) !important;
 }
 
 /* ─── Dashboard stats, quick links, charts (tablet + mobile inside shell) ─ */
@@ -562,7 +560,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .adm-stat-label {
@@ -585,7 +583,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
-  background: conic-gradient(var(--uber-accent, #276ef1) var(--adm-progress), var(--adm-accent-light) 0);
+  background: conic-gradient(var(--uber-accent, #000000) var(--adm-progress), var(--adm-accent-light) 0);
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -620,7 +618,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
 
 .uber-app-shell .adm-quick-link:hover {
   background: var(--adm-accent-light);
-  border-color: color-mix(in srgb, var(--uber-accent, #276ef1) 25%, var(--adm-border));
+  border-color: color-mix(in srgb, var(--uber-accent, #000000) 25%, var(--adm-border));
 }
 
 .uber-app-shell .adm-section-eyebrow {
@@ -664,7 +662,7 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   font-size: 0.6875rem;
   font-weight: 700;
   background: var(--adm-accent-light);
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }
 
 .uber-app-shell .adm-welcome-art {
@@ -672,5 +670,5 @@ html.theme-light .uber-app-shell .adm-card--welcome {
   align-items: center;
   justify-content: center;
   opacity: 0.35;
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000000);
 }

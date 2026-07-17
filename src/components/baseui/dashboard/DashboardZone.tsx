@@ -1,7 +1,5 @@
 import React from 'react';
-import { Block } from 'baseui/block';
-import { HeadingSmall } from 'baseui/typography';
-import { AppButton } from '../../ui/AppButton';
+import { useStyletron } from 'baseui';
 
 export function DashboardZone({
   title,
@@ -16,28 +14,44 @@ export function DashboardZone({
   children: React.ReactNode;
   className?: string;
 }) {
+  const [, theme] = useStyletron();
+
   return (
-    <Block as="section" className={`app-dashboard-zone ${className}`.trim()} marginBottom="scale800">
-      <Block
-        className="app-dashboard-zone-head"
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        gridGap="scale400"
-        paddingLeft="scale800"
-        paddingRight="scale800"
-        marginBottom="scale400"
-      >
-        <HeadingSmall margin={0} className="app-dashboard-zone-title">
+    <section className={`app-dashboard-zone ${className}`.trim()} aria-label={title}>
+      {/* Uber-style section header */}
+      <div className="app-section-head">
+        <h2 style={{
+          fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+          fontSize: '18px',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          color: theme.colors.contentPrimary,
+          margin: 0,
+        }}>
           {title}
-        </HeadingSmall>
+        </h2>
         {actionLabel && onAction ? (
-          <AppButton type="button" variant="ghost" size="inline" onClick={onAction} className="app-section-link">
+          <button
+            type="button"
+            onClick={onAction}
+            className="app-section-link"
+            style={{
+              fontFamily: 'inherit',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: theme.colors.contentSecondary,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
             {actionLabel}
-          </AppButton>
+          </button>
         ) : null}
-      </Block>
-      <Block className="app-dashboard-zone-body">{children}</Block>
-    </Block>
+      </div>
+      <div className="app-dashboard-zone-body">{children}</div>
+    </section>
   );
 }

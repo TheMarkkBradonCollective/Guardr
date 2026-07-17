@@ -16,12 +16,15 @@ import { registerServiceWorker, initNativePushListeners } from './lib/push';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
+import './styles/guardr-design-tokens.css';
 import './styles/uber-tokens.css';
 import './styles/uber-surfaces.css';
 import './styles/uber-mobility.css';
 import './styles/uber-landing.css';
 import './styles/uber-global.css';
 import './styles/uber-workbench.css';
+import './styles/platform-optimizations.css';
+import './styles/uber-in-app.css';
 
 applyThemeToDocument(loadTheme());
 

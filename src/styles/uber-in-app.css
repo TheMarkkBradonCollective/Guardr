@@ -1,0 +1,1313 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR × UBER — In-app design system
+   Every screen, card, list, form, and panel matches Uber's actual product UI.
+   Replaces the legacy card-border / rounded-card patterns throughout the app.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Screen / page shell ────────────────────────────────────────────────── */
+
+.app-screen {
+  height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--uber-surface, #f6f6f6);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Map views are always full bleed — no surface tint */
+.app-screen--bleed {
+  background: transparent;
+  overflow: hidden;
+}
+
+/* ─── Section titles — Uber bold page header ─────────────────────────────── */
+
+.app-screen-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--uber-text, #000);
+  padding: 20px 20px 4px;
+  margin: 0;
+}
+
+html.theme-dark .app-screen-title { color: #fff; }
+
+/* Dashboard hero */
+.app-dashboard-hero {
+  padding: 24px 20px 16px;
+  background: var(--uber-bg, #fff);
+}
+
+.app-dashboard-hero-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--uber-text-muted, #767676);
+  margin: 0 0 6px;
+}
+
+.app-dashboard-hero-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(1.625rem, 5vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--uber-text, #000);
+  margin: 0;
+}
+
+html.theme-dark .app-dashboard-hero-title { color: #fff; }
+
+/* ─── Section heads — Uber minimal section labels ────────────────────────── */
+
+.app-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 10px;
+}
+
+.app-section-head h2 {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--uber-text, #000);
+  margin: 0;
+}
+
+html.theme-dark .app-section-head h2 { color: #fff; }
+
+.app-section-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uber-text-muted, #767676);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 100ms ease;
+  flex-shrink: 0;
+}
+
+.app-section-link:hover { color: var(--uber-text, #000); }
+
+.app-section {
+  margin-bottom: 0;
+}
+
+.app-section-body { padding: 0; }
+
+/* ─── List rows — Uber separator-only style (no card borders) ────────────── */
+
+.app-list {
+  background: var(--uber-bg, #fff);
+}
+
+.app-list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #fff);
+  color: var(--uber-text, #000);
+  text-align: left;
+  font-family: inherit;
+  cursor: default;
+  transition: background-color 100ms ease;
+}
+
+.app-list-row-align-top { align-items: flex-start; }
+
+button.app-list-row, a.app-list-row { cursor: pointer; }
+button.app-list-row:hover, a.app-list-row:hover { background: var(--uber-surface, #f6f6f6); }
+button.app-list-row:active, a.app-list-row:active { background: var(--uber-border, #eeeeee); }
+
+/* ─── Item cards — Uber row item (no rounded card) ───────────────────────── */
+
+.app-item-card,
+.wf-list-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--uber-bg, #fff);
+  border: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 0;
+  box-shadow: none;
+  text-align: left;
+  font-family: inherit;
+  color: var(--uber-text, #000);
+}
+
+/* First item in a stack: top border */
+.app-item-card:first-child,
+.wf-list-card:first-child {
+  border-top: 1px solid var(--uber-border, #eeeeee);
+}
+
+.app-item-card-align-top { align-items: flex-start; }
+
+button.app-item-card,
+a.app-item-card,
+.wf-list-card-interactive {
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+button.app-item-card:hover,
+a.app-item-card:hover,
+.wf-list-card-interactive:hover {
+  background: var(--uber-surface, #f6f6f6);
+}
+
+button.app-item-card:active,
+a.app-item-card:active,
+.wf-list-card-interactive:active {
+  background: var(--uber-border, #eeeeee);
+}
+
+/* Selected: left black bar + light bg — Uber's selected ride card */
+.app-item-card-selected,
+.app-item-card.ring-2 {
+  border-left: 3px solid var(--uber-text, #000);
+  background: var(--uber-surface, #f6f6f6);
+  box-shadow: none;
+}
+
+/* Stack — remove gaps, stacked separator rows */
+.app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--uber-bg, #fff);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--uber-border, #eeeeee);
+}
+
+.app-item-card-stack .app-item-card,
+.app-item-card-stack .wf-list-card {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.app-item-card-stack .app-item-card:first-child,
+.app-item-card-stack .wf-list-card:first-child {
+  border-top: none;
+}
+
+.app-item-card-stack .app-item-card:last-child,
+.app-item-card-stack .wf-list-card:last-child {
+  border-bottom: none;
+}
+
+/* ─── Search bar — Uber booking/search style ─────────────────────────────── */
+
+.app-search-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 20px 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  background: var(--uber-surface, #f6f6f6);
+  border-radius: 8px;
+  border: none;
+  box-sizing: border-box;
+  transition: background-color 100ms ease;
+}
+
+.app-search-inline:focus-within {
+  background: var(--uber-accent-100, #eeeeee);
+}
+
+html.theme-dark .app-search-inline { background: var(--uber-surface, #1a1a1a); }
+html.theme-dark .app-search-inline:focus-within { background: var(--uber-elevated, #2b2b2b); }
+
+.app-search-inline input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--uber-text, #000);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 14px 0;
+}
+
+.app-search-inline input::placeholder { color: var(--uber-text-muted, #767676); }
+
+/* ─── Uber stat grid — "3 sites active" style ────────────────────────────── */
+
+.uber-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.uber-stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  border-right: 1px solid var(--uber-border, #eeeeee);
+  text-align: center;
+}
+
+.uber-stat-cell:last-child { border-right: none; }
+
+.uber-stat-value {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--uber-text, #000);
+  margin: 0;
+  line-height: 1.1;
+}
+
+html.theme-dark .uber-stat-value { color: #fff; }
+
+.uber-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uber-text-muted, #767676);
+  margin: 4px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Quick-action grid — Uber's home service tiles ─────────────────────── */
+
+.uber-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--uber-bg, #fff);
+}
+
+.uber-quick-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 100ms ease;
+  font-family: inherit;
+  min-height: 80px;
+}
+
+.uber-quick-tile:hover { background: var(--uber-surface, #f6f6f6); }
+.uber-quick-tile:active { background: var(--uber-border, #eeeeee); }
+
+.uber-quick-tile-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uber-text, #000);
+  flex-shrink: 0;
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .uber-quick-tile-icon { background: var(--uber-elevated, #2b2b2b); color: #fff; }
+.uber-quick-tile:hover .uber-quick-tile-icon { background: var(--uber-border, #eeeeee); }
+
+.uber-quick-tile-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+  text-align: center;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+html.theme-dark .uber-quick-tile-label { color: #fff; }
+
+/* ─── Live/active card — Uber "ride in progress" card ────────────────────── */
+
+.uber-live-card {
+  margin: 12px 20px;
+  background: #000;
+  border-radius: 14px;
+  padding: 20px;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 100ms ease;
+}
+
+.uber-live-card:hover { opacity: 0.92; }
+.uber-live-card:active { opacity: 0.80; }
+
+html.theme-dark .uber-live-card { background: #1a1a1a; border: 1px solid #2b2b2b; }
+
+.uber-live-card-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.65);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.uber-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #66d19e;
+  animation: uber-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes uber-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.uber-live-card-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.uber-live-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.uber-live-stat {
+  text-align: center;
+}
+
+.uber-live-stat-value {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1;
+}
+
+.uber-live-stat-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.60);
+  margin: 4px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.uber-live-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.uber-live-card-row-label {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255,255,255,0.90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uber-live-card-row-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  flex-shrink: 0;
+}
+
+/* ─── Profile/guard rows — Uber driver profile card ─────────────────────── */
+
+.uber-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.uber-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  overflow: hidden;
+}
+
+.uber-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.uber-profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.01em;
+  margin: 0 0 2px;
+}
+
+html.theme-dark .uber-profile-name { color: #fff; }
+
+.uber-profile-sub {
+  font-size: 13px;
+  color: var(--uber-text-muted, #767676);
+  margin: 0;
+}
+
+.uber-star-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark .uber-star-row { color: #fff; }
+
+/* ─── Action button row — Safety / Share / Call pattern ─────────────────── */
+
+.uber-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 16px 20px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.uber-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-family: inherit;
+  transition: opacity 100ms ease;
+}
+
+.uber-action-btn:hover { opacity: 0.70; }
+
+.uber-action-btn-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uber-text, #000);
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .uber-action-btn-circle { background: var(--uber-elevated, #2b2b2b); color: #fff; }
+.uber-action-btn:hover .uber-action-btn-circle { background: var(--uber-border, #eeeeee); }
+
+.uber-action-btn-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark .uber-action-btn-label { color: #fff; }
+
+/* ─── Bottom sheet / map panel — white panel sliding over map ────────────── */
+
+.uber-map-bottom-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--uber-bg, #fff);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 10;
+}
+
+html.theme-dark .uber-map-bottom-sheet { background: var(--uber-bg, #000); }
+
+.uber-map-bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--uber-border, #eeeeee);
+  border-radius: 999px;
+  margin: 12px auto 4px;
+}
+
+.uber-map-bottom-sheet-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--uber-text, #000);
+  padding: 4px 20px 16px;
+  margin: 0;
+}
+
+html.theme-dark .uber-map-bottom-sheet-title { color: #fff; }
+
+/* ─── Earnings banner — Uber driver earnings summary ─────────────────────── */
+
+.uber-earnings-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 20px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.uber-earnings-amount {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--uber-text, #000);
+  margin: 0;
+  line-height: 1;
+}
+
+html.theme-dark .uber-earnings-amount { color: #fff; }
+
+.uber-earnings-label {
+  font-size: 13px;
+  color: var(--uber-text-muted, #767676);
+  margin: 4px 0 0;
+}
+
+/* ─── Empty state — Uber minimal empty state ─────────────────────────────── */
+
+.app-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--uber-text-muted, #767676);
+}
+
+.app-empty-state-icon { margin-bottom: 16px; color: var(--uber-border, #c4c4c4); }
+.app-empty-state-title { font-size: 16px; font-weight: 700; color: var(--uber-text, #000); margin: 0 0 8px; }
+html.theme-dark .app-empty-state-title { color: #fff; }
+.app-empty-state-body { font-size: 14px; color: var(--uber-text-muted, #767676); margin: 0 0 24px; line-height: 1.5; max-width: 260px; }
+
+/* ─── Form fields — Uber gray-fill inputs ────────────────────────────────── */
+
+.app-form-field {
+  margin-bottom: 16px;
+}
+
+.app-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uber-text-muted, #767676);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.app-form-input {
+  width: 100%;
+  background: var(--uber-surface, #f6f6f6);
+  border: none;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--uber-text, #000);
+  transition: background-color 100ms ease;
+  box-sizing: border-box;
+}
+
+.app-form-input:focus {
+  background: var(--uber-border, #eeeeee);
+  outline: none;
+}
+
+.app-form-input::placeholder { color: var(--uber-text-muted, #767676); }
+html.theme-dark .app-form-input { background: var(--uber-surface, #1a1a1a); color: #fff; }
+html.theme-dark .app-form-input:focus { background: var(--uber-elevated, #2b2b2b); }
+
+/* ─── Desktop workspace — Uber desktop app layout ────────────────────────── */
+
+body[data-form-factor="desktop"] .app-item-card,
+body[data-form-factor="desktop"] .wf-list-card {
+  padding: 14px 24px;
+}
+
+body[data-form-factor="desktop"] .app-screen-title { font-size: 2rem; padding: 28px 32px 8px; }
+body[data-form-factor="desktop"] .app-section-head { padding: 24px 32px 12px; }
+body[data-form-factor="desktop"] .app-search-inline { margin: 0 32px 16px; }
+body[data-form-factor="desktop"] .uber-quick-grid { padding: 12px 32px; }
+body[data-form-factor="desktop"] .uber-live-card { margin: 12px 32px; }
+body[data-form-factor="desktop"] .uber-earnings-banner { padding: 28px 32px; }
+body[data-form-factor="desktop"] .uber-profile-row { padding: 18px 32px; }
+
+/* ─── Tablet refinements ─────────────────────────────────────────────────── */
+
+body[data-form-factor="tablet"] .app-item-card,
+body[data-form-factor="tablet"] .wf-list-card {
+  padding: 15px 24px;
+}
+
+body[data-form-factor="tablet"] .uber-quick-grid { padding: 12px 24px; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+
+/* ─── PWA / native safe area ─────────────────────────────────────────────── */
+
+body[data-view-surface^="pwa-"] .app-screen,
+body[data-view-surface^="native-"] .app-screen {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* ─── Dark mode surfaces ─────────────────────────────────────────────────── */
+
+html.theme-dark .app-screen { background: var(--uber-bg, #000); }
+html.theme-dark .app-list { background: var(--uber-surface, #1a1a1a); }
+html.theme-dark .app-item-card,
+html.theme-dark .wf-list-card { background: var(--uber-surface, #1a1a1a); border-color: var(--uber-border, #2b2b2b); }
+html.theme-dark .app-list-row { background: var(--uber-surface, #1a1a1a); border-color: var(--uber-border, #2b2b2b); }
+html.theme-dark .app-item-card:hover,
+html.theme-dark button.app-item-card:hover { background: var(--uber-elevated, #2b2b2b); }
+html.theme-dark .app-item-card-stack { background: var(--uber-surface, #1a1a1a); border-color: var(--uber-border, #2b2b2b); }
+html.theme-dark .app-dashboard-hero { background: var(--uber-bg, #000); }
+html.theme-dark .app-list { background: var(--uber-surface, #1a1a1a); }
+
+/* ─── Status badges — Uber pill style ───────────────────────────────────── */
+
+.uber-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.uber-status-badge--active { background: color-mix(in srgb, #048848 12%, transparent); color: #048848; }
+.uber-status-badge--pending { background: color-mix(in srgb, #ffc043 18%, transparent); color: #8a6700; }
+.uber-status-badge--inactive { background: var(--uber-surface, #f6f6f6); color: var(--uber-text-muted, #767676); }
+.uber-status-badge--danger { background: color-mix(in srgb, #e11900 12%, transparent); color: #e11900; }
+
+html.theme-dark .uber-status-badge--pending { color: #ffc043; }
+html.theme-dark .uber-status-badge--inactive { background: var(--uber-elevated, #2b2b2b); }
+
+/* ─── Full-width action button — "Choose UberX" style ───────────────────── */
+
+.uber-cta-full {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 16px 24px;
+  cursor: pointer;
+  min-height: 52px;
+  transition: background-color 100ms ease, transform 100ms ease;
+  letter-spacing: -0.01em;
+}
+
+html.theme-dark .uber-cta-full { background: #fff; color: #000; }
+.uber-cta-full:hover  { background: #333; }
+html.theme-dark .uber-cta-full:hover { background: #e2e2e2; }
+.uber-cta-full:active { transform: scale(0.98); }
+.uber-cta-full:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Secondary ghost CTA */
+.uber-cta-ghost {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: none;
+  color: var(--uber-text, #000);
+  border: 1.5px solid var(--uber-text, #000);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 14px 24px;
+  cursor: pointer;
+  min-height: 52px;
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .uber-cta-ghost { color: #fff; border-color: #fff; }
+.uber-cta-ghost:hover { background: var(--uber-surface, #f6f6f6); }
+
+/* ─── Notification bell badge ────────────────────────────────────────────── */
+
+.uber-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--uber-negative, #e11900);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ─── White panel content areas inside the app shell ────────────────────── */
+
+.uber-content-white {
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.uber-content-gray {
+  background: var(--uber-surface, #f6f6f6);
+}
+
+/* ─── Utility: screen-level sticky footer CTA ────────────────────────────── */
+
+.uber-sticky-cta {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+}
+
+html.theme-dark .uber-sticky-cta { background: var(--uber-bg, #000); }
+body[data-form-factor="desktop"] .uber-sticky-cta { padding: 16px 32px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEGACY CLASS OVERRIDES — map existing class names to Uber design language
+   These ensure all existing screen components get the Uber look without
+   requiring individual component rewrites.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Client home — live coverage card ──────────────────────────────────── */
+
+.client-home-live-card {
+  display: block;
+  margin: 0;
+  padding: 20px;
+  border-radius: 14px;
+  border: none;
+  background: #000 !important;
+  box-shadow: none;
+  cursor: pointer;
+  transition: opacity 100ms ease;
+  color: #fff;
+}
+
+html.theme-dark .client-home-live-card { background: #1a1a1a !important; border: 1px solid #2b2b2b; }
+
+.client-home-live-card:hover { opacity: 0.92; }
+.client-home-live-card:active { opacity: 0.80; }
+
+.client-home-action-muted { opacity: 0.5; pointer-events: none; }
+
+.client-home-live-map-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  flex-shrink: 0;
+}
+
+/* Stat pills inside live card — now white text on black */
+.client-home-stat-pill {
+  padding: 10px 8px;
+  border-radius: 10px;
+  text-align: center;
+  background: rgba(255,255,255,0.10);
+  border: none;
+}
+
+.client-home-stat-value {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.client-home-stat-label {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.60);
+  line-height: 1.25;
+}
+
+/* Live job rows inside the black card */
+.client-home-live-job-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  background: transparent;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* Empty live state — dashed suggestion */
+.client-home-empty-live {
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px dashed var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #fff);
+}
+
+html.theme-dark .client-home-empty-live { background: var(--uber-surface, #1a1a1a); border-color: var(--uber-border, #2b2b2b); }
+
+.client-home-empty-live-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--uber-surface, #f6f6f6);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uber-text, #000);
+  flex-shrink: 0;
+}
+
+html.theme-dark .client-home-empty-live-icon { background: var(--uber-elevated, #2b2b2b); color: #fff; }
+
+/* Glance tiles — Uber gray stat card */
+.client-home-glance-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background: var(--uber-surface, #f6f6f6);
+  text-align: left;
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .client-home-glance-tile { background: var(--uber-elevated, #2b2b2b); }
+.client-home-glance-tile:hover { background: var(--uber-border, #eeeeee); }
+html.theme-dark .client-home-glance-tile:hover { background: var(--uber-border, #3d3d3d); }
+
+.client-home-glance-value {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--uber-text, #000);
+  line-height: 1;
+}
+
+html.theme-dark .client-home-glance-value { color: #fff; }
+
+.client-home-glance-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--uber-text-muted, #767676);
+}
+
+/* Quick action grid — Uber home grid tiles */
+.client-home-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .client-home-quick-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+}
+
+.client-home-quick-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: none;
+  background: var(--uber-surface, #f6f6f6);
+  text-align: center;
+  cursor: pointer;
+  min-height: 80px;
+  justify-content: center;
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .client-home-quick-tile { background: var(--uber-elevated, #2b2b2b); }
+.client-home-quick-tile:hover { background: var(--uber-border, #eeeeee); }
+html.theme-dark .client-home-quick-tile:hover { background: var(--uber-border, #3d3d3d); }
+
+/* Primary variant: black tile */
+.client-home-quick-tile-primary {
+  background: #000 !important;
+  border: none !important;
+  color: #fff;
+}
+
+html.theme-dark .client-home-quick-tile-primary { background: #fff !important; color: #000; }
+.client-home-quick-tile-primary:hover { background: #333 !important; opacity: 1; }
+html.theme-dark .client-home-quick-tile-primary:hover { background: #e2e2e2 !important; }
+
+.client-home-quick-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--uber-bg, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark .client-home-quick-icon { background: var(--uber-surface, #1a1a1a); color: #fff; }
+.client-home-quick-tile-primary .client-home-quick-icon { background: rgba(255,255,255,0.15); color: #fff; }
+html.theme-dark .client-home-quick-tile-primary .client-home-quick-icon { background: rgba(0,0,0,0.15); color: #000; }
+
+.client-home-quick-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+html.theme-dark .client-home-quick-label { color: #fff; }
+.client-home-quick-tile-primary .client-home-quick-label { color: #fff; }
+html.theme-dark .client-home-quick-tile-primary .client-home-quick-label { color: #000; }
+
+.client-home-quick-sub {
+  font-size: 10px;
+  color: var(--uber-text-muted, #767676);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.client-home-quick-tile-primary .client-home-quick-sub { color: rgba(255,255,255,0.65); }
+
+/* ─── Guard job cards ─────────────────────────────────────────────────────── */
+
+.guard-job-card {
+  background: var(--uber-bg, #fff);
+  border: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 0;
+  padding: 16px 20px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+html.theme-dark .guard-job-card { background: var(--uber-surface, #1a1a1a); border-color: var(--uber-border, #2b2b2b); }
+.guard-job-card:hover { background: var(--uber-surface, #f6f6f6); }
+html.theme-dark .guard-job-card:hover { background: var(--uber-elevated, #2b2b2b); }
+
+/* ─── App screen header ───────────────────────────────────────────────────── */
+
+.app-screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  min-height: 56px;
+}
+
+html.theme-dark .app-screen-header { background: var(--uber-bg, #000); }
+
+.app-subscreen-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  min-height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+html.theme-dark .app-subscreen-header { background: var(--uber-bg, #000); }
+
+.app-subscreen-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+  cursor: pointer;
+  padding: 8px 0;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+html.theme-dark .app-subscreen-back { color: #fff; }
+.app-subscreen-back:hover { opacity: 0.65; }
+
+.app-subscreen-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.02em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.theme-dark .app-subscreen-title { color: #fff; }
+
+/* ─── App flow surface (form containers) ─────────────────────────────────── */
+
+.app-flow-surface {
+  background: var(--uber-bg, #fff);
+  padding: 20px;
+}
+
+/* ─── Metric strips — Uber horizontal stat row ───────────────────────────── */
+
+.app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  gap: 0;
+  padding: 0;
+}
+
+.app-metric-strip .app-metric-cell {
+  border-right: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 0;
+}
+
+.app-metric-strip .app-metric-cell:last-child { border-right: none; }
+
+/* ─── Segmented control — Uber tab-pill style ────────────────────────────── */
+
+.app-segmented-control {
+  display: flex;
+  background: var(--uber-surface, #f6f6f6);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 0;
+}
+
+.app-segmented-option {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--uber-text-muted, #767676);
+  transition: background-color 120ms ease, color 120ms ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.app-segmented-option--active {
+  background: var(--uber-bg, #fff);
+  color: var(--uber-text, #000);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+html.theme-dark .app-segmented-control { background: var(--uber-surface, #1a1a1a); }
+html.theme-dark .app-segmented-option--active { background: var(--uber-elevated, #2b2b2b); color: #fff; }
+
+/* ─── Map browse dock — Uber bottom sheet style ──────────────────────────── */
+
+.map-browse-dock {
+  background: var(--uber-bg, #fff);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+}
+
+html.theme-dark .map-browse-dock { background: var(--uber-bg, #000); }
+
+/* ─── Staff admin panels ─────────────────────────────────────────────────── */
+
+.adm-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 12px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.adm-panel-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+html.theme-dark .adm-panel-title { color: #fff; }
+
+/* ─── Page lead section ──────────────────────────────────────────────────── */
+
+.app-page-lead { padding: 20px 20px 8px; background: var(--uber-bg, #fff); }
+
+.app-page-lead-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--uber-text-muted, #767676);
+  margin: 0 0 6px;
+}
+
+.app-page-lead-title {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+html.theme-dark .app-page-lead-title { color: #fff; }
+
+.app-page-lead-sub { font-size: 14px; color: var(--uber-text-muted, #767676); margin: 6px 0 0; }
+
+/* ─── Status banners — Uber notification card ───────────────────────────── */
+
+.app-status-banner {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--uber-bg, #fff);
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  margin: 0 20px 12px;
+}
+
+html.theme-dark .app-status-banner { background: var(--uber-surface, #1a1a1a); }
+
+/* Warning variant */
+.app-status-banner--warning {
+  background: color-mix(in srgb, #ffc043 10%, var(--uber-bg, #fff));
+  border-color: color-mix(in srgb, #ffc043 40%, var(--uber-border, #eeeeee));
+}
+
+/* Error variant */
+.app-status-banner--danger {
+  background: color-mix(in srgb, #e11900 8%, var(--uber-bg, #fff));
+  border-color: color-mix(in srgb, #e11900 30%, var(--uber-border, #eeeeee));
+}
+
+/* ─── Hero band (credential/alert banners) ───────────────────────────────── */
+
+.app-hero-band {
+  padding: 16px 20px;
+  background: var(--uber-surface, #f6f6f6);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+.app-hero-band-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--uber-text, #000) !important;
+}
+
+html.theme-dark .app-hero-band-label { color: #fff !important; }

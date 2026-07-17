@@ -39,6 +39,7 @@
     "react-dom": "^19.0.1",
     "react-leaflet": "^5.0.0",
     "stripe": "^22.2.0",
+    "styletron-engine-atomic": "^1.6.2",
     "styletron-engine-monolithic": "^1.0.0",
     "styletron-react": "^6.1.1",
     "vite": "^6.2.3",

@@ -163,29 +163,54 @@ export function GuardrDrawerShell({
         },
       }}
     >
+      {/* Sidebar brand header — black on desktop (Uber desktop app style), white bg on mobile */}
       <Block
         display="flex"
         alignItems="center"
         gridGap="scale400"
-        paddingTop="scale600"
-        paddingBottom="scale500"
+        paddingTop={chrome.layout === 'desktop' ? 'scale500' : 'scale600'}
+        paddingBottom={chrome.layout === 'desktop' ? 'scale500' : 'scale500'}
         paddingLeft="scale600"
         paddingRight="scale600"
+        backgroundColor={chrome.layout === 'desktop' ? 'backgroundInversePrimary' : 'backgroundPrimary'}
         overrides={{
           Block: {
             style: {
-              borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+              borderBottom: chrome.layout === 'desktop'
+                ? 'none'
+                : `1px solid ${theme.colors.borderOpaque}`,
               minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
+              flexShrink: 0,
             },
           },
         }}
       >
-        <Logo size={chrome.layout === 'mobile' ? 26 : 28} className="shrink-0" />
+        <Logo
+          size={chrome.layout === 'mobile' ? 26 : 24}
+          className={`shrink-0${chrome.layout === 'desktop' ? ' dsk-sidebar-logo' : ''}`}
+        />
         <Block flex="1" minWidth="0">
-          <ParagraphMedium margin={0} $style={{ fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
-            Guard<span className="uber-text-accent">r</span>
+          <ParagraphMedium
+            margin={0}
+            $style={{
+              fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontWeight: 800,
+              letterSpacing: '-0.04em',
+              lineHeight: 1.1,
+              color: chrome.layout === 'desktop' ? '#fff' : theme.colors.contentPrimary,
+            }}
+          >
+            Guardr
           </ParagraphMedium>
-          <LabelSmall margin={0} $style={{ color: 'contentSecondary', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <LabelSmall
+            margin={0}
+            $style={{
+              color: chrome.layout === 'desktop' ? 'rgba(255,255,255,0.55)' : theme.colors.contentSecondary,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              fontSize: '10px',
+            }}
+          >
             {workspaceLabel}
           </LabelSmall>
         </Block>
@@ -199,6 +224,7 @@ export function GuardrDrawerShell({
         paddingTop="scale300"
         paddingBottom="scale300"
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
+        backgroundColor="backgroundPrimary"
       >
         <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
       </Block>
@@ -280,17 +306,19 @@ export function GuardrDrawerShell({
           justifyContent="space-between"
           gridGap="scale400"
           paddingBottom="scale400"
-          paddingLeft="scale500"
-          paddingRight="scale500"
-          backgroundColor="backgroundPrimary"
+          paddingLeft={chrome.layout === 'desktop' ? 'scale600' : 'scale500'}
+          paddingRight={chrome.layout === 'desktop' ? 'scale600' : 'scale500'}
+          backgroundColor={chrome.layout === 'desktop' ? 'backgroundInversePrimary' : 'backgroundPrimary'}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           overrides={{
             Block: {
               style: {
-                borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+                borderBottom: chrome.layout === 'desktop'
+                  ? 'none'
+                  : `1px solid ${theme.colors.borderOpaque}`,
                 flexShrink: 0,
                 paddingTop: 'max(10px, env(safe-area-inset-top))',
-                minHeight: 'var(--mobility-header-h, 56px)',
+                minHeight: chrome.layout === 'desktop' ? '60px' : 'var(--mobility-header-h, 56px)',
               },
             },
           }}
@@ -303,16 +331,42 @@ export function GuardrDrawerShell({
               onClick={toggleSidebar}
               aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
               aria-expanded={sidebarOpen}
-              overrides={{ Block: { style: iconBtnStyle } }}
+              overrides={{
+                Block: {
+                  style: {
+                    ...iconBtnStyle,
+                    ...(chrome.layout === 'desktop' ? {
+                      backgroundColor: 'rgba(255,255,255,0.10)',
+                      border: 'none',
+                      color: '#fff',
+                      ':hover': { backgroundColor: 'rgba(255,255,255,0.18)' },
+                    } : {}),
+                  },
+                },
+              }}
             >
-              <Menu size={18} />
+              <Menu size={18} color={chrome.layout === 'desktop' ? '#fff' : undefined} />
             </Block>
             <Block minWidth={0}>
-              <HeadingXSmall margin={0} $style={{ fontWeight: 700, lineHeight: 1.2 }} className="truncate">
+              <HeadingXSmall
+                margin={0}
+                $style={{
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  color: chrome.layout === 'desktop' ? '#fff' : theme.colors.contentPrimary,
+                }}
+                className="truncate"
+              >
                 {title}
               </HeadingXSmall>
               {chrome.layout !== 'mobile' ? (
-                <LabelSmall margin={0} $style={{ color: 'contentSecondary' }} className="truncate">
+                <LabelSmall
+                  margin={0}
+                  $style={{
+                    color: chrome.layout === 'desktop' ? 'rgba(255,255,255,0.55)' : theme.colors.contentSecondary,
+                  }}
+                  className="truncate"
+                >
                   {workspaceLabel}
                 </LabelSmall>
               ) : null}

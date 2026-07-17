@@ -392,21 +392,15 @@ export function AppSegmentedControl<T extends string>({
   value: T;
   onChange: (id: T) => void;
 }) {
+  // Uses Base Web SegmentedControl via GuardrSegmented
+  const { GuardrSegmented } = require('../../baseui/GuardrSegmented');
   return (
-    <div className="app-segmented-control" role="tablist">
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          type="button"
-          role="tab"
-          aria-selected={value === opt.id}
-          onClick={() => onChange(opt.id)}
-          className={`app-segmented-control-item ${value === opt.id ? 'app-segmented-control-item-active' : ''}`}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+    <GuardrSegmented
+      options={options}
+      value={value}
+      onChange={onChange}
+      fill
+    />
   );
 }
 

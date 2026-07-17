@@ -4,15 +4,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] {
-  --adm-accent: var(--uber-accent, #276ef1);
+  --adm-accent: var(--uber-accent, #000000);
   --adm-accent-hover: var(--uber-accent-hover, #1a5dc8);
   --adm-accent-light: var(--uber-accent-50, #eff4fe);
-  --adm-accent-dark: var(--uber-accent, #276ef1);
-  --adm-accent-band: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
+  --adm-accent-dark: var(--uber-accent, #000000);
+  --adm-accent-band: var(--uber-accent, #000000);
+  --adm-sand: var(--uber-accent, #000000);
   --adm-sand-light: var(--uber-accent-50, #eff4fe);
-  --adm-sand-dark: var(--uber-accent, #276ef1);
-  --adm-sand-band: var(--uber-accent, #276ef1);
+  --adm-sand-dark: var(--uber-accent, #000000);
+  --adm-sand-band: var(--uber-accent, #000000);
   --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
   --adm-sidebar-w: 17rem;
   --adm-bg: var(--uber-surface, #f6f6f6);
@@ -33,7 +33,7 @@ html.theme-dark body[data-form-factor="desktop"] {
   --adm-border: var(--uber-border, #333333);
   --adm-accent-light: var(--uber-accent-50, #1a2a42);
   --adm-sand-light: var(--uber-accent-50, #1a2a42);
-  --adm-sand-band: var(--uber-accent, #335ba3);
+  --adm-sand-band: var(--uber-accent, #7AAE7F);
 }
 
 body[data-form-factor="desktop"] .adm-app {
@@ -1962,6 +1962,202 @@ body[data-form-factor="desktop"] .desktop-map-inspector .guard-scroll-panel {
   padding-bottom: 1.25rem;
 }
 
+/* ─── Uber desktop app shell — black top bar (Uber.com booking view) ──── */
+
+/* dsk-app-topbar — full-width black navigation bar like Uber's desktop app */
+body[data-form-factor="desktop"] .dsk-app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 24px;
+  background: #000;
+  color: #fff;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-wordmark {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-suite {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-left: 1px solid rgba(255,255,255,0.2);
+  padding-left: 12px;
+  margin-left: 4px;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-nav--staff {
+  gap: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  transition: color 100ms ease, background-color 100ms ease;
+  white-space: nowrap;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab--active {
+  color: #fff;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-tab-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-badge {
+  background: #fff;
+  color: #000;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+body[data-form-factor="desktop"] .dsk-app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Sub-header below topbar */
+body[data-form-factor="desktop"] .dsk-app-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-slot {
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--uber-text-muted, #767676);
+  margin: 0;
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+body[data-form-factor="desktop"] .dsk-app-subheader-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body[data-form-factor="desktop"] .dsk-app-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--uber-positive, #048848);
+}
+
+body[data-form-factor="desktop"] .dsk-app-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--uber-positive, #048848);
+  animation: dsk-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dsk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Desktop content area */
+body[data-form-factor="desktop"] .dsk-app-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--uber-surface, #f6f6f6);
+}
+
+body[data-form-factor="desktop"] .dsk-app--map .dsk-app-content {
+  overflow: hidden;
+  background: transparent;
+}
+
 /* Hide legacy shells */
 body[data-form-factor="desktop"] .dsk-app,
 body[data-form-factor="desktop"] .desktop-workspace {
@@ -2439,4 +2635,20 @@ body[data-form-factor="desktop"] .adm-card-body--tight {
   margin-top: 0;
   margin-bottom: 0.65rem;
   max-width: none;
+}
+
+/* ─── Desktop sidebar logo — inverted for black header ───────────────────── */
+body[data-form-factor="desktop"] .dsk-sidebar-logo {
+  filter: brightness(0) invert(1);
+}
+
+/* ─── Desktop sidebar nav items — clean on white ─────────────────────────── */
+body[data-form-factor="desktop"] .uber-app-shell[data-mobility-layout="desktop"] aside {
+  background: var(--uber-bg, #fff);
+}
+
+/* Desktop GuardrDrawerShell sidebar nav active: bottom border on header,
+   then white body for nav */
+body[data-form-factor="desktop"] .uber-app-shell[data-mobility-layout="desktop"] .mobility-content-pane {
+  background: var(--uber-surface, #f6f6f6);
 }

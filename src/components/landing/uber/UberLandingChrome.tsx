@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Block } from 'baseui/block';
-import { LabelSmall, ParagraphMedium } from 'baseui/typography';
+import { LabelMedium, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
-import { ChevronDown, Clock, MapPin, Menu, Navigation, Square } from 'lucide-react';
+import { ChevronDown, MapPin, Menu, Navigation, Shield, X } from 'lucide-react';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
@@ -20,16 +20,22 @@ export function UberLandingNav({
   onOpenGuide,
   formFactor,
 }: UberLandingNavProps) {
-  const [, theme] = useStyletron();
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = formFactor === 'mobile';
+
+  const navLinks = [
+    { label: 'For clients',  onClick: () => onNavigateToAuth('client', 'sign-up') },
+    { label: 'For guards',   onClick: () => onNavigateToAuth('guard',  'sign-up') },
+    { label: 'Safety',       onClick: () => onNavigateToAuth(undefined, 'sign-in') },
+    { label: 'Company',      onClick: () => onNavigateToAuth(undefined, 'sign-in') },
+  ] as const;
 
   return (
     <Block
       as="header"
       className="uber-landing-nav"
-      backgroundColor="backgroundInversePrimary"
-      paddingTop="max(12px, env(safe-area-inset-top))"
+      role="banner"
+      paddingTop={`max(12px, env(safe-area-inset-top))`}
       paddingBottom="scale400"
       paddingLeft={isMobile ? 'scale500' : 'scale800'}
       paddingRight={isMobile ? 'scale500' : 'scale800'}
@@ -42,91 +48,95 @@ export function UberLandingNav({
         margin="0 auto"
         width="100%"
       >
-        <Block display="flex" alignItems="center" gridGap="scale600">
-          <Block display="flex" alignItems="center" gridGap="scale300">
-            <Logo size={24} className="shrink-0 uber-landing-logo" />
+        {/* Wordmark */}
+        <Block display="flex" alignItems="center" gridGap={isMobile ? '0' : 'scale700'}>
+          <Block
+            as="a"
+            href="/"
+            aria-label="Guardr home"
+            display="flex"
+            alignItems="center"
+            gridGap="scale300"
+            overrides={{ Block: { style: { textDecoration: 'none' } } }}
+          >
+            <Logo size={22} className="shrink-0 uber-landing-logo" />
             <Block
               as="span"
               color="contentInversePrimary"
-              $style={{ fontWeight: 800, fontSize: '20px', letterSpacing: '-0.03em' }}
+              $style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.03em' }}
             >
               Guardr
             </Block>
           </Block>
 
           {!isMobile ? (
-            <Block as="nav" display="flex" alignItems="center" gridGap="scale600" aria-label="Primary">
-              {['Clients', 'Guards', 'Operations', 'About'].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className="uber-landing-nav-link"
-                  onClick={() => {
-                    if (item === 'Guards') onNavigateToAuth('guard', 'sign-up');
-                    else if (item === 'Clients') onNavigateToAuth('client', 'sign-up');
-                    else onNavigateToAuth(undefined, 'sign-in');
-                  }}
-                >
-                  {item}
+            <Block as="nav" display="flex" alignItems="center" gridGap="scale500" aria-label="Main">
+              {navLinks.map((link) => (
+                <button key={link.label} type="button" className="uber-landing-nav-link" onClick={link.onClick}>
+                  {link.label}
                 </button>
               ))}
+              {onOpenGuide ? (
+                <button type="button" className="uber-landing-nav-link" onClick={onOpenGuide}>Help</button>
+              ) : null}
             </Block>
           ) : null}
         </Block>
 
-        <Block display="flex" alignItems="center" gridGap={isMobile ? 'scale300' : 'scale500'}>
-          {!isMobile && onOpenGuide ? (
-            <button type="button" className="uber-landing-nav-link" onClick={onOpenGuide}>
-              Help
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="uber-landing-nav-link"
-            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-          >
+        {/* Auth CTAs */}
+        <Block display="flex" alignItems="center" gridGap={isMobile ? 'scale300' : 'scale400'}>
+          <button type="button" className="uber-landing-nav-link" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
             Log in
           </button>
-          <button
-            type="button"
-            className="uber-landing-signup-pill"
-            onClick={() => onNavigateToAuth('client', 'sign-up')}
-          >
+          <button type="button" className="uber-landing-signup-pill" onClick={() => onNavigateToAuth('client', 'sign-up')}>
             Sign up
           </button>
           {isMobile ? (
             <button
               type="button"
               className="uber-landing-menu-btn"
-              aria-label="Open menu"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((v) => !v)}
             >
-              <Menu size={22} color={theme.colors.contentInversePrimary} />
+              {menuOpen
+                ? <X size={20} color="#fff" />
+                : <Menu size={20} color="#fff" />
+              }
             </button>
           ) : null}
         </Block>
       </Block>
 
+      {/* Mobile menu */}
       {isMobile && menuOpen ? (
         <Block
+          as="nav"
+          aria-label="Mobile menu"
           className="uber-landing-mobile-menu"
           marginTop="scale400"
           padding="scale500"
-          backgroundColor="backgroundInversePrimary"
-          overrides={{ Block: { style: { borderTop: `1px solid ${theme.colors.borderOpaque}` } } }}
+          overrides={{ Block: { style: { borderTop: '1px solid rgba(255,255,255,0.10)' } } }}
         >
+          {navLinks.map((link) => (
+            <button
+              key={link.label}
+              type="button"
+              className="uber-landing-mobile-menu-item"
+              onClick={() => { setMenuOpen(false); link.onClick(); }}
+            >
+              {link.label}
+            </button>
+          ))}
           {onOpenGuide ? (
-            <button type="button" className="uber-landing-mobile-menu-item" onClick={onOpenGuide}>
-              Guide
+            <button
+              type="button"
+              className="uber-landing-mobile-menu-item"
+              onClick={() => { setMenuOpen(false); onOpenGuide(); }}
+            >
+              Help
             </button>
           ) : null}
-          <button type="button" className="uber-landing-mobile-menu-item" onClick={() => onNavigateToAuth('client', 'sign-up')}>
-            I need security
-          </button>
-          <button type="button" className="uber-landing-mobile-menu-item" onClick={() => onNavigateToAuth('guard', 'sign-up')}>
-            I&apos;m a guard
-          </button>
         </Block>
       ) : null}
     </Block>
@@ -141,93 +151,116 @@ interface UberLandingHeroProps {
 
 export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: UberLandingHeroProps) {
   const [, theme] = useStyletron();
-  const isMobile = formFactor === 'mobile';
+  const isMobile  = formFactor === 'mobile';
   const isDesktop = formFactor === 'desktop';
 
-  const startClientFlow = () => onNavigateToAuth('client', 'sign-up');
+  const goClient = () => onNavigateToAuth('client', 'sign-up');
+  const goGuard  = () => onNavigateToAuth('guard',  'sign-up');
 
-  const bookingPanel = (
-    <Block maxWidth={isDesktop ? '480px' : '100%'} width="100%">
+  const heroPanel = (
+    <Block maxWidth={isDesktop ? '460px' : '100%'} width="100%">
+      {/* Location context */}
       <Block display="flex" alignItems="center" gridGap="scale200" marginBottom="scale500">
-        <MapPin size={14} />
-        <ParagraphMedium margin={0} $style={{ fontSize: '14px' }}>
-          Your area
-        </ParagraphMedium>
-        <button type="button" className="uber-landing-text-link" onClick={startClientFlow}>
-          Set location
-        </button>
+        <MapPin size={14} color={theme.colors.contentSecondary} />
+        <LabelSmall margin={0} color="contentSecondary" $style={{ fontSize: '13px' }}>
+          Security marketplace · your area
+        </LabelSmall>
       </Block>
 
+      {/* Hero heading — matches Uber's bold style */}
       <Block
         as="h1"
-        margin="0 0 scale600"
+        margin={`0 0 ${theme.sizing.scale600}`}
         $style={{
+          fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
           fontWeight: 700,
-          fontSize: isMobile ? 'clamp(2rem, 7vw, 2.5rem)' : 'clamp(2.25rem, 4vw, 3rem)',
-          lineHeight: 1.1,
+          fontSize: isMobile
+            ? 'clamp(2.25rem, 8vw, 2.75rem)'
+            : isDesktop
+            ? 'clamp(2.75rem, 4vw, 3.5rem)'
+            : 'clamp(2.25rem, 5vw, 3rem)',
+          lineHeight: 1.05,
           letterSpacing: '-0.03em',
+          color: theme.colors.contentPrimary,
         }}
       >
-        Go anywhere with Guardr
+        Post coverage.<br />Hire licensed guards.
       </Block>
 
-      <button type="button" className="uber-landing-time-pill" onClick={startClientFlow}>
-        <Clock size={16} />
-        <span>Post now</span>
+      {/* Time/type selector */}
+      <button type="button" className="uber-landing-time-pill" onClick={goClient}>
         <ChevronDown size={16} />
+        <span>Now or later</span>
       </button>
 
+      {/* Booking input stack */}
       <Block className="uber-landing-input-stack" marginTop="scale500" marginBottom="scale600">
         <Block className="uber-landing-input-row">
           <Block className="uber-landing-input-icon uber-landing-input-icon--circle" aria-hidden />
           <input
             type="text"
             readOnly
-            placeholder="Site or job location"
+            placeholder="Enter site or job location"
             className="uber-landing-input"
-            onFocus={startClientFlow}
-            onClick={startClientFlow}
+            onFocus={goClient}
+            onClick={goClient}
+            aria-label="Site or job location"
           />
-          <button type="button" className="uber-landing-input-action" aria-label="Use current location" onClick={startClientFlow}>
+          <button type="button" className="uber-landing-input-action" aria-label="Use current location" onClick={goClient}>
             <Navigation size={18} />
           </button>
         </Block>
         <Block className="uber-landing-input-connector" aria-hidden />
         <Block className="uber-landing-input-row">
-          <Block className="uber-landing-input-icon uber-landing-input-icon--square" aria-hidden>
-            <Square size={10} fill="currentColor" strokeWidth={0} />
-          </Block>
+          <Shield size={14} color={theme.colors.contentSecondary} style={{ flexShrink: 0 }} aria-hidden />
           <input
             type="text"
             readOnly
-            placeholder="Coverage type or hours"
+            placeholder="Coverage type · hours · rate"
             className="uber-landing-input"
-            onFocus={startClientFlow}
-            onClick={startClientFlow}
+            onFocus={goClient}
+            onClick={goClient}
+            aria-label="Coverage type, hours, or rate"
           />
         </Block>
       </Block>
 
-      <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'stretch' : 'center'} gridGap="scale500">
+      {/* Primary CTAs */}
+      <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} gridGap="scale400">
         <GuardrButton
           kind="primary"
-          onClick={startClientFlow}
+          onClick={goClient}
           overrides={{
             BaseButton: {
               style: {
-                backgroundColor: theme.colors.contentPrimary,
-                color: theme.colors.contentInversePrimary,
                 borderRadius: '8px',
-                width: isMobile ? '100%' : 'auto',
-                minWidth: isMobile ? undefined : '140px',
+                minWidth: isMobile ? undefined : '160px',
+                width: isMobile ? '100%' : undefined,
               },
             },
           }}
         >
-          Get started
+          Post a job
         </GuardrButton>
-        <button type="button" className="uber-landing-text-link uber-landing-text-link--block" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
-          Log in to see your recent activity
+        <GuardrButton
+          kind="secondary"
+          onClick={goGuard}
+          overrides={{
+            BaseButton: {
+              style: {
+                borderRadius: '8px',
+                width: isMobile ? '100%' : undefined,
+              },
+            },
+          }}
+        >
+          Find work as a guard
+        </GuardrButton>
+      </Block>
+
+      <Block marginTop="scale400">
+        <button type="button" className="uber-landing-text-link" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
+          Already have an account? Log in
         </button>
       </Block>
     </Block>
@@ -237,29 +270,41 @@ export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: Ub
     return (
       <Block
         as="section"
+        aria-label="Hero"
         className="uber-landing-hero"
         padding={isMobile ? 'scale600' : 'scale1000'}
-        paddingTop={isMobile ? 'scale600' : 'scale1200'}
+        paddingTop={isMobile ? 'scale800' : 'scale1200'}
         backgroundColor="backgroundPrimary"
       >
         <Block
           maxWidth="1280px"
           margin="0 auto"
           display="grid"
-          gridTemplateColumns={isMobile ? '1fr' : ['1fr', '1fr', '1fr 1fr']}
+          gridTemplateColumns={['1fr', '1fr', '1fr 1fr']}
           gridGap="scale1000"
           alignItems="center"
         >
-          {bookingPanel}
-          {heroVisual ? <Block className="uber-landing-hero-visual">{heroVisual}</Block> : null}
+          {heroPanel}
+          {heroVisual ? (
+            <Block className="uber-landing-hero-visual" role="img" aria-label="Guardr operations preview">
+              {heroVisual}
+            </Block>
+          ) : null}
         </Block>
       </Block>
     );
   }
 
   return (
-    <Block as="section" className="uber-landing-hero" padding="scale600" backgroundColor="backgroundPrimary">
-      {bookingPanel}
+    <Block
+      as="section"
+      aria-label="Hero"
+      className="uber-landing-hero"
+      padding="scale600"
+      paddingTop="scale800"
+      backgroundColor="backgroundPrimary"
+    >
+      {heroPanel}
     </Block>
   );
 }

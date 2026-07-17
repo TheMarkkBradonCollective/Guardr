@@ -1,9 +1,14 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { LabelSmall, ParagraphSmall } from 'baseui/typography';
+import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
-import { GuardrCard } from '../GuardrCard';
 
+/**
+ * Guardr quick-action tile — Uber home grid style.
+ * Gray square icon + label below (like Uber's Food / Reserve / 2-Wheels tiles).
+ * Primary variant: black background, white text.
+ */
 export function QuickActionTile({
   icon: Icon,
   label,
@@ -19,56 +24,93 @@ export function QuickActionTile({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  const [, theme] = useStyletron();
+
+  const bgColor     = primary ? theme.colors.contentPrimary   : theme.colors.backgroundSecondary;
+  const iconColor   = primary ? theme.colors.contentInversePrimary : theme.colors.contentPrimary;
+  const textColor   = primary ? theme.colors.contentInversePrimary : theme.colors.contentPrimary;
+  const subColor    = primary ? 'rgba(255,255,255,0.72)' : theme.colors.contentSecondary;
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`client-home-quick-tile ${primary ? 'client-home-quick-tile-primary' : ''} ${disabled ? 'client-home-action-muted' : ''}`}
       aria-disabled={disabled}
+      style={{
+        all: 'unset',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        width: '100%',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        borderRadius: '12px',
+        overflow: 'hidden',
+        transition: 'opacity 120ms ease, transform 120ms ease',
+      }}
+      onMouseDown={(e) => {
+        if (!disabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
+      }}
+      onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
     >
-      <GuardrCard
-        interactive
-        noBorder
+      <Block
+        display="flex"
+        flexDirection="column"
+        alignItems="flex-start"
+        gridGap="scale300"
+        padding="scale500"
+        width="100%"
         overrides={{
-          Root: {
+          Block: {
             style: {
-              width: '100%',
-              backgroundColor: primary ? 'accent' : 'backgroundPrimary',
-              color: primary ? 'contentOnColor' : 'contentPrimary',
-              border: primary ? 'none' : '1px solid',
-              borderColor: primary ? 'transparent' : 'borderOpaque',
+              backgroundColor: bgColor,
+              borderRadius: '12px',
+              minHeight: '110px',
+              boxSizing: 'border-box',
             },
           },
         }}
       >
-        <Block display="flex" flexDirection="column" alignItems="flex-start" gridGap="scale200" padding="scale500">
-          <Block
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            width="36px"
-            height="36px"
-            overrides={{
-              Block: {
-                style: {
-                  borderRadius: '10px',
-                  backgroundColor: primary ? 'rgba(255,255,255,0.16)' : 'accent50',
-                  color: primary ? 'contentOnColor' : 'accent',
-                },
+        {/* Icon square */}
+        <Block
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          width="40px"
+          height="40px"
+          overrides={{
+            Block: {
+              style: {
+                borderRadius: '10px',
+                backgroundColor: primary
+                  ? 'rgba(255,255,255,0.16)'
+                  : theme.colors.backgroundPrimary,
+                flexShrink: 0,
               },
-            }}
+            },
+          }}
+        >
+          <Icon size={20} color={iconColor} strokeWidth={2} aria-hidden />
+        </Block>
+
+        {/* Text */}
+        <Block>
+          <LabelSmall
+            margin={0}
+            $style={{ fontWeight: 700, fontSize: '13px', color: textColor, lineHeight: 1.25 }}
           >
-            <Icon className="w-4 h-4" strokeWidth={2} />
-          </Block>
-          <LabelSmall margin={0} $style={{ fontWeight: 700, fontSize: '13px', color: 'inherit' }}>
             {label}
           </LabelSmall>
-          <ParagraphSmall margin={0} $style={{ fontSize: '11px', opacity: primary ? 0.9 : 0.72, color: 'inherit' }}>
+          <ParagraphSmall
+            margin="4px 0 0"
+            $style={{ fontSize: '11px', color: subColor, lineHeight: 1.35 }}
+          >
             {sub}
           </ParagraphSmall>
         </Block>
-      </GuardrCard>
+      </Block>
     </button>
   );
 }

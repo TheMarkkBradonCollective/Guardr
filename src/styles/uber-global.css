@@ -1,17 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   UBER GLOBAL DESIGN SYSTEM — presentation layer for all surfaces
-   Replaces legacy Guardr sage/IBM visual patterns with Uber.com aesthetics.
-   Black primary CTAs · gray cards · blue accent links · Uber Move typography
+   GUARDR × UBER GLOBAL — real Uber app visual language
+   Black primary CTAs · white/gray surfaces · bold typography
+   Matches Uber mobile app screenshots from design reference
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
 
-html,
-body,
-.mobility-platform {
+html, body, .mobility-platform {
   font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color: var(--uber-text, #000);
+  background: var(--uber-bg, #fff);
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -20,10 +19,11 @@ h1, h2, h3, h4, h5, h6,
 .adm-card-title,
 .adm-card-heading {
   font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  color: var(--uber-text, #000);
 }
 
-/* ─── Primary buttons — Uber black CTA pattern ───────────────────────────── */
+/* ─── Primary buttons — Uber solid black ─────────────────────────────────── */
 
 .uber-button-primary,
 .uber-button-sage,
@@ -32,21 +32,20 @@ h1, h2, h3, h4, h5, h6,
 .app-btn-primary,
 .adm-btn--sand,
 .adm-btn--primary {
-  background: var(--uber-black, #000000) !important;
+  background: #000000 !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
-  min-height: 44px;
+  min-height: 48px;
   box-shadow: none !important;
-  transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease;
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  transition: background-color 150ms ease, transform 120ms ease;
 }
 
 html.theme-dark .uber-button-primary,
 html.theme-dark .uber-button-sage,
-html.theme-dark .uber-button-green,
 html.theme-dark .app-button-primary,
-html.theme-dark .app-btn-primary,
 html.theme-dark .adm-btn--sand,
 html.theme-dark .adm-btn--primary {
   background: #ffffff !important;
@@ -55,46 +54,36 @@ html.theme-dark .adm-btn--primary {
 
 .uber-button-primary:hover,
 .uber-button-sage:hover,
-.uber-button-green:hover,
 .app-button-primary:hover,
-.adm-btn--sand:hover {
-  background: var(--uber-black-hover, #333333) !important;
-  transform: none;
-  opacity: 0.92;
-}
-
-html.theme-dark .uber-button-primary:hover,
-html.theme-dark .uber-button-sage:hover,
-html.theme-dark .uber-button-green:hover {
-  background: var(--uber-black-hover, #e2e2e2) !important;
-}
+.adm-btn--sand:hover { background: #333333 !important; }
 
 .uber-button-primary:active,
 .uber-button-sage:active,
-.uber-button-green:active,
-.adm-btn--sand:active {
-  transform: scale(0.98) !important;
-}
+.app-button-primary:active,
+.adm-btn--sand:active { transform: scale(0.98) !important; }
 
-/* Secondary / outline — pill pattern */
+/* Secondary / outline */
 .uber-button-outline,
 .app-button-outline,
 .adm-btn--outline {
   background: transparent !important;
   color: var(--uber-text, #000) !important;
-  border: 1px solid var(--uber-border, #e2e2e2) !important;
-  border-radius: 999px !important;
+  border: 1.5px solid var(--uber-text, #000) !important;
+  border-radius: 8px !important;
   font-weight: 600 !important;
-  min-height: 44px;
+  min-height: 48px;
+  transition: background-color 120ms ease;
 }
 
 .uber-button-outline:hover,
 .app-button-outline:hover {
   background: var(--uber-surface, #f6f6f6) !important;
-  border-color: var(--uber-text, #000) !important;
 }
 
-/* ─── Cards — flat gray surface, no shadow ───────────────────────────────── */
+/* Ghost / tertiary */
+.uber-button-ghost { background: transparent !important; color: var(--uber-text, #000) !important; border: none !important; }
+
+/* ─── Cards — white with very subtle shadow ──────────────────────────────── */
 
 .uber-panel,
 .app-item-card,
@@ -102,28 +91,81 @@ html.theme-dark .uber-button-green:hover {
 .adm-card,
 .guardr-card {
   background: var(--uber-bg, #fff);
-  border: 1px solid var(--uber-border, #e2e2e2);
+  border: 1px solid var(--uber-border, #eeeeee);
   border-radius: 12px;
   box-shadow: none;
 }
 
-.app-item-card--elevated,
-.adm-card--elevated {
-  background: var(--uber-surface, #f6f6f6);
+html.theme-dark .uber-panel,
+html.theme-dark .app-item-card,
+html.theme-dark .app-card,
+html.theme-dark .adm-card {
+  background: var(--uber-surface, #1a1a1a);
+  border-color: var(--uber-border, #2b2b2b);
+}
+
+/* Ride/job selection cards — Uber style with selected outline */
+.uber-service-card {
+  background: var(--uber-bg, #fff);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.uber-service-card--selected {
+  border-color: var(--uber-black, #000);
+  background: var(--uber-bg, #fff);
+}
+
+.uber-service-card:hover { background: var(--uber-surface, #f6f6f6); }
+
+/* ─── Service grid tiles — Uber home grid ────────────────────────────────── */
+
+.uber-grid-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
   border: none;
-  box-shadow: none;
+  padding: 8px 4px;
+  transition: opacity 120ms ease;
+  min-width: 64px;
 }
 
-/* Explore / service cards */
-.uber-landing-explore-card,
-.app-service-card {
-  background: var(--uber-surface, #f6f6f6) !important;
-  border: none !important;
-  border-radius: 12px !important;
-  box-shadow: none !important;
+.uber-grid-tile:hover { opacity: 0.75; }
+
+.uber-grid-tile-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 120ms ease;
 }
 
-/* ─── Inputs — gray fill, no heavy border ────────────────────────────────── */
+html.theme-dark .uber-grid-tile-icon { background: var(--uber-surface, #1a1a1a); }
+
+.uber-grid-tile:hover .uber-grid-tile-icon { background: var(--uber-border, #eeeeee); }
+
+.uber-grid-tile-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uber-text, #000);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ─── Inputs — Uber gray fill ────────────────────────────────────────────── */
 
 .app-input,
 .app-textarea,
@@ -137,111 +179,150 @@ input[type="search"],
 textarea,
 select {
   background: var(--uber-surface, #f6f6f6);
-  border: 1px solid transparent;
+  border: none;
   border-radius: 8px;
   color: var(--uber-text, #000);
   font-family: inherit;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition: background-color 120ms ease;
 }
 
 .app-input:focus,
-.app-textarea:focus,
 input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--uber-text, #000);
+textarea:focus {
+  background: var(--uber-accent-100, #eeeeee);
   outline: none;
   box-shadow: none;
 }
 
 .app-input::placeholder,
 input::placeholder,
-textarea::placeholder {
-  color: var(--uber-text-muted, #545454);
+textarea::placeholder { color: var(--uber-text-muted, #767676); }
+
+/* Search bar — Uber booking bar style */
+.uber-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--uber-surface, #f6f6f6);
+  border-radius: 8px;
+  padding: 14px 16px;
+  min-height: 52px;
+  cursor: text;
+  transition: background-color 120ms ease;
 }
 
-/* ─── Navigation chrome — black header bar ───────────────────────────────── */
+.uber-search-bar:hover,
+.uber-search-bar:focus-within { background: var(--uber-accent-100, #eeeeee); }
+
+/* ─── Navigation chrome ─────────────────────────────────────────────────── */
 
 .uber-app-shell .mobility-header {
   background: var(--uber-bg, #fff);
-  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
 }
 
-body[data-view-surface^="browser"] .uber-landing-nav,
+/* Black landing nav (sticky) */
+.uber-landing-nav,
 .uber-chrome-black {
   background: #000000 !important;
   color: #ffffff;
 }
 
-/* ─── Links — Uber blue accent ───────────────────────────────────────────── */
+/* Bottom nav — clean, no color */
+.bottom-nav-bar {
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  box-shadow: var(--shadow-nav, 0 -1px 0 rgba(0,0,0,0.06));
+}
+
+/* Active tab: black icon + label */
+.bottom-nav-item--active { color: var(--uber-text, #000) !important; }
+.bottom-nav-item--active .bottom-nav-icon { color: var(--uber-text, #000) !important; }
+
+/* ─── Links ─────────────────────────────────────────────────────────────── */
 
 a,
 .uber-text-accent,
 .text-brand-primary,
 .text-brand-accent,
 .adm-accent-text {
-  color: var(--uber-accent, #276ef1);
+  color: var(--uber-accent, #000);
+  text-underline-offset: 3px;
 }
 
 .uber-text-muted,
-.text-brand-text-muted {
-  color: var(--uber-text-muted, #545454);
-}
+.text-brand-text-muted { color: var(--uber-text-muted, #767676); }
 
-/* ─── Status badges ──────────────────────────────────────────────────────── */
+/* ─── Status pills ──────────────────────────────────────────────────────── */
 
-.app-badge-success,
-.status-success {
+.app-badge-success, .status-success {
   background: color-mix(in srgb, var(--uber-positive, #048848) 12%, transparent);
   color: var(--uber-positive, #048848);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
 }
 
-.app-badge-warning,
-.status-warning {
+.app-badge-warning, .status-warning {
   background: color-mix(in srgb, var(--uber-warning, #ffc043) 18%, transparent);
-  color: color-mix(in srgb, var(--uber-warning, #ffc043) 60%, #000);
+  color: color-mix(in srgb, var(--uber-warning, #ffc043) 55%, #000);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
 }
 
-.app-badge-danger,
-.status-danger {
+.app-badge-danger, .status-danger {
   background: color-mix(in srgb, var(--uber-negative, #e11900) 12%, transparent);
   color: var(--uber-negative, #e11900);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
 }
 
-/* ─── Tables — clean data grid ───────────────────────────────────────────── */
+/* Uber "Cheaper" style badge */
+.uber-badge-promo {
+  background: color-mix(in srgb, var(--uber-positive, #048848) 16%, transparent);
+  color: var(--uber-positive, #048848);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  display: inline-block;
+}
 
-.app-table,
-.adm-table {
+/* ─── Tables ─────────────────────────────────────────────────────────────── */
+
+.app-table, .adm-table {
   border-collapse: collapse;
   width: 100%;
   font-size: 14px;
 }
 
-.app-table th,
-.adm-table th {
+.app-table th, .adm-table th {
   text-align: left;
   font-weight: 600;
-  color: var(--uber-text-muted, #545454);
-  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  color: var(--uber-text-muted, #767676);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
   padding: 12px 16px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.app-table td,
-.adm-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+.app-table td, .adm-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
   color: var(--uber-text, #000);
 }
 
-.app-table tr:hover td,
-.adm-table tr:hover td {
+.app-table tr:hover td, .adm-table tr:hover td {
   background: var(--uber-surface, #f6f6f6);
 }
 
-/* ─── Modals / sheets / drawers ──────────────────────────────────────────── */
+/* ─── Bottom sheets / panels — white lift over map ──────────────────────── */
 
 .app-modal-panel,
 .app-sheet-panel,
@@ -249,127 +330,120 @@ a,
 .guardr-modal {
   background: var(--uber-bg, #fff);
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0,0,0,0.10));
 }
 
 html.theme-dark .app-modal-panel,
 html.theme-dark .app-sheet-panel,
 html.theme-dark .auth-sheet-panel {
-  background: var(--uber-bg, #141414);
+  background: var(--uber-surface, #1a1a1a);
 }
 
-/* ─── Bottom nav — Uber mobile pattern ───────────────────────────────────── */
+/* ─── Map overlay panel ─────────────────────────────────────────────────── */
 
-.bottom-nav-bar {
+.uber-map-panel {
   background: var(--uber-bg, #fff);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
-  box-shadow: none;
-}
-
-.bottom-nav-item--active {
-  color: var(--uber-text, #000) !important;
-}
-
-.bottom-nav-item--active .bottom-nav-icon {
-  color: var(--uber-text, #000) !important;
-}
-
-/* ─── Segmented control ──────────────────────────────────────────────────── */
-
-.app-segmented-control {
-  background: var(--uber-surface, #f6f6f6);
-  border-radius: 999px;
-  padding: 4px;
-  border: none;
-}
-
-.app-segmented-option--active {
-  background: var(--uber-bg, #fff);
-  color: var(--uber-text, #000);
-  border-radius: 999px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  font-weight: 600;
-}
-
-/* ─── Desktop admin — Uber workspace density ─────────────────────────────── */
-
-body[data-form-factor="desktop"] {
-  --adm-font: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --adm-bg: var(--uber-surface, #f6f6f6);
-  --adm-card: var(--uber-bg, #ffffff);
-  --adm-text: var(--uber-text, #000000);
-  --adm-muted: var(--uber-text-muted, #545454);
-  --adm-border: var(--uber-border, #e2e2e2);
-  --adm-accent: var(--uber-accent, #276ef1);
-  --adm-sand: var(--uber-accent, #276ef1);
-  --adm-sand-dark: var(--uber-accent, #276ef1);
-  --adm-sand-light: var(--uber-accent-50, #eff4fe);
-  --adm-sand-band: var(--uber-accent, #276ef1);
-  --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
-}
-
-html.theme-dark body[data-form-factor="desktop"] {
-  --adm-bg: var(--uber-bg, #141414);
-  --adm-card: var(--uber-surface, #1f1f1f);
-  --adm-text: var(--uber-text, #ffffff);
-  --adm-muted: var(--uber-text-muted, #a6a6a6);
-  --adm-border: var(--uber-border, #333333);
-  --adm-sand-light: var(--uber-accent-50, #1a2a42);
-}
-
-/* ─── PWA / native welcome screens ───────────────────────────────────────── */
-
-.app-welcome {
-  background: var(--uber-bg, #fff);
-  color: var(--uber-text, #000);
-}
-
-.app-welcome-dock {
-  background: var(--uber-surface, #f6f6f6);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
   border-radius: 16px 16px 0 0;
+  box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0,0,0,0.10));
+  padding: 0;
+  overflow: hidden;
 }
 
-.app-welcome-role-btn {
-  background: var(--uber-surface, #f6f6f6);
-  border: none;
-  border-radius: 12px;
-  min-height: 72px;
-  transition: transform 150ms ease, background-color 150ms ease;
+/* Drag handle on sheets */
+.uber-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--uber-border, #eeeeee);
+  border-radius: 999px;
+  margin: 10px auto 8px;
+  flex-shrink: 0;
 }
 
-.app-welcome-role-btn:hover {
-  background: color-mix(in srgb, var(--uber-surface, #f6f6f6) 80%, var(--uber-text, #000));
+/* ─── Driver / guard info rows ──────────────────────────────────────────── */
+
+.uber-guard-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
 }
 
-.app-welcome-signin-btn {
-  background: var(--uber-black, #000) !important;
-  color: #fff !important;
-  border-radius: 8px !important;
+.uber-guard-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.01em;
+}
+
+.uber-guard-sub {
+  font-size: 13px;
+  color: var(--uber-text-muted, #767676);
+}
+
+.uber-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
   font-weight: 600;
-  min-height: 52px;
+  color: var(--uber-text, #000);
 }
 
-html.theme-dark .app-welcome-signin-btn {
-  background: #ffffff !important;
-  color: #000000 !important;
+/* ─── PIN display ────────────────────────────────────────────────────────── */
+
+.uber-pin-digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
 }
 
-/* ─── Scrollbars — minimal ───────────────────────────────────────────────── */
+.uber-pin-digit:nth-child(1) { background: #276EF1; }
+.uber-pin-digit:nth-child(2) { background: #CB4D12; }
+.uber-pin-digit:nth-child(3) { background: #057D55; }
+.uber-pin-digit:nth-child(4) { background: #7356BF; }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--uber-border, #e2e2e2) transparent;
+/* ─── Action icon buttons (Safety, Share, Call style) ───────────────────── */
+
+.uber-action-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  transition: opacity 120ms ease;
 }
 
-/* ─── Focus rings — Uber blue ────────────────────────────────────────────── */
+.uber-action-icon:hover { opacity: 0.75; }
 
-:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+.uber-action-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ─── Overlay sheet chrome (Phase 5) ─────────────────────────────────────── */
+html.theme-dark .uber-action-icon-circle { background: var(--uber-elevated, #2b2b2b); }
+
+.uber-action-icon-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uber-text, #000);
+}
+
+/* ─── Overlay sheet chrome ─────────────────────────────────────────────── */
 
 .uber-overlay-sheet-header {
   position: sticky;
@@ -380,17 +454,21 @@ html.theme-dark .app-welcome-signin-btn {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
   background: var(--uber-bg, #fff);
-  border-radius: 1.25rem 1.25rem 0 0;
+  border-radius: 1rem 1rem 0 0;
 }
 
 .uber-overlay-sheet-title {
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--uber-accent, #276ef1);
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--uber-text, #000);
   margin: 0;
+  letter-spacing: -0.02em;
 }
+
+html.theme-dark .uber-overlay-sheet-title { color: var(--uber-text, #fff); }
 
 .uber-overlay-sheet-body {
   padding: 1.25rem;
@@ -399,54 +477,73 @@ html.theme-dark .app-welcome-signin-btn {
 }
 
 .uber-overlay-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   padding-top: 0.25rem;
 }
 
-/* Desktop form wizards — replaces adm-form-wizard */
+/* Desktop workspace */
 body[data-form-factor="desktop"] .uber-form-wizard {
   max-width: min(52rem, 100%);
   margin: 0 auto;
   padding: 1.25rem 1.25rem 0;
 }
 
-body[data-form-factor="desktop"] .uber-form-wizard .guard-scroll-panel {
-  padding-bottom: 1rem;
-}
-
 body[data-form-factor="desktop"] .uber-form-wizard-actions {
   position: static;
   padding: 1rem 0 1.5rem;
-  border-top: 1px solid var(--uber-border, #e2e2e2);
+  border-top: 1px solid var(--uber-border, #eeeeee);
   margin-top: 1rem;
 }
 
-/* Map inspector close — replaces adm-header-icon-btn */
+/* Map inspector */
 .uber-map-inspector-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 999px;
-  border: 1px solid var(--uber-border, #e2e2e2);
+  border-radius: 50%;
+  border: none;
   background: var(--uber-bg, #fff);
   color: var(--uber-text, #000);
-  transition: background-color 150ms ease, border-color 150ms ease;
+  box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,0.08));
+  transition: background-color 120ms ease;
+  cursor: pointer;
 }
 
-.uber-map-inspector-close:hover {
-  background: var(--uber-surface, #f6f6f6);
-  border-color: var(--uber-text-muted, #545454);
+.uber-map-inspector-close:hover { background: var(--uber-surface, #f6f6f6); }
+
+/* ─── Scrollbars — minimal ──────────────────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--uber-border, #eeeeee) transparent;
 }
 
-/* ─── Remove legacy sage halo / glow effects ─────────────────────────────── */
+/* ─── Focus ─────────────────────────────────────────────────────────────── */
 
-.logo-halo,
-.brand-glow,
-.sage-halo {
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────── */
+
+::selection {
+  background: rgba(0,0,0,0.12);
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark ::selection {
+  background: rgba(255,255,255,0.15);
+  color: var(--uber-text, #fff);
+}
+
+/* ─── Remove any lingering sage-green halo ──────────────────────────────── */
+
+.logo-halo, .brand-glow, .sage-halo {
   box-shadow: none !important;
   filter: none !important;
 }
