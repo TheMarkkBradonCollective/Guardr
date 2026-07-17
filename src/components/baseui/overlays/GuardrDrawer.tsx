@@ -1,5 +1,8 @@
 import React from 'react';
+import { Block } from 'baseui/block';
+import { LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { Drawer } from '../baseuiShims';
+import { GuardrButton } from '../GuardrButton';
 import { X } from 'lucide-react';
 import { drawerOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
@@ -35,30 +38,84 @@ export function GuardrDrawer({ open, onClose, title, subtitle, children, footer 
       }}
       overrides={drawerOverrides({ zIndex: 2100 })}
     >
-      <div className="sidebar-drawer-panel flex flex-col h-full" role="dialog" aria-label={title}>
-        <div
-          className="shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-4 border-b border-brand-border bg-brand-chrome text-brand-chrome-text"
+      <Block
+        display="flex"
+        flexDirection="column"
+        height="100%"
+        className="sidebar-drawer-panel"
+        role="dialog"
+        aria-label={title}
+      >
+        <Block
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          gridGap="scale400"
+          paddingTop="scale800"
+          paddingBottom="scale600"
+          paddingLeft="scale800"
+          paddingRight="scale800"
+          backgroundColor="backgroundPrimary"
+          overrides={{
+            Block: {
+              style: {
+                flexShrink: 0,
+                borderBottom: '1px solid',
+                borderColor: 'borderOpaque',
+                paddingTop: 'max(1.25rem, env(safe-area-inset-top))',
+              },
+            },
+          }}
         >
-          <div className="min-w-0">
+          <Block minWidth={0}>
             {subtitle ? (
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-brand-text-muted mb-1">
+              <LabelSmall
+                $style={{
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'contentSecondary',
+                  marginBottom: '4px',
+                  fontWeight: 700,
+                }}
+              >
                 {subtitle}
-              </p>
+              </LabelSmall>
             ) : null}
-            <p className="font-black text-xl tracking-[-0.04em] leading-tight">{title}</p>
-          </div>
-          <button
-            type="button"
+            <ParagraphMedium margin={0} $style={{ fontWeight: 900, fontSize: '20px', lineHeight: '24px' }}>
+              {title}
+            </ParagraphMedium>
+          </Block>
+          <GuardrButton
+            kind="tertiary"
+            size="compact"
             onClick={gatedClose}
-            className="app-chrome-btn shrink-0"
             aria-label="Close sidebar"
+            overrides={{ BaseButton: { style: { minWidth: '40px', minHeight: '40px', padding: '8px' } } }}
           >
             <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2 pb-6">{children}</div>
-        {footer ? <div className="shrink-0 p-4 space-y-2 border-t border-brand-border">{footer}</div> : null}
-      </div>
+          </GuardrButton>
+        </Block>
+        <Block flex="1" minHeight={0} overflow="auto" padding="scale200" paddingBottom="scale800">
+          {children}
+        </Block>
+        {footer ? (
+          <Block
+            padding="scale600"
+            backgroundColor="backgroundPrimary"
+            overrides={{
+              Block: {
+                style: {
+                  flexShrink: 0,
+                  borderTop: '1px solid',
+                  borderColor: 'borderOpaque',
+                },
+              },
+            }}
+          >
+            {footer}
+          </Block>
+        ) : null}
+      </Block>
     </Drawer>
   );
 }

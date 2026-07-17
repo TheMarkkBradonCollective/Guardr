@@ -1,5 +1,6 @@
 import React from 'react';
 import { Block } from 'baseui/block';
+import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { ThemeToggle } from '../../ui/ThemeToggle';
 import type { ThemeMode } from '../../../lib/platform/theme';
@@ -17,6 +18,8 @@ export function PublicPageChrome({
   children?: React.ReactNode;
   sticky?: boolean;
 }) {
+  const [, theme] = useStyletron();
+
   return (
     <Block
       as="header"
@@ -30,7 +33,7 @@ export function PublicPageChrome({
             borderBottom: '1px solid',
             borderColor: 'borderOpaque',
             backdropFilter: 'blur(20px) saturate(150%)',
-            backgroundColor: 'color-mix(in srgb, var(--brand-surface) 94%, transparent)',
+            backgroundColor: `${theme.colors.backgroundPrimary}f0`,
             paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
           },
         },
@@ -50,7 +53,7 @@ export function PublicPageChrome({
         width="100%"
       >
         <Block display="flex" alignItems="center" gridGap="scale400">
-          <Logo size={28} className="text-brand-primary shrink-0" />
+          <Logo size={28} className="shrink-0" />
           <Block
             overrides={{
               Block: {
@@ -62,7 +65,7 @@ export function PublicPageChrome({
               },
             }}
           >
-            Guard<span style={{ color: 'var(--brand-primary)' }}>r</span>
+            Guard<span style={{ color: theme.colors.accent }}>r</span>
           </Block>
         </Block>
 

@@ -1,8 +1,8 @@
-import { guardrDarkTheme } from '../theme/guardrBaseTheme';
-import { withGuardrBreakpoints } from '../components/baseui/layout/shellStyles';
+import { DarkTheme } from 'baseui';
+import { withAppBreakpoints } from '../components/baseui/layout/shellStyles';
 
-/** Design-preview theme — Guardr sage accent with Base layout breakpoints. */
-export const darkTheme = withGuardrBreakpoints(guardrDarkTheme);
+/** Design-preview theme — stock Uber Base Web dark theme + app breakpoints. */
+export const darkTheme = withAppBreakpoints(DarkTheme);
 
 export const BREAKPOINTS = darkTheme.breakpoints;
 export const MEDIA_QUERY = darkTheme.mediaQuery;

@@ -17,7 +17,7 @@ export function WfMetricTile({ label, value, accent = false, className = '' }: W
       overrides={{
         Root: {
           style: {
-            backgroundColor: accent ? 'color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface))' : undefined,
+            backgroundColor: accent ? 'accent50' : undefined,
             borderColor: accent ? 'accent' : undefined,
           },
         },
