@@ -21579,68 +21579,26 @@ body.capacitor-native .landing-app-download-btn:active {
   pointer-events: none;
 }
 
+/* Clean map-like backdrop — no grid pattern, no glow blobs */
 .app-welcome-backdrop {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--brand-primary) 22%, #060a06) 0%,
-      color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg)) 38%,
-      var(--brand-bg) 100%
-    );
+  background: var(--brand-bg);
 }
 
-.app-welcome-backdrop-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.18;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--brand-primary) 40%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 40%, transparent) 1px, transparent 1px);
-  background-size: 2.5rem 2.5rem;
-  mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+/* Hide the old decorative elements */
+.app-welcome-backdrop-grid,
+.app-welcome-backdrop-glow,
+.app-welcome-backdrop-pins,
+.app-welcome-pin,
+.app-welcome-pin--a,
+.app-welcome-pin--b,
+.app-welcome-pin--c {
+  display: none;
 }
-
-.app-welcome-backdrop-glow {
-  position: absolute;
-  top: 12%;
-  left: 50%;
-  width: min(24rem, 92vw);
-  height: min(24rem, 52vh);
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 38%, transparent) 0%, transparent 70%);
-  filter: blur(4px);
-}
-
-.app-welcome-backdrop-pins {
-  position: absolute;
-  inset: 0;
-}
-
-.app-welcome-pin {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-surface) 90%, transparent);
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-  color: var(--brand-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.app-welcome-pin--a { top: 16%; left: 14%; }
-
-.app-welcome-pin--b { top: 26%; right: 16%; }
-
-.app-welcome-pin--c { top: 36%; left: 46%; }
 
 .app-welcome-header {
   position: relative;
@@ -21673,17 +21631,15 @@ body.capacitor-native .landing-app-download-btn:active {
   line-height: 1.04;
 }
 
+/* Welcome dock — Uber white bottom sheet anchored to bottom */
 .app-welcome-dock {
   margin-top: auto;
   width: 100%;
   padding: 1.25rem 1.25rem 0;
-  border-radius: 1.35rem 1.35rem 0 0;
-  border: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
-  border-bottom: none;
-  background: color-mix(in srgb, var(--brand-surface) 96%, var(--brand-bg));
-  box-shadow:
-    0 -8px 32px color-mix(in srgb, #000 22%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--brand-text) 6%, transparent);
+  border-radius: 16px 16px 0 0;
+  border: none;
+  background: var(--brand-bg);
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.18);
 }
 
 .app-welcome-main > .app-welcome-dock {

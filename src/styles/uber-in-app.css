@@ -1733,6 +1733,81 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
   max-width: 260px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL SURFACE RESET — eliminate all floating card boxes
+   Every section body, page body and content area is fully transparent
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Section bodies — no background, no border */
+.guard-rating-body,
+.app-section-body,
+.crew-hub-team-body,
+.guard-tiered-screen-scroll {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Staff ops mobile shell — transparent body, filter pills sit on page bg */
+.staff-ops-mobile-body,
+.staff-ops-mobile-toolbar {
+  background: transparent !important;
+}
+
+/* App section body has no padding override needed — uber-in-app already set it */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL EMPTY STATE RESET — no boxes, no borders, no backgrounds
+   Uber shows empty screens with just a centered icon + text on the page bg
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-empty-state,
+.app-empty-state--dashed,
+.staff-empty-state {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 48px 32px !important;
+  text-align: center;
+}
+
+.app-empty-state-icon {
+  background: var(--uber-surface, #f6f6f6) !important;
+  color: var(--uber-text-muted, #888) !important;
+  border-radius: 16px !important;
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0 auto 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html.theme-dark .app-empty-state-icon {
+  background: #1a1a1a !important;
+  color: #666 !important;
+}
+
+.app-empty-state-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: var(--uber-text, #000) !important;
+  letter-spacing: -0.01em !important;
+  margin: 0 0 6px !important;
+}
+
+html.theme-dark .app-empty-state-title { color: #fff !important; }
+
+.app-empty-state-body {
+  font-size: 14px !important;
+  color: var(--uber-text-muted, #767676) !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+  max-width: 260px;
+  display: inline-block;
+}
+
 /* ─── Guard factor card dark mode ────────────────────────────────────────── */
 html.theme-dark .guard-factor-card {
   background: #111;
