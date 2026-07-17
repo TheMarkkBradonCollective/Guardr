@@ -21,6 +21,11 @@ import {
 } from '../../lib/platformCities';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
+import {
+  WorkbenchEmpty,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { MapPin } from 'lucide-react';
@@ -117,7 +122,7 @@ function CityDetailPanel({
       <div>
         <p className="adm-card-eyebrow">{city.stateCode}</p>
         <h3 className="adm-card-title">{city.name}</h3>
-        <p className="adm-workbench-subtitle">{CITY_STATUS_DESCRIPTIONS[city.status]}</p>
+        <p className="uber-workbench-subtitle">{CITY_STATUS_DESCRIPTIONS[city.status]}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
@@ -249,10 +254,16 @@ export function StaffCitiesPanel({
   };
 
   if (!canView) {
+    if (formFactor === 'desktop') {
+      return (
+        <WorkbenchEmpty message="Operations unavailable. Operations controls are limited to Manager roles and above." />
+      );
+    }
+
     return (
-      <div className={formFactor === 'desktop' ? 'adm-empty' : 'app-empty-state app-empty-state--dashed'}>
-        <p className={formFactor === 'desktop' ? undefined : 'app-empty-state-title'}>Operations unavailable</p>
-        <p className={formFactor === 'desktop' ? 'adm-workbench-subtitle' : 'app-empty-state-body'}>
+      <div className="app-empty-state app-empty-state--dashed">
+        <p className="app-empty-state-title">Operations unavailable</p>
+        <p className="app-empty-state-body">
           Operations controls are limited to Manager roles and above.
         </p>
       </div>
@@ -276,50 +287,50 @@ export function StaffCitiesPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <StaffOpsPageShell className="adm-finance-page adm-cities-page">
-        <div className="adm-workbench-toolbar adm-finance-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
-              Control where Guardr accepts guard and client applications.
-            </p>
-          </div>
-          <div className="adm-cities-toolbar-controls">
-            <WfSearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder="Search cities..."
-              className="adm-cities-search"
-            />
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as CityMarketSort)}
-              className="uber-select adm-cities-sort"
-              aria-label="Sort cities"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
+      <StaffOpsPageShell
+        className="adm-finance-page adm-cities-page"
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Platform"
+            subtitle="Control where Guardr accepts guard and client applications."
+            actions={
+              <div className="adm-cities-toolbar-controls">
+                <WfSearchBar
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search cities..."
+                  className="adm-cities-search"
+                />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as CityMarketSort)}
+                  className="uber-select adm-cities-sort"
+                  aria-label="Sort cities"
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            }
+          />
+        }
+      >
         {filterTabs}
-        <p className="adm-workbench-subtitle adm-cities-count">
+        <p className="uber-workbench-subtitle adm-cities-count">
           Showing {filtered.length} of {visibleCities.length} cities
         </p>
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         {filtered.length === 0 ? (
-          <div className="adm-empty">
-            <p>No cities match your filters.</p>
-          </div>
+          <WorkbenchEmpty message="No cities match your filters." />
         ) : (
-          <div className="adm-workbench-split adm-finance-split">
-            <div className="adm-workbench-list">
-              <table className="adm-table adm-table--list">
+          <WorkbenchSplit
+            className="adm-finance-split"
+            list={
+              <table className="uber-workbench-table">
                 <thead>
                   <tr>
                     <th>City</th>
@@ -330,12 +341,12 @@ export function StaffCitiesPanel({
                   {filtered.map((city) => (
                     <tr
                       key={city.id}
-                      className={`adm-table-row--click${selectedId === city.id ? ' adm-table-row--selected' : ''}`}
+                      className={`uber-workbench-table-row${selectedId === city.id ? ' uber-workbench-table-row--selected' : ''}`}
                       onClick={() => setSelectedId(city.id)}
                     >
                       <td>
-                        <p className="adm-table-primary">{city.name}</p>
-                        <p className="adm-table-secondary">{city.stateCode}</p>
+                        <p className="uber-workbench-table-primary">{city.name}</p>
+                        <p className="uber-workbench-table-secondary">{city.stateCode}</p>
                       </td>
                       <td>
                         <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
@@ -344,26 +355,21 @@ export function StaffCitiesPanel({
                   ))}
                 </tbody>
               </table>
-            </div>
-            <div className="adm-workbench-detail">
-              {selectedCity ? (
-                <div className="adm-workbench-detail-inner">
-                  <CityDetailPanel
-                    city={selectedCity}
-                    busy={savingId === selectedCity.id}
-                    canManageStatus={canManageStatus}
-                    canRecommend={canRecommend}
-                    onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
-                  />
-                </div>
+            }
+            detail={
+              selectedCity ? (
+                <CityDetailPanel
+                  city={selectedCity}
+                  busy={savingId === selectedCity.id}
+                  canManageStatus={canManageStatus}
+                  canRecommend={canRecommend}
+                  onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
+                />
               ) : (
-                <div className="adm-empty adm-empty--detail">
-                  <MapPin className="w-10 h-10 adm-muted-icon" />
-                  <p>Select a city to manage</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <WorkbenchEmpty icon={MapPin} message="Select a city to manage" variant="detail" />
+              )
+            }
+          />
         )}
       </StaffOpsPageShell>
     );

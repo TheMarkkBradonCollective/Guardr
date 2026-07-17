@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDevice } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
+import { WorkbenchEmpty, WorkbenchSplit } from '../../baseui/layout/WorkbenchLayout';
 
 export type ListDetailMobilePresentation = 'inline' | 'page';
 
@@ -66,32 +67,28 @@ export function ListDetailLayout<T>({
 
   if (desktopView) {
     return (
-      <div className="adm-workbench-split adm-ops-list-detail">
-        <div className={`adm-workbench-list adm-ops-list ${listScrollClassName}`}>
-          <AppItemCardStack className="adm-ops-list-stack">
-            {items.map((item) => {
-              const id = getItemId(item);
-              const isSelected = resolvedSelectedId === id;
-              return (
-                <React.Fragment key={id}>
-                  {renderItem(item, isSelected, () => handleSelect(id))}
-                </React.Fragment>
-              );
-            })}
-          </AppItemCardStack>
-        </div>
-        <div className="adm-workbench-detail">
-          <div className={`adm-workbench-detail-inner ${detailClassName}`}>
-            {selected
-              ? renderDetail(selected)
-              : emptyDetail ?? (
-                  <div className="adm-empty adm-empty--detail">
-                    <p>Select an item to view details</p>
-                  </div>
-                )}
+      <WorkbenchSplit
+        list={
+          <div className={listScrollClassName}>
+            <AppItemCardStack>
+              {items.map((item) => {
+                const id = getItemId(item);
+                const isSelected = resolvedSelectedId === id;
+                return (
+                  <React.Fragment key={id}>
+                    {renderItem(item, isSelected, () => handleSelect(id))}
+                  </React.Fragment>
+                );
+              })}
+            </AppItemCardStack>
           </div>
-        </div>
-      </div>
+        }
+        detail={
+          selected
+            ? <div className={detailClassName}>{renderDetail(selected)}</div>
+            : emptyDetail ?? <WorkbenchEmpty message="Select an item to view details" variant="detail" />
+        }
+      />
     );
   }
 

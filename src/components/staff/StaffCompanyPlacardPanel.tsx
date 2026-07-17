@@ -10,6 +10,8 @@ import {
   type CompanyDocumentTypeId,
   type CompanyPublicDocument,
 } from '../../lib/companyPlacard';
+import { MetricCell, MetricStrip } from '../baseui/dashboard';
+import { GuardrButton } from '../baseui/GuardrButton';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
@@ -127,28 +129,12 @@ export function StaffCompanyPlacardPanel({
           display-only and does not block platform operations.
         </p>
 
-        <div
-          className={`rounded-xl border border-brand-border bg-brand-surface-elevated p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center ${
-            isDesktop ? 'adm-platform-placard-stats' : ''
-          }`.trim()}
-        >
-          <div>
-            <p className="text-lg font-black text-brand-text">{summary.requiredOnFile}/{summary.requiredTotal}</p>
-            <p className="text-[10px] uppercase tracking-wide text-brand-text-muted">Required on file</p>
-          </div>
-          <div>
-            <p className="text-lg font-black text-brand-text">{summary.requiredMissing}</p>
-            <p className="text-[10px] uppercase tracking-wide text-brand-text-muted">Still needed</p>
-          </div>
-          <div>
-            <p className="text-lg font-black text-brand-text">{summary.expiringOrExpired}</p>
-            <p className="text-[10px] uppercase tracking-wide text-brand-text-muted">Expiring / expired</p>
-          </div>
-          <div>
-            <p className="text-lg font-black text-brand-text">{documents.filter((d) => d.displayOnHomepage).length}</p>
-            <p className="text-[10px] uppercase tracking-wide text-brand-text-muted">On homepage</p>
-          </div>
-        </div>
+        <MetricStrip className="!px-0">
+          <MetricCell label="Required on file" value={`${summary.requiredOnFile}/${summary.requiredTotal}`} />
+          <MetricCell label="Still needed" value={String(summary.requiredMissing)} accent={summary.requiredMissing > 0} />
+          <MetricCell label="Expiring / expired" value={String(summary.expiringOrExpired)} accent={summary.expiringOrExpired > 0} />
+          <MetricCell label="On homepage" value={String(documents.filter((d) => d.displayOnHomepage).length)} />
+        </MetricStrip>
 
         {summary.expiringOrExpired > 0 && (
           <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
@@ -326,18 +312,9 @@ function CompanyDocumentEditor({
           placeholder="Renewal reminders, filing location, etc."
         />
       </label>
-      <button
-        type="button"
-        className={
-          variant === 'desktop'
-            ? 'adm-btn adm-btn--sand'
-            : 'app-button-primary !w-auto !h-10 !px-5'
-        }
-        disabled={saving}
-        onClick={handleSave}
-      >
+      <GuardrButton type="button" kind="primary" size="compact" disabled={saving} onClick={handleSave}>
         {saving ? 'Saving…' : 'Save credential'}
-      </button>
+      </GuardrButton>
     </div>
   );
 }

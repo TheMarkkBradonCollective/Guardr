@@ -9,6 +9,15 @@ import { computeAnalytics, computePlatformStats, computeWeeklyCompletedJobs } fr
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
+import { GuardrCard } from '../baseui/GuardrCard';
+import { MetricCell } from '../baseui/dashboard';
+import {
+  WorkbenchCardTitle,
+  WorkbenchGrid,
+  WorkbenchGridCell,
+  WorkbenchPage,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffAnalyticsPanelProps {
   guards: SecurityGuard[];
@@ -50,45 +59,41 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-dashboard adm-analytics-dashboard">
-        <div className="adm-workbench-toolbar">
-          <div>
-            <p className="adm-card-eyebrow">Insights</p>
-            <p className="adm-card-title">Platform analytics</p>
-          </div>
-        </div>
+      <WorkbenchPage>
+        <WorkbenchToolbar eyebrow="Insights" subtitle="Platform analytics" />
         {showFinancials && (
-          <div className="adm-dashboard-grid adm-span-12">
+          <WorkbenchGrid>
             {buildDirectorFinancialCells(financials).map(({ label, value, sub }) => (
-              <article key={label} className="adm-card adm-span-3">
-                <p className="adm-card-eyebrow">{label}</p>
-                <p className="adm-stat-value adm-stat-value--sm">{value}</p>
-                <p className="adm-stat-delta">{sub}</p>
-              </article>
+              <WorkbenchGridCell key={label} span={3}>
+                <MetricCell label={label} value={value} sub={sub} accent={financials.grossIncome > 0 && label === 'Gross Income'} />
+              </WorkbenchGridCell>
             ))}
-          </div>
+          </WorkbenchGrid>
         )}
-        <div className="adm-dashboard-grid adm-dashboard-grid--metrics adm-mt-md">
+        <WorkbenchGrid className="mt-4">
           {metrics.map(({ label, value }) => (
-            <article key={label} className="adm-card adm-span-3">
-              <p className="adm-card-eyebrow">{label}</p>
-              <p className="adm-stat-value adm-stat-value--sm">{value}</p>
-            </article>
+            <WorkbenchGridCell key={label} span={3}>
+              <MetricCell label={label} value={value} />
+            </WorkbenchGridCell>
           ))}
-        </div>
-        <article className="adm-card adm-span-12 adm-mt-md">
-          <p className="adm-card-heading">Completed jobs trend</p>
-          {hasWeeklyData ? (
-            <div className="adm-week-chart">
-              {weeklyTrend.map((h, i) => (
-                <div key={i} className="adm-week-chart-bar" style={{ height: `${Math.min(100, h)}%` }} />
-              ))}
-            </div>
-          ) : (
-            <p className="adm-card-body">No completed jobs this week yet.</p>
-          )}
-        </article>
-      </div>
+        </WorkbenchGrid>
+        <WorkbenchGrid className="mt-4">
+          <WorkbenchGridCell span={12}>
+            <GuardrCard>
+              <WorkbenchCardTitle>Completed jobs trend</WorkbenchCardTitle>
+              {hasWeeklyData ? (
+                <div className="adm-week-chart">
+                  {weeklyTrend.map((h, i) => (
+                    <div key={i} className="adm-week-chart-bar" style={{ height: `${Math.min(100, h)}%` }} />
+                  ))}
+                </div>
+              ) : (
+                <p className="uber-workbench-subtitle">No completed jobs this week yet.</p>
+              )}
+            </GuardrCard>
+          </WorkbenchGridCell>
+        </WorkbenchGrid>
+      </WorkbenchPage>
     );
   }
 

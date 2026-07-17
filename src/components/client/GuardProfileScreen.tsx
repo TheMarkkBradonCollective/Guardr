@@ -35,6 +35,8 @@ import {
 } from '../../lib/guardPerformance';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { DashboardHero, MetricCell, MetricStrip } from '../baseui/dashboard';
+import { GuardrButton } from '../baseui/GuardrButton';
 import {
   BookOpen,
   Briefcase,
@@ -132,9 +134,53 @@ export function GuardProfileScreen({
   );
 
   return (
-    <AppScreen className={`app-full-page-detail${formFactor === 'desktop' ? ' adm-guard-profile' : ''}`}>
-      <AppSubScreenHeader title={guard.name} onBack={onBack} backLabel="Guards" />
-      <div className={`px-4 py-4 space-y-6 max-w-3xl mx-auto${formFactor === 'desktop' ? ' adm-guard-profile-body' : ' pb-28'}`}>
+    <AppScreen className={`app-full-page-detail${formFactor === 'desktop' ? '' : ''}`}>
+      {formFactor !== 'desktop' ? (
+        <AppSubScreenHeader title={guard.name} onBack={onBack} backLabel="Guards" />
+      ) : null}
+      <div className={`px-4 py-4 space-y-6 max-w-3xl mx-auto${formFactor === 'desktop' ? '' : ' pb-28'}`}>
+          {formFactor === 'desktop' ? (
+            <div className="space-y-4">
+              <DashboardHero
+                kicker={getGuardDisplayHeadline(guard)}
+                title={guard.name}
+                status={
+                  onToggleFavorite ? (
+                    <button
+                      type="button"
+                      aria-label={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+                      onClick={() => void onToggleFavorite()}
+                      className="shrink-0 p-1.5 rounded-full uber-text-muted hover:text-rose-500 transition-colors"
+                    >
+                      <Heart className={`w-6 h-6 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                    </button>
+                  ) : undefined
+                }
+              />
+              <MetricStrip className="!px-0">
+                <MetricCell label="Completed" value={guard.jobsCompleted} accent />
+                {guard.yearsExperience != null && guard.yearsExperience > 0 && (
+                  <MetricCell label="Experience" value={`${guard.yearsExperience}+ yrs`} />
+                )}
+              </MetricStrip>
+              <div className="flex flex-wrap items-center gap-2 px-4">
+                <GuardArmedStatusPill guard={guard} />
+                {isGuardProfileApproved(guard) && (
+                  <span className="inline-flex items-center gap-1 text-sm uber-text-accent">
+                    <Check className="w-4 h-4" />
+                    {GUARD_APPROVED_BADGE_LABEL}
+                  </span>
+                )}
+                {isGuardTrusted(guard) && (
+                  <span className="inline-flex items-center gap-1 text-sm uber-text-accent">
+                    <Check className="w-4 h-4" />
+                    {GUARD_TRUSTED_BADGE_LABEL}
+                  </span>
+                )}
+              </div>
+              <p className="px-4 text-sm uber-text-muted leading-relaxed">{getGuardDisplaySummary(guard)}</p>
+            </div>
+          ) : (
           <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 overflow-hidden p-0">
             <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
               <div className="flex items-start gap-4">
@@ -186,6 +232,7 @@ export function GuardProfileScreen({
               </div>
             </div>
           </div>
+          )}
 
           <CertBadgeRow guard={guard} clientMode />
 
@@ -362,7 +409,7 @@ export function GuardProfileScreen({
           </section>
         </div>
 
-      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2${formFactor === 'desktop' ? ' adm-guard-profile-actions' : ''}`}>
+      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2${formFactor === 'desktop' ? '' : ''}`}>
         {canMessageFromProfile && messageableRequest && (
           <button
             type="button"
@@ -373,13 +420,19 @@ export function GuardProfileScreen({
             {jobChatActionLabel(messageableRequest)}
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => onRequestGuard(guard)}
-          className="app-button-primary"
-        >
-          Send assignment request to {guardFirstName}
-        </button>
+        {formFactor === 'desktop' ? (
+          <GuardrButton kind="primary" onClick={() => onRequestGuard(guard)} className="w-full">
+            Send assignment request to {guardFirstName}
+          </GuardrButton>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onRequestGuard(guard)}
+            className="app-button-primary"
+          >
+            Send assignment request to {guardFirstName}
+          </button>
+        )}
         <p className="text-center text-xs text-brand-text-muted mt-2">
           Separate from posting a general job to all guards
         </p>

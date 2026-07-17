@@ -29,6 +29,7 @@ import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppScreen, AppStatusBanner } from './ui/app/AppPrimitives';
 import { ResponsivePage } from './layouts/desktop/DesktopPageShell';
+import { WorkbenchEmpty, WorkbenchFlatSplit } from './baseui/layout/WorkbenchLayout';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import type { MessagesChrome } from '../lib/messagesChrome';
 
@@ -478,8 +479,8 @@ export function ClientDashboard({
         'guards',
         <>
           {tutorialDemoBanner}
-          <div className="adm-guards-workbench adm-workbench-split">
-            <div className="adm-workbench-list adm-workbench-list--flat">
+          <WorkbenchFlatSplit
+            list={
               <GuardDirectoryScreen
                 guards={guards}
                 onSelectGuard={setSelectedGuard}
@@ -491,34 +492,30 @@ export function ClientDashboard({
                 onRequestGuard={startDirectGuardRequest}
                 onTeamDetailOpenChange={onTeamDetailOpenChange}
               />
-            </div>
-            <div className="adm-workbench-detail">
-              {selectedGuard ? (
-                <div className="adm-workbench-detail-inner">
-                  <GuardProfileScreen
-                    guard={selectedGuard}
-                    clientId={clientId}
-                    requests={requests}
-                    platformRequests={platformRequests}
-                    onBack={() => setSelectedGuard(null)}
-                    onRequestGuard={startDirectGuardRequest}
-                    jobChatThreads={jobChatThreads}
-                    currentUser={currentUser}
-                    onSendJobChatMessage={onSendJobChatMessage}
-                    onOpenJobChat={onOpenJobChat ?? openMessages}
-                    isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
-                    onToggleFavorite={
-                      onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
-                    }
-                  />
-                </div>
+            }
+            detail={
+              selectedGuard ? (
+                <GuardProfileScreen
+                  guard={selectedGuard}
+                  clientId={clientId}
+                  requests={requests}
+                  platformRequests={platformRequests}
+                  onBack={() => setSelectedGuard(null)}
+                  onRequestGuard={startDirectGuardRequest}
+                  jobChatThreads={jobChatThreads}
+                  currentUser={currentUser}
+                  onSendJobChatMessage={onSendJobChatMessage}
+                  onOpenJobChat={onOpenJobChat ?? openMessages}
+                  isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
+                  onToggleFavorite={
+                    onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
+                  }
+                />
               ) : (
-                <div className="adm-empty adm-empty--detail">
-                  <p>Select a guard or team to view profile and hire options</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <WorkbenchEmpty message="Select a guard or team to view profile and hire options" variant="detail" />
+              )
+            }
+          />
         </>,
         'client-guards',
       );

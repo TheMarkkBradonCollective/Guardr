@@ -92,14 +92,14 @@ body[data-form-factor="tablet"] .tablet-admin-rail-item {
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail-item:hover {
-  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
-  color: var(--brand-text);
+  background: var(--uber-surface, #f6f6f6);
+  color: var(--uber-text, #000);
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail-item--active {
-  background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-surface));
-  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-  color: var(--brand-primary);
+  background: var(--uber-surface, #f6f6f6);
+  border-color: var(--uber-border, #e2e2e2);
+  color: var(--uber-text, #000);
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail-item-icon {

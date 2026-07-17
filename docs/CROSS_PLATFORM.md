@@ -103,21 +103,88 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | `pwa-*` | Glass header blur, safe-area padding |
 | `native-*` | 48px touch targets, edge safe areas, solid chrome |
 
+**Phase 3 dashboard migration** — remaining role dashboards migrated to `WorkbenchLayout`:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Guard earnings desktop | `GuardEarningsDesktop` | Migrated — `WorkbenchGrid`, `GuardrCard`, `GuardrButton` |
+| Guard crew hub | `GuardCrewHubPanel` | Migrated — `WorkbenchPage` + `WorkbenchSplit` |
+| Guard performance | `GuardPerformanceScreen` | Migrated — `WorkbenchFlatSplit` |
+| Guard preferences / availability | `GuardPreferencesScreen`, `GuardAvailabilityScreen` | Migrated — `WorkbenchPage` + toolbar |
+| Client reports desktop | `ClientReportsDesktop` | Migrated — `WorkbenchTabBar` + `WorkbenchSplit` |
+| Client invoice panel | `ClientInvoicePanel` | Migrated — `GuardrButton`, Uber table typography |
+| Client guard directory | `ClientDashboard` (guards view) | Migrated — `WorkbenchFlatSplit` |
+| Staff incidents / violations / disputes | `StaffIncidentsPanel`, etc. | Migrated — `WorkbenchPage` + `WorkbenchSplit` |
+| Staff payments / legal / cities / audit | Staff ops panels | Migrated — workbench adapters |
+| Staff analytics / SLA | `StaffAnalyticsPanel`, `StaffSlaDashboard` | Migrated — `WorkbenchGrid` + `GuardrCard` |
+| Platform guide / dev notes | `AppGuidePage`, `DevNotesPage` | Migrated — `WorkbenchSplit` |
+
+**Phase 4 dashboard kit** — `DashboardHero`, `MetricStrip`, `MetricCell`, `DashboardZone` on remaining hubs:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Staff payment summary | `StaffPaymentSummary` | Migrated — `MetricStrip` + `MetricCell` |
+| Staff SLA dashboard | `StaffSlaDashboard` | Migrated — `MetricCell` grid |
+| Staff analytics | `StaffAnalyticsPanel` | Migrated — `MetricCell` metrics |
+| Staff job approval | `StaffJobApprovalSettings` | Migrated — `GuardrCard` |
+| Staff company placard | `StaffCompanyPlacardPanel` | Migrated — `MetricStrip` + `GuardrButton` |
+| Client request wizards | `RequestSecurityFlow`, `DirectGuardRequestFlow` | Migrated — `GuardrButton` CTAs |
+| Client guard profile | `GuardProfileScreen` | Migrated — `DashboardHero` + `MetricStrip` (desktop) |
+
+**Phase 5 overlays + CSS cleanup** — feature overlays and legacy class retirement:
+
+| Area | Component / file | Status |
+|------|------------------|--------|
+| Overlay chrome | `OverlaySheetHeader` | New — shared bottom-sheet header |
+| Guard shift modals | `GuardSelfAuditModal`, `GuardEndShiftCheckpointModal` | Migrated — `OverlaySheetHeader` + `uber-overlay-sheet-body` |
+| Guard field modals | `GuardIncidentReportModal`, `GuardActivityLogModal`, `GuardRatingModal` | Migrated — `GuardrButton` + `uber-label` / `uber-overlay-actions` |
+| Map inspector | `MapSelectionExperience` | Migrated — `GuardrButton` + `uber-map-inspector-close` |
+| Pre-shift briefing | `GuardPreShiftBriefing` | Migrated — `uber-text-accent` / `uber-text-muted` |
+| Form wizards | `RequestSecurityFlow`, `DirectGuardRequestFlow` | Migrated — `uber-form-wizard` (replaces `adm-form-wizard`) |
+| Global CSS | `uber-global.css` | Overlay sheet, form wizard, map inspector utilities |
+
+**Phase 2 dashboard migration** — Base Web adapters replace legacy `adm-workbench` markup:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Staff overview desktop | `StaffOverviewDesktop` | Migrated — `DashboardHero`, `MetricStrip`, `GuardrCard`, `DashboardZone` |
+| Staff ops pages | `StaffOpsPageShell` | Migrated — `WorkbenchPage` |
+| List-detail (jobs, guards, clients) | `ListDetailLayout` | Migrated — `WorkbenchSplit` |
+| Guard my jobs desktop | `GuardMyJobsDesktop` | Migrated — `WorkbenchPage` + stat chips + table |
+| Client requests desktop | `ClientRequestsDesktop` | Migrated — `WorkbenchPage` + stat chips + table |
+| Client home desktop | `ClientHomeDesktop` | Already migrated (Phase 1 reference) |
+
 Central files:
 
 ```
-src/components/baseui/layout/mobilityChrome.ts   — viewSurface → layout config
-src/components/baseui/layout/GuardrDrawerShell.tsx
-src/styles/uber-mobility.css                     — global brand→Uber remap + per-surface CSS
-src/styles/uber-surfaces.css                     — adm/app legacy bridge inside shell
+src/components/baseui/layout/WorkbenchLayout.tsx  — WorkbenchPage, Split, StatChips, Grid
+src/styles/uber-workbench.css                     — Uber workbench layout CSS
+src/components/staff/StaffOverviewDesktop.tsx     — staff command center (desktop)
+src/components/guard/GuardMyJobsDesktop.tsx       — guard shifts workbench
+src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 ```
 
 ## Theme System
 
-- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts` and `uber-mobility.css` global `--brand-*` remap
-- **Themes:** Light (default), Dark, Grey — accent is Uber blue (`#276ef1`), not legacy sage
+- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
+- **Themes:** Light (default web/PWA), Dark (default APK) — accent is Uber blue (`#276ef1`), primary CTAs are black/white (Uber.com pattern)
+- **Typography:** Uber Move / Uber Move Text stack — no legacy sage green or IBM Plex
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
+
+### Uber design system files (`/uberitplatforms` complete)
+
+```
+src/styles/uber-tokens.css      — canonical --uber-* tokens + --brand-* bridge
+src/styles/uber-global.css      — global presentation overrides (buttons, cards, inputs, tables)
+src/styles/uber-mobility.css    — per-viewSurface shell chrome
+src/styles/uber-surfaces.css    — legacy adm-*/app-* bridge inside .uber-app-shell
+src/styles/uber-landing.css     — public marketing (Uber.com homepage pattern)
+src/styles/app-pwa.css          — PWA glass chrome, safe areas
+src/styles/app-native.css       — APK native touch targets, safe areas
+src/components/baseui/          — Base Web adapters (GuardrButton, GuardrCard, etc.)
+src/components/landing/uber/      — UberStyleLandingPage (mobile / tablet / desktop)
+```
 
 ## Offline + Field Mode (Phase 2)
 

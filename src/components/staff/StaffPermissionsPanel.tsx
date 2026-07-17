@@ -16,6 +16,7 @@ import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
 export type StaffPermissionsPatch = Pick<
   PlatformSettings,
@@ -200,7 +201,14 @@ export function StaffPermissionsPanel({
 
   if (isDesktop) {
     return (
-      <StaffOpsPageShell>
+      <StaffOpsPageShell
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Platform"
+            subtitle="Approval rules and staff role permissions."
+          />
+        }
+      >
         <div className="space-y-3">
           <DesktopCard title="Approval rules">{approvalSection}</DesktopCard>
           <DesktopCard title="Staff role permissions">

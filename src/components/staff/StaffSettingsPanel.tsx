@@ -3,6 +3,7 @@ import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import type { CompanyPublicDocument } from '../../lib/companyPlacard';
@@ -110,10 +111,10 @@ export function StaffSettingsPanel({
       <StaffOpsPageShell
         className="adm-platform-page adm-platform-settings-page"
         toolbar={
-          <div>
-            <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">Homepage messages and public placard.</p>
-          </div>
+          <WorkbenchToolbar
+            eyebrow="Platform"
+            subtitle="Homepage messages and public placard."
+          />
         }
       >
         <div className="adm-platform-settings-grid">

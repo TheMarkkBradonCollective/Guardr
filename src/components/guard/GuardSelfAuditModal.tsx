@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Camera, Loader2, MapPin } from 'lucide-react';
 import { SELF_AUDIT_PHOTO_LABELS, SelfAuditPhotoKind } from '../../lib/selfAuditPhotos';
+import { OverlaySheetHeader } from '../baseui/overlays/OverlaySheetHeader';
 import { AppModal } from '../ui/motion/AppMotion';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 
@@ -62,17 +63,14 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
 
   return (
     <AppModal open={open} position="absolute" zIndex={1003} onClose={onClose} ariaLabelledBy="guard-self-audit-title">
-      <div className="sticky top-0 bg-brand-surface border-b border-brand-border px-5 py-4 flex items-center justify-between rounded-t-[1.25rem]">
-        <p id="guard-self-audit-title" className="font-semibold text-brand-primary">
-          Start of shift package
-        </p>
-        <button type="button" onClick={onClose} aria-label="Close" className="text-brand-text-muted hover:text-brand-text text-lg">
-          ×
-        </button>
-      </div>
+      <OverlaySheetHeader
+        titleId="guard-self-audit-title"
+        title="Start of shift package"
+        onClose={onClose}
+      />
 
-      <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-        <p className="text-xs text-brand-text-muted leading-relaxed">
+      <div className="uber-overlay-sheet-body space-y-5">
+        <p className="text-xs uber-text-muted leading-relaxed">
           Self-audit and location photo before clock-in. Skipping items from the previous screen is allowed but
           automatically flagged for the client.
         </p>
@@ -86,7 +84,7 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
                   uniform[key] ? 'bg-brand-primary border-brand-primary' : 'border-brand-border'
                 }`}
               >
-                {uniform[key] && <Check className="w-3 h-3 text-brand-accent-text" />}
+                {uniform[key] && <Check className="w-3 h-3 text-white" />}
               </div>
               <span className="text-sm">{labels[key]}</span>
             </label>
@@ -114,11 +112,11 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
                   className="w-full h-32 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2 hover:border-brand-primary transition-colors surface-inset"
                 >
                   {loadingKind === kind ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-brand-text-muted" />
+                    <Loader2 className="w-8 h-8 animate-spin uber-text-muted" />
                   ) : (
                     <>
-                      <Camera className="w-8 h-8 text-brand-text-muted" />
-                      <span className="text-sm text-brand-text-muted">Tap to capture</span>
+                      <Camera className="w-8 h-8 uber-text-muted" />
+                      <span className="text-sm uber-text-muted">Tap to capture</span>
                     </>
                   )}
                 </button>
@@ -146,11 +144,11 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
               className="w-full h-28 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2"
             >
               {loadingKind === 'location' ? (
-                <Loader2 className="w-7 h-7 animate-spin text-brand-text-muted" />
+                <Loader2 className="w-7 h-7 animate-spin uber-text-muted" />
               ) : (
                 <>
-                  <MapPin className="w-7 h-7 text-brand-text-muted" />
-                  <span className="text-sm text-brand-text-muted">Photo of post / site</span>
+                  <MapPin className="w-7 h-7 uber-text-muted" />
+                  <span className="text-sm uber-text-muted">Photo of post / site</span>
                 </>
               )}
             </button>

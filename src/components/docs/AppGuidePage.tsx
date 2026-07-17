@@ -20,6 +20,7 @@ import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } fr
 import { useDevice } from '../../lib/platform';
 import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
 import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
+import { WorkbenchEmpty, WorkbenchSplit } from '../baseui/layout/WorkbenchLayout';
 import type { PlatformRole } from '../../types';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
@@ -554,46 +555,44 @@ export function AppGuidePage({
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
-            <p className="adm-workbench-subtitle">
+            <p className="uber-workbench-subtitle">
               Role-based workflows, permissions, and how Guardr works end to end.
             </p>
           </div>
         }
       >
-        <div className="adm-workbench-split adm-guide-workbench">
-          <div className="adm-workbench-list adm-guide-list">
-            <GuideHub
-              variant="desktop"
-              sections={ALL_SECTIONS}
-              tabs={tabs}
-              initialAudience={
-                initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
-                  ? initialAudience
-                  : 'all'
-              }
-              highlightAudience={highlightAudience}
-              activeSectionId={activeSection?.id ?? null}
-              onSelect={handleSelect}
-              tutorialAvailable={tutorialAvailable}
-              tutorialCompleted={tutorialCompleted}
-              tutorialActive={tutorialActive}
-              onStartTutorial={onStartTutorial}
-              onEnterPracticeMode={onEnterPracticeMode}
-            />
-          </div>
-          <div className="adm-workbench-detail">
-            {activeSection ? (
-              <div className="adm-workbench-detail-inner">
-                <SectionDetail section={activeSection} onBack={handleBack} variant="desktop" />
-              </div>
+        <WorkbenchSplit
+          className="adm-guide-workbench"
+          list={
+            <div className="adm-guide-list">
+              <GuideHub
+                variant="desktop"
+                sections={ALL_SECTIONS}
+                tabs={tabs}
+                initialAudience={
+                  initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
+                    ? initialAudience
+                    : 'all'
+                }
+                highlightAudience={highlightAudience}
+                activeSectionId={activeSection?.id ?? null}
+                onSelect={handleSelect}
+                tutorialAvailable={tutorialAvailable}
+                tutorialCompleted={tutorialCompleted}
+                tutorialActive={tutorialActive}
+                onStartTutorial={onStartTutorial}
+                onEnterPracticeMode={onEnterPracticeMode}
+              />
+            </div>
+          }
+          detail={
+            activeSection ? (
+              <SectionDetail section={activeSection} onBack={handleBack} variant="desktop" />
             ) : (
-              <div className="adm-empty adm-empty--detail">
-                <BookOpen className="w-10 h-10 adm-muted-icon" />
-                <p>Select a guide section to read</p>
-              </div>
-            )}
-          </div>
-        </div>
+              <WorkbenchEmpty icon={BookOpen} message="Select a guide section to read" variant="detail" />
+            )
+          }
+        />
       </StaffOpsPageShell>
     );
   }

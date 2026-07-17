@@ -168,7 +168,7 @@ export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: Ub
           letterSpacing: '-0.03em',
         }}
       >
-        Secure your site with Guardr
+        Go anywhere with Guardr
       </Block>
 
       <button type="button" className="uber-landing-time-pill" onClick={startClientFlow}>

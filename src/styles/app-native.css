@@ -7,15 +7,43 @@ body.shell-native {
   overscroll-behavior-y: none;
 }
 
-body[data-shell="native"] .app-welcome-header,
-body.shell-native .app-welcome-header {
-  background: var(--uber-bg, var(--brand-bg));
+/* Native APK — Uber premium touch chrome */
+
+body[data-shell="native"] .uber-app-shell.mobility-shell,
+body.shell-native .uber-app-shell.mobility-shell {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-shell="native"] .app-welcome,
+body.shell-native .app-welcome {
+  background: var(--uber-bg, #ffffff);
 }
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: var(--uber-surface, var(--brand-surface));
-  border-top: 1px solid var(--uber-border, var(--brand-border));
+  background: var(--uber-surface, #f6f6f6);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+}
+
+body[data-shell="native"] .bottom-nav-bar,
+body.shell-native .bottom-nav-bar {
+  background: var(--uber-bg, #ffffff);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  padding-bottom: max(0.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+body[data-shell="native"] .mobility-icon-btn,
+body.shell-native .mobility-icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 12px;
+}
+
+body[data-view-surface="native-mobile"] .auth-sheet-panel,
+body[data-view-surface="native-tablet"] .auth-sheet-panel {
+  border-radius: 20px 20px 0 0 !important;
+  background: var(--uber-bg, #fff);
+  padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 body[data-shell="native"] .app-welcome-role-btn:active,
@@ -64,9 +92,4 @@ body[data-view-surface="native-mobile"] .app-welcome--mobile .app-welcome-headli
 body[data-shell="native"] .auth-sheet-panel,
 body.shell-native .auth-sheet-panel {
   padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
-}
-
-body[data-shell="native"] .bottom-nav-bar,
-body.shell-native .bottom-nav-bar {
-  padding-bottom: max(0.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }

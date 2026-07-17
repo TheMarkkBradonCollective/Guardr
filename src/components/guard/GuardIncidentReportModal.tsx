@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppModal } from '../ui/motion/AppMotion';
+import { GuardrButton } from '../baseui/GuardrButton';
 import {
   emptyIncidentFormInput,
   INCIDENT_CATEGORY_OPTIONS,
@@ -62,7 +63,7 @@ export function GuardIncidentReportModal({
       <h3 id="guard-incident-report-title" className="font-bold text-lg">
         File incident report
       </h3>
-      {siteName && <p className="text-sm text-brand-text-muted">Site: {siteName}</p>}
+      {siteName && <p className="text-sm uber-text-muted">Site: {siteName}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {submitError && (
@@ -73,7 +74,7 @@ export function GuardIncidentReportModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
-            <span className="text-xs font-semibold text-brand-text-muted">Incident type</span>
+            <span className="uber-label">Incident type</span>
             <select
               value={form.incidentType}
               onChange={(e) => update('incidentType', e.target.value as IncidentReportFormInput['incidentType'])}
@@ -88,7 +89,7 @@ export function GuardIncidentReportModal({
             </select>
           </label>
           <label className="block space-y-1">
-            <span className="text-xs font-semibold text-brand-text-muted">Priority</span>
+            <span className="uber-label">Priority</span>
             <select
               value={form.priority}
               onChange={(e) => update('priority', e.target.value as IncidentReportFormInput['priority'])}
@@ -106,7 +107,7 @@ export function GuardIncidentReportModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
-            <span className="text-xs font-semibold text-brand-text-muted">When did it occur?</span>
+            <span className="uber-label">When did it occur?</span>
             <input
               type="datetime-local"
               value={form.occurredAt}
@@ -116,7 +117,7 @@ export function GuardIncidentReportModal({
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-xs font-semibold text-brand-text-muted">Where on site?</span>
+            <span className="uber-label">Where on site?</span>
             <input
               type="text"
               value={form.locationOnSite}
@@ -128,7 +129,7 @@ export function GuardIncidentReportModal({
         </div>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">What happened?</span>
+          <span className="uber-label">What happened?</span>
           <textarea
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
@@ -139,7 +140,7 @@ export function GuardIncidentReportModal({
         </label>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">Who was involved?</span>
+          <span className="uber-label">Who was involved?</span>
           <textarea
             value={form.partiesInvolved}
             onChange={(e) => update('partiesInvolved', e.target.value)}
@@ -149,7 +150,7 @@ export function GuardIncidentReportModal({
         </label>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">Witnesses</span>
+          <span className="uber-label">Witnesses</span>
           <textarea
             value={form.witnesses}
             onChange={(e) => update('witnesses', e.target.value)}
@@ -159,7 +160,7 @@ export function GuardIncidentReportModal({
         </label>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">Why / contributing factors</span>
+          <span className="uber-label">Why / contributing factors</span>
           <textarea
             value={form.causeOrTrigger}
             onChange={(e) => update('causeOrTrigger', e.target.value)}
@@ -169,7 +170,7 @@ export function GuardIncidentReportModal({
         </label>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">How did you respond?</span>
+          <span className="uber-label">How did you respond?</span>
           <textarea
             value={form.actionsTaken}
             onChange={(e) => update('actionsTaken', e.target.value)}
@@ -242,7 +243,7 @@ export function GuardIncidentReportModal({
         </div>
 
         <label className="block space-y-1">
-          <span className="text-xs font-semibold text-brand-text-muted">Evidence notes</span>
+          <span className="uber-label">Evidence notes</span>
           <textarea
             value={form.evidenceNotes}
             onChange={(e) => update('evidenceNotes', e.target.value)}
@@ -271,17 +272,17 @@ export function GuardIncidentReportModal({
           )}
         </div>
 
-        <div className="app-action-row--2 pt-1">
-          <button type="button" onClick={handleClose} disabled={submitting} className="app-button-outline disabled:opacity-50">
+        <div className="uber-overlay-actions pt-1">
+          <GuardrButton kind="secondary" onClick={handleClose} disabled={submitting}>
             Cancel
-          </button>
-          <button
+          </GuardrButton>
+          <GuardrButton
+            kind="primary"
             type="submit"
             disabled={!form.description.trim() || !form.actionsTaken.trim() || submitting}
-            className="app-button-primary disabled:opacity-50"
           >
             {submitting ? 'Submitting...' : 'Submit report'}
-          </button>
+          </GuardrButton>
         </div>
       </form>
     </AppModal>

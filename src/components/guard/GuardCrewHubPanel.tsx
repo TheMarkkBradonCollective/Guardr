@@ -23,6 +23,12 @@ import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import { formatTeamCodeDisplay } from '../../lib/teamCode';
 import { useDevice } from '../../lib/platform';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 export type { CrewHubTab };
 
@@ -324,21 +330,23 @@ export function GuardCrewHubPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <div className="adm-workbench adm-crew-workbench">
-        <div className="adm-workbench-toolbar">
-          {tabBar}
-        </div>
+      <WorkbenchPage className="adm-crew-workbench">
+        <WorkbenchToolbar>{tabBar}</WorkbenchToolbar>
         {activeTab === 'active' ? (
-          <div className="adm-workbench-split">
-            <div className="adm-workbench-list">
-              {coordinatingJobs.length === 0 ? (
-                <div className="adm-empty">
-                  <Users className="w-8 h-8 adm-muted-icon" />
-                  <p>No active crews</p>
-                  <p className="adm-workbench-subtitle">Apply as team lead on a multi-guard job from the map.</p>
-                </div>
+          <WorkbenchSplit
+            list={
+              coordinatingJobs.length === 0 ? (
+                <WorkbenchEmpty
+                  icon={Users}
+                  message="No active crews"
+                  action={
+                    <p className="uber-workbench-subtitle">
+                      Apply as team lead on a multi-guard job from the map.
+                    </p>
+                  }
+                />
               ) : (
-                <table className="adm-table adm-table--list">
+                <table className="uber-workbench-table">
                   <thead>
                     <tr>
                       <th>Crew / job</th>
@@ -353,26 +361,26 @@ export function GuardCrewHubPanel({
                       return (
                         <tr
                           key={job.id}
-                          className={`adm-table-row--click${selectedJobId === job.id ? ' adm-table-row--selected' : ''}`}
+                          className={`uber-workbench-table-row${selectedJobId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
                           onClick={() => setSelectedJobId(job.id)}
                         >
                           <td>
-                            <p className="adm-table-primary">{crewJobLabel(job, guard, coworkerGuards)}</p>
-                            <p className="adm-table-secondary">{job.siteName || job.location}</p>
+                            <p className="uber-workbench-table-primary">{crewJobLabel(job, guard, coworkerGuards)}</p>
+                            <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
                           </td>
-                          <td className="adm-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                          <td className="adm-table-secondary">{slotCount}/{needed}</td>
+                          <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
+                          <td className="uber-workbench-table-secondary">{slotCount}/{needed}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              )}
-            </div>
-            <div className="adm-workbench-detail">
-              {selectedJob ? (
-                <div className="adm-workbench-detail-inner">
-                  <h2 className="adm-card-title">{crewJobLabel(selectedJob, guard, coworkerGuards)}</h2>
+              )
+            }
+            detail={
+              selectedJob ? (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-bold m-0">{crewJobLabel(selectedJob, guard, coworkerGuards)}</h2>
                   <CrewJobDetailBody
                     job={selectedJob}
                     guard={guard}
@@ -398,19 +406,16 @@ export function GuardCrewHubPanel({
                   />
                 </div>
               ) : (
-                <div className="adm-empty adm-empty--detail">
-                  <Users className="w-10 h-10 adm-muted-icon" />
-                  <p>Select a crew job to manage members</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <WorkbenchEmpty icon={Users} message="Select a crew job to manage members" variant="detail" />
+              )
+            }
+          />
         ) : (
           <div className="adm-crew-team-workbench">
             <GuardStandingCrewPanel {...standingCrewPanelProps} />
           </div>
         )}
-      </div>
+      </WorkbenchPage>
     );
   }
 

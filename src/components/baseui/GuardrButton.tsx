@@ -62,9 +62,16 @@ export function GuardrButton({
           },
           style: {
             minHeight: 'var(--space-touch, 44px)',
-            borderRadius: '8px',
+            borderRadius: kind === 'primary' ? '8px' : '999px',
             fontWeight: 600,
-            transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1), box-shadow 150ms ease',
+            transition: 'transform 150ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease',
+            ...(kind === 'primary'
+              ? {
+                  backgroundColor: 'contentPrimary',
+                  color: 'contentInversePrimary',
+                  ':hover': { backgroundColor: 'contentSecondary' },
+                }
+              : {}),
             ...(fullWidth ? { width: '100%' } : {}),
             ...(typeof overrides?.BaseButton?.style === 'object' ? overrides.BaseButton.style : {}),
             ...(typeof dangerOverrides.BaseButton?.style === 'object' ? dangerOverrides.BaseButton.style : {}),

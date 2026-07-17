@@ -1,6 +1,8 @@
 import React from 'react';
 import { SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
+import { GuardrCard } from '../baseui/GuardrCard';
+import { WorkbenchCardTitle } from '../baseui/layout/WorkbenchLayout';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 
@@ -53,7 +55,7 @@ function ApprovalRulesFields({
         />
         Enable trusted-client auto-publish
       </label>
-      <p id="job-review-note" className="text-xs text-brand-text-muted">
+      <p id="job-review-note" className="text-xs uber-text-muted">
         Trusted clients with valid map coordinates skip the approval queue when auto-publish is enabled.
         Mark clients as trusted from the Clients panel.
       </p>
@@ -83,10 +85,10 @@ export function StaffJobApprovalSettings({
 
   if (formFactor === 'desktop') {
     return (
-      <section className="adm-card adm-job-approval-settings-card mb-3">
-        <h3 className="adm-card-title adm-job-approval-settings-card-title">Approval rules</h3>
+      <GuardrCard className="mb-3">
+        <WorkbenchCardTitle>Approval rules</WorkbenchCardTitle>
         {fields}
-      </section>
+      </GuardrCard>
     );
   }
 

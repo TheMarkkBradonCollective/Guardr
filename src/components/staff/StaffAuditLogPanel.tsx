@@ -3,6 +3,8 @@ import { ScrollText, RefreshCw } from 'lucide-react';
 import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../lib/auditLog';
 import { useAuditLogRealtime } from '../../lib/useAuditLogRealtime';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -64,23 +66,24 @@ export function StaffAuditLogPanel() {
     });
   }, true);
 
-  const refreshButton = (
-    <button
-      type="button"
-      onClick={() => void refresh()}
-      className={
-        formFactor === 'desktop'
-          ? 'adm-btn adm-btn--outline adm-btn--sm flex items-center gap-1'
-          : 'app-button-outline app-btn-sm flex items-center gap-1'
-      }
-    >
-      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
-    </button>
-  );
+  const refreshButton =
+    formFactor === 'desktop' ? (
+      <GuardrButton kind="secondary" size="compact" onClick={() => void refresh()}>
+        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+      </GuardrButton>
+    ) : (
+      <button
+        type="button"
+        onClick={() => void refresh()}
+        className="app-button-outline app-btn-sm flex items-center gap-1"
+      >
+        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+      </button>
+    );
 
   const desktopTable = (
     <div className="adm-finance-audit-table">
-      <table className="adm-table">
+      <table className="uber-workbench-table">
         <thead>
           <tr>
             <th>Time</th>
@@ -97,13 +100,13 @@ export function StaffAuditLogPanel() {
           ) : (
             entries.map((e) => (
               <tr key={e.id}>
-                <td className="adm-table-muted whitespace-nowrap">{new Date(e.createdAt).toLocaleString()}</td>
+                <td className="uber-workbench-table-secondary whitespace-nowrap">{new Date(e.createdAt).toLocaleString()}</td>
                 <td>
-                  <span className="adm-table-primary">{e.actorEmail}</span>
-                  <span className="adm-table-secondary ml-1">({e.actorRole})</span>
+                  <span className="uber-workbench-table-primary">{e.actorEmail}</span>
+                  <span className="uber-workbench-table-secondary ml-1">({e.actorRole})</span>
                 </td>
-                <td className="adm-table-secondary">{formatAuditAction(e.action)}</td>
-                <td className="adm-table-muted hidden md:table-cell">
+                <td className="uber-workbench-table-secondary">{formatAuditAction(e.action)}</td>
+                <td className="uber-workbench-table-secondary hidden md:table-cell">
                   {e.entityType}
                   {e.entityId ? ` · ${e.entityId.slice(0, 12)}` : ''}
                 </td>
@@ -129,23 +132,22 @@ export function StaffAuditLogPanel() {
 
   if (formFactor === 'desktop') {
     return (
-      <StaffOpsPageShell className="adm-finance-page adm-finance-audit">
-        <div className="adm-workbench-toolbar adm-finance-toolbar">
-          <div className="flex items-center gap-2">
-            <ScrollText className="w-5 h-5 text-brand-primary" />
-            <div>
-              <p className="adm-card-eyebrow">Audit trail</p>
-              <p className="adm-workbench-subtitle">Staff actions and platform changes — most recent 200 entries.</p>
-            </div>
-          </div>
-          {refreshButton}
-        </div>
+      <StaffOpsPageShell
+        className="adm-finance-page adm-finance-audit"
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Audit trail"
+            subtitle="Staff actions and platform changes — most recent 200 entries."
+            actions={refreshButton}
+          />
+        }
+      >
         {entries.length >= 200 && (
-          <p className="adm-workbench-subtitle adm-finance-audit-note">
+          <p className="uber-workbench-subtitle adm-finance-audit-note">
             Showing the 200 most recent entries. Older activity is still retained but not shown here.
           </p>
         )}
-        <div className="adm-workbench-list adm-workbench-list--flat adm-finance-audit-list">{desktopTable}</div>
+        <div className="uber-workbench-list uber-workbench-list--flat adm-finance-audit-list">{desktopTable}</div>
       </StaffOpsPageShell>
     );
   }

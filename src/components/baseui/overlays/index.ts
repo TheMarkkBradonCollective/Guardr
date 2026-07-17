@@ -3,4 +3,5 @@ export { registerSnackbarHandlers, enqueueSnackbar, dequeueSnackbar } from './sn
 export { GuardrModal, type GuardrModalProps } from './GuardrModal';
 export { GuardrSheet, type GuardrSheetProps } from './GuardrSheet';
 export { GuardrDrawer, type GuardrDrawerProps } from './GuardrDrawer';
+export { OverlaySheetHeader } from './OverlaySheetHeader';
 export { snackbarOverrides } from './overlayStyles';

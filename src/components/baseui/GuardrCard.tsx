@@ -41,7 +41,7 @@ export function GuardrCard({
             ...(typeof overrides?.Root?.props === 'object' ? overrides.Root.props : {}),
           },
           style: {
-            borderRadius: '14px',
+            borderRadius: '12px',
             border: noBorder ? 'none' : '1px solid',
             borderColor: 'borderOpaque',
             boxShadow: 'none',

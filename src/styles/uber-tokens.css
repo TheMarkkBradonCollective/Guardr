@@ -23,6 +23,8 @@ html.theme-light {
   --uber-positive: #048848;
   --uber-negative: #e11900;
   --uber-warning: #ffc043;
+  --uber-black: #000000;
+  --uber-black-hover: #333333;
 
   /* Legacy --brand-* bridge (entire site reads these until Phase 5 cleanup) */
   --brand-primary: var(--uber-accent);
@@ -60,6 +62,8 @@ html.theme-dark {
   --uber-positive: #66d19e;
   --uber-negative: #f1998e;
   --uber-warning: #ffc043;
+  --uber-black: #ffffff;
+  --uber-black-hover: #e2e2e2;
 
   --brand-primary: var(--uber-accent);
   --brand-primary-hover: var(--uber-accent-hover);
