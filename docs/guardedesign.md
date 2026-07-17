@@ -8,7 +8,7 @@ This document captures the *design philosophy* of a premium modular SaaS dashboa
 
 **External reference (design guidelines only):** [Uber Base design system](https://base.uber.com/) — patterns and principles summarized in Appendix A; not Uber branding.
 
-**Visual preview:** [`/design-preview.html`](/design-preview.html) — Base Web (`baseweb`) React prototype with Uber `DarkThemeMove`, sidebar page index, and all role screens.
+**Visual preview:** [`/design-preview.html`](/design-preview.html) — Base Web React prototype with stock Uber `LightTheme` / `DarkTheme`, component showcase, sidebar page index, and all role screen mocks. Staff live QA: `/staff/design-qa`.
 
 ---
 

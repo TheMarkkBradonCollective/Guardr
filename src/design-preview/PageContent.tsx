@@ -1,23 +1,19 @@
 import React from 'react';
 import { Block } from 'baseui/block';
-import { Card, StyledBody } from 'baseui/card';
-import { Button } from 'baseui/button';
-import { GuardrTag, AppCarousel, GuardrCard, GuardrButton } from '../components/baseui';
 import { Grid, Cell } from 'baseui/layout-grid';
-import { Input } from 'baseui/input';
 import { ParagraphMedium, HeadingMedium, HeadingLarge, LabelSmall } from 'baseui/typography';
+import {
+  GuardrTag,
+  AppCarousel,
+  GuardrCard,
+  GuardrButton,
+  GuardrInput,
+  GuardrSkeleton,
+  MetricCell,
+  MetricStrip,
+  DashboardZone,
+} from '../components/baseui';
 import type { PreviewPage } from './pages';
-
-function Skeleton({ height = '12px', width = '100%' }: { height?: string; width?: string }) {
-  return (
-    <Block
-      height={height}
-      width={width}
-      backgroundColor="backgroundSecondary"
-      overrides={{ Block: { style: { borderRadius: '6px' } } }}
-    />
-  );
-}
 
 function PlaceholderList() {
   return (
@@ -32,16 +28,11 @@ function PlaceholderList() {
           paddingBottom="scale400"
           overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}
         >
-          <Block
-            width="40px"
-            height="40px"
-            backgroundColor="backgroundSecondary"
-            overrides={{ Block: { style: { borderRadius: '50%' } } }}
-          />
+          <GuardrSkeleton height="40px" width="40px" circle />
           <Block flex="1">
-            <Skeleton width="70%" />
+            <GuardrSkeleton width="70%" />
             <Block height="scale200" />
-            <Skeleton width="45%" />
+            <GuardrSkeleton width="45%" />
           </Block>
         </Block>
       ))}
@@ -59,40 +50,42 @@ function DashboardWidgets() {
             <LabelSmall $style={{ color: 'contentSecondary' }}>UPCOMING</LabelSmall>
             <ParagraphMedium $style={{ fontWeight: 700, marginTop: '4px' }}>{title}</ParagraphMedium>
             <HeadingMedium $style={{ marginTop: '12px' }}>${[42, 28, 35][i]}/hr</HeadingMedium>
-            {i === 0 && (
+            {i === 0 ? (
               <GuardrTag kind="accent" closeable={false}>
                 Surge 1.8×
               </GuardrTag>
-            )}
+            ) : null}
           </GuardrCard>
         ))}
       </AppCarousel>
+      <DashboardZone title="Metrics">
+        <MetricStrip>
+          {['Active', 'Rating', 'Earnings', 'On-time'].map((label, i) => (
+            <MetricCell key={label} label={label} value="—" accent={i === 0} />
+          ))}
+        </MetricStrip>
+      </DashboardZone>
       <Grid gridGutters={16} gridMargins={0} gridMaxWidth={1200}>
-        {['Active', 'Rating', 'Earnings', 'On-time'].map((label) => (
-          <Cell key={label} span={[4, 3, 3]}>
-            <Card>
-              <StyledBody>
-                <LabelSmall $style={{ color: 'contentSecondary' }}>{label.toUpperCase()}</LabelSmall>
-                <HeadingLarge $style={{ marginTop: '8px' }}>—</HeadingLarge>
-              </StyledBody>
-            </Card>
-          </Cell>
-        ))}
         <Cell span={[8, 8, 8]}>
-          <Card>
-            <StyledBody>
-              <LabelSmall $style={{ color: 'contentSecondary' }}>TREND</LabelSmall>
-              <Block height="140px" marginTop="scale400" backgroundColor="backgroundSecondary" overrides={{ Block: { style: { borderRadius: '8px' } } }} />
-            </StyledBody>
-          </Card>
+          <GuardrCard>
+            <LabelSmall $style={{ color: 'contentSecondary' }}>TREND</LabelSmall>
+            <Block
+              height="140px"
+              marginTop="scale400"
+              backgroundColor="backgroundSecondary"
+              overrides={{ Block: { style: { borderRadius: '8px' } } }}
+            />
+          </GuardrCard>
         </Cell>
         <Cell span={[4, 4, 4]}>
-          <Card>
-            <StyledBody>
-              <LabelSmall $style={{ color: 'contentSecondary' }}>ACTIVITY</LabelSmall>
-              <Block marginTop="scale400"><Skeleton /><Block height="8px" /><Skeleton width="80%" /></Block>
-            </StyledBody>
-          </Card>
+          <GuardrCard>
+            <LabelSmall $style={{ color: 'contentSecondary' }}>ACTIVITY</LabelSmall>
+            <Block marginTop="scale400">
+              <GuardrSkeleton />
+              <Block height="8px" />
+              <GuardrSkeleton width="80%" />
+            </Block>
+          </GuardrCard>
         </Cell>
       </Grid>
     </Block>
@@ -144,29 +137,35 @@ function MapMock({ variant }: { variant: 'guard' | 'client' | 'staff' }) {
           <ParagraphMedium $style={{ fontWeight: 700, marginTop: '8px' }}>Corporate lobby · Night shift</ParagraphMedium>
           <ParagraphMedium $style={{ color: 'contentSecondary', marginTop: '4px' }}>Client: Acme Corp · 3 applicants</ParagraphMedium>
           <Block marginTop="auto" display="flex" gridGap="scale300" paddingTop="scale800">
-            <Button size="compact" overrides={{ BaseButton: { style: { flex: 1 } } }}>Approve</Button>
-            <Button size="compact" kind="secondary" overrides={{ BaseButton: { style: { flex: 1 } } }}>Deny</Button>
+            <Block flex="1">
+              <GuardrButton size="compact" fullWidth>
+                Approve
+              </GuardrButton>
+            </Block>
+            <Block flex="1">
+              <GuardrButton size="compact" kind="secondary" fullWidth>
+                Deny
+              </GuardrButton>
+            </Block>
           </Block>
         </Block>
       ) : (
         <Block position="absolute" bottom="0" left="0" right="0" padding="scale400" display="flex" gridGap="scale400" overflow="auto">
-          <Card overrides={{ Root: { style: { minWidth: '220px', flex: '0 0 auto' } } }}>
-            <StyledBody>
-              <ParagraphMedium $style={{ fontWeight: 700 }}>
-                {variant === 'client' ? 'Live shift · Guard en route' : 'Event security · Downtown'}
-              </ParagraphMedium>
-              <ParagraphMedium $style={{ color: 'contentSecondary', marginTop: '4px' }}>
-                {variant === 'client' ? 'Staples Center · ETA 8 min' : 'Tonight 6:00 PM · Surge 1.8×'}
-              </ParagraphMedium>
-              <Block display="flex" justifyContent="space-between" alignItems="center" marginTop="scale500">
-                <HeadingMedium>{variant === 'client' ? 'Track →' : '$42/hr'}</HeadingMedium>
-                <Button size="compact">{variant === 'client' ? 'Chat' : 'Apply'}</Button>
-              </Block>
-            </StyledBody>
-          </Card>
+          <GuardrCard overrides={{ Root: { style: { minWidth: '220px', flex: '0 0 auto' } } }}>
+            <ParagraphMedium $style={{ fontWeight: 700 }}>
+              {variant === 'client' ? 'Live shift · Guard en route' : 'Event security · Downtown'}
+            </ParagraphMedium>
+            <ParagraphMedium $style={{ color: 'contentSecondary', marginTop: '4px' }}>
+              {variant === 'client' ? 'Staples Center · ETA 8 min' : 'Tonight 6:00 PM · Surge 1.8×'}
+            </ParagraphMedium>
+            <Block display="flex" justifyContent="space-between" alignItems="center" marginTop="scale500">
+              <HeadingMedium>{variant === 'client' ? 'Track →' : '$42/hr'}</HeadingMedium>
+              <GuardrButton size="compact">{variant === 'client' ? 'Chat' : 'Apply'}</GuardrButton>
+            </Block>
+          </GuardrCard>
         </Block>
       )}
-      {variant === 'guard' && (
+      {variant === 'guard' ? (
         <Block
           padding="scale500"
           display="flex"
@@ -181,7 +180,7 @@ function MapMock({ variant }: { variant: 'guard' | 'client' | 'staff' }) {
           </Block>
           <Block width="48px" height="28px" backgroundColor="accent" overrides={{ Block: { style: { borderRadius: '999px' } } }} />
         </Block>
-      )}
+      ) : null}
     </Block>
   );
 }
@@ -205,8 +204,8 @@ export function PageContent({ page }: { page: PreviewPage }) {
             Licensed guards for events, retail, corporate, and more.
           </ParagraphMedium>
           <Block marginTop="scale800" display="flex" justifyContent="center" gridGap="scale400">
-            <Button>Get started</Button>
-            <Button kind="secondary">Sign in</Button>
+            <GuardrButton>Get started</GuardrButton>
+            <GuardrButton kind="secondary">Sign in</GuardrButton>
           </Block>
         </Block>
       );
@@ -216,9 +215,9 @@ export function PageContent({ page }: { page: PreviewPage }) {
         <Block maxWidth="400px" margin="scale1000 auto" padding="scale600">
           <HeadingMedium>{page.type === 'auth-signup' ? 'Create account' : 'Welcome back'}</HeadingMedium>
           <Block marginTop="scale600" display="flex" flexDirection="column" gridGap="scale500">
-            <Input placeholder="Email" />
-            <Input placeholder="Password" type="password" />
-            <Button>{page.type === 'auth-signup' ? 'Sign up' : 'Sign in'}</Button>
+            <GuardrInput placeholder="Email" />
+            <GuardrInput placeholder="Password" type="password" />
+            <GuardrButton>{page.type === 'auth-signup' ? 'Sign up' : 'Sign in'}</GuardrButton>
           </Block>
         </Block>
       );
@@ -228,28 +227,28 @@ export function PageContent({ page }: { page: PreviewPage }) {
           {['Title', 'Location', 'Date', 'Notes'].map((f) => (
             <Block key={f} marginBottom="scale500">
               <LabelSmall $style={{ marginBottom: '6px' }}>{f}</LabelSmall>
-              <Input placeholder={f} />
+              <GuardrInput placeholder={f} />
             </Block>
           ))}
-          <Button>Continue</Button>
+          <GuardrButton>Continue</GuardrButton>
         </Block>
       );
     case 'messages':
       return (
         <Grid gridGutters={16} gridMargins={0}>
           <Cell span={[4, 4, 4]}>
-            <Card><StyledBody><PlaceholderList /></StyledBody></Card>
+            <GuardrCard>
+              <PlaceholderList />
+            </GuardrCard>
           </Cell>
           <Cell span={[8, 8, 8]}>
-            <Card overrides={{ Root: { style: { minHeight: '400px' } } }}>
-              <StyledBody>
-                <Block marginTop="auto" paddingTop="scale800">
-                  <Skeleton width="55%" />
-                  <Block height="scale400" />
-                  <Input placeholder="Message…" />
-                </Block>
-              </StyledBody>
-            </Card>
+            <GuardrCard overrides={{ Root: { style: { minHeight: '400px' } } }}>
+              <Block marginTop="auto" paddingTop="scale800">
+                <GuardrSkeleton width="55%" />
+                <Block height="scale400" />
+                <GuardrInput placeholder="Message…" />
+              </Block>
+            </GuardrCard>
           </Cell>
         </Grid>
       );
@@ -260,7 +259,9 @@ export function PageContent({ page }: { page: PreviewPage }) {
           <ParagraphMedium $style={{ color: 'contentSecondary', marginTop: '8px' }}>
             Upload credentials to start accepting jobs
           </ParagraphMedium>
-          <Block marginTop="scale800" overrides={{ Block: { style: { textAlign: 'left' } } }}><PlaceholderList /></Block>
+          <Block marginTop="scale800" overrides={{ Block: { style: { textAlign: 'left' } } }}>
+            <PlaceholderList />
+          </Block>
         </Block>
       );
     case 'guide':
@@ -272,7 +273,11 @@ export function PageContent({ page }: { page: PreviewPage }) {
         <Grid gridGutters={16} gridMargins={0}>
           {Array.from({ length: 6 }).map((_, i) => (
             <Cell key={i} span={[4, 4, 4]}>
-              <Card><StyledBody><Skeleton height="48px" width="48px" /><Block height="8px" /><Skeleton /></StyledBody></Card>
+              <GuardrCard>
+                <GuardrSkeleton height="48px" width="48px" />
+                <Block height="8px" />
+                <GuardrSkeleton />
+              </GuardrCard>
             </Cell>
           ))}
         </Grid>
@@ -283,7 +288,7 @@ export function PageContent({ page }: { page: PreviewPage }) {
     default:
       return (
         <Block>
-          <Skeleton height="80px" />
+          <GuardrSkeleton height="80px" />
           <Block height="scale600" />
           <PlaceholderList />
         </Block>

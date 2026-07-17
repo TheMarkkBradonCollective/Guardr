@@ -10,3 +10,4 @@ export * from './dashboard';
 export * from './primitives';
 export * from './layout';
 export * from './overlays';
+export * from './showcase';

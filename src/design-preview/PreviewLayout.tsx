@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useStyletron, styled } from 'baseui';
-import { Modal, ModalHeader, ModalBody } from 'baseui/modal';
+import { Block } from 'baseui/block';
+import { HeadingSmall, ParagraphMedium } from 'baseui/typography';
+import { GuardrButton, GuardrModal } from '../components/baseui';
 import { PreviewHeader } from './PreviewHeader';
 import { PreviewSideNavigation } from './PreviewSideNavigation';
 import { PreviewBottomNavigation } from './PreviewBottomNavigation';
@@ -34,23 +36,24 @@ export function PreviewLayout({ contextValue, children }: PreviewLayoutProps) {
 
   return (
     <PreviewContext.Provider value={{ ...contextValue, openHelpModal }}>
-      <Modal
-        isOpen={helpOpen}
+      <GuardrModal
+        open={helpOpen}
         onClose={() => setHelpOpen(false)}
-        closeable
-        animate
-        autoFocus
+        align="center"
+        ariaLabelledBy="preview-help-title"
       >
-        <ModalHeader>Help &amp; navigation</ModalHeader>
-        <ModalBody>
-          <p>
-            This preview mirrors the layout from{' '}
+        <Block padding="scale800">
+          <HeadingSmall id="preview-help-title" marginTop={0}>
+            Help &amp; navigation
+          </HeadingSmall>
+          <ParagraphMedium color="contentSecondary">
+            This preview mirrors layout patterns from{' '}
             <a href="https://github.com/uber/base-design-docs" target="_blank" rel="noopener noreferrer">
               uber/base-design-docs
             </a>
             : fixed header, accordion sidebar, and scrollable page mocks for every Guardr role.
-          </p>
-          <p>Shortcuts:</p>
+          </ParagraphMedium>
+          <ParagraphMedium>Shortcuts:</ParagraphMedium>
           <ul className={css({ listStyle: 'circle', paddingLeft: theme.sizing.scale800 })}>
             {[
               ['/', 'Focus the search input'],
@@ -62,12 +65,16 @@ export function PreviewLayout({ contextValue, children }: PreviewLayoutProps) {
               </li>
             ))}
           </ul>
-          <p>
-            Use role and device filters in the header to narrow the page list. Each mock uses Base Web{' '}
-            <code>DarkThemeMove</code> inside an in-app shell — no production data.
-          </p>
-        </ModalBody>
-      </Modal>
+          <ParagraphMedium color="contentSecondary">
+            Use role and device filters in the header to narrow the page list. Mocks use the same{' '}
+            <code>BaseUIProvider</code> stack as production — stock Uber <code>LightTheme</code> /{' '}
+            <code>DarkTheme</code> with no live data.
+          </ParagraphMedium>
+          <Block marginTop="scale600">
+            <GuardrButton onClick={() => setHelpOpen(false)}>Got it</GuardrButton>
+          </Block>
+        </Block>
+      </GuardrModal>
 
       <PreviewHeader />
       <PreviewSideNavigation />

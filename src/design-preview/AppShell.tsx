@@ -1,30 +1,21 @@
 import React from 'react';
 import { Block } from 'baseui/block';
-import { Navigation } from 'baseui/side-navigation';
 import { ParagraphMedium, LabelSmall } from 'baseui/typography';
 import type { PreviewPage } from './pages';
-import { BRAND_LABEL, navForLayout, STAFF_GROUPS, STAFF_NAV } from './nav';
+import { BRAND_LABEL, navForLayout } from './nav';
+import { staffNavGroups, toGuardrNavItems } from './previewNavIcons';
 import { PageContent } from './PageContent';
-import { GuardrTag, AppCarousel, GuardrCard, GuardrButton } from '../components/baseui';
+import {
+  GuardrTag,
+  GuardrSideNav,
+  GuardrIconRail,
+  GuardrBottomNav,
+  PublicPageChrome,
+} from '../components/baseui';
+import { useThemeMode } from '../lib/platform/useThemeMode';
+import { saveTheme } from '../lib/platform/theme';
 
 export type FrameSize = 'desktop' | 'tablet' | 'mobile';
-
-function buildNavItems(layout: string, activeNav?: string) {
-  if (layout === 'staff') {
-    return STAFF_GROUPS.flatMap((group) => {
-      const items = group.ids
-        .map((id) => STAFF_NAV.find((n) => n.id === id))
-        .filter(Boolean)
-        .map((n) => ({
-          title: n!.label,
-          itemId: n!.id,
-        }));
-      if (!items.length) return [];
-      return [{ title: group.title, itemId: `__group_${group.title}`, disabled: true }, ...items];
-    });
-  }
-  return navForLayout(layout).map((n) => ({ title: n.label, itemId: n.id }));
-}
 
 function UberTopbar({ title }: { title: string }) {
   return (
@@ -39,11 +30,15 @@ function UberTopbar({ title }: { title: string }) {
       backgroundColor="backgroundPrimary"
       overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}
     >
-      <GuardrTag kind="neutral" closeable={false}>Los Angeles</GuardrTag>
+      <GuardrTag kind="neutral" closeable={false}>
+        Los Angeles
+      </GuardrTag>
       <Block flex="1" overflow="hidden" $style={{ fontSize: '12px', color: 'contentSecondary' }}>
-        <strong style={{ color: '#F5A623' }}>Surge</strong> — Downtown demand active
+        <strong className="uber-text-accent">Surge</strong> — Downtown demand active
       </Block>
-      <GuardrTag kind="accent" closeable={false} overrides={{ Root: { style: { minWidth: '20px' } } }}>3</GuardrTag>
+      <GuardrTag kind="accent" closeable={false} overrides={{ Root: { style: { minWidth: '20px' } } }}>
+        3
+      </GuardrTag>
       <ParagraphMedium $style={{ fontWeight: 600 }}>Hello Alex</ParagraphMedium>
       <Block
         width="34px"
@@ -55,6 +50,25 @@ function UberTopbar({ title }: { title: string }) {
   );
 }
 
+function BrandMark({ layout, compact }: { layout: string; compact?: boolean }) {
+  return (
+    <Block padding="scale600" paddingBottom="scale500" display="flex" alignItems="center" gridGap="scale400">
+      <Block
+        width="32px"
+        height="32px"
+        backgroundColor="accent"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        overrides={{ Block: { style: { borderRadius: '8px', color: '#fff', fontWeight: 800, fontSize: '13px' } } }}
+      >
+        G
+      </Block>
+      {!compact ? <ParagraphMedium $style={{ fontWeight: 800 }}>{BRAND_LABEL[layout]}</ParagraphMedium> : null}
+    </Block>
+  );
+}
+
 export function AppShell({
   page,
   frameSize,
@@ -62,16 +76,16 @@ export function AppShell({
   page: PreviewPage;
   frameSize: FrameSize;
 }) {
+  const themeMode = useThemeMode();
   const isMap = page.type.startsWith('map-');
-  const navItems = buildNavItems(page.layout, page.nav);
+  const navItems = toGuardrNavItems(navForLayout(page.layout));
   const activeId = page.nav ?? '';
+  const noop = () => undefined;
 
   if (page.layout === 'public') {
     return (
       <Block minHeight="560px" backgroundColor="backgroundPrimary">
-        <Block padding="scale500" overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}>
-          <ParagraphMedium $style={{ fontWeight: 700 }}>Guardr</ParagraphMedium>
-        </Block>
+        <PublicPageChrome themeMode={themeMode} onChangeTheme={saveTheme} sticky={false} />
         <Block padding="scale600">
           <PageContent page={page} />
         </Block>
@@ -86,19 +100,30 @@ export function AppShell({
         <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale500'}>
           <PageContent page={page} />
         </Block>
-        <Block
-          display="flex"
-          justifyContent="space-around"
-          paddingTop="scale300"
-          paddingBottom="scale500"
-          backgroundColor="backgroundPrimary"
-          overrides={{ Block: { style: { borderTop: '1px solid', borderColor: 'borderOpaque' } } }}
-        >
-          {navForLayout(page.layout).slice(0, 4).map((n) => (
-            <Block key={n.id} overrides={{ Block: { style: { textAlign: 'center', padding: '8px' } } }}>
-              <LabelSmall $style={{ color: n.id === activeId ? 'accent' : 'contentSecondary' }}>{n.label}</LabelSmall>
-            </Block>
-          ))}
+        <GuardrBottomNav
+          items={navItems.slice(0, 4)}
+          activeId={activeId}
+          onNavigate={noop}
+          flat
+        />
+      </Block>
+    );
+  }
+
+  if (frameSize === 'tablet') {
+    return (
+      <Block display="flex" minHeight="680px" backgroundColor="backgroundPrimary">
+        <GuardrIconRail
+          items={navItems}
+          activeId={activeId}
+          onSelect={noop}
+          brand={<BrandMark layout={page.layout} compact />}
+        />
+        <Block flex="1" display="flex" flexDirection="column" minWidth="0">
+          <UberTopbar title={page.title} />
+          <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale600'}>
+            <PageContent page={page} />
+          </Block>
         </Block>
       </Block>
     );
@@ -110,7 +135,7 @@ export function AppShell({
         overrides={{
           Block: {
             style: {
-              width: frameSize === 'tablet' ? '72px' : '228px',
+              width: '228px',
               flexShrink: 0,
               backgroundColor: 'inherit',
               borderRight: '1px solid',
@@ -119,29 +144,19 @@ export function AppShell({
           },
         }}
       >
-        <Block padding="scale600" paddingBottom="scale500" display="flex" alignItems="center" gridGap="scale400">
+        <BrandMark layout={page.layout} />
+        {page.layout === 'staff' ? (
+          <GuardrSideNav groups={staffNavGroups()} activeId={activeId} onSelect={noop} />
+        ) : (
+          <GuardrSideNav items={navItems} activeId={activeId} onSelect={noop} />
+        )}
+        {page.layout === 'guard' && (
           <Block
-            width="32px"
-            height="32px"
-            backgroundColor="accent"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            overrides={{ Block: { style: { borderRadius: '8px', color: '#fff', fontWeight: 800, fontSize: '13px' } } }}
+            margin="scale400"
+            padding="scale500"
+            backgroundColor="backgroundSecondary"
+            overrides={{ Block: { style: { borderRadius: '12px', marginLeft: '12px', marginRight: '12px' } } }}
           >
-            G
-          </Block>
-          {frameSize !== 'tablet' && (
-            <ParagraphMedium $style={{ fontWeight: 800 }}>{BRAND_LABEL[page.layout]}</ParagraphMedium>
-          )}
-        </Block>
-        <Navigation
-          items={navItems}
-          activeItemId={activeId}
-          onChange={() => undefined}
-        />
-        {page.layout === 'guard' && frameSize === 'desktop' && (
-          <Block margin="scale400" padding="scale500" backgroundColor="backgroundSecondary" overrides={{ Block: { style: { borderRadius: '12px', marginLeft: '12px', marginRight: '12px' } } }}>
             <LabelSmall $style={{ color: 'contentSecondary' }}>STATUS</LabelSmall>
             <ParagraphMedium $style={{ fontWeight: 700, marginTop: '4px' }}>Online · accepting</ParagraphMedium>
           </Block>
@@ -152,7 +167,19 @@ export function AppShell({
         {!isMap && ['dashboard', 'earnings', 'list'].includes(page.type) && (
           <Block display="flex" paddingLeft="scale600" overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}>
             {['Overview', 'Details', 'Activity'].map((tab, i) => (
-              <Block key={tab} padding="scale500" overrides={{ Block: { style: { borderBottom: i === 0 ? '2px solid' : 'none', borderColor: 'accent', color: i === 0 ? 'inherit' : undefined } } }}>
+              <Block
+                key={tab}
+                padding="scale500"
+                overrides={{
+                  Block: {
+                    style: {
+                      borderBottom: i === 0 ? '2px solid' : 'none',
+                      borderColor: 'accent',
+                      color: i === 0 ? 'inherit' : undefined,
+                    },
+                  },
+                }}
+              >
                 <LabelSmall>{tab}</LabelSmall>
               </Block>
             ))}

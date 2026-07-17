@@ -35,7 +35,7 @@ export const STAFF_GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Operations', ids: ['jobs', 'applications', 'credentials', 'clients', 'guards', 'crews', 'team', 'messages'] },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { title: 'Insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
-  { title: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
+  { title: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates', 'design-qa'] },
 ];
 
 export const STAFF_NAV: NavItemDef[] = [
@@ -64,6 +64,7 @@ export const STAFF_NAV: NavItemDef[] = [
   { id: 'integrations', label: 'Integrations' },
   { id: 'guide', label: 'Guide' },
   { id: 'dev-updates', label: 'Dev notes' },
+  { id: 'design-qa', label: 'Design QA' },
   { id: 'profile', label: 'Profile' },
   { id: 'preferences', label: 'Settings' },
 ];

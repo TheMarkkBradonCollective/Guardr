@@ -135,9 +135,11 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - **Removed:** dead `GuardBottomSheet.tsx`
 - **Remaining:** domain modal content restyle, map sheets, `--brand-*` CSS retirement
 
-### Phase 6 — Preview parity
-- Design preview uses shared `src/components/baseui/*`
-- Optional staff-only route for live QA
+### Phase 6 — Preview parity (complete)
+- **Provider stack:** design-preview uses `DeviceProvider` + `BaseUIProvider` + `AppMotionProvider` + `AppSnackbarProvider` (matches production)
+- **Shared adapters:** `GuardrModal`, `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`, `GuardrSkeleton`, dashboard kit in preview mocks
+- **Component showcase:** pinned section in `/design-preview.html` + `ComponentShowcase` in `src/components/baseui/showcase/`
+- **Staff live QA:** `/staff/design-qa` (Director/Founder) renders interactive component showcase with toast/modal demos
 
 ### Later — Brand pass
 - Re-apply Guardr colors on top of Uber structure (optional `createLightTheme` / `createDarkTheme` overrides)

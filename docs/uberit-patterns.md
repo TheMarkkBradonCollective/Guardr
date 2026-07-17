@@ -108,6 +108,12 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 Hybrid screens use `.uber-text-accent`, `.uber-text-muted` instead of `text-brand-*`.
 
+## Design preview
+
+- Entry: `/design-preview.html` — standalone Vite page using the same provider stack as production
+- Pinned **Component showcase** exercises adapters, overlays, and dashboard kit
+- Staff live QA: `/staff/design-qa` (Director/Founder) — in-app `ComponentShowcase` with real auth context
+
 
 `src/components/baseui/primitives/fieldStyles.ts`:
 
