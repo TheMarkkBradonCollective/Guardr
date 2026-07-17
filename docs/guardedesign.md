@@ -4,7 +4,7 @@ Official visual and interaction specification for Guardr across **Website** (mob
 
 This document captures the *design philosophy* of a premium modular SaaS dashboard (similar in polish to Linear, Stripe, or Notion) while remaining unmistakably **Guardr** — not Uber, not generic fintech, not security-agency cliché.
 
-**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`.cursor/commands/designit.md`](../.cursor/commands/designit.md)
+**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`.cursor/commands/designit.md`](../.cursor/commands/designit.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md) · [`uberit-patterns.md`](./uberit-patterns.md)
 
 **External reference (design guidelines only):** [Uber Base design system](https://base.uber.com/) — patterns and principles summarized in Appendix A; not Uber branding.
 

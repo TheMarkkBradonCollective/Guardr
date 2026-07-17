@@ -10,6 +10,7 @@ import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppToastHost } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
+import { BaseUIProvider } from './components/baseui';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
 import { registerServiceWorker, initNativePushListeners } from './lib/push';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
@@ -42,12 +43,14 @@ if (!Capacitor.isNativePlatform()) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DeviceProvider>
-      <AppMotionProvider>
-        <App />
-        <OfflineBanner />
-        <AppToastHost />
-        <AppConfirmHost />
-      </AppMotionProvider>
+      <BaseUIProvider>
+        <AppMotionProvider>
+          <App />
+          <OfflineBanner />
+          <AppToastHost />
+          <AppConfirmHost />
+        </AppMotionProvider>
+      </BaseUIProvider>
     </DeviceProvider>
   </StrictMode>,
 );

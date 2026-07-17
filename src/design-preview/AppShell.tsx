@@ -5,7 +5,7 @@ import { ParagraphMedium, LabelSmall } from 'baseui/typography';
 import type { PreviewPage } from './pages';
 import { BRAND_LABEL, navForLayout, STAFF_GROUPS, STAFF_NAV } from './nav';
 import { PageContent } from './PageContent';
-import { Tag } from './baseuiShims';
+import { GuardrTag, AppCarousel, GuardrCard, GuardrButton } from '../components/baseui';
 
 export type FrameSize = 'desktop' | 'tablet' | 'mobile';
 
@@ -39,11 +39,11 @@ function UberTopbar({ title }: { title: string }) {
       backgroundColor="backgroundPrimary"
       overrides={{ Block: { style: { borderBottom: '1px solid', borderColor: 'borderOpaque' } } }}
     >
-      <Tag closeable={false} kind="neutral">Los Angeles</Tag>
+      <GuardrTag kind="neutral" closeable={false}>Los Angeles</GuardrTag>
       <Block flex="1" overflow="hidden" $style={{ fontSize: '12px', color: 'contentSecondary' }}>
         <strong style={{ color: '#F5A623' }}>Surge</strong> — Downtown demand active
       </Block>
-      <Tag closeable={false} kind="accent" overrides={{ Root: { style: { minWidth: '20px' } } }}>3</Tag>
+      <GuardrTag kind="accent" closeable={false} overrides={{ Root: { style: { minWidth: '20px' } } }}>3</GuardrTag>
       <ParagraphMedium $style={{ fontWeight: 600 }}>Hello Alex</ParagraphMedium>
       <Block
         width="34px"

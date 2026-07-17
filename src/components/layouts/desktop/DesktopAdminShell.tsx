@@ -3,6 +3,7 @@ import { PanelLeft, Settings } from 'lucide-react';
 import { Logo } from '../../Logo';
 import { AccountMenu, type AccountMenuProps } from '../AccountMenu';
 import { BottomNavItem } from '../BottomNavBar';
+import { GuardrSideNav } from '../../baseui/layout/GuardrSideNav';
 
 interface DesktopAdminShellProps {
   title: string;
@@ -43,31 +44,17 @@ export function DesktopAdminShell({
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
-  const menuItems = useMemo(() => navItems, [navItems]);
-  const accountItems = useMemo(() => overflowNavItems, [overflowNavItems]);
+  const navGroups = useMemo(
+    () => [
+      { title: 'Menu', items: navItems },
+      ...(overflowNavItems.length > 0 ? [{ title: 'Account', items: overflowNavItems }] : []),
+    ],
+    [navItems, overflowNavItems],
+  );
 
   const handleNavigate = (id: string) => {
     onNavigate(id);
     closeSidebar();
-  };
-
-  const renderNavItem = ({ id, label, icon: Icon, badge }: BottomNavItem) => {
-    const active = activeNavId === id;
-    return (
-      <button
-        key={id}
-        type="button"
-        onClick={() => handleNavigate(id)}
-        className={`adm-sidebar-item${active ? ' adm-sidebar-item--active' : ''}`}
-        aria-current={active ? 'page' : undefined}
-      >
-        <Icon className="adm-sidebar-item-icon" strokeWidth={active ? 2.25 : 1.85} />
-        <span className="adm-sidebar-item-label">{label}</span>
-        {badge != null && badge > 0 ? (
-          <span className="adm-sidebar-badge">{badge > 99 ? '99+' : badge}</span>
-        ) : null}
-      </button>
-    );
   };
 
   return (
@@ -95,15 +82,9 @@ export function DesktopAdminShell({
           </span>
         </div>
 
-        <p className="adm-sidebar-section">Menu</p>
-        <nav className="adm-sidebar-nav">{menuItems.map(renderNavItem)}</nav>
-
-        {accountItems.length > 0 ? (
-          <>
-            <p className="adm-sidebar-section">Account</p>
-            <nav className="adm-sidebar-nav">{accountItems.map(renderNavItem)}</nav>
-          </>
-        ) : null}
+        <div className="adm-sidebar-nav adm-sidebar-nav--baseui">
+          <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} />
+        </div>
 
         <div className="adm-sidebar-footer">
           <AccountMenu {...accountMenu} />

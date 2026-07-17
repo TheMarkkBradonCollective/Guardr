@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { Logo } from '../../Logo';
 import { AccountMenu, type AccountMenuProps } from '../AccountMenu';
 import { BottomNavItem } from '../BottomNavBar';
-import { DesktopCommandBar } from '../desktop/DesktopCommandBar';
+import { DesktopCommandBar } from './DesktopCommandBar';
+import { GuardrIconRail } from '../../baseui/layout/GuardrBottomNav';
 
 interface TabletAdminShellProps {
   title: string;
@@ -23,8 +24,7 @@ interface TabletAdminShellProps {
 }
 
 /**
- * Tablet merge shell — desktop icon rail + command bar header + mobile-friendly content.
- * Used for browser, PWA, and APK at tablet widths.
+ * Tablet merge shell — Base Web icon rail + command bar header + touch-friendly content.
  */
 export function TabletAdminShell({
   title,
@@ -54,36 +54,18 @@ export function TabletAdminShell({
         isMapMode ? 'tablet-admin-shell--map' : ''
       }`}
     >
-      <aside className="tablet-admin-rail" aria-label="Main navigation">
-        <div className="tablet-admin-rail-brand">
-          <Logo size={22} className="text-brand-primary shrink-0" />
-          <span className="tablet-admin-rail-label">{workspaceLabel}</span>
-        </div>
-        <nav className="tablet-admin-rail-nav" role="navigation">
-          {allNavItems.map(({ id, label, icon: Icon, badge }) => {
-            const active = activeNavId === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onNavigate(id)}
-                className={`tablet-admin-rail-item${active ? ' tablet-admin-rail-item--active' : ''}`}
-                aria-current={active ? 'page' : undefined}
-                aria-label={label}
-                title={label}
-              >
-                <Icon className="tablet-admin-rail-item-icon" strokeWidth={active ? 2.5 : 2} />
-                {badge != null && badge > 0 ? (
-                  <span className="tablet-admin-rail-item-badge">{badge > 9 ? '9+' : badge}</span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="tablet-admin-rail-footer">
-          <AccountMenu {...accountMenu} />
-        </div>
-      </aside>
+      <GuardrIconRail
+        items={allNavItems}
+        activeId={activeNavId}
+        onSelect={onNavigate}
+        brand={
+          <div className="tablet-admin-rail-brand">
+            <Logo size={22} className="text-brand-primary shrink-0" />
+            <span className="tablet-admin-rail-label">{workspaceLabel}</span>
+          </div>
+        }
+        footer={<AccountMenu {...accountMenu} />}
+      />
 
       <div className="tablet-admin-main flex-1 flex flex-col min-w-0 min-h-0">
         {headerOverride ? (
