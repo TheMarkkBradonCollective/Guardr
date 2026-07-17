@@ -79,7 +79,6 @@ Each surface gets a **dedicated design** — not a scaled copy.
 | Layout shells | `src/components/baseui/layout/` |
 | Global overlays | `src/components/baseui/overlays/` |
 | Carousel | `src/components/baseui/AppCarousel.tsx` |
-| Design preview | `src/design-preview/` |
 | Legacy CSS (migrate off) | `src/index.css`, `src/styles/*` |
 
 ### Theme rule
@@ -136,11 +135,9 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - **Removed:** dead `GuardBottomSheet.tsx`
 - **Remaining:** domain modal content restyle, map sheets, `--brand-*` CSS retirement
 
-### Phase 6 — Preview parity (complete)
-- **Provider stack:** design-preview uses `DeviceProvider` + `BaseUIProvider` + `AppMotionProvider` + `AppSnackbarProvider` (matches production)
-- **Shared adapters:** `GuardrModal`, `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`, `GuardrSkeleton`, dashboard kit in preview mocks
-- **Component showcase:** pinned section in `/design-preview.html` + `ComponentShowcase` in `src/components/baseui/showcase/`
-- **Staff live QA:** `/staff/design-qa` (Director/Founder) renders interactive component showcase with toast/modal demos
+### Phase 6 — Overlay + adapter parity (complete)
+- **Provider stack:** production uses `DeviceProvider` + `BaseUIProvider` + `AppMotionProvider` + `AppSnackbarProvider`
+- **Shared adapters:** `GuardrModal`, `GuardrSideNav`, `GuardrBottomNav`, dashboard kit across role surfaces
 
 ### Later — Domain screen migration
 - Continue migrating remaining role dashboards to Base Web adapters
@@ -221,6 +218,5 @@ Use Uber Base Web components wherever practical. Consistent language for buttons
 - Phase completed and screens touched
 - Files changed (theme, baseui, layouts, CSS)
 - Functionality preserved checklist
-- Design preview URL: `/design-preview.html`
 - Test/lint status
 - Next recommended phase

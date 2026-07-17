@@ -31,7 +31,6 @@ import {
   MapPinned,
   Plug,
   KeyRound,
-  Palette,
 } from 'lucide-react';
 
 import type { AccountMenuNotificationProps } from '../layouts/AccountMenu';
@@ -83,7 +82,6 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   cities: 'Operations',
   guide: 'Guide',
   'dev-updates': 'Dev notes',
-  'design-qa': 'Design QA',
   profile: 'Profile',
   preferences: 'Settings',
 };
@@ -133,7 +131,6 @@ export function StaffOpsLayout({
       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       { id: 'guide', label: 'Guide', icon: BookOpen },
       { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
-      { id: 'design-qa', label: 'Design QA', icon: Palette, financeOnly: true },
       { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
       { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
       { id: 'settings', label: 'Public Information', icon: Settings },

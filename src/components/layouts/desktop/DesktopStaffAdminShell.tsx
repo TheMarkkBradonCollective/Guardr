@@ -41,7 +41,7 @@ const MENU_GROUPS: { label: string; ids: StaffSection[] }[] = [
   },
   { label: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { label: 'Support & insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
-  { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates', 'design-qa'] },
+  { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
 export function DesktopStaffAdminShell({

@@ -1,4 +1,5 @@
 export { GuardrDrawerShell } from './GuardrDrawerShell';
+export { resolveMobilityChrome, type MobilityChromeConfig, type MobilityLayout } from './mobilityChrome';
 export { GuardrSideNav, guardrNavItemsFlat, guardrNavItemsFromGroups } from './GuardrSideNav';
 export { GuardrIconRail, GuardrBottomNav, type GuardrBottomNavItem } from './GuardrBottomNav';
 export { PublicPageChrome } from './PublicPageChrome';

@@ -6,7 +6,7 @@ Official visual and interaction specification for Guardr across **Website** (mob
 
 **Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uberit-patterns.md`](./uberit-patterns.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md)
 
-**Visual preview:** [`/design-preview.html`](/design-preview.html) — Base Web React prototype with stock Uber `LightTheme` / `DarkTheme`, component showcase, sidebar page index, and all role screen mocks. Staff live QA: `/staff/design-qa`.
+**Implementation:** Base Web React components with stock Uber `LightTheme` / `DarkTheme` across production surfaces.
 
 ---
 

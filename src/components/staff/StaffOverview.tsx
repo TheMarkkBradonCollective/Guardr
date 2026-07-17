@@ -137,7 +137,6 @@ const QUICK_LINK_META: Record<
   cities: { label: 'Operations', icon: MapPin },
   guide: { label: 'Guide', icon: LayoutDashboard },
   'dev-updates': { label: 'Dev notes', icon: LayoutDashboard },
-  'design-qa': { label: 'Design QA', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },
   preferences: { label: 'Preferences', icon: Settings },
 };
