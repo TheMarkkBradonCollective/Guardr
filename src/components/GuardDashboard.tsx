@@ -130,6 +130,11 @@ import {
 import type { IncidentReportFormInput } from '../lib/incidentReports';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import { useUserLocation } from '../lib/useUserLocation';
+import {
+  captureGuardActivityOffline,
+  captureGuardIncidentOffline,
+  captureGuardSelfAuditOffline,
+} from '../lib/platform/guardOfflineCapture';
 import type { PerformanceFactorId } from '../lib/guardPerformanceFactorDetail';
 
 interface GuardDashboardProps {
@@ -923,7 +928,7 @@ export function GuardDashboard({
     }
   };
 
-  const handleSelfAuditSubmit = (payload: {
+  const handleSelfAuditSubmit = async (payload: {
     uniform: { uniformPresent: boolean; blackShoes: boolean; dutyBelt: boolean; requiredEquipment: boolean };
     selfieUpload: string;
     uniformPhoto?: string;
@@ -970,6 +975,10 @@ export function GuardDashboard({
       locationPhoto: payload.locationPhoto,
       readyForDuty: !failed,
     };
+    const queued = await captureGuardSelfAuditOffline(guard.id, activeShiftJob.id, checkInAudit);
+    if (queued) {
+      showAppToast('Self-audit saved offline — will sync when you reconnect.', { tone: 'info' });
+    }
     queueClockIn(checkInAudit, skipViolations);
   };
 
@@ -1797,6 +1806,11 @@ export function GuardDashboard({
             if (!onSubmitIncidentReport) {
               throw new Error('Incident reporting is not available for this session.');
             }
+            const queued = await captureGuardIncidentOffline(guard.id, activeShiftJob.id, input);
+            if (queued) {
+              showAppToast('Incident report saved offline — will sync when you reconnect.', { tone: 'info' });
+              return;
+            }
             await onSubmitIncidentReport(activeShiftJob.id, input);
             showAppToast('Incident report filed', {
               body: 'Full details shared with the client and staff.',
@@ -1810,7 +1824,12 @@ export function GuardDashboard({
         <GuardActivityLogModal
           open={showActivityLog}
           onClose={() => setShowActivityLog(false)}
-          onSubmit={(report) => {
+          onSubmit={async (report) => {
+            const queued = await captureGuardActivityOffline(guard.id, activeShiftJob.id, { notes: report });
+            if (queued) {
+              showAppToast('Activity log saved offline — will sync when you reconnect.', { tone: 'info' });
+              return;
+            }
             const stamp = new Date().toISOString();
             const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report}`;
             const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';

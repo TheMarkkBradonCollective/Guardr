@@ -9,7 +9,7 @@ import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { appVersionLabel } from '../../lib/appVersion';
-import { isNativeShell } from '../../lib/platform/device';
+import { useDevice } from '../../lib/platform';
 import { SITE_URL } from '../../lib/siteConfig';
 
 interface UserSettingsScreenProps {
@@ -27,6 +27,10 @@ export function UserSettingsScreen({
   isDbConnected = false,
   onOpenLegal,
 }: UserSettingsScreenProps) {
+  const { shellKind } = useDevice();
+  const surfaceLabel =
+    shellKind === 'native' ? 'Android app' : shellKind === 'pwa' ? 'Installed app' : 'Web';
+
   const formContent = (
     <>
       {currentUser.role === 'guard' && (
@@ -57,9 +61,10 @@ export function UserSettingsScreen({
       <AppFormSection title="About">
         <p className="text-sm text-brand-text-muted">
           {appVersionLabel()}
-          {isNativeShell() ? ' · Android app' : ' · Web'}
+          {' · '}
+          {surfaceLabel}
         </p>
-        {isNativeShell() && (
+        {shellKind === 'native' && (
           <p className="text-xs text-brand-text-muted mt-2 leading-relaxed">
             Updates ship with new APK builds. Compare with the live site at{' '}
             <a href={`${SITE_URL}/download/`} className="text-brand-primary font-semibold underline break-all">
