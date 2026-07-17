@@ -186,7 +186,11 @@ export async function refundPayment(params: {
   }
 }
 
-export async function fetchPayments(): Promise<
+export async function fetchPayments(session: {
+  userId: string;
+  email: string;
+  role: string;
+}): Promise<
   Array<{
     id: string;
     job_id: string;
@@ -198,7 +202,12 @@ export async function fetchPayments(): Promise<
     created_at?: string;
   }>
 > {
-  const res = await fetch(apiUrl('/api/stripe/payments'));
+  const params = new URLSearchParams({
+    userId: session.userId,
+    email: session.email,
+    role: session.role,
+  });
+  const res = await fetch(apiUrl(`/api/stripe/payments?${params.toString()}`));
   const data = await parseApiResponse<{ payments?: unknown[]; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to load payments');
   return (data.payments ?? []) as Array<{

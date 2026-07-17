@@ -30,6 +30,7 @@ var DEDUP_TTL_MS = 25 * 60 * 60 * 1e3;
 var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
   "owner",
   "director",
+  "manager",
   "administrator",
   "moderator",
   "staff",
@@ -44,6 +45,8 @@ function resolvePlatformRole(input) {
         return "owner";
       case "Director":
         return "director";
+      case "Manager":
+        return "manager";
       case "Administrator":
         return "administrator";
       case "Moderator":

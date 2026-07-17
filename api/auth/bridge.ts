@@ -19,6 +19,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  const bridgeSecret = process.env.AUTH_BRIDGE_SECRET?.trim();
+  if (bridgeSecret) {
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${bridgeSecret}`) {
+      res.status(401).json({ error: 'Unauthorized — auth bridge secret required' });
+      return;
+    }
+  } else if (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY) {
+    res.status(503).json({ error: 'Auth bridge secret not configured' });
+    return;
+  }
+
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!url || !serviceKey) {

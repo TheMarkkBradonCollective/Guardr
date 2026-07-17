@@ -703,10 +703,17 @@ export function registerStripeRoutes(app: Express) {
   });
 
   // ── List payments for admin dashboard ──────────────────────
-  app.get('/api/stripe/payments', async (_req: Request, res: Response) => {
+  app.get('/api/stripe/payments', async (req: Request, res: Response) => {
     const db = getSupabaseAdmin();
     if (!db) {
       return res.json({ payments: [] });
+    }
+
+    const { verifyFinanceStaffSession } = await import('../lib/accountSessionAuth');
+    const { parseSessionCredentials } = await import('../lib/apiRequestSession');
+    const session = await verifyFinanceStaffSession(db, parseSessionCredentials(req));
+    if (!session) {
+      return res.status(401).json({ error: 'Unauthorized — finance staff sign-in required' });
     }
 
     const { data, error } = await db

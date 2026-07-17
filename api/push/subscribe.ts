@@ -67,6 +67,7 @@ function platformRoleToPushRole(role) {
 var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
   "owner",
   "director",
+  "manager",
   "administrator",
   "moderator",
   "staff",
@@ -81,6 +82,8 @@ function resolvePlatformRole(input) {
         return "owner";
       case "Director":
         return "director";
+      case "Manager":
+        return "manager";
       case "Administrator":
         return "administrator";
       case "Moderator":

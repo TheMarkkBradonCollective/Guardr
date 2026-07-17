@@ -1,6 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+export type PlatformRole =
+  | 'client'
+  | 'guard'
+  | 'moderator'
+  | 'administrator'
+  | 'manager'
+  | 'director'
+  | 'owner';
+
+export type StaffDbRole = 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
 
 export interface SessionCredentials {
   userId: string;
@@ -15,6 +24,7 @@ export interface VerifiedSession extends SessionCredentials {
 const STAFF_PLATFORM_ROLES = new Set([
   'owner',
   'director',
+  'manager',
   'administrator',
   'moderator',
   'staff',
@@ -23,7 +33,7 @@ const STAFF_PLATFORM_ROLES = new Set([
 
 export function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: StaffDbRole;
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
@@ -34,6 +44,8 @@ export function resolvePlatformRole(input: {
         return 'owner';
       case 'Director':
         return 'director';
+      case 'Manager':
+        return 'manager';
       case 'Administrator':
         return 'administrator';
       case 'Moderator':
@@ -43,6 +55,20 @@ export function resolvePlatformRole(input: {
   if (input.legacyRole === 'auditor') return 'moderator';
   if (input.legacyRole === 'staff') return 'administrator';
   return 'guard';
+}
+
+export function isStaffPlatformRole(role: PlatformRole): boolean {
+  return (
+    role === 'moderator' ||
+    role === 'administrator' ||
+    role === 'manager' ||
+    role === 'director' ||
+    role === 'owner'
+  );
+}
+
+export function hasFinancePlatformAccess(role: PlatformRole): boolean {
+  return role === 'manager' || role === 'director' || role === 'owner';
 }
 
 async function verifyStaffSession(
@@ -146,4 +172,14 @@ export async function verifyAccountSession(
   }
 
   return verifyFieldGuardSession(db, userId, email, role);
+}
+
+export async function verifyFinanceStaffSession(
+  db: SupabaseClient,
+  credentials: SessionCredentials | null | undefined
+): Promise<VerifiedSession | null> {
+  const session = await verifyAccountSession(db, credentials);
+  if (!session || !isStaffPlatformRole(session.platformRole)) return null;
+  if (!hasFinancePlatformAccess(session.platformRole)) return null;
+  return session;
 }

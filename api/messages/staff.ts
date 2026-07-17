@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
 
 function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
@@ -16,6 +16,8 @@ function resolvePlatformRole(input: {
         return 'owner';
       case 'Director':
         return 'director';
+      case 'Manager':
+        return 'manager';
       case 'Administrator':
         return 'administrator';
       case 'Moderator':
@@ -51,7 +53,13 @@ async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
 }
 
 function isStaffPlatformRole(role: PlatformRole): boolean {
-  return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
+  return (
+    role === 'moderator' ||
+    role === 'administrator' ||
+    role === 'manager' ||
+    role === 'director' ||
+    role === 'owner'
+  );
 }
 
 async function verifyStaffSession(
