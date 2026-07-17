@@ -9,6 +9,13 @@ import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import { Briefcase, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchStatChips,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
 
 export interface GuardMyJobsDesktopProps {
   availableJobs: GuardJobView[];
@@ -181,37 +188,21 @@ export function GuardMyJobsDesktop({
   });
 
   return (
-    <div className="adm-workbench" data-tour="guard-my-jobs">
-      <div className="adm-workbench-toolbar">
-        <div>
-          <p className="adm-card-eyebrow">Your shifts</p>
-          <p className="adm-workbench-subtitle">{subtitle}</p>
-        </div>
-      </div>
+    <WorkbenchPage data-tour="guard-my-jobs">
+      <WorkbenchToolbar eyebrow="Your shifts" subtitle={subtitle} />
 
-      <div className="adm-workbench-stats">
-        {TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={`adm-stat-chip${activeTab === id ? ' adm-stat-chip--active' : ''}`}
-            onClick={() => setActiveTab(id)}
-          >
-            <span className="adm-stat-chip-value">{tallies[id]}</span>
-            <span className="adm-stat-chip-label">{label}</span>
-          </button>
-        ))}
-      </div>
+      <WorkbenchStatChips<GuardJobsBrowseTab>
+        items={TABS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
+        activeId={activeTab}
+        onSelect={setActiveTab}
+      />
 
-      <div className="adm-workbench-split">
-        <div className="adm-workbench-list">
-          {listJobs.length === 0 ? (
-            <div className="adm-empty">
-              <Map className="w-8 h-8 adm-muted-icon" />
-              <p>No {JOB_TALLY_LABELS[activeTab].toLowerCase()} shifts</p>
-            </div>
+      <WorkbenchSplit
+        list={
+          listJobs.length === 0 ? (
+            <WorkbenchEmpty icon={Map} message={`No ${JOB_TALLY_LABELS[activeTab].toLowerCase()} shifts`} />
           ) : (
-            <table className="adm-table adm-table--list">
+            <table className="uber-workbench-table">
               <thead>
                 <tr>
                   <th>Shift</th>
@@ -223,46 +214,44 @@ export function GuardMyJobsDesktop({
                 {listJobs.map((job) => (
                   <tr
                     key={job.id}
-                    className={`adm-table-row--click${selectedId === job.id ? ' adm-table-row--selected' : ''}`}
+                    className={`uber-workbench-table-row${selectedId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
                     onClick={() => updateSelectedId(job.id)}
                   >
                     <td>
-                      <p className="adm-table-primary">{job.title}</p>
-                      <p className="adm-table-secondary">{job.siteName || job.location}</p>
+                      <p className="uber-workbench-table-primary">{job.title}</p>
+                      <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
                     </td>
-                    <td className="adm-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                    <td className="adm-stat-value adm-stat-value--sm">${getGuardHourlyPay(job)}/hr</td>
+                    <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
+                    <td className="uber-workbench-table-value">${getGuardHourlyPay(job)}/hr</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
-        <div className="adm-workbench-detail">
-          {selectedJob ? (
-            <div className="adm-workbench-detail-inner">
-              <GuardJobDetailView
-                job={selectedJob}
-                guard={guard}
-                jobChatThreads={jobChatThreads}
-                coworkerGuards={coworkerGuards}
-                scheduleRequests={scheduleRequests}
-                onOpenMessages={onOpenMessages}
-                onApproveOvertime={onApproveOvertime}
-                onClose={() => updateSelectedId(null)}
-                onViewBriefing={onViewBriefing}
-                {...detailHandlers(selectedJob)}
-              />
-            </div>
+          )
+        }
+        detail={
+          selectedJob ? (
+            <GuardJobDetailView
+              job={selectedJob}
+              guard={guard}
+              jobChatThreads={jobChatThreads}
+              coworkerGuards={coworkerGuards}
+              scheduleRequests={scheduleRequests}
+              onOpenMessages={onOpenMessages}
+              onApproveOvertime={onApproveOvertime}
+              onClose={() => updateSelectedId(null)}
+              onViewBriefing={onViewBriefing}
+              {...detailHandlers(selectedJob)}
+            />
           ) : (
-            <div className="adm-empty adm-empty--detail">
-              <Briefcase className="w-10 h-10 adm-muted-icon" />
-              <p>Select a shift to view details and actions</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+            <WorkbenchEmpty
+              icon={Briefcase}
+              message="Select a shift to view details and actions"
+              variant="detail"
+            />
+          )
+        }
+      />
+    </WorkbenchPage>
   );
 }

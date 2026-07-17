@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchBody, WorkbenchPage } from '../baseui/layout/WorkbenchLayout';
 
 interface StaffOpsPageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -17,10 +18,10 @@ export function StaffOpsPageShell({
 
   if (formFactor === 'desktop') {
     return (
-      <div className={`adm-workbench adm-ops-page ${className}`.trim()} {...rest}>
-        {toolbar ? <div className="adm-workbench-toolbar adm-ops-toolbar">{toolbar}</div> : null}
-        <div className="adm-ops-page-body">{children}</div>
-      </div>
+      <WorkbenchPage className={`uber-ops-page ${className}`.trim()} {...rest}>
+        {toolbar}
+        <WorkbenchBody className="uber-ops-page-body">{children}</WorkbenchBody>
+      </WorkbenchPage>
     );
   }
 

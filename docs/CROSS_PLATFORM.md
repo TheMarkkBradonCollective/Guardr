@@ -103,13 +103,25 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | `pwa-*` | Glass header blur, safe-area padding |
 | `native-*` | 48px touch targets, edge safe areas, solid chrome |
 
+**Phase 2 dashboard migration** — Base Web adapters replace legacy `adm-workbench` markup:
+
+| Screen | Component | Status |
+|--------|-----------|--------|
+| Staff overview desktop | `StaffOverviewDesktop` | Migrated — `DashboardHero`, `MetricStrip`, `GuardrCard`, `DashboardZone` |
+| Staff ops pages | `StaffOpsPageShell` | Migrated — `WorkbenchPage` |
+| List-detail (jobs, guards, clients) | `ListDetailLayout` | Migrated — `WorkbenchSplit` |
+| Guard my jobs desktop | `GuardMyJobsDesktop` | Migrated — `WorkbenchPage` + stat chips + table |
+| Client requests desktop | `ClientRequestsDesktop` | Migrated — `WorkbenchPage` + stat chips + table |
+| Client home desktop | `ClientHomeDesktop` | Already migrated (Phase 1 reference) |
+
 Central files:
 
 ```
-src/components/baseui/layout/mobilityChrome.ts   — viewSurface → layout config
-src/components/baseui/layout/GuardrDrawerShell.tsx
-src/styles/uber-mobility.css                     — global brand→Uber remap + per-surface CSS
-src/styles/uber-surfaces.css                     — adm/app legacy bridge inside shell
+src/components/baseui/layout/WorkbenchLayout.tsx  — WorkbenchPage, Split, StatChips, Grid
+src/styles/uber-workbench.css                     — Uber workbench layout CSS
+src/components/staff/StaffOverviewDesktop.tsx     — staff command center (desktop)
+src/components/guard/GuardMyJobsDesktop.tsx       — guard shifts workbench
+src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 ```
 
 ## Theme System

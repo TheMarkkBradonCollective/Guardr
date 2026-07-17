@@ -7,6 +7,14 @@ import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { ClipboardList, Clock, Plus } from 'lucide-react';
 import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchSplit,
+  WorkbenchStatChips,
+  WorkbenchToolbar,
+} from '../baseui/layout/WorkbenchLayout';
+import { GuardrButton } from '../baseui/GuardrButton';
+import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
@@ -208,46 +216,40 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
   }, [nextScheduled, tallies.open]);
 
   return (
-    <div className="adm-workbench" data-tour="client-jobs">
-      <div className="adm-workbench-toolbar">
-        <div>
-          <p className="adm-card-eyebrow">Your coverage</p>
-          <p className="adm-workbench-subtitle">{subtitle}</p>
-        </div>
-        <button type="button" className="adm-btn adm-btn--sand" onClick={onRequestNew}>
-          <Plus className="w-4 h-4" />
-          Post job
-        </button>
-      </div>
+    <WorkbenchPage data-tour="client-jobs">
+      <WorkbenchToolbar
+        eyebrow="Your coverage"
+        subtitle={subtitle}
+        actions={
+          <GuardrButton kind="primary" onClick={onRequestNew}>
+            <Plus className="w-4 h-4" />
+            Post job
+          </GuardrButton>
+        }
+      />
 
-      <div className="adm-workbench-stats">
-        {TAB_OPTIONS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={`adm-stat-chip${activeTab === id ? ' adm-stat-chip--active' : ''}`}
-            onClick={() => setActiveTab(id)}
-          >
-            <span className="adm-stat-chip-value">{tallies[id]}</span>
-            <span className="adm-stat-chip-label">{label}</span>
-          </button>
-        ))}
-      </div>
+      <WorkbenchStatChips<JobTab>
+        items={TAB_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
+        activeId={activeTab}
+        onSelect={setActiveTab}
+      />
 
-      <div className="adm-workbench-split">
-        <div className="adm-workbench-list">
-          {listJobs.length === 0 ? (
-            <div className="adm-empty">
-              <ClipboardList className="w-8 h-8 adm-muted-icon" />
-              <p>No {JOB_TALLY_LABELS[activeTab].toLowerCase()} jobs</p>
-              {activeTab === 'open' ? (
-                <button type="button" className="adm-btn adm-btn--outline adm-btn--sm" onClick={onRequestNew}>
-                  Post a job
-                </button>
-              ) : null}
-            </div>
+      <WorkbenchSplit
+        list={
+          listJobs.length === 0 ? (
+            <WorkbenchEmpty
+              icon={ClipboardList}
+              message={`No ${JOB_TALLY_LABELS[activeTab].toLowerCase()} jobs`}
+              action={
+                activeTab === 'open' ? (
+                  <GuardrButton kind="secondary" size="compact" onClick={onRequestNew}>
+                    Post a job
+                  </GuardrButton>
+                ) : undefined
+              }
+            />
           ) : (
-            <table className="adm-table adm-table--list">
+            <table className="uber-workbench-table">
               <thead>
                 <tr>
                   <th>Job</th>
@@ -260,15 +262,15 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
                 {listJobs.map((job) => (
                   <tr
                     key={job.id}
-                    className={`adm-table-row--click${selectedId === job.id ? ' adm-table-row--selected' : ''}`}
+                    className={`uber-workbench-table-row${selectedId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
                     onClick={() => updateSelectedId(job.id)}
                   >
                     <td>
-                      <p className="adm-table-primary">{job.title}</p>
-                      <p className="adm-table-secondary">{job.siteName || job.location}</p>
+                      <p className="uber-workbench-table-primary">{job.title}</p>
+                      <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
                     </td>
-                    <td className="adm-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                    <td className="adm-stat-value adm-stat-value--sm">${job.hourlyRate}/hr</td>
+                    <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
+                    <td className="uber-workbench-table-value">${job.hourlyRate}/hr</td>
                     <td>
                       <span className={`adm-pill adm-pill--${statusTone(job.status)}`}>{job.status}</span>
                     </td>
@@ -276,14 +278,13 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
-        <div className="adm-workbench-detail">
-          {selectedRequest ? (
-            <div className="adm-workbench-detail-inner">
-              <div className="adm-workbench-detail-head">
-                <h2 className="adm-card-title">{selectedRequest.title}</h2>
+          )
+        }
+        detail={
+          selectedRequest ? (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-lg font-bold m-0">{selectedRequest.title}</h2>
                 <span className={`adm-pill adm-pill--${statusTone(selectedRequest.status)}`}>
                   {selectedRequest.status}
                 </span>
@@ -340,13 +341,10 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
               />
             </div>
           ) : (
-            <div className="adm-empty adm-empty--detail">
-              <Clock className="w-10 h-10 adm-muted-icon" />
-              <p>Select a job to view details and actions</p>
-            </div>
-          )}
-        </div>
-      </div>
+            <WorkbenchEmpty icon={Clock} message="Select a job to view details and actions" variant="detail" />
+          )
+        }
+      />
 
       <EditRequestSheet
         open={!!editingRequest}
@@ -356,6 +354,6 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
         onSave={onEditRequest}
         onClose={() => setEditingId(null)}
       />
-    </div>
+    </WorkbenchPage>
   );
 }
