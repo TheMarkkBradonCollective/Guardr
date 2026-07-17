@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.75**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.79**
 
 ---
 
@@ -667,6 +667,26 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - Merged **#645**; no open PRs at release
 
 **Release:** **v1.0.78** (build **178**) — web + PWA cache bust (`guardr-cache-v1-0-78`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
+
+---
+
+## Friday, July 17, 2026 (night) — /updateit → v1.0.79
+
+**Uber Base Web redesign — Phases 1–5 (#651, merged from #650)**
+- **Phase 1:** Global Uber tokens, `uber-global.css`, black CTAs, sage-green removal
+- **Phase 2:** High-traffic workbenches (`StaffOverviewDesktop`, `GuardMyJobsDesktop`, `ClientRequestsDesktop`)
+- **Phase 3:** Remaining role dashboards → `WorkbenchLayout` adapters (`WorkbenchSplit`, `WorkbenchTabBar`, `WorkbenchFlatSplit`)
+- **Phase 4:** Dashboard kit (`DashboardHero`, `MetricStrip`, `MetricCell`) on staff finance + client hubs
+- **Phase 5:** Feature overlays (`OverlaySheetHeader`), guard field modals, map inspector, `uber-form-wizard` CSS
+
+**PR cleanup**
+- Merged **#651** (integration) and closed **#650**; no open PRs at release
+
+**Release:** **v1.0.79** (build **179**) — web + PWA cache bust (`guardr-cache-v1-0-79`) + CI FCM APK
 
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
 
