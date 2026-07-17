@@ -54,6 +54,36 @@ Guardr translates that as:
 
 Green is always the **brand accent** (buttons, active nav, charts, focus rings, status emphasis). It does not replace semantic colors (success, warning, danger) or neutral text.
 
+### Inspiration, not imitation
+
+[Uber Base](https://base.uber.com/) is one of the most refined enterprise design systems in production — consistency, accessibility, typography, spacing, color, motion, and reusable components at scale. Guardr treats Base as **inspiration and a quality bar**, not a template to clone.
+
+| Adopt from Base philosophy | Do not copy from Uber |
+|----------------------------|------------------------|
+| Grid layouts + generous whitespace | Uber blue, Uber Move, logos |
+| Token-driven theming | Driver/rider product language |
+| Component-first screens | Literal Base Figma specs |
+| Purposeful motion + strong a11y | SSO-only internal token pages |
+
+### Base-inspired principles (Guardr interpretation)
+
+These are the principles we actively adopt — translated to Guardr’s sage-green / white / black identity:
+
+| Principle | Guardr rule |
+|-----------|-------------|
+| **Clean grid layouts** | Modular card grid; 4/8/12-column behavior (§3, Appendix A.5) |
+| **Generous whitespace** | `--space-gutter`, `--space-section`; remove rows before shrinking padding |
+| **4px / 8px spacing scale** | All spacing snaps to 4px baseline (Base uses 4px grid; see Appendix A.4) |
+| **Large readable type** | Display-scale KPIs (~44px); body 16–18px for multi-line copy |
+| **Clear hierarchy** | Display → Heading → Label → Paragraph roles |
+| **Monochrome surfaces + one accent** | White or black canvas; **sage green** as sole brand accent |
+| **Large touch targets** | **Minimum 44px** (WCAG); **48px** for primary field actions (clock-in, post job) |
+| **Consistent corner radius** | 14px cards · 8px nested controls · 22px sheets — don’t mix ad-hoc radii |
+| **Subtle shadows, not heavy gradients** | Borders on flat cards; shadows only when floating (§6, Appendix A.7) |
+| **Purposeful motion** | **150–300ms** for most UI transitions; longer only for charts / first mount |
+| **Strong accessibility** | WCAG AA contrast, keyboard focus, screen readers, `prefers-reduced-motion` |
+| **Component-first architecture** | Every screen built from shared primitives — no one-off page CSS |
+
 ---
 
 ## 2. Brand tokens
@@ -69,6 +99,19 @@ src/lib/platform/themeBranding.ts — PWA/APK icon + theme-color meta swap
 ```
 
 **Never hardcode hex values in components.** Use Tailwind `brand-*` utilities or `var(--brand-*)`.
+
+### Neutral branding (shared across themes)
+
+| Neutral | Light | Dark | Role |
+|---------|-------|------|------|
+| **White** | `#FFFFFF` canvas | — | Light backgrounds, inverse text on dark buttons |
+| **Black** | — | `#000000` canvas | Dark backgrounds |
+| **Charcoal** | — | `#111111` / `#1A1A1A` surfaces | Cards, elevated panels in Dark |
+| **Soft tint** | `#F2F4F2` / `#F7F9F7` | `#0A0A0A` | Secondary surfaces |
+
+**Brand accent (Guardr):** sage green (`--brand-primary`) — required in every theme.
+
+**Optional secondary accent:** reserve for map overlays or third-party embeds only — never compete with sage on CTAs.
 
 ### Primary palette (current)
 
@@ -119,7 +162,10 @@ src/lib/platform/themeBranding.ts — PWA/APK icon + theme-color meta swap
 | `--radius-pill` | full | Badges, chips |
 | `--shadow-card` | theme-aware | Default card elevation |
 | `--shadow-float` | theme-aware | Hover lift, popovers |
-| `--space-touch` | 2.75rem min | Minimum tap target height |
+| `--space-touch` | 2.75rem (44px) min | WCAG minimum tap target |
+| `--space-touch-primary` | 3rem (48px) target | Primary field CTAs (clock-in, accept job, post coverage) |
+
+**Spacing scale:** use **4px and 8px multiples** for padding, margins, and gaps (4, 8, 12, 16, 20, 24, 32, 40, 48, 64…). Avoid odd values (5px, 13px, 22px except sheet radius token).
 
 ---
 
@@ -214,10 +260,13 @@ See `src/lib/platform/viewSurface.ts` and `DeviceProvider` (`body[data-shell]`, 
 
 ### Modes
 
-| Mode | Canvas | Text | Default platform |
-|------|--------|------|------------------|
-| **Light** | White / soft green tint | Black / dark gray | PWA, web |
-| **Dark** | Black / charcoal | Off-white | APK (default), user preference |
+| Mode | Canvas | Text | Status |
+|------|--------|------|--------|
+| **Light** | White / soft green tint | Black / dark gray | **Shipped** — default web / PWA |
+| **Dark** | Black / charcoal surfaces | Off-white | **Shipped** — default APK; user toggle |
+| **Shade** | Charcoal gray (between Light and Dark) | High-contrast muted palette | **Planned (MDS)** — third theme; legacy `grey` alias currently maps to Light in `theme.ts` |
+
+**MDS target (ecosystem):** every app supports **Light · Dark · Shade** with the same components; only brand accent and logo change per product.
 
 Toggle via `ThemeToggle`; persisted per user (`localStorage` + Supabase `theme_preference`).
 
@@ -239,7 +288,25 @@ Toggle via `ThemeToggle`; persisted per user (`localStorage` + Supabase `theme_p
 
 ## 5. Components
 
-Use **one consistent component family** across surfaces. Prefer existing primitives before inventing new ones.
+Use **one consistent component family** across surfaces. Prefer existing primitives before inventing new ones. **Every screen is assembled from this catalog** — not custom one-off layouts.
+
+### Component catalog (required coverage)
+
+| Category | Components | Guardr location / notes |
+|----------|------------|-------------------------|
+| **Action** | Buttons, button groups, links, tiles | Primary / secondary / ghost variants |
+| **Surfaces** | Cards, sheets, modals, dialogs | `.app-card`, `MoreMenuSheet`, legal modals |
+| **Navigation** | Sidebars, bottom nav, drawers, tabs, breadcrumbs | `DesktopNavRail`, `BottomNavBar`, `AppSidebarNav` |
+| **Forms** | Inputs, selects, checkboxes, date/time pickers | Job wizard, credentials, settings |
+| **Data display** | Lists, tables, badges, chips, tags, avatars | Admin tables; status pills `--status-*` |
+| **Feedback** | Toasts, banners, dialogs, snackbars, progress | Push + in-app; `OfflineBanner` |
+| **Progress** | Bars, rings, steps | Credential progress, job lifecycle |
+| **Maps** | Map cards, markers, routes, peek sheets | `src/components/map/*` |
+| **Dashboards** | Stat cards, widget grid, live activity | Role-specific home / ops views |
+| **Charts** | Line, bar, area, donut | Earnings, performance — sage stroke |
+| **Live panels** | Activity feed, messaging threads | Real job events only (`JobChatPanel`) |
+
+**Icons:** single library — **Lucide** — consistent stroke width per surface.
 
 ### Core primitives
 
@@ -286,16 +353,29 @@ Use **one consistent component family** across surfaces. Prefer existing primiti
 
 | Animation | When | Duration |
 |-----------|------|----------|
-| Fade in | Page / card mount | 200–320ms |
-| Slide up | Sheets, modals | 220–280ms cubic-bezier(0.16, 1, 0.3, 1) |
+| Fade in | Page / card mount | **150–200ms** |
+| Slide up | Sheets, modals, nav | **220–300ms** cubic-bezier(0.16, 1, 0.3, 1) |
+| Scale | Popovers, emphasis | 200–250ms |
 | Hover lift | Interactive cards | 200ms |
+| Theme / route crossfade | Light ↔ Dark, tab switch | 150–300ms |
 | Glow pulse | Live / online indicators only | subtle, 2s loop max |
-| Counter tick | KPI reveal | 400–800ms once |
-| Skeleton | Loading states | shimmer 1.2s |
+| Counter tick | KPI reveal | 400–600ms once |
+| Skeleton shimmer | Loading states | 1.2s loop |
+| Chart draw | First mount only | ≤600ms |
+
+**Motion stack (target quality):**
+
+- **60fps** — animate `transform` and `opacity` only; avoid layout-thrashing properties
+- **Soft fades** — default enter/exit; crossfade 100ms when `prefers-reduced-motion`
+- **Scale transitions** — popovers and sheet headers; never bounce easing on production UI
+- **Slide navigation** — bottom sheets, drawer rail, drill-forward mobile flows
+- **Skeleton + shimmer** — preferred over spinners for lists and dashboard widgets
+- **Micro-interactions** — toggle, checkbox, badge update (≤150ms)
+- **Haptic feedback** — APK Premium on clock-in / clock-out / payment confirm only
 
 **Rules:**
 
-- Honor `prefers-reduced-motion: reduce` — disable glow, counter, and slide.
+- Honor `prefers-reduced-motion: reduce` — disable glow, counter, slide, and scale.
 - No animation on every keystroke or scroll tick.
 - PWA Lite (see §8) may reduce concurrent animations.
 
@@ -415,10 +495,10 @@ Each persona shares the **same design language** but different widget sets and n
 When building or redesigning a screen (`/designit`, `/fixit`, `/themeit`):
 
 - [ ] Uses CSS variables only — no stray `#5E7B61` in TSX
-- [ ] Tested in **Light** and **Dark**
+- [ ] Tested in **Light** and **Dark** (and **Shade** when implemented)
 - [ ] Tested at mobile, tablet, desktop widths
 - [ ] Tested in browser, PWA standalone, and APK when touching chrome
-- [ ] Touch targets ≥ 44px on mobile / tablet
+- [ ] Touch targets ≥ 44px (48px for primary field actions)
 - [ ] Focus visible for keyboard users
 - [ ] Maps and charts respect active theme
 - [ ] Role permissions unchanged — design only
@@ -461,9 +541,29 @@ Future token work may introduce **deep green-tinted dark chrome** (`color-mix` o
 
 ---
 
-## 16. Summary
+## 16. Universal design rules
+
+Every Guardr screen must satisfy these rules — same bar Uber Base enforces, with Guardr branding:
+
+| Rule | Requirement |
+|------|-------------|
+| **Spacing system** | 4px/8px scale only; no arbitrary margins |
+| **Icon library** | Lucide only; consistent stroke |
+| **Responsive** | Works **320px → 4K**; test mobile, tablet, desktop |
+| **Themes** | Every component supports **Light + Dark** today; **Shade** when MDS third theme ships |
+| **Accessibility** | Keyboard navigable, focus visible, screen-reader labels, WCAG AA contrast |
+| **Cross-surface parity** | Same feature behaves consistently on **browser, PWA, APK** |
+| **Component-first** | No screen built from bespoke layout CSS when a primitive exists |
+| **No heavy gradients** | Subtle surface tints OK; no full-bleed gradient backgrounds on dashboards |
+| **One brand accent** | Sage green for interactive emphasis — semantic colors for status only |
+
+---
+
+## 17. Summary
 
 Guardr should feel like **enterprise-grade security marketplace software** — modular, breathable, and confident — with **sage green** as the unmistakable thread through charts, navigation, and focus states, on either a **white** or **black** canvas chosen by the user. The same language ships on web, PWA, and APK; only density, motion, and native integrations change per surface.
+
+**Quality reference:** Uber Base-level polish. **Identity:** unmistakably Guardr. **Ecosystem path:** Markk Design System (Appendix B).
 
 ---
 
@@ -781,3 +881,66 @@ Uber logos · Uber Move font · Uber blue · “Professional driver” product f
 5. Bottom nav + side rail behavior (§A.10)
 6. Motion choreography + reduced motion (§A.8)
 7. Chart module patterns (§A.11)
+
+---
+
+## Appendix B — Markk Design System (MDS) ecosystem vision
+
+Build **your own** design system with Base-level discipline — not Uber’s skin. Applies to the broader product family (Guardr, Friendr, BuyNothing, YouVerse, etc.).
+
+### What MDS is
+
+> **Markk Design System (MDS)** — a shared foundation so every app uses the same buttons, forms, cards, typography, navigation, motion, accessibility, and responsive behavior. Each product only swaps **branding** (logo, primary accent, optional secondary accent).
+
+Guardr is the **first production consumer** of this philosophy. `guardedesign.md` is Guardr’s binding spec; MDS is the cross-app layer above it.
+
+### MDS foundation (all apps)
+
+| Layer | Spec |
+|-------|------|
+| **Web** | Responsive SPA, mobile-first |
+| **PWA Lite** | Installable, offline-capable, lighter motion |
+| **PWA Full** | Feature parity with web |
+| **APK Full / Premium** | Capacitor native shell, GPS, camera, push, haptics |
+| **Desktop** | ≥1024px admin / workspace layouts |
+| **Breakpoints** | 320 · 768 · 1024 · 1280+ |
+
+### MDS themes (target)
+
+| Theme | Canvas | Accent |
+|-------|--------|--------|
+| **Light** | White | Per-app primary |
+| **Dark** | Black + charcoal | Per-app primary |
+| **Shade** | Signature gray | Per-app primary |
+
+### Per-app branding (examples)
+
+| App | Primary accent | Notes |
+|-----|----------------|-------|
+| **Guardr** | Sage green `#5E7B61` | Security marketplace |
+| *Friendr* | TBD | Social / connections |
+| *BuyNothing* | TBD | Community / gifting |
+| *YouVerse* | TBD | Personal / creative |
+
+Shared neutrals: **black · white · charcoal**. Never share accent colors between apps.
+
+### What stays shared vs per-app
+
+| Shared (MDS) | Per-app |
+|--------------|---------|
+| Spacing scale, grid, radius, elevation rules | Logo, wordmark |
+| Component APIs and behavior | Primary accent color |
+| Motion timing and a11y standards | Marketing voice |
+| Lucide icon set | Domain-specific widgets |
+| Light / Dark / Shade token *structure* | Optional secondary accent |
+
+### Guardr → MDS extraction path
+
+When a second app ships, promote from Guardr:
+
+1. `src/index.css` token *structure* → `@markk/tokens` package
+2. Layout shells → `@markk/layouts`
+3. UI primitives → `@markk/ui`
+4. Keep `guardedesign.md` as Guardr overlay; add `mds.md` as ecosystem root
+
+Until then, **implement MDS rules inside Guardr** — don’t wait for a separate package.
