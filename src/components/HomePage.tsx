@@ -1,7 +1,12 @@
 import React from 'react';
+import { Block } from 'baseui/block';
+import { HeadingLarge, ParagraphMedium } from 'baseui/typography';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { PublicPageChrome } from './baseui/layout/PublicPageChrome';
+import { PublicLandingHeader } from './baseui/layout/PublicLandingHeader';
+import { AppButton } from './ui/AppButton';
+import { GuardrCard } from './baseui/GuardrCard';
+import { GuardrTag } from './baseui/GuardrTag';
 import {
   ArrowRight,
   BookOpen,
@@ -35,6 +40,13 @@ import { CompanyPublicPlacard } from './public/CompanyPublicPlacard';
 import type { CompanyPublicDocument } from '../lib/companyPlacard';
 import { LandingAppDownloads } from './landing/LandingAppDownloads';
 import { LandingPathCards } from './landing/LandingPathCards';
+import {
+  LandingBadge,
+  LandingCoverageTags,
+  LandingHighlightCard,
+  LandingHowCard,
+  LandingSectionHead,
+} from './landing/LandingUberPrimitives';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -214,89 +226,20 @@ export function HomePage({
       data-landing-factor={formFactor}
     >
       {isMobile ? (
-        <PublicPageChrome themeMode={themeMode} onChangeTheme={onChangeTheme}>
-          {onOpenGuide && (
-            <button
-              type="button"
-              onClick={onOpenGuide}
-              className="landing-header-link p-2"
-              aria-label="Open guide"
-            >
-              <BookOpen className="w-4 h-4" />
-            </button>
-          )}
-          <a href="#get-app" className="landing-header-link inline-flex items-center gap-1.5 p-2" aria-label="Get app">
-            <Smartphone className="w-3.5 h-3.5" />
-          </a>
-          <button
-            type="button"
-            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="landing-header-signin text-sm font-semibold px-3 py-1.5"
-          >
-            Sign in
-          </button>
-        </PublicPageChrome>
+        <PublicLandingHeader
+          themeMode={themeMode}
+          onChangeTheme={onChangeTheme}
+          onNavigateToAuth={onNavigateToAuth}
+          onOpenGuide={onOpenGuide}
+          showRoleLinks={false}
+        />
       ) : (
-      <header className="landing-header sticky top-0 z-50 border-b border-brand-border/60 bg-brand-bg/96 backdrop-blur-xl">
-        <div className="landing-container landing-header-inner">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Logo size={isMobile ? 26 : 28} className="text-brand-primary shrink-0" />
-            <span className="landing-wordmark font-black text-xl tracking-[-0.05em] leading-none">
-              Guard<span className="landing-wordmark-accent">r</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="landing-header-theme" />
-            {isMobile && onOpenGuide && (
-              <button
-                type="button"
-                onClick={onOpenGuide}
-                className="landing-header-link p-2"
-                aria-label="Open guide"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-            )}
-            <a href="#get-app" className="landing-header-link inline-flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5" />
-              {isMobile ? <span className="sr-only">Get app</span> : 'Get app'}
-            </a>
-            {!isMobile && (
-              <>
-                <button
-                  type="button"
-                  onClick={onOpenGuide}
-                  className="landing-header-link inline-flex items-center gap-1.5"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Guide
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigateToAuth('client', 'sign-in')}
-                  className="landing-header-link"
-                >
-                  Client
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigateToAuth('guard', 'sign-in')}
-                  className="landing-header-link"
-                >
-                  Guard
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="landing-header-signin"
-            >
-              Sign in
-            </button>
-          </div>
-        </div>
-      </header>
+        <PublicLandingHeader
+          themeMode={themeMode}
+          onChangeTheme={onChangeTheme}
+          onNavigateToAuth={onNavigateToAuth}
+          onOpenGuide={onOpenGuide}
+        />
       )}
 
       <section className="landing-hero relative overflow-hidden">
@@ -313,7 +256,7 @@ export function HomePage({
               transition={{ duration: 0.4 }}
               className="landing-stat-pill mb-8 sm:mb-10"
             >
-              Independent security marketplace
+              <LandingBadge>Independent security marketplace</LandingBadge>
             </motion.div>
 
             <motion.h1
@@ -355,18 +298,18 @@ export function HomePage({
               >
                 {ownerMessage?.trim() && (
                   <blockquote className="landing-leadership-card">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide uber-text-accent mb-1.5">
                       Markeith White · Founder
                     </p>
-                    <p className="text-sm leading-relaxed text-brand-text whitespace-pre-wrap">{ownerMessage}</p>
+                    <p className="text-sm leading-relaxed uber-text-muted whitespace-pre-wrap">{ownerMessage}</p>
                   </blockquote>
                 )}
                 {directorMessage?.trim() && (
                   <blockquote className="landing-leadership-card">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide uber-text-accent mb-1.5">
                       Tyrone Johnson · Director
                     </p>
-                    <p className="text-sm leading-relaxed text-brand-text whitespace-pre-wrap">{directorMessage}</p>
+                    <p className="text-sm leading-relaxed uber-text-muted whitespace-pre-wrap">{directorMessage}</p>
                   </blockquote>
                 )}
               </motion.div>
@@ -380,13 +323,9 @@ export function HomePage({
             >
               <LandingPathCards onNavigateToAuth={onNavigateToAuth} layout={formFactor} />
               <LandingAppDownloads formFactor={formFactor} variant="hero" id="get-app" />
-              <button
-                type="button"
-                onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-                className="landing-hero-signin-link"
-              >
+              <AppButton variant="ghost" size="sm" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
                 Already have an account? Sign in →
-              </button>
+              </AppButton>
             </motion.div>
           </div>
 
@@ -415,32 +354,22 @@ export function HomePage({
 
       <section className="landing-section landing-how-section">
         <div className="landing-container">
-          <div className="landing-section-head">
-            <p className="experience-badge">How it works</p>
-            <h2 className="landing-section-title">From post to paid shift</h2>
-            <p className="landing-section-lead">
-              A direct marketplace — clients and guards arrange each job, with Guardr handling the tools.
-            </p>
-          </div>
+          <LandingSectionHead
+            badge="How it works"
+            title="From post to paid shift"
+            lead="A direct marketplace — clients and guards arrange each job, with Guardr handling the tools."
+          />
           <div className={`landing-how-grid landing-how-grid--${formFactor}`}>
-            {HOW_IT_WORKS.map(({ step, icon: Icon, title, body }, index) => (
-              <motion.article
+            {HOW_IT_WORKS.map(({ step, icon, title, body }, index) => (
+              <motion.div
                 key={step}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.45, delay: index * 0.08 }}
-                className="landing-how-card"
               >
-                <div className="landing-how-card-top">
-                  <span className="landing-how-step">{step}</span>
-                  <span className="landing-how-icon">
-                    <Icon className="w-5 h-5" />
-                  </span>
-                </div>
-                <h3 className="landing-how-title">{title}</h3>
-                <p className="landing-how-body">{body}</p>
-              </motion.article>
+                <LandingHowCard step={step} icon={icon} title={title} body={body} />
+              </motion.div>
             ))}
           </div>
         </div>
@@ -450,7 +379,7 @@ export function HomePage({
         <div className="landing-container">
           <div className={`landing-features-grid landing-features-grid--${formFactor}`}>
             <article className="landing-feature-column">
-              <p className="experience-badge">Client workspace</p>
+              <LandingBadge>Client workspace</LandingBadge>
               <h2 className="landing-feature-headline">
                 Request coverage at your site
               </h2>
@@ -465,24 +394,20 @@ export function HomePage({
                       <Icon className="w-5 h-5 text-brand-text" strokeWidth={1.75} />
                     </span>
                     <div>
-                      <p className="font-bold text-brand-text tracking-tight">{title}</p>
-                      <p className="text-sm text-brand-text-muted mt-0.5 leading-relaxed">{body}</p>
+                      <p className="font-bold tracking-tight">{title}</p>
+                      <p className="text-sm uber-text-muted mt-0.5 leading-relaxed">{body}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                onClick={() => onNavigateToAuth('client', 'sign-up')}
-                className="app-cta-dark landing-feature-cta"
-              >
+              <AppButton variant="primary" onClick={() => onNavigateToAuth('client', 'sign-up')} className="landing-feature-cta">
                 Get started as a client
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </AppButton>
             </article>
 
             <article className="landing-feature-column landing-feature-column--guard">
-              <p className="experience-badge">Guard workspace</p>
+              <LandingBadge>Guard workspace</LandingBadge>
               <h2 className="landing-feature-headline">
                 Work independently, get paid directly
               </h2>
@@ -497,20 +422,16 @@ export function HomePage({
                       <Icon className="w-5 h-5 text-brand-primary" strokeWidth={1.75} />
                     </span>
                     <div>
-                      <p className="font-bold text-brand-text tracking-tight">{title}</p>
-                      <p className="text-sm text-brand-text-muted mt-0.5 leading-relaxed">{body}</p>
+                      <p className="font-bold tracking-tight">{title}</p>
+                      <p className="text-sm uber-text-muted mt-0.5 leading-relaxed">{body}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                onClick={() => onNavigateToAuth('guard', 'sign-up')}
-                className="app-button-primary landing-feature-cta"
-              >
+              <AppButton variant="outline" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="landing-feature-cta">
                 Create guard account
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </AppButton>
             </article>
           </div>
         </div>
@@ -519,13 +440,12 @@ export function HomePage({
       {/* Platform highlights section */}
       <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
         <div className="landing-container">
-          <div className="landing-section-head landing-section-head--center">
-            <p className="experience-badge">Everything included</p>
-            <h2 className="landing-section-title">Built for the job, not around it</h2>
-            <p className="landing-section-lead">
-              Every feature on Guardr is designed for how security work actually happens.
-            </p>
-          </div>
+          <LandingSectionHead
+            badge="Everything included"
+            title="Built for the job, not around it"
+            lead="Every feature on Guardr is designed for how security work actually happens."
+            center
+          />
           <motion.div
             className="landing-highlights-grid"
             initial="hidden"
@@ -536,22 +456,15 @@ export function HomePage({
               visible: { transition: { staggerChildren: 0.06 } },
             }}
           >
-            {PLATFORM_HIGHLIGHTS.map(({ icon: Icon, title, body }) => (
+            {PLATFORM_HIGHLIGHTS.map(({ icon, title, body }) => (
               <motion.div
                 key={title}
                 variants={{
                   hidden: { opacity: 0, y: 12 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
                 }}
-                className="landing-highlight-card"
               >
-                <span className="landing-highlight-icon">
-                  <Icon className="w-5 h-5" strokeWidth={1.75} />
-                </span>
-                <div>
-                  <p className="landing-highlight-title">{title}</p>
-                  <p className="landing-highlight-body">{body}</p>
-                </div>
+                <LandingHighlightCard icon={icon} title={title} body={body} />
               </motion.div>
             ))}
           </motion.div>
@@ -560,49 +473,45 @@ export function HomePage({
 
       <section className="landing-section landing-coverage-section border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-coverage-inner">
-          <div className="landing-section-head landing-section-head--center">
-            <p className="experience-badge">Coverage types</p>
-            <h2 className="landing-section-title">Built for real-world coverage</h2>
-            <p className="landing-section-lead">
-              Any site, any shift length, any requirement. Post what you need — guards apply with
-              the credentials to match.
-            </p>
-          </div>
-          <div className={`landing-coverage-grid landing-coverage-grid--${formFactor}`}>
-            {COVERAGE_TYPES.map((tag) => (
-              <span key={tag} className="landing-coverage-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
+          <LandingSectionHead
+            badge="Coverage types"
+            title="Built for real-world coverage"
+            lead="Any site, any shift length, any requirement. Post what you need — guards apply with the credentials to match."
+            center
+          />
+          <LandingCoverageTags tags={COVERAGE_TYPES} />
         </div>
       </section>
 
       <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
         <div className="landing-container landing-rules-inner">
-          <div className="app-card-elevated landing-rules-card text-center space-y-4">
-            <p className="experience-badge experience-badge--center">Marketplace rules</p>
-            <h2 className="text-xl font-black tracking-tight">Transparent by design</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed max-w-sm mx-auto">
+          <GuardrCard className="text-center">
+            <LandingBadge center>Marketplace rules</LandingBadge>
+            <Block as="h2" margin="0 0 12px" $style={{ fontSize: '20px', fontWeight: 900 }}>
+              Transparent by design
+            </Block>
+            <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary" $style={{ maxWidth: '28rem', marginLeft: 'auto', marginRight: 'auto' }}>
               {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
               independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
-            </p>
-            <div className={`landing-rules-pills landing-rules-pills--${formFactor}`}>
-              <div className="landing-rules-pill">Clients contract per job</div>
-              <div className="landing-rules-pill">Guards choose assignments</div>
-              <div className="landing-rules-pill">Platform tools &amp; support</div>
-            </div>
-          </div>
+            </ParagraphMedium>
+            <Block display="flex" flexWrap justifyContent="center" gridGap="scale300">
+              <GuardrTag kind="neutral">Clients contract per job</GuardrTag>
+              <GuardrTag kind="neutral">Guards choose assignments</GuardrTag>
+              <GuardrTag kind="neutral">Platform tools &amp; support</GuardrTag>
+            </Block>
+          </GuardrCard>
         </div>
       </section>
 
       <section className="landing-section border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-legal-inner">
           <div className="landing-section-head landing-section-head--center">
-            <h2 className="landing-section-title landing-section-title--sm">Policies &amp; data</h2>
-            <p className="landing-section-lead">
+            <HeadingLarge marginTop="0" marginBottom="scale400" overrides={{ Block: { style: { fontWeight: 900 } } }}>
+              Policies &amp; data
+            </HeadingLarge>
+            <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
               Read how Guardr handles your data and the marketplace rules for clients and guards.
-            </p>
+            </ParagraphMedium>
           </div>
           <LegalInfoCards onOpenLegal={onOpenLegal} />
         </div>
@@ -616,27 +525,23 @@ export function HomePage({
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45 }}
           >
-            <p className="experience-badge experience-badge--center">Get started</p>
+            <LandingBadge center>Get started</LandingBadge>
             <h2 className="landing-final-title font-black tracking-[-0.04em]">Ready when you are</h2>
-            <p className="landing-final-lead">
+            <p className="landing-final-lead uber-text-muted">
               Choose your path — each experience is purpose-built for how you use Guardr.
             </p>
             <div className={`landing-final-actions landing-final-actions--${formFactor}`}>
-              <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark">
+              <AppButton variant="primary" onClick={() => onNavigateToAuth('client', 'sign-up')}>
                 I need security
-              </button>
-              <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark">
+              </AppButton>
+              <AppButton variant="outline" onClick={() => onNavigateToAuth('guard', 'sign-up')}>
                 I&apos;m a guard
-              </button>
+              </AppButton>
             </div>
             <LandingAppDownloads formFactor={formFactor} variant="cta" />
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="landing-final-signin"
-            >
+            <AppButton variant="ghost" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
               Sign in to your account
-            </button>
+            </AppButton>
           </motion.div>
         </div>
       </section>
@@ -644,12 +549,12 @@ export function HomePage({
       <footer className="landing-footer border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-footer-inner">
           <div className="flex items-center gap-2.5">
-            <Logo size={22} className="text-brand-primary" />
+            <Logo size={22} className="shrink-0" />
             <div>
               <span className="font-black text-sm tracking-[-0.04em] block leading-none">Guardr</span>
-              <span className="text-[10px] uppercase tracking-wider text-brand-text-muted mt-0.5 block">
+              <span className="text-[10px] uppercase tracking-wider uber-text-muted mt-0.5 block">
                 by{' '}
-                <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-wider" />
+                <SignatureSecuritySpecialistLink className="uber-text-muted hover:uber-text-accent hover:underline transition-colors uppercase tracking-wider" />
               </span>
             </div>
           </div>
@@ -659,14 +564,14 @@ export function HomePage({
               <button
                 type="button"
                 onClick={onOpenGuide}
-                className="text-sm font-semibold text-brand-primary hover:underline inline-flex items-center gap-1.5"
+                className="text-sm font-semibold uber-text-accent hover:underline inline-flex items-center gap-1.5"
               >
                 <BookOpen className="w-4 h-4" />
                 Guide
               </button>
             )}
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
-            <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right leading-relaxed">
+            <p className="text-xs uber-text-muted max-w-xs text-center sm:text-right leading-relaxed">
               © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}<br className="hidden sm:block" />
               Independent contractor marketplace. State licensing rules apply.
             </p>
@@ -681,20 +586,12 @@ export function HomePage({
 
       {isMobile && (
         <div className="landing-mobile-cta-bar" role="region" aria-label="Get started">
-          <button
-            type="button"
-            onClick={() => onNavigateToAuth('client', 'sign-up')}
-            className="landing-mobile-cta landing-mobile-cta--client"
-          >
+          <AppButton fullWidth variant="primary" onClick={() => onNavigateToAuth('client', 'sign-up')}>
             I need security
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigateToAuth('guard', 'sign-up')}
-            className="landing-mobile-cta landing-mobile-cta--guard"
-          >
+          </AppButton>
+          <AppButton fullWidth variant="outline" onClick={() => onNavigateToAuth('guard', 'sign-up')}>
             I&apos;m a guard
-          </button>
+          </AppButton>
         </div>
       )}
     </div>

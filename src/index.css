@@ -21811,3 +21811,22 @@ body.capacitor-native .app-welcome .landing-path-grid {
 .uber-fill-accent { fill: var(--uber-accent, #276EF1); }
 .uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 12%, transparent); }
 .uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #276EF1) 20%, transparent); }
+
+/* /uberit — public auth hero uses stock Uber accent */
+.auth-experience--uber .auth-hero {
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--uber-accent, #276EF1) 92%, #000000) 0%,
+    color-mix(in srgb, var(--uber-accent, #276EF1) 48%, #0a0a0a) 42%,
+    #0a0a0a 100%
+  );
+}
+
+html.theme-light .auth-experience--uber .auth-hero {
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--uber-accent, #276EF1) 88%, #ffffff) 0%,
+    color-mix(in srgb, var(--uber-accent, #276EF1) 35%, #f2f4f2) 50%,
+    var(--uber-bg, #ffffff) 100%
+  );
+}

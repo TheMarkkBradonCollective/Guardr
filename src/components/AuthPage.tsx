@@ -27,10 +27,12 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { AppOverlaySheet } from './ui/motion/AppMotion';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
+import { AppButton } from './ui/AppButton';
+import { GuardrSheet } from './baseui/overlays/GuardrSheet';
+import { AuthFormHeader, AuthModeToggle, AuthRolePicker } from './auth/AuthFormChrome';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -46,6 +48,7 @@ import {
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { useStyletron } from 'baseui';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
 import {
   GUARD_CARD_STATUS_OPTIONS,
@@ -684,6 +687,8 @@ export function AuthPage({
     setErrorMsg('Account not found. Please sign up or check your email address.');
   };
 
+  const [, theme] = useStyletron();
+
   const ROLES = [
     { id: 'guard' as const, label: 'Guard', desc: 'Licensed security professional', icon: Shield },
     { id: 'client' as const, label: 'Client', desc: 'Business seeking security', icon: Building2 },
@@ -693,88 +698,48 @@ export function AuthPage({
 
   const authFormBody = (
     <>
-          <div className={isSheet ? 'mb-5' : 'mb-7'}>
-            <p className="experience-badge">
-              {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
-            </p>
-            <h1 className={`font-black tracking-[-0.04em] leading-tight mt-1 ${isSheet ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
-              {isSignUp
-                ? role === 'guard'
-                  ? 'Create your guard account'
-                  : 'Create your client account'
-                : 'Sign in'}
-            </h1>
-            <p className="text-brand-text-muted text-sm mt-2.5 leading-relaxed font-medium">
-              {isSignUp
-                ? role === 'guard'
-                  ? 'Independent contractors manage credentials, jobs, and pay here.'
-                  : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
-                : role === 'guard'
-                  ? 'Welcome back — your jobs and earnings are ready.'
-                  : 'Welcome back — your requests and coverage are ready.'}
-            </p>
-          </div>
+          <AuthFormHeader role={role} isSignUp={isSignUp} compact={isSheet} />
 
-          <div className="segmented-control segmented-control-full mb-6">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(false); setErrorMsg(''); onAuthModeChange?.('sign-in'); }}
-              className={`segmented-control-btn flex-1 text-center ${!isSignUp ? 'segmented-control-btn-active' : ''}`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(true); setErrorMsg(''); onAuthModeChange?.('sign-up'); }}
-              className={`segmented-control-btn flex-1 text-center ${isSignUp ? 'segmented-control-btn-active' : ''}`}
-            >
-              Sign up
-            </button>
-          </div>
+          <AuthModeToggle
+            isSignUp={isSignUp}
+            onSignIn={() => {
+              setIsSignUp(false);
+              setErrorMsg('');
+              onAuthModeChange?.('sign-in');
+            }}
+            onSignUp={() => {
+              setIsSignUp(true);
+              setErrorMsg('');
+              onAuthModeChange?.('sign-up');
+            }}
+          />
 
           {!isSignUp && (
-            <div className="mb-6">
-              <p className="uber-label mb-3">Account type</p>
-              <div className="grid grid-cols-2 gap-3">
-                {ROLES.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => { setRole(id); setErrorMsg(''); onAuthRoleChange?.(id); }}
-                    className={`auth-role-card text-left w-full ${
-                      role === id ? 'auth-role-card-active' : 'hover:border-brand-primary/30'
-                    }`}
-                  >
-                    <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
-                    <p className={`text-sm font-semibold ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <AuthRolePicker
+              roles={ROLES}
+              value={role}
+              onChange={(id) => {
+                setRole(id);
+                setErrorMsg('');
+                onAuthRoleChange?.(id);
+              }}
+            />
           )}
 
           <div className="space-y-5">
             {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
 
             {isSignUp && (
-              <div className="mb-6">
-                <p className="uber-label mb-3">Account type</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {ROLES.map(({ id, label, desc, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => { setRole(id); setErrorMsg(''); onAuthRoleChange?.(id); }}
-                      className={`auth-role-card text-left w-full ${
-                        role === id ? 'auth-role-card-active' : 'hover:border-brand-primary/30'
-                      }`}
-                    >
-                      <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
-                      <p className={`text-sm font-semibold ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <AuthRolePicker
+                roles={ROLES}
+                value={role}
+                onChange={(id) => {
+                  setRole(id);
+                  setErrorMsg('');
+                  onAuthRoleChange?.(id);
+                }}
+                showDescription
+              />
             )}
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
@@ -1464,10 +1429,10 @@ export function AuthPage({
                 </label>
               )}
 
-              <button type="submit" className="app-button-primary mt-3">
+              <AppButton type="submit" fullWidth className="mt-3">
                 {isSignUp ? 'Create account' : 'Sign in'}
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </AppButton>
             </form>
           </div>
 
@@ -1481,10 +1446,10 @@ export function AuthPage({
 
   if (isSheet) {
     return (
-      <AppOverlaySheet
+      <GuardrSheet
         open={open}
         onClose={onBackToHome}
-        panelClassName="auth-sheet-panel rounded-t-[1.35rem] max-h-[92dvh]"
+        panelClassName="rounded-t-[1.35rem] max-h-[92dvh]"
         ariaLabel={isSignUp ? 'Create account' : 'Sign in'}
         zIndex={2200}
       >
@@ -1493,30 +1458,31 @@ export function AuthPage({
         </div>
         <header className="auth-sheet-header flex items-center justify-between gap-3 px-5 pb-3 pt-1">
           <div className="flex items-center gap-2 min-w-0">
-            <Logo size={22} className="text-brand-primary shrink-0" />
+            <Logo size={22} className="shrink-0" />
             <span className="font-black text-base tracking-[-0.04em] truncate">
               {isSignUp ? 'Create account' : 'Sign in'}
             </span>
           </div>
-          <button
-            type="button"
+          <AppButton
+            variant="ghost"
+            size="sm"
             onClick={onBackToHome}
-            className="auth-sheet-close flex h-9 w-9 items-center justify-center rounded-full border border-brand-border bg-brand-bg text-brand-text-muted hover:text-brand-text transition-colors"
             aria-label="Close"
+            className="!min-w-0 !rounded-full !p-2"
           >
             <X className="w-4 h-4" />
-          </button>
+          </AppButton>
         </header>
         <div className="auth-sheet-scroll px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {authFormBody}
         </div>
-      </AppOverlaySheet>
+      </GuardrSheet>
     );
   }
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience${isDesktopAuth ? ' dsk-auth' : ''}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}`}
       id="guardr-auth-root"
     >
       {isDesktopAuth ? (
@@ -1615,7 +1581,7 @@ export function AuthPage({
         <div className="absolute inset-0 pointer-events-none opacity-40">
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 45%, transparent) 0%, transparent 70%)' }}
+            style={{ background: `radial-gradient(circle, color-mix(in srgb, ${theme.colors.accent} 45%, transparent) 0%, transparent 70%)` }}
           />
         </div>
         <heroContent.icon className="auth-hero-watermark" strokeWidth={1} aria-hidden="true" />

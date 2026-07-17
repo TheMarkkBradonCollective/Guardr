@@ -1,5 +1,10 @@
 import { ArrowRight, Building2, Shield } from 'lucide-react';
+import { Block } from 'baseui/block';
+import { ParagraphMedium, LabelSmall } from 'baseui/typography';
+import { useStyletron } from 'baseui';
 import type { FormFactor } from '../../lib/platform/device';
+import { GuardrCard } from '../baseui/GuardrCard';
+import { AccentIcon } from '../baseui/dashboard';
 
 interface LandingPathCardsProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -7,49 +12,77 @@ interface LandingPathCardsProps {
 }
 
 export function LandingPathCards({ onNavigateToAuth, layout }: LandingPathCardsProps) {
-  return (
-    <div className={`landing-path-grid landing-path-grid--${layout}`}>
-      <button
-        type="button"
-        onClick={() => onNavigateToAuth('client', 'sign-up')}
-        className="landing-path-card landing-path-card-client group w-full"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="text-left">
-            <p className="landing-path-card-eyebrow landing-path-card-eyebrow--accent">
-              For businesses &amp; sites
-            </p>
-            <p className="landing-path-card-title">I need security</p>
-            <p className="landing-path-card-body">
-              Post coverage, review guards, monitor live shifts.
-            </p>
-          </div>
-          <Building2 className="landing-path-card-icon landing-path-card-icon--accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
-        </div>
-        <span className="landing-path-card-action landing-path-card-action--accent">
-          Get started <ArrowRight className="w-3.5 h-3.5" />
-        </span>
-      </button>
+  const [, theme] = useStyletron();
+  const isMobile = layout === 'mobile';
 
-      <button
-        type="button"
-        onClick={() => onNavigateToAuth('guard', 'sign-up')}
-        className="landing-path-card landing-path-card-client group w-full"
+  return (
+    <Block
+      display="grid"
+      gridTemplateColumns={isMobile ? '1fr' : ['1fr', '1fr', '1fr 1fr', '1fr 1fr']}
+      gridGap="scale500"
+      width="100%"
+    >
+      <GuardrCard
+        interactive
+        onClick={() => onNavigateToAuth('client', 'sign-up')}
+        overrides={{ Root: { style: { cursor: 'pointer', height: '100%' } } }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="text-left">
-            <p className="landing-path-card-eyebrow landing-path-card-eyebrow--accent">Independent contractor</p>
-            <p className="landing-path-card-title">I&apos;m a guard</p>
-            <p className="landing-path-card-body">
+        <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale400">
+          <Block>
+            <LabelSmall color="accent" marginBottom="scale200" overrides={{ Block: { style: { fontWeight: 700 } } }}>
+              For businesses &amp; sites
+            </LabelSmall>
+            <Block as="p" margin="0 0 6px" $style={{ fontWeight: 800, fontSize: '18px' }}>
+              I need security
+            </Block>
+            <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
+              Post coverage, review guards, monitor live shifts.
+            </ParagraphMedium>
+          </Block>
+          <AccentIcon icon={Building2} size={22} strokeWidth={1.75} />
+        </Block>
+        <Block
+          display="inline-flex"
+          alignItems="center"
+          gridGap="scale200"
+          marginTop="scale600"
+          color="accent"
+          $style={{ fontWeight: 700, fontSize: '14px' }}
+        >
+          Get started <ArrowRight size={14} color={theme.colors.accent} />
+        </Block>
+      </GuardrCard>
+
+      <GuardrCard
+        interactive
+        onClick={() => onNavigateToAuth('guard', 'sign-up')}
+        overrides={{ Root: { style: { cursor: 'pointer', height: '100%' } } }}
+      >
+        <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale400">
+          <Block>
+            <LabelSmall color="accent" marginBottom="scale200" overrides={{ Block: { style: { fontWeight: 700 } } }}>
+              Independent contractor
+            </LabelSmall>
+            <Block as="p" margin="0 0 6px" $style={{ fontWeight: 800, fontSize: '18px' }}>
+              I&apos;m a guard
+            </Block>
+            <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
               Browse jobs on the map, set your rate, work on your terms.
-            </p>
-          </div>
-          <Shield className="landing-path-card-icon landing-path-card-icon--accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
-        </div>
-        <span className="landing-path-card-action landing-path-card-action--accent">
-          Create account <ArrowRight className="w-3.5 h-3.5" />
-        </span>
-      </button>
-    </div>
+            </ParagraphMedium>
+          </Block>
+          <AccentIcon icon={Shield} size={22} strokeWidth={1.75} />
+        </Block>
+        <Block
+          display="inline-flex"
+          alignItems="center"
+          gridGap="scale200"
+          marginTop="scale600"
+          color="accent"
+          $style={{ fontWeight: 700, fontSize: '14px' }}
+        >
+          Create account <ArrowRight size={14} color={theme.colors.accent} />
+        </Block>
+      </GuardrCard>
+    </Block>
   );
 }
