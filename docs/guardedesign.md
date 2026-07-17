@@ -6,7 +6,7 @@ This document captures the *design philosophy* of a premium modular SaaS dashboa
 
 **Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`.cursor/commands/designit.md`](../.cursor/commands/designit.md)
 
-**External reference (patterns only, not branding):** [Uber Base design system](https://base.uber.com/) · [Base Web docs](https://baseweb.design/) · [Base Web tokens](https://baseweb.design/components/tokens/)
+**External reference (design guidelines only):** [Uber Base design system](https://base.uber.com/) — patterns and principles summarized in Appendix A; not Uber branding.
 
 ---
 
@@ -467,227 +467,317 @@ Guardr should feel like **enterprise-grade security marketplace software** — m
 
 ---
 
-## Appendix A — Uber Base reference (adapted for Guardr)
+## Appendix A — Uber Base design guidelines (from base.uber.com)
 
-This appendix pulls structural patterns from [Uber Base](https://base.uber.com/) and its open-source React implementation [Base Web](https://baseweb.design/). Use it for **layout, tokens, motion, and component behavior** — never for Uber colors, logos, or product copy.
+This appendix summarizes the **design language documented on [base.uber.com](https://base.uber.com/)** — Uber’s official Base styleguide (v05.13.26 as of scrape). It captures *how Uber defines UI design*, not their React codebase. Every section below is translated for **Guardr** (sage green accent, white/black themes, security marketplace identity).
 
-### A.1 What Base is
+> *“The Base design system defines the foundations of user interfaces across Uber's ecosystem of products & services. It brings all Uber experiences together under a single, unified framework.”* — [Welcome to Base](https://base.uber.com/6d2425e9f/p/93825b-welcome-to-base)
 
-From the Base styleguide metadata ([base.uber.com](https://base.uber.com/)):
+### A.1 How Base is organized
 
-> *The Base design system defines the foundations of user interfaces across Uber's ecosystem of products & services. It brings all Uber experiences together under a single, unified framework.*
+The styleguide has four top-level areas:
 
-Base is hosted on zeroheight (custom domain). The public marketing site is JS-rendered; the **implementable spec** lives in Base Web:
+| Area | Purpose | Guardr equivalent |
+|------|---------|-------------------|
+| **Foundation** | Tokens, type, color, grid, radius, elevation, motion, content, inclusion | `index.css`, `theme.ts`, voice/copy rules |
+| **Components** | Specs for buttons, cards, nav, charts, sheets, tables, etc. | `src/components/`, layout shells |
+| **Patterns** | Cross-component flows: modality, maps, chat, rider flows | Job flows, map browse, messaging |
+| **Resources & tools** | Onboarding, Figma, playbooks, a11y articles | `/designit`, docs, E2E |
 
-| Layer | URL | Guardr uses |
-|-------|-----|-------------|
-| Design guidelines | [base.uber.com](https://base.uber.com/) | Philosophy + visual patterns (via this doc) |
-| React components + theme API | [baseweb.design](https://baseweb.design/) | Token mapping, spacing, motion, semantic colors |
-| Source | [github.com/uber/baseweb](https://github.com/uber/baseweb) | Reference implementation |
+**Foundation pillars** (from Welcome): Design tokens · Color · Typography · Icons · Dimensions · Layout grids · Corner radius · Elevation · Motion · Content · Equity · Accessibility
 
-Base Web’s stated goals — **reliability, accessibility, customization** — align with Guardr’s cross-platform needs. The **overrides pattern** (per-subcomponent style + behavior hooks) is the mental model for Guardr’s variant props and CSS modifier classes.
+### A.2 Core philosophy (Uber → Guardr)
 
-### A.2 Token architecture (three layers)
+From Uber’s public design platform writing and Base onboarding:
 
-Base Web separates tokens the same way Guardr should:
+| Uber Base idea | Meaning | Guardr application |
+|----------------|---------|---------------------|
+| **Dead simple** | Four font categories, three main colors (white, black, accent), five core sizes on a 4px grid | Light/dark canvas + sage accent; limited type scale; 4px-aligned spacing |
+| **LEGO bricks** | Basic components combine into many layouts; customize via overrides, not one-offs | Modular `.app-card` widgets; variant props, not per-page CSS |
+| **Design for patterns** | Think beyond pixels — digital affordances affect real behavior | Field guard flows, live coverage, credential compliance |
+| **Single source of truth** | Documentation lives in design tools (Figma), not stale websites | `guardedesign.md` + tokens in `index.css` |
+| **Inclusive by default** | Product inclusion principles inform every decision | WCAG AA, reduced motion, readable type in sunlight |
 
-```
-Primitive colors (immutable hex)     →  Theme primitives (light/dark sets)  →  Semantic roles (backgroundPrimary, contentAccent, …)
-```
+Uber describes Base as: *reliable, accessible, extensively customizable*. Guardr matches that bar on web, PWA, and APK.
 
-| Base Web layer | Example | Guardr equivalent |
-|----------------|---------|-------------------|
-| Primitive | `colors.green600` `#0E8345` | Raw palette in `index.css` grays + sage steps (future `--brand-primary-50` … `900`) |
-| Theme primitive | `primary`, `primary700` | `--brand-primary`, `--brand-primary-hover` |
-| Semantic | `backgroundAccent`, `contentPrimary` | `--brand-bg`, `--brand-text`, `--brand-surface`, `--status-*` |
+### A.3 Design tokens
 
-**Rule:** Components reference **semantic** tokens only. Primitives are edited in one place (`index.css`), not in TSX.
+Source: [Design tokens](https://base.uber.com/6d2425e9f/p/33fa5e-design-tokens)
 
-### A.3 Semantic color mapping (Base → Guardr)
+**Definition:** Tokens are foundational design decisions as reusable data — shared across iOS, Android, and Web — controlling the entire visual system.
 
-Uber’s accent stack uses `brandDefault*` (blue). Guardr substitutes **sage green** at the accent slots.
+**Anatomy:** Each token has a **name** (required) and **value** (required), optional **description**.
 
-| Base Web semantic (light / dark) | Uber value | Guardr mapping |
-|----------------------------------|------------|----------------|
-| `backgroundPrimary` | `#FFFFFF` / `#161616` | `--brand-bg` (`#FFFFFF` / `#000000`) |
-| `backgroundSecondary` | `#F3F3F3` / `#292929` | `--brand-bg-sec` |
-| `backgroundTertiary` | `#E8E8E8` / `#383838` | `--brand-elevated` |
-| `contentPrimary` | `#000000` / `#DEDEDE` | `--brand-text` |
-| `contentSecondary` | `#4B4B4B` / `#C4C4C4` | `--brand-text-muted` (secondary labels) |
-| `backgroundAccent` | `#276EF1` / `#335BA3` | `--brand-primary` / `--brand-primary-hover` |
-| `contentAccent` | `#276EF1` / `#5E8BDB` | `--brand-primary` |
-| `backgroundLightAccent` | `#EFF4FE` / `#182946` | `color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg))` |
-| `borderAccent` | blue | `color-mix(in srgb, var(--brand-primary) 40%, var(--brand-border))` |
-| `backgroundPositive` | `#0E8345` | `--status-success` (keep semantic green separate from brand sage) |
-| `backgroundNegative` | `#DE1135` | `--status-danger` |
-| `backgroundWarning` | `#F6BC2F` | `--status-warning` |
-| `backgroundOverlayDark` | `rgba(0,0,0,0.5)` | Modal/sheet scrim — theme-aware |
+**Three tiers** (aliasing — each tier references the one below):
 
-**Dark canvas note:** Base dark primary background is `#161616` (charcoal). Guardr dark canvas is **`#000000`** per product choice (company green / black). Card surfaces (`#111111`, `#1A1A1A`) provide the layered depth Base achieves with gray50Dark/gray100Dark.
+| Tier | Role | Guardr |
+|------|------|--------|
+| **Primitive** | Raw, platform-agnostic values (hex, px) | Future `--brand-primary-*` steps in `index.css` |
+| **Semantic** | Usage-based names (`backgroundPrimary`, `contentAccent`) | `--brand-bg`, `--brand-text`, `--brand-primary` |
+| **Component** | Self-contained per-component tokens | Button heights, nav rail width, card padding |
 
-### A.4 Spacing scale (Base `sizing.scale*`)
+**Principles Uber teaches:**
 
-Base uses a named spacing ramp (2px → 192px). Map to Guardr spacing:
+- **Shared language** between design and engineering
+- **Consistency** — fast to build, slow to break; tokens cement the “feel”
+- **Reusability** — never raw hex in components; themes (Light/Dark) depend on tokens
+- **Single voice** — deviating from tokens breaks the system
 
-| Base scale | Size | Guardr usage |
-|------------|------|--------------|
-| `scale0` | 2px | Hairline offsets |
-| `scale100` | 4px | Tight icon padding |
-| `scale300` | 8px | Inline chip padding |
-| `scale500` | 12px | Compact list gaps |
-| `scale600` | 16px | Default inner card padding (min) |
-| `scale800` | 24px | Section padding |
-| `scale900` | 32px | Card grid gap (desktop) |
-| `scale1000` | 40px | Hero widget padding |
-| `scale1600` | 64px | Page section margins (desktop) |
+**Supported token types in Base:** Color · Typography · Layout grids · Dimensions · Corner radius · Elevation · Motion · Haptics
 
-Guardr’s `--space-gutter` (1.25rem ≈ 20px) sits between `scale700` and `scale800`. When tightening layouts, step down one Base scale step rather than arbitrary pixels.
+**Guardr rule:** Same three-tier mental model. Components use semantic `--brand-*` only; primitives live in `index.css`.
 
-### A.5 Grid & breakpoints
+### A.4 Typography
 
-**Base Web grid** (dashboard-style pages):
+Source: [Typography](https://base.uber.com/6d2425e9f/p/976582-typography)
 
-| Property | Mobile / tablet / desktop |
-|----------|---------------------------|
-| Columns | 4 / 8 / 12 |
-| Gutters | 16px / 36px / 36px |
-| Margins | 16px / 36px / 64px |
-| Max content width | 1280px |
+#### Principles
 
-**Guardr breakpoints** (`src/lib/platform/device.ts`):
+| Principle | Uber says | Guardr says |
+|-----------|-----------|-------------|
+| **Go big** | Prioritize larger sizes; legibility and accessibility first | KPI numbers large (~44px); don’t shrink field-critical labels |
+| **Less is more** | Fewer style options — no decision paralysis | Four roles × four sizes max in product UI |
+| **Simple semantics** | Roles guide usage without over-prescription | Display / Heading / Label / Paragraph naming in docs |
 
-| Form factor | Width | Base equivalent |
-|-------------|-------|-----------------|
-| Mobile | &lt; 768px | Base `small`–`medium` (320–600px) + Guardr tablet band |
-| Tablet | 768–1023px | Between Base `medium` and `large` |
-| Desktop | ≥ 1024px | Near Base `large` (1136px) |
+#### Roles
 
-Use **12-column mental model** on desktop admin dashboards; **single column** on mobile; **2-column card grid** on tablet when cards are medium-width widgets.
+Four type **roles**: **Display**, **Heading**, **Label**, **Paragraph** — each in sizes XSmall → Large (Heading/Display also XLarge, XXLarge).
 
-### A.6 Border radius (Base `borders.radius*`)
+#### Scale (modular)
 
-| Base token | Radius | Guardr token |
-|------------|--------|--------------|
-| `radius100` | 2px | — (too small for Guardr cards) |
-| `radius200` | 4px | — |
-| `radius300` | 8px | `--radius-app-sm` (8px) |
-| `radius400` | 12px | `--radius-input` (12px) |
-| `radius500` | 16px | Near `--radius-app-lg` / `--radius-card` (14px) |
+- **Base size:** 14px
+- **Multiplier:** 1.125 per step (major-second musical scale — “upbeat, happy” rhythm)
+- **Line height:** `fontSize × 1.45`, rounded to nearest **4px** (4px baseline grid)
+- **Spacing below text:** `(lineHeight − fontSize)` rounded to 4; extra line height below Paragraphs
 
-Guardr card corners (14px) sit between Base `radius400` and `radius500` — keep as-is for the softer SaaS feel in the reference mockups.
+#### Fonts
 
-### A.7 Lighting & elevation (Base `lighting.*`)
+- Uber: **Uber Move** (Display, Text, Mono) — Display for large titles only, not body/buttons
+- Guardr: **Plus Jakarta Sans** (UI) + **IBM Plex Sans** (admin density) — same role split
 
-Base shadow stack (same opacity light/dark):
+#### Mono ramp
 
-| Token | Value | Guardr mapping |
-|-------|-------|----------------|
-| `shadow400` | `0 1px 4px hsla(0,0%,0%,0.16)` | `--shadow-sm` |
-| `shadow500` | `0 2px 8px hsla(0,0%,0%,0.16)` | `--shadow-card` |
-| `shadow600` | `0 4px 16px hsla(0,0%,0%,0.16)` | Card hover |
-| `shadow700` | `0 8px 24px hsla(0,0%,0%,0.16)` | `--shadow-float` |
-| `shallowBelow` | `0 4px 16px rgba(0,0,0,0.12)` | Bottom nav |
-| `deepBelow` | `0 16px 48px rgba(0,0,0,0.22)` | Modals, map sheets |
+Use monospace ramp **only** for isolated numbers (earnings, rates, balances) — not phone numbers, addresses, or inline strings.
 
-**Glow (reference mockups):** Base does not ship neon glow in core tokens; the driver-dashboard reference adds accent glow on charts. Guardr adds this **only** on data viz:
+#### Do / Don’t (from Base)
 
-```css
-/* Example — chart peak / active map zone */
-box-shadow: 0 0 24px color-mix(in srgb, var(--brand-primary) 35%, transparent);
-```
+| Do | Don’t |
+|----|-------|
+| Paragraph Medium (16) or Large (18) for multi-line body | Paragraph XSmall (12) for long-form — max ~3 lines (legal disclaimers) |
+| Default sizes on settings/list screens | Reinvent sizes on every screen |
+| Underline embedded links; label weight inside paragraph | Color-only links |
+| Move Mono for metrics in dashboards | Mono for nominal IDs |
 
-### A.8 Motion (Base `animation.*`)
+**Guardr KPI cards** (earnings, rating, trip time): **Display Small scale** (~44px bold) — not marketing Display Large (96px).
 
-| Base timing | Duration | Guardr use |
+### A.5 Layout grids
+
+Source: [Layout grids](https://base.uber.com/6d2425e9f/p/785d5f-layout-grids)
+
+**Anatomy:** Columns (content aligns here) · Gutters (fixed between columns) · Margins (outer edge padding)
+
+**Rules:**
+
+- Align content to **columns**, not gutters
+- **Span** — how many columns a cell occupies; wraps if insufficient
+- **Hide** — `span: 0` removes from flow (responsive nav)
+- **Skip** — offset columns without empty cells
+- Intrinsic-width items (tags, pills) stay natural width — don’t stretch to fill grid
+- **Fixed-width** sidebar (side-nav) sits beside fluid grid content
+- **Sub-grids** — nested areas use margin-stripped grid variants
+
+**Behaviors:** Fluid (default full width) · Fixed (centered max width) · Hybrid (mix on one screen)
+
+**Breakpoints:** Container width switches grid definition; span/skip/hide accept per-breakpoint values.
+
+**Guardr mapping:**
+
+| Surface | Grid behavior |
+|---------|---------------|
+| Desktop admin | 12-column mental model; `DesktopAdminShell` |
+| Tablet | 8-column / 2-card rows; `TabletAdminShell` |
+| Mobile | 4-column compact; single column stack |
+| Card feed | 16px gap narrow; grid without dividers ≥600px wide |
+
+### A.6 Corner radius
+
+Source: [Corner radius](https://base.uber.com/6d2425e9f/p/652959-corner-radius)
+
+Radius follows **component footprint** — larger containers get larger radius:
+
+| Radius | Used for |
+|--------|----------|
+| **16px** | Large containers: sheets, dialogs |
+| **12px** (default) | Cards, snackbars, banners, message cards |
+| **8px** | Nested elements: buttons inside cards |
+| **4px** | Small: tags |
+
+Nested 12px parent → child can drop to **8px** for visual balance.
+
+**Guardr:** `--radius-card` (14px) sits between 12–16 — acceptable for dashboard widgets; use 16px for sheets/modals (`--radius-sheet` 22px for bottom sheets).
+
+### A.7 Elevation
+
+Source: [Elevation](https://base.uber.com/6d2425e9f/p/595594-elevation)
+
+Elevation = **depth cue via shadow**, not border substitute.
+
+**Use shadows when elevated above main surface:**
+
+- Sheet over map · Dialog over screen · Snackbar over content · Button dock with scroll behind · Drag/lift states
+
+**Do not** use shadow only to separate adjacent cards on the same plane — use **border or background color** instead.
+
+| Shadow type | Uber use | Guardr use |
 |-------------|----------|------------|
-| `timing100` | 100ms | Micro feedback (toggle, checkbox) |
-| `timing200` | 200ms | Button hover, card border |
-| `timing300` | 300ms | Theme switch, page fade |
-| `timing400` | 400ms | Sheet slide |
-| `timing500`+ | 500–1000ms | Chart draw, KPI counter |
+| **Shallow above** | Sheet header, full-screen modal, overflow button dock | Sticky header, bottom nav backdrop |
+| **Shallow below** | Dialog, menu, popover, date picker | `NavMenuPopover`, map peek |
+| **Deep below** | Tooltips, snackbars | Toasts, floating map controls |
 
-| Base easing | Curve | Guardr use |
-|-------------|-------|------------|
-| `easeOutCurve` | `cubic-bezier(.2, .8, .4, 1)` | Enter animations |
-| `easeInOutCurve` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default transitions |
-| `easeOutQuinticCurve` | `cubic-bezier(0.22, 1, 0.36, 1)` | Sheet / drawer open (matches `tablet-app.css`) |
+**Cards:** Base explicitly says — *don’t add shadows to cards*; use borders. Background-art cards may need stroke if artwork is white.
 
-### A.9 Typography scale (Base → Guardr)
+**Guardr chart glow** (reference mockups): accent `box-shadow` on live data only — not default card elevation.
 
-Base styleguide typography uses **DM Sans** on [base.uber.com](https://base.uber.com/). Guardr uses **Plus Jakarta Sans** + **IBM Plex Sans** (admin) — do not switch to DM Sans.
+### A.8 Motion
 
-Map Base roles to Guardr hierarchy:
+Source: [Motion](https://base.uber.com/6d2425e9f/p/116184-motion)
 
-| Base role | Size / weight / line | Guardr usage |
-|-----------|----------------------|--------------|
-| `LabelSmall` | 14px / 500 / 16px | Nav labels, card headers |
-| `ParagraphMedium` | 16px / 400 / 24px | Body copy |
-| `HeadingSmall` | 24px / 700 / 32px | Page titles |
-| `HeadingMedium` | 28px / 700 / 36px | Dashboard section titles |
-| `DisplaySmall` | 44px / 700 / 52px | KPI hero numbers (earnings, rating) |
-| `DisplayLarge` | 96px / 700 / 112px | Marketing hero only — not in-app dashboards |
+#### Motion principles
 
-KPI widgets from the reference mockup map to **`DisplaySmall` scale** (~44px bold), not DisplayLarge.
+| Principle | Summary |
+|-----------|---------|
+| **Accessible** | Users control motion; no harmful flashing; respect reduced motion |
+| **Purposeful** | Feedback, signify change, orient — user always knows what happened |
+| **Consistent** | Predictable patterns; brand personality: Bold, Direct, with Heart |
+| **Contextual** | Choreographed for focus — never distracting |
 
-### A.10 Navigation patterns (from Base + reference UI)
+#### Accessibility (motion)
 
-Patterns to preserve when redesigning Guardr shells:
+- No flashing colors; use transition patterns over jump cuts
+- Non-essential loops ≤5s or user can pause/stop/hide
+- **Reduced motion:** 100ms crossfade replaces large transitions; static illustrations replace animated brand moments
 
-| Pattern | Base / reference behavior | Guardr component |
-|---------|---------------------------|------------------|
-| Persistent left rail (desktop) | Icon + label; active = accent bar or fill | `DesktopNavRail`, `adm-sidebar` |
-| Collapsible rail | Icons only below breakpoint | Desktop drawer mode |
-| Top bar (sticky) | Location, alerts ticker, notifications, avatar | `DesktopTopShell`, `app-screen-header` |
-| Bottom nav (mobile) | 4–5 primary destinations + More | `BottomNavBar`, `MoreMenuSheet` |
-| Online / status toggle | Fixed footer on mobile field app | Guard availability toggle |
-| Card widget grid | Mixed aspect ratios, aligned grid | Dashboard pages per role |
+#### Timing
 
-### A.11 Component catalog (Base Web → Guardr)
+- **Quintic easing** for most UI — quick, smooth, heavy accel/decel
+- Enter/exit defaults: opacity 200ms in / 100ms out; scale/position 400–500ms with decelerate/accelerate
 
-Base Web ships 50+ components. Guardr does not adopt Base Web (React + Styletron); it **mirrors behavior** with Tailwind + existing components:
+#### Choreography rules
 
-| Base Web component | Guardr approach |
-|--------------------|-----------------|
-| `Card` | `.app-card`, `.uber-card` |
-| `Button` | Primary / secondary / ghost variants |
-| `Modal` / `Drawer` | Sheets, `MoreMenuSheet`, legal modals |
-| `DataTable` | Desktop admin tables |
-| `Datepicker` | Job scheduling pickers |
-| `Notification` | Toast + push; bell badge in header |
-| `ProgressBar` / `ProgressSteps` | Credential progress, job stages |
-| `Tag` | Status badges |
-| `LayoutGrid` | Dashboard widget grid |
-| `Layer` / `Popover` | `NavMenuPopover`, map peek cards |
+| Rule | Detail |
+|------|--------|
+| **Continuity** | Container transforms between related views — not abrupt cuts |
+| **Keep space** | Elements never collide while moving; fade static elements first |
+| **Clean fades** | Fade out completely to background before fading in — avoid muddy cross-fades |
+| **Move on grid** | Separate X and Y — no diagonal smart-animate |
+| **One direction** | Don’t move horizontal + vertical simultaneously |
+| **Transition every change** | Nothing pops in/out without enter/exit pattern |
 
-### A.12 Accessibility (from Base Web)
+**Guardr:** Honor `prefers-reduced-motion`; PWA Lite reduces concurrent animation (§8).
 
-Carry these forward regardless of component library:
+### A.9 Cards (dashboard widgets)
 
-- Keyboard navigation for all interactive widgets (Base tests drag-and-drop lists with screen readers)
-- Focus visible on every control (`--focus-ring`)
-- `aria-label` on icon-only nav items
-- Color is never the only status indicator — pair with icon or text
-- Respect `prefers-reduced-motion`
-- Touch targets ≥ 44px on mobile/tablet (Base + Guardr field use)
+Source: [Card](https://base.uber.com/6d2425e9f/p/02338d-card)
 
-### A.13 What not to import from Base
+The reference dashboard mockup is essentially a **card grid**. Base defines cards as:
 
-| Base element | Why skip |
-|--------------|----------|
-| `brandDefault` blue scale | Guardr sage green |
-| DM Sans / Uber Move fonts | Guardr Jakarta / IBM Plex |
-| Styletron / `baseui` package | Guardr stack is Tailwind + Vite |
-| Uber Figma files | Build from Guardr tokens |
-| Literal Uber Professional naming | Guardr by Signature Security Specialist |
+> *A contained unit of information related to a topic.*
 
-### A.14 Adoption priority (for `/designit` work)
+**Layer cake anatomy** (vertical tiers):
 
-When aligning Guardr to Base-quality polish, implement in this order:
+1. **Fixed tier** — eyebrow, headline, paragraph, currency (order fixed)
+2. **Media tier** — photo, illustration, video, carousel (position flexible)
+3. **Custom tier** — tags, list items, progress bar (reorderable)
+4. **Button tier** — single primary action
 
-1. **Semantic tokens** — ensure every new component uses `--brand-*` and `--status-*` only
-2. **Card grid** — dashboard pages as widget grid with consistent gutters (§A.5)
-3. **Elevation stack** — unify shadows to `--shadow-card` / `--shadow-float` (§A.7)
-4. **Motion** — sheet transitions on Base easing curves (§A.8)
-5. **KPI typography** — large DisplaySmall-scale numbers in stat cards (§A.9)
-6. **Chart glow** — green accent on live data only (§A.7)
-7. **Dark/Light sync** — maps, icons, PWA meta follow `theme.ts` (§4)
+**Card vs list:**
+
+| Cards | Lists |
+|-------|-------|
+| Vertical “layer cake” cells | Horizontal scanned rows |
+| Feeds, grids, dynamic media | Settings, search results, navigation |
+| More viewport space each | Denser, faster scan |
+
+**Behavior:**
+
+- Usually **one destination** or **one action** per card
+- Avoid many competing tap targets inside one card
+- Truncate: eyebrow 1 line, heading 4 lines, currency 1 line; fit within **80% viewport height** — detail page for overflow
+- **No vertical scroll inside a card**
+- Feed cards: 100% width &lt;600px with dividers; grid ≥600px without dividers
+- **No shadow on standard cards**; border/background separation
+
+**Guardr dashboard widgets** map 1:1: earnings chart card, rating card, map card, messages card — each one topic, one primary action.
+
+### A.10 Navigation
+
+#### Bottom navigation
+
+Source: [Bottom navigation](https://base.uber.com/6d2425e9f/p/1413a0-bottom-navigation)
+
+- **3–5 equally sized tabs** — global, persistent, thumb-reachable
+- Independent sections with **preserved scroll state**
+- Tap active tab → scroll section to top
+- Only **modal surfaces** cover the bar
+- Optional badge per tab (must be obvious why on tap)
+- **Narrow** (&lt;600): icon + label stacked · **Wide** (≥600): icon + label horizontal
+- Don’t use bottom nav to split content within a section — use **Tabs** for that
+
+**Guardr:** `BottomNavBar` + `MoreMenuSheet` for overflow; guard mobile primary shell.
+
+#### Side navigation
+
+Source: [Side navigation](https://base.uber.com/6d2425e9f/p/917574-side-navigation)
+
+- Column of links for categories / subsections
+- Combines with top nav + breadcrumbs, or stands alone
+- Use cases: product categories, app sections, frequent features (support, safety)
+
+**Guardr:** `DesktopNavRail`, `adm-sidebar`, `TabletAdminShell` rail.
+
+### A.11 Charts
+
+Source: [Charts](https://base.uber.com/6d2425e9f/p/61b6c1-charts)
+
+- Modular parts: gridlines, axes, labels, legend — swap per context
+- Labels must not overlap; show on interaction if space is tight
+- Choose chart by: **concept** → **variable count** → **time series importance**
+- Types: Bar · Line · Area · Circles/dots · Other
+
+**Guardr earnings / performance widgets:** smooth line + area fill under curve; sage green stroke; interactive peak labels; no overlapping axis labels.
+
+### A.12 Product inclusion principles
+
+Source: [Principles](https://base.uber.com/6d2425e9f/p/434f39-principles) (Product inclusion)
+
+1. **Recognize how your identity informs your perspective**
+2. **Consider multiple perspectives** — design *with*, not *for*
+3. **Prioritize impact over intentions** — who benefits? unintended consequences?
+
+Guardr relevance: guards, clients, and staff have different contexts (field, desk, mobile, night shift). Test layouts for sun glare, one-handed use, screen readers, and non-native English readers.
+
+### A.13 Guardr translation cheat sheet
+
+| Uber Base | Guardr |
+|-----------|--------|
+| White + black + blue accent | White or black canvas + **sage green** accent |
+| Uber Move / Move Mono | Plus Jakarta Sans / IBM Plex Sans; tabular nums for money |
+| `brandDefault` blue charts | `--brand-primary` charts + soft green glow on live peaks |
+| Driver / rider copy | Guard / client / staff marketplace language |
+| Uber maps patterns | Guardr `Map*` components, job pins, route layer |
+| Base 1.0 light-only card shadows | Theme-aware `--shadow-card`; no shadow on flat dashboard cards |
+| SSO-locked internal pages | Public Guardr spec in this doc + `index.css` tokens |
+
+### A.14 What we do not copy
+
+Uber logos · Uber Move font · Uber blue · “Professional driver” product framing · Literal Base component pixel specs · Private SSO-only Base pages (Color 1.0 token values, some patterns).
+
+### A.15 Adoption order for Guardr `/designit`
+
+1. Token discipline (`--brand-*` only)
+2. Card grid dashboard (§A.9) with 12/8/4 column grids (§A.5)
+3. Type scale + KPI Display Small numbers (§A.4)
+4. Radius + elevation rules — borders on cards, shadows only when floating (§A.6–7)
+5. Bottom nav + side rail behavior (§A.10)
+6. Motion choreography + reduced motion (§A.8)
+7. Chart module patterns (§A.11)
