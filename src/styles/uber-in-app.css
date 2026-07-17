@@ -1314,6 +1314,22 @@ html.theme-dark .app-status-banner { background: var(--uber-surface, #1a1a1a); }
 
 html.theme-dark .app-hero-band-label { color: #fff !important; }
 
+/* ─── Guard factor card dark mode ────────────────────────────────────────── */
+html.theme-dark .guard-factor-card {
+  background: #111;
+  border-bottom-color: #2a2a2a;
+}
+html.theme-dark .guard-factor-card:hover { background: #1a1a1a; }
+html.theme-dark .guard-factor-card-label { color: #888; }
+html.theme-dark .guard-factor-card-rate { color: #fff; }
+html.theme-dark .guard-factor-card-points { color: #888; }
+html.theme-dark .guard-factor-card-bar { background: #2a2a2a; }
+html.theme-dark .guard-factors-grid { border-top-color: #2a2a2a; }
+html.theme-dark .guard-performance-stat { background: #111; border-color: #2a2a2a; }
+html.theme-dark .guard-performance-stat-label { color: #888; }
+html.theme-dark .guard-performance-stat-value { color: #fff; }
+html.theme-dark .guard-factors-heading { color: #fff; }
+
 /* ─── Filter pills — Uber tab/chip style ─────────────────────────────────── */
 
 .staff-filter-pill {
