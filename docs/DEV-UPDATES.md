@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.73**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.74**
 
 ---
 
@@ -578,5 +578,22 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - Merged **#632** (full audit) and **#633** (white screen); no open PRs at release
 
 **Release:** **v1.0.73** (build **173**) — web + PWA cache bust (`guardr-cache-v1-0-73`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 (midday) — /updateit → v1.0.74
+
+**/uberit Phase 2 — home + auth (#635)**
+- **Home page** — `PublicLandingHeader`, `LandingUberPrimitives`, `GuardrCard`/`GuardrTag`/`AppButton` sections; desktop landing rebuilt with Base Web `Block` layout
+- **Sign-in / sign-up** — `AuthFormChrome` (segmented control, role picker), `AppButton` submit, `GuardrSheet` for PWA auth sheet
+- **Auth hero** — Uber accent gradient via `--uber-accent` (`.auth-experience--uber`)
+- **`GuardrCard`** — optional `onClick` for interactive public cards
+
+**PR cleanup**
+- Merged **#635** (uberit home/auth); no open PRs at release
+
+**Release:** **v1.0.74** (build **174**) — web + PWA cache bust (`guardr-cache-v1-0-74`) + CI FCM APK
 
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
