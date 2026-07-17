@@ -1,19 +1,8 @@
-import { DarkThemeMove } from 'baseui';
+import { guardrDarkTheme } from '../theme/guardrBaseTheme';
+import { withGuardrBreakpoints } from '../components/baseui/layout/shellStyles';
 
-export const BREAKPOINTS = {
-  small: 400,
-  medium: 800,
-  large: 1200,
-};
+/** Design-preview theme — Guardr sage accent with Base layout breakpoints. */
+export const darkTheme = withGuardrBreakpoints(guardrDarkTheme);
 
-export const MEDIA_QUERY = {
-  small: `@media screen and (min-width: ${BREAKPOINTS.small}px)`,
-  medium: `@media screen and (min-width: ${BREAKPOINTS.medium}px)`,
-  large: `@media screen and (min-width: ${BREAKPOINTS.large}px)`,
-};
-
-export const darkTheme = {
-  ...DarkThemeMove,
-  breakpoints: BREAKPOINTS,
-  mediaQuery: MEDIA_QUERY,
-};
+export const BREAKPOINTS = darkTheme.breakpoints;
+export const MEDIA_QUERY = darkTheme.mediaQuery;

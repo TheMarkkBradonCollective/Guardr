@@ -2,7 +2,7 @@ import React from 'react';
 import { Block } from 'baseui/block';
 import { Card, StyledBody } from 'baseui/card';
 import { Button } from 'baseui/button';
-import { Tag } from './baseuiShims';
+import { GuardrTag, AppCarousel, GuardrCard, GuardrButton } from '../components/baseui';
 import { Grid, Cell } from 'baseui/layout-grid';
 import { Input } from 'baseui/input';
 import { ParagraphMedium, HeadingMedium, HeadingLarge, LabelSmall } from 'baseui/typography';
@@ -50,24 +50,23 @@ function PlaceholderList() {
 }
 
 function DashboardWidgets() {
+  const featured = ['Staples Center', 'Retail patrol', 'Event security'];
   return (
     <Block>
-      <Block display="flex" gridGap="scale400" overflow="auto" paddingBottom="scale400">
-        {['Staples Center', 'Retail patrol', 'Event security'].map((title, i) => (
-          <Card key={title} overrides={{ Root: { style: { minWidth: '200px', flex: '0 0 auto' } } }}>
-            <StyledBody>
-              <LabelSmall $style={{ color: 'contentSecondary' }}>UPCOMING</LabelSmall>
-              <ParagraphMedium $style={{ fontWeight: 700, marginTop: '4px' }}>{title}</ParagraphMedium>
-              <HeadingMedium $style={{ marginTop: '12px' }}>${[42, 28, 35][i]}/hr</HeadingMedium>
-              {i === 0 && (
-                <Tag closeable={false} kind="accent" overrides={{ Root: { style: { marginTop: '8px' } } }}>
-                  Surge 1.8×
-                </Tag>
-              )}
-            </StyledBody>
-          </Card>
+      <AppCarousel showDots edgeFade activeScale={1.02} gap={16} label="Featured jobs">
+        {featured.map((title, i) => (
+          <GuardrCard key={title} overrides={{ Root: { style: { minWidth: '200px' } } }}>
+            <LabelSmall $style={{ color: 'contentSecondary' }}>UPCOMING</LabelSmall>
+            <ParagraphMedium $style={{ fontWeight: 700, marginTop: '4px' }}>{title}</ParagraphMedium>
+            <HeadingMedium $style={{ marginTop: '12px' }}>${[42, 28, 35][i]}/hr</HeadingMedium>
+            {i === 0 && (
+              <GuardrTag kind="accent" closeable={false}>
+                Surge 1.8×
+              </GuardrTag>
+            )}
+          </GuardrCard>
         ))}
-      </Block>
+      </AppCarousel>
       <Grid gridGutters={16} gridMargins={0} gridMaxWidth={1200}>
         {['Active', 'Rating', 'Earnings', 'On-time'].map((label) => (
           <Cell key={label} span={[4, 3, 3]}>
@@ -125,9 +124,9 @@ function MapMock({ variant }: { variant: 'guard' | 'client' | 'staff' }) {
             ? ['All', 'Live', 'Scheduled', 'Completed']
             : ['All jobs', 'Pending', 'Live', 'Needs review']
         ).map((chip, i) => (
-          <Tag key={chip} closeable={false} kind={i === 0 ? 'accent' : 'neutral'}>
+          <GuardrTag key={chip} kind={i === 0 ? 'accent' : 'neutral'} closeable={false}>
             {chip}
-          </Tag>
+          </GuardrTag>
         ))}
       </Block>
       {variant === 'staff' ? (

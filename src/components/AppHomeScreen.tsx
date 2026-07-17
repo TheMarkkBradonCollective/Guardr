@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
-import { ThemeToggle } from './ui/ThemeToggle';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import type { LegalPageId } from '../lib/legalContent';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { PublicPageChrome } from './baseui/layout/PublicPageChrome';
 import { Building2, Shield, ArrowRight, MapPin, Radio } from 'lucide-react';
 
 interface AppHomeScreenProps {
@@ -117,20 +117,17 @@ export function AppHomeScreen({
     >
       <AppWelcomeBackdrop />
 
-      <header className="app-welcome-header shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 relative z-[2]">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Logo size={26} className="text-brand-primary shrink-0" />
-          <span className="font-black text-lg tracking-[-0.05em] leading-none text-brand-text">
-            Guard<span className="text-brand-primary">r</span>
-          </span>
-          {shellKind === 'native' ? (
+      <PublicPageChrome
+        themeMode={themeMode}
+        onChangeTheme={onChangeTheme}
+        trailing={
+          shellKind === 'native' ? (
             <span className="app-welcome-shell-badge app-welcome-shell-badge--native">App</span>
           ) : shellKind === 'pwa' ? (
             <span className="app-welcome-shell-badge app-welcome-shell-badge--pwa">Installed</span>
-          ) : null}
-        </div>
-        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-      </header>
+          ) : null
+        }
+      />
 
       <main
         className={`app-welcome-main relative z-[1] flex-1 min-h-0 ${

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ui/ThemeToggle';
+import { PublicPageChrome } from './baseui/layout/PublicPageChrome';
 import {
   ArrowRight,
   BookOpen,
@@ -212,6 +213,30 @@ export function HomePage({
       className={`landing-page page-shell min-h-screen ${isMobile ? 'landing-page--mobile' : ''} ${isTablet ? 'landing-page--tablet' : ''} ${isDesktop ? 'landing-page--desktop' : ''}`}
       data-landing-factor={formFactor}
     >
+      {isMobile ? (
+        <PublicPageChrome themeMode={themeMode} onChangeTheme={onChangeTheme}>
+          {onOpenGuide && (
+            <button
+              type="button"
+              onClick={onOpenGuide}
+              className="landing-header-link p-2"
+              aria-label="Open guide"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          )}
+          <a href="#get-app" className="landing-header-link inline-flex items-center gap-1.5 p-2" aria-label="Get app">
+            <Smartphone className="w-3.5 h-3.5" />
+          </a>
+          <button
+            type="button"
+            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
+            className="landing-header-signin text-sm font-semibold px-3 py-1.5"
+          >
+            Sign in
+          </button>
+        </PublicPageChrome>
+      ) : (
       <header className="landing-header sticky top-0 z-50 border-b border-brand-border/60 bg-brand-bg/96 backdrop-blur-xl">
         <div className="landing-container landing-header-inner">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -272,6 +297,7 @@ export function HomePage({
           </div>
         </div>
       </header>
+      )}
 
       <section className="landing-hero relative overflow-hidden">
         <div className="landing-hero-glow" aria-hidden="true">

@@ -146,6 +146,14 @@ body[data-form-factor="desktop"] .adm-sidebar-nav {
   padding: 0 0.65rem;
 }
 
+body[data-form-factor="desktop"] .adm-sidebar-nav--baseui {
+  padding: 0 0.35rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 body[data-form-factor="desktop"] .adm-sidebar-item {
   display: flex;
   align-items: center;

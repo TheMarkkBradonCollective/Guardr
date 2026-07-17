@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef } from 'react';
 import { useStyletron } from 'baseui';
-import { Accordion, Panel } from './baseuiShims';
+import { Accordion, Panel } from '../components/baseui/baseuiShims';
 import { PreviewContext } from './PreviewContext';
 
 export function PreviewSideNavigation() {

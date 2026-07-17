@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PanelLeft, Settings } from 'lucide-react';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
@@ -10,6 +10,7 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
+import { GuardrSideNav } from '../../baseui/layout/GuardrSideNav';
 
 interface DesktopStaffAdminShellProps {
   children: React.ReactNode;
@@ -75,13 +76,31 @@ export function DesktopStaffAdminShell({
 
   const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 
-  const handleNav = (id: StaffSection) => {
-    const notice = getStaffNavAccessNotice(id, accessFlags);
+  const navGroups = useMemo(
+    () =>
+      MENU_GROUPS.map((group) => ({
+        title: group.label,
+        items: group.ids
+          .map((id) => navItems.find((n) => n.id === id))
+          .filter((item): item is StaffNavItem => !!item && visible(item))
+          .map((item) => ({
+            id: item.id,
+            label: item.label,
+            icon: item.icon,
+            badge: item.badge,
+          })),
+      })).filter((group) => group.items.length > 0),
+    [navItems, showFinance, showSettings, showPermissions, showDisputes, showCities],
+  );
+
+  const handleNav = (id: string) => {
+    const section = id as StaffSection;
+    const notice = getStaffNavAccessNotice(section, accessFlags);
     if (notice) {
       void showAppAlert({ title: notice.title, message: notice.message, tone: 'warning' });
       return;
     }
-    onNavigate(id);
+    onNavigate(section);
     closeSidebar();
   };
 
@@ -114,37 +133,14 @@ export function DesktopStaffAdminShell({
           {isDbConnected ? <span className="adm-db-dot" aria-label="Connected" /> : null}
         </div>
 
-        {MENU_GROUPS.map((group) => {
-          const items = group.ids
-            .map((id) => navItems.find((n) => n.id === id))
-            .filter((item): item is StaffNavItem => !!item && visible(item));
-          if (items.length === 0) return null;
-          return (
-            <div key={group.label}>
-              <p className="adm-sidebar-section">{group.label}</p>
-              <nav className="adm-sidebar-nav">
-                {items.map(({ id, label, icon: Icon, badge }) => {
-                  const active = navHighlight === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => handleNav(id)}
-                      className={`adm-sidebar-item${active ? ' adm-sidebar-item--active' : ''}`}
-                      aria-current={active ? 'page' : undefined}
-                    >
-                      <Icon className="adm-sidebar-item-icon" strokeWidth={active ? 2.25 : 1.85} />
-                      <span className="adm-sidebar-item-label">{label}</span>
-                      {badge != null && badge > 0 ? (
-                        <span className="adm-sidebar-badge">{badge > 99 ? '99+' : badge}</span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          );
-        })}
+        <div className="adm-sidebar-nav adm-sidebar-nav--baseui">
+          <GuardrSideNav
+            groups={navGroups}
+            activeId={navHighlight}
+            onSelect={handleNav}
+            ariaLabel="Staff navigation"
+          />
+        </div>
 
         {onOpenLegal ? (
           <div className="adm-sidebar-legal">

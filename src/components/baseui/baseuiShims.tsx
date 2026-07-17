@@ -1,4 +1,4 @@
-/* Base Web + React 19 compatibility shim for design preview only */
+/* Base Web + React 19 compatibility shims */
 import type React from 'react';
 import { Tag as BaseTag } from 'baseui/tag';
 import { Accordion as BaseAccordion, Panel as BasePanel } from 'baseui/accordion';
