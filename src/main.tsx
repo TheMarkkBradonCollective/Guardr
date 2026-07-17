@@ -7,7 +7,7 @@ import { registerNativeInstall, registerPwaInstall } from './lib/platform/instal
 import App from './App.tsx';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
-import { AppToastHost } from './components/ui/AppToast';
+import { AppSnackbarProvider } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
 import { BaseUIProvider } from './components/baseui';
@@ -45,10 +45,11 @@ createRoot(document.getElementById('root')!).render(
     <DeviceProvider>
       <BaseUIProvider>
         <AppMotionProvider>
-          <App />
-          <OfflineBanner />
-          <AppToastHost />
-          <AppConfirmHost />
+          <AppSnackbarProvider>
+            <App />
+            <OfflineBanner />
+            <AppConfirmHost />
+          </AppSnackbarProvider>
         </AppMotionProvider>
       </BaseUIProvider>
     </DeviceProvider>
