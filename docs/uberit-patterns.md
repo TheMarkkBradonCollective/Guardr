@@ -98,7 +98,7 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 **Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — global sage→Uber token remap; independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
 
-**Public landing (browser):** `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage` — each form factor has an independent Base Web layout via `LandingSections.tsx`.
+**Public landing (browser):** `UberStyleLandingPage` — Uber.com homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
 
 ## Dashboard building blocks (Phase 4)
 
