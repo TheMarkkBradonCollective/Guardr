@@ -37,7 +37,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 
 Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevice()` / `body[data-form-factor]`.
 
-### View surface model (`/viewit`)
+### View surface model (`/fixit`)
 
 Guardr uses a **two-axis** layout model:
 
@@ -62,7 +62,7 @@ src/components/layouts/tablet/      — TabletAdminShell, TabletStaffAdminShell
 src/styles/tablet-app.css           — tablet merge styles
 src/styles/app-pwa.css              — PWA overrides
 src/styles/app-native.css           — APK overrides
-.cursor/commands/viewit.md          — slash command for surface work
+.cursor/commands/fixit.md           — slash command for UI/UX surface work
 ```
 
 `DeviceProvider` sets `body[data-shell]`, `body[data-view-surface]`, and `body[data-form-factor]` for CSS targeting.

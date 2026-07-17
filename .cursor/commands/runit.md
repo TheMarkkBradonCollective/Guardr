@@ -1,21 +1,155 @@
-# /runit — Explain Guardr in my words
+# /runit — Complete audit, validation, optimization, and repair
 
-Explain what Guardr is and how it works — in **my voice**, simple and plain. Like I'm telling someone new what I built, not a marketing doc.
+Perform a complete audit, validation, optimization, and repair of the **selected scope**. Audit every part of the selected scope, automatically identify issues, repair them, optimize where needed, and verify fixes before marking complete.
 
-Cover:
+## Scope
 
-1. **What it is** — Uber-for-security marketplace for Signature Security. Clients post jobs, licensed guards pick them up. I'm the platform — I verify credentials, I don't employ guards or dispatch them like an agency.
+| Selection | What to do |
+|-----------|------------|
+| **Current component** | Audit and repair only that component |
+| **Current page** | Audit and repair only that page |
+| **Selected pages** | Audit and repair all selected pages |
+| **Entire website/application** | Full project audit and repair |
 
-2. **Who uses it** — clients (businesses/sites/events), guards (independent contractors), staff (Moderator → Founder tiers).
+When no specific selection is given, ask what to target or infer scope from context (open files, recent edits, or an explicit area name).
 
-3. **How a job flows** — client posts → staff approves listing → client pays → guard applies or gets a direct request → client approves guard → guard arrives, self-audit photos, works shift, ends shift → payout ~48h.
+## UI/UX
 
-4. **How guards get on** — sign up, upload 5 creds (ID, guard card, COI, PTA/UOF, 32-hr), staff approve application, admin verifies each doc, account activates.
+- Find broken layouts
+- Fix alignment issues
+- Fix spacing inconsistencies
+- Fix typography
+- Fix colors and contrast
+- Verify animations
+- Verify loading states
+- Verify empty states
+- Verify error states
+- Verify success states
+- Verify modals, drawers, dialogs, and popups
+- Verify navigation
+- Verify icons
+- Verify accessibility
+- Verify touch targets
+- Verify responsive behavior
 
-5. **Surfaces** — website at guardr.co, PWA (auto-updates), Android APK (manual reinstall for updates, better push).
+## Responsive audit
 
-6. **Money** — Stripe in-app. Clients pay by card. Guards connect bank in Pay tab.
+### Website
 
-7. **What makes it different** — guards choose jobs, clients approve who works their site, everything documented (self-audits, reports, messaging).
+Each layout must be independently designed and optimized for its screen size. **Do not simply scale the desktop version.**
 
-Keep it short — a few paragraphs max. No jargon unless I explain it. If I ask about a specific role or screen, zoom in on that part.
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+### PWA
+
+Optimize as a **lightweight experience**. Verify:
+
+- Installation
+- Offline mode
+- Caching
+- Service workers
+- Synchronization
+- Navigation
+- Responsiveness
+
+### APK
+
+Optimize as the **premium mobile experience**. Verify:
+
+- Native-style navigation
+- Android lifecycle
+- Notifications
+- Permissions
+- Camera
+- GPS
+- Storage
+- Responsiveness
+
+## Functionality
+
+Test and repair as needed:
+
+- Every button, link, form, modal, menu, search, and filter
+- Every upload and download
+- Every API request and route
+- Every role and permission
+
+## Authentication
+
+Verify and repair:
+
+- Registration, login, logout, password reset
+- Session handling and token validation
+- Role security
+
+## Database
+
+Verify and repair:
+
+- Schema, relationships, constraints, indexes, queries, migrations
+- Duplicate data removal
+- Data integrity checks
+
+Update `supabase/complete_schema_setup.sql` when schema changes are made.
+
+## Performance
+
+- Remove unused and duplicate code
+- Optimize assets, images, JavaScript, and CSS
+- Optimize rendering
+- Improve loading speed and memory usage
+
+## Security
+
+Verify:
+
+- Authorization and authentication
+- Input validation and API security
+- SQL protection, XSS protection, CSRF protection
+- Secure storage
+
+## Code quality
+
+- Fix console errors and warnings
+- Fix broken imports and dependencies
+- Remove dead code
+- Standardize formatting
+- Improve maintainability
+
+## Production readiness
+
+Verify:
+
+- Production build (`npm run build`)
+- Deployment configuration
+- Environment variables
+- Version consistency (website, PWA, APK)
+- Release configuration
+
+Run `npm run lint` and `npm test` before finishing.
+
+## Completion requirements
+
+- **Repair every issue found** — do not stop at reporting problems
+- Continue until all identified issues in scope are resolved
+- Preserve existing functionality unless a change improves stability, usability, or performance
+- If something is blocked (missing credentials, external service down), document it clearly under Remaining Concerns
+
+## Branch & PR
+
+- Branch: `cursor/runit-<descriptive-name>-e760`
+- Commit and push as you go
+
+## Final report
+
+Produce a summary with:
+
+- **Issues Found**
+- **Issues Fixed**
+- **Remaining Concerns** (if any)
+- **Recommendations**
+- **Overall Health Score** (e.g. 1–10 with brief rationale)
+- **Production Readiness Status** (Ready / Needs work / Blocked)
