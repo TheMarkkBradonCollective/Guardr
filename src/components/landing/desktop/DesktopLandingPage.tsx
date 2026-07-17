@@ -95,17 +95,17 @@ export function DesktopLandingPage({
                 },
               }}
             >
-              Run coverage.
+              Get security
               <br />
-              Run your business.
+              anywhere with Guardr.
               <br />
               <Block as="span" color="contentSecondary">
-                One admin console.
+                One platform for every site.
               </Block>
             </HeadingLarge>
             <ParagraphMedium marginTop="0" marginBottom="scale800" color="contentSecondary">
-              Clients command sites. Guards run independent careers. Staff orchestrates the field.
-              A desktop admin workspace with sidebar navigation, live dashboards, and operational cards — not a stretched phone app.
+              Request coverage at your site or browse jobs on the map.
+              Licensed guards, live tracking, and direct payments — built for desktop operations.
             </ParagraphMedium>
 
             {(ownerMessage?.trim() || directorMessage?.trim()) && (

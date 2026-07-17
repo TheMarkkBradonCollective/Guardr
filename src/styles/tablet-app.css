@@ -1,10 +1,10 @@
-/* Tablet merge shell — desktop rail + command bar + mobile touch content.
+/* Tablet merge shell — Uber Base Web icon rail + command bar + touch content.
    Applies to browser, PWA, and APK at tablet widths (768–1023px). */
 
 body[data-form-factor="tablet"] .tablet-admin-shell {
   display: flex;
   flex-direction: row;
-  background: var(--brand-bg);
+  background: var(--uber-bg, var(--brand-bg));
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail {
@@ -13,13 +13,13 @@ body[data-form-factor="tablet"] .tablet-admin-rail {
   width: 4.75rem;
   flex-shrink: 0;
   padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0 max(0.75rem, env(safe-area-inset-bottom, 0px));
-  border-right: 1px solid var(--brand-border);
-  background: var(--brand-surface);
+  border-right: 1px solid var(--uber-border, var(--brand-border));
+  background: var(--uber-bg, var(--brand-surface));
   z-index: 20;
 }
 
 html.theme-dark body[data-form-factor="tablet"] .tablet-admin-rail {
-  background: color-mix(in srgb, var(--brand-bg) 88%, #000);
+  background: color-mix(in srgb, var(--uber-bg, var(--brand-bg)) 88%, #000);
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail--staff {
@@ -52,8 +52,8 @@ body[data-form-factor="tablet"] .tablet-admin-rail-live {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 999px;
-  background: var(--brand-primary);
-  box-shadow: 0 0 0 2px var(--brand-surface);
+  background: var(--uber-accent, var(--brand-primary));
+  box-shadow: 0 0 0 2px var(--uber-bg, var(--brand-surface));
 }
 
 body[data-form-factor="tablet"] .tablet-admin-rail-nav {

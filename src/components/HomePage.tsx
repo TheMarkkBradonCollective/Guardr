@@ -41,6 +41,11 @@ import type { CompanyPublicDocument } from '../lib/companyPlacard';
 import { LandingAppDownloads } from './landing/LandingAppDownloads';
 import { LandingPathCards } from './landing/LandingPathCards';
 import {
+  UberLandingExplore,
+  UberLandingEarn,
+  UberLandingBusiness,
+} from './landing/UberLandingExplore';
+import {
   LandingBadge,
   LandingCoverageTags,
   LandingHighlightCard,
@@ -267,14 +272,14 @@ export function HomePage({
             >
               {isMobile ? (
                 <>
-                  Security,
-                  <span className="landing-hero-accent"> when you need it.</span>
+                  Get security
+                  <span className="landing-hero-accent"> anywhere.</span>
                 </>
               ) : (
                 <>
-                  Security,
+                  Get security
                   <br />
-                  <span className="landing-hero-accent">when you need it.</span>
+                  <span className="landing-hero-accent">anywhere with Guardr.</span>
                 </>
               )}
             </motion.h1>
@@ -285,8 +290,8 @@ export function HomePage({
               transition={{ duration: 0.5, delay: 0.1 }}
               className="landing-hero-subcopy font-medium"
             >
-              Clients post jobs. Licensed guards choose assignments.
-              Maps, messaging, and payments — all in one place.
+              Request coverage at your site or browse jobs on the map.
+              Licensed guards, live tracking, and direct payments — all in one platform.
             </motion.p>
 
             {(ownerMessage?.trim() || directorMessage?.trim()) && (
@@ -351,6 +356,12 @@ export function HomePage({
           </div>
         </section>
       )}
+
+      <UberLandingExplore formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+
+      <UberLandingEarn formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+
+      <UberLandingBusiness formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
 
       <section className="landing-section landing-how-section">
         <div className="landing-container">

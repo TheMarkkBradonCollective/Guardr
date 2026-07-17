@@ -8,6 +8,7 @@ import { DeviceProvider } from '../lib/platform';
 import { applyThemeToDocument, loadTheme } from '../lib/platform/theme';
 import { DesignPreviewApp } from './DesignPreviewApp';
 import '../index.css';
+import '../styles/uber-tokens.css';
 import '../styles/uber-surfaces.css';
 
 applyThemeToDocument(loadTheme());

@@ -1,0 +1,127 @@
+/* Uber Base Web design tokens — canonical source for all surfaces.
+   Maps legacy --brand-* aliases to stock Base Web LightTheme / DarkTheme values.
+   See: https://github.com/uber/baseweb · https://github.com/uber/base-design-docs */
+
+:root,
+html.theme-light {
+  /* Uber Move typography stack (Base design system) */
+  --uber-font-display: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --uber-font-text: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --uber-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* Stock LightTheme accent + neutrals */
+  --uber-accent: #276ef1;
+  --uber-accent-hover: #1a5dc8;
+  --uber-accent-50: #eff4fe;
+  --uber-accent-100: #d4e2fc;
+  --uber-bg: #ffffff;
+  --uber-surface: #f6f6f6;
+  --uber-elevated: #f6f6f6;
+  --uber-text: #000000;
+  --uber-text-muted: #545454;
+  --uber-border: #e2e2e2;
+  --uber-positive: #048848;
+  --uber-negative: #e11900;
+  --uber-warning: #ffc043;
+
+  /* Legacy --brand-* bridge (entire site reads these until Phase 5 cleanup) */
+  --brand-primary: var(--uber-accent);
+  --brand-primary-hover: var(--uber-accent-hover);
+  --brand-bg: var(--uber-bg);
+  --brand-bg-sec: var(--uber-surface);
+  --brand-surface: var(--uber-bg);
+  --brand-elevated: var(--uber-elevated);
+  --brand-border: var(--uber-border);
+  --brand-text: var(--uber-text);
+  --brand-text-muted: var(--uber-text-muted);
+  --brand-accent: var(--uber-accent);
+  --brand-accent-text: #ffffff;
+  --brand-overlay: rgba(255, 255, 255, 0.92);
+  --brand-chrome: var(--uber-bg);
+  --brand-chrome-deep: var(--uber-surface);
+  --brand-chrome-text: var(--uber-text);
+  --brand-chrome-muted: var(--uber-text-muted);
+  --brand-chrome-border: var(--uber-border);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--uber-accent) 22%, transparent);
+}
+
+html.theme-dark {
+  /* Stock DarkTheme accent + neutrals */
+  --uber-accent: #335ba3;
+  --uber-accent-hover: #276ef1;
+  --uber-accent-50: #1a2a42;
+  --uber-accent-100: #1e3352;
+  --uber-bg: #141414;
+  --uber-surface: #1f1f1f;
+  --uber-elevated: #2b2b2b;
+  --uber-text: #ffffff;
+  --uber-text-muted: #a6a6a6;
+  --uber-border: #333333;
+  --uber-positive: #66d19e;
+  --uber-negative: #f1998e;
+  --uber-warning: #ffc043;
+
+  --brand-primary: var(--uber-accent);
+  --brand-primary-hover: var(--uber-accent-hover);
+  --brand-bg: var(--uber-bg);
+  --brand-bg-sec: #0a0a0a;
+  --brand-surface: var(--uber-surface);
+  --brand-elevated: var(--uber-elevated);
+  --brand-border: var(--uber-border);
+  --brand-text: var(--uber-text);
+  --brand-text-muted: var(--uber-text-muted);
+  --brand-accent: var(--uber-accent);
+  --brand-accent-text: #ffffff;
+  --brand-overlay: rgba(0, 0, 0, 0.94);
+  --brand-chrome: #000000;
+  --brand-chrome-deep: #000000;
+  --brand-chrome-text: var(--uber-text);
+  --brand-chrome-muted: var(--uber-text-muted);
+  --brand-chrome-border: color-mix(in srgb, var(--uber-accent) 28%, var(--uber-border));
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--uber-accent) 28%, transparent);
+}
+
+/* Global typography — Uber Move stack on all surfaces */
+html,
+body,
+.uber-app-shell,
+.landing-page,
+.app-welcome {
+  font-family: var(--uber-font-text);
+}
+
+/* Landing — Uber-clone responsive patterns (mobile / tablet / desktop) */
+
+.landing-explore-section .landing-container {
+  max-width: 80rem;
+}
+
+body[data-form-factor="mobile"] .landing-explore-section {
+  padding-block: 3rem;
+}
+
+body[data-form-factor="tablet"] .landing-hero-inner {
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding-block: 3rem 4rem;
+}
+
+body[data-form-factor="tablet"] .landing-hero-title {
+  font-size: clamp(2.25rem, 5vw, 3rem);
+}
+
+body[data-form-factor="tablet"] .landing-trust-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .landing-hero-inner {
+  grid-template-columns: 1fr 1fr;
+  padding-block: 5rem 6rem;
+}
+
+h1, h2, h3, h4, h5, h6,
+.landing-hero-title,
+.landing-section-title,
+.landing-final-title {
+  font-family: var(--uber-font-display);
+}

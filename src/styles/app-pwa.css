@@ -35,14 +35,14 @@ body.shell-pwa .role-app-shell--compact {
 body[data-shell="pwa"] .bottom-nav-bar,
 body.shell-pwa .bottom-nav-bar {
   padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
+  background: color-mix(in srgb, var(--uber-bg, var(--brand-surface)) 94%, transparent);
   backdrop-filter: blur(16px);
 }
 
 body[data-shell="pwa"] .tablet-admin-rail,
 body.shell-pwa .tablet-admin-rail {
   backdrop-filter: blur(10px);
-  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  background: color-mix(in srgb, var(--uber-bg, var(--brand-surface)) 92%, transparent);
 }
 
 body[data-shell="pwa"] .app-welcome-shell-badge--pwa,
