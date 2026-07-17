@@ -159,47 +159,35 @@ export function AppWelcomeSignInDock({
   ];
 
   return (
-    <Block
+    <div
       className="app-welcome-dock shrink-0"
-      paddingTop="scale600"
-      paddingLeft="scale600"
-      paddingRight="scale600"
-      $style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      style={{
+        paddingTop: '1.25rem',
+        paddingLeft: '1.25rem',
+        paddingRight: '1.25rem',
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+      }}
       data-view-surface={viewSurface}
     >
-      <LabelSmall marginBottom="scale400" color="contentSecondary">
-        Sign in as
-      </LabelSmall>
-      <Block display="grid" gridTemplateColumns="1fr 1fr" gridGap="scale300" className="app-welcome-role-toggle">
-        {roles.map(({ id, label, icon }) => {
+      {/* Role toggle — single segmented row */}
+      <div className="app-welcome-role-row">
+        {roles.map(({ id, label, icon: Icon }) => {
           const selected = signInRole === id;
           return (
-            <GuardrCard
+            <button
               key={id}
-              interactive
+              type="button"
+              aria-pressed={selected}
               onClick={() => setSignInRole(id)}
-              className="app-welcome-role-btn"
-              overrides={{
-                Root: {
-                  props: { 'aria-pressed': selected },
-                  style: {
-                    cursor: 'pointer',
-                    borderColor: selected ? 'accent' : 'borderOpaque',
-                    backgroundColor: selected ? 'accent50' : 'backgroundPrimary',
-                  },
-                },
-              }}
+              className="app-welcome-role-seg"
+              data-active={selected ? 'true' : undefined}
             >
-              <Block display="flex" alignItems="center" justifyContent="center" gridGap="scale300">
-                <AccentIcon icon={icon} size={18} strokeWidth={1.75} />
-                <Block as="span" $style={{ fontWeight: 700, fontSize: '14px' }}>
-                  {label}
-                </Block>
-              </Block>
-            </GuardrCard>
+              <Icon size={16} strokeWidth={1.75} aria-hidden />
+              {label}
+            </button>
           );
         })}
-      </Block>
+      </div>
 
       <AppButton
         fullWidth
@@ -210,19 +198,17 @@ export function AppWelcomeSignInDock({
         <ArrowRight className="w-4 h-4" />
       </AppButton>
 
-      <Block display="flex" justifyContent="center" alignItems="center" marginTop="scale400" gridGap="scale200">
-        <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary" $style={{ fontSize: '12px' }}>
-          New here?
-        </ParagraphMedium>
+      <div className="flex justify-center items-center gap-1 mt-3">
+        <span className="text-xs" style={{ color: 'var(--uber-text-muted)' }}>New here?</span>
         <AppButton variant="ghost" size="inline" onClick={() => onNavigateToAuth(signInRole, 'sign-up')}>
           Create {signInRole === 'guard' ? 'guard' : 'client'} account
         </AppButton>
-      </Block>
+      </div>
 
-      <Block marginTop="scale500" paddingTop="scale400" overrides={{ Block: { style: { borderTop: '1px solid var(--uber-border)' } } }}>
+      <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--uber-border)' }}>
         <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-      </Block>
-    </Block>
+      </div>
+    </div>
   );
 }
 

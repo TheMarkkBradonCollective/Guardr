@@ -29,9 +29,10 @@ export function StaffListFilterTabs({
 }: StaffListFilterTabsProps) {
   return (
     <div
-      className={`flex flex-nowrap gap-2 staff-list-filter-tabs ${className}`.trim()}
+      className={`flex flex-nowrap gap-1.5 staff-list-filter-tabs overflow-x-auto scrollbar-none ${className}`.trim()}
       role="tablist"
       aria-label={ariaLabel}
+      style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' } as React.CSSProperties}
     >
       {tabs.map((tab) => (
         <button
@@ -40,9 +41,8 @@ export function StaffListFilterTabs({
           role="tab"
           aria-selected={activeId === tab.id}
           onClick={() => onChange(tab.id)}
-          className={`app-button-outline app-btn-sm shrink-0 whitespace-nowrap ${
-            activeId === tab.id ? '!border-brand-primary !text-brand-primary' : ''
-          }`}
+          className="staff-filter-pill shrink-0 whitespace-nowrap"
+          data-active={activeId === tab.id ? 'true' : undefined}
         >
           {formatStaffListFilterTabLabel(tab)}
         </button>
