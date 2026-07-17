@@ -5,6 +5,7 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
 import { useDevice } from '../../lib/platform';
+import { GuardrButton } from '../baseui/GuardrButton';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
@@ -107,7 +108,7 @@ export function MapSelectionExperience({
           <p className="desktop-map-inspector-header-label">
             {'title' in selected ? selected.title : 'Job details'}
           </p>
-          <button type="button" className="adm-header-icon-btn" onClick={onClose} aria-label="Close">
+          <button type="button" className="uber-map-inspector-close" onClick={onClose} aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -121,9 +122,9 @@ export function MapSelectionExperience({
             guards={guards}
           />
           {onPrimaryAction && primaryLabel ? (
-            <button type="button" className="adm-btn adm-btn--sand adm-btn--sm adm-mt-sm" onClick={onPrimaryAction}>
+            <GuardrButton kind="primary" size="compact" onClick={onPrimaryAction}>
               {primaryLabel}
-            </button>
+            </GuardrButton>
           ) : null}
           {detailBody}
         </div>

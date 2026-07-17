@@ -204,7 +204,7 @@ export function DirectGuardRequestFlow({
 
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
-    <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' adm-form-wizard' : ''}`}>
+    <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
       <div className="shrink-0 px-4 pt-4 space-y-4">
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
           <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
@@ -480,7 +480,7 @@ export function DirectGuardRequestFlow({
         )}
       </div>
 
-      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' adm-form-wizard-actions' : ''}`}>
+      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
         {formFactor === 'desktop' ? (
           step < 8 ? (
             <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()}>

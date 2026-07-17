@@ -131,6 +131,18 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | Client request wizards | `RequestSecurityFlow`, `DirectGuardRequestFlow` | Migrated — `GuardrButton` CTAs |
 | Client guard profile | `GuardProfileScreen` | Migrated — `DashboardHero` + `MetricStrip` (desktop) |
 
+**Phase 5 overlays + CSS cleanup** — feature overlays and legacy class retirement:
+
+| Area | Component / file | Status |
+|------|------------------|--------|
+| Overlay chrome | `OverlaySheetHeader` | New — shared bottom-sheet header |
+| Guard shift modals | `GuardSelfAuditModal`, `GuardEndShiftCheckpointModal` | Migrated — `OverlaySheetHeader` + `uber-overlay-sheet-body` |
+| Guard field modals | `GuardIncidentReportModal`, `GuardActivityLogModal`, `GuardRatingModal` | Migrated — `GuardrButton` + `uber-label` / `uber-overlay-actions` |
+| Map inspector | `MapSelectionExperience` | Migrated — `GuardrButton` + `uber-map-inspector-close` |
+| Pre-shift briefing | `GuardPreShiftBriefing` | Migrated — `uber-text-accent` / `uber-text-muted` |
+| Form wizards | `RequestSecurityFlow`, `DirectGuardRequestFlow` | Migrated — `uber-form-wizard` (replaces `adm-form-wizard`) |
+| Global CSS | `uber-global.css` | Overlay sheet, form wizard, map inspector utilities |
+
 **Phase 2 dashboard migration** — Base Web adapters replace legacy `adm-workbench` markup:
 
 | Screen | Component | Status |

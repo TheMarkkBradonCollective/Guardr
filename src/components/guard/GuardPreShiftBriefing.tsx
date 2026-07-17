@@ -66,26 +66,26 @@ export function GuardPreShiftBriefing({
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-brand-primary mb-1">Pre-shift briefing</p>
+            <p className="text-sm font-medium uber-text-accent mb-1">Pre-shift briefing</p>
             <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
-            <p className="text-sm text-brand-text-muted mt-1 truncate">{job.clientName}</p>
+            <p className="text-sm uber-text-muted mt-1 truncate">{job.clientName}</p>
           </div>
           <div className="shrink-0 text-right space-y-1">
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="ml-auto p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec"
+                className="ml-auto p-1.5 rounded-lg uber-text-muted hover:text-brand-text hover:bg-brand-bg-sec"
                 aria-label="Close briefing"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
-            <p className="text-xs text-brand-text-muted flex items-center justify-end gap-1">
+            <p className="text-xs uber-text-muted flex items-center justify-end gap-1">
               <DollarSign className="w-3.5 h-3.5" />
               Your pay
             </p>
-            <div className="text-sm font-bold text-brand-primary mt-0.5">
+            <div className="text-sm font-bold uber-text-accent mt-0.5">
               <JobBillingSummaryFromGuardJob job={job} />
             </div>
           </div>
@@ -93,8 +93,8 @@ export function GuardPreShiftBriefing({
 
         <ShiftPeriodStatusBar startDate={job.startDate} endDate={job.endDate} live={false} />
 
-        <div className="rounded-xl border border-brand-border bg-brand-bg-sec px-3 py-2.5 text-xs text-brand-text-muted leading-relaxed flex gap-2">
-          <Clock className="w-4 h-4 shrink-0 mt-0.5 text-brand-primary" />
+        <div className="rounded-xl border border-brand-border bg-brand-bg-sec px-3 py-2.5 text-xs uber-text-muted leading-relaxed flex gap-2">
+          <Clock className="w-4 h-4 shrink-0 mt-0.5 uber-text-accent" />
           <span>
             Shift window: {formatShiftRange(job.startDate, job.endDate)}. Review post orders and site
             briefing before you head out.
@@ -108,7 +108,7 @@ export function GuardPreShiftBriefing({
 
         <div className="border border-brand-border rounded-2xl p-4 space-y-4 bg-brand-bg">
           <p className="text-sm font-semibold flex items-center gap-2">
-            <FileText className="w-4 h-4 text-brand-primary" />
+            <FileText className="w-4 h-4 uber-text-accent" />
             Site briefing & post orders
           </p>
 
@@ -126,7 +126,7 @@ export function GuardPreShiftBriefing({
           <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3">
             <div>
               <h3 className="font-bold text-sm">Acknowledge post orders</h3>
-              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              <p className="text-xs uber-text-muted mt-1 leading-relaxed">
                 Confirm you have read the client&apos;s site instructions before heading to site.
               </p>
             </div>
@@ -141,7 +141,7 @@ export function GuardPreShiftBriefing({
           <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/5 p-4 space-y-3">
             <div>
               <h3 className="font-bold text-sm">Acknowledge site briefing</h3>
-              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              <p className="text-xs uber-text-muted mt-1 leading-relaxed">
                 Confirm you have reviewed the full site briefing before heading out. Skipping this may delay
                 clock-in and count as a violation if you arrive unprepared.
               </p>
@@ -163,7 +163,7 @@ export function GuardPreShiftBriefing({
               {enRouteWarning}
             </p>
           )}
-          <p className="text-xs text-center text-brand-text-muted flex items-center justify-center gap-1.5">
+          <p className="text-xs text-center uber-text-muted flex items-center justify-center gap-1.5">
             <Navigation className="w-3.5 h-3.5" />
             {enRouteOpen
               ? 'Slide when you are ready to head to the job site.'

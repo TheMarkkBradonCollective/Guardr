@@ -296,7 +296,7 @@ export function RequestSecurityFlow({
 
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
-    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' adm-form-wizard' : ''}`}>
+    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
       <div className="flex items-center gap-3 mb-7 shrink-0 px-1">
         <button type="button" onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-bg-sec transition-colors shrink-0 -ml-1" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
@@ -836,7 +836,7 @@ export function RequestSecurityFlow({
         )}
       </div>
 
-      <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' adm-form-wizard-actions' : ''}`}>
+      <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
         <div className="client-form-shell mx-auto">
           {formFactor === 'desktop' ? (
             step < 9 ? (

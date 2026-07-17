@@ -369,6 +369,79 @@ html.theme-dark .app-welcome-signin-btn {
   box-shadow: var(--focus-ring);
 }
 
+/* ─── Overlay sheet chrome (Phase 5) ─────────────────────────────────────── */
+
+.uber-overlay-sheet-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  background: var(--uber-bg, #fff);
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+
+.uber-overlay-sheet-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--uber-accent, #276ef1);
+  margin: 0;
+}
+
+.uber-overlay-sheet-body {
+  padding: 1.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.uber-overlay-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+/* Desktop form wizards — replaces adm-form-wizard */
+body[data-form-factor="desktop"] .uber-form-wizard {
+  max-width: min(52rem, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0;
+}
+
+body[data-form-factor="desktop"] .uber-form-wizard .guard-scroll-panel {
+  padding-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .uber-form-wizard-actions {
+  position: static;
+  padding: 1rem 0 1.5rem;
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  margin-top: 1rem;
+}
+
+/* Map inspector close — replaces adm-header-icon-btn */
+.uber-map-inspector-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--uber-border, #e2e2e2);
+  background: var(--uber-bg, #fff);
+  color: var(--uber-text, #000);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.uber-map-inspector-close:hover {
+  background: var(--uber-surface, #f6f6f6);
+  border-color: var(--uber-text-muted, #545454);
+}
+
 /* ─── Remove legacy sage halo / glow effects ─────────────────────────────── */
 
 .logo-halo,

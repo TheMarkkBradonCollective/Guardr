@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppModal } from '../ui/motion/AppMotion';
+import { GuardrButton } from '../baseui/GuardrButton';
 
 interface GuardActivityLogModalProps {
   open: boolean;
@@ -33,13 +34,13 @@ export function GuardActivityLogModal({ open, onClose, onSubmit }: GuardActivity
           required
           autoFocus
         />
-        <div className="app-action-row--2">
-          <button type="button" onClick={onClose} className="app-button-outline">
+        <div className="uber-overlay-actions">
+          <GuardrButton kind="secondary" type="button" onClick={onClose}>
             Cancel
-          </button>
-          <button type="submit" disabled={!entry.trim()} className="app-button-primary disabled:opacity-50">
+          </GuardrButton>
+          <GuardrButton kind="primary" type="submit" disabled={!entry.trim()}>
             Save entry
-          </button>
+          </GuardrButton>
         </div>
       </form>
     </AppModal>
