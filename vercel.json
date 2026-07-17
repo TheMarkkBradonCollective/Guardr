@@ -44,7 +44,7 @@
     }
   },
   "rewrites": [
-    { "source": "/((?!api/|marketing/|download/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|marketing/|download/|design-preview\\.html).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
