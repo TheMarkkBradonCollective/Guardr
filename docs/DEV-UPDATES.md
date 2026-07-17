@@ -1,9 +1,9 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Thursday, July 16, 2026  
+**Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.69**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.70**
 
 ---
 
@@ -500,4 +500,31 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Release:** **v1.0.69** (build **169**) — web + PWA cache bust (`guardr-cache-v1-0-69`) + CI FCM APK
 
 **Test coverage:** 404 unit tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 — /updateit → v1.0.70
+
+**Desktop staff command center (#592, #595)**
+- **Overview** — full status panels with metrics, meters, pie charts, line graphs, and donut gauges
+- **Stats** tab (desktop sidebar) — guard performance breakdown, tier % progress bars, compare up to four guards, violations rollup
+
+**Permissions & agreements (#594, #596)**
+- **Permissions** sidebar page (Director+) — job approval rules and per-role staff permission toggles
+- Marketplace agreement checkboxes enlarged for better tap targets
+
+**Multi-surface views (#597)**
+- `/viewit` view system — desktop, tablet, PWA, and APK layouts share one surface-aware shell
+
+**Developer slash commands (#601–#606)**
+- Explicit commands: `/mergeit`, `/updateit`, `/readit`, `/fixit`, `/runit`, `/automergeit`, `/deployit`, and more
+- `/mergeit` docs: must always close merged and superseded PRs
+- Closed **#600** — remove-slash-commands superseded by explicit command set
+
+**PR cleanup**
+- No open PRs at release — all work already on `main`
+
+**Release:** **v1.0.70** (build **170**) — web + PWA cache bust (`guardr-cache-v1-0-70`) + CI FCM APK
+
+**Test coverage:** 409 unit tests, lint and build clean.
 
