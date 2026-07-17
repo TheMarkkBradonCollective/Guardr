@@ -331,7 +331,7 @@ Issue or exception
 | **Messages** | Bottom navigation | Job chats, support tickets, support reports |
 | **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
 | **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
-| **Invoices** | Account menu → **More** → **Invoices** (tablet/desktop: left sidebar) | View job invoices, download PDF, pay when staff mark invoice ready |
+| **Invoices** | Sidebar → **Invoices** (Account group on phone) | View job invoices, download PDF, pay when staff mark invoice ready |
 | **Profile** | Account menu | Company/contact profile details |
 | **Guide** | Account menu | This guide |
 
@@ -378,7 +378,7 @@ What happens next:
 
 Use this when you already know which guard you want.
 
-1. Open **Guards** from the bottom navigation.
+1. Open **Guards** from the sidebar (menu button on phone).
 2. Select a guard profile.
 3. Review the guard's resume, licenses, experience, and availability details.
 4. Select **Send assignment request to [guard name]** from the guard profile.
@@ -475,7 +475,7 @@ If the guard skipped the audit:
 
 Use **Messages** for communication:
 
-1. Open **Messages** from the bottom navigation.
+1. Open **Messages** from the sidebar.
 2. Use job chats for assignment-specific coordination.
 3. Select **Contact support** to open a support ticket.
 4. Select **File a report** when you need to send a structured report to staff.
@@ -512,7 +512,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 
 After staff approve a completed job for billing, clients can view and pay formal invoices.
 
-1. Open **More** → **Invoices** (phone) or the **Invoices** sidebar tab (tablet/desktop).
+1. Open **Invoices** from the sidebar (under Account on phone).
 2. Each row shows the job, invoice number, amount, and status (**Draft**, **Payment due**, **Paid**).
 3. Tap an invoice to open details — review line items, dates, and totals.
 4. Use **Download PDF** to save or share the invoice.
@@ -1295,7 +1295,7 @@ Available from **Messages** for all users. Use for safety concerns, formal compl
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.75**, build **175**).
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.76**, build **176**).
 
 | Surface | How to install |
 |---------|----------------|

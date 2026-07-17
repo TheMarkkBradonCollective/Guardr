@@ -615,3 +615,22 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Release:** **v1.0.75** (build **175**) — web + PWA cache bust (`guardr-cache-v1-0-75`) + CI FCM APK
 
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+---
+
+## Friday, July 17, 2026 (afternoon) — /updateit → v1.0.76
+
+**/uberit — unified drawer sidebar + Uber app body (#639, merged via #640)**
+- **`GuardrDrawerShell`** — Base Web drawer sidebar with `GuardrSideNav` for client, guard, and staff on **all breakpoints** (replaces mobile bottom nav and tablet icon rail)
+- **`RoleAppShell` / `StaffOpsLayout`** — single shell path; map bleed, header overrides, and nav permission gates preserved
+- **Body chrome** — Uber `backgroundPrimary` content pane; `.uber-app-shell` CSS bridge maps legacy `bg-brand-*` / `text-brand-*` to `--uber-*` tokens inside the shell
+- **Design preview** — mobile/tablet/desktop all use drawer sidebar
+
+**PR cleanup**
+- Merged **#639** and **#640**; no open PRs at release
+
+**Release:** **v1.0.76** (build **176**) — web + PWA cache bust (`guardr-cache-v1-0-76`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
