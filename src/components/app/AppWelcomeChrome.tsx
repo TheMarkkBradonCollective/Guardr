@@ -73,19 +73,19 @@ export function AppWelcomeBackdrop() {
 
 const HERO_COPY: Record<ShellKind, { eyebrow: string; headline: string; accent: string; sub: string }> = {
   browser: {
-    eyebrow: 'California security marketplace',
-    headline: 'Get security anywhere.',
-    accent: 'Your workspace is ready.',
-    sub: 'Request coverage, accept shifts, and track live operations — all in one platform.',
+    eyebrow: 'Security marketplace',
+    headline: 'Go anywhere with Guardr.',
+    accent: 'Request coverage in minutes.',
+    sub: 'Post jobs, accept shifts, and track live operations — one platform for guards and clients.',
   },
   pwa: {
-    eyebrow: 'Installed · Guardr workspace',
-    headline: 'Get security anywhere.',
+    eyebrow: 'Installed · Guardr',
+    headline: 'Go anywhere with Guardr.',
     accent: 'Ready on your home screen.',
     sub: 'Post coverage, pick up shifts, and follow live operations from your installed app.',
   },
   native: {
-    eyebrow: 'Guardr Android app',
+    eyebrow: 'Guardr for Android',
     headline: 'Field-ready security ops.',
     accent: 'Built for mobile crews.',
     sub: 'Map-first jobs, shift tools, messaging, and direct pay — optimized for native Android.',

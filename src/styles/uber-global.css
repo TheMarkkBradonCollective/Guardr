@@ -1,0 +1,379 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER GLOBAL DESIGN SYSTEM — presentation layer for all surfaces
+   Replaces legacy Guardr sage/IBM visual patterns with Uber.com aesthetics.
+   Black primary CTAs · gray cards · blue accent links · Uber Move typography
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+
+html,
+body,
+.mobility-platform {
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.uber-display,
+.landing-hero-title,
+.adm-card-title,
+.adm-card-heading {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Primary buttons — Uber black CTA pattern ───────────────────────────── */
+
+.uber-button-primary,
+.uber-button-sage,
+.uber-button-green,
+.app-button-primary,
+.app-btn-primary,
+.adm-btn--sand,
+.adm-btn--primary {
+  background: var(--uber-black, #000000) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  min-height: 44px;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease;
+}
+
+html.theme-dark .uber-button-primary,
+html.theme-dark .uber-button-sage,
+html.theme-dark .uber-button-green,
+html.theme-dark .app-button-primary,
+html.theme-dark .app-btn-primary,
+html.theme-dark .adm-btn--sand,
+html.theme-dark .adm-btn--primary {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.uber-button-primary:hover,
+.uber-button-sage:hover,
+.uber-button-green:hover,
+.app-button-primary:hover,
+.adm-btn--sand:hover {
+  background: var(--uber-black-hover, #333333) !important;
+  transform: none;
+  opacity: 0.92;
+}
+
+html.theme-dark .uber-button-primary:hover,
+html.theme-dark .uber-button-sage:hover,
+html.theme-dark .uber-button-green:hover {
+  background: var(--uber-black-hover, #e2e2e2) !important;
+}
+
+.uber-button-primary:active,
+.uber-button-sage:active,
+.uber-button-green:active,
+.adm-btn--sand:active {
+  transform: scale(0.98) !important;
+}
+
+/* Secondary / outline — pill pattern */
+.uber-button-outline,
+.app-button-outline,
+.adm-btn--outline {
+  background: transparent !important;
+  color: var(--uber-text, #000) !important;
+  border: 1px solid var(--uber-border, #e2e2e2) !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  min-height: 44px;
+}
+
+.uber-button-outline:hover,
+.app-button-outline:hover {
+  background: var(--uber-surface, #f6f6f6) !important;
+  border-color: var(--uber-text, #000) !important;
+}
+
+/* ─── Cards — flat gray surface, no shadow ───────────────────────────────── */
+
+.uber-panel,
+.app-item-card,
+.app-card,
+.adm-card,
+.guardr-card {
+  background: var(--uber-bg, #fff);
+  border: 1px solid var(--uber-border, #e2e2e2);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-item-card--elevated,
+.adm-card--elevated {
+  background: var(--uber-surface, #f6f6f6);
+  border: none;
+  box-shadow: none;
+}
+
+/* Explore / service cards */
+.uber-landing-explore-card,
+.app-service-card {
+  background: var(--uber-surface, #f6f6f6) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* ─── Inputs — gray fill, no heavy border ────────────────────────────────── */
+
+.app-input,
+.app-textarea,
+.uber-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  background: var(--uber-surface, #f6f6f6);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--uber-text, #000);
+  font-family: inherit;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.app-input:focus,
+.app-textarea:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--uber-text, #000);
+  outline: none;
+  box-shadow: none;
+}
+
+.app-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--uber-text-muted, #545454);
+}
+
+/* ─── Navigation chrome — black header bar ───────────────────────────────── */
+
+.uber-app-shell .mobility-header {
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+}
+
+body[data-view-surface^="browser"] .uber-landing-nav,
+.uber-chrome-black {
+  background: #000000 !important;
+  color: #ffffff;
+}
+
+/* ─── Links — Uber blue accent ───────────────────────────────────────────── */
+
+a,
+.uber-text-accent,
+.text-brand-primary,
+.text-brand-accent,
+.adm-accent-text {
+  color: var(--uber-accent, #276ef1);
+}
+
+.uber-text-muted,
+.text-brand-text-muted {
+  color: var(--uber-text-muted, #545454);
+}
+
+/* ─── Status badges ──────────────────────────────────────────────────────── */
+
+.app-badge-success,
+.status-success {
+  background: color-mix(in srgb, var(--uber-positive, #048848) 12%, transparent);
+  color: var(--uber-positive, #048848);
+}
+
+.app-badge-warning,
+.status-warning {
+  background: color-mix(in srgb, var(--uber-warning, #ffc043) 18%, transparent);
+  color: color-mix(in srgb, var(--uber-warning, #ffc043) 60%, #000);
+}
+
+.app-badge-danger,
+.status-danger {
+  background: color-mix(in srgb, var(--uber-negative, #e11900) 12%, transparent);
+  color: var(--uber-negative, #e11900);
+}
+
+/* ─── Tables — clean data grid ───────────────────────────────────────────── */
+
+.app-table,
+.adm-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+.app-table th,
+.adm-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--uber-text-muted, #545454);
+  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  padding: 12px 16px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.app-table td,
+.adm-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  color: var(--uber-text, #000);
+}
+
+.app-table tr:hover td,
+.adm-table tr:hover td {
+  background: var(--uber-surface, #f6f6f6);
+}
+
+/* ─── Modals / sheets / drawers ──────────────────────────────────────────── */
+
+.app-modal-panel,
+.app-sheet-panel,
+.auth-sheet-panel,
+.guardr-modal {
+  background: var(--uber-bg, #fff);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+}
+
+html.theme-dark .app-modal-panel,
+html.theme-dark .app-sheet-panel,
+html.theme-dark .auth-sheet-panel {
+  background: var(--uber-bg, #141414);
+}
+
+/* ─── Bottom nav — Uber mobile pattern ───────────────────────────────────── */
+
+.bottom-nav-bar {
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  box-shadow: none;
+}
+
+.bottom-nav-item--active {
+  color: var(--uber-text, #000) !important;
+}
+
+.bottom-nav-item--active .bottom-nav-icon {
+  color: var(--uber-text, #000) !important;
+}
+
+/* ─── Segmented control ──────────────────────────────────────────────────── */
+
+.app-segmented-control {
+  background: var(--uber-surface, #f6f6f6);
+  border-radius: 999px;
+  padding: 4px;
+  border: none;
+}
+
+.app-segmented-option--active {
+  background: var(--uber-bg, #fff);
+  color: var(--uber-text, #000);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+
+/* ─── Desktop admin — Uber workspace density ─────────────────────────────── */
+
+body[data-form-factor="desktop"] {
+  --adm-font: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --adm-bg: var(--uber-surface, #f6f6f6);
+  --adm-card: var(--uber-bg, #ffffff);
+  --adm-text: var(--uber-text, #000000);
+  --adm-muted: var(--uber-text-muted, #545454);
+  --adm-border: var(--uber-border, #e2e2e2);
+  --adm-accent: var(--uber-accent, #276ef1);
+  --adm-sand: var(--uber-accent, #276ef1);
+  --adm-sand-dark: var(--uber-accent, #276ef1);
+  --adm-sand-light: var(--uber-accent-50, #eff4fe);
+  --adm-sand-band: var(--uber-accent, #276ef1);
+  --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
+}
+
+html.theme-dark body[data-form-factor="desktop"] {
+  --adm-bg: var(--uber-bg, #141414);
+  --adm-card: var(--uber-surface, #1f1f1f);
+  --adm-text: var(--uber-text, #ffffff);
+  --adm-muted: var(--uber-text-muted, #a6a6a6);
+  --adm-border: var(--uber-border, #333333);
+  --adm-sand-light: var(--uber-accent-50, #1a2a42);
+}
+
+/* ─── PWA / native welcome screens ───────────────────────────────────────── */
+
+.app-welcome {
+  background: var(--uber-bg, #fff);
+  color: var(--uber-text, #000);
+}
+
+.app-welcome-dock {
+  background: var(--uber-surface, #f6f6f6);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  border-radius: 16px 16px 0 0;
+}
+
+.app-welcome-role-btn {
+  background: var(--uber-surface, #f6f6f6);
+  border: none;
+  border-radius: 12px;
+  min-height: 72px;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.app-welcome-role-btn:hover {
+  background: color-mix(in srgb, var(--uber-surface, #f6f6f6) 80%, var(--uber-text, #000));
+}
+
+.app-welcome-signin-btn {
+  background: var(--uber-black, #000) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  min-height: 52px;
+}
+
+html.theme-dark .app-welcome-signin-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ─── Scrollbars — minimal ───────────────────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--uber-border, #e2e2e2) transparent;
+}
+
+/* ─── Focus rings — Uber blue ────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Remove legacy sage halo / glow effects ─────────────────────────────── */
+
+.logo-halo,
+.brand-glow,
+.sage-halo {
+  box-shadow: none !important;
+  filter: none !important;
+}

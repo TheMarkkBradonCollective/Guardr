@@ -35,28 +35,27 @@ export const withGuardrBreakpoints = withAppBreakpoints;
 export const shellNavOverrides = {
   Root: {
     style: {
-      paddingTop: '8px',
-      paddingBottom: '8px',
+      paddingTop: '4px',
+      paddingBottom: '4px',
     },
   },
   NavItem: {
     style: ({ $active }: { $active: boolean }) => ({
-      borderRadius: '10px',
+      borderRadius: '8px',
       marginLeft: '8px',
       marginRight: '8px',
       paddingLeft: '12px',
       paddingRight: '12px',
-      backgroundColor: $active ? 'accent50' : 'transparent',
-      borderLeft: '3px solid',
-      borderColor: $active ? 'accent' : 'transparent',
+      backgroundColor: $active ? 'backgroundSecondary' : 'transparent',
+      borderLeft: 'none',
       ':hover': {
-        backgroundColor: $active ? 'accent100' : 'backgroundSecondary',
+        backgroundColor: 'backgroundSecondary',
       },
     }),
   },
   NavLink: {
-    style: {
-      fontWeight: 600,
+    style: ({ $active }: { $active: boolean }) => ({
+      fontWeight: $active ? 700 : 500,
       fontSize: '14px',
       lineHeight: '20px',
       paddingTop: '10px',
@@ -64,7 +63,8 @@ export const shellNavOverrides = {
       minHeight: '44px',
       display: 'flex',
       alignItems: 'center',
-    },
+      color: $active ? 'contentPrimary' : 'contentSecondary',
+    }),
   },
 };
 

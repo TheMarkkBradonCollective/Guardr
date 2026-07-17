@@ -6,19 +6,40 @@ body.shell-pwa {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ─── PWA standalone — Uber glass chrome ─────────────────────────────────── */
+
+body[data-shell="pwa"] .uber-app-shell.mobility-shell .mobility-header--glass,
+body.shell-pwa .uber-app-shell.mobility-shell .mobility-header--glass {
+  background: color-mix(in srgb, var(--uber-bg, #fff) 85%, transparent) !important;
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--uber-border, #e2e2e2) 60%, transparent);
+}
+
 body[data-shell="pwa"] .app-welcome,
 body.shell-pwa .app-welcome {
-  background: var(--uber-bg, var(--brand-bg));
+  background: var(--uber-bg, #ffffff);
 }
 
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
-  border-top: 1px solid color-mix(in srgb, var(--uber-border, var(--brand-border)) 70%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--uber-bg, var(--brand-bg)) 0%, transparent) 0%,
-    color-mix(in srgb, var(--uber-surface, var(--brand-surface)) 88%, var(--uber-bg, var(--brand-bg))) 24%
-  );
+  background: var(--uber-surface, #f6f6f6);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  backdrop-filter: blur(16px);
+}
+
+body[data-shell="pwa"] .bottom-nav-bar,
+body.shell-pwa .bottom-nav-bar {
+  background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--uber-border, #e2e2e2);
+  box-shadow: none;
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+}
+
+body[data-view-surface="pwa-mobile"] .auth-sheet-panel,
+body[data-view-surface="pwa-tablet"] .auth-sheet-panel {
+  border-radius: 20px 20px 0 0 !important;
+  background: var(--uber-bg, #fff);
 }
 
 body[data-shell="pwa"] .auth-sheet-panel,
@@ -30,13 +51,6 @@ body.shell-pwa .auth-sheet-panel {
 body[data-shell="pwa"] .role-app-shell--compact,
 body.shell-pwa .role-app-shell--compact {
   padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-body[data-shell="pwa"] .bottom-nav-bar,
-body.shell-pwa .bottom-nav-bar {
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--uber-bg, var(--brand-surface)) 94%, transparent);
-  backdrop-filter: blur(16px);
 }
 
 body[data-shell="pwa"] .tablet-admin-rail,

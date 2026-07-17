@@ -232,10 +232,44 @@ body[data-form-factor="desktop"] {
   --adm-accent: var(--uber-accent, #276ef1);
   --adm-sand: var(--uber-accent, #276ef1);
   --adm-sand-dark: var(--uber-accent, #276ef1);
-  --adm-sand-light: color-mix(in srgb, var(--uber-accent, #276ef1) 12%, var(--uber-bg, #fff));
+  --adm-sand-light: var(--uber-accent-50, #eff4fe);
   --adm-bg: var(--uber-surface, #f6f6f6);
   --adm-card: var(--uber-bg, #ffffff);
   --adm-text: var(--uber-text, #000);
-  --adm-muted: var(--uber-text-muted, #6b6b6b);
+  --adm-muted: var(--uber-text-muted, #545454);
   --adm-border: var(--uber-border, #e2e2e2);
+}
+
+/* ─── Uber black CTA inside signed-in shell ─────────────────────────────── */
+
+.uber-app-shell .adm-btn--sand,
+.uber-app-shell .app-button-primary {
+  background: var(--uber-black, #000) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+html.theme-dark .uber-app-shell .adm-btn--sand,
+html.theme-dark .uber-app-shell .app-button-primary {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+/* ─── Form fields inside shell ───────────────────────────────────────────── */
+
+.uber-app-shell .app-input,
+.uber-app-shell .app-textarea,
+.uber-app-shell input[type="text"],
+.uber-app-shell input[type="email"],
+.uber-app-shell input[type="password"],
+.uber-app-shell select {
+  background: var(--uber-surface, #f6f6f6);
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.uber-app-shell .app-input:focus,
+.uber-app-shell input:focus {
+  border-color: var(--uber-text, #000);
+  box-shadow: none;
 }

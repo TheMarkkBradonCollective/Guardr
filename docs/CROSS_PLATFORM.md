@@ -114,10 +114,25 @@ src/styles/uber-surfaces.css                     — adm/app legacy bridge insid
 
 ## Theme System
 
-- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts` and `uber-mobility.css` global `--brand-*` remap
-- **Themes:** Light (default), Dark, Grey — accent is Uber blue (`#276ef1`), not legacy sage
+- **Presentation layer:** Stock Uber Base Web tokens via `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
+- **Themes:** Light (default web/PWA), Dark (default APK) — accent is Uber blue (`#276ef1`), primary CTAs are black/white (Uber.com pattern)
+- **Typography:** Uber Move / Uber Move Text stack — no legacy sage green or IBM Plex
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
+
+### Uber design system files (`/uberitplatforms` complete)
+
+```
+src/styles/uber-tokens.css      — canonical --uber-* tokens + --brand-* bridge
+src/styles/uber-global.css      — global presentation overrides (buttons, cards, inputs, tables)
+src/styles/uber-mobility.css    — per-viewSurface shell chrome
+src/styles/uber-surfaces.css    — legacy adm-*/app-* bridge inside .uber-app-shell
+src/styles/uber-landing.css     — public marketing (Uber.com homepage pattern)
+src/styles/app-pwa.css          — PWA glass chrome, safe areas
+src/styles/app-native.css       — APK native touch targets, safe areas
+src/components/baseui/          — Base Web adapters (GuardrButton, GuardrCard, etc.)
+src/components/landing/uber/      — UberStyleLandingPage (mobile / tablet / desktop)
+```
 
 ## Offline + Field Mode (Phase 2)
 

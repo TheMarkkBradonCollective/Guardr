@@ -1,41 +1,39 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESKTOP ADMIN — XORIC-style dashboard (≥1024px only)
-   Overlay sidebar · header branding · brand hero band · white card grid
-   Uses company brand green (--brand-primary) for accents
+   DESKTOP ADMIN — Uber mobility workspace (≥1024px only)
+   Multi-column workspace · flat gray cards · black CTAs · Uber Move typography
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] {
-  --adm-accent: var(--brand-primary);
-  --adm-accent-hover: var(--brand-primary-hover);
-  --adm-accent-light: color-mix(in srgb, var(--brand-primary) 12%, #fff);
-  --adm-accent-dark: var(--brand-primary-hover);
-  --adm-accent-band: var(--brand-primary);
-  /* Legacy token names kept for compatibility — all map to brand green */
-  --adm-sand: var(--brand-primary);
-  --adm-sand-light: color-mix(in srgb, var(--brand-primary) 12%, #fff);
-  --adm-sand-dark: var(--brand-primary);
-  --adm-sand-band: var(--brand-primary);
-  --adm-sand-hover: var(--brand-primary-hover);
-  --adm-sidebar-w: 15.5rem;
-  --adm-bg: #EFF1F5;
-  --adm-card: #FFFFFF;
-  --adm-text: #2D3748;
-  --adm-muted: #718096;
-  --adm-border: #E2E8F0;
-  --adm-header-h: 4rem;
-  --adm-hero-h: 7rem;
-  --adm-font: "IBM Plex Sans", "Plus Jakarta Sans", system-ui, sans-serif;
+  --adm-accent: var(--uber-accent, #276ef1);
+  --adm-accent-hover: var(--uber-accent-hover, #1a5dc8);
+  --adm-accent-light: var(--uber-accent-50, #eff4fe);
+  --adm-accent-dark: var(--uber-accent, #276ef1);
+  --adm-accent-band: var(--uber-accent, #276ef1);
+  --adm-sand: var(--uber-accent, #276ef1);
+  --adm-sand-light: var(--uber-accent-50, #eff4fe);
+  --adm-sand-dark: var(--uber-accent, #276ef1);
+  --adm-sand-band: var(--uber-accent, #276ef1);
+  --adm-sand-hover: var(--uber-accent-hover, #1a5dc8);
+  --adm-sidebar-w: 17rem;
+  --adm-bg: var(--uber-surface, #f6f6f6);
+  --adm-card: var(--uber-bg, #ffffff);
+  --adm-text: var(--uber-text, #000000);
+  --adm-muted: var(--uber-text-muted, #545454);
+  --adm-border: var(--uber-border, #e2e2e2);
+  --adm-header-h: 3.5rem;
+  --adm-hero-h: 6rem;
+  --adm-font: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 html.theme-dark body[data-form-factor="desktop"] {
-  --adm-bg: #141414;
-  --adm-card: #1C1C1C;
-  --adm-text: #F0F0EC;
-  --adm-muted: #9CA3AF;
-  --adm-border: #2D2D2D;
-  --adm-accent-light: color-mix(in srgb, var(--brand-primary) 18%, #1C1C1C);
-  --adm-sand-light: color-mix(in srgb, var(--brand-primary) 18%, #1C1C1C);
-  --adm-sand-band: var(--brand-primary);
+  --adm-bg: var(--uber-bg, #141414);
+  --adm-card: var(--uber-surface, #1f1f1f);
+  --adm-text: var(--uber-text, #ffffff);
+  --adm-muted: var(--uber-text-muted, #a6a6a6);
+  --adm-border: var(--uber-border, #333333);
+  --adm-accent-light: var(--uber-accent-50, #1a2a42);
+  --adm-sand-light: var(--uber-accent-50, #1a2a42);
+  --adm-sand-band: var(--uber-accent, #335ba3);
 }
 
 body[data-form-factor="desktop"] .adm-app {
