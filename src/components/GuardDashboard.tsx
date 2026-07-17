@@ -52,6 +52,7 @@ import { GuardIncidentReportModal } from './guard/GuardIncidentReportModal';
 import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
+import { AppOverlaySheet } from './ui/motion/AppMotion';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
@@ -1851,29 +1852,26 @@ export function GuardDashboard({
       )}
 
       {manualBriefingJob && (
-        <div className="fixed inset-0 z-[2000] flex flex-col justify-end pointer-events-auto">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={closeManualBriefing}
-            aria-label="Close briefing"
+        <AppOverlaySheet
+          open
+          onClose={closeManualBriefing}
+          ariaLabel="Pre-shift briefing"
+          zIndex={2000}
+        >
+          <GuardPreShiftBriefing
+            layout="modal"
+            job={manualBriefingJob}
+            guardId={guard.id}
+            onClose={closeManualBriefing}
+            onStartEnRoute={() => handleStartEnRoute(manualBriefingJob.id)}
+            onAckPostOrders={
+              onAckPostOrders ? () => onAckPostOrders(manualBriefingJob.id) : undefined
+            }
+            onAckBriefing={
+              onAckBriefing ? () => onAckBriefing(manualBriefingJob.id) : undefined
+            }
           />
-          <div className="relative z-[1] w-full">
-            <GuardPreShiftBriefing
-              layout="modal"
-              job={manualBriefingJob}
-              guardId={guard.id}
-              onClose={closeManualBriefing}
-              onStartEnRoute={() => handleStartEnRoute(manualBriefingJob.id)}
-              onAckPostOrders={
-                onAckPostOrders ? () => onAckPostOrders(manualBriefingJob.id) : undefined
-              }
-              onAckBriefing={
-                onAckBriefing ? () => onAckBriefing(manualBriefingJob.id) : undefined
-              }
-            />
-          </div>
-        </div>
+        </AppOverlaySheet>
       )}
     </>
   );

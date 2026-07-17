@@ -79,8 +79,11 @@ Always call `prefersReducedMotion()` or `motionDuration()` before animating.
 Global overlays live in `src/components/baseui/overlays/`:
 
 - `GuardrModal`, `GuardrSheet`, `GuardrDrawer`
+- `dismissable={false}` — legal gates that block backdrop/Escape/system-back close
 - `overlayStack.ts` — Escape / system-back
 - `snackbarBridge.ts` — `showAppToast()` unchanged API
+- `AppFormSheet` — Base Web form sheet chrome (no legacy `app-form-sheet-*` CSS)
+
 
 ## Layout shells
 

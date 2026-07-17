@@ -127,8 +127,13 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - **Hub screens migrated:** Client home, Staff overview, Guard earnings, User profile (shared)
 - **Remaining:** Client (15 views), Guard (14 tabs + map), Staff (26 sections), map views last
 
-### Phase 5 — Feature overlays + CSS cleanup
-- Domain modals/sheets; retire redundant CSS and `--brand-*` bridge
+### Phase 5 — Feature overlays + CSS cleanup (in progress)
+- **Overlay stack:** `dismissable` prop on `GuardrModal` / `GuardrSheet` for non-dismissible gates
+- **Migrated gates:** `LegalAcceptanceModal`, `OnboardingTour` prompt, `GuardPreShiftBriefing` wrapper, `DocumentImageLightbox`
+- **AppFormSheet:** rebuilt with Base Web chrome (no `app-form-sheet-*` classes)
+- **AppButton:** dropped legacy `.app-button-*` CSS class bridge
+- **Removed:** dead `GuardBottomSheet.tsx`
+- **Remaining:** domain modal content restyle, map sheets, `--brand-*` CSS retirement
 
 ### Phase 6 — Preview parity
 - Design preview uses shared `src/components/baseui/*`

@@ -18,20 +18,6 @@ const SIZE_MAP: Record<AppButtonSize, GuardrButtonProps['size']> = {
   inline: 'mini',
 };
 
-const VARIANT_CLASS: Record<AppButtonVariant, string> = {
-  primary: 'app-button-primary',
-  outline: 'app-button-outline',
-  danger: 'app-button-danger',
-  ghost: 'app-button-ghost',
-};
-
-const SIZE_CLASS: Record<AppButtonSize, string> = {
-  sm: 'app-btn-sm',
-  md: 'app-btn-md',
-  lg: 'app-btn-lg',
-  inline: 'app-btn-inline',
-};
-
 export type AppButtonProps = Omit<GuardrButtonProps, 'kind' | 'size'> & {
   variant?: AppButtonVariant;
   size?: AppButtonSize;
@@ -39,7 +25,7 @@ export type AppButtonProps = Omit<GuardrButtonProps, 'kind' | 'size'> & {
 };
 
 /**
- * Unified Guardr action button — maps legacy `.app-button-*` variants to Base Web.
+ * Unified action button — maps legacy variant names to GuardrButton (Base Web only, no CSS bridge).
  */
 export function AppButton({
   variant = 'primary',
@@ -54,7 +40,7 @@ export function AppButton({
       kind={VARIANT_MAP[variant]}
       size={SIZE_MAP[size]}
       fullWidth={fullWidth}
-      className={`${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${className}`.trim()}
+      className={className || undefined}
       {...rest}
     >
       {children}

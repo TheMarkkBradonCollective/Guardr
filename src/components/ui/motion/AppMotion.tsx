@@ -66,6 +66,7 @@ interface AppModalProps {
   zIndex?: number;
   ariaLabelledBy?: string;
   position?: 'fixed' | 'absolute';
+  dismissable?: boolean;
 }
 
 /** Base Web modal / bottom sheet with overlay stack integration */
@@ -81,6 +82,7 @@ interface AppOverlaySheetProps {
   panelClassName?: string;
   zIndex?: number;
   ariaLabel?: string;
+  dismissable?: boolean;
 }
 
 /** Base Web bottom sheet */

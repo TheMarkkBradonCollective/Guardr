@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { Block } from 'baseui/block';
+import { HeadingMedium, LabelSmall, ParagraphSmall } from 'baseui/typography';
 import {
   CURRENT_LEGAL_VERSIONS,
   LEGAL_DOCUMENTS,
@@ -11,6 +13,8 @@ import {
   type LegalUserRole,
 } from '../../lib/legalAcceptance';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../../lib/siteConfig';
+import { GuardrModal } from '../baseui/overlays/GuardrModal';
+import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from './LegalFooterLinks';
 
 interface LegalAcceptanceModalProps {
@@ -52,31 +56,36 @@ export function LegalAcceptanceModal({
   };
 
   return (
-    // z-[10000]: this gate must sit above every other layer (app header
-    // z-1200, bottom nav z-1001, account/notification menus z-1300/3000,
-    // onboarding tour z-9999) — otherwise users can interact with app
-    // chrome without ever accepting the required legal agreements.
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4">
-      <div
-        className="w-full max-w-lg rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-2xl"
-        role="dialog"
-        aria-labelledby="legal-acceptance-title"
-      >
-        <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted">
+    <GuardrModal
+      open
+      onClose={() => {}}
+      dismissable={false}
+      align="center"
+      zIndex={10000}
+      ariaLabelledBy="legal-acceptance-title"
+      className="w-full max-w-lg"
+    >
+      <Block padding="scale800">
+        <LabelSmall
+          marginTop={0}
+          marginBottom="scale200"
+          $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}
+          color="contentSecondary"
+        >
           {LEGAL_ENTITY_NAME}
-        </p>
-        <h2 id="legal-acceptance-title" className="text-xl font-bold mt-1">
+        </LabelSmall>
+        <HeadingMedium id="legal-acceptance-title" marginTop={0} marginBottom="scale400">
           Marketplace agreements required
-        </h2>
-        <p className="text-sm text-brand-text-muted mt-3 leading-relaxed">
+        </HeadingMedium>
+        <ParagraphSmall color="contentSecondary" marginBottom="scale600">
           {SITE_NAME} is a technology platform connecting clients with independent licensed security
           professionals. Review and accept the agreements below to continue.
-        </p>
+        </ParagraphSmall>
 
-        <ul className="mt-5 space-y-3">
+        <Block as="ul" marginTop={0} marginBottom="scale600" paddingLeft={0} $style={{ listStyle: 'none' }}>
           {missing.map((documentId) => (
-            <li key={documentId}>
-              <label className="legal-accept-row cursor-pointer">
+            <Block as="li" key={documentId} marginBottom="scale400">
+              <label className="legal-accept-row cursor-pointer flex gap-3 items-start">
                 <input
                   type="checkbox"
                   className="app-checkbox mt-0.5"
@@ -89,7 +98,7 @@ export function LegalAcceptanceModal({
                   I agree to the{' '}
                   <button
                     type="button"
-                    className="font-semibold text-brand-primary hover:underline"
+                    className="font-semibold uber-text-accent hover:underline"
                     onClick={() => onOpenLegal(documentId)}
                   >
                     {legalDocumentLabel(documentId)}
@@ -97,26 +106,21 @@ export function LegalAcceptanceModal({
                   (version {CURRENT_LEGAL_VERSIONS[documentId]})
                 </span>
               </label>
-              <p className="text-xs text-brand-text-muted mt-1 ml-[2.375rem]">
+              <ParagraphSmall color="contentSecondary" marginTop="scale200" marginLeft="scale1000">
                 {LEGAL_DOCUMENTS[documentId].intro.slice(0, 140)}…
-              </p>
-            </li>
+              </ParagraphSmall>
+            </Block>
           ))}
-        </ul>
+        </Block>
 
-        <button
-          type="button"
-          className="app-button-primary w-full mt-6"
-          disabled={!allChecked || submitting}
-          onClick={handleSubmit}
-        >
+        <AppButton type="button" variant="primary" fullWidth disabled={!allChecked || submitting} onClick={handleSubmit}>
           {submitting ? 'Saving…' : 'Accept and continue'}
-        </button>
+        </AppButton>
 
-        <div className="mt-6 pt-4 border-t border-brand-border">
+        <Block marginTop="scale600" paddingTop="scale600" overrides={{ Block: { style: { borderTop: '1px solid', borderColor: 'borderOpaque' } } }}>
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
-        </div>
-      </div>
-    </div>
+        </Block>
+      </Block>
+    </GuardrModal>
   );
 }
