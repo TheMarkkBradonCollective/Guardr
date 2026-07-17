@@ -19,7 +19,6 @@ const FINANCE_SECTIONS = new Set<StaffSection>([
   'agreements',
   'audit-log',
   'dev-updates',
-  'design-qa',
 ]);
 
 const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
@@ -105,10 +104,6 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   'dev-updates': {
     title: 'Dev notes',
     message: 'Dev notes are available to Director and Founder accounts.',
-  },
-  'design-qa': {
-    title: 'Design QA',
-    message: 'Design QA is available to Director and Founder accounts.',
   },
   'payment-settings': {
     title: 'Payment settings',

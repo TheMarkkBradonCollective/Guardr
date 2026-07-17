@@ -93,8 +93,6 @@ src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 
 Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
-Design preview: `/design-preview.html` → Public → **App welcome · PWA/APK**, **Auth sheet · PWA/APK** (shell toggle in header).
-
 ### Uber mobility platform (`/uberitplatforms` Phase 2)
 
 | Surface | Shell behavior |
