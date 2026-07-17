@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 17, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.71**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.72**
 
 ---
 
@@ -545,3 +545,20 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 **Test coverage:** 409 unit tests, lint and build clean.
 
+---
+
+## Friday, July 17, 2026 (morning) — /updateit → v1.0.72
+
+**/uberit UI migration (phases 3–6, #629)**
+- **Stock Uber Base Web theme** — `LightTheme` / `DarkTheme` via `uberBaseTheme.ts`; sage brand deferred to later pass
+- **Phase 3** — shared primitives: `AppButton`, `AppPrimitives`, wireframe kit, field styles
+- **Phase 4** — dashboard kit (`DashboardHero`, `MetricCell`, `QuickActionTile`, `UberThemeVars`); hub screens: client home, staff overview, guard earnings, user profile
+- **Phase 5** — overlay gates (`LegalAcceptanceModal`, onboarding, briefing, lightbox); `AppFormSheet` Base Web rebuild; removed dead `GuardBottomSheet`
+- **Phase 6** — design-preview parity (`/design-preview.html`); `ComponentShowcase`; staff live QA at `/staff/design-qa`
+
+**PR cleanup**
+- Merged uberit stack via **#629**; closed **#623–#628** (superseded or landed)
+
+**Release:** **v1.0.72** (build **172**) — web + PWA cache bust (`guardr-cache-v1-0-72`) + CI FCM APK
+
+**Test coverage:** 415 unit tests, lint and build clean.
