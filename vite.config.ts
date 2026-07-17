@@ -32,15 +32,31 @@ export default defineConfig(() => {
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
-          designPreview: path.resolve(__dirname, 'public/design-preview.html'),
+          designPreview: path.resolve(__dirname, 'design-preview.html'),
         },
         output: {
-          manualChunks: {
-            'vendor-map': ['leaflet', 'react-leaflet'],
-            'vendor-motion': ['motion'],
-            'vendor-supabase': ['@supabase/supabase-js'],
-            'vendor-icons': ['lucide-react'],
-            'vendor-baseweb': ['baseui', 'styletron-react', 'styletron-engine-monolithic'],
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/')
+            ) {
+              return 'vendor-react';
+            }
+            if (id.includes('/leaflet') || id.includes('/react-leaflet')) {
+              return 'vendor-map';
+            }
+            if (id.includes('/motion/')) return 'vendor-motion';
+            if (id.includes('/@supabase/')) return 'vendor-supabase';
+            if (id.includes('/lucide-react/')) return 'vendor-icons';
+            if (
+              id.includes('/baseui/') ||
+              id.includes('/styletron-react/') ||
+              id.includes('/styletron-engine-monolithic/')
+            ) {
+              return 'vendor-baseweb';
+            }
           },
         },
       },

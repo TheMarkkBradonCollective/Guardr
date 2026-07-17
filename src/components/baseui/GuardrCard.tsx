@@ -1,5 +1,11 @@
 import React from 'react';
-import { Card as BaseCard, StyledBody, StyledAction, StyledTitle } from 'baseui/card';
+import {
+  Card as BaseCard,
+  StyledBody,
+  StyledAction,
+  StyledTitle,
+  hasThumbnail as cardHasThumbnail,
+} from 'baseui/card';
 import type { CardProps } from 'baseui/card';
 
 export type GuardrCardProps = Omit<CardProps, 'overrides'> & {
@@ -24,6 +30,7 @@ export function GuardrCard({
   return (
     <BaseCard
       {...rest}
+      hasThumbnail={cardHasThumbnail}
       overrides={{
         Root: {
           props: {

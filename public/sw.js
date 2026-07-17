@@ -1,5 +1,5 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v1-0-72';
+const CACHE_NAME = 'guardr-cache-v1-0-73';
 const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
 const OFFLINE_URLS = [
   '/',
@@ -80,16 +80,17 @@ async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
 
-  const networkPromise = fetch(request)
-    .then((response) => {
-      if (response.status === 200) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch(() => null);
-
-  return cached || networkPromise || caches.match('/index.html');
+  try {
+    const response = await fetch(request);
+    if (response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    if (cached) return cached;
+    // Never fall back to index.html for asset requests — that causes white screens.
+    return new Response('Offline', { status: 503, statusText: 'Asset unavailable offline' });
+  }
 }
 
 self.addEventListener('fetch', (event) => {

@@ -2,8 +2,8 @@
 import type React from 'react';
 import { Tag as BaseTag } from 'baseui/tag';
 import { Accordion as BaseAccordion, Panel as BasePanel } from 'baseui/accordion';
-import BaseModal from 'baseui/modal';
-import BaseDrawer from 'baseui/drawer';
+import { Modal as BaseModal } from 'baseui/modal';
+import { Drawer as BaseDrawer } from 'baseui/drawer';
 import BaseFormControl from 'baseui/form-control';
 import { Input as BaseInput } from 'baseui/input';
 import { Textarea as BaseTextarea } from 'baseui/textarea';
