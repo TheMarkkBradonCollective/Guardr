@@ -1221,6 +1221,349 @@ html.theme-dark .app-segmented-option--active { background: var(--uber-elevated,
 
 html.theme-dark .map-browse-dock { background: var(--uber-bg, #000); }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER BOTTOM TAB BAR
+   Exact replica of Uber's mobile tab bar — white, hairline top, 4 equal tabs
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uber-bottom-nav {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 50;
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+html.theme-dark .uber-bottom-nav {
+  background: #000;
+  border-top-color: #1a1a1a;
+}
+
+.uber-bottom-nav-inner {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  width: 100%;
+}
+
+/* Each tab */
+.uber-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+  padding: 8px 4px 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  color: var(--uber-text-muted, #767676);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 100ms ease;
+}
+
+.uber-tab-btn[data-active="true"] {
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark .uber-tab-btn { color: #666; }
+html.theme-dark .uber-tab-btn[data-active="true"] { color: #fff; }
+
+/* Icon */
+.uber-tab-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uber-tab-icon {
+  display: block;
+  color: inherit;
+}
+
+/* Label */
+.uber-tab-label {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: inherit;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.uber-tab-btn[data-active="true"] .uber-tab-label {
+  font-weight: 700;
+}
+
+/* Tiny active dot under icon — Uber's subtle active indicator */
+.uber-tab-active-dot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--uber-text, #000);
+}
+
+html.theme-dark .uber-tab-active-dot { background: #fff; }
+
+/* Badge */
+.uber-tab-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: var(--uber-text, #000);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+html.theme-dark .uber-tab-badge {
+  background: #fff;
+  color: #000;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER MAP BOTTOM SHEET — job list that slides up over the full-screen map
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The white bottom sheet panel — exactly like Uber's ride-selection sheet */
+.map-offer-card,
+.map-jobs-browse-card,
+.uber-map-sheet {
+  margin: 0;
+  padding: 0;
+  border-radius: 16px 16px 0 0;
+  background: var(--uber-bg, #fff);
+  border: none;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+  color: var(--uber-text, #000);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html.theme-dark .map-offer-card,
+html.theme-dark .map-jobs-browse-card,
+html.theme-dark .uber-map-sheet {
+  background: #111;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.5);
+}
+
+/* Drag handle */
+.map-offer-card-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--uber-border, #e0e0e0);
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+html.theme-dark .map-offer-card-handle { background: #333; }
+
+/* Sheet title row */
+.map-offer-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 10px;
+}
+
+.map-offer-card-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--uber-surface, #f6f6f6);
+  color: var(--uber-text, #000);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+html.theme-dark .map-offer-card-close {
+  background: #222;
+  color: #fff;
+}
+
+/* ─── Uber ride-selection row (job row on map sheet) ──────────────────────── */
+
+.uber-job-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #fff);
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 100ms ease;
+}
+
+.uber-job-row:hover { background: var(--uber-surface, #f6f6f6); }
+.uber-job-row:active { background: var(--uber-border, #eeeeee); }
+
+html.theme-dark .uber-job-row { background: #111; border-bottom-color: #222; }
+html.theme-dark .uber-job-row:hover { background: #1a1a1a; }
+
+/* Left icon — like Uber's car thumbnail */
+.uber-job-row-icon {
+  width: 56px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--uber-text, #000);
+}
+
+html.theme-dark .uber-job-row-icon { color: #fff; }
+
+/* Main content */
+.uber-job-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.uber-job-row-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+html.theme-dark .uber-job-row-title { color: #fff; }
+
+.uber-job-row-meta {
+  font-size: 13px;
+  color: var(--uber-text-muted, #767676);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right side — price like Uber */
+.uber-job-row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.uber-job-row-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  letter-spacing: -0.01em;
+}
+
+html.theme-dark .uber-job-row-price { color: #fff; }
+
+.uber-job-row-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--uber-text, #000);
+  color: #fff;
+}
+
+.uber-job-row-badge-open { background: #111; }
+.uber-job-row-badge-available { background: #111; }
+.uber-job-row-badge-live { background: #34c759; }
+.uber-job-row-badge-scheduled { background: #007aff; }
+.uber-job-row-badge-upcoming { background: #007aff; }
+.uber-job-row-badge-completed,
+.uber-job-row-badge-past { background: #8e8e93; }
+.uber-job-row-badge-missed,
+.uber-job-row-badge-cancelled { background: #ff3b30; }
+
+/* Section header — like Uber's "Economy" / "Premium" dividers */
+.uber-section-header {
+  padding: 20px 20px 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--uber-text, #000);
+  background: var(--uber-bg, #fff);
+}
+
+html.theme-dark .uber-section-header { color: #fff; background: #111; }
+
+/* Bottom CTA bar — like Uber's "Choose UberX" black button bar */
+.uber-sheet-cta-bar {
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--uber-bg, #fff);
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+html.theme-dark .uber-sheet-cta-bar { background: #111; border-top-color: #222; }
+
+.uber-sheet-cta-primary {
+  flex: 1;
+  height: 52px;
+  border-radius: 8px;
+  background: var(--uber-text, #000);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.uber-sheet-cta-primary:active { opacity: 0.85; }
+
+html.theme-dark .uber-sheet-cta-primary {
+  background: #fff;
+  color: #000;
+}
+
+/* Payment row at bottom of sheet — like Uber's "Visa ···1059" row */
+.uber-payment-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #fff);
+  font-size: 14px;
+  color: var(--uber-text, #000);
+  cursor: pointer;
+}
+
+html.theme-dark .uber-payment-row { background: #111; border-top-color: #222; color: #fff; }
+
 /* ─── Staff admin panels ─────────────────────────────────────────────────── */
 
 .adm-panel-head {
@@ -1313,6 +1656,82 @@ html.theme-dark .app-status-banner { background: var(--uber-surface, #1a1a1a); }
 }
 
 html.theme-dark .app-hero-band-label { color: #fff !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER JOBS SCREEN — no hero banner, pure list with Uber ride-selection style
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uber-jobs-screen {
+  background: var(--uber-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html.theme-dark .uber-jobs-screen { background: #111; }
+
+.uber-jobs-tab-bar {
+  flex-shrink: 0;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+html.theme-dark .uber-jobs-tab-bar {
+  background: #111;
+  border-bottom-color: #222;
+}
+
+.uber-jobs-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--uber-bg, #fff);
+}
+
+html.theme-dark .uber-jobs-list { background: #111; }
+
+/* Empty state */
+.uber-jobs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 32px 32px;
+  gap: 10px;
+}
+
+.uber-jobs-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--uber-surface, #f6f6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uber-text-muted, #767676);
+  margin-bottom: 4px;
+}
+
+html.theme-dark .uber-jobs-empty-icon { background: #1a1a1a; color: #666; }
+
+.uber-jobs-empty-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--uber-text, #000);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+html.theme-dark .uber-jobs-empty-title { color: #fff; }
+
+.uber-jobs-empty-body {
+  font-size: 14px;
+  color: var(--uber-text-muted, #767676);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 260px;
+}
 
 /* ─── Guard factor card dark mode ────────────────────────────────────────── */
 html.theme-dark .guard-factor-card {

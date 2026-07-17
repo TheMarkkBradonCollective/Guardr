@@ -8,7 +8,6 @@ import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import {
-  JobsScreenHero,
   JOBS_PIE_COLORS,
 } from '../jobs/JobsScreenHero';
 import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
@@ -80,30 +79,43 @@ function JobRow({
   showTimeUntil?: boolean;
 }) {
   const timeUntil = showTimeUntil ? formatTimeUntilShift(job.startDate) : null;
+  const pay = showPay ? getGuardHourlyPay(job) : null;
+  const statusBadge =
+    job.status === 'in-progress' ? 'live' :
+    job.status === 'accepted' ? 'scheduled' :
+    job.status === 'open' ? 'available' :
+    job.status === 'completed' ? 'completed' :
+    job.status === 'closed' ? 'past' : 'available';
 
   return (
-    <AppItemCard
-      onClick={onSelect}
-      className={showPay ? 'border-brand-primary/30 bg-brand-primary/8' : undefined}
-    >
-      <div className="min-w-0 flex-1 text-left">
-        <p className="font-semibold truncate">{job.title}</p>
-        <p className="text-sm text-brand-text-muted mt-1 truncate">
+    <button type="button" className="uber-job-row" onClick={onSelect}>
+      <span className="uber-job-row-icon" aria-hidden>
+        <svg width="52" height="32" viewBox="0 0 52 32" fill="none">
+          <rect x="4" y="14" width="44" height="14" rx="5" fill="currentColor" opacity="0.12"/>
+          <rect x="10" y="8" width="32" height="16" rx="5" fill="currentColor" opacity="0.22"/>
+          <circle cx="16" cy="28" r="4" fill="currentColor" opacity="0.55"/>
+          <circle cx="36" cy="28" r="4" fill="currentColor" opacity="0.55"/>
+        </svg>
+      </span>
+      <span className="uber-job-row-body">
+        <p className="uber-job-row-title">{job.title}</p>
+        <p className="uber-job-row-meta">
           {formatShiftRange(job.startDate, job.endDate)}
+          {timeUntil ? ` · ${timeUntil}` : ''}
         </p>
-        {timeUntil && (
-          <p className="text-xs font-semibold text-brand-primary flex items-center gap-1 mt-1">
-            <Clock className="w-3 h-3 shrink-0" />
-            {timeUntil}
-          </p>
-        )}
-        {showPay && (
-          <p className="text-sm font-medium text-brand-primary mt-1">
-            ${getGuardHourlyPay(job)}/hr
-          </p>
-        )}
-      </div>
-    </AppItemCard>
+      </span>
+      <span className="uber-job-row-right">
+        {pay != null ? (
+          <span className="uber-job-row-price">${pay}/hr</span>
+        ) : null}
+        <span className={`uber-job-row-badge uber-job-row-badge-${statusBadge}`}>
+          {statusBadge === 'live' ? 'Active' :
+           statusBadge === 'scheduled' ? 'Scheduled' :
+           statusBadge === 'available' ? 'Open' :
+           statusBadge === 'completed' || statusBadge === 'past' ? 'Done' : 'Open'}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -306,125 +318,79 @@ export function GuardMyJobsPanel({
     );
   }
 
+  const activeJobs =
+    activeTab === 'available' ? availableJobs :
+    activeTab === 'scheduled' ? scheduledJobs :
+    activeTab === 'completed' ? completedJobs :
+    missedJobs;
+
+  const emptyIcon =
+    activeTab === 'available' ? <Map className="w-6 h-6" /> :
+    activeTab === 'scheduled' ? <Clock className="w-6 h-6" /> :
+    activeTab === 'completed' ? <CheckCircle2 className="w-6 h-6" /> :
+    <AlertTriangle className="w-6 h-6" />;
+
+  const emptyTitle =
+    activeTab === 'available' ? 'No open jobs nearby' :
+    activeTab === 'scheduled' ? 'No scheduled shifts' :
+    activeTab === 'completed' ? 'No completed shifts yet' :
+    'No missed shifts';
+
+  const emptyBody =
+    activeTab === 'available' ? 'Open jobs in your cities appear here. Use the map to browse.' :
+    activeTab === 'scheduled' ? 'Accepted jobs appear here before they start.' :
+    activeTab === 'completed' ? 'Your completed shift history will show here.' :
+    'No-call and no-show shifts appear here.';
+
   return (
-    <AppScreen className="guard-tiered-screen h-full min-h-0">
-      <div className="guard-tiered-screen-pinned">
-        <JobsScreenHero
-          eyebrow="Your shifts"
-          title="My jobs"
-          subtitle={jobsHeroSubtitle}
-          segments={pieSegments}
-          activeId={activeTab}
-          onSegmentSelect={(id) => setActiveTab(id)}
-        />
-      </div>
-
-      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar">
-        <AppSegmentedControl<GuardJobsBrowseTab>
-          options={tabOptions}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
-      <div className="guard-tiered-screen-scroll">
-        <div className="guard-rating-body">
-          {activeTab === 'available' && (
-            <div className="app-section-body pt-2">
-              {availableJobs.length === 0 ? (
-                <AppEmptyState
-                  icon={<Map className="w-5 h-5" />}
-                  title="No open jobs in your service areas"
-                >
-                  Open jobs in your cities appear here. Use the map to browse shifts in nearby
-                  areas too.
-                </AppEmptyState>
-              ) : (
-                <AppItemCardStack>
-                  {availableJobs.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      job={job}
-                      onSelect={() => updateSelectedId(job.id)}
-                      showPay
-                    />
-                  ))}
-                </AppItemCardStack>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'scheduled' && (
-            <div className="app-section-body pt-2">
-              {scheduledJobs.length === 0 ? (
-                <AppEmptyState
-                  icon={<Clock className="w-5 h-5" />}
-                  title="No scheduled shifts"
-                >
-                  Accepted jobs will appear here before they start.
-                </AppEmptyState>
-              ) : (
-                <AppItemCardStack>
-                  {scheduledJobs.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      job={job}
-                      onSelect={() => updateSelectedId(job.id)}
-                      showPay
-                      showTimeUntil
-                    />
-                  ))}
-                </AppItemCardStack>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'completed' && (
-            <div className="app-section-body pt-2">
-              {completedJobs.length === 0 ? (
-                <AppEmptyState
-                  icon={<CheckCircle2 className="w-5 h-5" />}
-                  title="No completed shifts yet"
-                >
-                  Your completed shift history will show up here.
-                </AppEmptyState>
-              ) : (
-                <AppItemCardStack>
-                  {completedJobs.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      job={job}
-                      onSelect={() => updateSelectedId(job.id)}
-                    />
-                  ))}
-                </AppItemCardStack>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'missed' && (
-            <div className="app-section-body pt-2">
-              {missedJobs.length === 0 ? (
-                <AppEmptyState
-                  icon={<AlertTriangle className="w-5 h-5" />}
-                  title="No missed shifts"
-                >
-                  No-call and no-show shifts will appear here.
-                </AppEmptyState>
-              ) : (
-                <AppItemCardStack>
-                  {missedJobs.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      job={job}
-                      onSelect={() => updateSelectedId(job.id)}
-                    />
-                  ))}
-                </AppItemCardStack>
-              )}
-            </div>
-          )}
+    <AppScreen className="uber-jobs-screen h-full min-h-0">
+      {/* Uber-style: scrollable tab strip pinned at top */}
+      <div className="uber-jobs-tab-bar">
+        <div
+          className="flex gap-1.5 overflow-x-auto px-4 py-3"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        >
+          {tabOptions.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className="staff-filter-pill shrink-0 whitespace-nowrap"
+              data-active={activeTab === tab.id ? 'true' : undefined}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              {tallies[tab.id] > 0 ? ` ${tallies[tab.id]}` : ''}
+            </button>
+          ))}
         </div>
+      </div>
+
+      {/* Job list — Uber ride-selection style */}
+      <div className="uber-jobs-list">
+        {activeJobs.length === 0 ? (
+          <div className="uber-jobs-empty">
+            <div className="uber-jobs-empty-icon">{emptyIcon}</div>
+            <p className="uber-jobs-empty-title">{emptyTitle}</p>
+            <p className="uber-jobs-empty-body">{emptyBody}</p>
+          </div>
+        ) : (
+          <>
+            <p className="uber-section-header">
+              {activeTab === 'available' ? 'Available near you' :
+               activeTab === 'scheduled' ? 'Your schedule' :
+               activeTab === 'completed' ? 'Shift history' : 'Missed shifts'}
+            </p>
+            {activeJobs.map((job) => (
+              <JobRow
+                key={job.id}
+                job={job}
+                onSelect={() => updateSelectedId(job.id)}
+                showPay={activeTab === 'available' || activeTab === 'scheduled'}
+                showTimeUntil={activeTab === 'scheduled'}
+              />
+            ))}
+          </>
+        )}
       </div>
     </AppScreen>
   );

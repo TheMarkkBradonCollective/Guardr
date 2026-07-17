@@ -2456,14 +2456,12 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
 
 .map-browse-dock-inner,
 .client-map-browse-dock-inner {
-  margin: 0 0 calc(0.5rem + var(--app-safe-bottom));
-  padding: 0.5rem 0 0.25rem;
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--brand-bg) 92%, transparent) 0%,
-    color-mix(in srgb, var(--brand-bg) 55%, transparent) 70%,
-    transparent 100%
-  );
+  margin: 0 0 calc(0px + var(--app-safe-bottom));
+  padding: 10px 0 4px;
+  background: var(--uber-bg, #fff);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+  border-top: none;
 }
 
 .map-browse-scroll,
@@ -2724,16 +2722,17 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
 }
 
 .map-offer-card {
-  margin: 0 0.75rem 0.75rem;
-  padding: 0.75rem 1rem 1rem;
-  border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
-  backdrop-filter: blur(18px);
-  border: 1px solid var(--brand-border);
-  box-shadow: var(--shadow-nav);
-  color: var(--brand-text);
+  margin: 0;
+  padding: 0;
+  border-radius: 16px 16px 0 0;
+  background: var(--uber-bg, #fff);
+  backdrop-filter: none;
+  border: none;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+  color: var(--uber-text, #000);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .map-offer-card-expanded {
