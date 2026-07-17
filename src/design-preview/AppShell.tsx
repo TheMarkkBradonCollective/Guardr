@@ -82,13 +82,21 @@ export function AppShell({
   const activeId = page.nav ?? '';
   const noop = () => undefined;
 
-  if (page.layout === 'public') {
+  if (page.layout === 'public' && page.type !== 'app-welcome' && page.type !== 'auth-sheet') {
     return (
       <Block minHeight="560px" backgroundColor="backgroundPrimary">
         <PublicPageChrome themeMode={themeMode} onChangeTheme={saveTheme} sticky={false} />
         <Block padding="scale600">
-          <PageContent page={page} />
+          <PageContent page={page} frameSize={frameSize} />
         </Block>
+      </Block>
+    );
+  }
+
+  if (page.type === 'app-welcome' || page.type === 'auth-sheet') {
+    return (
+      <Block minHeight="680px" backgroundColor="backgroundPrimary" overflow="hidden">
+        <PageContent page={page} frameSize={frameSize} />
       </Block>
     );
   }
@@ -98,7 +106,7 @@ export function AppShell({
       <Block display="flex" flexDirection="column" minHeight="720px" backgroundColor="backgroundPrimary">
         <UberTopbar title={page.title} />
         <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale500'}>
-          <PageContent page={page} />
+          <PageContent page={page} frameSize={frameSize} />
         </Block>
         <GuardrBottomNav
           items={navItems.slice(0, 4)}
@@ -122,7 +130,7 @@ export function AppShell({
         <Block flex="1" display="flex" flexDirection="column" minWidth="0">
           <UberTopbar title={page.title} />
           <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale600'}>
-            <PageContent page={page} />
+            <PageContent page={page} frameSize={frameSize} />
           </Block>
         </Block>
       </Block>
@@ -186,7 +194,7 @@ export function AppShell({
           </Block>
         )}
         <Block flex="1" overflow="hidden" padding={isMap ? '0' : 'scale600'}>
-          <PageContent page={page} />
+          <PageContent page={page} frameSize={frameSize} />
         </Block>
       </Block>
     </Block>

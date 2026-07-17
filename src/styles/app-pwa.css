@@ -8,22 +8,16 @@ body.shell-pwa {
 
 body[data-shell="pwa"] .app-welcome,
 body.shell-pwa .app-welcome {
-  background: var(--brand-bg);
-}
-
-body[data-shell="pwa"] .app-welcome-header,
-body.shell-pwa .app-welcome-header {
-  backdrop-filter: blur(12px);
-  background: color-mix(in srgb, var(--brand-bg) 82%, transparent);
+  background: var(--uber-bg, var(--brand-bg));
 }
 
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
-  border-top: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--uber-border, var(--brand-border)) 70%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--brand-bg) 0%, transparent) 0%,
-    color-mix(in srgb, var(--brand-surface) 88%, var(--brand-bg)) 24%
+    color-mix(in srgb, var(--uber-bg, var(--brand-bg)) 0%, transparent) 0%,
+    color-mix(in srgb, var(--uber-surface, var(--brand-surface)) 88%, var(--uber-bg, var(--brand-bg))) 24%
   );
 }
 
@@ -53,7 +47,12 @@ body.shell-pwa .tablet-admin-rail {
 
 body[data-shell="pwa"] .app-welcome-shell-badge--pwa,
 body.shell-pwa .app-welcome-shell-badge--pwa {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--uber-accent, var(--brand-primary)) 25%, transparent);
+}
+
+body[data-view-surface="pwa-mobile"] .auth-sheet--pwa-mobile .auth-sheet-scroll,
+body[data-view-surface="pwa-tablet"] .auth-sheet--pwa-tablet .auth-sheet-scroll {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* PWA tablet — softer card chrome */

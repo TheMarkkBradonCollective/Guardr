@@ -5,7 +5,14 @@ import { Book, Console, Help, Logo } from './PreviewIcons';
 import { PreviewSearch } from './PreviewSearch';
 import { PreviewContext } from './PreviewContext';
 import type { PreviewRole } from './pages';
+import type { PreviewShellKind } from './PreviewContext';
 import type { FrameSize } from './AppShell';
+
+const SHELL_OPTIONS: { id: PreviewShellKind; label: string }[] = [
+  { id: 'browser', label: 'Browser' },
+  { id: 'pwa', label: 'PWA' },
+  { id: 'native', label: 'APK' },
+];
 
 const ROLE_OPTIONS: { id: PreviewRole | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -117,7 +124,7 @@ function Links() {
 
 function FilterPills() {
   const [css, theme] = useStyletron();
-  const { roleFilter, setRoleFilter, frameSize, setFrameSize } = useContext(PreviewContext);
+  const { roleFilter, setRoleFilter, frameSize, setFrameSize, shellPreview, setShellPreview } = useContext(PreviewContext);
 
   return (
     <div
@@ -155,13 +162,24 @@ function FilterPills() {
           {opt.label}
         </Button>
       ))}
+      {SHELL_OPTIONS.map((opt) => (
+        <Button
+          key={opt.id}
+          size={SIZE.mini}
+          kind={shellPreview === opt.id ? KIND.primary : KIND.secondary}
+          shape={SHAPE.pill}
+          onClick={() => setShellPreview(opt.id)}
+        >
+          {opt.label}
+        </Button>
+      ))}
     </div>
   );
 }
 
 export function PreviewHeader() {
   const [css, theme] = useStyletron();
-  const { roleFilter, setRoleFilter, frameSize, setFrameSize } = useContext(PreviewContext);
+  const { roleFilter, setRoleFilter, frameSize, setFrameSize, shellPreview, setShellPreview } = useContext(PreviewContext);
 
   return (
     <header
@@ -248,6 +266,17 @@ export function PreviewHeader() {
               kind={frameSize === opt.id ? KIND.primary : KIND.tertiary}
               shape={SHAPE.pill}
               onClick={() => setFrameSize(opt.id)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+          {SHELL_OPTIONS.map((opt) => (
+            <Button
+              key={opt.id}
+              size={SIZE.compact}
+              kind={shellPreview === opt.id ? KIND.primary : KIND.tertiary}
+              shape={SHAPE.pill}
+              onClick={() => setShellPreview(opt.id)}
             >
               {opt.label}
             </Button>
