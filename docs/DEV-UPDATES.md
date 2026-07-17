@@ -634,3 +634,22 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
 
 **Supabase:** No schema changes — nothing to run.
+
+---
+
+## Friday, July 17, 2026 (late afternoon) — /updateit → v1.0.77
+
+**/uberit — complete Uber surface finish (#642, merged via #643)**
+- **`GuardrDrawerShell`** — Uber-style persistent desktop sidebar, drawer on mobile/tablet/PWA/APK, compact top bar with inline title, gray content canvas
+- **`uber-surfaces.css`** — remaps legacy `adm-*`, `app-*`, and `bg-brand-*` inside `.uber-app-shell` to `--uber-*` tokens on all breakpoints
+- **`AppPrimitives`** — Base Web `AppEmptyState`, `AppScreen`, `AppSection`, `AppHeroBand`, `AppStatusBanner`
+- **Docs** — `uberit-patterns.md` surface bridge notes
+
+**PR cleanup**
+- Merged **#642** and **#643**; no open PRs at release
+
+**Release:** **v1.0.77** (build **177**) — web + PWA cache bust (`guardr-cache-v1-0-77`) + CI FCM APK
+
+**Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
