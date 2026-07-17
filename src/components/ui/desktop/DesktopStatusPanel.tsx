@@ -1,6 +1,12 @@
 import React from 'react';
+import { Block } from 'baseui/block';
+import { HeadingSmall, LabelSmall, ParagraphMedium, ParagraphSmall } from 'baseui/typography';
+import { useStyletron } from 'baseui';
 import { OverviewSegment } from '../../../lib/overviewVisuals';
 import { OverviewPieChart, OverviewSegmentBar } from '../../staff/overview/OverviewCharts';
+import { GuardrCard } from '../../baseui/GuardrCard';
+import { GuardrButton } from '../../baseui/GuardrButton';
+import { MetricCell } from '../../baseui/dashboard/MetricCell';
 
 export type DesktopStatusVariant = 'ok' | 'warn' | 'muted';
 
@@ -54,18 +60,30 @@ interface DesktopStatusPanelProps {
   className?: string;
 }
 
-const METER_TONE_CLASS: Record<NonNullable<DesktopStatusMeter['tone']>, string> = {
-  primary: 'adm-status-meter-fill--primary',
-  success: 'adm-status-meter-fill--success',
-  warning: 'adm-status-meter-fill--warning',
-  muted: 'adm-status-meter-fill--muted',
+const VARIANT_ACCENT: Record<DesktopStatusVariant, string> = {
+  ok: 'positive400',
+  warn: 'warning400',
+  muted: 'contentTertiary',
 };
 
-const METRIC_TONE_CLASS: Record<NonNullable<DesktopStatusMetric['tone']>, string> = {
-  default: '',
-  ok: 'adm-status-grid-value--ok',
-  warn: 'adm-status-grid-value--warn',
-  accent: 'adm-status-grid-value--accent',
+const METER_FILL: Record<NonNullable<DesktopStatusMeter['tone']>, string> = {
+  primary: 'accent',
+  success: 'positive400',
+  warning: 'warning400',
+  muted: 'contentTertiary',
+};
+
+const METRIC_ACCENT: Record<NonNullable<DesktopStatusMetric['tone']>, boolean> = {
+  default: false,
+  ok: true,
+  warn: true,
+  accent: true,
+};
+
+const ACTION_KIND: Record<NonNullable<DesktopStatusAction['variant']>, 'primary' | 'secondary' | 'tertiary'> = {
+  sand: 'primary',
+  outline: 'secondary',
+  soft: 'tertiary',
 };
 
 export function DesktopStatusPanel({
@@ -83,140 +101,263 @@ export function DesktopStatusPanel({
   actions = [],
   className = '',
 }: DesktopStatusPanelProps) {
+  const [, theme] = useStyletron();
+
   return (
-    <article className={`adm-card adm-card--status adm-card--status-rich ${className} adm-card--status-${variant}`}>
-      <div className="adm-status-rich-head">
-        <div className="adm-status-head">
-          <span className={`adm-status-dot adm-status-dot--${variant}`} aria-hidden />
-          <div>
-            <p className="adm-card-eyebrow">{eyebrow}</p>
-            <h3 className="adm-status-title">{title}</h3>
-          </div>
-        </div>
+    <GuardrCard className={`mobility-status-panel mobility-status-panel--${variant} ${className}`.trim()}>
+      <Block display="flex" alignItems="flex-start" justifyContent="space-between" gridGap="scale400" marginBottom="scale500">
+        <Block display="flex" alignItems="flex-start" gridGap="scale400" minWidth={0}>
+          <Block
+            width="10px"
+            height="10px"
+            flex="0 0 10px"
+            marginTop="6px"
+            overrides={{
+              Block: {
+                style: {
+                  borderRadius: '50%',
+                  backgroundColor: theme.colors[VARIANT_ACCENT[variant] as keyof typeof theme.colors] ?? theme.colors.accent,
+                },
+              },
+            }}
+            aria-hidden
+          />
+          <Block minWidth={0}>
+            <LabelSmall
+              marginTop={0}
+              marginBottom="scale200"
+              color="contentSecondary"
+              overrides={{ Block: { style: { textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 } } }}
+            >
+              {eyebrow}
+            </LabelSmall>
+            <HeadingSmall marginTop={0} marginBottom={0}>
+              {title}
+            </HeadingSmall>
+          </Block>
+        </Block>
+
         {actions.length > 0 ? (
-          <div className="adm-status-actions">
+          <Block display="flex" flexWrap gridGap="scale300" flex="0 0 auto">
             {actions.map((action) => (
-              <button
+              <GuardrButton
                 key={action.id}
-                type="button"
-                className={`adm-btn adm-btn--sm adm-btn--${action.variant ?? 'outline'}`}
+                kind={ACTION_KIND[action.variant ?? 'outline']}
+                size="compact"
                 onClick={action.onClick}
               >
                 {action.label}
-              </button>
+              </GuardrButton>
             ))}
-          </div>
+          </Block>
         ) : null}
-      </div>
+      </Block>
 
-      <p className="adm-status-summary">{summary}</p>
-      {alert ? <p className="adm-status-alert">{alert}</p> : null}
+      <ParagraphMedium marginTop={0} marginBottom={alert ? 'scale300' : 'scale500'} color="contentSecondary">
+        {summary}
+      </ParagraphMedium>
+
+      {alert ? (
+        <ParagraphSmall
+          marginTop={0}
+          marginBottom="scale500"
+          overrides={{ Block: { style: { color: theme.colors.warning400, fontWeight: 600 } } }}
+        >
+          {alert}
+        </ParagraphSmall>
+      ) : null}
 
       {metrics.length > 0 ? (
-        <ul className="adm-status-grid adm-status-grid--rich">
-          {metrics.map((metric) => {
-            const Tag = metric.onClick ? 'button' : 'li';
-            return (
-              <Tag
-                key={metric.id}
-                type={metric.onClick ? 'button' : undefined}
-                className={`adm-status-metric${metric.onClick ? ' adm-status-metric--click' : ''}`}
-                onClick={metric.onClick}
-              >
-                <p className={`adm-status-grid-value ${METRIC_TONE_CLASS[metric.tone ?? 'default']}`}>
-                  {metric.value}
-                </p>
-                <p className="adm-status-grid-label">{metric.label}</p>
-              </Tag>
-            );
-          })}
-        </ul>
+        <Block
+          display="grid"
+          gridTemplateColumns="repeat(auto-fit, minmax(100px, 1fr))"
+          gridGap="scale400"
+          marginBottom="scale600"
+        >
+          {metrics.map((metric) => (
+            <MetricCell
+              key={metric.id}
+              label={metric.label}
+              value={metric.value}
+              onClick={metric.onClick}
+              accent={METRIC_ACCENT[metric.tone ?? 'default']}
+            />
+          ))}
+        </Block>
       ) : null}
 
       {meters.length > 0 ? (
-        <div className="adm-status-meters">
+        <Block display="grid" gridTemplateColumns={['1fr', '1fr', '1fr 1fr']} gridGap="scale500" marginBottom="scale600">
           {meters.map((meter) => {
-            const Tag = meter.onClick ? 'button' : 'div';
-            return (
-              <Tag
-                key={meter.id}
-                type={meter.onClick ? 'button' : undefined}
-                className={`adm-status-meter${meter.onClick ? ' adm-status-meter--click' : ''}`}
-                onClick={meter.onClick}
-              >
-                <div className="adm-status-meter-head">
-                  <p className="adm-status-meter-label">{meter.label}</p>
-                  <p className="adm-status-meter-value">{meter.value}</p>
-                </div>
-                <div className="adm-status-meter-track">
-                  <div
-                    className={`adm-status-meter-fill ${METER_TONE_CLASS[meter.tone ?? 'primary']}`}
-                    style={{ width: `${Math.max(0, Math.min(100, meter.pct))}%` }}
+            const fillColor = theme.colors[METER_FILL[meter.tone ?? 'primary'] as keyof typeof theme.colors] ?? theme.colors.accent;
+            const body = (
+              <Block width="100%">
+                <Block display="flex" justifyContent="space-between" alignItems="center" marginBottom="scale200">
+                  <LabelSmall margin={0} color="contentSecondary">
+                    {meter.label}
+                  </LabelSmall>
+                  <LabelSmall margin={0} overrides={{ Block: { style: { fontWeight: 700 } } }}>
+                    {meter.value}
+                  </LabelSmall>
+                </Block>
+                <Block
+                  height="6px"
+                  overrides={{
+                    Block: {
+                      style: {
+                        borderRadius: '999px',
+                        backgroundColor: theme.colors.backgroundSecondary,
+                        overflow: 'hidden',
+                      },
+                    },
+                  }}
+                >
+                  <Block
+                    height="100%"
+                    width={`${Math.max(0, Math.min(100, meter.pct))}%`}
+                    overrides={{ Block: { style: { borderRadius: '999px', backgroundColor: fillColor } } }}
                   />
-                </div>
-                {meter.sub ? <p className="adm-status-meter-sub">{meter.sub}</p> : null}
-              </Tag>
+                </Block>
+                {meter.sub ? (
+                  <ParagraphSmall marginTop="scale200" marginBottom={0} color="contentSecondary">
+                    {meter.sub}
+                  </ParagraphSmall>
+                ) : null}
+              </Block>
             );
+
+            if (meter.onClick) {
+              return (
+                <button
+                  key={meter.id}
+                  type="button"
+                  onClick={meter.onClick}
+                  className="mobility-status-meter mobility-status-meter--click w-full text-left"
+                >
+                  {body}
+                </button>
+              );
+            }
+
+            return <Block key={meter.id}>{body}</Block>;
           })}
-        </div>
+        </Block>
       ) : null}
 
       {breakdown.length > 0 ? (
-        <div className="adm-status-breakdown">
-          <p className="adm-status-breakdown-title">{breakdownTitle}</p>
-          <ul className="adm-status-breakdown-list">
+        <Block marginBottom="scale600">
+          <LabelSmall
+            marginTop={0}
+            marginBottom="scale400"
+            overrides={{ Block: { style: { fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' } } }}
+          >
+            {breakdownTitle}
+          </LabelSmall>
+          <Block as="ul" margin={0} padding={0} $style={{ listStyle: 'none' }}>
             {breakdown.map((row) => {
-              const Tag = row.onClick ? 'button' : 'li';
-              return (
-                <Tag
-                  key={row.id}
-                  type={row.onClick ? 'button' : undefined}
-                  className={`adm-status-breakdown-row${row.onClick ? ' adm-status-breakdown-row--click' : ''}`}
-                  onClick={row.onClick}
-                >
-                  <span className="adm-status-breakdown-label">{row.label}</span>
-                  <span className={`adm-status-breakdown-value adm-status-breakdown-value--${row.tone ?? 'default'}`}>
+              const content = (
+                <>
+                  <ParagraphMedium margin={0} $style={{ fontWeight: 600 }}>
+                    {row.label}
+                  </ParagraphMedium>
+                  <LabelSmall
+                    margin={0}
+                    color={row.tone === 'warn' ? 'warning' : row.tone === 'ok' ? 'positive' : 'contentPrimary'}
+                    overrides={{ Block: { style: { fontWeight: 700 } } }}
+                  >
                     {row.value}
-                  </span>
-                  {row.detail ? <span className="adm-status-breakdown-detail">{row.detail}</span> : null}
-                </Tag>
+                  </LabelSmall>
+                  {row.detail ? (
+                    <ParagraphSmall margin={0} color="contentSecondary">
+                      {row.detail}
+                    </ParagraphSmall>
+                  ) : null}
+                </>
+              );
+
+              if (row.onClick) {
+                return (
+                  <Block
+                    as="li"
+                    key={row.id}
+                    marginBottom="scale300"
+                    overrides={{
+                      Block: {
+                        style: {
+                          border: `1px solid ${theme.colors.borderOpaque}`,
+                          borderRadius: '10px',
+                          padding: '12px',
+                        },
+                      },
+                    }}
+                  >
+                    <button type="button" onClick={row.onClick} className="w-full text-left mobility-status-breakdown-row">
+                      <Block display="grid" gridGap="scale100">{content}</Block>
+                    </button>
+                  </Block>
+                );
+              }
+
+              return (
+                <Block
+                  as="li"
+                  key={row.id}
+                  marginBottom="scale300"
+                  padding="scale400"
+                  overrides={{
+                    Block: {
+                      style: {
+                        border: `1px solid ${theme.colors.borderOpaque}`,
+                        borderRadius: '10px',
+                      },
+                    },
+                  }}
+                >
+                  <Block display="grid" gridGap="scale100">{content}</Block>
+                </Block>
               );
             })}
-          </ul>
-        </div>
+          </Block>
+        </Block>
       ) : null}
 
       {pipelineSegments && pipelineSegments.length > 0 ? (
-        <div className="adm-status-pipeline">
-          <p className="adm-status-breakdown-title">Pipeline pie</p>
+        <Block marginBottom="scale500">
+          <LabelSmall marginTop={0} marginBottom="scale400" overrides={{ Block: { style: { fontWeight: 700 } } }}>
+            Pipeline pie
+          </LabelSmall>
           <OverviewPieChart
             segments={pipelineSegments}
             centerLabel={String(pipelineSegments.reduce((sum, segment) => sum + segment.value, 0))}
             centerSub="jobs"
             size="sm"
           />
-        </div>
+        </Block>
       ) : null}
 
       {queuePieSegments && queuePieSegments.length > 0 ? (
-        <div className="adm-status-pipeline">
-          <p className="adm-status-breakdown-title">Queue pie</p>
+        <Block marginBottom="scale500">
+          <LabelSmall marginTop={0} marginBottom="scale400" overrides={{ Block: { style: { fontWeight: 700 } } }}>
+            Queue pie
+          </LabelSmall>
           <OverviewPieChart
             segments={queuePieSegments}
             centerLabel={String(queuePieSegments.reduce((sum, segment) => sum + segment.value, 0))}
             centerSub="items"
             size="sm"
           />
-        </div>
+        </Block>
       ) : null}
 
       {pipelineSegments && pipelineSegments.length > 0 ? (
-        <div className="adm-status-pipeline">
-          <p className="adm-status-breakdown-title">Pipeline bars</p>
+        <Block>
+          <LabelSmall marginTop={0} marginBottom="scale400" overrides={{ Block: { style: { fontWeight: 700 } } }}>
+            Pipeline bars
+          </LabelSmall>
           <OverviewSegmentBar segments={pipelineSegments} />
-        </div>
+        </Block>
       ) : null}
-    </article>
+    </GuardrCard>
   );
 }
 

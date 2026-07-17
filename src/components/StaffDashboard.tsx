@@ -103,7 +103,6 @@ import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
 import { STAFF_SECTION_ACCESS_MESSAGES, isStaffNavSectionAccessible } from '../lib/staffNavAccess';
 import { DevNotesPage } from './docs/DevNotesPage';
-import { StaffDesignQAPanel } from './staff/StaffDesignQAPanel';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
@@ -1029,16 +1028,6 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.message}
             placeholders={['Release notes', 'Build history']}
-          />
-        );
-      case 'design-qa':
-        return showFinance ? (
-          <StaffDesignQAPanel />
-        ) : (
-          <AppBlockedAccessScreen
-            title={STAFF_SECTION_ACCESS_MESSAGES['design-qa']!.title}
-            message={STAFF_SECTION_ACCESS_MESSAGES['design-qa']!.message}
-            placeholders={['Component showcase', 'Overlay QA']}
           />
         );
       case 'payment-settings':

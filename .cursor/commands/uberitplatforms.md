@@ -129,7 +129,6 @@ src/components/layouts/desktop/, tablet/, RoleAppShell.tsx
 src/components/baseui/                    — Base Web adapters
 src/theme/guardrBaseTheme.ts, motionTokens.ts
 src/styles/desktop-app.css, tablet-app.css, app-pwa.css, app-native.css
-src/design-preview/                       — acceptance preview
 ```
 
 ---
@@ -146,7 +145,6 @@ src/design-preview/                       — acceptance preview
 - Layouts split vs still shared (and why)
 - Feature parity status per platform
 - Files changed
-- Design preview URL
 - Test/lint status
 - Next platform or phase
 

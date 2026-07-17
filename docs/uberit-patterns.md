@@ -4,7 +4,7 @@ Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/c
 
 ## Theme
 
-Production and design-preview share one theme — **no custom brand colors during migration**:
+Production uses stock Uber Base Web themes — **no custom brand colors during migration**:
 
 ```ts
 import { uberThemeForMode } from '../theme/uberBaseTheme';
@@ -96,6 +96,10 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 **Surface bridge:** `src/styles/uber-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
 
+**Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — global sage→Uber token remap; independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
+
+**Public landing (browser):** `UberStyleLandingPage` — Uber.com homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
+
 ## Dashboard building blocks (Phase 4)
 
 `src/components/baseui/dashboard/`:
@@ -110,13 +114,6 @@ Global overlays live in `src/components/baseui/overlays/`:
 | `UberThemeVars` | Syncs `--uber-accent` etc. to CSS (auto-mounted in BaseUIProvider) |
 
 Hybrid screens use `.uber-text-accent`, `.uber-text-muted` instead of `text-brand-*`.
-
-## Design preview
-
-- Entry: `/design-preview.html` — standalone Vite page using the same provider stack as production
-- Pinned **Component showcase** exercises adapters, overlays, and dashboard kit
-- Staff live QA: `/staff/design-qa` (Director/Founder) — in-app `ComponentShowcase` with real auth context
-
 
 `src/components/baseui/primitives/fieldStyles.ts`:
 
