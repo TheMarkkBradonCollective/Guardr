@@ -1,23 +1,33 @@
-# /fixit — Complete UI/UX optimization
+# /fixit — UI/UX optimization (scope-aware)
 
-Perform a complete UI/UX optimization across every Guardr surface. Each device gets its own optimized layout — not a resized copy of another breakpoint.
+Optimize the **selected work** based on its scope. Do not expand beyond what was selected unless the scope is the entire project.
 
-## Expected outcome
+## Scope
 
-Every screen is fully responsive with purpose-built layouts per platform, improved usability and performance, accessibility fixes applied, and UI bugs resolved.
+| Selection | What to do |
+|-----------|------------|
+| **Single component** | Improve only that component |
+| **Single page** | Fully redesign and optimize that page |
+| **Multiple pages** | Optimize all selected pages |
+| **Entire project** | Perform a full project UI/UX overhaul |
 
-## Requirements
+When no specific selection is given, ask what to target or infer scope from context (open files, recent edits, or an explicit area name).
 
-- Every screen must be fully responsive
-- Create **independent layouts** for:
-  - **Desktop**
-  - **Tablet**
-  - **Mobile**
-- Do not simply resize elements — each device should have its own optimized layout and navigation
-- Improve spacing, typography, animations, and usability
-- Fix accessibility issues (focus, contrast, labels, keyboard/touch targets)
-- Optimize loading speed
-- Ensure all pages work on every device
+## Always
+
+- Create independent **Desktop**, **Tablet**, and **Mobile** layouts
+- Do not simply scale layouts — design each for its device
+- Create an optimized **PWA** version (lite experience)
+- Create an optimized **APK** version (premium native experience when applicable)
+- Fix responsiveness
+- Improve accessibility (focus, contrast, labels, keyboard/touch targets)
+- Improve spacing and typography
+- Improve navigation
+- Improve animations
+- Improve performance
+- Remove redundant code
+- Fix UI inconsistencies
+- **Preserve existing functionality** unless improvements require changes
 
 ## Platform designs
 
@@ -61,21 +71,15 @@ src/styles/desktop-app.css, tablet-app.css, app-pwa.css, app-native.css
 
 See `docs/CROSS_PLATFORM.md` for the full surface model.
 
-## General cleanup
-
-- Fix UI bugs, responsive bugs, and alignment issues
-- Improve visual and interaction consistency
-- Remove unused code and dead CSS
-- Optimize performance (lazy load, reduce re-renders, trim bundle where obvious)
-
 ## Work order
 
-1. Audit screens against the surface matrix — note what shares a layout that should split
-2. Implement **mobile** first (default path)
-3. Add **tablet** shell wiring for authenticated app screens
-4. Add **desktop** variants where density warrants it
-5. Verify **PWA** and **native (APK)** at mobile and tablet widths
-6. Run `npm run lint` and `npm test`
+1. Confirm scope (component / page / pages / project)
+2. Audit selected screens against the surface matrix
+3. Implement **mobile** first (default path)
+4. Add **tablet** shell wiring where needed
+5. Add **desktop** variants where density warrants it
+6. Verify **PWA** and **native (APK)** at mobile and tablet widths
+7. Run `npm run lint` and `npm test`
 
 ## Branch & PR
 
@@ -84,7 +88,8 @@ See `docs/CROSS_PLATFORM.md` for the full surface model.
 
 ## Report back
 
-- Surfaces and screens touched (desktop / tablet / mobile / PWA / APK)
+- Scope worked on (component / page / pages / project)
+- Surfaces touched (desktop / tablet / mobile / PWA / APK)
 - Files changed (shells, components, CSS)
 - UI bugs fixed
 - Screens still needing a dedicated variant
