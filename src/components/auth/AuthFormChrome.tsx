@@ -3,8 +3,6 @@ import { Block } from 'baseui/block';
 import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
-import { GuardrCard } from '../baseui/GuardrCard';
-import { AccentIcon } from '../baseui/dashboard';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { LandingBadge } from '../landing/LandingUberPrimitives';
 
@@ -91,54 +89,30 @@ export function AuthRolePicker({
   onChange: (id: 'guard' | 'client') => void;
   showDescription?: boolean;
 }) {
-  const [, theme] = useStyletron();
-
   return (
-    <Block marginBottom="scale700">
-      <LabelSmall marginBottom="scale400" color="contentSecondary">
+    <Block marginBottom="scale600">
+      <LabelSmall marginBottom="scale300" color="contentSecondary">
         Account type
       </LabelSmall>
-      <Block display="grid" gridTemplateColumns="1fr 1fr" gridGap="scale400">
-        {roles.map(({ id, label, desc, icon: Icon }) => {
+      <div className="app-welcome-role-row">
+        {roles.map(({ id, label, icon: Icon }) => {
           const selected = value === id;
           return (
-            <GuardrCard
+            <button
               key={id}
-              interactive
+              type="button"
+              aria-pressed={selected}
               onClick={() => onChange(id)}
-              overrides={{
-                Root: {
-                  style: {
-                    cursor: 'pointer',
-                    borderColor: selected ? 'accent' : 'borderOpaque',
-                    backgroundColor: selected ? 'accent50' : 'backgroundPrimary',
-                  },
-                },
-              }}
+              className="app-welcome-role-seg"
+              data-active={selected ? 'true' : undefined}
             >
-              <Block marginBottom="scale300">
-                <AccentIcon icon={Icon} size={20} strokeWidth={1.75} />
-              </Block>
-              <Block
-                as="p"
-                margin="0"
-                $style={{
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: selected ? theme.colors.accent : theme.colors.contentPrimary,
-                }}
-              >
-                {label}
-              </Block>
-              {showDescription && desc ? (
-                <ParagraphMedium marginTop="scale200" marginBottom="0" color="contentSecondary">
-                  {desc}
-                </ParagraphMedium>
-              ) : null}
-            </GuardrCard>
+              <Icon size={16} strokeWidth={1.75} aria-hidden />
+              {label}
+              {showDescription && !selected ? null : null}
+            </button>
           );
         })}
-      </Block>
+      </div>
     </Block>
   );
 }

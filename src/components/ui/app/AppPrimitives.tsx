@@ -30,21 +30,19 @@ export function AppEmptyState({
   if (icon || title) {
     return (
       <Block
-        className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}
+        className={`app-empty-state ${className}`.trim()}
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
         gridGap="scale300"
         padding="scale800"
-        backgroundColor={dashed ? 'transparent' : 'backgroundPrimary'}
         overrides={{
           Block: {
             style: {
-              borderRadius: '12px',
-              border: dashed ? '1px dashed' : '1px solid',
-              borderColor: 'borderOpaque',
               textAlign: 'center',
+              background: 'transparent',
+              border: 'none',
             },
           },
         }}

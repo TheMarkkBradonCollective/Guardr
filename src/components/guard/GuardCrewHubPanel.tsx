@@ -135,12 +135,9 @@ function CrewJobDetailBody({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-brand-border bg-brand-surface/50 px-3 py-3">
-        <p className="text-sm text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
-        <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5 shrink-0" />
-          {job.siteName || job.location}
-        </p>
+      <div className="app-list-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+        <p className="uber-job-row-meta">{formatShiftRange(job.startDate, job.endDate)}</p>
+        <p className="uber-job-row-meta">{job.siteName || job.location}</p>
       </div>
       <GuardTeamPanel
         job={job}
