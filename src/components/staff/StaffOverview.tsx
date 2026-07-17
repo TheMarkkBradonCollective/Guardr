@@ -35,6 +35,8 @@ import {
   AppMetricCell,
   AppMetricStrip,
 } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
+import { AccentIcon } from '../baseui/dashboard';
 import { WfBadge } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
 import {
@@ -135,6 +137,7 @@ const QUICK_LINK_META: Record<
   cities: { label: 'Operations', icon: MapPin },
   guide: { label: 'Guide', icon: LayoutDashboard },
   'dev-updates': { label: 'Dev notes', icon: LayoutDashboard },
+  'design-qa': { label: 'Design QA', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },
   preferences: { label: 'Preferences', icon: Settings },
 };
@@ -229,7 +232,7 @@ export function StaffOverview({
         <p className="text-sm font-semibold leading-tight">
           {stats.platformHealthy ? 'All clear' : 'Needs review'}
         </p>
-        <p className="text-xs text-brand-text-muted mt-0.5">{stats.pendingReviews} in queue</p>
+        <p className="text-xs uber-text-muted mt-0.5">{stats.pendingReviews} in queue</p>
       </div>
     </div>
   );
@@ -254,10 +257,10 @@ export function StaffOverview({
     <AppDashboardZone title="Needs your attention">
       {filteredActions.length === 0 ? (
         <div className="staff-overview-empty-card">
-          <CheckCircle2 className="w-5 h-5 text-brand-primary shrink-0" />
+          <AccentIcon icon={CheckCircle2} size={20} className="shrink-0" />
           <div>
             <p className="text-sm font-semibold">You&apos;re caught up</p>
-            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{config.emptyAttentionCopy}</p>
+            <p className="text-xs uber-text-muted mt-0.5 leading-relaxed">{config.emptyAttentionCopy}</p>
           </div>
         </div>
       ) : (
@@ -282,9 +285,9 @@ export function StaffOverview({
                     <p className="text-sm font-semibold">{item.title}</p>
                     <WfBadge tone={item.tone === 'urgent' ? 'warning' : 'default'}>{item.count}</WfBadge>
                   </div>
-                  <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{item.description}</p>
+                  <p className="text-xs uber-text-muted mt-1 leading-relaxed">{item.description}</p>
                 </div>
-                <ArrowRight className="w-4 h-4 shrink-0 text-brand-text-muted mt-0.5" />
+                <ArrowRight className="w-4 h-4 shrink-0 uber-text-muted mt-0.5" />
               </div>
             </AppItemCard>
           ))}
@@ -301,10 +304,10 @@ export function StaffOverview({
     >
       {liveJobs.length === 0 ? (
         <div className="staff-overview-empty-card">
-          <MapPin className="w-5 h-5 text-brand-text-muted shrink-0" />
+          <MapPin className="w-5 h-5 uber-text-muted shrink-0" />
           <div>
             <p className="text-sm font-semibold">No guards on site</p>
-            <p className="text-xs text-brand-text-muted mt-0.5">
+            <p className="text-xs uber-text-muted mt-0.5">
               Picked-up and in-progress jobs appear here when work is underway.
             </p>
           </div>
@@ -326,25 +329,27 @@ export function StaffOverview({
                         {statusCfg.emoji} {statusCfg.label}
                       </WfBadge>
                     </div>
-                    <p className="text-xs text-brand-text-muted mt-1">
+                    <p className="text-xs uber-text-muted mt-1">
                       {job.guardName} · {job.clientName}
                     </p>
-                    <p className="text-xs text-brand-text-muted mt-0.5 truncate">{job.site}</p>
+                    <p className="text-xs uber-text-muted mt-0.5 truncate">{job.site}</p>
                     {canUpdateJobs && onOpenJob && (
-                      <button
+                      <AppButton
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOpenJob(job.id);
                         }}
-                        className="mt-2 app-button-outline app-btn-sm"
+                        className="mt-2"
                       >
                         Edit / update job
-                      </button>
+                      </AppButton>
                     )}
                   </div>
                   {job.startedAt && (
-                    <p className="text-[11px] text-brand-text-muted shrink-0">
+                    <p className="text-[11px] uber-text-muted shrink-0">
                       {formatActivityTime(job.startedAt)}
                     </p>
                   )}
@@ -413,7 +418,7 @@ export function StaffOverview({
                   <OverviewSegmentBar segments={jobPipelineSegments} />
                 </div>
               ) : (
-                <p className="text-sm text-brand-text-muted py-6 text-center">No jobs in the pipeline yet.</p>
+                <p className="text-sm uber-text-muted py-6 text-center">No jobs in the pipeline yet.</p>
               )}
             </section>
           )}
@@ -422,7 +427,7 @@ export function StaffOverview({
             <section className="staff-overview-feed-card">
               <p className="overview-visual-title">Recent activity</p>
               {activityFeed.length === 0 ? (
-                <p className="text-sm text-brand-text-muted py-6 text-center">
+                <p className="text-sm uber-text-muted py-6 text-center">
                   Check-ins, patrol reports, and new jobs will show here as they happen.
                 </p>
               ) : (
@@ -432,7 +437,7 @@ export function StaffOverview({
                       <span className="staff-overview-feed-dot" aria-hidden />
                       <div className="min-w-0">
                         <p className="text-sm leading-snug">{item.message}</p>
-                        <p className="text-[11px] text-brand-text-muted mt-0.5">{formatActivityTime(item.timestamp)}</p>
+                        <p className="text-[11px] uber-text-muted mt-0.5">{formatActivityTime(item.timestamp)}</p>
                       </div>
                     </li>
                   ))}

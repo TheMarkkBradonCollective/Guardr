@@ -1,4 +1,8 @@
 import React from 'react';
+import { Block } from 'baseui/block';
+import { HeadingSmall, LabelSmall } from 'baseui/typography';
+import { GuardrButton } from '../../baseui/GuardrButton';
+import { GuardrTag } from '../../baseui/GuardrTag';
 
 interface WfSectionHeaderProps {
   title: string;
@@ -10,18 +14,22 @@ interface WfSectionHeaderProps {
 
 export function WfSectionHeader({ title, actionLabel, onAction, count, className = '' }: WfSectionHeaderProps) {
   return (
-    <div className={`app-section-head ${className}`}>
-      <div className="flex items-center gap-2 min-w-0 !p-0">
-        <h2 className="truncate">{title}</h2>
-        {count != null && (
-          <span className="wf-count-badge shrink-0">{count}</span>
-        )}
-      </div>
-      {actionLabel && onAction && (
-        <button type="button" onClick={onAction} className="app-section-link shrink-0">
+    <Block className={`app-section-head ${className}`.trim()} display="flex" alignItems="center" justifyContent="space-between" gridGap="scale400">
+      <Block display="flex" alignItems="center" gridGap="scale300" minWidth="0">
+        <HeadingSmall margin="0" className="truncate">
+          {title}
+        </HeadingSmall>
+        {count != null ? (
+          <GuardrTag kind="neutral" closeable={false}>
+            {count}
+          </GuardrTag>
+        ) : null}
+      </Block>
+      {actionLabel && onAction ? (
+        <GuardrButton kind="tertiary" size="compact" onClick={onAction} className="app-section-link shrink-0">
           {actionLabel}
-        </button>
-      )}
-    </div>
+        </GuardrButton>
+      ) : null}
+    </Block>
   );
 }

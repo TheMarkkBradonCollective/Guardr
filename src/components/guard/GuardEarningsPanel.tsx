@@ -8,6 +8,7 @@ import {
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
 import { AppEmptyState, AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
 import { Banknote, CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { GuardEarningsDesktop } from './GuardEarningsDesktop';
@@ -93,8 +94,9 @@ export function GuardEarningsPanel({
     <section className="guard-pay-actions-section" aria-label="Payout actions">
       <div className="guard-pay-actions-grid">
         <div className="guard-pay-action-block">
-          <button
+          <AppButton
             type="button"
+            variant="primary"
             onClick={() => void onRequestStripePayout?.()}
             disabled={
               breakdown.onlineAvailable <= 0 ||
@@ -102,7 +104,7 @@ export function GuardEarningsPanel({
               !onRequestStripePayout ||
               !stripeReady
             }
-            className="app-button-primary guard-pay-action-button"
+            className="guard-pay-action-button"
           >
             {stripeRequestPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -110,7 +112,7 @@ export function GuardEarningsPanel({
               <CreditCard className="w-4 h-4" />
             )}
             Send to my bank
-          </button>
+          </AppButton>
           {!stripeReady && needsBankForOnline && (
             <p className="guard-pay-action-hint">Connect your bank through Stripe first</p>
           )}
@@ -124,11 +126,12 @@ export function GuardEarningsPanel({
           )}
         </div>
         <div className="guard-pay-action-block">
-          <button
+          <AppButton
             type="button"
+            variant="outline"
             onClick={() => void onRequestCashPayout?.()}
             disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-            className="app-button-outline guard-pay-action-button"
+            className="guard-pay-action-button"
           >
             {cashRequestPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -136,7 +139,7 @@ export function GuardEarningsPanel({
               <Banknote className="w-4 h-4" />
             )}
             Request cash pickup
-          </button>
+          </AppButton>
           {(breakdown.cashAvailable ?? 0) <= 0 && (
             <p className="guard-pay-action-hint">Available when cash pickup funds are ready</p>
           )}
@@ -196,11 +199,13 @@ export function GuardEarningsPanel({
                     ? 'Stripe still needs a few payout details before online bank transfers are enabled.'
                     : 'Link your bank through Stripe to receive online payouts. Cash pickup stays available without this step.'}
                 </p>
-                <button
+                <AppButton
                   type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={onConnectStripe}
                   disabled={connectPending}
-                  className="app-button-primary app-btn-sm mt-3 disabled:opacity-50"
+                  className="mt-3"
                 >
                   {connectPending ? (
                     <>
@@ -211,7 +216,7 @@ export function GuardEarningsPanel({
                       <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
                     </>
                   )}
-                </button>
+                </AppButton>
               </div>
             </div>
           )}
@@ -282,13 +287,13 @@ export function GuardEarningsPanel({
                     <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
                       <div className="flex-1 min-w-0 text-left">
                         <p className="font-semibold text-sm">{job.title}</p>
-                        <p className="text-xs text-brand-text-muted mt-0.5">{job.clientName}</p>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
+                        <p className="text-xs uber-text-muted mt-0.5">{job.clientName}</p>
+                        <p className="text-xs uber-text-muted mt-0.5">
                           {formatShiftRange(job.startDate, job.endDate)}
                         </p>
-                        <p className="text-xs font-medium text-brand-text mt-2">{pay.headline}</p>
+                        <p className="text-xs font-medium uber-text mt-2">{pay.headline}</p>
                         {pay.subtext && (
-                          <p className="text-xs text-brand-text-muted mt-0.5">{pay.subtext}</p>
+                          <p className="text-xs uber-text-muted mt-0.5">{pay.subtext}</p>
                         )}
                       </div>
                       <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>

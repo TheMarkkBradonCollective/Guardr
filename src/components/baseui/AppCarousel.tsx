@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { motion, useMotionValue, animate, type PanInfo } from 'motion/react';
 import { Block } from 'baseui/block';
+import { useStyletron } from 'baseui';
 import { LabelSmall } from 'baseui/typography';
 import { MOTION_DURATION, MOTION_EASING, motionDuration, prefersReducedMotion } from '../../theme/motionTokens';
 
@@ -47,6 +48,7 @@ export function AppCarousel({
   label = 'Carousel',
   className,
 }: AppCarouselProps) {
+  const [, theme] = useStyletron();
   const slideCount = children.length;
   const [internalIndex, setInternalIndex] = useState(0);
   const index = controlledIndex ?? internalIndex;
@@ -156,7 +158,7 @@ export function AppCarousel({
                 style: {
                   pointerEvents: 'none',
                   zIndex: 2,
-                  background: 'linear-gradient(90deg, var(--brand-bg) 0%, transparent 100%)',
+                  background: `linear-gradient(90deg, ${theme.colors.backgroundPrimary} 0%, transparent 100%)`,
                 },
               },
             }}
@@ -172,7 +174,7 @@ export function AppCarousel({
                 style: {
                   pointerEvents: 'none',
                   zIndex: 2,
-                  background: 'linear-gradient(270deg, var(--brand-bg) 0%, transparent 100%)',
+                  background: `linear-gradient(270deg, ${theme.colors.backgroundPrimary} 0%, transparent 100%)`,
                 },
               },
             }}
@@ -258,7 +260,7 @@ export function AppCarousel({
                 border: 'none',
                 padding: 0,
                 cursor: 'pointer',
-                background: i === index ? 'var(--brand-primary)' : 'var(--brand-border)',
+                background: i === index ? theme.colors.accent : theme.colors.borderOpaque,
                 transition: `width ${MOTION_DURATION.fast}ms ${MOTION_EASING.standard}, background ${MOTION_DURATION.fast}ms ease`,
               }}
             />

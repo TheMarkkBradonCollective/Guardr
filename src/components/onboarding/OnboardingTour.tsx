@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Block } from 'baseui/block';
+import { HeadingMedium, LabelSmall, ParagraphSmall } from 'baseui/typography';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import type { OnboardingTour } from '../../lib/onboardingTours';
 import { shouldOfferTutorialPrompt, type TutorialPhase, type TutorialPersistedState } from '../../lib/tutorialSession';
+import { AppModal } from '../ui/motion/AppMotion';
+import { AppButton } from '../ui/AppButton';
+import { AccentIcon } from '../baseui/dashboard';
 
 export interface TutorialNavigationHandlers {
   onGuardTab?: (tab: string) => void;
@@ -54,32 +59,36 @@ function TutorialPrompt({
   onDecline: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 tutorial-prompt-overlay">
-      <div className="w-full max-w-lg modal-panel p-6 space-y-4">
-        <div className="flex items-center gap-2 text-brand-primary">
-          <Sparkles className="w-5 h-5" />
-          <p className="text-xs font-bold uppercase tracking-wider">Interactive tutorial</p>
-        </div>
-        <h2 className="text-2xl font-black tracking-[-0.03em]">Take a quick tour?</h2>
-        <p className="text-sm text-brand-text-muted leading-relaxed">
+    <AppModal open onClose={onDecline} align="center" zIndex={9998} ariaLabelledBy="tutorial-prompt-title">
+      <Block padding="scale800" className="w-full max-w-lg">
+        <Block display="flex" alignItems="center" gridGap="scale300" marginBottom="scale400">
+          <AccentIcon icon={Sparkles} size={20} />
+          <LabelSmall margin={0} $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+            Interactive tutorial
+          </LabelSmall>
+        </Block>
+        <HeadingMedium id="tutorial-prompt-title" marginTop={0} marginBottom="scale400">
+          Take a quick tour?
+        </HeadingMedium>
+        <ParagraphSmall color="contentSecondary" marginBottom="scale500">
           Walk through {tour.role === 'staff' ? 'staff ops' : `the ${tour.role} app`} step by step with
           private practice data that never goes live. You can skip now and restart anytime from Settings.
-        </p>
-        <ul className="text-sm text-brand-text-muted space-y-1.5 list-disc list-inside">
+        </ParagraphSmall>
+        <ul className="text-sm uber-text-muted space-y-1.5 list-disc list-inside mb-6">
           <li>Practice jobs and requests stay on your device only</li>
           <li>Deleted automatically when you end the tutorial</li>
           <li>After the walkthrough, explore freely in practice mode</li>
         </ul>
-        <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <button type="button" onClick={onStart} className="app-button-primary flex-1">
+        <Block display="flex" flexDirection={['column', 'column', 'row']} gridGap="scale300">
+          <AppButton type="button" variant="primary" fullWidth onClick={onStart}>
             Start tutorial
-          </button>
-          <button type="button" onClick={onDecline} className="app-button-outline flex-1">
+          </AppButton>
+          <AppButton type="button" variant="outline" fullWidth onClick={onDecline}>
             Skip for now
-          </button>
-        </div>
-      </div>
-    </div>
+          </AppButton>
+        </Block>
+      </Block>
+    </AppModal>
   );
 }
 

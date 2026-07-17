@@ -1,21 +1,23 @@
 # /uberit — Reusable UI patterns
 
-Patterns for the Guardr platform redesign using Uber Base Web. See also `docs/guardedesign.md` and `.cursor/commands/uberit.md`.
+Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/commands/uberit.md`.
 
-## Theme bridge
+## Theme
 
-Production and design-preview share one theme:
+Production and design-preview share one theme — **no custom brand colors during migration**:
 
 ```ts
-import { guardrThemeForMode } from '../theme/guardrBaseTheme';
+import { uberThemeForMode } from '../theme/uberBaseTheme';
+import { withAppBreakpoints } from '../components/baseui/layout/shellStyles';
 import { useThemeMode } from '../lib/platform/useThemeMode';
 
-const theme = guardrThemeForMode(useThemeMode());
+const theme = withAppBreakpoints(uberThemeForMode(useThemeMode()));
 ```
 
-- **Light:** white canvas, sage `#5E7B61` accent
-- **Dark:** black canvas, sage `#6B8F6E` accent
-- CSS vars (`--brand-*`) remain source of truth; Base Web theme mirrors them for `baseui` components
+- **Light:** Uber `LightTheme` — accent `#276EF1`
+- **Dark:** Uber `DarkTheme` — accent `#335BA3`
+- Use `useStyletron()` or Styletron token strings in overrides — **not** `var(--brand-primary)`
+- Legacy Tailwind `--brand-*` CSS remains for unmigrated screens until Phase 5
 
 ## Provider stack
 
@@ -23,42 +25,41 @@ const theme = guardrThemeForMode(useThemeMode());
 <DeviceProvider>
   <BaseUIProvider>
     <AppMotionProvider>
-      <App />
+      <AppSnackbarProvider>
+        <App />
+      </AppSnackbarProvider>
     </AppMotionProvider>
   </BaseUIProvider>
 </DeviceProvider>
 ```
-
-Wrap any new Base Web UI inside `BaseUIProvider`. Legacy Tailwind/CSS screens continue to work during migration.
 
 ## Component adapters
 
 | Adapter | Base Web | Use for |
 |---------|----------|---------|
 | `GuardrButton` | `Button` | All CTAs — 44px min height, press scale |
+| `AppButton` | `GuardrButton` | Legacy `.app-button-*` class mapping |
 | `GuardrCard` | `Card` | Dashboard widgets — border, no default shadow |
 | `GuardrInput` | `Input` | Forms — 44px touch target |
 | `GuardrTag` | `Tag` | Chips, filters, status pills |
-| `GuardrSkeleton` | `Block` | Loading — shimmer, respects reduced motion |
-| `AppCarousel` | `motion` + snap scroll | Hero, stats, galleries, tutorials |
+| `GuardrSkeleton` | `Block` | Loading — Uber-blue shimmer |
+| `AppCarousel` | `motion` + snap scroll | Hero, stats, galleries |
+
+### Active nav states
+
+```ts
+// shellStyles.ts — use theme tokens, not sage RGB
+backgroundColor: $active ? 'accent50' : 'transparent',
+borderColor: $active ? 'accent' : 'transparent',
+```
 
 ### Button example
 
 ```tsx
-import { GuardrButton } from '@/src/components/baseui';
+import { AppButton } from '../components/ui/AppButton';
 
-<GuardrButton kind="primary" onClick={onSave}>Save changes</GuardrButton>
-<GuardrButton kind="secondary" size="compact">Cancel</GuardrButton>
-```
-
-### Card example
-
-```tsx
-import { GuardrCard } from '@/src/components/baseui';
-
-<GuardrCard interactive title="Earnings">
-  <HeadingLarge>$1,240</HeadingLarge>
-</GuardrCard>
+<AppButton variant="primary" onClick={onSave}>Save changes</AppButton>
+<AppButton variant="outline" size="compact">Cancel</AppButton>
 ```
 
 ## Motion system
@@ -70,52 +71,54 @@ Import from `src/theme/motionTokens.ts`:
 | `MOTION_DURATION.fast` | 150ms | Micro-interactions |
 | `MOTION_DURATION.normal` | 200ms | Fade, hover |
 | `MOTION_DURATION.sheet` | 320ms | Sheets, drawers |
-| `MOTION_EASING.enter` | quintic decel | Enter transitions |
-| `MOTION_EASING.exit` | accelerate | Exit transitions |
 
 Always call `prefersReducedMotion()` or `motionDuration()` before animating.
 
-## Carousel (`AppCarousel`)
+## Overlays
 
-Features: drag, touch, keyboard (←/→/Home/End), horizontal wheel, snap, dots, edge fade, active scale, optional autoplay + loop.
+Global overlays live in `src/components/baseui/overlays/`:
 
-```tsx
-<AppCarousel showDots edgeFade activeScale={1.02} autoplayMs={8000} loop>
-  {slides.map((slide) => (
-    <GuardrCard key={slide.id}>{slide.content}</GuardrCard>
-  ))}
-</AppCarousel>
-```
+- `GuardrModal`, `GuardrSheet`, `GuardrDrawer`
+- `dismissable={false}` — legal gates that block backdrop/Escape/system-back close
+- `overlayStack.ts` — Escape / system-back
+- `snackbarBridge.ts` — `showAppToast()` unchanged API
+- `AppFormSheet` — Base Web form sheet chrome (no legacy `app-form-sheet-*` CSS)
 
-## Navigation patterns
 
-| Form factor | Pattern | Target component |
-|-------------|---------|------------------|
-| Mobile | Bottom nav 3–5 tabs + More sheet | `BottomNavBar` → Base `Navigation` |
-| Tablet | Icon rail + top bar | `TabletAdminShell` |
-| Desktop | Collapsible side rail + sticky top bar | `DesktopAdminShell` |
+## Layout shells
 
-Active state: sage accent — never Uber blue.
+`src/components/baseui/layout/`:
 
-## Spacing
+- `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`
+- `PublicPageChrome`
+- `shellStyles.ts` — breakpoints + nav overrides
 
-4px baseline: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
+## Dashboard building blocks (Phase 4)
 
-Base Web scale maps: `scale300` = 8px, `scale400` = 12px, `scale500` = 16px, `scale600` = 20px, `scale800` = 32px.
+`src/components/baseui/dashboard/`:
 
-## Accessibility checklist
+| Component | Use for |
+|-----------|---------|
+| `DashboardHero` | Role hub greeting + status pill |
+| `DashboardZone` | Section with title + action link |
+| `MetricCell` / `MetricStrip` | At-a-glance stats (GuardrCard) |
+| `QuickActionTile` | Client home quick-action grid |
+| `AccentIcon` / `MutedIcon` | Lucide icons using theme colors |
+| `UberThemeVars` | Syncs `--uber-accent` etc. to CSS (auto-mounted in BaseUIProvider) |
 
-- [ ] Semantic landmarks (`main`, `nav`, `region`)
-- [ ] Visible focus rings (`--focus-ring`)
-- [ ] `aria-*` on carousels, modals, tabs
-- [ ] 44px minimum touch targets
-- [ ] WCAG AA contrast in Light and Dark
-- [ ] `prefers-reduced-motion` honored
-
-## Migration rule
-
-**Shells before screens.** Replace layout chrome first, then page content. Do not rewrite `App.tsx` handlers — swap presentation at dashboard boundaries.
+Hybrid screens use `.uber-text-accent`, `.uber-text-muted` instead of `text-brand-*`.
 
 ## Design preview
 
-`/design-preview.html` — 67 screens mirroring production routes. Use as acceptance checklist during `/uberit` phases.
+- Entry: `/design-preview.html` — standalone Vite page using the same provider stack as production
+- Pinned **Component showcase** exercises adapters, overlays, and dashboard kit
+- Staff live QA: `/staff/design-qa` (Director/Founder) — in-app `ComponentShowcase` with real auth context
+
+
+`src/components/baseui/primitives/fieldStyles.ts`:
+
+```tsx
+import { inputOverrides, formControlOverrides } from '../baseui/primitives';
+```
+
+Used by `AppInput`, `AppTextarea`, `AppFormField` in `AppPrimitives.tsx`.

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Block } from 'baseui/block';
+import { useStyletron } from 'baseui';
 import { LayoutGrid, Map, type LucideIcon } from 'lucide-react';
 import { iconRailItemStyle } from './shellStyles';
 import type { GuardrNavItem } from './types';
@@ -19,6 +20,8 @@ export function GuardrIconRail({
   footer?: React.ReactNode;
   ariaLabel?: string;
 }) {
+  const [, theme] = useStyletron();
+
   return (
     <Block
       as="aside"
@@ -65,7 +68,7 @@ export function GuardrIconRail({
               aria-current={active ? 'page' : undefined}
               aria-label={label}
               title={label}
-              style={iconRailItemStyle(active)}
+              style={iconRailItemStyle(theme, active)}
             >
               {Icon ? <Icon size={22} strokeWidth={active ? 2.5 : 2} /> : null}
               {badge != null && badge > 0 ? (
@@ -78,8 +81,8 @@ export function GuardrIconRail({
                     height: 16,
                     padding: '0 4px',
                     borderRadius: 9999,
-                    background: 'var(--brand-primary)',
-                    color: '#fff',
+                    background: theme.colors.accent,
+                    color: theme.colors.contentOnColor,
                     fontSize: 10,
                     fontWeight: 700,
                     lineHeight: '16px',
@@ -128,6 +131,8 @@ function BottomNavButton({
   onClick: () => void;
   className?: string;
 }) {
+  const [, theme] = useStyletron();
+
   return (
     <button
       type="button"
@@ -146,7 +151,7 @@ function BottomNavButton({
         border: 'none',
         background: 'transparent',
         cursor: 'pointer',
-        color: active ? 'var(--brand-primary)' : 'var(--brand-text-muted)',
+        color: active ? theme.colors.accent : theme.colors.contentSecondary,
         transition: 'color 150ms ease, transform 150ms ease',
       }}
     >
@@ -162,8 +167,8 @@ function BottomNavButton({
               height: 16,
               padding: '0 4px',
               borderRadius: 9999,
-              background: 'var(--brand-primary)',
-              color: '#fff',
+              background: theme.colors.accent,
+              color: theme.colors.contentOnColor,
               fontSize: 10,
               fontWeight: 700,
               lineHeight: '16px',
@@ -189,6 +194,7 @@ export function GuardrBottomNav({
   flat = false,
   centerItemId = 'map',
 }: GuardrBottomNavProps) {
+  const [, theme] = useStyletron();
   const primarySlots = showMore ? items.slice(0, 4) : items.slice(0, 5);
   const centerIndex = primarySlots.findIndex((item) => item.id === centerItemId);
   const hasCenter = centerIndex >= 0;
@@ -209,8 +215,10 @@ export function GuardrBottomNav({
             borderTop: '1px solid',
             borderColor: 'borderOpaque',
             backdropFilter: flat ? undefined : 'blur(20px) saturate(150%)',
-            backgroundColor: flat ? 'var(--brand-bg)' : 'color-mix(in srgb, var(--brand-surface) 92%, transparent)',
-            boxShadow: 'var(--shadow-nav)',
+            backgroundColor: flat
+              ? theme.colors.backgroundPrimary
+              : `${theme.colors.backgroundPrimary}eb`,
+            boxShadow: theme.colors.shadow400,
             paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
           },
         },

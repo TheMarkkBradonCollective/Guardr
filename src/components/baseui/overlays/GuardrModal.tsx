@@ -13,6 +13,8 @@ export interface GuardrModalProps {
   zIndex?: number;
   ariaLabelledBy?: string;
   position?: 'fixed' | 'absolute';
+  /** When false, backdrop tap, Escape, and system back do not close. */
+  dismissable?: boolean;
 }
 
 export function GuardrModal({
@@ -24,8 +26,9 @@ export function GuardrModal({
   panelClassName = '',
   zIndex = 1100,
   ariaLabelledBy,
+  dismissable = true,
 }: GuardrModalProps) {
-  const gatedClose = useOverlayCloseGate(open, onClose);
+  const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
   if (align === 'bottom') {
@@ -38,12 +41,16 @@ export function GuardrModal({
         autoFocus
         closeable={false}
         showBackdrop
-        onClose={() => gatedClose()}
-        onBackdropClick={() => gatedClose()}
-        onEscapeKeyDown={(e) => {
-          e.preventDefault();
-          gatedClose();
-        }}
+        onClose={dismissable ? () => gatedClose() : () => {}}
+        onBackdropClick={dismissable ? () => gatedClose() : undefined}
+        onEscapeKeyDown={
+          dismissable
+            ? (e) => {
+                e.preventDefault();
+                gatedClose();
+              }
+            : (e) => e.preventDefault()
+        }
         overrides={sheetOverrides({ zIndex, panelClassName })}
       >
         <div className={className} role="dialog" aria-labelledby={ariaLabelledBy}>
@@ -56,7 +63,7 @@ export function GuardrModal({
   return (
     <Modal
       isOpen={open}
-      onClose={() => gatedClose()}
+      onClose={dismissable ? () => gatedClose() : () => {}}
       closeable={false}
       animate
       autoFocus
