@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESKTOP WORKSPACE — Ground-up desktop shell (≥1024px only)
-   Completely separate from mobile/tablet role shells. Left nav rail + command
-   bar + padded workspace canvas. Nothing recycled from compact/docked layouts.
+   DESKTOP WORKSPACE — Uber desktop workspace (≥1024px only)
+   Black top bar · gray content surface · white panels · clean data tables
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-form-factor="desktop"] .desktop-workspace {
@@ -9,44 +8,11 @@ body[data-form-factor="desktop"] .desktop-workspace {
   grid-template-columns: 19rem minmax(0, 1fr);
   grid-template-rows: 1fr;
   position: relative;
-  background: var(--brand-bg);
+  background: var(--uber-surface, #f6f6f6);
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-ambient {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-body[data-form-factor="desktop"] .desktop-workspace-ambient-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(72px);
-  opacity: 0.5;
-}
-
-body[data-form-factor="desktop"] .desktop-workspace-ambient-orb--a {
-  width: 28rem;
-  height: 28rem;
-  top: -8rem;
-  right: 12%;
-  background: color-mix(in srgb, var(--brand-primary) 16%, transparent);
-}
-
-body[data-form-factor="desktop"] .desktop-workspace-ambient-orb--b {
-  width: 22rem;
-  height: 22rem;
-  bottom: -6rem;
-  left: 22%;
-  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
-}
-
-body[data-form-factor="desktop"] .desktop-workspace > *:not(.desktop-workspace-ambient) {
-  position: relative;
-  z-index: 1;
-}
+/* No ambient orbs — Uber is flat/clean */
+body[data-form-factor="desktop"] .desktop-workspace-ambient { display: none; }
 
 body[data-form-factor="desktop"] .desktop-workspace-main {
   display: flex;
@@ -54,28 +20,25 @@ body[data-form-factor="desktop"] .desktop-workspace-main {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border-left: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-surface) 35%, transparent) 0%, transparent 18%),
-    var(--brand-bg);
+  border-left: 1px solid var(--uber-border, #eeeeee);
+  background: var(--uber-surface, #f6f6f6);
 }
 
-/* ─── Left navigation rail ─────────────────────────────────────────────── */
+/* ─── Left navigation rail — Uber clean white sidebar ─────────────────── */
 
 body[data-form-factor="desktop"] .desktop-nav-rail {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-bg-sec) 96%, #000) 0%, color-mix(in srgb, var(--brand-bg-sec) 88%, #000) 100%);
-  border-right: 1px solid color-mix(in srgb, var(--brand-border) 55%, transparent);
-  box-shadow: 8px 0 32px -24px color-mix(in srgb, #000 35%, transparent);
+  background: var(--uber-bg, #fff);
+  border-right: 1px solid var(--uber-border, #eeeeee);
+  box-shadow: none;
   z-index: 20;
 }
 
 html.theme-dark body[data-form-factor="desktop"] .desktop-nav-rail {
-  background:
-    linear-gradient(180deg, #0d0d0d 0%, #080808 100%);
+  background: var(--uber-bg, #000);
+  border-right-color: var(--uber-border, #1a1a1a);
 }
 
 html.theme-light body[data-form-factor="desktop"] .desktop-nav-rail {

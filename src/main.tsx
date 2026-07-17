@@ -24,6 +24,7 @@ import './styles/uber-landing.css';
 import './styles/uber-global.css';
 import './styles/uber-workbench.css';
 import './styles/platform-optimizations.css';
+import './styles/uber-in-app.css';
 
 applyThemeToDocument(loadTheme());
 

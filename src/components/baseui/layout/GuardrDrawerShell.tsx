@@ -224,6 +224,7 @@ export function GuardrDrawerShell({
         paddingTop="scale300"
         paddingBottom="scale300"
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
+        backgroundColor="backgroundPrimary"
       >
         <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
       </Block>
