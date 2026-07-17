@@ -14,7 +14,7 @@
       --brand-primary-hover: #5A7A5D;
       --brand-bg: #000000;
       --brand-surface: #000000;
-      --brand-elevated: #060606;
+      --brand-elevated: #080808;
       --brand-border: #1A2A1A;
       --brand-text: #7DB882;
       --brand-text-muted: #3D5C40;
@@ -22,10 +22,10 @@
       --chrome: #000000;
       --status-warning: #C9A24D;
       --glow: 0 0 24px color-mix(in srgb, var(--brand-primary-bright) 65%, transparent);
-      --glow-strong: 0 0 40px color-mix(in srgb, var(--brand-primary-bright) 85%, transparent);
-      --radius-card: 14px;
+      --glow-strong: 0 0 40px color-mix(in srgb, var(--brand-primary-bright) 85%, transparent), 0 0 80px color-mix(in srgb, var(--brand-primary-bright) 35%, transparent);
+      --radius-card: 16px;
       --radius-pill: 999px;
-      --index-w: 260px;
+      --index-w: 272px;
     }
     * { box-sizing: border-box; margin: 0; }
     html { scroll-behavior: smooth; }
@@ -55,33 +55,57 @@
     .toolbar button.active { border-color: var(--brand-primary-bright); color: var(--brand-primary-bright); box-shadow: var(--glow); }
     .toolbar button.role-btn.active { background: color-mix(in srgb, var(--brand-primary-bright) 12%, transparent); }
 
-    /* ── Layout ── */
-    .site-layout { display: flex; min-height: calc(100vh - 52px); }
+    /* ── Page index sidebar (keep structure, Uber polish) ── */
     .page-index {
       position: sticky; top: 52px; align-self: flex-start;
       width: var(--index-w); max-height: calc(100vh - 52px);
       overflow-y: auto; flex-shrink: 0;
       border-right: 1px solid var(--brand-border);
-      padding: 12px 0 40px;
+      background: #000;
+      padding: 0 0 40px;
       scrollbar-width: thin;
     }
-    .index-group { margin-bottom: 16px; }
+    .index-brand {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--brand-border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 800; letter-spacing: -.03em;
+    }
+    .index-brand .logo {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      display: grid; place-items: center; font-size: 13px; font-weight: 800;
+      box-shadow: var(--glow);
+    }
+    .index-brand small { display: block; font-size: 10px; font-weight: 600; color: var(--brand-text-muted); margin-top: 2px; }
+    .index-group { margin-bottom: 8px; padding-top: 10px; }
     .index-group-title {
-      padding: 4px 16px 6px;
-      font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 18px 8px;
+      font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
       color: var(--brand-text-muted);
     }
     .index-link {
+      position: relative;
       display: block; width: 100%; text-align: left;
-      padding: 7px 16px; border: none; background: none;
-      font: 600 12px/1.3 "Plus Jakarta Sans", sans-serif;
+      padding: 9px 18px; border: none; background: none;
+      font: 600 13px/1.25 "Plus Jakarta Sans", sans-serif;
       color: var(--brand-text-muted); cursor: pointer; transition: .15s;
     }
-    .index-link:hover { color: var(--brand-text); background: color-mix(in srgb, var(--brand-primary) 6%, transparent); }
-    .index-link.active { color: var(--brand-primary-bright); border-left: 3px solid var(--brand-primary-bright); padding-left: 13px; }
-    .index-link .path { display: block; font-size: 10px; font-weight: 500; opacity: .7; margin-top: 2px; }
+    .index-link:hover { color: var(--brand-text); background: color-mix(in srgb, var(--brand-primary) 7%, transparent); }
+    .index-link.active {
+      color: var(--brand-text);
+      background: color-mix(in srgb, var(--brand-primary-bright) 8%, transparent);
+    }
+    .index-link.active::before {
+      content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; width: 3px;
+      background: var(--brand-primary-bright); border-radius: 0 3px 3px 0; box-shadow: var(--glow);
+    }
+    .index-link .path { display: block; font-size: 10px; font-weight: 500; color: var(--brand-text-muted); opacity: .85; margin-top: 3px; }
+    .index-link.active .path { color: var(--brand-primary-bright); opacity: .7; }
 
-    .scroll-stage { flex: 1; padding: 20px 20px 80px; min-width: 0; }
+    .scroll-stage { flex: 1; padding: 24px 28px 100px; min-width: 0; background: #000; }
+
+    .site-layout { display: flex; min-height: calc(100vh - 52px); }
 
     /* ── Screen blocks ── */
     .screen-block {
@@ -103,8 +127,8 @@
     .device-frame {
       margin: 0 auto;
       border: 1px solid var(--brand-border);
-      border-radius: 12px; overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,.7);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 32px 100px rgba(0,0,0,.85), inset 0 1px 0 color-mix(in srgb, var(--brand-primary-bright) 5%, transparent);
       background: var(--brand-bg);
       transition: max-width .3s;
     }
@@ -112,47 +136,104 @@
     .device-frame.tablet { max-width: 820px; }
     .device-frame.mobile { max-width: 390px; border-radius: 28px; }
 
-    /* ── App shell ── */
-    .shell { display: flex; min-height: 640px; background: var(--brand-bg); }
-    .shell.mobile-stack { flex-direction: column; min-height: 720px; }
+    /* ── Uber Pro app shell ── */
+    .shell { display: flex; min-height: 680px; background: var(--brand-bg); }
+    .shell.mobile-stack { flex-direction: column; min-height: 740px; }
     .shell-sidebar {
-      width: 210px; flex-shrink: 0;
+      width: 228px; flex-shrink: 0;
       border-right: 1px solid var(--brand-border);
-      padding: 16px 0; display: flex; flex-direction: column;
+      padding: 18px 0 14px; display: flex; flex-direction: column;
+      background: #000;
     }
     .shell-brand {
-      padding: 0 18px 20px; font-size: 14px; font-weight: 800;
-      display: flex; align-items: center; gap: 8px;
+      padding: 0 20px 22px; font-size: 15px; font-weight: 800; letter-spacing: -.04em;
+      display: flex; align-items: center; gap: 10px; color: var(--brand-text);
     }
     .shell-brand .logo {
-      width: 30px; height: 30px; border-radius: 8px;
+      width: 34px; height: 34px; border-radius: 10px;
       background: var(--brand-primary-bright); color: var(--brand-on-primary);
-      display: grid; place-items: center; font-size: 12px; font-weight: 800;
+      display: grid; place-items: center; font-size: 13px; font-weight: 800;
+      box-shadow: var(--glow);
     }
-    .shell-nav {
-      display: flex; flex-direction: column; gap: 2px;
+    .shell-nav { display: flex; flex-direction: column; gap: 1px; flex: 1; overflow-y: auto; }
+    .shell-nav-group { margin-bottom: 14px; }
+    .shell-nav-group-title {
+      padding: 0 20px 6px; font-size: 9px; font-weight: 800;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--brand-text-muted);
     }
     .shell-nav button {
-      position: relative; display: flex; align-items: center; gap: 10px;
-      width: 100%; padding: 11px 18px; border: none; background: none;
+      position: relative; display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 12px 20px; border: none; background: none;
       font: 600 13px/1 "Plus Jakarta Sans", sans-serif;
       color: var(--brand-text-muted); cursor: default; text-align: left;
     }
+    .shell-nav button .ico { width: 18px; text-align: center; font-size: 14px; opacity: .9; }
     .shell-nav button.on {
       color: var(--brand-text);
-      background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+      background: color-mix(in srgb, var(--brand-primary-bright) 8%, transparent);
     }
     .shell-nav button.on::before {
-      content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
-      background: var(--brand-primary-bright); border-radius: 0 3px 3px 0; box-shadow: var(--glow);
+      content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; width: 4px;
+      background: var(--brand-primary-bright); border-radius: 0 4px 4px 0; box-shadow: var(--glow);
     }
+    .shell-status {
+      margin: 8px 14px 0; padding: 12px 14px; border-radius: 12px;
+      background: var(--brand-elevated); border: 1px solid var(--brand-border);
+    }
+    .shell-status-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--brand-text-muted); }
+    .shell-status-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 12px; font-weight: 700; }
+    .shell-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-primary-bright); box-shadow: var(--glow); }
+
     .shell-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .shell-topbar {
-      padding: 10px 18px; border-bottom: 1px solid var(--brand-border);
-      font-size: 14px; font-weight: 700;
-      display: flex; align-items: center; justify-content: space-between;
+    .uber-topbar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 10px 20px;
+      background: color-mix(in srgb, #000 92%, transparent);
+      backdrop-filter: blur(20px) saturate(1.2);
+      border-bottom: 1px solid var(--brand-border);
     }
-    .shell-body { flex: 1; padding: 16px 18px; overflow: hidden; }
+    .uber-market {
+      font: 700 12px/1 "Plus Jakarta Sans", sans-serif;
+      padding: 8px 14px; border-radius: var(--radius-pill);
+      border: 1px solid var(--brand-border); background: var(--brand-elevated);
+      color: var(--brand-text);
+    }
+    .uber-ticker {
+      flex: 1; min-width: 120px; overflow: hidden;
+      font-size: 11px; font-weight: 500; color: var(--brand-text-muted);
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      white-space: nowrap;
+    }
+    .uber-ticker strong { color: var(--status-warning); font-weight: 800; }
+    .uber-top-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+    .uber-bell { position: relative; font-size: 16px; }
+    .uber-bell-badge {
+      position: absolute; top: -5px; right: -7px;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--brand-primary-bright); color: var(--brand-on-primary);
+      font-size: 9px; font-weight: 800; border-radius: var(--radius-pill);
+      display: grid; place-items: center;
+    }
+    .uber-greeting { font-size: 13px; font-weight: 700; }
+    .uber-greeting span { color: var(--brand-text-muted); font-weight: 500; }
+    .uber-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid var(--brand-primary-bright);
+      background: var(--brand-elevated); box-shadow: var(--glow);
+    }
+    .shell-subnav {
+      display: flex; gap: 2px; padding: 0 20px;
+      border-bottom: 1px solid var(--brand-border); background: #000;
+      overflow-x: auto;
+    }
+    .shell-subnav button {
+      padding: 12px 14px; border: none; background: none;
+      font: 600 12px/1 "Plus Jakarta Sans", sans-serif;
+      color: var(--brand-text-muted); border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .shell-subnav button.on { color: var(--brand-text); border-bottom-color: var(--brand-primary-bright); }
+    .shell-body { flex: 1; padding: 18px 20px; overflow: hidden; }
     .shell-body.flush { padding: 0; }
     .shell-bottom {
       display: flex; justify-content: space-around;
@@ -164,6 +245,11 @@
       font: 600 9px/1 "Plus Jakarta Sans", sans-serif; min-height: 44px;
     }
     .shell-bottom button.on { color: var(--brand-primary-bright); }
+    .shell-bottom button.on::before {
+      content: ""; position: absolute; top: -6px; width: 20px; height: 3px;
+      border-radius: 2px; background: var(--brand-primary-bright); box-shadow: var(--glow);
+    }
+    .shell-bottom button { position: relative; }
     .shell-bottom .map-fab {
       width: 44px; height: 44px; border-radius: 50%;
       background: var(--brand-primary-bright); color: var(--brand-on-primary);
@@ -171,11 +257,52 @@
       box-shadow: var(--glow);
     }
 
-    /* ── Placeholders ── */
+    /* ── Uber widgets & placeholders ── */
+    .widget-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+    .w3 { grid-column: span 3; } .w4 { grid-column: span 4; } .w6 { grid-column: span 6; } .w8 { grid-column: span 8; } .w12 { grid-column: span 12; }
+    .uber-card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: var(--radius-card);
+      padding: 18px 20px;
+      box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand-primary-bright) 5%, transparent);
+    }
+    .uber-card-label {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--brand-text-muted); margin-bottom: 12px;
+    }
+    .uber-kpi { font-size: 48px; font-weight: 800; letter-spacing: -.06em; line-height: .95; color: var(--brand-text); }
+    .uber-kpi-sm { font-size: 32px; font-weight: 800; letter-spacing: -.05em; }
+    .uber-trend {
+      display: inline-flex; margin-top: 10px; padding: 4px 10px;
+      border-radius: var(--radius-pill); font-size: 10px; font-weight: 800;
+      background: color-mix(in srgb, var(--brand-primary-bright) 18%, transparent);
+      color: var(--brand-primary-bright); box-shadow: var(--glow);
+    }
+    .uber-chart {
+      height: 140px; border-radius: 10px; position: relative; overflow: hidden;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--brand-primary-bright) 8%, transparent), transparent);
+      border: 1px solid var(--brand-border);
+    }
+    .uber-chart svg { width: 100%; height: 100%; display: block; }
+    .uber-chart-line {
+      fill: none; stroke: var(--brand-primary-bright); stroke-width: 3; stroke-linecap: round;
+      filter: drop-shadow(0 0 8px var(--brand-primary-bright));
+    }
+    .shift-carousel { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .shift-carousel::-webkit-scrollbar { display: none; }
+    .shift-card-mini {
+      flex: 0 0 200px; padding: 14px; border-radius: 14px;
+      border: 1px solid var(--brand-border); background: var(--brand-elevated);
+    }
+    .shift-card-mini.hot { border-color: var(--brand-primary-bright); box-shadow: var(--glow); }
+    .shift-card-mini .title { font-size: 13px; font-weight: 800; margin-top: 4px; }
+    .shift-card-mini .pay { font-size: 16px; font-weight: 800; color: var(--brand-primary-bright); margin-top: 10px; }
+
     .sk { background: var(--brand-elevated); border-radius: 8px; border: 1px solid var(--brand-border); }
     .sk-line { height: 10px; border-radius: 4px; }
     .sk-line.w60 { width: 60%; } .sk-line.w40 { width: 40%; } .sk-line.w80 { width: 80%; } .sk-line.w30 { width: 30%; }
-    .sk-card { padding: 14px; border-radius: var(--radius-card); border: 1px solid var(--brand-border); }
+    .sk-card { padding: 14px; border-radius: var(--radius-card); border: 1px solid var(--brand-border); background: var(--brand-surface); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--brand-primary-bright) 4%, transparent); }
     .sk-grid { display: grid; gap: 12px; }
     .sk-grid.c2 { grid-template-columns: 1fr 1fr; }
     .sk-grid.c3 { grid-template-columns: repeat(3, 1fr); }
@@ -183,7 +310,7 @@
     .sk-row { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--brand-border); }
     .sk-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
     .sk-stat { padding: 16px; text-align: center; }
-    .sk-stat .num { font-size: 28px; font-weight: 800; color: var(--brand-text); margin-bottom: 4px; }
+    .sk-stat .num { font-size: 36px; font-weight: 800; color: var(--brand-text); margin-bottom: 4px; letter-spacing: -.04em; }
     .sk-stat .lbl { font-size: 10px; color: var(--brand-text-muted); text-transform: uppercase; letter-spacing: .05em; }
     .sk-hero { padding: 40px 24px; text-align: center; }
     .sk-hero h3 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
@@ -200,14 +327,14 @@
 
     /* ── Map mock (shared) ── */
     .map-mock {
-      position: relative; height: 100%; min-height: 520px;
+      position: relative; height: 100%; min-height: 540px;
       background:
-        radial-gradient(ellipse 140px 90px at 55% 45%, color-mix(in srgb, var(--brand-primary-bright) 30%, transparent), transparent),
-        radial-gradient(ellipse 80px 60px at 28% 35%, color-mix(in srgb, var(--brand-primary-bright) 14%, transparent), transparent),
-        radial-gradient(ellipse 70px 50px at 78% 62%, color-mix(in srgb, var(--status-warning) 12%, transparent), transparent),
+        radial-gradient(ellipse 160px 100px at 55% 45%, color-mix(in srgb, var(--brand-primary-bright) 35%, transparent), transparent),
+        radial-gradient(ellipse 90px 70px at 28% 35%, color-mix(in srgb, var(--brand-primary-bright) 16%, transparent), transparent),
+        radial-gradient(ellipse 70px 50px at 78% 62%, color-mix(in srgb, var(--status-warning) 14%, transparent), transparent),
         #000;
     }
-    .map-mock.tall { min-height: 600px; }
+    .map-mock.tall { min-height: 620px; }
     .map-grid-bg {
       position: absolute; inset: 0; opacity: .1;
       background-image:
@@ -261,15 +388,18 @@
     .map-route-banner strong { color: var(--brand-primary-bright); }
     .map-dock {
       position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
-      padding: 12px; display: flex; flex-direction: column; gap: 8px;
-      background: linear-gradient(transparent, rgba(0,0,0,.95) 30%);
+      padding: 12px; display: flex; gap: 10px;
+      overflow-x: auto; scrollbar-width: none;
+      background: linear-gradient(transparent, rgba(0,0,0,.95) 35%);
     }
+    .map-dock::-webkit-scrollbar { display: none; }
     .map-card {
+      flex: 0 0 220px;
       padding: 14px 16px; border-radius: 14px;
       background: rgba(0,0,0,.9); border: 1px solid var(--brand-border);
       backdrop-filter: blur(12px);
     }
-    .map-card.hot { border-color: color-mix(in srgb, var(--brand-primary-bright) 50%, var(--brand-border)); box-shadow: var(--glow); }
+    .map-card.hot { border-color: color-mix(in srgb, var(--brand-primary-bright) 55%, var(--brand-border)); box-shadow: var(--glow-strong); }
     .map-card-title { font-size: 13px; font-weight: 800; }
     .map-card-sub { font-size: 10px; color: var(--brand-text-muted); margin-top: 3px; }
     .map-card-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
@@ -312,17 +442,21 @@
     .device-frame.mobile .shell-sidebar { display: none; }
     .device-frame.mobile .map-side-panel { width: 100%; top: auto; height: 42%; border-left: none; border-top: 1px solid var(--brand-border); }
     .device-frame.mobile .map-mock { min-height: 480px; }
-    .device-frame.tablet .shell-sidebar { width: 68px; }
-    .device-frame.tablet .shell-nav button span { display: none; }
-    .device-frame.tablet .shell-brand span:last-child { display: none; }
-    .device-frame.tablet .shell-brand { justify-content: center; padding: 0 0 16px; }
+    .device-frame.tablet .shell-sidebar { width: 72px; }
+    .device-frame.tablet .shell-nav button span:not(.ico) { display: none; }
+    .device-frame.tablet .shell-brand span:last-child,
+    .device-frame.tablet .shell-nav-group-title,
+    .device-frame.tablet .shell-status { display: none; }
+    .device-frame.tablet .shell-brand { justify-content: center; padding: 0 0 18px; }
+    .device-frame.mobile .widget-grid { grid-template-columns: 1fr; }
+    .device-frame.mobile .w3, .device-frame.mobile .w4, .device-frame.mobile .w6, .device-frame.mobile .w8, .device-frame.mobile .w12 { grid-column: span 1; }
   </style>
 </head>
 <body>
   <header class="preview-chrome">
     <div>
-      <h1>Guardr — full site preview</h1>
-      <p>Scroll every page · pure black + sage · no live data</p>
+      <h1>Guardr — Uber Pro preview</h1>
+      <p>Sidebar nav · scroll all pages · sage on black</p>
     </div>
     <div class="toolbar" id="role-toolbar">
       <button type="button" class="role-btn active" data-role="all">All</button>
@@ -338,7 +472,12 @@
   </header>
 
   <div class="site-layout">
-    <nav class="page-index" id="page-index" aria-label="Page index"></nav>
+    <nav class="page-index" id="page-index" aria-label="Page index">
+      <div class="index-brand">
+        <span class="logo">G</span>
+        <div>Guardr preview<small>Design system mock</small></div>
+      </div>
+    </nav>
     <main class="scroll-stage" id="scroll-stage"></main>
   </div>
 
@@ -479,6 +618,18 @@
 
   const BRAND = { client: 'Guardr Client', guard: 'Guardr Pro', staff: 'Guardr Ops' };
 
+  const STAFF_GROUPS = [
+    { title: 'Command', ids: ['overview', 'map'] },
+    { title: 'Operations', ids: ['jobs', 'applications', 'credentials', 'clients', 'guards', 'crews', 'team', 'messages'] },
+    { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
+    { title: 'Insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
+    { title: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
+  ];
+
+  const CHART_SVG = `<svg viewBox="0 0 400 120" preserveAspectRatio="none">
+    <path class="uber-chart-line" d="M0,90 C50,80 90,70 140,55 C190,40 250,30 320,20 C360,14 400,10 400,10"/>
+  </svg>`;
+
   /* ── Content templates ── */
   function skLines(n = 4) {
     return Array.from({ length: n }, (_, i) =>
@@ -488,29 +639,46 @@
 
   function tplList() {
     return `<div>${Array.from({ length: 5 }, () => `
-      <div class="sk-row">
+      <div class="uber-card sk-row" style="margin-bottom:10px;border-radius:12px;padding:14px 16px">
         <div class="sk sk-av"></div>
         <div style="flex:1">${skLines(2)}</div>
-        <div class="sk sk-line" style="width:48px"></div>
+        <div class="sk sk-line" style="width:52px"></div>
       </div>`).join('')}</div>`;
   }
 
   function tplGrid() {
-    return `<div class="sk-grid c3">${Array.from({ length: 6 }, () => `
-      <div class="sk-card sk">
-        <div class="sk sk-av" style="width:48px;height:48px;margin-bottom:10px"></div>
+    return `<div class="widget-grid">${Array.from({ length: 6 }, () => `
+      <div class="uber-card w4">
+        <div class="sk sk-av" style="width:48px;height:48px;margin-bottom:10px;border-radius:50%"></div>
         ${skLines(2)}
       </div>`).join('')}</div>`;
   }
 
   function tplDashboard() {
     return `
-      <div class="sk-grid c4" style="margin-bottom:16px">
-        ${['Jobs','Guards','Revenue','Rating'].map(l => `
-          <div class="sk-card sk-stat sk"><div class="num">—</div><div class="lbl">${l}</div></div>`).join('')}
+      <div class="shift-carousel" style="margin-bottom:16px">
+        ${['Staples Center','Retail patrol','Event security'].map((t,i) => `
+          <div class="shift-card-mini${i===0?' hot':''}">
+            <div style="font-size:9px;font-weight:800;text-transform:uppercase;color:var(--brand-text-muted)">Upcoming</div>
+            <div class="title">${t}</div>
+            <div class="pay">$${[42,28,35][i]}/hr</div>
+          </div>`).join('')}
       </div>
-      <div class="sk-card sk" style="height:160px;margin-bottom:12px"></div>
-      ${tplList()}`;
+      <div class="widget-grid">
+        <div class="uber-card w3"><div class="uber-card-label">Active</div><div class="uber-kpi-sm">—</div><div class="uber-trend">↑ —</div></div>
+        <div class="uber-card w3"><div class="uber-card-label">Rating</div><div class="uber-kpi-sm">—★</div></div>
+        <div class="uber-card w3"><div class="uber-card-label">Earnings</div><div class="uber-kpi-sm">$—</div></div>
+        <div class="uber-card w3"><div class="uber-card-label">On-time</div><div class="uber-kpi-sm">—%</div></div>
+        <div class="uber-card w8">
+          <div class="uber-card-label">Trend</div>
+          <div class="uber-chart">${CHART_SVG}</div>
+        </div>
+        <div class="uber-card w4"><div class="uber-card-label">Activity</div>
+          <div class="sk sk-line" style="width:90%;margin-bottom:8px"></div>
+          <div class="sk sk-line" style="width:70%;margin-bottom:8px"></div>
+          <div class="sk sk-line" style="width:80%"></div>
+        </div>
+      </div>`;
   }
 
   function tplForm() {
@@ -553,10 +721,15 @@
 
   function tplEarnings() {
     return `
-      <div class="sk-card sk-stat sk" style="margin-bottom:16px;text-align:left">
-        <div class="lbl">This week</div><div class="num" style="font-size:40px">$—</div>
+      <div class="uber-card" style="margin-bottom:16px">
+        <div class="uber-card-label">This week</div>
+        <div class="uber-kpi">$—</div>
+        <div class="uber-trend">↑ —</div>
       </div>
-      <div class="sk-card sk" style="height:140px;margin-bottom:12px"></div>
+      <div class="uber-card" style="margin-bottom:16px">
+        <div class="uber-card-label">Earnings trend</div>
+        <div class="uber-chart" style="height:160px">${CHART_SVG}</div>
+      </div>
       ${tplList()}`;
   }
 
@@ -713,10 +886,51 @@
 
   function renderNav(layout, activeId) {
     const items = NAV[layout] || [];
+    if (layout === 'staff') {
+      return STAFF_GROUPS.map(g => {
+        const groupItems = g.ids.map(id => items.find(it => it.id === id)).filter(Boolean);
+        if (!groupItems.length) return '';
+        return `<div class="shell-nav-group">
+          <div class="shell-nav-group-title">${g.title}</div>
+          ${groupItems.map(it => `
+            <button type="button" class="${it.id === activeId ? 'on' : ''}">
+              <span class="ico">${it.icon}</span><span>${it.label}</span>
+            </button>`).join('')}
+        </div>`;
+      }).join('');
+    }
     return items.map(it => `
       <button type="button" class="${it.id === activeId ? 'on' : ''}">
-        <span>${it.icon}</span><span>${it.label}</span>
+        <span class="ico">${it.icon}</span><span>${it.label}</span>
       </button>`).join('');
+  }
+
+  function renderUberTopbar(title) {
+    return `<header class="uber-topbar">
+      <span class="uber-market">Los Angeles ▾</span>
+      <div class="uber-ticker"><strong>Surge</strong> — Downtown demand active · <strong>Traffic</strong> — I-405 delays</div>
+      <div class="uber-top-actions">
+        <span class="uber-bell">🔔<span class="uber-bell-badge">3</span></span>
+        <span class="uber-greeting"><span>Hello</span> Alex,</span>
+        <span class="uber-avatar"></span>
+      </div>
+    </header>`;
+  }
+
+  function renderSubnav(title) {
+    const tabs = ['Overview', 'Details', 'Activity'];
+    return `<nav class="shell-subnav">${tabs.map((t,i) =>
+      `<button type="button" class="${i===0?'on':''}">${t}</button>`).join('')}</nav>`;
+  }
+
+  function renderSidebarExtra(layout) {
+    if (layout === 'guard') {
+      return `<div class="shell-status">
+        <div class="shell-status-lbl">Status</div>
+        <div class="shell-status-row"><span class="shell-status-dot"></span>Online · accepting</div>
+      </div>`;
+    }
+    return '';
   }
 
   function renderBottomNav(layout, activeId) {
@@ -731,13 +945,16 @@
   function renderShell(page, inner) {
     const { layout, title, nav, type } = page;
     if (layout === 'public') {
-      return `<div class="shell" style="min-height:560px"><div class="shell-main"><div class="shell-topbar">Guardr <span style="font-size:11px;color:var(--brand-text-muted)">public</span></div><div class="shell-body">${inner}</div></div></div>`;
+      return `<div class="shell" style="min-height:560px"><div class="shell-main">
+        <div class="uber-topbar"><span style="font-weight:800">Guardr</span><span style="font-size:11px;color:var(--brand-text-muted)">public</span></div>
+        <div class="shell-body">${inner}</div></div></div>`;
     }
     const isMap = type.startsWith('map-');
+    const showSubnav = ['dashboard', 'earnings', 'list'].includes(type) && !isMap;
     const mobile = FRAME.size === 'mobile';
     if (mobile) {
       return `<div class="shell mobile-stack">
-        <div class="shell-topbar">${BRAND[layout]} · ${title}</div>
+        <div class="uber-topbar" style="padding:12px 16px"><span style="font-weight:800">${title}</span><span class="uber-avatar"></span></div>
         <div class="shell-body ${isMap ? 'flush' : ''}">${inner}</div>
         <div class="shell-bottom">${renderBottomNav(layout, nav)}</div>
       </div>`;
@@ -746,9 +963,11 @@
       <aside class="shell-sidebar">
         <div class="shell-brand"><span class="logo">G</span><span>${BRAND[layout]}</span></div>
         <nav class="shell-nav">${renderNav(layout, nav)}</nav>
+        ${renderSidebarExtra(layout)}
       </aside>
       <div class="shell-main">
-        <div class="shell-topbar">${title}</div>
+        ${renderUberTopbar(title)}
+        ${showSubnav ? renderSubnav(title) : ''}
         <div class="shell-body ${isMap ? 'flush' : ''}">${inner}</div>
       </div>
     </div>`;
@@ -775,7 +994,7 @@
   function renderIndex() {
     const index = document.getElementById('page-index');
     const groups = ['public', 'client', 'guard', 'staff'];
-    index.innerHTML = groups.map(role => {
+    const groupsHtml = groups.map(role => {
       const pages = filteredPages().filter(p => p.role === role);
       if (!pages.length) return '';
       return `<div class="index-group" data-role="${role}">
@@ -785,6 +1004,16 @@
         </button>`).join('')}
       </div>`;
     }).join('');
+    const existingBrand = index.querySelector('.index-brand');
+    if (!existingBrand) {
+      index.innerHTML = `<div class="index-brand">
+        <span class="logo">G</span>
+        <div>Guardr preview<small>Design system mock</small></div>
+      </div>` + groupsHtml;
+    } else {
+      index.querySelectorAll('.index-group').forEach(el => el.remove());
+      index.insertAdjacentHTML('beforeend', groupsHtml);
+    }
 
     index.querySelectorAll('.index-link').forEach(btn => {
       btn.onclick = () => {
