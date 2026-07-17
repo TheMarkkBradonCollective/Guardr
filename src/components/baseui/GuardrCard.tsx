@@ -2,11 +2,13 @@ import React from 'react';
 import { Card as BaseCard, StyledBody, StyledAction, StyledTitle } from 'baseui/card';
 import type { CardProps } from 'baseui/card';
 
-export type GuardrCardProps = CardProps & {
+export type GuardrCardProps = Omit<CardProps, 'overrides'> & {
   interactive?: boolean;
   title?: React.ReactNode;
   action?: React.ReactNode;
   noBorder?: boolean;
+  className?: string;
+  overrides?: CardProps['overrides'];
 };
 
 export function GuardrCard({
@@ -15,6 +17,7 @@ export function GuardrCard({
   title,
   action,
   noBorder = false,
+  className,
   overrides,
   ...rest
 }: GuardrCardProps) {
@@ -23,6 +26,10 @@ export function GuardrCard({
       {...rest}
       overrides={{
         Root: {
+          props: {
+            className,
+            ...(typeof overrides?.Root?.props === 'object' ? overrides.Root.props : {}),
+          },
           style: {
             borderRadius: '14px',
             border: noBorder ? 'none' : '1px solid',

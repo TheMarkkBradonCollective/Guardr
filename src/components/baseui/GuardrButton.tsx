@@ -14,12 +14,14 @@ export type GuardrButtonProps = Omit<ButtonProps, 'kind' | 'size'> & {
   kind?: GuardrButtonKind;
   size?: 'mini' | 'compact' | 'default' | 'large';
   fullWidth?: boolean;
+  className?: string;
 };
 
 export function GuardrButton({
   kind = 'primary',
   size = 'default',
   fullWidth,
+  className,
   overrides,
   children,
   ...rest
@@ -54,6 +56,10 @@ export function GuardrButton({
         BaseButton: {
           ...dangerOverrides.BaseButton,
           ...overrides?.BaseButton,
+          props: {
+            className,
+            ...(typeof overrides?.BaseButton?.props === 'object' ? overrides.BaseButton.props : {}),
+          },
           style: {
             minHeight: 'var(--space-touch, 44px)',
             borderRadius: '8px',

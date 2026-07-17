@@ -1,4 +1,5 @@
 import React from 'react';
+import { GuardrTag, type GuardrTagKind } from '../../baseui/GuardrTag';
 
 export type WfBadgeTone = 'default' | 'muted' | 'primary' | 'success' | 'warning' | 'danger';
 
@@ -8,15 +9,21 @@ interface WfBadgeProps {
   className?: string;
 }
 
-const TONE_CLASS: Record<WfBadgeTone, string> = {
-  default: 'wf-badge',
-  muted: 'wf-badge',
-  primary: 'wf-badge wf-badge-primary',
-  success: 'wf-badge wf-badge-success',
-  warning: 'wf-badge wf-badge-warning',
-  danger: 'wf-badge wf-badge-danger',
+const TONE_MAP: Record<WfBadgeTone, GuardrTagKind> = {
+  default: 'neutral',
+  muted: 'neutral',
+  primary: 'accent',
+  success: 'success',
+  warning: 'warning',
+  danger: 'danger',
 };
 
 export function WfBadge({ children, tone = 'default', className = '' }: WfBadgeProps) {
-  return <span className={`${TONE_CLASS[tone]} ${className}`}>{children}</span>;
+  return (
+    <span className={className}>
+      <GuardrTag kind={TONE_MAP[tone]} closeable={false}>
+        {children}
+      </GuardrTag>
+    </span>
+  );
 }
