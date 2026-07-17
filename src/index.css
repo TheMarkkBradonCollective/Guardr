@@ -8549,18 +8549,21 @@ html.theme-dark .wf-badge-success {
   border: none;
   background: transparent;
   border-radius: 0;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 12px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .guard-rating-body {
-  background: var(--brand-bg-sec);
+  background: var(--uber-bg, #fff);
 }
 
+html.theme-dark .guard-rating-body {
+  background: #111;
+}
+
+/* ─── Uber compact hero — replaces the 22rem translucent banner ─────────── */
 :root {
-  --guard-tier-hero-height: 22rem;
-  --guard-tier-hero-padding: 1.35rem 1.25rem 1.5rem;
+  --guard-tier-hero-height: auto;
+  --guard-tier-hero-padding: 14px 20px 16px;
   --guard-tier-hero-content-width: min(100%, 26rem);
 }
 
@@ -8613,17 +8616,18 @@ html.theme-dark .wf-badge-success {
   color: #fff;
   box-sizing: border-box;
   width: 100%;
-  height: var(--guard-tier-hero-height);
-  min-height: var(--guard-tier-hero-height);
+  height: auto;
+  min-height: auto;
   padding: var(--guard-tier-hero-padding);
-  text-align: center;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-evenly;
-  gap: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
   z-index: 1;
   border-radius: 0;
+  background: #111 !important;
 }
 
 .guard-tier-hero > :not(.guard-tier-hero-glow) {
@@ -8636,37 +8640,15 @@ html.theme-dark .wf-badge-success {
 
 .guard-tier-hero-glow,
 .guard-pref-hero-tiered .guard-pref-hero-glow {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.28), transparent 55%),
-    radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.12), transparent 40%);
-  pointer-events: none;
+  display: none;
 }
 
-.guard-tier-hero-starting {
-  background: linear-gradient(160deg, #5a6470 0%, #3f4854 100%);
-}
-
-.guard-tier-hero-rising {
-  background: linear-gradient(160deg, #8b6b4d 0%, #6d4f34 55%, #5a3f28 100%);
-}
-
-.guard-tier-hero-professional {
-  background: linear-gradient(160deg, #c9a227 0%, #a67c00 52%, #8a6400 100%);
-}
-
-.guard-tier-hero-elite {
-  background: linear-gradient(160deg, #6f8fd4 0%, #4f6db0 55%, #3d5694 100%);
-}
-
+.guard-tier-hero-starting,
+.guard-tier-hero-rising,
+.guard-tier-hero-professional,
+.guard-tier-hero-elite,
 .guard-tier-hero-brand {
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--brand-primary) 78%, #fff) 0%,
-    var(--brand-primary) 55%,
-    var(--brand-primary-hover) 100%
-  );
+  background: #111 !important;
 }
 
 .guard-tier-hero .guard-pref-tier-medal,
@@ -8712,8 +8694,10 @@ html.theme-dark .wf-badge-success {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-.guard-tier-hero .guard-tier-medal {
-  margin: 0 auto 0.1rem;
+/* Hide the medal artwork — Uber doesn't use decorative medallions */
+.guard-tier-hero .guard-tier-medal,
+.guard-pref-tier-medal {
+  display: none;
 }
 
 .guard-tier-hero .guard-tier-medal-ribbon,
@@ -8722,14 +8706,16 @@ html.theme-dark .wf-badge-success {
 }
 
 .guard-tier-hero-dense {
-  gap: 0;
+  gap: 4px;
   padding: var(--guard-tier-hero-padding);
-  justify-content: space-evenly;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .guard-tier-hero-dense .guard-tier-hero-score-row {
   margin: 0;
-  padding: 0.55rem 1rem;
+  padding: 0;
 }
 
 .guard-tier-hero-dense .guard-tier-hero-subtitle {
@@ -8739,14 +8725,15 @@ html.theme-dark .wf-badge-success {
   overflow: visible;
 }
 
+/* Compact rewards button — now a flat text link */
 .guard-tier-rewards-btn {
-  width: var(--guard-tier-hero-content-width);
+  width: auto;
   max-width: 100%;
-  margin-top: 0.85rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid color-mix(in srgb, #fff 24%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, #fff 16%, transparent);
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: #fff;
   font-size: 0.875rem;
   font-weight: 800;
@@ -9066,71 +9053,75 @@ html.theme-dark .wf-badge-success {
   background: rgba(180, 210, 255, 0.18);
 }
 
+/* ─── Uber compact hero typography ───────────────────────────────────────── */
 .guard-tier-hero-eyebrow {
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
-  opacity: 0.82;
+  opacity: 0.7;
+  color: rgba(255,255,255,0.7);
 }
 
 .guard-tier-hero-name {
   position: relative;
   z-index: 1;
-  font-size: clamp(1.75rem, 6.5vw, 2.25rem);
-  font-weight: 900;
-  letter-spacing: -0.05em;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   margin: 0;
-  line-height: 1.05;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: none;
 }
 
+/* Score row: inline label + value, no pill */
 .guard-tier-hero-score-row {
   position: relative;
   z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  width: var(--guard-tier-hero-content-width);
-  max-width: 100%;
-  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 2px 0 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  width: auto;
 }
 
 .guard-tier-hero-score-label {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  opacity: 0.9;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.75;
+  color: rgba(255,255,255,0.75);
 }
 
 .guard-tier-hero-score-value {
-  font-size: 1.35rem;
+  font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.03em;
+  color: #fff;
 }
 
 .guard-tier-hero-info {
   width: 0.9rem;
   height: 0.9rem;
-  opacity: 0.75;
+  opacity: 0.6;
 }
 
 .guard-tier-hero-subtitle {
   position: relative;
   z-index: 1;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  opacity: 0.88;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.7;
+  color: rgba(255,255,255,0.7);
   margin: 0;
-  max-width: var(--guard-tier-hero-content-width);
+  max-width: 100%;
   width: 100%;
   display: block;
   overflow: visible;
@@ -9144,90 +9135,48 @@ html.theme-dark .wf-badge-success {
   margin: 0 auto;
 }
 
-.guard-tier-progress-markers {
-  position: relative;
-  height: 2.75rem;
-  margin-bottom: 0.35rem;
-}
+/* Progress tier markers hidden — just show a thin bar */
+.guard-tier-progress-markers { display: none; }
+.guard-tier-progress-node { display: none; }
+.guard-tier-progress-node-icon { display: none; }
+.guard-tier-progress-node-label { display: none; }
 
-.guard-tier-progress-node {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  opacity: 0.45;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.guard-tier-progress-node-active {
-  opacity: 1;
-}
-
-.guard-tier-progress-node-current {
-  transform: translateX(-50%) scale(1.08);
-}
-
-.guard-tier-progress-node-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.65rem;
-  height: 1.65rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
-}
-
-.guard-tier-progress-node-current .guard-tier-progress-node-icon {
-  background: #fff;
-  color: color-mix(in srgb, var(--brand-primary) 70%, black);
-  border-color: #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-}
-
-.guard-tier-progress-node-label {
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+.guard-tier-progress {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 4px 0 0;
 }
 
 .guard-tier-progress-track {
-  height: 0.55rem;
+  height: 3px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.20);
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .guard-tier-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.88));
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+  background: #fff;
   transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .guard-tier-progress-hint {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  opacity: 0.92;
-  margin: 0.7rem 0 0;
+  gap: 0.3rem;
+  font-size: 11px;
+  opacity: 0.7;
+  color: rgba(255,255,255,0.7);
+  margin: 6px 0 0;
 }
 
-.guard-tier-progress-hint-max {
-  opacity: 0.85;
-}
+.guard-tier-progress-hint-max { opacity: 0.7; }
 
 .guard-tier-progress-hint-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 11px;
+  height: 11px;
   flex-shrink: 0;
 }
 
@@ -9945,95 +9894,97 @@ html.theme-dark .wf-badge-success {
 }
 
 .guard-factors-header {
-  margin-bottom: 0.875rem;
+  padding: 20px 20px 8px;
+  margin-bottom: 0;
 }
 
 .guard-factors-heading {
-  font-size: 1.0625rem;
-  font-weight: 900;
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
-  color: var(--brand-text);
+  color: var(--uber-text, #000);
 }
+
+html.theme-dark .guard-factors-heading { color: #fff; }
 
 .guard-factors-subheading {
-  margin: 0.2rem 0 0;
-  font-size: 0.75rem;
-  color: var(--brand-text-muted);
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--uber-text-muted, #767676);
 }
 
+/* Single-column flat list — no 2-col card grid */
 .guard-factors-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--uber-border, #eeeeee);
 }
 
+/* ─── Factor cards → flat Uber list rows ─────────────────────────────────── */
 .guard-factor-card {
   position: relative;
   overflow: hidden;
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-lg);
-  padding: 0.9rem 0.95rem 0.85rem;
+  background: var(--uber-bg, #fff);
+  border: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 0;
+  padding: 14px 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  gap: 6px;
+  box-shadow: none;
+  transition: background 0.1s ease;
 }
 
-.guard-factor-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--brand-border);
-}
+.guard-factor-card::before { display: none; }
 
-.guard-factor-card-very-high::before { background: var(--status-success); }
-
-.guard-factor-card-high::before { background: color-mix(in srgb, var(--status-success) 70%, var(--brand-border)); }
-
-.guard-factor-card-moderate::before { background: var(--status-warning); }
-
+.guard-factor-card-very-high::before,
+.guard-factor-card-high::before,
+.guard-factor-card-moderate::before,
 .guard-factor-card-low::before,
-.guard-factor-card-very-low::before { background: var(--status-danger); }
+.guard-factor-card-very-low::before { display: none; }
 
 .guard-factor-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  transform: none;
+  box-shadow: none;
+  background: var(--uber-surface, #f6f6f6);
 }
 
 .guard-factor-card-label {
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--brand-text-muted);
+  color: var(--uber-text-muted, #767676);
   margin: 0;
 }
 
 .guard-factor-card-rate {
-  font-size: 1.625rem;
-  font-weight: 900;
+  font-size: 28px;
+  font-weight: 800;
   letter-spacing: -0.04em;
-  color: var(--brand-text);
+  color: var(--uber-text, #000);
   margin: 0;
   line-height: 1;
 }
 
 .guard-factor-card-bar {
-  height: 0.3rem;
+  height: 3px;
   border-radius: 999px;
-  background: var(--brand-border);
+  background: var(--uber-border, #eeeeee);
   overflow: hidden;
+  margin-top: 4px;
 }
 
 .guard-factor-card-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--brand-primary), color-mix(in srgb, var(--brand-primary) 65%, white));
+  background: var(--uber-text, #000);
   transition: width 0.4s ease;
+}
+
+html.theme-dark .guard-factor-card-bar-fill {
+  background: #fff;
 }
 
 .guard-factor-card-footer {
@@ -10041,57 +9992,61 @@ html.theme-dark .wf-badge-success {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-top: 0.15rem;
 }
 
 .guard-factor-card-points {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--brand-text);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--uber-text-muted, #767676);
 }
 
 .guard-factor-card-points-max {
-  font-weight: 600;
-  color: var(--brand-text-muted);
+  font-weight: 500;
+  color: var(--uber-text-muted, #767676);
 }
 
 .guard-factor-card-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.6875rem;
-  font-weight: 800;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .guard-factor-status-dot {
-  width: 0.4rem;
-  height: 0.4rem;
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: currentColor;
+  flex-shrink: 0;
 }
 
-.guard-factor-status-very-high { color: var(--status-success); }
-
-.guard-factor-status-high { color: color-mix(in srgb, var(--status-success) 75%, var(--brand-text)); }
-
-.guard-factor-status-moderate { color: var(--status-warning); }
-
+.guard-factor-status-very-high { color: #34c759; }
+.guard-factor-status-high { color: #34c759; }
+.guard-factor-status-moderate { color: #ff9500; }
 .guard-factor-status-low,
-.guard-factor-status-very-low { color: var(--status-danger); }
+.guard-factor-status-very-low { color: #ff3b30; }
+
+html.theme-dark .guard-factor-status-very-high,
+html.theme-dark .guard-factor-status-high { color: #30d158; }
+html.theme-dark .guard-factor-status-moderate { color: #ffd60a; }
+html.theme-dark .guard-factor-status-low,
+html.theme-dark .guard-factor-status-very-low { color: #ff453a; }
 
 button.guard-factor-card {
   width: 100%;
   text-align: left;
   cursor: pointer;
-  border: 1px solid var(--brand-border);
+  border: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
   font: inherit;
   color: inherit;
 }
 
 .guard-factor-card-interactive {
   position: relative;
-  padding-right: 2rem;
+  padding-right: 2.5rem;
 }
 
 .guard-factor-card-chevron {
@@ -10869,37 +10824,45 @@ button.guard-factor-card {
   padding: 0;
 }
 
+/* Performance summary stats — flat Uber stat row */
 .guard-performance-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  padding: 1rem;
-  background: var(--brand-bg-sec);
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border-top: 1px solid var(--uber-border, #eeeeee);
 }
 
 .guard-performance-stat {
-  padding: 0.9rem 0.95rem;
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-lg);
-  background: var(--brand-surface);
+  padding: 14px 20px;
+  border: none;
+  border-right: 1px solid var(--uber-border, #eeeeee);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 0;
+  background: var(--uber-bg, #fff);
   min-width: 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-shadow: none;
+}
+
+.guard-performance-stat:nth-child(even) {
+  border-right: none;
 }
 
 .guard-performance-stat-label {
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--brand-text-muted);
-  margin: 0 0 0.35rem;
+  color: var(--uber-text-muted, #767676);
+  margin: 0 0 4px;
 }
 
 .guard-performance-stat-value {
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  color: var(--brand-text);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000);
   margin: 0;
   line-height: 1.1;
 }
@@ -15028,30 +14991,35 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
     font-size: 0.8125rem;
   }}
 
+/* Jobs hero — compact Uber stat bar, no brand colour */
 .guard-jobs-tier-hero {
-  justify-content: space-between;
-  text-align: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  gap: 4px;
 }
 
 .guard-jobs-hero-stack {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 18rem;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.35rem;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .guard-jobs-hero-stack .guard-tier-hero-eyebrow,
 .guard-jobs-hero-name {
-  text-align: center;
+  text-align: left;
 }
 
 .guard-jobs-hero-name {
-  font-size: clamp(1.65rem, 6vw, 2.15rem);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   margin: 0;
 }
 
@@ -15090,16 +15058,17 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
 .guard-jobs-hero-legend {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.4rem 0.75rem;
-  margin-top: 0.45rem;
+  gap: 0 1rem;
+  margin-top: 8px;
+  width: 100%;
 }
 
 .guard-jobs-hero-legend-item {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 6px;
   min-width: 0;
-  opacity: 0.82;
+  opacity: 0.75;
   transition: opacity 0.15s ease;
 }
 
@@ -15108,33 +15077,32 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
 }
 
 .guard-jobs-hero-legend-dot {
-  width: 0.42rem;
-  height: 0.42rem;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .guard-jobs-hero-legend-label {
   flex: 1;
   min-width: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .guard-jobs-hero-legend-value {
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  color: #fff;
 }
 
 .guard-jobs-hero-legend-item-active .guard-jobs-hero-legend-value {
-  text-decoration: underline;
-  text-underline-offset: 0.12rem;
+  text-decoration: none;
 }
 
 .guard-jobs-hero-legend-button {
