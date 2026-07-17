@@ -270,7 +270,7 @@ export function AuthPage({
   open = true,
 }: AuthPageProps) {
   const isSheet = presentation === 'sheet';
-  const { formFactor } = useDevice();
+  const { formFactor, shellKind, viewSurface } = useDevice();
   const isDesktopAuth = !isSheet && formFactor === 'desktop';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
@@ -1449,7 +1449,8 @@ export function AuthPage({
       <GuardrSheet
         open={open}
         onClose={onBackToHome}
-        panelClassName="rounded-t-[1.35rem] max-h-[92dvh]"
+        panelClassName={`auth-sheet-panel auth-sheet-panel--${shellKind} rounded-t-[1.35rem] max-h-[92dvh]`}
+        className={`auth-sheet-root auth-sheet--${viewSurface}`}
         ariaLabel={isSignUp ? 'Create account' : 'Sign in'}
         zIndex={2200}
       >

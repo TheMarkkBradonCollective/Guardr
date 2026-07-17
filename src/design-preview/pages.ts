@@ -4,6 +4,8 @@ export type PageType =
   | 'landing'
   | 'auth'
   | 'auth-signup'
+  | 'app-welcome'
+  | 'auth-sheet'
   | 'guide'
   | 'legal'
   | 'dashboard'
@@ -28,12 +30,18 @@ export interface PreviewPage {
   layout: PreviewRole | 'public';
   type: PageType;
   nav?: string;
+  /** Simulated install shell for app-welcome / auth-sheet mocks */
+  shellKind?: 'pwa' | 'native';
 }
 
 export const PREVIEW_PAGES: PreviewPage[] = [
   { id: 'landing', role: 'public', path: '/', title: 'Landing', layout: 'public', type: 'landing' },
   { id: 'auth-signin', role: 'public', path: '/?auth=sign-in', title: 'Sign in', layout: 'public', type: 'auth' },
   { id: 'auth-signup', role: 'public', path: '/?auth=sign-up', title: 'Sign up', layout: 'public', type: 'auth-signup' },
+  { id: 'app-welcome-pwa', role: 'public', path: '/app (PWA)', title: 'App welcome · PWA', layout: 'public', type: 'app-welcome', shellKind: 'pwa' },
+  { id: 'app-welcome-native', role: 'public', path: '/app (APK)', title: 'App welcome · Native', layout: 'public', type: 'app-welcome', shellKind: 'native' },
+  { id: 'auth-sheet-pwa', role: 'public', path: '/app auth (PWA)', title: 'Auth sheet · PWA', layout: 'public', type: 'auth-sheet', shellKind: 'pwa' },
+  { id: 'auth-sheet-native', role: 'public', path: '/app auth (APK)', title: 'Auth sheet · Native', layout: 'public', type: 'auth-sheet', shellKind: 'native' },
   { id: 'guide', role: 'public', path: '/guide', title: 'Product guide', layout: 'public', type: 'guide' },
   { id: 'legal-terms', role: 'public', path: '/legal/terms', title: 'Terms of Service', layout: 'public', type: 'legal' },
   { id: 'legal-privacy', role: 'public', path: '/legal/privacy', title: 'Privacy Policy', layout: 'public', type: 'legal' },

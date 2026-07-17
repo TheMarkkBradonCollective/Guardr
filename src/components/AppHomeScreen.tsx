@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
-import { Logo } from './Logo';
-import { LegalFooterLinks } from './legal/LegalFooterLinks';
-import type { LegalPageId } from '../lib/legalContent';
+import { Block } from 'baseui/block';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import type { FormFactor } from '../lib/platform/device';
+import type { ShellKind } from '../lib/platform/shellKind';
+import type { ViewSurface } from '../lib/platform/viewSurface';
+import { resolveViewSurface } from '../lib/platform/viewSurface';
 import { PublicPageChrome } from './baseui/layout/PublicPageChrome';
-import { Building2, Shield, ArrowRight, MapPin, Radio } from 'lucide-react';
+import type { LegalPageId } from '../lib/legalContent';
+import {
+  AppWelcomeBackdrop,
+  AppWelcomeHero,
+  AppWelcomeShellBadge,
+  AppWelcomeSignInDock,
+} from './app/AppWelcomeChrome';
 
 interface AppHomeScreenProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -13,88 +21,11 @@ interface AppHomeScreenProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onOpenLegal: (page: LegalPageId) => void;
   authSheetOpen?: boolean;
-}
-
-function AppWelcomeBackdrop() {
-  return (
-    <div className="app-welcome-backdrop" aria-hidden="true">
-      <div className="app-welcome-backdrop-grid" />
-      <div className="app-welcome-backdrop-glow" />
-      <div className="app-welcome-backdrop-pins">
-        <span className="app-welcome-pin app-welcome-pin--a">
-          <MapPin className="w-3.5 h-3.5" />
-        </span>
-        <span className="app-welcome-pin app-welcome-pin--b">
-          <Radio className="w-3 h-3" />
-        </span>
-        <span className="app-welcome-pin app-welcome-pin--c">
-          <Shield className="w-3 h-3" />
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function AppWelcomeSignInDock({
-  signInRole,
-  setSignInRole,
-  onNavigateToAuth,
-  onOpenLegal,
-}: {
-  signInRole: 'guard' | 'client';
-  setSignInRole: (role: 'guard' | 'client') => void;
-  onNavigateToAuth: AppHomeScreenProps['onNavigateToAuth'];
-  onOpenLegal: (page: LegalPageId) => void;
-}) {
-  return (
-    <div className="app-welcome-dock shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <p className="app-welcome-role-label">Sign in as</p>
-      <div className="app-welcome-role-toggle" role="group" aria-label="Account type">
-        <button
-          type="button"
-          onClick={() => setSignInRole('guard')}
-          className={`app-welcome-role-btn ${signInRole === 'guard' ? 'app-welcome-role-btn--active' : ''}`}
-          aria-pressed={signInRole === 'guard'}
-        >
-          <Shield className="w-4 h-4 shrink-0" />
-          Guard
-        </button>
-        <button
-          type="button"
-          onClick={() => setSignInRole('client')}
-          className={`app-welcome-role-btn ${signInRole === 'client' ? 'app-welcome-role-btn--active' : ''}`}
-          aria-pressed={signInRole === 'client'}
-        >
-          <Building2 className="w-4 h-4 shrink-0" />
-          Client
-        </button>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onNavigateToAuth(signInRole, 'sign-in')}
-        className="app-button-primary app-welcome-signin-btn w-full mt-4"
-      >
-        Sign in
-        <ArrowRight className="w-4 h-4" />
-      </button>
-
-      <div className="app-welcome-signup-row mt-3 text-center">
-        <span className="text-xs text-brand-text-muted">New here?</span>
-        <button
-          type="button"
-          onClick={() => onNavigateToAuth(signInRole, 'sign-up')}
-          className="app-welcome-signup-link text-xs font-semibold text-brand-primary ml-1.5"
-        >
-          Create {signInRole === 'guard' ? 'guard' : 'client'} account
-        </button>
-      </div>
-
-      <div className="app-welcome-legal mt-4 pt-3 border-t border-brand-border/50">
-        <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-      </div>
-    </div>
-  );
+  /** Design-preview only — simulate PWA/APK shell without changing DeviceProvider */
+  previewOverrides?: {
+    shellKind: ShellKind;
+    formFactor: FormFactor;
+  };
 }
 
 export function AppHomeScreen({
@@ -103,55 +34,62 @@ export function AppHomeScreen({
   onChangeTheme,
   onOpenLegal,
   authSheetOpen = false,
+  previewOverrides,
 }: AppHomeScreenProps) {
   const [signInRole, setSignInRole] = useState<'guard' | 'client'>('guard');
-  const { formFactor, shellKind, viewSurface } = useDevice();
+  const device = useDevice();
+  const shellKind = previewOverrides?.shellKind ?? device.shellKind;
+  const formFactor = previewOverrides?.formFactor ?? device.formFactor;
+  const viewSurface: ViewSurface =
+    previewOverrides != null
+      ? resolveViewSurface(previewOverrides.shellKind, previewOverrides.formFactor)
+      : device.viewSurface;
   const isTablet = formFactor === 'tablet';
 
   return (
-    <div
-      className={`app-welcome page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden text-brand-text app-welcome--${shellKind} ${
+    <Block
+      className={`app-welcome page-shell app-welcome--${shellKind} ${
         isTablet ? 'app-welcome--tablet' : 'app-welcome--mobile'
       } ${authSheetOpen ? 'app-welcome--dimmed' : ''}`}
       data-view-surface={viewSurface}
+      height="100dvh"
+      maxHeight="100dvh"
+      display="flex"
+      flexDirection="column"
+      overflow="hidden"
+      backgroundColor="backgroundPrimary"
+      color="contentPrimary"
     >
       <AppWelcomeBackdrop />
 
       <PublicPageChrome
         themeMode={themeMode}
         onChangeTheme={onChangeTheme}
-        trailing={
-          shellKind === 'native' ? (
-            <span className="app-welcome-shell-badge app-welcome-shell-badge--native">App</span>
-          ) : shellKind === 'pwa' ? (
-            <span className="app-welcome-shell-badge app-welcome-shell-badge--pwa">Installed</span>
-          ) : null
-        }
+        trailing={<AppWelcomeShellBadge shellKind={shellKind} />}
       />
 
-      <main
+      <Block
+        as="main"
         className={`app-welcome-main relative z-[1] flex-1 min-h-0 ${
           isTablet ? 'app-welcome-main--tablet' : 'flex flex-col justify-between px-5'
         }`}
+        display="flex"
+        flexDirection={isTablet ? 'row' : 'column'}
+        flex="1"
+        minHeight="0"
+        position="relative"
+        overrides={{ Block: { style: { zIndex: 1 } } }}
       >
-        <div className={`app-welcome-hero ${isTablet ? 'app-welcome-hero--tablet' : 'pt-2 sm:pt-6'}`}>
-          <p className="app-welcome-eyebrow">California security marketplace</p>
-          <h1 className="app-welcome-headline">
-            Coverage on demand.
-            <span className="block text-brand-primary">Professionals on your schedule.</span>
-          </h1>
-          <p className="app-welcome-sub mt-3 max-w-sm text-sm text-brand-text-muted leading-relaxed">
-            Sign in to post jobs, accept shifts, and track live coverage — all in one place.
-          </p>
-        </div>
+        <AppWelcomeHero shellKind={shellKind} isTablet={isTablet} />
 
         <AppWelcomeSignInDock
           signInRole={signInRole}
           setSignInRole={setSignInRole}
           onNavigateToAuth={onNavigateToAuth}
           onOpenLegal={onOpenLegal}
+          viewSurface={viewSurface}
         />
-      </main>
-    </div>
+      </Block>
+    </Block>
   );
 }

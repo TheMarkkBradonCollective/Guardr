@@ -67,6 +67,28 @@ src/styles/app-native.css           — APK overrides
 
 `DeviceProvider` sets `body[data-shell]`, `body[data-view-surface]`, and `body[data-form-factor]` for CSS targeting.
 
+### Pre-auth surfaces (`/uberitplatforms` — Phase 1)
+
+| Surface | Component | Notes |
+|---------|-----------|-------|
+| `browser-*` | `HomePage` + `AuthPage` (page) | Marketing landing; full-page auth with desktop split |
+| `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Glass dock, “Installed” badge, Uber accent hero copy |
+| `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Solid dock, safe-area padding, native press feedback |
+
+Central files:
+
+```
+src/components/AppHomeScreen.tsx       — PWA/APK welcome (not browser marketing)
+src/components/app/AppWelcomeChrome.tsx — shell-specific hero, dock, badges (Base Web)
+src/components/auth/AuthFormChrome.tsx  — shared sign-in/sign-up chrome
+src/styles/app-pwa.css                  — PWA welcome + auth-sheet overrides (--uber-*)
+src/styles/app-native.css               — APK welcome + auth-sheet safe areas
+```
+
+Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) still branches on **form factor only** — PWA/native deltas are CSS via `data-shell`. Next phase: per-surface signed-in nav.
+
+Design preview: `/design-preview.html` → Public → **App welcome · PWA/APK**, **Auth sheet · PWA/APK** (shell toggle in header).
+
 ## Theme System
 
 - **Primary brand:** Sage green (`#84a279`)

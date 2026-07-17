@@ -14,6 +14,14 @@ import {
   DashboardZone,
 } from '../components/baseui';
 import type { PreviewPage } from './pages';
+import type { FrameSize } from './AppShell';
+import { AppHomeScreen } from '../components/AppHomeScreen';
+import { AuthFormHeader, AuthModeToggle, AuthRolePicker } from '../components/auth/AuthFormChrome';
+import { useThemeMode } from '../lib/platform/useThemeMode';
+import { saveTheme } from '../lib/platform/theme';
+import type { FormFactor } from '../lib/platform/device';
+import { Building2, Shield } from 'lucide-react';
+import { useState } from 'react';
 
 function PlaceholderList() {
   return (
@@ -185,7 +193,70 @@ function MapMock({ variant }: { variant: 'guard' | 'client' | 'staff' }) {
   );
 }
 
-export function PageContent({ page }: { page: PreviewPage }) {
+function previewFormFactor(frameSize: FrameSize): FormFactor {
+  if (frameSize === 'mobile') return 'mobile';
+  if (frameSize === 'tablet') return 'tablet';
+  return 'desktop';
+}
+
+const PREVIEW_ROLES = [
+  { id: 'guard' as const, label: 'Guard', icon: Shield },
+  { id: 'client' as const, label: 'Client', icon: Building2 },
+];
+
+function AppWelcomePreview({ page, frameSize }: { page: PreviewPage; frameSize: FrameSize }) {
+  const themeMode = useThemeMode();
+  return (
+    <AppHomeScreen
+      themeMode={themeMode}
+      onChangeTheme={saveTheme}
+      onNavigateToAuth={() => undefined}
+      onOpenLegal={() => undefined}
+      authSheetOpen={page.type === 'auth-sheet'}
+      previewOverrides={{
+        shellKind: page.shellKind ?? 'pwa',
+        formFactor: previewFormFactor(frameSize),
+      }}
+    />
+  );
+}
+
+function AuthSheetMock() {
+  const [role, setRole] = useState<'guard' | 'client'>('guard');
+  const [isSignUp, setIsSignUp] = useState(false);
+  return (
+    <Block
+      position="absolute"
+      left={0}
+      right={0}
+      bottom={0}
+      backgroundColor="backgroundPrimary"
+      padding="scale600"
+      overrides={{
+        Block: {
+          style: {
+            borderTopLeftRadius: '1.35rem',
+            borderTopRightRadius: '1.35rem',
+            borderTop: '1px solid var(--uber-border)',
+            maxHeight: '72%',
+            overflow: 'auto',
+          },
+        },
+      }}
+    >
+      <AuthFormHeader role={role} isSignUp={isSignUp} compact />
+      <AuthModeToggle
+        isSignUp={isSignUp}
+        onSignIn={() => setIsSignUp(false)}
+        onSignUp={() => setIsSignUp(true)}
+      />
+      <AuthRolePicker roles={PREVIEW_ROLES} value={role} onChange={setRole} />
+      <GuardrButton fullWidth>{isSignUp ? 'Create account' : 'Sign in'}</GuardrButton>
+    </Block>
+  );
+}
+
+export function PageContent({ page, frameSize = 'desktop' }: { page: PreviewPage; frameSize?: FrameSize }) {
   switch (page.type) {
     case 'map-guard':
       return <MapMock variant="guard" />;
@@ -196,6 +267,15 @@ export function PageContent({ page }: { page: PreviewPage }) {
     case 'dashboard':
     case 'earnings':
       return <DashboardWidgets />;
+    case 'app-welcome':
+      return <AppWelcomePreview page={page} frameSize={frameSize} />;
+    case 'auth-sheet':
+      return (
+        <Block position="relative" minHeight="680px" height="680px" overflow="hidden">
+          <AppWelcomePreview page={{ ...page, type: 'app-welcome' }} frameSize={frameSize} />
+          <AuthSheetMock />
+        </Block>
+      );
     case 'landing':
       return (
         <Block padding="scale1000" overrides={{ Block: { style: { textAlign: 'center' } } }}>

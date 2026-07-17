@@ -14,8 +14,8 @@ body.shell-native .app-welcome-header {
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: var(--brand-surface);
-  border-top: 1px solid var(--brand-border);
+  background: var(--uber-surface, var(--brand-surface));
+  border-top: 1px solid var(--uber-border, var(--brand-border));
 }
 
 body[data-shell="native"] .app-welcome-role-btn:active,
@@ -43,7 +43,12 @@ body.shell-native .tablet-admin-rail-item:active {
 
 body[data-shell="native"] .app-welcome-shell-badge--native,
 body.shell-native .app-welcome-shell-badge--native {
-  border-color: color-mix(in srgb, var(--brand-primary) 45%, var(--brand-border));
+  border-color: color-mix(in srgb, var(--uber-accent, var(--brand-primary)) 45%, var(--uber-border, var(--brand-border)));
+}
+
+body[data-view-surface="native-mobile"] .auth-sheet--native-mobile .auth-sheet-scroll,
+body[data-view-surface="native-tablet"] .auth-sheet--native-tablet .auth-sheet-scroll {
+  padding-bottom: max(1.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 body[data-view-surface="native-tablet"] .app-welcome--tablet .app-welcome-dock {

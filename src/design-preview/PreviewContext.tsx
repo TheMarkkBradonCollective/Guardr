@@ -1,6 +1,9 @@
 import { createContext } from 'react';
 import type { PreviewPage, PreviewRole } from './pages';
 import type { FrameSize } from './AppShell';
+import type { ShellKind } from '../lib/platform/shellKind';
+
+export type PreviewShellKind = ShellKind | 'browser';
 
 export interface SiteMapSection {
   name: string;
@@ -16,6 +19,8 @@ export interface PreviewContextValue {
   setRoleFilter: (role: PreviewRole | 'all') => void;
   frameSize: FrameSize;
   setFrameSize: (size: FrameSize) => void;
+  shellPreview: PreviewShellKind;
+  setShellPreview: (shell: PreviewShellKind) => void;
 }
 
 export const PreviewContext = createContext<PreviewContextValue>({
@@ -27,4 +32,6 @@ export const PreviewContext = createContext<PreviewContextValue>({
   setRoleFilter: () => undefined,
   frameSize: 'desktop',
   setFrameSize: () => undefined,
+  shellPreview: 'browser',
+  setShellPreview: () => undefined,
 });

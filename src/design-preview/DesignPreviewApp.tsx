@@ -33,6 +33,7 @@ function buildSiteMap(pages: PreviewPage[]): SiteMapSection[] {
 export function DesignPreviewApp() {
   const [roleFilter, setRoleFilter] = useState<PreviewRole | 'all'>('all');
   const [frameSize, setFrameSize] = useState<FrameSize>('desktop');
+  const [shellPreview, setShellPreview] = useState<'browser' | 'pwa' | 'native'>('browser');
   const [activeId, setActiveId] = useState(PREVIEW_PAGES[0]?.id ?? '');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -73,8 +74,10 @@ export function DesignPreviewApp() {
       setRoleFilter,
       frameSize,
       setFrameSize,
+      shellPreview,
+      setShellPreview,
     }),
-    [siteMap, activeId, scrollToPage, roleFilter, frameSize],
+    [siteMap, activeId, scrollToPage, roleFilter, frameSize, shellPreview],
   );
 
   return (
@@ -128,6 +131,13 @@ export function DesignPreviewApp() {
               margin="0 auto"
               maxWidth={MAX_WIDTH[frameSize]}
               backgroundColor="backgroundPrimary"
+              data-shell={page.type === 'app-welcome' || page.type === 'auth-sheet' ? (page.shellKind ?? 'pwa') : shellPreview}
+              data-view-surface={
+                page.type === 'app-welcome' || page.type === 'auth-sheet'
+                  ? `${page.shellKind ?? 'pwa'}-${frameSize}`
+                  : `${shellPreview}-${frameSize}`
+              }
+              data-form-factor={frameSize}
               overrides={{
                 Block: {
                   style: {
