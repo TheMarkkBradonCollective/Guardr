@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Logo } from '../../Logo';
 import { AccountMenu, type AccountMenuProps } from '../AccountMenu';
 import { BottomNavItem } from '../BottomNavBar';
-import { DesktopCommandBar } from './DesktopCommandBar';
+import { DesktopCommandBar } from '../desktop/DesktopCommandBar';
 import { GuardrIconRail } from '../../baseui/layout/GuardrBottomNav';
 
 interface TabletAdminShellProps {

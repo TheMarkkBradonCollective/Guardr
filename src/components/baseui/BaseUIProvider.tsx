@@ -4,7 +4,7 @@ import { Provider as StyletronProvider } from 'styletron-react';
 import { BaseProvider } from 'baseui';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { guardrThemeForMode } from '../../theme/guardrBaseTheme';
-import { withGuardrBreakpoints } from '../components/baseui/layout/shellStyles';
+import { withGuardrBreakpoints } from './layout/shellStyles';
 
 let clientEngine: Styletron | null = null;
 
