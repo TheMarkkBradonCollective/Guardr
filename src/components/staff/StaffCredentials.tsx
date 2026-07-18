@@ -33,6 +33,7 @@ import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
 import { StaffActivationCredentialSection } from './StaffActivationCredentialSection';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
@@ -291,15 +292,17 @@ export function StaffCredentials({
             Updated document pending review — verified copy stays on file until you approve this version.
           </p>
           <div className="app-action-row--equal w-full">
-            <button
-              type="button"
+            <AppButton
+              variant="danger"
+              size="sm"
               onClick={() => onRejectCert(guard.id, cert.id)}
-              className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+              startEnhancer={<X className="w-3 h-3" />}
             >
-              <X className="w-3 h-3" /> Reject update
-            </button>
-            <button
-              type="button"
+              Reject update
+            </AppButton>
+            <AppButton
+              variant="primary"
+              size="sm"
               disabled={!staffCanVerifyCertification(cert, guard)}
               title={staffVerifyCertificationBlocker(cert, guard) ?? 'Verify updated credential'}
               onClick={() => {
@@ -313,10 +316,10 @@ export function StaffCredentials({
                   }
                 })();
               }}
-              className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+              startEnhancer={<Check className="w-3 h-3" />}
             >
-              <Check className="w-3 h-3" /> Verify update
-            </button>
+              Verify update
+            </AppButton>
           </div>
           {staffVerifyCertificationBlocker(cert, guard) && (
             <p className="text-xs text-amber-500 leading-relaxed break-words">
@@ -332,23 +335,26 @@ export function StaffCredentials({
         <div className="flex flex-col items-stretch gap-1.5 w-full">
           <div className="app-action-row--equal w-full">
             {cert.imageUrl && onRequestCertImageResubmit && (
-              <button
-                type="button"
+              <AppButton
+                variant="outline"
+                size="sm"
                 onClick={() => requestCertResubmit(guard, cert)}
-                className="app-button-outline app-btn-sm gap-1"
+                startEnhancer={<RefreshCw className="w-3 h-3" />}
               >
-                <RefreshCw className="w-3 h-3" /> Request clearer photo
-              </button>
+                Request clearer photo
+              </AppButton>
             )}
-            <button
-              type="button"
+            <AppButton
+              variant="danger"
+              size="sm"
               onClick={() => onRejectCert(guard.id, cert.id)}
-              className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+              startEnhancer={<X className="w-3 h-3" />}
             >
-              <X className="w-3 h-3" /> Reject
-            </button>
-            <button
-              type="button"
+              Reject
+            </AppButton>
+            <AppButton
+              variant="primary"
+              size="sm"
               disabled={!staffCanVerifyCertification(cert, guard)}
               title={staffVerifyCertificationBlocker(cert, guard) ?? 'Verify credential'}
               onClick={() => {
@@ -362,10 +368,10 @@ export function StaffCredentials({
                   }
                 })();
               }}
-              className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+              startEnhancer={<Check className="w-3 h-3" />}
             >
-              <Check className="w-3 h-3" /> Verify
-            </button>
+              Verify
+            </AppButton>
           </div>
           {staffVerifyCertificationBlocker(cert, guard) && (
             <p className="text-xs text-amber-500 leading-relaxed break-words">
@@ -378,13 +384,15 @@ export function StaffCredentials({
 
     if (cert.status === 'verified' && onRequestCertUpdate) {
       return (
-        <button
-          type="button"
+        <AppButton
+          variant="outline"
+          size="sm"
+          className="text-amber-500 border-amber-500/40"
           onClick={() => requestCertUpdate(guard, cert)}
-          className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
+          startEnhancer={<RefreshCw className="w-3 h-3" />}
         >
-          <RefreshCw className="w-3 h-3" /> Request update
-        </button>
+          Request update
+        </AppButton>
       );
     }
 
@@ -400,22 +408,22 @@ export function StaffCredentials({
     if (status === 'pending') {
       return (
         <div className="flex flex-wrap gap-2 pt-2">
-          <button
-            type="button"
-            className="app-button-primary app-btn-sm"
+          <AppButton
+            variant="primary"
+            size="sm"
             onClick={() => void onReviewGuardInsurance(guard.id, 'verified')}
           >
             Verify insurance
-          </button>
-          <button
-            type="button"
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+          </AppButton>
+          <AppButton
+            variant="danger"
+            size="sm"
             onClick={() =>
               void onReviewGuardInsurance(guard.id, 'rejected', 'Document incomplete or expired')
             }
           >
             Reject
-          </button>
+          </AppButton>
         </div>
       );
     }
@@ -443,9 +451,10 @@ export function StaffCredentials({
     if (!policy || resolveInsuranceStatus(policy) !== 'verified') return null;
     if (policy.updateRequestedAt) return null;
     return (
-      <button
-        type="button"
-        className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
+      <AppButton
+        variant="outline"
+        size="sm"
+        className="text-amber-500 border-amber-500/40"
         onClick={() => {
           void (async () => {
             const note = await promptStaffCredentialUpdateNote('Certificate of Insurance');
@@ -459,9 +468,10 @@ export function StaffCredentials({
             }
           })();
         }}
+        startEnhancer={<RefreshCw className="w-3 h-3" />}
       >
-        <RefreshCw className="w-3 h-3" /> Request update
-      </button>
+        Request update
+      </AppButton>
     );
   };
 
@@ -469,9 +479,10 @@ export function StaffCredentials({
     if (!canVerifyCredentials || !onRequestIdentityResubmit) return null;
     if (getGuardIdVerificationStatus(guard) !== 'verified') return null;
     return (
-      <button
-        type="button"
-        className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
+      <AppButton
+        variant="outline"
+        size="sm"
+        className="text-amber-500 border-amber-500/40"
         onClick={() => {
           void (async () => {
             const note = await promptStaffCredentialUpdateNote('Government ID');
@@ -479,9 +490,10 @@ export function StaffCredentials({
             await onRequestIdentityResubmit(guard.id, ['front', 'back', 'selfie'], note);
           })();
         }}
+        startEnhancer={<RefreshCw className="w-3 h-3" />}
       >
-        <RefreshCw className="w-3 h-3" /> Request update
-      </button>
+        Request update
+      </AppButton>
     );
   };
 
