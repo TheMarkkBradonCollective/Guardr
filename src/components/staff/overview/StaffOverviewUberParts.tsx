@@ -381,6 +381,28 @@ export function StaffOverviewListRow({
   );
 }
 
+export function StaffOverviewShortcutRow({
+  title,
+  description,
+  onClick,
+}: {
+  title: string;
+  description?: string;
+  onClick: () => void;
+}) {
+  return (
+    <li>
+      <button type="button" className="uber-mobile-list-row staff-overview-shortcut-row" onClick={onClick}>
+        <span className="staff-overview-list-row-copy">
+          <span className="staff-overview-list-row-title">{title}</span>
+          {description ? <span className="staff-overview-list-row-description">{description}</span> : null}
+        </span>
+        <ChevronRight size={16} className="staff-overview-list-row-chevron" aria-hidden />
+      </button>
+    </li>
+  );
+}
+
 export function StaffOverviewMetricChips({
   metrics,
   onNavigate,

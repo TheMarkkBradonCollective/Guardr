@@ -360,3 +360,108 @@ body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-ove
   padding: 14px !important;
 }
 
+/* ─── Mobile overview + drawer ─────────────────────────────────────────── */
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .uber-shell-content,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .uber-shell-content,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .uber-shell-content {
+  background: var(--uber-bg, #ffffff) !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-content-inner,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-content-inner,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-content-inner {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile.uber-mobile-overview,
+body[data-view-surface="pwa-mobile"] .staff-overview-mobile.uber-mobile-overview,
+body[data-view-surface="native-mobile"] .staff-overview-mobile.uber-mobile-overview {
+  gap: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile .staff-overview-list-panel,
+body[data-view-surface="pwa-mobile"] .staff-overview-mobile .staff-overview-list-panel,
+body[data-view-surface="native-mobile"] .staff-overview-mobile .staff-overview-list-panel {
+  padding: 14px 16px !important;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+  box-shadow: none;
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile .staff-overview-empty-card--panel,
+body[data-view-surface="pwa-mobile"] .staff-overview-mobile .staff-overview-empty-card--panel,
+body[data-view-surface="native-mobile"] .staff-overview-mobile .staff-overview-empty-card--panel {
+  padding: 4px 0 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile .uber-mobile-action-grid .uber-quick-tile,
+body[data-view-surface="pwa-mobile"] .staff-overview-mobile .uber-mobile-action-grid button,
+body[data-view-surface="native-mobile"] .staff-overview-mobile .uber-mobile-action-grid button {
+  min-height: 96px;
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile .staff-overview-metric-chips {
+  margin: 0 -2px;
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-mobile-shortcuts {
+  margin-top: 4px;
+}
+
+body[data-view-surface$="-mobile"] .staff-overview-shortcut-row {
+  padding: 12px 0;
+}
+
+/* Mobile overflow drawer — not a permanent sidebar */
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer {
+  background: var(--uber-bg, #ffffff) !important;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.14);
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-brand,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-brand,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-brand {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-header,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-header,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-header {
+  background: var(--uber-bg, #ffffff) !important;
+  border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"] {
+  padding-top: 4px;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-radius: 8px;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg {
+  color: #ffffff !important;
+}
+
