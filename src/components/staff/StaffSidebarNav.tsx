@@ -41,8 +41,8 @@ const OPERATIONS_IDS: StaffSection[] = [
   'crews',
   'clients',
   'team',
-  'messages',
 ];
+const MESSAGES_IDS: StaffSection[] = ['messages'];
 const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'violations', 'stats', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
@@ -132,6 +132,14 @@ export function StaffSidebarNav({
       <NavGroup
         title="Operations"
         itemIds={OPERATIONS_IDS}
+        items={items}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+        accessFlags={accessFlags}
+      />
+      <NavGroup
+        title="Messages"
+        itemIds={MESSAGES_IDS}
         items={items}
         activeSection={activeSection}
         onNavigate={onNavigate}
