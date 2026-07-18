@@ -88,7 +88,7 @@ export function UberLandingNav({
           <button type="button" className="uber-landing-nav-link" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
             Log in
           </button>
-          <button type="button" className="uber-landing-signup-pill" onClick={() => onNavigateToAuth('client', 'sign-up')}>
+          <button type="button" className="uber-landing-signup-pill" onClick={() => onNavigateToAuth(undefined, 'sign-up')}>
             Sign up
           </button>
           {isMobile ? (

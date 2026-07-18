@@ -130,7 +130,7 @@ function DesktopNav({
           <button
             type="button"
             className="dsk-landing-signup-btn"
-            onClick={() => onNavigateToAuth('client', 'sign-up')}
+            onClick={() => onNavigateToAuth(undefined, 'sign-up')}
           >
             Sign up
           </button>
@@ -375,7 +375,7 @@ function LoginBand({
             <button
               type="button"
               className="dsk-hero-cta-link"
-              onClick={() => onNavigateToAuth('client', 'sign-up')}
+              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
             >
               Create an account
             </button>

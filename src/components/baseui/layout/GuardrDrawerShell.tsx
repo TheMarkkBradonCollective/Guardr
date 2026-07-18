@@ -5,8 +5,9 @@ import { Menu, Settings } from 'lucide-react';
 import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
+import { GuardrBottomNav } from './GuardrBottomNav';
 import { resolveMobilityChrome } from './mobilityChrome';
-import type { GuardrNavGroup } from './types';
+import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { useDevice } from '../../../lib/platform';
 import { prefersReducedMotion } from '../../../theme/motionTokens';
 
@@ -29,6 +30,9 @@ export interface GuardrDrawerShellProps {
   children: React.ReactNode;
   ariaLabel?: string;
   showTitleBand?: boolean;
+  /** Primary tabs for Uber-style bottom nav on mobile/PWA/APK. */
+  mobileBottomNavItems?: GuardrNavItem[];
+  mobileBottomNavOverflow?: GuardrNavItem[];
 }
 
 export function GuardrDrawerShell({
@@ -50,6 +54,8 @@ export function GuardrDrawerShell({
   children,
   ariaLabel = 'Main navigation',
   showTitleBand = false,
+  mobileBottomNavItems,
+  mobileBottomNavOverflow = [],
 }: GuardrDrawerShellProps) {
   const [, theme] = useStyletron();
   const { viewSurface, experienceTier } = useDevice();
@@ -58,8 +64,13 @@ export function GuardrDrawerShell({
     [viewSurface, experienceTier],
   );
   const isMobile = chrome.layout === 'mobile';
+  const isDesktopWorkspace = chrome.layout === 'desktop';
   const isFlowSidebar = !isMobile;
   const isMapMode = variant === 'dark';
+  const useBottomNav = isMobile && !!mobileBottomNavItems?.length;
+  const showChromeHeader = !hideHeader && !isDesktopWorkspace;
+  const showPageTitleBand =
+    (showTitleBand || isDesktopWorkspace) && !hideHeader && !headerOverride;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
 
   useEffect(() => {
@@ -166,22 +177,20 @@ export function GuardrDrawerShell({
         },
       }}
     >
-      {/* Sidebar brand header — black on desktop (Uber desktop app style), white bg on mobile */}
+      {/* Sidebar brand — white Uber Direct rail on desktop; compact on mobile drawer */}
       <Block
         display="flex"
         alignItems="center"
         gridGap="scale400"
-        paddingTop={chrome.layout === 'desktop' ? 'scale500' : 'scale600'}
+        paddingTop={chrome.layout === 'desktop' ? 'scale600' : 'scale600'}
         paddingBottom={chrome.layout === 'desktop' ? 'scale500' : 'scale500'}
         paddingLeft="scale600"
         paddingRight="scale600"
-        backgroundColor={chrome.layout === 'desktop' ? 'backgroundInversePrimary' : 'backgroundPrimary'}
+        backgroundColor="backgroundPrimary"
         overrides={{
           Block: {
             style: {
-              borderBottom: chrome.layout === 'desktop'
-                ? 'none'
-                : `1px solid ${theme.colors.borderOpaque}`,
+              borderBottom: `1px solid ${theme.colors.borderOpaque}`,
               minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
               flexShrink: 0,
             },
@@ -190,7 +199,7 @@ export function GuardrDrawerShell({
       >
         <Logo
           size={chrome.layout === 'mobile' ? 26 : 24}
-          className={`shrink-0${chrome.layout === 'desktop' ? ' dsk-sidebar-logo' : ''}`}
+          className="shrink-0"
         />
         <Block flex="1" minWidth="0">
           <ParagraphMedium
@@ -200,22 +209,24 @@ export function GuardrDrawerShell({
               fontWeight: 800,
               letterSpacing: '-0.04em',
               lineHeight: 1.1,
-              color: chrome.layout === 'desktop' ? '#fff' : theme.colors.contentPrimary,
+              color: theme.colors.contentPrimary,
             }}
           >
             Guardr
           </ParagraphMedium>
-          <LabelSmall
-            margin={0}
-            $style={{
-              color: chrome.layout === 'desktop' ? 'rgba(255,255,255,0.55)' : theme.colors.contentSecondary,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              fontSize: '10px',
-            }}
-          >
-            {workspaceLabel}
-          </LabelSmall>
+          {!isDesktopWorkspace ? (
+            <LabelSmall
+              margin={0}
+              $style={{
+                color: theme.colors.contentSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontSize: '10px',
+              }}
+            >
+              {workspaceLabel}
+            </LabelSmall>
+          ) : null}
         </Block>
         {sidebarBrandExtra}
       </Block>
@@ -264,6 +275,7 @@ export function GuardrDrawerShell({
       data-mobility-layout={chrome.layout}
       data-sidebar-open={sidebarOpen ? 'true' : 'false'}
       data-view-surface={viewSurface}
+      data-uber-direct={isDesktopWorkspace ? 'true' : undefined}
     >
       {showDrawerBackdrop ? (
         <Block
@@ -302,6 +314,7 @@ export function GuardrDrawerShell({
         className="mobility-content-pane"
         onClick={showDrawerBackdrop ? closeSidebar : undefined}
       >
+        {showChromeHeader ? (
         <Block
           className={`mobility-header${chrome.headerGlass ? ' mobility-header--glass' : ''}${chrome.nativeChrome ? ' mobility-header--native' : ''}`}
           display="flex"
@@ -309,19 +322,17 @@ export function GuardrDrawerShell({
           justifyContent="space-between"
           gridGap="scale400"
           paddingBottom="scale400"
-          paddingLeft={chrome.layout === 'desktop' ? 'scale600' : 'scale500'}
-          paddingRight={chrome.layout === 'desktop' ? 'scale600' : 'scale500'}
-          backgroundColor={chrome.layout === 'desktop' ? 'backgroundInversePrimary' : 'backgroundPrimary'}
+          paddingLeft="scale500"
+          paddingRight="scale500"
+          backgroundColor="backgroundPrimary"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           overrides={{
             Block: {
               style: {
-                borderBottom: chrome.layout === 'desktop'
-                  ? 'none'
-                  : `1px solid ${theme.colors.borderOpaque}`,
+                borderBottom: `1px solid ${theme.colors.borderOpaque}`,
                 flexShrink: 0,
                 paddingTop: 'max(10px, env(safe-area-inset-top))',
-                minHeight: chrome.layout === 'desktop' ? '60px' : 'var(--mobility-header-h, 56px)',
+                minHeight: 'var(--mobility-header-h, 56px)',
               },
             },
           }}
@@ -336,19 +347,11 @@ export function GuardrDrawerShell({
               aria-expanded={sidebarOpen}
               overrides={{
                 Block: {
-                  style: {
-                    ...iconBtnStyle,
-                    ...(chrome.layout === 'desktop' ? {
-                      backgroundColor: 'rgba(255,255,255,0.10)',
-                      border: 'none',
-                      color: '#fff',
-                      ':hover': { backgroundColor: 'rgba(255,255,255,0.18)' },
-                    } : {}),
-                  },
+                  style: iconBtnStyle,
                 },
               }}
             >
-              <Menu size={18} color={chrome.layout === 'desktop' ? '#fff' : undefined} />
+              <Menu size={18} />
             </Block>
             <Block minWidth={0}>
               <HeadingXSmall
@@ -356,7 +359,7 @@ export function GuardrDrawerShell({
                 $style={{
                   fontWeight: 700,
                   lineHeight: 1.2,
-                  color: chrome.layout === 'desktop' ? '#fff' : theme.colors.contentPrimary,
+                  color: theme.colors.contentPrimary,
                 }}
                 className="truncate"
               >
@@ -365,9 +368,7 @@ export function GuardrDrawerShell({
               {chrome.layout !== 'mobile' ? (
                 <LabelSmall
                   margin={0}
-                  $style={{
-                    color: chrome.layout === 'desktop' ? 'rgba(255,255,255,0.55)' : theme.colors.contentSecondary,
-                  }}
+                  $style={{ color: theme.colors.contentSecondary }}
                   className="truncate"
                 >
                   {workspaceLabel}
@@ -393,6 +394,7 @@ export function GuardrDrawerShell({
             ) : null}
           </Block>
         </Block>
+        ) : null}
 
         {!hideHeader && headerOverride ? (
           <Block
@@ -410,29 +412,57 @@ export function GuardrDrawerShell({
           </Block>
         ) : null}
 
-        {!hideHeader && !headerOverride && showTitleBand ? (
+        {!hideHeader && !headerOverride && showPageTitleBand ? (
           <Block
-            paddingTop="scale600"
-            paddingBottom="scale600"
-            paddingLeft="scale600"
-            paddingRight="scale600"
-            backgroundColor="backgroundSecondary"
+            paddingTop={isDesktopWorkspace ? 'scale800' : 'scale600'}
+            paddingBottom={isDesktopWorkspace ? 'scale600' : 'scale600'}
+            paddingLeft="scale800"
+            paddingRight="scale800"
+            backgroundColor="backgroundPrimary"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             overrides={{
               Block: {
                 style: {
                   flexShrink: 0,
-                  borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+                  borderBottom: isDesktopWorkspace
+                    ? 'none'
+                    : `1px solid ${theme.colors.borderOpaque}`,
                 },
               },
             }}
           >
-            <ParagraphMedium margin={0} $style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1.15 }}>
-              {title}
-            </ParagraphMedium>
-            <LabelSmall marginTop="scale200" $style={{ color: 'contentSecondary' }}>
-              {workspaceLabel}
-            </LabelSmall>
+            <Block
+              display="flex"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              gridGap="scale600"
+            >
+              <Block minWidth={0} flex="1">
+                <ParagraphMedium
+                  margin={0}
+                  $style={{
+                    fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: isDesktopWorkspace ? '32px' : '28px',
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.03em',
+                  }}
+                >
+                  {title}
+                </ParagraphMedium>
+                {!isDesktopWorkspace ? (
+                  <LabelSmall marginTop="scale200" $style={{ color: 'contentSecondary' }}>
+                    {workspaceLabel}
+                  </LabelSmall>
+                ) : null}
+              </Block>
+              {isDesktopWorkspace ? (
+                <Block display="flex" alignItems="center" gridGap="scale300" overrides={{ Block: { style: { flexShrink: 0 } } }}>
+                  {notifications}
+                  {accountMenu}
+                </Block>
+              ) : null}
+            </Block>
           </Block>
         ) : null}
 
@@ -472,6 +502,19 @@ export function GuardrDrawerShell({
             {children}
           </Block>
         </Block>
+
+        {useBottomNav && mobileBottomNavItems ? (
+          <Block onClick={(e: React.MouseEvent) => e.stopPropagation()} overrides={{ Block: { style: { flexShrink: 0 } } }}>
+            <GuardrBottomNav
+              items={mobileBottomNavItems}
+              activeId={activeNavId}
+              onNavigate={handleNavigate}
+              showMore={mobileBottomNavOverflow.length > 0}
+              moreActive={sidebarOpen}
+              onMoreClick={() => setSidebarOpen(true)}
+            />
+          </Block>
+        ) : null}
       </Block>
     </Block>
   );

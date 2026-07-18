@@ -129,3 +129,27 @@ import { inputOverrides, formControlOverrides } from '../baseui/primitives';
 ```
 
 Used by `AppInput`, `AppTextarea`, `AppFormField` in `AppPrimitives.tsx`.
+
+## Post-login experience (signed-in shell)
+
+Reference targets: **Uber Direct** (desktop web) and **Uber rider/driver app** (mobile PWA/APK).
+
+| Surface | Pattern | Implementation |
+|---------|---------|----------------|
+| **Desktop website** | White left sidebar · gray `#f6f6f6` canvas · large page title in content · avatar top-right | `GuardrDrawerShell` with `data-uber-direct="true"` — no black top bar; title band + `WorkbenchLayout` content |
+| **Mobile / PWA / APK** | Bottom tab bar (Home, Jobs, Map, Messages…) · drawer for overflow · map full-bleed | `GuardrBottomNav` via `RoleAppShell` / `DesktopStaffAdminShell` `mobileBottomNavItems` |
+| **Tablet** | Persistent sidebar rail + touch targets | `mobilityChrome` tablet widths |
+| **Map / active shift** | Full-bleed map · bottom sheet overlays | `variant="dark"` + `bleed` on shell; panel-specific sheets |
+
+### Shell entry points
+
+- Guard / client: `RoleAppShell` → `GuardrDrawerShell`
+- Staff: `DesktopStaffAdminShell` → `GuardrDrawerShell`
+- Content inside shell: prefer `WorkbenchPage` / `WorkbenchSplit` on desktop; `AppScreen` card stacks migrating to workbench zones on mobile
+
+### Next migration targets (content inside shell)
+
+1. Client / guard home hubs → `DashboardHero` + `MetricStrip` + white cards on gray canvas
+2. List screens → workbench tables with search row (Uber Direct Users/Billing pattern)
+3. Map + active shift → Uber bottom-sheet overlays (`uber-in-app.css`)
+4. Remove legacy `adm-*` / `text-brand-*` from high-traffic panels

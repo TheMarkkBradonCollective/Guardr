@@ -1,33 +1,121 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESKTOP AUTH — split editorial + form (brand green accents)
+   DESKTOP AUTH — split screen (black editorial left · white form right)
+   Twin of the shadcn "Authentication" layout, Guardr-branded.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-body[data-form-factor="desktop"] .dsk-auth {
-  min-height: 100vh;
-  background: var(--adm-bg, #EFF1F5);
-  color: var(--adm-text, #2D3748);
-  font-family: var(--adm-font, "IBM Plex Sans", system-ui, sans-serif);
+/* Override legacy index.css flex-row auth layout — we use dsk-auth-split grid */
+body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  background: var(--uber-bg, #ffffff);
+  color: var(--uber-text, #000000);
+  font-family: var(--uber-font-text, "Uber Move Text", system-ui, sans-serif);
 }
 
 body[data-form-factor="desktop"] .dsk-auth-split {
   display: grid;
-  grid-template-columns: minmax(24rem, 42%) minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-columns: minmax(22rem, 1fr) minmax(22rem, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  flex: 1;
 }
 
+/* ─── Left: black editorial panel ─────────────────────────────────────────── */
+
 body[data-form-factor="desktop"] .dsk-auth-editorial {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 2rem 2.5rem;
-  background: var(--adm-card, #fff);
-  border-right: 1px solid var(--adm-border, #E2E8F0);
+  padding: 2.5rem 2.75rem;
+  background: #000000;
+  color: #ffffff;
+  min-height: 100%;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-editorial-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-editorial-spacer {
+  flex: 1;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-logo {
+  color: #ffffff !important;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-wordmark {
+  font-family: var(--uber-font-display, "Uber Move", sans-serif);
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-quote {
+  margin: 0;
+  max-width: 30rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-quote-text {
+  margin: 0 0 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-quote-author {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-quote-role {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* ─── Right: white form panel ─────────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .dsk-auth-form-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  background: var(--uber-bg, #ffffff);
+  overflow: hidden;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-back {
@@ -39,134 +127,72 @@ body[data-form-factor="desktop"] .dsk-auth-back {
   background: none;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--adm-muted, #718096);
+  font-family: inherit;
+  color: var(--uber-text-muted, #767676);
   cursor: pointer;
+  transition: color 120ms ease;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-back:hover {
-  color: var(--brand-primary);
+  color: var(--uber-text, #000000);
 }
 
-body[data-form-factor="desktop"] .dsk-auth-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-logo {
-  color: var(--brand-primary) !important;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-wordmark {
-  font-size: 1.125rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-accent {
-  color: var(--brand-primary);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-editorial-body {
+body[data-form-factor="desktop"] .dsk-auth-form-scroll {
   flex: 1;
+  min-height: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  max-width: 26rem;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-label {
-  margin: 0 0 0.75rem;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--brand-primary);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-headline {
-  margin: 0;
-  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-deck {
-  margin: 1rem 0 0;
-  font-size: 0.9375rem;
-  line-height: 1.65;
-  color: var(--adm-muted, #718096);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-features {
-  list-style: none;
-  margin: 1.5rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.65rem;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-feature {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--adm-text, #2D3748);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-feature-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.4rem;
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--adm-card, #fff));
-  color: var(--brand-primary);
-  flex-shrink: 0;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-trust {
-  margin: 1.25rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.55;
-  color: var(--adm-muted, #718096);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-editorial-foot {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--adm-border, #E2E8F0);
-  font-size: 0.6875rem;
-  color: var(--adm-muted, #718096);
-}
-
-body[data-form-factor="desktop"] .dsk-auth-form-panel {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 2.5rem 2rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0 clamp(1.5rem, 4vw, 3rem) 3rem;
   overflow-y: auto;
-  background: var(--adm-bg, #EFF1F5);
+  overscroll-behavior: contain;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-form-inner {
-  width: min(100%, 28rem);
-  padding: 1.75rem;
-  border-radius: 0.5rem;
-  background: var(--adm-card, #fff);
-  border: 1px solid var(--adm-border, #E2E8F0);
-  box-shadow: 0 8px 32px -12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-body[data-form-factor="desktop"] .dsk-auth .experience-badge {
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--adm-card, #fff));
+body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-input {
+  border-radius: 8px;
+  border-color: #e2e2e2;
+  font-size: 0.9375rem;
+  width: 100%;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--uber-text, #000000);
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-inner form > .mt-3 {
+  margin-top: 1.25rem;
+}
+
+body[data-form-factor="desktop"] .dsk-auth-form-inner .app-checkbox + span,
+body[data-form-factor="desktop"] .dsk-auth-form-inner label:has(.app-checkbox) {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--uber-text-muted, #767676);
 }
 
 /* Hide mobile auth hero when desktop split is active */
 body[data-form-factor="desktop"] .auth-experience:not(.dsk-auth) .auth-hero {
   display: none;
+}
+
+@media (min-width: 1280px) {
+  body[data-form-factor="desktop"] .dsk-auth-split {
+    grid-template-columns: minmax(26rem, 46%) minmax(0, 1fr);
+  }
 }

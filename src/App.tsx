@@ -88,6 +88,7 @@ import { HomePage } from './components/HomePage';
 import { AppHomeScreen } from './components/AppHomeScreen';
 import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
+import { AuthRoleChoicePage } from './components/auth/AuthRoleChoicePage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { AccountMenu, type AccountMenuNotificationProps } from './components/layouts/AccountMenu';
@@ -597,6 +598,7 @@ export default function App() {
   const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
+  const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(null);
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [publicGuideOpen, setPublicGuideOpen] = useState(
     () => !isAppExperience() && readGuideFromWindow()
@@ -1381,14 +1383,39 @@ export default function App() {
   };
 
   const openAuthView = (role: AuthViewRole, mode: AuthViewMode) => {
+    setAuthChoiceMode(null);
     setInitialAuthRole(role);
     setInitialAuthMode(mode);
     setIsAuthView(true);
     syncAppRoute({ role: 'client', authView: mode, authRole: role });
   };
 
+  const openAuthChoice = (mode: 'sign-in' | 'sign-up') => {
+    setAuthChoiceMode(mode);
+    setIsAuthView(false);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ authChoice: mode }, '', `/?auth=${mode}&pick=role`);
+    }
+  };
+
+  const closeAuthChoice = () => {
+    setAuthChoiceMode(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ home: true }, '', '/');
+    }
+  };
+
+  const navigateToAuth = (role?: AuthViewRole, mode?: AuthViewMode) => {
+    if (!role && (mode === 'sign-up' || mode === 'sign-in')) {
+      openAuthChoice(mode);
+      return;
+    }
+    openAuthView(role ?? 'client', mode ?? 'sign-in');
+  };
+
   const closeAuthView = () => {
     setIsAuthView(false);
+    setAuthChoiceMode(null);
     document.documentElement.classList.remove('auth-page-open');
     if (typeof window !== 'undefined') {
       window.history.replaceState({ home: true }, '', '/');
@@ -1501,6 +1528,25 @@ export default function App() {
 
     const user = currentUserRef.current;
     const strippedUrl = stripEphemeralQueryParams(url);
+    const authChoiceFromState =
+      options.source === 'popstate'
+        ? (options.event?.state?.authChoice as 'sign-in' | 'sign-up' | undefined)
+        : undefined;
+    const authChoiceQuery = strippedUrl.includes('?') ? strippedUrl.split('?')[1] : '';
+    const authChoiceParams = new URLSearchParams(authChoiceQuery);
+    const authChoiceFromUrl =
+      authChoiceParams.get('pick') === 'role' &&
+      (authChoiceParams.get('auth') === 'sign-up' || authChoiceParams.get('auth') === 'sign-in')
+        ? (authChoiceParams.get('auth') as 'sign-in' | 'sign-up')
+        : null;
+    const authChoice = authChoiceFromState ?? authChoiceFromUrl;
+
+    if (authChoice && !user) {
+      setAuthChoiceMode(authChoice);
+      setIsAuthView(false);
+      return;
+    }
+
     const routeFromUrl = parseAppRoute(strippedUrl);
     const userRole = user ? appRoleForUser(user) : null;
     const route =
@@ -1517,6 +1563,7 @@ export default function App() {
 
     if (route?.authView) {
       if (!user) {
+        setAuthChoiceMode(null);
         setIsAuthView(true);
         setInitialAuthRole(route.authRole ?? 'client');
         setInitialAuthMode(route.authView);
@@ -12398,6 +12445,21 @@ export default function App() {
         </>
       );
     }
+    if (authChoiceMode && !isAppExperience()) {
+      return (
+        <>
+          <AuthRoleChoicePage
+            mode={authChoiceMode}
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            onNavigateToAuth={navigateToAuth}
+            onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+            onOpenGuide={openPublicGuide}
+          />
+          <InstallPrompt />
+        </>
+      );
+    }
     if (isAuthView && !isAppExperience()) {
       return (
         <>
@@ -12424,15 +12486,28 @@ export default function App() {
       );
     }
     if (isAppExperience()) {
+      if (authChoiceMode) {
+        return (
+          <>
+            <AuthRoleChoicePage
+              mode={authChoiceMode}
+              themeMode={themeMode}
+              onChangeTheme={changeThemeMode}
+              onNavigateToAuth={navigateToAuth}
+              onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+              onOpenGuide={openPublicGuide}
+            />
+            <InstallPrompt />
+          </>
+        );
+      }
       return (
         <>
           <AppHomeScreen
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             authSheetOpen={isAuthView}
-            onNavigateToAuth={(role, mode) => {
-              openAuthView(role ?? 'guard', mode ?? 'sign-in');
-            }}
+            onNavigateToAuth={navigateToAuth}
             onOpenLegal={openLegalPage}
           />
           <AuthPage
@@ -12465,9 +12540,7 @@ export default function App() {
           ownerMessage={platformSettings.ownerMessage}
           directorMessage={platformSettings.directorMessage}
           companyPlacardDocuments={companyPlacardPublicDocuments}
-          onNavigateToAuth={(role, mode) => {
-            openAuthView(role ?? 'client', mode ?? 'sign-in');
-          }}
+          onNavigateToAuth={navigateToAuth}
           onOpenLegal={openLegalPage}
           onOpenGuide={openPublicGuide}
         />
