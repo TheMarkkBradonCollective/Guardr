@@ -97,6 +97,34 @@ export function staffVisibleMapJobs(requests: SecurityRequest[]): SecurityReques
     (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
   );
 }
+export type StaffMapStatusFilter = 'all' | 'live' | 'open' | 'scheduled' | 'past';
+
+export const STAFF_MAP_STATUS_FILTERS: { id: StaffMapStatusFilter; label: string }[] = [
+  { id: 'all', label: 'All jobs' },
+  { id: 'live', label: 'Live' },
+  { id: 'open', label: 'Open' },
+  { id: 'scheduled', label: 'Scheduled' },
+  { id: 'past', label: 'Past' },
+];
+
+export function staffJobMatchesMapStatusFilter(
+  req: SecurityRequest,
+  filter: StaffMapStatusFilter
+): boolean {
+  const kind = staffMapPinKind(req);
+  if (filter === 'all') return true;
+  if (filter === 'live') return kind === 'live';
+  if (filter === 'open') return kind === 'open';
+  if (filter === 'scheduled') return kind === 'scheduled';
+  if (filter === 'past') return kind === 'past' || kind === 'cancelled';
+  return true;
+}
+
+/** Staff routes to any job with coordinates when selected. */
+export function staffMapShouldRouteToJob(req: SecurityRequest): boolean {
+  return staffMapPinKind(req) !== 'cancelled';
+}
+
 export function clientVisibleMapJobs(
   clientId: string,
   clientName: string | undefined,
