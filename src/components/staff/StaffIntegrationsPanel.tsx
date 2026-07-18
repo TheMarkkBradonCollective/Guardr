@@ -17,10 +17,15 @@ import { INTEGRATION_ENV_HINTS, type IntegrationHealth } from '../../lib/integra
 import { fetchPaymentProcessorHealth } from '../../lib/paymentProcessorApi';
 import type { CardPaymentProcessor, PaymentProcessorHealth } from '../../lib/paymentProcessors';
 import { CARD_PROCESSOR_LABELS, processorEnvHint } from '../../lib/paymentProcessors';
+import { useStyletron } from 'baseui';
+import { Block } from 'baseui/block';
+import { HeadingXSmall, LabelSmall, LabelXSmall, ParagraphSmall } from 'baseui/typography';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
+import { GuardrCard } from '../baseui/GuardrCard';
+import { GuardrTag } from '../baseui/GuardrTag';
 import { showAppToast } from '../ui/AppToast';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -44,31 +49,26 @@ type StaffIntegrationsPatch = Pick<
 function DesktopSettingsCard({
   title,
   children,
-  className = '',
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`adm-card adm-platform-settings-card ${className}`.trim()}>
-      <h3 className="adm-card-title adm-platform-settings-card-title">{title}</h3>
+    <GuardrCard>
+      <HeadingXSmall marginTop={0} marginBottom="scale500" $style={{ fontWeight: 700 }}>
+        {title}
+      </HeadingXSmall>
       {children}
-    </section>
+    </GuardrCard>
   );
 }
 
 function ConnectionBadge({ connected }: { connected: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-        connected
-          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-          : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-      }`}
-    >
+    <GuardrTag kind={connected ? 'success' : 'warning'} closeable={false}>
       {connected ? 'Connected' : 'Not connected'}
-    </span>
+    </GuardrTag>
   );
 }
 
@@ -84,14 +84,20 @@ function IntegrationSection({
   readOnlyNote?: string;
 }) {
   return (
-    <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+    <Block display="flex" flexDirection="column" gridGap="scale500">
+      <LabelXSmall color="contentSecondary" margin={0} $style={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
         Current mode: {modeLabel}
-      </p>
-      <p className="text-sm text-brand-text-muted leading-relaxed">{modeDescription}</p>
+      </LabelXSmall>
+      <ParagraphSmall color="contentSecondary" margin={0} $style={{ lineHeight: 1.55 }}>
+        {modeDescription}
+      </ParagraphSmall>
       {children}
-      {readOnlyNote && <p className="text-xs text-brand-text-muted">{readOnlyNote}</p>}
-    </div>
+      {readOnlyNote && (
+        <LabelXSmall color="contentSecondary" margin={0}>
+          {readOnlyNote}
+        </LabelXSmall>
+      )}
+    </Block>
   );
 }
 
@@ -118,34 +124,47 @@ function IntegrationToggleCard({
   primary?: boolean;
   envHint?: string;
 }) {
+  const [, theme] = useStyletron();
+  const highlighted = primary && enabled;
   return (
-    <div
-      className={`flex items-start justify-between gap-4 rounded-xl border p-4 ${
-        primary && enabled ? 'border-brand-primary/30 bg-brand-primary/5' : 'border-brand-border'
-      }`}
+    <Block
+      display="flex"
+      alignItems="flex-start"
+      justifyContent="space-between"
+      gridGap="scale500"
+      padding="scale500"
+      backgroundColor={highlighted ? 'accent50' : undefined}
+      $style={{
+        borderRadius: '12px',
+        border: `1px solid ${highlighted ? theme.colors.accent : theme.colors.borderOpaque}`,
+      }}
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold">{title}</span>
+      <Block flex="1" minWidth={0}>
+        <Block display="flex" alignItems="center" gridGap="scale200" $style={{ flexWrap: 'wrap' }}>
+          <LabelSmall margin={0} $style={{ fontWeight: 600 }}>{title}</LabelSmall>
           {!healthLoading && <ConnectionBadge connected={connected} />}
-        </div>
-        <span className="text-xs text-brand-text-muted block mt-1 leading-relaxed">{subtitle}</span>
+        </Block>
+        <LabelXSmall color="contentSecondary" display="block" marginTop="scale100" $style={{ lineHeight: 1.5 }}>
+          {subtitle}
+        </LabelXSmall>
         {!connected && !enabled && envHint && (
-          <span className="text-xs text-amber-400/90 block mt-1.5">{envHint}</span>
+          <LabelXSmall display="block" marginTop="scale200" $style={{ color: theme.colors.warning }}>
+            {envHint}
+          </LabelXSmall>
         )}
         {enabled && !connected && envHint && (
-          <span className="text-xs text-amber-400/90 block mt-1.5">
+          <LabelXSmall display="block" marginTop="scale200" $style={{ color: theme.colors.warning }}>
             Enabled but not connected — configure env before this integration can run.
-          </span>
+          </LabelXSmall>
         )}
-      </div>
+      </Block>
       <AppSwitch
         checked={enabled}
         disabled={!canEdit || disabled}
         onChange={() => onToggle()}
         ariaLabel={`Toggle ${title}`}
       />
-    </div>
+    </Block>
   );
 }
 
