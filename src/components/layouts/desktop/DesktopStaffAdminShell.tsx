@@ -40,8 +40,8 @@ interface DesktopStaffAdminShellProps {
 const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   {
     ids: [
-      'overview',
       'map',
+      'overview',
       'jobs',
       'applications',
       'credentials',

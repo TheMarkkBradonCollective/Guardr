@@ -18,7 +18,7 @@ interface StaffDesktopNavProps {
 }
 
 const GROUPS: { title: string; ids: StaffSection[] }[] = [
-  { title: 'Command center', ids: ['overview', 'map'] },
+  { title: 'Command center', ids: ['map', 'overview'] },
   {
     title: 'Field operations',
     ids: ['jobs', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team', 'messages'],
