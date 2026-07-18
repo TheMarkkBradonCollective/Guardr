@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { BottomNavItem } from './BottomNavBar';
 import { GuardrDrawerShell } from '../baseui/layout/GuardrDrawerShell';
+import { useDevice } from '../../lib/platform';
 
 interface RoleAppShellProps {
   title: string;
@@ -22,6 +23,8 @@ interface RoleAppShellProps {
   workspaceLabel?: string;
 }
 
+const MOBILE_BOTTOM_TAB_COUNT = 4;
+
 export function RoleAppShell({
   title,
   accountMenu,
@@ -39,7 +42,9 @@ export function RoleAppShell({
   variant = 'default',
   workspaceLabel,
 }: RoleAppShellProps) {
+  const { formFactor } = useDevice();
   const isMapMode = variant === 'dark';
+  const isMobileShell = formFactor === 'mobile';
 
   const navGroups = useMemo(
     () => [
@@ -48,6 +53,17 @@ export function RoleAppShell({
     ],
     [navItems, overflowNavItems],
   );
+
+  const mobileBottomNavItems = useMemo(
+    () => (isMobileShell ? navItems.slice(0, MOBILE_BOTTOM_TAB_COUNT) : undefined),
+    [isMobileShell, navItems],
+  );
+
+  const mobileBottomNavOverflow = useMemo(() => {
+    if (!isMobileShell) return undefined;
+    const rest = navItems.slice(MOBILE_BOTTOM_TAB_COUNT);
+    return [...rest, ...overflowNavItems];
+  }, [isMobileShell, navItems, overflowNavItems]);
 
   return (
     <GuardrDrawerShell
@@ -64,6 +80,8 @@ export function RoleAppShell({
       bleed={fullBleed || isMapMode}
       variant={variant}
       onSettingsClick={accountMenu.onOpenSettings}
+      mobileBottomNavItems={mobileBottomNavItems}
+      mobileBottomNavOverflow={mobileBottomNavOverflow}
     >
       {children}
     </GuardrDrawerShell>

@@ -10,6 +10,7 @@ import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
 import { GuardrDrawerShell } from '../../baseui/layout/GuardrDrawerShell';
+import { useDevice } from '../../../lib/platform';
 
 interface DesktopStaffAdminShellProps {
   children: React.ReactNode;
@@ -65,6 +66,8 @@ export function DesktopStaffAdminShell({
   headerExtension,
   headerOverride,
 }: DesktopStaffAdminShellProps) {
+  const { formFactor } = useDevice();
+  const isMobileShell = formFactor === 'mobile';
   const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesSection(activeSection);
@@ -86,6 +89,21 @@ export function DesktopStaffAdminShell({
           })),
       })).filter((group) => group.items.length > 0),
     [navItems, showFinance, showSettings, showPermissions, showDisputes, showCities],
+  );
+
+  const flatNavItems = useMemo(
+    () => navGroups.flatMap((group) => group.items),
+    [navGroups],
+  );
+
+  const mobileBottomNavItems = useMemo(
+    () => (isMobileShell ? flatNavItems.slice(0, 4) : undefined),
+    [isMobileShell, flatNavItems],
+  );
+
+  const mobileBottomNavOverflow = useMemo(
+    () => (isMobileShell ? flatNavItems.slice(4) : undefined),
+    [isMobileShell, flatNavItems],
   );
 
   const handleNav = (id: string) => {
@@ -140,6 +158,8 @@ export function DesktopStaffAdminShell({
       variant={isMap ? 'dark' : 'default'}
       onSettingsClick={() => onNavigate('settings')}
       ariaLabel="Staff navigation"
+      mobileBottomNavItems={mobileBottomNavItems}
+      mobileBottomNavOverflow={mobileBottomNavOverflow}
     >
       {children}
     </GuardrDrawerShell>
