@@ -10,38 +10,50 @@ export function AuthFormHeader({
   role,
   isSignUp,
   compact = false,
+  hideBadge = false,
+  center = false,
 }: {
   role: 'guard' | 'client';
   isSignUp: boolean;
   compact?: boolean;
+  hideBadge?: boolean;
+  center?: boolean;
 }) {
-  const title = isSignUp
-    ? role === 'guard'
-      ? 'Create your guard account'
-      : 'Create your client account'
-    : 'Sign in';
+  const title = center && hideBadge
+    ? (isSignUp ? 'Create an account' : 'Sign in')
+    : isSignUp
+      ? role === 'guard'
+        ? 'Create your guard account'
+        : 'Create your client account'
+      : 'Sign in';
 
-  const subtitle = isSignUp
-    ? role === 'guard'
-      ? 'Independent contractors manage credentials, jobs, and pay here.'
-      : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
-    : role === 'guard'
-      ? 'Welcome back — your jobs and earnings are ready.'
-      : 'Welcome back — your requests and coverage are ready.';
+  const subtitle = center && hideBadge
+    ? (isSignUp
+        ? 'Enter your email below to create your account'
+        : 'Enter your email and password to sign in')
+    : isSignUp
+      ? role === 'guard'
+        ? 'Independent contractors manage credentials, jobs, and pay here.'
+        : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+      : role === 'guard'
+        ? 'Welcome back — your jobs and earnings are ready.'
+        : 'Welcome back — your requests and coverage are ready.';
 
   return (
-    <Block marginBottom={compact ? 'scale600' : 'scale800'}>
-      <LandingBadge>{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</LandingBadge>
+    <Block marginBottom={compact ? 'scale600' : 'scale800'} $style={center ? { textAlign: 'center' } : undefined}>
+      {hideBadge ? null : (
+        <LandingBadge center={center}>{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</LandingBadge>
+      )}
       <HeadingLarge
-        marginTop="scale200"
+        marginTop={hideBadge ? '0' : 'scale200'}
         marginBottom="scale300"
         overrides={{
           Block: {
             style: {
-              fontWeight: 900,
+              fontWeight: center ? 700 : 900,
               letterSpacing: '-0.04em',
               lineHeight: 1.1,
-              fontSize: compact ? '24px' : undefined,
+              fontSize: compact ? '24px' : center ? '30px' : undefined,
             },
           },
         }}
