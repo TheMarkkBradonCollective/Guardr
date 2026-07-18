@@ -28,6 +28,7 @@ import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { WfBadge } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 
 const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {
   paid: 'text-emerald-400',
@@ -206,155 +207,147 @@ export function JobPaymentRow({
         (canApproveCash || canRejectCash || canMarkClientCash || canApproveOvertimeCash || canMarkOvertimeCash || canReleaseOvertimeGuard || canOvertimeGuardCash || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={() => run('approveCash', onApproveClientCashPayment)}
               disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
+              startEnhancer={busy === 'approveCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'approveCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Approve cash payment
-            </button>
+            </AppButton>
           )}
 
           {canRejectCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="danger"
+              size="sm"
               onClick={() => run('rejectCash', onRejectClientCashPayment)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5 text-red-400 border-red-500/40"
+              startEnhancer={busy === 'rejectCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : undefined}
             >
-              {busy === 'rejectCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               Decline request
-            </button>
+            </AppButton>
           )}
 
           {canMarkClientCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => run('client', onMarkClientPaidCash)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
+              startEnhancer={busy === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Client paid cash
-            </button>
+            </AppButton>
           )}
 
           {canApproveOvertimeCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={() => run('approveOvertimeCash', onApproveOvertimeCashPayment)}
               disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
+              startEnhancer={busy === 'approveOvertimeCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'approveOvertimeCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Approve overtime cash
-            </button>
+            </AppButton>
           )}
 
           {canMarkOvertimeCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => run('overtime', onMarkOvertimePaidCash)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
+              startEnhancer={busy === 'overtime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'overtime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Overtime paid ${(req.overtimeAmount ?? 0).toFixed(2)}
-            </button>
+            </AppButton>
           )}
 
           {canReleaseOvertimeGuard && (
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={() => run('releaseOvertime', onMakeOvertimeGuardPayoutAvailable)}
               disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
+              startEnhancer={busy === 'releaseOvertime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
             >
-              {busy === 'releaseOvertime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
               Release overtime ${overtimeGuardAmount.toFixed(2)}
-            </button>
+            </AppButton>
           )}
 
           {canOvertimeGuardCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => run('overtimeGuardCash', onMarkOvertimeGuardPaidCash)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
+              startEnhancer={busy === 'overtimeGuardCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'overtimeGuardCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Pay overtime cash ${overtimeGuardAmount.toFixed(2)}
-            </button>
+            </AppButton>
           )}
 
           {canCashGuard && (
-            <button
-              type="button"
+            <AppButton
+              variant={cashClientJob ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => run('guard', onMarkGuardPaidCash)}
               disabled={busy !== null}
-              className={`${cashClientJob ? 'app-button-primary' : 'app-button-outline'} app-btn-sm gap-1.5`}
+              startEnhancer={busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Pay guard ${guardAmount.toFixed(2)} cash
-            </button>
+            </AppButton>
           )}
 
           {canReleaseFunds && (
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={() => run('release', onMakeGuardPayoutAvailable)}
               disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
+              startEnhancer={busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
             >
-              {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
               {guardDepositLabel}
-            </button>
+            </AppButton>
           )}
 
           {canManualDeposit && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => run('manualDeposit', onMarkCashDepositManually)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
+              startEnhancer={busy === 'manualDeposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'manualDeposit' ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
-                <Banknote className="w-3 h-3" />
-              )}
               Manually record ${manualDepositDue.toFixed(2)} deposited
-            </button>
+            </AppButton>
           )}
 
           {canPlatformFeeCash && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => run('platformFee', onMarkPlatformFeePaidCash)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
+              startEnhancer={busy === 'platformFee' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
             >
-              {busy === 'platformFee' ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
-                <Banknote className="w-3 h-3" />
-              )}
               Manually deposit ${getPlatformFeeAmount(req).toFixed(2)} platform fee
-            </button>
+            </AppButton>
           )}
 
           {canRefund && (
-            <button
-              type="button"
+            <AppButton
+              variant="danger"
+              size="sm"
               onClick={() => run('refund', onRefundPayment)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5 text-red-400 border-red-500/40"
+              startEnhancer={busy === 'refund' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
             >
-              {busy === 'refund' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
               Refund client
-            </button>
+            </AppButton>
           )}
         </div>
       )}
