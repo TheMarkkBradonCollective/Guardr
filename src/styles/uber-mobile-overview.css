@@ -987,12 +987,13 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
   border-color: var(--overview-cta-hover, #000000);
 }
 
-.staff-overview-pro .uber-mobile-action-grid button [data-baseweb="block"] {
+.staff-overview-pro .uber-mobile-action-grid .uber-quick-tile-surface {
   background-color: var(--overview-cta-bg, #000000) !important;
 }
 
-.staff-overview-pro .uber-mobile-action-grid button [data-baseweb="block"] [data-baseweb="block"] {
-  background-color: rgba(255, 255, 255, 0.16) !important;
+.staff-overview-pro .uber-mobile-action-grid .uber-quick-tile-icon,
+.staff-overview-pro .uber-mobile-action-grid .uber-quick-tile-copy {
+  background-color: transparent !important;
 }
 
 .staff-overview-pro .uber-mobile-action-grid button [data-baseweb="typo-labelsmall"],
