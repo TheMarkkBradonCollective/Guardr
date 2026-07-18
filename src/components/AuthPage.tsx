@@ -715,6 +715,7 @@ export function AuthPage({
   const heroContent = AUTH_HERO_CONTENT[role];
   const testimonial = AUTH_TESTIMONIAL[role];
   const isMobilePageAuth = !isSheet && !isDesktopAuth;
+  const useMobileLogoLayout = isMobilePageAuth && formFactor === 'mobile';
   const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
   const showAuthChromeControls = !isDesktopAuth && !isMobilePageAuth && isSheet && isSignUp;
 
@@ -1486,7 +1487,7 @@ export function AuthPage({
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}${useMobileLogoLayout ? ' auth-experience--mobile-page' : ''}`}
       id="guardr-auth-root"
     >
       {isDesktopAuth ? (
@@ -1533,6 +1534,41 @@ export function AuthPage({
           </section>
         </div>
         </>
+      ) : useMobileLogoLayout ? (
+        <div className="auth-mobile-page">
+          <header className="auth-mobile-page-topbar">
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="auth-mobile-page-back"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden />
+              Back
+            </button>
+            <div className="auth-mobile-page-topbar-actions">
+              {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
+              {onOpenGuide ? (
+                <button
+                  type="button"
+                  onClick={onOpenGuide}
+                  className="auth-mobile-page-guide"
+                  aria-label="Open guide"
+                >
+                  <BookOpen className="w-4 h-4" />
+                </button>
+              ) : null}
+            </div>
+          </header>
+
+          <div className="auth-mobile-page-scroll">
+            <div className="auth-mobile-page-logo-wrap" aria-hidden>
+              <Logo variant="wordmark" size={88} className="auth-mobile-page-logo" />
+            </div>
+            <AppFlowSurface className="auth-mobile-page-form w-full max-w-md mx-auto animate-fade-in">
+              {authFormBody}
+            </AppFlowSurface>
+          </div>
+        </div>
       ) : (
         <>
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
