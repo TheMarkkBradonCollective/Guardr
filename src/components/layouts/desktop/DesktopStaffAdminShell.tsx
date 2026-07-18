@@ -178,7 +178,6 @@ export function DesktopStaffAdminShell({
       headerOverride={headerOverride}
       bleed={bleed}
       variant={isMap ? 'dark' : 'default'}
-      onSettingsClick={() => onNavigate('settings')}
       ariaLabel="Staff navigation"
       mobileBottomNavItems={mobileBottomNavItems}
     >

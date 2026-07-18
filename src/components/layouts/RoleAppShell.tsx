@@ -86,7 +86,6 @@ export function RoleAppShell({
       headerOverride={headerOverride}
       bleed={fullBleed || isMapMode}
       variant={variant}
-      onSettingsClick={accountMenu.onOpenSettings}
       mobileBottomNavItems={mobileBottomNavItems}
       mobileBottomNavOverflow={mobileBottomNavOverflow}
       sidebarPrimaryAction={sidebarPrimaryAction}
