@@ -266,6 +266,17 @@ html.theme-dark .uber-stat-chip--active {
   border-color: var(--uber-text, #000);
 }
 
+.staff-overview-pro .staff-overview-desktop-quick-link {
+  background: var(--overview-cta-bg, #000000);
+  border-color: var(--overview-cta-bg, #000000);
+  color: var(--overview-cta-text, #ffffff);
+}
+
+.staff-overview-pro .staff-overview-desktop-quick-link:hover {
+  background: var(--overview-cta-hover, #1a1a1a);
+  border-color: var(--overview-cta-hover, #1a1a1a);
+}
+
 .staff-overview-desktop-section-label {
   margin: 0 0 0.75rem;
   font-size: 0.6875rem;

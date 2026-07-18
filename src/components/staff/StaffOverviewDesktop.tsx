@@ -163,7 +163,7 @@ export function StaffOverviewDesktop({
       label: meta.label,
       sub: meta.sub,
       icon: meta.icon,
-      primary: section === 'map' || section === 'applications',
+      primary: true,
       onClick: () => onNavigate(section),
     };
   });
