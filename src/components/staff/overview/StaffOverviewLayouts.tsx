@@ -104,7 +104,7 @@ function DesktopChartsBand({
   );
 }
 
-/** Mobile — app-first: quick actions, scroll hubs, lightweight lists. */
+/** Mobile — app-first: hero, quick actions, scroll hubs, lightweight lists. */
 export function StaffOverviewMobileLayout({
   staffRole,
   header,
