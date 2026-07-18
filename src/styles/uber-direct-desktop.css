@@ -32,7 +32,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta-wrap {
-  padding: 0 16px 12px;
+  padding: 16px 16px 12px;
   flex-shrink: 0;
 }
 
@@ -378,4 +378,107 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 .uber-workbench-table-col-total {
   text-align: right;
   width: 120px;
+}
+
+/* ─── Global Uber Direct top header (auth + signed-in desktop) ─────────────── */
+
+.uber-direct-top-header {
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 56px;
+  background: var(--uber-bg, #ffffff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  z-index: 30;
+}
+
+.uber-direct-top-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.uber-direct-top-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  text-decoration: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.uber-direct-top-header-wordmark {
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--uber-text, #000000);
+}
+
+.uber-direct-top-header-trailing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.uber-direct-workspace-body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.uber-direct-avatar-trigger {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  line-height: 0;
+}
+
+.uber-direct-avatar-trigger:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.uber-direct-header-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+html.theme-dark .uber-direct-header-avatar {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Auth pages share the same white top header */
+.auth-role-choice-page .uber-direct-top-header,
+.page-shell.auth-experience.dsk-auth .uber-direct-top-header {
+  position: relative;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth .dsk-auth-split {
+  flex: 1;
+  min-height: 0;
 }

@@ -105,9 +105,9 @@ body[data-form-factor="desktop"] .dsk-auth-form-panel {
 body[data-form-factor="desktop"] .dsk-auth-form-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   flex-shrink: 0;
   width: 100%;
 }

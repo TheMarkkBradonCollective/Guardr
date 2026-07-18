@@ -4,7 +4,7 @@ import { useStyletron } from 'baseui';
 import { ArrowRight, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
-import { UberLandingNav } from '../landing/uber/UberLandingChrome';
+import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
 
 const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
@@ -103,13 +103,7 @@ export function AuthRoleChoicePage({
       flexDirection="column"
       overflow="hidden"
     >
-      <UberLandingNav
-        formFactor={factor}
-        themeMode={themeMode}
-        onChangeTheme={onChangeTheme}
-        onNavigateToAuth={onNavigateToAuth}
-        onOpenGuide={onOpenGuide}
-      />
+      <UberDirectTopHeader />
 
       <Block as="main" className="auth-role-choice-main">
         {/* Hero band — pale gray with headline + illustration */}

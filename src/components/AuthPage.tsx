@@ -40,6 +40,7 @@ import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
 import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalContent';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import { UberDirectTopHeader } from './baseui/layout/UberDirectTopHeader';
 import {
   getStoredPassword,
   shouldPromptPasswordChange,
@@ -1472,15 +1473,18 @@ export function AuthPage({
       id="guardr-auth-root"
     >
       {isDesktopAuth ? (
+        <>
+          <UberDirectTopHeader
+            onBrandClick={onBackToHome}
+            trailing={
+              <button type="button" onClick={onBackToHome} className="dsk-auth-back">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+            }
+          />
         <div className="dsk-auth-split">
           <aside className="dsk-auth-editorial">
-            <div className="dsk-auth-editorial-top">
-              <div className="dsk-auth-brand">
-                <Logo size={26} className="dsk-auth-logo" />
-                <span className="dsk-auth-wordmark">Guardr</span>
-              </div>
-            </div>
-
             <div className="dsk-auth-editorial-spacer" aria-hidden />
 
             <blockquote className="dsk-auth-quote">
@@ -1494,10 +1498,6 @@ export function AuthPage({
 
           <section className="dsk-auth-form-panel" aria-label="Sign in or sign up">
             <div className="dsk-auth-form-topbar">
-              <button type="button" onClick={onBackToHome} className="dsk-auth-back">
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
               <div className="dsk-auth-topbar-actions">
                 {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
                 {onOpenGuide ? (
@@ -1515,6 +1515,7 @@ export function AuthPage({
             </div>
           </section>
         </div>
+        </>
       ) : (
         <>
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">

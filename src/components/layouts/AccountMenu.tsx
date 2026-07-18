@@ -37,6 +37,8 @@ export interface AccountMenuProps {
   notifications?: UserNotification[];
   onNotificationClick?: (notification: UserNotification) => void | Promise<void>;
   onMarkAllNotificationsRead?: () => void | Promise<void>;
+  /** Uber Direct desktop — black circle avatar only, no chevron. */
+  triggerVariant?: 'default' | 'uber-direct';
 }
 
 export function AccountMenu({
@@ -53,6 +55,7 @@ export function AccountMenu({
   notifications,
   onNotificationClick,
   onMarkAllNotificationsRead,
+  triggerVariant = 'default',
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const [menuView, setMenuView] = useState<'main' | 'notifications'>('main');
@@ -237,15 +240,21 @@ export function AccountMenu({
     </div>
   ) : null;
 
+  const isUberDirectTrigger = triggerVariant === 'uber-direct';
+
   return (
     <div className="account-menu relative shrink-0">
       <button
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className={`account-menu-trigger app-header-account-trigger inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-          active ? 'bg-brand-primary/10 ring-1 ring-brand-primary/30' : 'hover:bg-brand-border/20'
-        }`}
+        className={
+          isUberDirectTrigger
+            ? 'uber-direct-avatar-trigger'
+            : `account-menu-trigger app-header-account-trigger inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                active ? 'bg-brand-primary/10 ring-1 ring-brand-primary/30' : 'hover:bg-brand-border/20'
+              }`
+        }
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
@@ -254,17 +263,24 @@ export function AccountMenu({
         }
       >
         <span className="relative shrink-0">
-          <ProfileAvatar src={avatarUrl} name={userName} size="sm" />
+          <ProfileAvatar
+            src={avatarUrl}
+            name={userName}
+            size={isUberDirectTrigger ? 'xs' : 'sm'}
+            className={isUberDirectTrigger ? 'uber-direct-header-avatar' : undefined}
+          />
           {unread > 0 && (
             <span className="notification-bell-badge absolute -top-0.5 -right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-brand-primary text-[10px] font-black text-white flex items-center justify-center leading-none border-2 border-brand-surface">
               {unread > 99 ? '99+' : unread}
             </span>
           )}
         </span>
-        <ChevronDown
-          className={`w-3.5 h-3.5 text-brand-text-muted transition-transform ${open ? 'rotate-180' : ''}`}
-          strokeWidth={2}
-        />
+        {!isUberDirectTrigger ? (
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-brand-text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+            strokeWidth={2}
+          />
+        ) : null}
       </button>
 
       {typeof document !== 'undefined' && menuPanel ? createPortal(menuPanel, document.body) : null}
