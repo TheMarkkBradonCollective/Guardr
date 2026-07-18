@@ -121,8 +121,8 @@ export function StaffOpsLayout({
 
   const navItems: StaffNavItem[] = useMemo(
     () => [
-      { id: 'map', label: 'Map', icon: Map },
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+      { id: 'map', label: 'Map', icon: Map },
       { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
       { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
       { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },

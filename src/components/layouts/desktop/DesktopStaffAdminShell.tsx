@@ -38,20 +38,12 @@ interface DesktopStaffAdminShellProps {
 
 /** Uber Direct sidebar groups — order matches staff nav list with section labels. */
 const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
+  { label: 'Dashboard', ids: ['overview', 'map'] },
   {
-    ids: [
-      'map',
-      'overview',
-      'jobs',
-      'applications',
-      'credentials',
-      'guards',
-      'crews',
-      'clients',
-      'team',
-      'messages',
-    ],
+    label: 'Operations',
+    ids: ['jobs', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
   },
+  { label: 'Messages', ids: ['messages'] },
   { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
   { ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
