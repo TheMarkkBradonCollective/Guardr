@@ -16,6 +16,7 @@ import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { Briefcase, MessageCircle, Shield, Users } from 'lucide-react';
 
@@ -152,9 +153,9 @@ export function StaffGuardCrewsPanel({
     return (
       <div className="space-y-4">
         {options?.onBack && (
-          <button type="button" onClick={options.onBack} className="app-button-outline app-btn-sm lg:hidden">
+          <AppButton variant="outline" size="sm" className="lg:hidden" onClick={options.onBack}>
             Back to crews
-          </button>
+          </AppButton>
         )}
 
         <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-4 py-4 space-y-3">
@@ -192,24 +193,24 @@ export function StaffGuardCrewsPanel({
 
           <div className="flex flex-wrap gap-2 pt-1">
             {onOpenJob && (
-              <button
-                type="button"
+              <AppButton
+                variant="outline"
+                size="sm"
                 onClick={() => onOpenJob(job.id)}
-                className="app-button-outline app-btn-sm inline-flex items-center gap-1.5"
+                startEnhancer={<Briefcase className="w-3.5 h-3.5" />}
               >
-                <Briefcase className="w-3.5 h-3.5" />
                 Open job
-              </button>
+              </AppButton>
             )}
             {onOpenMessages && (
-              <button
-                type="button"
+              <AppButton
+                variant="outline"
+                size="sm"
                 onClick={onOpenMessages}
-                className="app-button-outline app-btn-sm inline-flex items-center gap-1.5"
+                startEnhancer={<MessageCircle className="w-3.5 h-3.5" />}
               >
-                <MessageCircle className="w-3.5 h-3.5" />
                 Crew chat in Messages
-              </button>
+              </AppButton>
             )}
           </div>
         </div>
@@ -346,9 +347,9 @@ export function StaffGuardCrewsPanel({
                       {canManage && (onApproveCrewLeadRequest || onDeclineCrewLeadRequest) && (
                         <div className="flex flex-wrap gap-2">
                           {onApproveCrewLeadRequest && (
-                            <button
-                              type="button"
-                              className="app-button-primary app-btn-sm"
+                            <AppButton
+                              variant="primary"
+                              size="sm"
                               disabled={resolvingRequestId === request.id}
                               onClick={async () => {
                                 setResolvingRequestId(request.id);
@@ -360,12 +361,12 @@ export function StaffGuardCrewsPanel({
                               }}
                             >
                               {resolvingRequestId === request.id ? 'Approving…' : 'Make crew lead'}
-                            </button>
+                            </AppButton>
                           )}
                           {onDeclineCrewLeadRequest && (
-                            <button
-                              type="button"
-                              className="app-button-outline app-btn-sm text-red-400 border-red-500/30"
+                            <AppButton
+                              variant="danger"
+                              size="sm"
                               disabled={resolvingRequestId === request.id}
                               onClick={async () => {
                                 setResolvingRequestId(request.id);
@@ -377,7 +378,7 @@ export function StaffGuardCrewsPanel({
                               }}
                             >
                               Decline
-                            </button>
+                            </AppButton>
                           )}
                         </div>
                       )}
@@ -439,9 +440,9 @@ export function StaffGuardCrewsPanel({
                 return (
                   <div className="space-y-4">
                     {options?.onBack && (
-                      <button type="button" onClick={options.onBack} className="app-button-outline app-btn-sm lg:hidden">
+                      <AppButton variant="outline" size="sm" className="lg:hidden" onClick={options.onBack}>
                         Back to crews
-                      </button>
+                      </AppButton>
                     )}
 
                     {/* Lead profile */}
