@@ -219,3 +219,94 @@ html.theme-dark .auth-sheet-panel {
   align-items: flex-start;
   gap: 8px !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE PAGE AUTH — logo-forward sign-in (PWA / APK / mobile browser)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.auth-experience--mobile-page {
+  background: var(--uber-bg, var(--brand-bg, #ffffff));
+}
+
+.auth-mobile-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.auth-mobile-page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: max(10px, env(safe-area-inset-top)) 16px 8px;
+}
+
+.auth-mobile-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: var(--uber-text, var(--brand-text, #000000));
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.auth-mobile-page-topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auth-mobile-page-guide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--uber-text-muted, var(--brand-text-muted, #6b6b6b));
+  cursor: pointer;
+}
+
+.auth-mobile-page-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px max(20px, env(safe-area-inset-bottom));
+}
+
+.auth-mobile-page-logo-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(38dvh, 280px);
+  padding: 8px 0 28px;
+}
+
+.auth-mobile-page-logo {
+  width: min(78vw, 300px) !important;
+  height: auto !important;
+  max-height: min(28dvh, 120px);
+  object-fit: contain;
+}
+
+.auth-mobile-page-form {
+  flex-shrink: 0;
+  width: 100%;
+  margin-bottom: 8px;
+}
