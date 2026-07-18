@@ -273,8 +273,8 @@ html.theme-dark .uber-stat-chip--active {
 }
 
 .staff-overview-pro .staff-overview-desktop-quick-link:hover {
-  background: var(--overview-cta-hover, #1a1a1a);
-  border-color: var(--overview-cta-hover, #1a1a1a);
+  background: var(--overview-cta-hover, #000000);
+  border-color: var(--overview-cta-hover, #000000);
 }
 
 .staff-overview-desktop-quicklinks-panel .staff-overview-desktop-quick-links {

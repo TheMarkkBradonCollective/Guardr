@@ -26,9 +26,9 @@ export function QuickActionTile({
 }) {
   const [, theme] = useStyletron();
 
-  const bgColor     = primary ? theme.colors.contentPrimary   : theme.colors.backgroundSecondary;
-  const iconColor   = primary ? theme.colors.contentInversePrimary : theme.colors.contentPrimary;
-  const textColor   = primary ? theme.colors.contentInversePrimary : theme.colors.contentPrimary;
+  const bgColor     = primary ? '#000000' : theme.colors.backgroundSecondary;
+  const iconColor   = primary ? '#FFFFFF' : theme.colors.contentPrimary;
+  const textColor   = primary ? '#FFFFFF' : theme.colors.contentPrimary;
   const subColor    = primary ? 'rgba(255,255,255,0.72)' : theme.colors.contentSecondary;
 
   return (
