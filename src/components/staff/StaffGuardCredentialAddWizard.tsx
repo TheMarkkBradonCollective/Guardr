@@ -102,28 +102,43 @@ function WizardFooter({
 function getWizardSheetMeta(
   step: WizardStep,
   guard: SecurityGuard,
-  selectedSectionMeta?: { title: string }
+  selectedSectionMeta?: { title: string },
+  options?: { skipTypeStep?: boolean }
 ): StaffCredentialAddWizardSheetMeta {
+  const stepNumber = (() => {
+    if (options?.skipTypeStep) {
+      if (step === 'details') return 3;
+      if (step === 'upload') return 4;
+      if (step === 'preview') return 5;
+      return 3;
+    }
+    if (step === 'type') return 1;
+    if (step === 'details') return 2;
+    if (step === 'upload') return 3;
+    if (step === 'preview') return 4;
+    return 1;
+  })();
+
   switch (step) {
     case 'type':
       return {
         title: 'Add credential',
-        subtitle: `Step 1 — Choose a credential type for ${guard.name}`,
+        subtitle: `Step ${stepNumber} — Choose a credential type for ${guard.name}`,
       };
     case 'details':
       return {
         title: selectedSectionMeta?.title ?? 'Credential details',
-        subtitle: 'Step 2 — Enter license or certificate information',
+        subtitle: `Step ${stepNumber} — Enter license or certificate information`,
       };
     case 'upload':
       return {
         title: 'Upload proof',
-        subtitle: 'Step 3 — Photo or scan of the credential document',
+        subtitle: `Step ${stepNumber} — Photo or scan of the credential document`,
       };
     case 'preview':
       return {
         title: 'Review credential',
-        subtitle: 'Step 4 — Confirm before adding to the guard profile',
+        subtitle: `Step ${stepNumber} — Confirm before adding to the guard profile`,
       };
     default:
       return { title: 'Add credential' };
@@ -138,6 +153,9 @@ interface StaffGuardCredentialAddWizardFlowProps {
   onAdded?: () => void;
   onChangeGuard?: () => void;
   onSheetMetaChange?: (meta: StaffCredentialAddWizardSheetMeta) => void;
+  initialSection?: CredentialViewSectionId;
+  skipTypeStep?: boolean;
+  onBackFromDetails?: () => void;
 }
 
 function StaffGuardCredentialAddWizardFlow({
@@ -148,9 +166,14 @@ function StaffGuardCredentialAddWizardFlow({
   onAdded,
   onChangeGuard,
   onSheetMetaChange,
+  initialSection,
+  skipTypeStep = false,
+  onBackFromDetails,
 }: StaffGuardCredentialAddWizardFlowProps) {
-  const [step, setStep] = useState<WizardStep>('type');
-  const [selectedSection, setSelectedSection] = useState<CredentialViewSectionId | null>(null);
+  const [step, setStep] = useState<WizardStep>(skipTypeStep ? 'details' : 'type');
+  const [selectedSection, setSelectedSection] = useState<CredentialViewSectionId | null>(
+    skipTypeStep ? initialSection ?? null : null,
+  );
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
@@ -173,8 +196,8 @@ function StaffGuardCredentialAddWizardFlow({
     (selectedCatalogId ? credentialRequiresExpiry(selectedCatalogId) : false);
 
   const resetFlow = () => {
-    setStep('type');
-    setSelectedSection(null);
+    setStep(skipTypeStep ? 'details' : 'type');
+    setSelectedSection(skipTypeStep ? initialSection ?? null : null);
     setSelectedCatalogId('');
     setIssuer('');
     setNumber('');
@@ -186,13 +209,31 @@ function StaffGuardCredentialAddWizardFlow({
     setSaving(false);
   };
 
+  const initializeSection = (sectionId: CredentialViewSectionId) => {
+    const options = catalogOptionsForStaffAddSection(sectionId);
+    setSelectedSection(sectionId);
+    setSelectedCatalogId(options[0]?.id ?? '');
+    setCustomCertName('');
+    setIssuer('');
+    setNumber('');
+    setExpiryDate('');
+    setState('CA');
+    setImageUrl(undefined);
+    setFormError('');
+  };
+
   useEffect(() => {
     if (!active) {
       resetFlow();
+      return;
     }
-  }, [active, guard.id]);
+    if (skipTypeStep && initialSection) {
+      initializeSection(initialSection);
+      setStep('details');
+    }
+  }, [active, guard.id, initialSection, skipTypeStep]);
 
-  const sheetMeta = getWizardSheetMeta(step, guard, selectedSectionMeta);
+  const sheetMeta = getWizardSheetMeta(step, guard, selectedSectionMeta, { skipTypeStep });
 
   useEffect(() => {
     if (active) {
@@ -206,16 +247,7 @@ function StaffGuardCredentialAddWizardFlow({
   };
 
   const selectSection = (sectionId: CredentialViewSectionId) => {
-    const options = catalogOptionsForStaffAddSection(sectionId);
-    setSelectedSection(sectionId);
-    setSelectedCatalogId(options[0]?.id ?? '');
-    setCustomCertName('');
-    setIssuer('');
-    setNumber('');
-    setExpiryDate('');
-    setState('CA');
-    setImageUrl(undefined);
-    setFormError('');
+    initializeSection(sectionId);
     setStep('details');
   };
 
@@ -396,7 +428,7 @@ function StaffGuardCredentialAddWizardFlow({
           )}
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <WizardFooter
-            onBack={() => setStep('type')}
+            onBack={() => (skipTypeStep && onBackFromDetails ? onBackFromDetails() : setStep('type'))}
             onNext={() => {
               if (!detailsComplete) {
                 setFormError('Fill in all required credential details.');
@@ -507,6 +539,9 @@ interface StaffGuardCredentialAddWizardProps {
   embedded?: boolean;
   onChangeGuard?: () => void;
   onSheetMetaChange?: (meta: StaffCredentialAddWizardSheetMeta) => void;
+  initialSection?: CredentialViewSectionId;
+  skipTypeStep?: boolean;
+  onBackFromDetails?: () => void;
 }
 
 export function StaffGuardCredentialAddWizard({
@@ -518,6 +553,9 @@ export function StaffGuardCredentialAddWizard({
   embedded = false,
   onChangeGuard,
   onSheetMetaChange,
+  initialSection,
+  skipTypeStep = false,
+  onBackFromDetails,
 }: StaffGuardCredentialAddWizardProps) {
   const [sheetMeta, setSheetMeta] = useState<StaffCredentialAddWizardSheetMeta>({
     title: 'Add credential',
@@ -533,6 +571,9 @@ export function StaffGuardCredentialAddWizard({
       onAdded={onAdded}
       onChangeGuard={onChangeGuard}
       onSheetMetaChange={embedded ? onSheetMetaChange ?? setSheetMeta : setSheetMeta}
+      initialSection={initialSection}
+      skipTypeStep={skipTypeStep}
+      onBackFromDetails={onBackFromDetails}
     />
   );
 
