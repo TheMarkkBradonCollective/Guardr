@@ -132,7 +132,7 @@ Staff monitor from **Map** and **Jobs**. Incidents appear in **Incidents**.
 - Client rates the guard from **Jobs**.
 - Client reviews reports from **Home → Reports**.
 - Guard reviews earnings in **Pay**.
-- Anyone can open **Messages → Contact support** for help.
+- Anyone can open **Messages → Support** for help tickets and reports.
 
 ### Your cheat sheet — "who acts next?"
 
@@ -314,8 +314,8 @@ Issue or exception
   |     -> Staff Payments or Disputes: settle and close
   |
   |-- Support question
-        -> Client/Guard Messages: Contact support or File a report
-        -> Staff Messages: support inbox / job chat / staff chat
+        -> Client/Guard sidebar **Messages** group: **Messages** (job chats) or **Support** (tickets/reports)
+        -> Staff sidebar **Messages** group: **Messages** (job/staff chat) or **Support** (ticket inbox)
 ```
 
 ---
@@ -328,7 +328,8 @@ Issue or exception
 |------|-------------|----------------|
 | **Map** | Bottom navigation | Live job geography and active shift map |
 | **Home** | Bottom navigation | Quick actions, account status, live coverage shortcuts, reports shortcuts |
-| **Messages** | Bottom navigation | Job chats, support tickets, support reports |
+| **Messages** | Sidebar **Messages** group | Job chats and team threads |
+| **Support** | Sidebar **Messages** group | Contact support, file a report, view ticket threads |
 | **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
 | **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
 | **Invoices** | Sidebar → **Invoices** (Account group on phone) | View job invoices, download PDF, pay when staff mark invoice ready |
@@ -473,11 +474,11 @@ If the guard skipped the audit:
 
 ### 9. Use messages, job chat, support, and reports
 
-Use **Messages** for communication:
+Use the **Messages** sidebar group for communication:
 
-1. Open **Messages** from the sidebar.
-2. Use job chats for assignment-specific coordination.
-3. Select **Contact support** to open a support ticket.
+1. Open **Messages** for job chats and team threads.
+2. Open **Support** for help tickets and formal reports.
+3. Select **Contact support** to open a new support ticket.
 4. Select **File a report** when you need to send a structured report to staff.
 
 Use reports from **Home**:
@@ -534,7 +535,8 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
 | **Crew** | Bottom navigation (trusted guards only) | Standing team roster, job crews, team codes |
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
-| **Messages** | Bottom navigation (active guards only) | Job chats, support tickets, support reports |
+| **Messages** | Sidebar **Messages** group (active guards only) | Job chats and team threads |
+| **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
 | **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
 | **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
 | **Settings** | Account menu | Theme, push notifications, notification sound (APK), legal pages, sign out — available on activation screen too |
@@ -746,11 +748,9 @@ Payouts depend on:
 
 ### 13. Get help or message people
 
-1. Open **Messages**.
-2. Use job chat for assignment-specific messages.
-3. Use **Contact support** for help tickets.
-4. Use **File a report** for support/report submissions.
-5. During an active shift, **Message client** opens the relevant job chat.
+1. Open **Messages** for job chats.
+2. Open **Support** for help tickets and formal reports.
+3. During an active shift, **Message client** opens the relevant job chat.
 
 ---
 
@@ -1021,7 +1021,7 @@ Client opens Home or Jobs
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
 | Overtime | **Jobs → Approve overtime $X** or **Dispute charge** | **Jobs → Approve overtime** | **Payments** / **Disputes** |
 | Payout | — | **Pay → Send to my bank** | **Payments** — dispute-hold override only (Director/Founder) |
-| Support | **Messages → Contact support** or **File a report** | **Messages → Contact support** or **File a report** | **Messages** support inbox |
+| Support | **Support** → Contact support or File a report | **Support** → Contact support or File a report | **Support** ticket inbox |
 
 ---
 
@@ -1285,17 +1285,17 @@ Guards on the platform have access to a shared community channel — visible onl
 
 #### Contact support
 
-Available from **Messages** for all users. Opens a new support thread with the Guardr operations team. The team responds in the same thread.
+Available from the **Support** sidebar tab for clients and guards. Opens a new support thread with the Guardr operations team. The team responds in the same thread.
 
 #### File a report
 
-Available from **Messages** for all users. Use for safety concerns, formal complaints, or structured reports that need staff review and follow-up.
+Available from the **Support** sidebar tab for clients and guards. Use for safety concerns, formal complaints, or structured reports that need staff review and follow-up.
 
 ---
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.79**, build **179**).
+Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.82**, build **182**).
 
 | Surface | How to install |
 |---------|----------------|
@@ -1361,7 +1361,7 @@ Press back repeatedly to step out of nested views (for example: guard profile �
 
 ## Need help?
 
-- **Clients:** Open **Messages**, then choose **Contact support** or **File a report**. Use job chat for job-specific questions.
-- **Guards:** Open **Messages**, then choose **Contact support** or **File a report**. During a shift, use **Message client** for the active job chat.
-- **Staff:** Open **Messages** for support tickets, job chats, and staff chat. Use **Incidents** and **Disputes** for escalations. Filter this guide by your role: **Moderator**, **Administrator**, **Director**, or **Founder**.
+- **Clients:** Open **Support** for **Contact support** or **File a report**. Use **Messages** for job chats.
+- **Guards:** Open **Support** for **Contact support** or **File a report**. Use **Messages** for job chats. During a shift, use **Message client** for the active job chat.
+- **Staff:** Open **Messages** for job/staff chat and **Support** for the ticket inbox. Use **Incidents** and **Disputes** for escalations. Filter this guide by your role: **Moderator**, **Administrator**, **Director**, or **Founder**.
 - **This guide:** Clients and guards open the account menu and select **Guide**. Staff select **Guide** in the left sidebar.
