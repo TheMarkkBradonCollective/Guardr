@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    UBER DIRECT — desktop signed-in workspace (browser-desktop)
-   White sidebar · black CTA · gray canvas · white page header
+   White sidebar · black CTA · white canvas · nav indicates active page
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] {
@@ -112,12 +112,36 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
-  background: var(--uber-surface, #f6f6f6) !important;
+  background: #000000 !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+  color: #ffffff !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+  color: #000000 !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover {
   background: var(--uber-surface, #f6f6f6) !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
+  background: #000000 !important;
+  opacity: 0.92;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
+  background: #ffffff !important;
+  opacity: 0.92;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
@@ -159,7 +183,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
-  background: var(--uber-surface, #f6f6f6) !important;
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner {
@@ -172,10 +196,25 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   padding: 0 !important;
 }
 
-/* Workbench cards on gray canvas */
+/* Workbench on white canvas — panels keep subtle borders for structure */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-workspace {
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list {
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-split {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail {
+  border-left: 1px solid var(--uber-border, #eeeeee);
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .guardr-card,
@@ -188,6 +227,26 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-panel--padded {
   padding: 24px;
+}
+
+/* Page titles live in sidebar nav — hide in-page eyebrow/toolbar copy on desktop */
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-eyebrow,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-subtitle {
+  display: none;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar {
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 0;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:not(:has(> div:nth-child(2) > *)) {
+  display: none;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:has(> div:nth-child(2) > *) {
+  padding-bottom: 12px;
 }
 
 /* Nested sidebar sub-items */
