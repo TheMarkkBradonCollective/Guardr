@@ -117,7 +117,91 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     description: 'Platform trends and operational reporting',
     iconTone: 'green',
   },
+  team: {
+    title: 'Staff',
+    description: 'Platform team, roles, and access',
+    iconTone: 'green',
+  },
+  clients: {
+    title: 'Clients',
+    description: 'Client accounts and coverage history',
+    iconTone: 'yellow',
+  },
+  settings: {
+    title: 'Public information',
+    description: 'Company profile and platform settings',
+    iconTone: 'green',
+  },
+  'payment-settings': {
+    title: 'Payment settings',
+    description: 'Stripe, fees, and payout configuration',
+    iconTone: 'yellow',
+  },
+  agreements: {
+    title: 'Agreements',
+    description: 'Legal templates and signed contracts',
+    iconTone: 'orange',
+  },
+  'audit-log': {
+    title: 'Audit log',
+    description: 'Staff actions and platform activity',
+    iconTone: 'orange',
+  },
+  crews: {
+    title: 'Crews',
+    description: 'Guard teams and crew assignments',
+    iconTone: 'green',
+  },
+  violations: {
+    title: 'Violations',
+    description: 'Shift issues and policy follow-up',
+    iconTone: 'orange',
+  },
+  stats: {
+    title: 'Stats',
+    description: 'Guard performance and reporting',
+    iconTone: 'green',
+  },
 };
+
+const DEFAULT_HUB_SECTIONS: StaffSection[] = ['map', 'jobs', 'applications', 'payments', 'analytics'];
+
+export function buildStaffOverviewHubItems(
+  sections: StaffSection[],
+  onNavigate: (section: StaffSection) => void,
+) {
+  const items: {
+    id: string;
+    title: string;
+    description: string;
+    icon: LucideIcon;
+    iconTone: 'green' | 'yellow' | 'orange';
+    onClick: () => void;
+  }[] = [];
+
+  const tryAdd = (section: StaffSection) => {
+    if (items.some((item) => item.id === section)) return;
+    const meta = QUICK_LINK_META[section];
+    const hubMeta = STAFF_OVERVIEW_HUB_META[section];
+    if (!meta || !hubMeta) return;
+    items.push({
+      id: section,
+      title: hubMeta.title,
+      description: hubMeta.description,
+      icon: meta.icon,
+      iconTone: hubMeta.iconTone,
+      onClick: () => onNavigate(section),
+    });
+  };
+
+  for (const section of sections) tryAdd(section);
+  for (const section of DEFAULT_HUB_SECTIONS) {
+    if (items.length >= 3) break;
+    tryAdd(section);
+  }
+
+  return items.slice(0, 3);
+}
 
 export function StaffOverviewHubCards({
   items,
