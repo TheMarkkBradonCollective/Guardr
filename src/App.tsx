@@ -598,7 +598,7 @@ export default function App() {
   const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
-  const [authChoiceMode, setAuthChoiceMode] = useState<'sign-up' | null>(null);
+  const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(null);
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [publicGuideOpen, setPublicGuideOpen] = useState(
     () => !isAppExperience() && readGuideFromWindow()
@@ -1390,11 +1390,11 @@ export default function App() {
     syncAppRoute({ role: 'client', authView: mode, authRole: role });
   };
 
-  const openAuthChoice = (mode: 'sign-up') => {
+  const openAuthChoice = (mode: 'sign-in' | 'sign-up') => {
     setAuthChoiceMode(mode);
     setIsAuthView(false);
     if (typeof window !== 'undefined') {
-      window.history.pushState({ authChoice: mode }, '', '/?auth=sign-up&pick=role');
+      window.history.pushState({ authChoice: mode }, '', `/?auth=${mode}&pick=role`);
     }
   };
 
@@ -1406,8 +1406,8 @@ export default function App() {
   };
 
   const navigateToAuth = (role?: AuthViewRole, mode?: AuthViewMode) => {
-    if (!role && mode === 'sign-up') {
-      openAuthChoice('sign-up');
+    if (!role && (mode === 'sign-up' || mode === 'sign-in')) {
+      openAuthChoice(mode);
       return;
     }
     openAuthView(role ?? 'client', mode ?? 'sign-in');
@@ -1530,13 +1530,14 @@ export default function App() {
     const strippedUrl = stripEphemeralQueryParams(url);
     const authChoiceFromState =
       options.source === 'popstate'
-        ? (options.event?.state?.authChoice as 'sign-up' | undefined)
+        ? (options.event?.state?.authChoice as 'sign-in' | 'sign-up' | undefined)
         : undefined;
     const authChoiceQuery = strippedUrl.includes('?') ? strippedUrl.split('?')[1] : '';
     const authChoiceParams = new URLSearchParams(authChoiceQuery);
     const authChoiceFromUrl =
-      authChoiceParams.get('auth') === 'sign-up' && authChoiceParams.get('pick') === 'role'
-        ? ('sign-up' as const)
+      authChoiceParams.get('pick') === 'role' &&
+      (authChoiceParams.get('auth') === 'sign-up' || authChoiceParams.get('auth') === 'sign-in')
+        ? (authChoiceParams.get('auth') as 'sign-in' | 'sign-up')
         : null;
     const authChoice = authChoiceFromState ?? authChoiceFromUrl;
 
@@ -12452,7 +12453,7 @@ export default function App() {
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             onNavigateToAuth={navigateToAuth}
-            onSelectRole={(role) => openAuthView(role, 'sign-up')}
+            onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
             onOpenGuide={openPublicGuide}
           />
           <InstallPrompt />
@@ -12493,7 +12494,7 @@ export default function App() {
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
               onNavigateToAuth={navigateToAuth}
-              onSelectRole={(role) => openAuthView(role, 'sign-up')}
+              onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
               onOpenGuide={openPublicGuide}
             />
             <InstallPrompt />

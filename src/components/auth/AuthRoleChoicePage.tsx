@@ -8,7 +8,7 @@ import { UberLandingNav } from '../landing/uber/UberLandingChrome';
 
 const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
-export type AuthRoleChoiceMode = 'sign-up';
+export type AuthRoleChoiceMode = 'sign-in' | 'sign-up';
 
 interface RoleOption {
   role: 'guard' | 'client';
@@ -16,17 +16,27 @@ interface RoleOption {
   title: string;
 }
 
-const SIGNUP_OPTIONS: RoleOption[] = [
-  { role: 'guard', icon: Shield, title: 'Sign up as guard' },
-  { role: 'client', icon: User, title: 'Sign up as client' },
-];
+const ROLE_OPTIONS: Record<AuthRoleChoiceMode, RoleOption[]> = {
+  'sign-in': [
+    { role: 'guard', icon: Shield, title: 'Log in as guard' },
+    { role: 'client', icon: User, title: 'Log in as client' },
+  ],
+  'sign-up': [
+    { role: 'guard', icon: Shield, title: 'Sign up as guard' },
+    { role: 'client', icon: User, title: 'Sign up as client' },
+  ],
+};
 
-const COPY = {
+const COPY: Record<AuthRoleChoiceMode, { heading: string; ariaLabel: string }> = {
+  'sign-in': {
+    heading: 'Log in to access your account',
+    ariaLabel: 'Choose how to log in',
+  },
   'sign-up': {
     heading: 'Sign up to access your account',
     ariaLabel: 'Choose how to sign up',
   },
-} as const;
+};
 
 /** Flat vector illustration — guard + client, mirroring Uber's login hero art. */
 function AuthChoiceHeroVisual() {
@@ -80,7 +90,7 @@ export function AuthRoleChoicePage({
   const factor = formFactor === 'tablet' ? 'tablet' : formFactor === 'desktop' ? 'desktop' : 'mobile';
   const isMobile = factor === 'mobile';
   const copy = COPY[mode];
-  const options = SIGNUP_OPTIONS;
+  const options = ROLE_OPTIONS[mode];
 
   return (
     <Block
