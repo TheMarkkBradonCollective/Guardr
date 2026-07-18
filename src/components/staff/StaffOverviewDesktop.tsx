@@ -19,6 +19,7 @@ import {
   buildPlatformPulseCards,
   buildJobPipelineSegments,
   computeWeeklyJobSeries,
+  type OverviewVisualCard,
 } from '../../lib/overviewVisuals';
 import {
   filterOverviewActionItems,
@@ -63,6 +64,20 @@ interface StaffOverviewDesktopProps {
   onOpenJob?: (jobId: string) => void;
   canUpdateJobs?: boolean;
   staffRole: PlatformRole;
+}
+
+function glanceCardDescription(card: OverviewVisualCard): string {
+  if (card.footnote) return card.footnote;
+  if (card.ring?.sub) return `${card.ring.value} · ${card.ring.sub}`;
+  if (card.meters?.[0]) {
+    const meter = card.meters[0];
+    return `${meter.value} · ${meter.sub ?? meter.label}`;
+  }
+  if (card.rings?.[0]) {
+    const ring = card.rings[0];
+    return `${ring.value} · ${ring.sub ?? ring.label}`;
+  }
+  return 'Open analytics for detail';
 }
 
 function formatActivityTime(iso: string): string {
@@ -140,6 +155,7 @@ export function StaffOverviewDesktop({
 }: StaffOverviewDesktopProps) {
   const { formFactor } = useDevice();
   const isDesktop = formFactor === 'desktop';
+  const isTablet = formFactor === 'tablet';
   const {
     config,
     metrics,
@@ -156,17 +172,20 @@ export function StaffOverviewDesktop({
     [config.quickLinkSections, onNavigate],
   );
 
-  const quickGridItems = config.quickLinkSections.slice(0, 6).map((section) => {
-    const meta = QUICK_LINK_META[section];
-    return {
-      id: section,
-      label: meta.label,
-      sub: meta.sub,
-      icon: meta.icon,
-      primary: section === 'map',
-      onClick: () => onNavigate(section),
-    };
-  });
+  const quickGridItems = config.quickLinkSections
+    .filter((section) => !['overview', 'jobs', 'clients', 'guards', 'team'].includes(section))
+    .slice(0, isTablet ? 6 : 4)
+    .map((section) => {
+      const meta = QUICK_LINK_META[section];
+      return {
+        id: section,
+        label: meta.label,
+        sub: meta.sub,
+        icon: meta.icon,
+        primary: section === 'map',
+        onClick: () => onNavigate(section),
+      };
+    });
 
   const quickLinks = config.quickLinkSections.slice(0, 8).map((section) => {
     const meta = QUICK_LINK_META[section];
@@ -310,6 +329,45 @@ export function StaffOverviewDesktop({
       </WorkbenchPanel>
     ) : null;
 
+  const glancePanel =
+    config.showPlatformPulse || config.showDirectorFinancials || config.showOperationsSnapshot ? (
+      <WorkbenchPanel className="staff-overview-list-panel staff-overview-glance-panel" padding>
+        <StaffOverviewSectionHeader title="At a glance" />
+        <ul className="uber-mobile-list staff-overview-list staff-overview-glance-list">
+          {config.showDirectorFinancials
+            ? directorFinancialCells.slice(0, 3).map(({ label, value, sub }) => (
+                <StaffOverviewShortcutRow
+                  key={label}
+                  title={label}
+                  description={`${value}${sub ? ` · ${sub}` : ''}`}
+                  onClick={() => onNavigate('payments')}
+                />
+              ))
+            : null}
+          {config.showPlatformPulse
+            ? platformPulseCards.slice(0, isTablet ? 4 : 3).map((card) => (
+                <StaffOverviewShortcutRow
+                  key={card.id}
+                  title={card.title}
+                  description={glanceCardDescription(card)}
+                  onClick={() => onNavigate('analytics')}
+                />
+              ))
+            : null}
+          {config.showOperationsSnapshot
+            ? operationsSnapshotCards.slice(0, 2).map((card) => (
+                <StaffOverviewShortcutRow
+                  key={card.id}
+                  title={card.title}
+                  description={glanceCardDescription(card)}
+                  onClick={() => onNavigate('stats')}
+                />
+              ))
+            : null}
+        </ul>
+      </WorkbenchPanel>
+    ) : null;
+
   if (isDesktop) {
     return (
       <WorkbenchPage
@@ -359,7 +417,7 @@ export function StaffOverviewDesktop({
 
   return (
     <WorkbenchPage
-      className="staff-overview-uber staff-overview-mobile uber-mobile-overview mobility-workspace"
+      className={`staff-overview-uber staff-overview-portable ${isTablet ? 'staff-overview-tablet' : 'staff-overview-mobile'} uber-mobile-overview mobility-workspace`}
       data-tour="staff-overview"
     >
       <StaffOverviewStatusBanner
@@ -367,6 +425,8 @@ export function StaffOverviewDesktop({
         pendingReviews={stats.pendingReviews}
         onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
       />
+
+      {isTablet ? <StaffOverviewHubCards items={hubItems} /> : null}
 
       <StaffOverviewMetricChips
         metrics={metrics.map((metric) => ({
@@ -377,36 +437,28 @@ export function StaffOverviewDesktop({
         onNavigate={(section) => onNavigate(section as StaffSection)}
       />
 
-      <StaffOverviewQuickGrid items={quickGridItems} />
+      {quickGridItems.length > 0 ? <StaffOverviewQuickGrid items={quickGridItems} /> : null}
 
-      {attentionPanel}
-      {livePanel}
+      <div className={isTablet ? 'staff-overview-portable-split' : undefined}>
+        {attentionPanel}
+        {livePanel}
+      </div>
 
-      {config.showPlatformPulse || config.showDirectorFinancials || config.showOperationsSnapshot ? (
-        <WorkbenchPanel className="staff-overview-list-panel staff-overview-mobile-shortcuts" padding>
-          <StaffOverviewSectionHeader title="Go deeper" />
-          <ul className="uber-mobile-list staff-overview-list">
-            {config.showPlatformPulse ? (
-              <StaffOverviewShortcutRow
-                title="Platform pulse"
-                description="Coverage, pipeline, and quality signals"
-                onClick={() => onNavigate('analytics')}
-              />
-            ) : null}
-            {config.showDirectorFinancials ? (
-              <StaffOverviewShortcutRow
-                title="Company financials"
-                description="Revenue, payouts, and settlements"
-                onClick={() => onNavigate('payments')}
-              />
-            ) : null}
-            {config.showOperationsSnapshot ? (
-              <StaffOverviewShortcutRow
-                title="Operations snapshot"
-                description="Pipeline, marketplace, and people mix"
-                onClick={() => onNavigate('stats')}
-              />
-            ) : null}
+      {glancePanel}
+
+      {isTablet && config.showActivityFeed && activityFeed.length > 0 ? (
+        <WorkbenchPanel className="staff-overview-list-panel staff-overview-feed-panel" padding>
+          <StaffOverviewSectionHeader title="Recent activity" actionLabel="Messages" onAction={() => onNavigate('messages')} />
+          <ul className="staff-overview-feed-list">
+            {activityFeed.slice(0, 5).map((item) => (
+              <li key={item.id} className="staff-overview-feed-item">
+                <span className="staff-overview-feed-dot" aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-sm leading-snug">{item.message}</p>
+                  <p className="text-[11px] uber-text-muted mt-0.5">{formatActivityTime(item.timestamp)}</p>
+                </div>
+              </li>
+            ))}
           </ul>
         </WorkbenchPanel>
       ) : null}

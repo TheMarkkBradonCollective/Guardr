@@ -351,6 +351,13 @@ body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .uber-bottom-n
   right: 0;
 }
 
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .uber-bottom-nav {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
 /* ─── Mobile/PWA/native — bottom content pad ─────────────────────────── */
 
 body[data-view-surface^="pwa-"] .uber-app-shell,
