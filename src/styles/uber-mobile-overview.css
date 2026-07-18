@@ -590,3 +590,638 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility
   background: var(--uber-bg, #ffffff);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF OVERVIEW PRO — unified mobile / tablet / desktop command center
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.staff-overview-pro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.staff-overview-pro-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staff-overview-pro-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-pro-title {
+  margin: 0;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-focus {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--uber-text-muted, #6b6b6b);
+  max-width: 72ch;
+}
+
+.staff-overview-pro-kpi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.staff-overview-pro-kpi-card:disabled {
+  cursor: default;
+}
+
+.staff-overview-pro-kpi-card:not(:disabled):hover {
+  border-color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-card--accent {
+  background: #f2f8ff;
+  border-color: #c8ddff;
+}
+
+.staff-overview-pro-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-sub {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-pro-hub.uber-direct-home-hub {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.staff-overview-pro-hub .uber-direct-hub-card {
+  min-height: 120px;
+}
+
+.staff-overview-pro-ops {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.staff-overview-pro-queue-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-queue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 10px;
+  background: var(--uber-surface, #f6f6f6);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.staff-overview-pro-queue-card--active {
+  background: var(--uber-bg, #ffffff);
+  border-color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-count {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-pro-main.staff-overview-desktop-grid {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+  gap: 12px;
+}
+
+.staff-overview-pro-financials {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-insights {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.staff-overview-pro-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-kpi,
+body[data-view-surface$="-tablet"] .staff-overview-pro-kpi {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-ops,
+body[data-view-surface$="-tablet"] .staff-overview-pro-ops {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-queue-grid,
+body[data-view-surface$="-tablet"] .staff-overview-pro-queue-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-financials,
+body[data-view-surface$="-tablet"] .staff-overview-pro-financials {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-insights,
+body[data-view-surface$="-tablet"] .staff-overview-pro-insights {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-title,
+body[data-view-surface$="-tablet"] .staff-overview-pro-title {
+  font-size: 32px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro,
+body[data-view-surface$="-desktop"] .staff-overview-pro {
+  gap: 20px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-kpi,
+body[data-view-surface$="-desktop"] .staff-overview-pro-kpi {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-ops,
+body[data-view-surface$="-desktop"] .staff-overview-pro-ops {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-queue-grid,
+body[data-view-surface$="-desktop"] .staff-overview-pro-queue-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-financials,
+body[data-view-surface$="-desktop"] .staff-overview-pro-financials {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-main.staff-overview-desktop-grid,
+body[data-view-surface$="-desktop"] .staff-overview-pro-main.staff-overview-desktop-grid {
+  gap: 16px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-title,
+body[data-view-surface$="-desktop"] .staff-overview-pro-title {
+  font-size: 36px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-hub.uber-direct-home-hub,
+body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 639px) {
+  .staff-overview-pro-hub.uber-direct-home-hub {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .staff-overview-pro-hub .uber-direct-hub-card {
+    flex: 0 0 min(82vw, 300px);
+    scroll-snap-align: start;
+  }
+}
+
+.staff-overview-pro .staff-overview-list-panel {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+  box-shadow: none;
+}
+
+.staff-overview-pro .staff-overview-chart-card,
+.staff-overview-pro .staff-overview-feed-card {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--uber-surface, #f6f6f6);
+}
+
+.staff-overview-pro .staff-overview-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.staff-overview-pro .staff-overview-feed-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.staff-overview-pro .staff-overview-feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0e8345;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF OVERVIEW PRO — unified mobile / tablet / desktop command center
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.staff-overview-pro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.staff-overview-pro-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staff-overview-pro-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-pro-title {
+  margin: 0;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-focus {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--uber-text-muted, #6b6b6b);
+  max-width: 72ch;
+}
+
+/* KPI metric cards */
+.staff-overview-pro-kpi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.staff-overview-pro-kpi-card:disabled {
+  cursor: default;
+}
+
+.staff-overview-pro-kpi-card:not(:disabled):hover {
+  border-color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-card--accent {
+  background: #f2f8ff;
+  border-color: #c8ddff;
+}
+
+.staff-overview-pro-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-kpi-sub {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+/* Hub cards — horizontal scroll on narrow screens */
+.staff-overview-pro-hub.uber-direct-home-hub {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.staff-overview-pro-hub .uber-direct-hub-card {
+  min-height: 120px;
+}
+
+/* Ops row: attention + live */
+.staff-overview-pro-ops {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* Approval queue board */
+.staff-overview-pro-queue-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-queue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 10px;
+  background: var(--uber-surface, #f6f6f6);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.staff-overview-pro-queue-card--active {
+  background: var(--uber-bg, #ffffff);
+  border-color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-count {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+/* Main analytics grid */
+.staff-overview-pro-main.staff-overview-desktop-grid {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+  gap: 12px;
+}
+
+.staff-overview-pro-financials {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.staff-overview-pro-insights {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.staff-overview-pro-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Tablet */
+body[data-form-factor="tablet"] .staff-overview-pro-kpi,
+body[data-view-surface$="-tablet"] .staff-overview-pro-kpi {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-ops,
+body[data-view-surface$="-tablet"] .staff-overview-pro-ops {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-queue-grid,
+body[data-view-surface$="-tablet"] .staff-overview-pro-queue-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-financials,
+body[data-view-surface$="-tablet"] .staff-overview-pro-financials {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-insights,
+body[data-view-surface$="-tablet"] .staff-overview-pro-insights {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-form-factor="tablet"] .staff-overview-pro-title,
+body[data-view-surface$="-tablet"] .staff-overview-pro-title {
+  font-size: 32px;
+}
+
+/* Desktop */
+body[data-form-factor="desktop"] .staff-overview-pro,
+body[data-view-surface$="-desktop"] .staff-overview-pro {
+  gap: 20px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-kpi,
+body[data-view-surface$="-desktop"] .staff-overview-pro-kpi {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-ops,
+body[data-view-surface$="-desktop"] .staff-overview-pro-ops {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-queue-grid,
+body[data-view-surface$="-desktop"] .staff-overview-pro-queue-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-financials,
+body[data-view-surface$="-desktop"] .staff-overview-pro-financials {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-main.staff-overview-desktop-grid,
+body[data-view-surface$="-desktop"] .staff-overview-pro-main.staff-overview-desktop-grid {
+  gap: 16px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-title,
+body[data-view-surface$="-desktop"] .staff-overview-pro-title {
+  font-size: 36px;
+}
+
+body[data-form-factor="desktop"] .staff-overview-pro-hub.uber-direct-home-hub,
+body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Mobile hub horizontal scroll */
+@media (max-width: 639px) {
+  .staff-overview-pro-hub.uber-direct-home-hub {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .staff-overview-pro-hub .uber-direct-hub-card {
+    flex: 0 0 min(82vw, 300px);
+    scroll-snap-align: start;
+  }
+}
+
+/* Panel polish inside pro overview */
+.staff-overview-pro .staff-overview-list-panel {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+  box-shadow: none;
+}
+
+.staff-overview-pro .staff-overview-chart-card,
+.staff-overview-pro .staff-overview-feed-card {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--uber-surface, #f6f6f6);
+}
+
+.staff-overview-pro .staff-overview-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.staff-overview-pro .staff-overview-feed-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.staff-overview-pro .staff-overview-feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0e8345;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
