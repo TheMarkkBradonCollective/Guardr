@@ -4,6 +4,7 @@ import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 
 export interface StaffAddClientInput {
   firstName: string;
@@ -20,7 +21,7 @@ interface StaffAddClientFormProps {
 }
 
 export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('client');
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -86,14 +87,16 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
-      >
-        <Plus className="w-4 h-4" />
-        Add client
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add client
+        </button>
+      ) : null}
 
       <AppFormSheet
         open={open}

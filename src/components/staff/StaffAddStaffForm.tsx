@@ -3,6 +3,7 @@ import { StaffRole, PlatformRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import type { PlatformCity } from '../../lib/platformCities';
 import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
@@ -36,7 +37,7 @@ export function StaffAddStaffForm({
   onAdd,
   onCreated,
 }: StaffAddStaffFormProps) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('staff');
   const [email, setEmail] = useState('');
   const [badge, setBadge] = useState('');
   const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
@@ -101,14 +102,16 @@ export function StaffAddStaffForm({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
-      >
-        <Plus className="w-4 h-4" />
-        Add staff
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add staff
+        </button>
+      ) : null}
 
       <AppFormSheet
         open={open}

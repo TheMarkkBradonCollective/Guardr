@@ -30,6 +30,7 @@ import { JobOperationalDetails } from '../../types';
 import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 
 export interface StaffCreateJobInput {
   clientId: string;
@@ -72,7 +73,7 @@ interface StaffCreateJobFormProps {
 
 export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCreate, onCreated }: StaffCreateJobFormProps) {
   const selectableClientCities = getSelectableCityNamesForClients();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('job');
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
   const [customTitle, setCustomTitle] = useState('');
@@ -234,15 +235,17 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="uber-sheet-cta-primary"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, width: '100%', justifyContent: 'center', height: 52, marginBottom: 4 }}
-      >
-        <Plus className="w-4 h-4" />
-        Create job for client
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="uber-sheet-cta-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, width: '100%', justifyContent: 'center', height: 52, marginBottom: 4 }}
+        >
+          <Plus className="w-4 h-4" />
+          Create job for client
+        </button>
+      ) : null}
 
       <AppFormSheet
         open={open}
