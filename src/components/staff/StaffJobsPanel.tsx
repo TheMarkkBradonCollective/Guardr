@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Briefcase, ChevronRight, Clock, Search } from 'lucide-react';
+import { Briefcase, Clock, Search } from 'lucide-react';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { PlatformFeeConfig } from '../../lib/payments';
 import { formatShiftRange } from '../../lib/dates';
@@ -13,9 +13,13 @@ import {
   WorkbenchSplit,
   WorkbenchStatChips,
 } from '../baseui/layout/WorkbenchLayout';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
+import { WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
 
@@ -133,6 +137,7 @@ export function StaffJobsPanel({
   }, [requests, filter, search]);
 
   const selectedRequest = selectedId ? requests.find((r) => r.id === selectedId) ?? null : null;
+  const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
   useEffect(() => {
     if (formFactor === 'mobile') return;
@@ -246,78 +251,76 @@ export function StaffJobsPanel({
     );
   }
 
-  if (selectedRequest) {
-    return (
-      <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in" data-tour="staff-jobs">
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         {createForm}
-        <div className="-mx-4 sm:-mx-5 app-full-page-detail flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          {renderJobDetail(selectedRequest, () => setSelectedId(null))}
-        </div>
       </div>
-    );
-  }
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search client, location, or title"
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Job pipeline status"
+        activeId={filter}
+        onChange={(id) => setFilter(id as JobsFilter)}
+        tabs={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, count: tallies[id] }))}
+      />
+    </>
+  ) : null;
 
   return (
-    <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in" data-tour="staff-jobs">
-      {createForm}
-      <div className="staff-ops-mobile-toolbar space-y-3 -mx-4 sm:-mx-5 px-4 sm:px-5 pb-3">
-        <WorkbenchSearchRow
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search client, location, or title"
-        />
-        <WorkbenchStatChips<JobsFilter>
-          items={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
-          activeId={filter}
-          onSelect={setFilter}
-        />
-      </div>
-      <div className="staff-ops-mobile-body flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-4 sm:-mx-5 px-4 sm:px-5">
-        {filtered.length === 0 ? (
-          <div className="app-empty-state">
-            <div className="app-empty-state-icon">
-              <Briefcase className="w-5 h-5" />
-            </div>
-            <p className="app-empty-state-title">{search ? 'No matching jobs' : 'No jobs yet'}</p>
-            <p className="app-empty-state-body">
-              {search
-                ? `No jobs match "${search}". Try adjusting your search or filters.`
-                : 'Jobs will appear here once clients post coverage requests.'}
-            </p>
+    <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-jobs">
+      {filtered.length === 0 ? (
+        <div className="app-empty-state app-empty-state--dashed">
+          <div className="app-empty-state-icon">
+            <Briefcase className="w-5 h-5" />
           </div>
-        ) : (
-          <ul className="uber-mobile-list staff-overview-list">
-            {filtered.map((req) => (
-              <li key={req.id}>
-                <button
-                  type="button"
-                  className="uber-mobile-list-row staff-overview-list-row"
-                  onClick={() => setSelectedId(req.id)}
-                >
-                  <span className="staff-overview-list-row-icon">
-                    <Briefcase size={18} aria-hidden />
+          <p className="app-empty-state-title">{search ? 'No matching jobs' : 'No jobs yet'}</p>
+          <p className="app-empty-state-body">
+            {search
+              ? `No jobs match "${search}". Try adjusting your search or filters.`
+              : 'Jobs will appear here once clients post coverage requests.'}
+          </p>
+        </div>
+      ) : (
+        <ListDetailLayout
+          items={filtered}
+          selectedId={selectedId}
+          onSelectId={setSelectedId}
+          getItemId={(req) => req.id}
+          listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
+          mobilePresentation="page"
+          autoSelectFirst={formFactor === 'tablet'}
+          renderItem={(req, isActive, onSelect) => (
+            <WfListCard
+              avatar={
+                <span className="staff-overview-list-row-icon" aria-hidden>
+                  <Briefcase size={18} />
+                </span>
+              }
+              title={req.title}
+              subtitle={req.clientName}
+              meta={
+                <div className="flex flex-col items-start gap-1.5 w-full">
+                  <GuardrTag closeable={false} kind={statusKind(req.status)}>
+                    {req.status}
+                  </GuardrTag>
+                  <span className="text-[11px] text-brand-text-muted">
+                    {formatShiftRange(req.startDate, req.endDate)} · {guardMeta(req, guards)}
                   </span>
-                  <span className="staff-overview-list-row-copy">
-                    <span className="staff-overview-list-row-title-row">
-                      <span className="staff-overview-list-row-title">{req.title}</span>
-                      <GuardrTag closeable={false} kind={statusKind(req.status)}>
-                        {req.status}
-                      </GuardrTag>
-                    </span>
-                    <span className="staff-overview-list-row-description">
-                      {req.clientName} · {req.location}
-                    </span>
-                    <span className="staff-overview-list-row-meta">
-                      {formatShiftRange(req.startDate, req.endDate)} · {guardMeta(req, guards)}
-                    </span>
-                  </span>
-                  <ChevronRight size={16} className="staff-overview-list-row-chevron" aria-hidden />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+                  <span className="text-[11px] text-brand-text-muted">{req.location}</span>
+                </div>
+              }
+              onClick={onSelect}
+              className={isActive ? 'app-item-card-selected' : ''}
+            />
+          )}
+          renderDetail={(req, options) => renderJobDetail(req, options?.onBack)}
+        />
+      )}
+    </StaffOpsPageShell>
   );
 }

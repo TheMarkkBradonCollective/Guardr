@@ -239,11 +239,10 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="uber-sheet-cta-primary"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, width: '100%', justifyContent: 'center', height: 52, marginBottom: 4 }}
+          className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create job for client
+          Create job
         </button>
       ) : null}
 
