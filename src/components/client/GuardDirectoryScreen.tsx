@@ -22,6 +22,7 @@ import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guard
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack, AppEmptyState, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import {
@@ -229,16 +230,16 @@ export function GuardDirectoryScreen({
             </div>
           )}
           {coordinator && onRequestGuard && (
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              fullWidth
               onClick={() => {
                 setSelectedListingId(null);
                 onRequestGuard(coordinator);
               }}
-              className="app-button-primary w-full"
             >
               Request {coordinator.name}
-            </button>
+            </AppButton>
           )}
           {coordinator && (
             <button
@@ -580,20 +581,12 @@ export function GuardDirectoryScreen({
 
           {/* Actions */}
           <div className="app-action-row app-action-row--equal pt-1">
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="app-button-outline app-btn-sm"
-            >
+            <AppButton variant="outline" size="sm" onClick={clearAllFilters}>
               Clear all
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowFilterPanel(false)}
-              className="app-button-primary app-btn-sm"
-            >
+            </AppButton>
+            <AppButton variant="primary" size="sm" onClick={() => setShowFilterPanel(false)}>
               Show {filtered.length} guard{filtered.length !== 1 ? 's' : ''}
-            </button>
+            </AppButton>
           </div>
         </div>
       )}
@@ -858,13 +851,9 @@ function GuardEmptyState({
         <p className="text-sm text-brand-text-muted mb-4">
           Try adjusting or removing some of your filters to see more results.
         </p>
-        <button
-          type="button"
-          onClick={onClearFilters}
-          className="app-button-primary app-btn-sm app-btn-inline"
-        >
+        <AppButton variant="primary" size="sm" onClick={onClearFilters}>
           Clear all filters
-        </button>
+        </AppButton>
       </div>
     );
   }
