@@ -16,8 +16,10 @@ import {
 } from '../../lib/operationalFinancials';
 import {
   buildOperationsSnapshotCards,
+  buildPlatformHealthPieSegments,
   buildPlatformPulseCards,
   buildJobPipelineSegments,
+  buildQueuePieSegments,
   computeWeeklyJobSeries,
 } from '../../lib/overviewVisuals';
 import {
@@ -29,15 +31,18 @@ import { isStaffRole } from '../../lib/permissions';
 import { useDevice } from '../../lib/platform';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
-  WorkbenchGrid,
-  WorkbenchGridCell,
-  WorkbenchPage,
   WorkbenchPanel,
   WorkbenchQuickLinks,
 } from '../baseui/layout/WorkbenchLayout';
 import { WfBadge } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
-import { OverviewSegmentBar, OverviewVisualGrid, OverviewWeekChart } from './overview/OverviewCharts';
+import { OverviewVisualGrid } from './overview/OverviewCharts';
+import {
+  StaffOverviewDesktopLayout,
+  StaffOverviewInsightGlance,
+  StaffOverviewMobileLayout,
+  StaffOverviewTabletLayout,
+} from './overview/StaffOverviewLayouts';
 import {
   buildStaffOverviewHubItems,
   QUICK_LINK_META,
@@ -113,6 +118,8 @@ function useOverviewData(
   );
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
+  const queuePieSegments = useMemo(() => buildQueuePieSegments(stats), [stats]);
+  const healthPieSegments = useMemo(() => buildPlatformHealthPieSegments(stats), [stats]);
 
   return {
     config,
@@ -123,6 +130,8 @@ function useOverviewData(
     platformPulseCards,
     weeklySeries,
     jobPipelineSegments,
+    queuePieSegments,
+    healthPieSegments,
   };
 }
 
@@ -149,6 +158,8 @@ export function StaffOverviewDesktop({
     platformPulseCards,
     weeklySeries,
     jobPipelineSegments,
+    queuePieSegments,
+    healthPieSegments,
   } = useOverviewData(stats, requests, guards, clients, actionItems, staffRole);
 
   const hubItems = useMemo(
@@ -163,7 +174,7 @@ export function StaffOverviewDesktop({
       label: meta.label,
       sub: meta.sub,
       icon: meta.icon,
-      primary: section === 'map' || section === 'applications',
+      primary: true,
       onClick: () => onNavigate(section),
     };
   });
@@ -179,6 +190,31 @@ export function StaffOverviewDesktop({
   });
 
   const showQueueBoard = isStaffRole(staffRole);
+  const attentionLimit = formFactor === 'mobile' ? 5 : formFactor === 'tablet' ? 8 : 10;
+  const liveLimit = formFactor === 'mobile' ? 3 : formFactor === 'tablet' ? 6 : 8;
+  const activityLimit = formFactor === 'mobile' ? 5 : formFactor === 'tablet' ? 8 : 12;
+
+  const header = (
+    <StaffOverviewRoleHeader
+      config={config}
+      healthy={stats.platformHealthy}
+      pendingReviews={stats.pendingReviews}
+      onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
+    />
+  );
+
+  const kpiGrid = <StaffOverviewKpiGrid metrics={metrics} onNavigate={onNavigate} />;
+
+  const hubCards = <StaffOverviewHubCards items={hubItems} className="staff-overview-pro-hub" />;
+
+  const queueBoard = showQueueBoard ? (
+    <StaffOverviewQueueBoard
+      stats={stats}
+      showPayments={config.showPaymentsInQueue}
+      staffRole={staffRole}
+      onNavigate={onNavigate}
+    />
+  ) : null;
 
   const attentionPanel = (
     <StaffOverviewListPanel
@@ -188,7 +224,7 @@ export function StaffOverviewDesktop({
       emptyTitle="You're caught up"
       emptyBody={config.emptyAttentionCopy}
     >
-      {filteredActions.slice(0, 10).map((item) => (
+      {filteredActions.slice(0, attentionLimit).map((item) => (
         <StaffOverviewListRow
           key={item.id}
           title={item.title}
@@ -211,7 +247,7 @@ export function StaffOverviewDesktop({
       emptyTitle="No guards on site"
       emptyBody="Picked-up and in-progress jobs appear here when work is underway."
     >
-      {liveJobs.slice(0, 8).map((job) => {
+      {liveJobs.slice(0, liveLimit).map((job) => {
         const statusCfg = LIVE_JOB_STATUS_LABEL[job.status];
         return (
           <StaffOverviewListRow
@@ -235,7 +271,7 @@ export function StaffOverviewDesktop({
       />
       <OverviewVisualGrid
         cards={platformPulseCards}
-        columns={config.layout === 'compact' ? 2 : 3}
+        columns={formFactor === 'tablet' ? 2 : 3}
         variant="full"
       />
     </WorkbenchPanel>
@@ -261,97 +297,73 @@ export function StaffOverviewDesktop({
 
   const insightsPanel =
     config.showWeeklyInsight || config.showPipelineInsight ? (
-      <WorkbenchPanel className="staff-overview-list-panel staff-overview-insights-panel" padding>
-        <StaffOverviewSectionHeader title="Performance insights" />
-        <div className="staff-overview-insights-grid staff-overview-pro-insights">
-          {config.showWeeklyInsight ? (
-            <section className="staff-overview-chart-card">
-              <p className="overview-visual-title">Completed jobs this week</p>
-              <OverviewWeekChart series={weeklySeries} />
-            </section>
-          ) : null}
-          {config.showPipelineInsight ? (
-            <section className="staff-overview-chart-card">
-              <p className="overview-visual-title">Job pipeline mix</p>
-              {jobPipelineSegments.length > 0 ? (
-                <OverviewSegmentBar segments={jobPipelineSegments} />
-              ) : (
-                <p className="text-sm uber-text-muted py-4">No jobs in the pipeline yet.</p>
-              )}
-            </section>
-          ) : null}
-        </div>
-      </WorkbenchPanel>
+      <StaffOverviewInsightGlance
+        showWeekly={config.showWeeklyInsight}
+        showPipeline={config.showPipelineInsight}
+        weeklySeries={weeklySeries}
+        jobPipelineSegments={jobPipelineSegments}
+        compact={formFactor === 'mobile'}
+      />
     ) : null;
 
   const activityPanel = config.showActivityFeed ? (
     <StaffOverviewActivityPanel
-      items={activityFeed.slice(0, formFactor === 'mobile' ? 6 : 10)}
+      items={activityFeed.slice(0, activityLimit)}
       formatTime={formatActivityTime}
       onViewAll={() => onNavigate('messages')}
     />
   ) : null;
 
-  return (
-    <WorkbenchPage
-      className={`staff-overview-pro staff-overview-uber uber-direct-home mobility-workspace staff-overview--${formFactor}`}
-      data-tour="staff-overview"
-      data-staff-role={staffRole}
-    >
-      <StaffOverviewRoleHeader
-        config={config}
-        healthy={stats.platformHealthy}
-        pendingReviews={stats.pendingReviews}
-        onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
-      />
-
-      <StaffOverviewKpiGrid metrics={metrics} onNavigate={onNavigate} />
-
-      <StaffOverviewHubCards items={hubItems} className="staff-overview-pro-hub" />
-
-      {showQueueBoard ? (
-        <StaffOverviewQueueBoard
-          stats={stats}
-          showPayments={config.showPaymentsInQueue}
-          staffRole={staffRole}
-          onNavigate={onNavigate}
-        />
-      ) : null}
-
-      <section className="staff-overview-pro-ops">
-        {attentionPanel}
-        {livePanel}
-      </section>
-
-      <WorkbenchGrid className="staff-overview-pro-main">
-        {financialsPanel ? <WorkbenchGridCell span={12}>{financialsPanel}</WorkbenchGridCell> : null}
-
-        {pulsePanel && operationsPanel ? (
-          <>
-            <WorkbenchGridCell span={8}>{pulsePanel}</WorkbenchGridCell>
-            <WorkbenchGridCell span={4}>{operationsPanel}</WorkbenchGridCell>
-          </>
-        ) : (
-          <>
-            {pulsePanel ? <WorkbenchGridCell span={12}>{pulsePanel}</WorkbenchGridCell> : null}
-            {operationsPanel ? <WorkbenchGridCell span={12}>{operationsPanel}</WorkbenchGridCell> : null}
-          </>
-        )}
-
-        {insightsPanel ? <WorkbenchGridCell span={activityPanel ? 6 : 12}>{insightsPanel}</WorkbenchGridCell> : null}
-        {activityPanel ? <WorkbenchGridCell span={insightsPanel ? 6 : 12}>{activityPanel}</WorkbenchGridCell> : null}
-      </WorkbenchGrid>
-
-      <section className="staff-overview-pro-shortcuts">
-        <StaffOverviewSectionHeader title="Shortcuts" />
-        {formFactor === 'mobile' ? (
-          <StaffOverviewQuickGrid items={quickGridItems} />
-        ) : (
-          <WorkbenchPanel padding={false} className="staff-overview-quicklinks-panel">
-            <WorkbenchQuickLinks items={quickLinks} />
-          </WorkbenchPanel>
-        )}
-      </section>
-    </WorkbenchPage>
+  const mobileShortcuts = (
+    <>
+      <StaffOverviewSectionHeader title="Quick actions" />
+      <StaffOverviewQuickGrid items={quickGridItems} />
+    </>
   );
+
+  const tabletShortcuts = (
+    <WorkbenchPanel padding={false} className="staff-overview-quicklinks-panel">
+      <WorkbenchQuickLinks items={quickLinks} />
+    </WorkbenchPanel>
+  );
+
+  const desktopShortcuts = (
+    <WorkbenchPanel padding={false} className="staff-overview-quicklinks-panel staff-overview-desktop-quicklinks-panel">
+      <WorkbenchQuickLinks items={quickLinks} />
+    </WorkbenchPanel>
+  );
+
+  const sharedLayoutProps = {
+    config,
+    staffRole,
+    stats,
+    header,
+    kpiGrid,
+    hubCards,
+    queueBoard,
+    attentionPanel,
+    livePanel,
+    pulsePanel,
+    financialsPanel,
+    operationsPanel,
+    insightsPanel,
+    activityPanel,
+    weeklySeries,
+    jobPipelineSegments,
+    platformPulseCards,
+    operationsSnapshotCards,
+    queuePieSegments,
+    healthPieSegments,
+    onNavigateAnalytics: () => onNavigate('analytics'),
+  };
+
+  if (formFactor === 'mobile') {
+    return <StaffOverviewMobileLayout {...sharedLayoutProps} shortcuts={mobileShortcuts} />;
+  }
+
+  if (formFactor === 'tablet') {
+    return <StaffOverviewTabletLayout {...sharedLayoutProps} shortcuts={tabletShortcuts} />;
+  }
+
+  return <StaffOverviewDesktopLayout {...sharedLayoutProps} shortcuts={desktopShortcuts} />;
 }

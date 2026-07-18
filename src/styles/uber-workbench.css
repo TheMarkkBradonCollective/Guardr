@@ -266,6 +266,46 @@ html.theme-dark .uber-stat-chip--active {
   border-color: var(--uber-text, #000);
 }
 
+.staff-overview-pro .staff-overview-desktop-quick-link {
+  background: var(--overview-cta-bg, #000000);
+  border-color: var(--overview-cta-bg, #000000);
+  color: var(--overview-cta-text, #ffffff);
+}
+
+.staff-overview-pro .staff-overview-desktop-quick-link:hover {
+  background: var(--overview-cta-hover, #1a1a1a);
+  border-color: var(--overview-cta-hover, #1a1a1a);
+}
+
+.staff-overview-desktop-quicklinks-panel .staff-overview-desktop-quick-links {
+  padding: 10px 12px;
+  justify-content: flex-end;
+}
+
+body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi,
+body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-visual-grid,
+body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-visual-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-visual-card,
+body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-visual-card {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--uber-bg, #ffffff);
+}
+
+body[data-form-factor="desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie,
+body[data-view-surface$="-desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie {
+  width: 9.5rem;
+  height: 9.5rem;
+}
+
 .staff-overview-desktop-section-label {
   margin: 0 0 0.75rem;
   font-size: 0.6875rem;
