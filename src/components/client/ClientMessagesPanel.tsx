@@ -44,6 +44,7 @@ type ActiveView =
 type InboxTab = 'chats' | 'jobs' | 'support';
 
 interface ClientMessagesPanelProps {
+  scope?: 'messages' | 'support';
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   currentUser: SessionUser;
@@ -104,6 +105,7 @@ export function ClientMessagesPanel({
   onDetailOpenChange,
   onMessagesChromeChange,
   shellHeaderTrailing,
+  scope = 'messages',
 }: ClientMessagesPanelProps) {
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
@@ -118,9 +120,11 @@ export function ClientMessagesPanel({
     return { kind: 'list' };
   });
 
+  const isSupportScope = scope === 'support';
+
   const [activeTab, setActiveTab] = useState<InboxTab>(() => {
+    if (isSupportScope || initialSupportTicketId) return 'support';
     if (initialChatOpen || initialChatRequestId) return 'jobs';
-    if (initialSupportTicketId) return 'support';
     return 'chats';
   });
 
@@ -185,12 +189,13 @@ export function ClientMessagesPanel({
   );
 
   const tabRows = useMemo((): InboxRow[] => {
+    if (isSupportScope) return supportRowsAll;
     switch (activeTab) {
       case 'chats': return [communityRow];
       case 'jobs': return jobRows;
       case 'support': return supportRowsAll;
     }
-  }, [activeTab, communityRow, jobRows, supportRowsAll]);
+  }, [activeTab, communityRow, isSupportScope, jobRows, supportRowsAll]);
 
   const openRow = (row: InboxRow) => {
     if (row.channel === 'client-community') {
@@ -256,14 +261,13 @@ export function ClientMessagesPanel({
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
-  const header = (
+  const header = isSupportScope ? null : (
     <MessagesInboxTabs
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
       tabs={[
         { id: 'chats', label: 'Chats', icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
         { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
   );
@@ -331,7 +335,7 @@ export function ClientMessagesPanel({
 
   const list = (
     <>
-      {activeTab === 'support' && (
+      {(isSupportScope || activeTab === 'support') && (
         <MessagesQuickActions
           onContactSupport={onOpenCompose}
           onFileReport={onOpenReport}

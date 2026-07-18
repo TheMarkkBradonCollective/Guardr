@@ -116,7 +116,7 @@ describe('normalizeGuardTabForAccount', () => {
   it('normalizes legacy chat tabs before gating', () => {
     const guard = fullyActiveGuard();
     assert.equal(normalizeGuardTabForAccount('guardChat', guard), 'messages');
-    assert.equal(normalizeGuardTabForAccount('support', guard), 'messages');
+    assert.equal(normalizeGuardTabForAccount('support', guard), 'support');
   });
 
   it('defaults unknown guard profiles to activation until profile loads', () => {

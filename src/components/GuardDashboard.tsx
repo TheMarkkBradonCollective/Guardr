@@ -70,7 +70,7 @@ import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, Plus } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, Plus, LifeBuoy } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -285,6 +285,7 @@ const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'myJobs',
   'crew',
   'messages',
+  'support',
   'availability',
   'preferences',
   'performance',
@@ -299,7 +300,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   earnings: 'Pay',
   messages: 'Messages',
   guardChat: 'Messages',
-  support: 'Messages',
+  support: 'Support',
   profile: 'Profile',
   settings: 'Settings',
   guide: 'Guide',
@@ -416,8 +417,7 @@ export function GuardDashboard({
   const isControlled = controlledTab !== undefined;
   const [standaloneTab, setStandaloneTab] = useState<GuardTab>(controlledTab ?? initialTab);
   const activeTab = isEmbedded ? shiftTab : (isControlled ? controlledTab : standaloneTab);
-  const tab: GuardTab =
-    activeTab === 'guardChat' || activeTab === 'support' ? 'messages' : activeTab;
+  const tab: GuardTab = activeTab === 'guardChat' ? 'messages' : activeTab;
 
   const setTab = useCallback(
     (next: GuardTab) => {
@@ -1272,7 +1272,11 @@ export function GuardDashboard({
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
     ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
+  ];
+
+  const GUARD_MESSAGES_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
+    { id: 'support', icon: LifeBuoy, label: 'Support' },
   ];
 
   const GUARD_MANAGEMENT_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -1588,6 +1592,38 @@ export function GuardDashboard({
 
           {tab === 'messages' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-messages">
+              <GuardMessagesPanel
+                scope="messages"
+                upcomingJobs={upcomingForMessages}
+                pastJobs={browseJobLists.past}
+                guard={guard}
+                coworkerGuards={coworkerGuards}
+                currentUser={currentUser}
+                jobChatThreads={jobChatThreads}
+                jobChatMessages={jobChatMessages}
+                teamChatThreads={teamChatThreads}
+                teamChatMessages={teamChatMessages}
+                guardMessages={guardMessages}
+                supportTickets={supportTickets}
+                onSendJobChatMessage={onSendJobChatMessage}
+                onSendTeamChatMessage={onSendTeamChatMessage}
+                onSendGuardMessage={onSendGuardMessage}
+                onSendSupportMessage={onSendSupportMessage}
+                onRefreshGuardMessages={onRefreshGuardMessages}
+                initialJobChatRequestId={jobChatRequestId}
+                initialJobChatOpen={openJobChat}
+                initialTeamChatRequestId={teamChatRequestId}
+                onJobChatRequestIdChange={onJobChatRequestIdChange}
+                onJobChatOpenChange={onJobChatOpenChange}
+                onDetailOpenChange={setGuardMessagesDetailOpen}
+                onMessagesChromeChange={setGuardMessagesChrome}
+                shellHeaderTrailing={messagesShellHeaderTrailing}
+              />
+            </div>
+          )}
+
+          {tab === 'support' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-support">
               {supportMode === 'compose' && onCreateSupportTicket ? (
                 <SupportComposePage
                   onBack={() => onCloseSupportForm?.()}
@@ -1606,6 +1642,7 @@ export function GuardDashboard({
                 />
               ) : (
                 <GuardMessagesPanel
+                  scope="support"
                   upcomingJobs={upcomingForMessages}
                   pastJobs={browseJobLists.past}
                   guard={guard}
@@ -1617,22 +1654,12 @@ export function GuardDashboard({
                   teamChatMessages={teamChatMessages}
                   guardMessages={guardMessages}
                   supportTickets={supportTickets}
-                  onSendJobChatMessage={onSendJobChatMessage}
-                  onSendTeamChatMessage={onSendTeamChatMessage}
-                  onSendGuardMessage={onSendGuardMessage}
                   onSendSupportMessage={onSendSupportMessage}
-                  onRefreshGuardMessages={onRefreshGuardMessages}
-                  initialJobChatRequestId={jobChatRequestId}
-                  initialJobChatOpen={openJobChat}
-                  initialTeamChatRequestId={teamChatRequestId}
-                  onJobChatRequestIdChange={onJobChatRequestIdChange}
-                  onJobChatOpenChange={onJobChatOpenChange}
                   initialSupportTicketId={supportTicketId}
                   onSupportTicketIdChange={onSupportTicketIdChange}
                   onOpenSupportCompose={onOpenSupportCompose}
                   onOpenSupportReport={onOpenSupportReport}
                   onDetailOpenChange={setGuardMessagesDetailOpen}
-                  onMessagesChromeChange={setGuardMessagesChrome}
                   shellHeaderTrailing={messagesShellHeaderTrailing}
                 />
               )}
@@ -1913,9 +1940,9 @@ export function GuardDashboard({
       : userStatus === 'approved'
         ? 'Awaiting activation'
         : 'Complete application'
-    : tab === 'messages' && supportMode === 'compose'
+    : tab === 'support' && supportMode === 'compose'
       ? 'Contact support'
-      : tab === 'messages' && supportMode === 'report'
+      : tab === 'support' && supportMode === 'report'
         ? 'File a report'
         : GUARD_TAB_TITLES[tab];
   const guardHeaderStatus =
@@ -1948,6 +1975,7 @@ export function GuardDashboard({
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
       navItems={accountNeedsActivation ? [] : GUARD_PRIMARY_NAV}
+      messagesNavItems={accountNeedsActivation ? [] : GUARD_MESSAGES_NAV}
       overflowNavItems={accountNeedsActivation ? [] : GUARD_MANAGEMENT_NAV}
       activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}

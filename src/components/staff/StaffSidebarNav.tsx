@@ -42,7 +42,7 @@ const OPERATIONS_IDS: StaffSection[] = [
   'clients',
   'team',
 ];
-const MESSAGES_IDS: StaffSection[] = ['messages'];
+const MESSAGES_IDS: StaffSection[] = ['messages', 'support'];
 const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'violations', 'stats', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];

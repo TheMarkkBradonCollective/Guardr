@@ -125,14 +125,14 @@ export function buildClientInboxRows({
 
 export function clientMessagesBadge(
   threads: JobChatThread[],
-  tickets: SupportTicket[],
+  _tickets: SupportTicket[],
   user: SessionUser
 ): number {
-  const activeJobs = threads.filter((t) => t.clientId === user.id && t.status === 'active').length;
-  const openSupport = ticketsForUser(tickets, user).filter(
-    (t) => t.kind === 'chat' && t.status !== 'resolved'
-  ).length;
-  return activeJobs + openSupport;
+  return threads.filter((t) => t.clientId === user.id && t.status === 'active').length;
+}
+
+export function clientSupportBadge(tickets: SupportTicket[], user: SessionUser): number {
+  return ticketsForUser(tickets, user).filter((t) => t.kind === 'chat' && t.status !== 'resolved').length;
 }
 
 export function buildGuardJobInboxRows({
@@ -392,9 +392,7 @@ export function buildStaffInboxRows({
 
 export function staffMessagesBadge(
   jobChatThreads: JobChatThread[],
-  supportTickets: SupportTicket[]
+  _supportTickets: SupportTicket[] = [],
 ): number {
-  const jobs = jobChatThreads.filter((t) => t.status === 'active').length;
-  const support = supportTickets.filter((t) => t.kind === 'chat' && t.status !== 'resolved').length;
-  return jobs + support;
+  return jobChatThreads.filter((t) => t.status === 'active').length;
 }

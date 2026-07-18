@@ -1,7 +1,7 @@
 import React from 'react';
 import { SessionUser } from '../../../types';
 import { canAccessFinancialControls, canAccessStaffPermissions, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../../lib/permissions';
-import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../../lib/staffOps';
+import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { AccountMenu } from '../AccountMenu';
@@ -83,7 +83,7 @@ export function StaffDesktopShell({
   );
 
   const isMap = isStaffOpsMapSection(activeSection);
-  const isMessages = isStaffMessagesSection(activeSection);
+  const isMessages = isStaffMessagesHubSection(activeSection);
 
   return (
     <div className="desktop-workspace desktop-workspace--staff page-shell fixed inset-0 h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">

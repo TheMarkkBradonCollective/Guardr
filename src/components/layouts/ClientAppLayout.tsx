@@ -19,6 +19,7 @@ import {
   Settings,
   Receipt,
   Plus,
+  LifeBuoy,
 } from 'lucide-react';
 
 export type ClientRequestsJobTab = 'open' | 'scheduled' | 'completed' | 'missed';
@@ -37,6 +38,7 @@ interface ClientAppLayoutProps {
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   messagesBadge?: number;
+  supportBadge?: number;
   hideHeader?: boolean;
   headerRight?: React.ReactNode;
   messagesChrome?: MessagesChrome;
@@ -70,7 +72,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   invoices: 'Billing',
   guide: 'Guide',
   messages: 'Messages',
-  support: 'Messages',
+  support: 'Support',
 };
 
 function requestsTabTitle(tab: ClientRequestsJobTab): string {
@@ -103,6 +105,7 @@ export function ClientAppLayout({
   accountPending = false,
   onOpenLegal,
   messagesBadge = 0,
+  supportBadge = 0,
   invoicesBadge = 0,
   hideHeader = false,
   headerRight,
@@ -121,8 +124,10 @@ export function ClientAppLayout({
 
   const navHighlightView: ClientNavId = SIDEBAR_VIEWS.has(activeView)
     ? activeView
-    : messagesViews.includes(activeView)
-      ? 'messages'
+    : activeView === 'messages' || activeView === 'support'
+      ? activeView
+      : messagesViews.includes(activeView)
+        ? 'messages'
       : activeView === 'requests'
         ? requestsSubNavId(requestsJobTab)
         : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
@@ -143,14 +148,26 @@ export function ClientAppLayout({
         ],
       },
       { id: 'map', label: 'Map', icon: Map },
+    ],
+    [],
+  );
+
+  const messagesNavItems = useMemo(
+    () => [
       {
         id: 'messages',
         label: 'Messages',
         icon: MessagesSquare,
         badge: messagesBadge > 0 ? messagesBadge : undefined,
       },
+      {
+        id: 'support',
+        label: 'Support',
+        icon: LifeBuoy,
+        badge: supportBadge > 0 ? supportBadge : undefined,
+      },
     ],
-    [messagesBadge],
+    [messagesBadge, supportBadge],
   );
 
   const overflowNavItems = useMemo(
@@ -219,6 +236,7 @@ export function ClientAppLayout({
         ...accountNotifications,
       }}
       navItems={navItems}
+      messagesNavItems={messagesNavItems}
       overflowNavItems={accountPending ? [] : overflowNavItems}
       activeNavId={navHighlightView}
       onNavigate={handleNavigate}
