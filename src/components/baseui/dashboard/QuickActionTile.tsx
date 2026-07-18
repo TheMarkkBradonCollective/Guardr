@@ -56,6 +56,7 @@ export function QuickActionTile({
       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
     >
       <Block
+        className="uber-quick-tile-surface"
         display="flex"
         flexDirection="column"
         alignItems="flex-start"
@@ -75,6 +76,7 @@ export function QuickActionTile({
       >
         {/* Icon square */}
         <Block
+          className="uber-quick-tile-icon"
           display="flex"
           alignItems="center"
           justifyContent="center"
@@ -85,7 +87,7 @@ export function QuickActionTile({
               style: {
                 borderRadius: '10px',
                 backgroundColor: primary
-                  ? 'rgba(255,255,255,0.16)'
+                  ? 'transparent'
                   : theme.colors.backgroundPrimary,
                 flexShrink: 0,
               },
@@ -96,7 +98,7 @@ export function QuickActionTile({
         </Block>
 
         {/* Text */}
-        <Block>
+        <Block className="uber-quick-tile-copy">
           <LabelSmall
             margin={0}
             $style={{ fontWeight: 700, fontSize: '13px', color: textColor, lineHeight: 1.25 }}
