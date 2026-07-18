@@ -36,11 +36,30 @@ export function guardrNavItemsFromGroups(groups: GuardrNavGroup[]) {
     const header = group.title
       ? [{ title: group.title.toUpperCase(), itemId: `__group_${group.title}`, disabled: true as const }]
       : [];
-    const items = group.items.map((item) => ({
-      title: <NavTitle item={item} />,
-      itemId: item.id,
-      disabled: item.disabled,
-    }));
+    const items = group.items.flatMap((item) => {
+      const parent = {
+        title: <NavTitle item={item} />,
+        itemId: item.id,
+        disabled: item.disabled,
+      };
+      const children = (item.children ?? []).map((child) => ({
+        title: (
+          <ParagraphMedium
+            $style={{
+              fontWeight: 500,
+              margin: 0,
+              fontSize: '14px',
+              paddingLeft: '28px',
+            }}
+          >
+            {child.label}
+          </ParagraphMedium>
+        ),
+        itemId: child.id,
+        disabled: false as const,
+      }));
+      return [parent, ...children];
+    });
     return [...header, ...items];
   });
 }

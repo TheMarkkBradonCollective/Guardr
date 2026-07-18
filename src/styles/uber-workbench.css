@@ -322,3 +322,118 @@ html.theme-dark .uber-workbench-tab--active {
   padding: 1rem 1.25rem;
   background: var(--uber-bg, #fff);
 }
+
+/* Uber Direct search + filter row */
+.uber-workbench-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.uber-workbench-search-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.uber-workbench-search-row-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.uber-workbench-search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 240px;
+  max-width: 520px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--uber-surface, #f6f6f6);
+  border: 1px solid transparent;
+}
+
+.uber-workbench-search-icon {
+  color: var(--uber-text-muted, #6b6b6b);
+  flex-shrink: 0;
+}
+
+.uber-workbench-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--uber-text, #000000);
+  outline: none;
+}
+
+.uber-workbench-search-input::placeholder {
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.uber-workbench-search-btn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--uber-text, #000000);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+html.theme-dark .uber-workbench-search-btn {
+  background: #ffffff;
+  color: #000000;
+}
+
+.uber-workbench-filter-select {
+  appearance: none;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--uber-bg, #ffffff);
+  color: var(--uber-text, #000000);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.uber-workbench-filter-select--muted {
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.uber-workbench-panel {
+  background: var(--uber-bg, #ffffff);
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.uber-workbench-panel .uber-workbench-split {
+  border-top: none;
+}
+
+.uber-workbench-panel .uber-workbench-stats {
+  padding-top: 16px;
+  padding-bottom: 0;
+}
+
+.uber-direct-deliveries-table th:last-child,
+.uber-direct-deliveries-table td:last-child {
+  text-align: right;
+}

@@ -6,13 +6,33 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import type { AccountMenuNotificationProps } from './AccountMenu';
-import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings, Receipt, Plus } from 'lucide-react';
+import { UberDirectContextSelect } from '../baseui/layout/UberDirectContextSelect';
+import {
+  MessagesSquare,
+  Home,
+  Map,
+  ClipboardList,
+  Users,
+  BookOpen,
+  MapPin,
+  FileText,
+  Settings,
+  Receipt,
+  Plus,
+} from 'lucide-react';
+
+export type ClientRequestsJobTab = 'open' | 'scheduled' | 'completed' | 'missed';
+
+type ClientNavId = ClientView | 'requests-today' | 'requests-future' | 'requests-past';
 
 interface ClientAppLayoutProps {
   children: React.ReactNode;
   currentUser: SessionUser;
+  companyName?: string;
   onSignOut: () => void;
   activeView?: ClientView;
+  requestsJobTab?: ClientRequestsJobTab;
+  onRequestsJobTabChange?: (tab: ClientRequestsJobTab) => void;
   onNavigate?: (view: ClientView) => void;
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
@@ -24,47 +44,61 @@ interface ClientAppLayoutProps {
   accountNotifications?: AccountMenuNotificationProps;
 }
 
-const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'home', label: 'Home', icon: Home },
-  { id: 'requests', label: 'Jobs', icon: ClipboardList },
-  { id: 'map', label: 'Map', icon: Map },
-  { id: 'messages', label: 'Messages', icon: MessagesSquare },
-  { id: 'guards', label: 'Guards', icon: Users },
-];
-
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'invoices', label: 'Invoices', icon: Receipt },
+  { id: 'invoices', label: 'Billing', icon: Receipt },
+  { id: 'guards', label: 'Users', icon: Users },
   { id: 'locations', label: 'Locations', icon: MapPin },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'invoices', 'settings']);
+const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'invoices', 'settings', 'guards']);
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
   home: 'Home',
-  guards: 'Guards',
-  requests: 'Jobs',
+  guards: 'Users',
+  requests: "Today's jobs",
   'support-compose': 'Contact support',
   'support-report': 'File a report',
-  locations: 'My Locations',
+  locations: 'Locations',
   profile: 'Profile',
-  settings: 'Settings',
+  settings: 'Account settings',
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
-  invoices: 'Invoices',
+  invoices: 'Billing',
   guide: 'Guide',
   messages: 'Messages',
   support: 'Messages',
 };
 
+function requestsTabTitle(tab: ClientRequestsJobTab): string {
+  if (tab === 'scheduled') return 'Future jobs';
+  if (tab === 'completed' || tab === 'missed') return 'Past jobs';
+  return "Today's jobs";
+}
+
+function requestsSubNavId(tab: ClientRequestsJobTab): ClientNavId {
+  if (tab === 'scheduled') return 'requests-future';
+  if (tab === 'completed' || tab === 'missed') return 'requests-past';
+  return 'requests-today';
+}
+
+function tabFromSubNavId(id: ClientNavId): ClientRequestsJobTab {
+  if (id === 'requests-future') return 'scheduled';
+  if (id === 'requests-past') return 'completed';
+  return 'open';
+}
+
 export function ClientAppLayout({
   children,
   currentUser,
+  companyName = 'Your company',
   onSignOut,
   activeView = 'home',
+  requestsJobTab = 'open',
+  onRequestsJobTabChange,
   onNavigate,
   accountPending = false,
   onOpenLegal,
@@ -75,41 +109,89 @@ export function ClientAppLayout({
   messagesChrome = EMPTY_MESSAGES_CHROME,
   accountNotifications,
 }: ClientAppLayoutProps) {
-  const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
+  const screenTitle =
+    activeView === 'home'
+      ? `Welcome, ${companyName}`
+      : activeView === 'requests'
+        ? requestsTabTitle(requestsJobTab)
+        : VIEW_TITLES[activeView] ?? 'Client dashboard';
+
   const fullBleed = activeView === 'map';
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
-  const navHighlightView = SIDEBAR_VIEWS.has(activeView)
+
+  const navHighlightView: ClientNavId = SIDEBAR_VIEWS.has(activeView)
     ? activeView
     : messagesViews.includes(activeView)
-    ? 'messages'
-    : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
-      ? 'home'
-      : activeView;
+      ? 'messages'
+      : activeView === 'requests'
+        ? requestsSubNavId(requestsJobTab)
+        : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
+          ? 'home'
+          : activeView;
 
   const navItems = useMemo(
-    () =>
-      PRIMARY_NAV.map((item) =>
-        item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
-      ),
-    [messagesBadge]
+    () => [
+      { id: 'home', label: 'Home', icon: Home },
+      {
+        id: 'requests',
+        label: 'Jobs',
+        icon: ClipboardList,
+        children: [
+          { id: 'requests-today', label: 'Today' },
+          { id: 'requests-future', label: 'Future' },
+          { id: 'requests-past', label: 'Past' },
+        ],
+      },
+      { id: 'map', label: 'Map', icon: Map },
+      {
+        id: 'messages',
+        label: 'Messages',
+        icon: MessagesSquare,
+        badge: messagesBadge > 0 ? messagesBadge : undefined,
+      },
+    ],
+    [messagesBadge],
   );
 
   const overflowNavItems = useMemo(
     () =>
       OVERFLOW_NAV.map((item) =>
-        item.id === 'invoices' && invoicesBadge > 0 ? { ...item, badge: invoicesBadge } : item
+        item.id === 'invoices' && invoicesBadge > 0 ? { ...item, badge: invoicesBadge } : item,
       ),
-    [invoicesBadge]
+    [invoicesBadge],
   );
 
-  const accountFooter = onOpenLegal ? (
-    <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-  ) : undefined;
+  const sidebarFooter = (
+    <div className="uber-direct-sidebar-footer-links">
+      <button type="button" className="uber-direct-sidebar-footer-link" onClick={() => onNavigate?.('settings')}>
+        Account settings
+      </button>
+      {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : null}
+    </div>
+  );
 
   const chromeActive = activeView === 'messages';
   const shellHeaderOverride = chromeActive ? messagesChrome.override : null;
   const shellHeaderExtension = chromeActive ? messagesChrome.extension : null;
   const shellHideHeader = hideHeader && !shellHeaderOverride;
+
+  const handleNavigate = (id: string) => {
+    if (id === 'requests-today' || id === 'requests-future' || id === 'requests-past' || id === 'requests') {
+      const tab = tabFromSubNavId(id as ClientNavId);
+      onRequestsJobTabChange?.(tab);
+      onNavigate?.('requests');
+      return;
+    }
+    onNavigate?.(id as ClientView);
+  };
+
+  const headerContext = (
+    <UberDirectContextSelect
+      value={companyName}
+      options={[{ id: companyName, label: companyName }]}
+      aria-label="Organization"
+    />
+  );
 
   return (
     <RoleAppShell
@@ -139,11 +221,12 @@ export function ClientAppLayout({
       navItems={navItems}
       overflowNavItems={accountPending ? [] : overflowNavItems}
       activeNavId={navHighlightView}
-      onNavigate={(id) => onNavigate?.(id as ClientView)}
+      onNavigate={handleNavigate}
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
       workspaceLabel="Client workspace"
+      headerContext={headerContext}
       sidebarPrimaryAction={
         !accountPending
           ? {
@@ -153,7 +236,7 @@ export function ClientAppLayout({
             }
           : undefined
       }
-      sidebarFooter={accountFooter}
+      sidebarFooter={sidebarFooter}
     >
       {children}
     </RoleAppShell>

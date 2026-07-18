@@ -71,6 +71,7 @@ interface ClientRequestsListProps {
   onOpenJobChat?: (requestId: string) => void;
   onSelectedJobIdChange?: (jobId: string | null) => void;
   initialSelectedId?: string | null;
+  initialJobTab?: JobTab;
   feeConfig?: import('../../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
     requestId: string,
@@ -145,6 +146,7 @@ export function ClientRequestsList({
   onOpenJobChat,
   onSelectedJobIdChange,
   initialSelectedId = null,
+  initialJobTab = 'open',
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
@@ -296,6 +298,7 @@ export function ClientRequestsList({
         onOpenJobChat={onOpenJobChat}
         onSelectedJobIdChange={onSelectedJobIdChange}
         initialSelectedId={initialSelectedId}
+        initialJobTab={initialJobTab}
         feeConfig={feeConfig}
         onSubmitPriceOffer={onSubmitPriceOffer}
         onAcceptPriceOffer={onAcceptPriceOffer}

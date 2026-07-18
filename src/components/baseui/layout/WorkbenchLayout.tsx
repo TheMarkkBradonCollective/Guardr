@@ -2,6 +2,7 @@ import React from 'react';
 import { Block } from 'baseui/block';
 import { LabelSmall, ParagraphMedium } from 'baseui/typography';
 import type { LucideIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export function WorkbenchPage({
   children,
@@ -167,6 +168,61 @@ export function WorkbenchCardTitle({ children }: { children: React.ReactNode }) 
     >
       {children}
     </LabelSmall>
+  );
+}
+
+/** White panel on gray canvas — Uber Direct content card. */
+export function WorkbenchPanel({
+  children,
+  className = '',
+  padding = true,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  padding?: boolean;
+}) {
+  return (
+    <div
+      className={`uber-workbench-panel${padding ? ' uber-workbench-panel--padded' : ''} ${className}`.trim()}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Uber Direct search + filter toolbar row. */
+export function WorkbenchSearchRow({
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = 'Search',
+  filters,
+  actions,
+}: {
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  filters?: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="uber-workbench-search-row">
+      <div className="uber-workbench-search-row-main">
+        {onSearchChange ? (
+          <label className="uber-workbench-search-field">
+            <Search size={18} aria-hidden className="uber-workbench-search-icon" />
+            <input
+              type="search"
+              className="uber-workbench-search-input"
+              placeholder={searchPlaceholder}
+              value={searchValue ?? ''}
+              onChange={(event) => onSearchChange(event.target.value)}
+            />
+          </label>
+        ) : null}
+        {actions}
+      </div>
+      {filters ? <div className="uber-workbench-search-row-filters">{filters}</div> : null}
+    </div>
   );
 }
 
