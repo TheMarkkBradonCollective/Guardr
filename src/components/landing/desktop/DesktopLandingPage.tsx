@@ -10,7 +10,7 @@
  *   Footer
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { ParagraphMedium, LabelSmall } from 'baseui/typography';
@@ -37,6 +37,7 @@ import type { LegalPageId } from '../../../lib/legalContent';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
+import { LoginChoiceModal } from '../uber/LoginChoiceModal';
 
 interface DesktopLandingPageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -430,12 +431,27 @@ export function DesktopLandingPage({
   onOpenGuide,
   companyPlacardDocuments = [],
 }: DesktopLandingPageProps) {
+  const [loginChoiceOpen, setLoginChoiceOpen] = useState(false);
+
+  // Role-less "Log in" opens the Guard/Client choice modal (mirrors Uber's
+  // Driver/Rider picker); role-specific auth passes straight through.
+  const handleNavigateToAuth = useCallback(
+    (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => {
+      if (!role && mode === 'sign-in') {
+        setLoginChoiceOpen(true);
+        return;
+      }
+      onNavigateToAuth(role, mode);
+    },
+    [onNavigateToAuth],
+  );
+
   return (
     <div className="dsk-landing-page">
-      <DesktopNav onNavigateToAuth={onNavigateToAuth} onOpenGuide={onOpenGuide} />
-      <DesktopHero onNavigateToAuth={onNavigateToAuth} />
-      <ExploreSection onNavigateToAuth={onNavigateToAuth} />
-      <LoginBand onNavigateToAuth={onNavigateToAuth} />
+      <DesktopNav onNavigateToAuth={handleNavigateToAuth} onOpenGuide={onOpenGuide} />
+      <DesktopHero onNavigateToAuth={handleNavigateToAuth} />
+      <ExploreSection onNavigateToAuth={handleNavigateToAuth} />
+      <LoginBand onNavigateToAuth={handleNavigateToAuth} />
       <div className="dsk-section-inner" style={{ padding: '48px 0' }}>
         <LandingAppDownloads formFactor="desktop" variant="cta" />
       </div>
@@ -443,6 +459,15 @@ export function DesktopLandingPage({
         <CompanyPublicPlacard documents={companyPlacardDocuments} />
       )}
       <DesktopFooter onOpenLegal={onOpenLegal} />
+
+      <LoginChoiceModal
+        open={loginChoiceOpen}
+        onClose={() => setLoginChoiceOpen(false)}
+        onSelect={(role) => {
+          setLoginChoiceOpen(false);
+          onNavigateToAuth(role, 'sign-in');
+        }}
+      />
     </div>
   );
 }

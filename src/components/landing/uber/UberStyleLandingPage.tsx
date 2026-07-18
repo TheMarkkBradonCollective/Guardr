@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Block } from 'baseui/block';
 import { LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
@@ -15,6 +15,7 @@ import { UberExploreGrid, UberLoginBand } from './UberExploreGrid';
 import { UberLandingHeroVisual, UberLandingLoginVisual } from './UberLandingVisuals';
 import { UberCoverageEstimator } from './UberCoverageEstimator';
 import { UberHomePromoSections } from './UberHomeSections';
+import { LoginChoiceModal } from './LoginChoiceModal';
 import type { LandingSectionsProps } from '../shared/LandingSections';
 
 type UberFormFactor = 'mobile' | 'tablet' | 'desktop';
@@ -92,6 +93,20 @@ export function UberStyleLandingPage({
   const factor = toUberFactor(formFactor);
   const isMobile = factor === 'mobile';
   const showHeroVisual = factor !== 'mobile';
+  const [loginChoiceOpen, setLoginChoiceOpen] = useState(false);
+
+  // Clicking a role-less "Log in" opens the Guard/Client choice modal
+  // (mirrors Uber's Driver/Rider login picker). Role-specific auth passes through.
+  const handleNavigateToAuth = useCallback(
+    (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => {
+      if (!role && mode === 'sign-in') {
+        setLoginChoiceOpen(true);
+        return;
+      }
+      onNavigateToAuth(role, mode);
+    },
+    [onNavigateToAuth],
+  );
 
   return (
     <Block
@@ -104,27 +119,27 @@ export function UberStyleLandingPage({
         formFactor={factor}
         themeMode={themeMode}
         onChangeTheme={onChangeTheme}
-        onNavigateToAuth={onNavigateToAuth}
+        onNavigateToAuth={handleNavigateToAuth}
         onOpenGuide={onOpenGuide}
       />
 
       <UberLandingHero
         formFactor={factor}
-        onNavigateToAuth={onNavigateToAuth}
+        onNavigateToAuth={handleNavigateToAuth}
         heroVisual={showHeroVisual ? <UberLandingHeroVisual /> : undefined}
       />
 
       <TrustStrip isMobile={isMobile} />
 
-      <UberExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+      <UberExploreGrid formFactor={formFactor} onNavigateToAuth={handleNavigateToAuth} />
 
-      <UberCoverageEstimator formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+      <UberCoverageEstimator formFactor={formFactor} onNavigateToAuth={handleNavigateToAuth} />
 
-      <UberHomePromoSections formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+      <UberHomePromoSections formFactor={formFactor} onNavigateToAuth={handleNavigateToAuth} />
 
       <UberLoginBand
         formFactor={formFactor}
-        onNavigateToAuth={onNavigateToAuth}
+        onNavigateToAuth={handleNavigateToAuth}
         visual={<UberLandingLoginVisual />}
       />
 
@@ -167,6 +182,15 @@ export function UberStyleLandingPage({
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
         </Block>
       </Block>
+
+      <LoginChoiceModal
+        open={loginChoiceOpen}
+        onClose={() => setLoginChoiceOpen(false)}
+        onSelect={(role) => {
+          setLoginChoiceOpen(false);
+          onNavigateToAuth(role, 'sign-in');
+        }}
+      />
     </Block>
   );
 }
