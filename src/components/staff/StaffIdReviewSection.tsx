@@ -16,6 +16,7 @@ import {
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
 import { getGuardUserStatus } from '../../lib/accountStatus';
+import { AppButton } from '../ui/AppButton';
 import type { GuardIdentityVerificationPayload, IdentityVerificationSubmitResult } from '../profile/GuardIdentityVerificationPanel';
 
 interface StaffIdReviewSectionProps {
@@ -81,8 +82,9 @@ export function StaffIdReviewSection({
       )}
       <div className="app-action-row--equal">
         {canApprove && onApprove && (
-          <button
-            type="button"
+          <AppButton
+            variant="primary"
+            size="sm"
             disabled={actionPending}
             onClick={() => {
               if (actionPending) return;
@@ -97,46 +99,37 @@ export function StaffIdReviewSection({
                 }
               })();
             }}
-            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+            startEnhancer={<Check className="w-3.5 h-3.5" />}
           >
-            <Check className="w-3.5 h-3.5" /> {approveActionLabel}
-          </button>
+            {approveActionLabel}
+          </AppButton>
         )}
         {onRequestResubmit && canRequestResubmit && (
           <>
-            <button
-              type="button"
-              onClick={() => requestSlot('front')}
-              className="app-button-outline app-btn-sm gap-1"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Resubmit ID front
-            </button>
-            <button
-              type="button"
-              onClick={() => requestSlot('back')}
-              className="app-button-outline app-btn-sm gap-1"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Resubmit ID back
-            </button>
-            <button
-              type="button"
-              onClick={() => requestSlot('selfie')}
-              className="app-button-outline app-btn-sm gap-1"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Resubmit selfie
-            </button>
-            <button
-              type="button"
+            <AppButton variant="outline" size="sm" onClick={() => requestSlot('front')} startEnhancer={<RefreshCw className="w-3.5 h-3.5" />}>
+              Resubmit ID front
+            </AppButton>
+            <AppButton variant="outline" size="sm" onClick={() => requestSlot('back')} startEnhancer={<RefreshCw className="w-3.5 h-3.5" />}>
+              Resubmit ID back
+            </AppButton>
+            <AppButton variant="outline" size="sm" onClick={() => requestSlot('selfie')} startEnhancer={<RefreshCw className="w-3.5 h-3.5" />}>
+              Resubmit selfie
+            </AppButton>
+            <AppButton
+              variant="outline"
+              size="sm"
+              className="text-amber-500 border-amber-500/40"
               onClick={requestAll}
-              className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
+              startEnhancer={<RefreshCw className="w-3.5 h-3.5" />}
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Resubmit all ID photos
-            </button>
+              Resubmit all ID photos
+            </AppButton>
           </>
         )}
         {onReject && !applicationBlocked && status !== 'verified' && (
-          <button
-            type="button"
+          <AppButton
+            variant="danger"
+            size="sm"
             disabled={actionPending}
             onClick={() => {
               if (actionPending) return;
@@ -153,10 +146,10 @@ export function StaffIdReviewSection({
                 }
               })();
             }}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1 disabled:opacity-50"
+            startEnhancer={<X className="w-3.5 h-3.5" />}
           >
-            <X className="w-3.5 h-3.5" /> Reject application
-          </button>
+            Reject application
+          </AppButton>
         )}
       </div>
     </div>

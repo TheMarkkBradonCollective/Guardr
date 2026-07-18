@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toDatetimeLocal } from '../../lib/dates';
 import { computeLateClockOutHours } from '../../lib/shiftBilling';
 import { AppModal } from '../ui/motion/AppMotion';
+import { AppButton } from '../ui/AppButton';
 
 export interface LateClockOutResult {
   checkedAt: string;
@@ -101,30 +102,18 @@ export function LateClockOutPrompt({
             departure — overtime only applies if you stayed past that time or set a later leave time.
           </p>
           <div className="space-y-2">
-            <button
-              type="button"
-              onClick={handleStayed}
-              className="app-button-primary app-btn-md w-full"
-            >
+            <AppButton variant="primary" fullWidth onClick={handleStayed}>
               I stayed — clock out now
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep('adjust')}
-              className="app-button-outline app-btn-md w-full"
-            >
+            </AppButton>
+            <AppButton variant="outline" fullWidth onClick={() => setStep('adjust')}>
               Set when I left
-            </button>
-            <button
-              type="button"
-              onClick={handleLeftOnTime}
-              className="app-button-outline app-btn-md w-full"
-            >
+            </AppButton>
+            <AppButton variant="outline" fullWidth onClick={handleLeftOnTime}>
               I left at scheduled end — forgot to clock out
-            </button>
-            <button type="button" onClick={onClose} className="app-button-outline app-btn-md w-full">
+            </AppButton>
+            <AppButton variant="outline" fullWidth onClick={onClose}>
               Cancel
-            </button>
+            </AppButton>
           </div>
         </>
       ) : (
@@ -151,20 +140,12 @@ export function LateClockOutPrompt({
             </p>
           )}
           <div className="space-y-2">
-            <button
-              type="button"
-              onClick={handleUseAdjustedTime}
-              className="app-button-primary app-btn-md w-full"
-            >
+            <AppButton variant="primary" fullWidth onClick={handleUseAdjustedTime}>
               Use this time
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep('choice')}
-              className="app-button-outline app-btn-md w-full"
-            >
+            </AppButton>
+            <AppButton variant="outline" fullWidth onClick={() => setStep('choice')}>
               Back
-            </button>
+            </AppButton>
           </div>
         </>
       )}
