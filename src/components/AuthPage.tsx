@@ -32,7 +32,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader, AuthModeToggle, AuthRolePicker } from './auth/AuthFormChrome';
+import { AuthFormHeader, AuthModeToggle } from './auth/AuthFormChrome';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -58,10 +58,6 @@ import {
   type GuardCardStatus,
 } from '../lib/guardApplicationIntake';
 
-const AUTH_ROLE_OPTIONS = [
-  { id: 'guard' as const, label: 'Guard', icon: Shield },
-  { id: 'client' as const, label: 'Client', icon: Building2 },
-];
 const MAX_GUARD_HOURLY_RATE = 300;
 const MIN_GUARD_HOURLY_RATE = 15;
 const DEFAULT_GUARD_HOURLY_RATE = 35;
@@ -718,6 +714,9 @@ export function AuthPage({
 
   const heroContent = AUTH_HERO_CONTENT[role];
   const testimonial = AUTH_TESTIMONIAL[role];
+  const isMobilePageAuth = !isSheet && !isDesktopAuth;
+  const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
+  const showAuthChromeControls = !isDesktopAuth && !isMobilePageAuth && isSheet && isSignUp;
 
   const authFormBody = (
     <>
@@ -725,15 +724,15 @@ export function AuthPage({
         <AuthFormHeader
           role={role}
           isSignUp={isSignUp}
-          compact={isSheet || !isDesktopAuth}
-          hideBadge={isDesktopAuth}
-          center={isDesktopAuth}
-          variant={isSheet ? 'sheet' : isDesktopAuth ? 'desktop' : 'sheet'}
+          compact={isSheet || isMobilePageAuth}
+          hideBadge={useFocusedAuthHeader}
+          center={isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp)}
+          variant={useFocusedAuthHeader ? 'page' : 'sheet'}
         />
 
-        {!isDesktopAuth ? (
-          <div className={isSheet ? 'auth-sheet-controls' : 'flex flex-col gap-4 mb-2'}>
-            <div className={isSheet ? 'auth-sheet-segmented' : undefined}>
+        {showAuthChromeControls ? (
+          <div className="auth-sheet-controls">
+            <div className="auth-sheet-segmented">
               <AuthModeToggle
                 isSignUp={isSignUp}
                 onSignIn={() => {
@@ -746,15 +745,6 @@ export function AuthPage({
                 }}
               />
             </div>
-            <AuthRolePicker
-              roles={AUTH_ROLE_OPTIONS}
-              value={role}
-              onChange={(nextRole) => {
-                setRole(nextRole);
-                onAuthRoleChange?.(nextRole);
-              }}
-              variant={isSheet ? 'sheet' : 'sheet'}
-            />
           </div>
         ) : null}
 
