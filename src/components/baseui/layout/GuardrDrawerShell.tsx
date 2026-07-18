@@ -97,7 +97,8 @@ export function GuardrDrawerShell({
   };
 
   const sidebarVisible = sidebarOpen;
-  const showDrawerBackdrop = sidebarVisible && isMobile;
+  const isMobileDrawer = isMobile;
+  const showDrawerBackdrop = sidebarVisible && isMobileDrawer;
   const flowSidebarWidth = sidebarVisible ? chrome.sidebarWidth : '0px';
   const drawerPanelWidth = chrome.drawerWidth;
   const reducedMotion = prefersReducedMotion();
@@ -148,19 +149,19 @@ export function GuardrDrawerShell({
   const sidebarNode = (
     <Block
       as="aside"
-      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer'}${useBottomNav ? ' mobility-drawer--bottom-nav' : ''}`.trim()}
+      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer'}${useBottomNav ? ' mobility-drawer--bottom-nav' : ''}${sidebarVisible ? ' mobility-drawer--open' : ''}`.trim()}
       aria-label={ariaLabel}
       aria-hidden={!sidebarVisible}
       display="flex"
       flexDirection="column"
-      width={isFlowSidebar ? flowSidebarWidth : '0px'}
+      width={isFlowSidebar ? flowSidebarWidth : drawerPanelWidth}
       backgroundColor="backgroundPrimary"
       overrides={{
         Block: {
           style: {
             flexShrink: 0,
             borderRight: sidebarVisible ? `1px solid ${theme.colors.borderOpaque}` : 'none',
-            overflow: 'hidden',
+            overflow: isMobileDrawer ? 'hidden' : 'hidden',
             transition: reducedMotion
               ? 'none'
               : isFlowSidebar
@@ -179,11 +180,16 @@ export function GuardrDrawerShell({
                   left: 0,
                   bottom: 0,
                   width: drawerPanelWidth,
-                  zIndex: 120,
+                  zIndex: 130,
+                  pointerEvents: sidebarVisible ? 'auto' : 'none',
                   transform: sidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
                   paddingTop: 'max(0px, env(safe-area-inset-top))',
                   paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch',
                 }),
           },
         },
@@ -276,10 +282,10 @@ export function GuardrDrawerShell({
       ) : null}
 
       <Block
-        className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : undefined}
-        flex="1"
-        minHeight={0}
-        overflow="auto"
+        className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : 'mobility-drawer-scroll'}
+        flex={isMobileDrawer ? undefined : '1'}
+        minHeight={isMobileDrawer ? undefined : 0}
+        overflow={isMobileDrawer ? 'visible' : 'auto'}
         paddingTop="scale300"
         paddingBottom="scale300"
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
@@ -304,7 +310,7 @@ export function GuardrDrawerShell({
 
   const workspaceBody = (
     <>
-      {sidebarNode}
+      {!isMobileDrawer ? sidebarNode : null}
 
       <Block
         flex="1"
@@ -312,10 +318,31 @@ export function GuardrDrawerShell({
         flexDirection="column"
         minWidth={0}
         minHeight={0}
-        className="mobility-content-pane"
+        className={`mobility-content-pane${showDrawerBackdrop ? ' mobility-content-pane--drawer-open' : ''}`}
         onClick={showDrawerBackdrop ? closeSidebar : undefined}
       >
-        {showChromeHeader ? (
+        {showDrawerBackdrop ? (
+        <Block
+          className="mobility-drawer-backdrop"
+          aria-hidden
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="rgba(0, 0, 0, 0.35)"
+          overrides={{
+            Block: {
+              style: {
+                zIndex: 1,
+                pointerEvents: 'none',
+              },
+            },
+          }}
+        />
+      ) : null}
+
+      {showChromeHeader ? (
         <Block
           className={`mobility-header${chrome.headerGlass ? ' mobility-header--glass' : ''}${chrome.nativeChrome ? ' mobility-header--native' : ''}`}
           display="flex"
@@ -486,6 +513,14 @@ export function GuardrDrawerShell({
           }
           className="uber-shell-content"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          overrides={{
+            Block: {
+              style: {
+                position: 'relative',
+                zIndex: 2,
+              },
+            },
+          }}
         >
           <Block
             className={`mobility-content-inner${isDesktopWorkspace ? ` uber-direct-content-inner${bleed ? ' uber-direct-content-inner--bleed' : ''}` : ''}`}
@@ -542,32 +577,6 @@ export function GuardrDrawerShell({
       data-view-surface={viewSurface}
       data-uber-direct={isDesktopWorkspace ? 'true' : undefined}
     >
-      {showDrawerBackdrop ? (
-        <Block
-          as="button"
-          type="button"
-          onClick={closeSidebar}
-          aria-label="Close navigation"
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="rgba(0, 0, 0, 0.35)"
-          overrides={{
-            Block: {
-              style: {
-                zIndex: 110,
-                border: 'none',
-                padding: 0,
-                margin: 0,
-                cursor: 'default',
-              },
-            },
-          }}
-        />
-      ) : null}
-
       {isDesktopWorkspace ? (
         <UberDirectTopHeader
           trailing={
@@ -589,6 +598,8 @@ export function GuardrDrawerShell({
       >
         {workspaceBody}
       </Block>
+
+      {isMobileDrawer ? sidebarNode : null}
     </Block>
   );
 }

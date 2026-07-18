@@ -417,26 +417,55 @@ body[data-view-surface$="-mobile"] .staff-overview-shortcut-row {
   padding: 12px 0;
 }
 
-/* Mobile overflow drawer — not a permanent sidebar */
+/* Mobile drawer — shell-level overlay above content */
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
 body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
-body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
-body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
-body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
-body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer {
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer {
   background: var(--uber-bg, #ffffff) !important;
   box-shadow: 8px 0 32px rgba(0, 0, 0, 0.14);
-  z-index: 120 !important;
+  z-index: 130 !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--open,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--open,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--open {
+  pointer-events: auto !important;
+  visibility: visible;
 }
 
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
 body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
-body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"] {
+  visibility: hidden;
+  pointer-events: none !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-content-pane--drawer-open,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-content-pane--drawer-open,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-content-pane--drawer-open {
+  position: relative;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop {
+  pointer-events: none;
+}
+
+/* Tablet flow sidebar */
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer {
+  background: var(--uber-bg, #ffffff) !important;
+  box-shadow: none;
+  z-index: auto !important;
+}
+
 body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
 body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"],
 body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer[aria-hidden="true"] {
-  visibility: hidden;
-  pointer-events: none;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-brand,
