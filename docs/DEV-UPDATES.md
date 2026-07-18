@@ -691,3 +691,32 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 **Test coverage:** 418 unit tests, 3 e2e public-page tests, lint and build clean.
 
 **Supabase:** No schema changes — nothing to run.
+
+---
+
+## Saturday, July 18, 2026 — /updateit → v1.0.82
+
+**Mobile auth polish (#699, #700, #703)**
+- **#699** — Mobile sign-in aligned with desktop: role-specific titles, focused header, no redundant toggles
+- **#700** — PWA and APK use full-page auth (not sheet overlay); v1.0.81 shipped
+- **#703** — Mobile page auth drops empty black hero band; large centered wordmark logo above sign-in form
+
+**Messages & support (#702)**
+- **Support** is its own sidebar tab under the **Messages** group for staff, clients, and guards
+- Separate unread badges for job chats vs open support tickets
+- `/support` routes directly to the Support tab
+
+**Staff ops (#701)**
+- **Create crew** on Crews page — staff can pick trusted guards who are not crew leads and not already in a crew
+
+**Staff overview polish (#696–#698)**
+- Toolbar spacing, removed desktop quick actions, mobile overview hero above quick actions
+
+**PR cleanup**
+- Merged **#699–#703**; closed draft **#662** (superseded homepage replica — not ready for release)
+
+**Release:** **v1.0.82** (build **182**) — web + PWA cache bust (`guardr-cache-v1-0-82`) + CI FCM APK
+
+**Test coverage:** 427 unit tests, e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
