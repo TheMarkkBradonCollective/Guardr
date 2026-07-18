@@ -1077,42 +1077,207 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
 
 /* ── Desktop: broad analytics workspace ── */
 .staff-overview-desktop-command {
-  gap: 18px;
+  gap: 0;
   max-width: none;
+  padding: 0;
 }
 
-.staff-overview-desktop-topbar {
+.staff-overview-desktop-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 1.5rem 1.5rem;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+.staff-overview-desktop-shell-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.staff-overview-desktop-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
+}
+
+.staff-overview-desktop-head-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.staff-overview-desktop-eyebrow {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-desktop-head-row {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 10px 14px;
 }
 
-.staff-overview-desktop-topbar-copy {
-  flex: 1 1 420px;
-  min-width: 0;
+.staff-overview-desktop-title {
+  margin: 0;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--uber-text, #000000);
 }
 
-.staff-overview-desktop-topbar-actions {
-  flex: 1 1 320px;
-  min-width: 0;
+.staff-overview-desktop-subtitle {
+  margin: 6px 0 0;
+  max-width: 72ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--uber-text-muted, #6b6b6b);
 }
 
-.staff-overview-desktop-topbar-actions .staff-overview-quicklinks-panel {
+.staff-overview-desktop-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--overview-cta-bg, #000000);
+  border-radius: 999px;
+  background: var(--overview-cta-bg, #000000);
+  color: var(--overview-cta-text, #ffffff);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+}
+
+.staff-overview-desktop-status-chip:not(:disabled) {
+  cursor: pointer;
+}
+
+.staff-overview-desktop-status-chip--warn .staff-overview-desktop-status-dot {
+  background: #ffc043;
+}
+
+.staff-overview-desktop-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0e8345;
+  flex-shrink: 0;
+}
+
+.staff-overview-desktop-toolbar .staff-overview-desktop-quick-links {
+  padding: 0;
+  gap: 8px;
+}
+
+.staff-overview-desktop-metrics {
   border: 1px solid var(--uber-border, #eeeeee);
   border-radius: 12px;
   background: var(--uber-bg, #ffffff);
+  overflow: hidden;
 }
 
-.staff-overview-desktop-topbar .staff-overview-pro-title {
-  font-size: 34px;
+.staff-overview-desktop-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.staff-overview-desktop-metric-strip .app-metric-cell {
+  border-right: 1px solid var(--uber-border, #eeeeee);
+}
+
+.staff-overview-desktop-metric-strip > *:last-child .app-metric-cell,
+.staff-overview-desktop-metric-strip > *:last-child {
+  border-right: none;
+}
+
+.staff-overview-desktop-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: start;
+}
+
+.staff-overview-desktop-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.staff-overview-desktop-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.staff-overview-desktop-rail .staff-overview-list-panel {
+  padding: 14px !important;
+}
+
+.staff-overview-desktop-rail .staff-overview-section-head {
+  margin-bottom: 10px;
+}
+
+.staff-overview-desktop-rail .staff-overview-list-row {
+  padding: 10px 0;
+}
+
+.staff-overview-pro-queue-grid--desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.staff-overview-pro-queue-grid--desktop .staff-overview-pro-queue-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  background: transparent;
+}
+
+.staff-overview-pro-queue-grid--desktop li:last-child .staff-overview-pro-queue-card {
+  border-bottom: none;
+}
+
+.staff-overview-pro-queue-grid--desktop .staff-overview-pro-queue-count {
+  min-width: 2rem;
+  font-size: 18px;
+  text-align: right;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-grid--desktop .staff-overview-pro-queue-label {
+  font-size: 13px;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-pro-queue-grid--desktop .staff-overview-pro-queue-desc {
+  display: none;
+}
+
+.staff-overview-pro-queue-grid--desktop .staff-overview-pro-queue-card:hover {
+  background: var(--uber-surface, #f6f6f6);
 }
 
 .staff-overview-desktop-charts {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
 }
 
 .staff-overview-desktop-chart-panel {
@@ -1120,34 +1285,97 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
 }
 
 .staff-overview-desktop-chart-body {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .staff-overview-desktop-chart-body--tall .overview-line-chart-wrap {
-  min-height: 150px;
+  min-height: 132px;
 }
 
 .staff-overview-desktop-chart-body--tall .overview-line-chart {
-  min-height: 130px;
+  min-height: 112px;
 }
 
 .staff-overview-desktop-chart-footnote {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 11px;
   color: var(--uber-text-muted, #6b6b6b);
 }
 
 .staff-overview-desktop-main {
-  gap: 14px;
+  gap: 12px;
+  padding: 0;
+  max-width: none;
+  margin: 0;
 }
 
-.staff-overview-desktop-hubs .staff-overview-pro-hub.uber-direct-home-hub {
+.staff-overview-desktop-destinations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staff-overview-desktop-destinations-grid.uber-direct-home-hub {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.staff-overview-desktop-hubs .uber-direct-hub-card {
-  min-height: 108px;
-  padding: 16px 18px;
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card {
+  min-height: auto;
+  padding: 14px 16px;
+  background: var(--uber-bg, #ffffff);
+  border-color: var(--uber-border, #eeeeee);
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card:hover {
+  background: var(--uber-surface, #f6f6f6);
+  border-color: var(--uber-text, #000000);
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-title {
+  font-size: 14px;
+  color: var(--uber-text, #000000);
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-description {
+  display: none;
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-icon--green {
+  background: #e6f4ea;
+  color: #0e8345;
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-icon--yellow {
+  background: #fff7d9;
+  color: #9a6b00;
+}
+
+.staff-overview-desktop-destinations-grid .uber-direct-hub-card-icon--orange {
+  background: #ffefe3;
+  color: #c45b00;
+}
+
+@media (max-width: 1399px) {
+  .staff-overview-desktop-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-overview-desktop-rail {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .staff-overview-desktop-metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1279px) {
@@ -1158,10 +1386,22 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
   .staff-overview-desktop-charts > :first-child {
     grid-column: 1 / -1;
   }
+
+  .staff-overview-desktop-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-overview-desktop-destinations-grid.uber-direct-home-hub {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1023px) {
   .staff-overview-desktop-charts {
     grid-template-columns: 1fr;
+  }
+
+  .staff-overview-desktop-metric-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

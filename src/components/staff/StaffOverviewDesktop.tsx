@@ -47,6 +47,8 @@ import {
   buildStaffOverviewHubItems,
   QUICK_LINK_META,
   StaffOverviewActivityPanel,
+  StaffOverviewDesktopHeader,
+  StaffOverviewDesktopKpiStrip,
   StaffOverviewHubCards,
   StaffOverviewKpiGrid,
   StaffOverviewListPanel,
@@ -194,18 +196,36 @@ export function StaffOverviewDesktop({
   const liveLimit = formFactor === 'mobile' ? 3 : formFactor === 'tablet' ? 6 : 8;
   const activityLimit = formFactor === 'mobile' ? 5 : formFactor === 'tablet' ? 8 : 12;
 
-  const header = (
-    <StaffOverviewRoleHeader
-      config={config}
-      healthy={stats.platformHealthy}
-      pendingReviews={stats.pendingReviews}
-      onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
+  const header =
+    formFactor === 'desktop' ? (
+      <StaffOverviewDesktopHeader
+        config={config}
+        healthy={stats.platformHealthy}
+        pendingReviews={stats.pendingReviews}
+        onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
+      />
+    ) : (
+      <StaffOverviewRoleHeader
+        config={config}
+        healthy={stats.platformHealthy}
+        pendingReviews={stats.pendingReviews}
+        onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
+      />
+    );
+
+  const kpiGrid =
+    formFactor === 'desktop' ? (
+      <StaffOverviewDesktopKpiStrip metrics={metrics} onNavigate={onNavigate} />
+    ) : (
+      <StaffOverviewKpiGrid metrics={metrics} onNavigate={onNavigate} />
+    );
+
+  const hubCards = (
+    <StaffOverviewHubCards
+      items={hubItems}
+      className={formFactor === 'desktop' ? 'staff-overview-pro-hub staff-overview-desktop-destinations-grid' : 'staff-overview-pro-hub'}
     />
   );
-
-  const kpiGrid = <StaffOverviewKpiGrid metrics={metrics} onNavigate={onNavigate} />;
-
-  const hubCards = <StaffOverviewHubCards items={hubItems} className="staff-overview-pro-hub" />;
 
   const queueBoard = showQueueBoard ? (
     <StaffOverviewQueueBoard
@@ -213,6 +233,7 @@ export function StaffOverviewDesktop({
       showPayments={config.showPaymentsInQueue}
       staffRole={staffRole}
       onNavigate={onNavigate}
+      layout={formFactor === 'desktop' ? 'desktop' : 'default'}
     />
   ) : null;
 
@@ -327,11 +348,7 @@ export function StaffOverviewDesktop({
     </WorkbenchPanel>
   );
 
-  const desktopShortcuts = (
-    <WorkbenchPanel padding={false} className="staff-overview-quicklinks-panel staff-overview-desktop-quicklinks-panel">
-      <WorkbenchQuickLinks items={quickLinks} />
-    </WorkbenchPanel>
-  );
+  const desktopShortcuts = <WorkbenchQuickLinks items={quickLinks} />;
 
   const sharedLayoutProps = {
     config,

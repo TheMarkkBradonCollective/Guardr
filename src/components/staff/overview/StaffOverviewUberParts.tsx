@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { LabelSmall } from 'baseui/typography';
 import { UberDirectHubCard } from '../../baseui/dashboard';
+import { MetricCell, MetricStrip } from '../../baseui/dashboard/MetricCell';
 import { QuickActionTile } from '../../baseui/dashboard/QuickActionTile';
 import { WorkbenchPanel } from '../../baseui/layout/WorkbenchLayout';
 import { CheckCircle2 } from 'lucide-react';
@@ -437,6 +438,42 @@ export function StaffOverviewRoleHeader({
   );
 }
 
+/** Compact desktop page header — toolbar density, inline status chip. */
+export function StaffOverviewDesktopHeader({
+  config,
+  healthy,
+  pendingReviews,
+  onReview,
+}: {
+  config: StaffOverviewConfig;
+  healthy: boolean;
+  pendingReviews: number;
+  onReview?: () => void;
+}) {
+  return (
+    <header className="staff-overview-desktop-head">
+      <div className="staff-overview-desktop-head-copy">
+        <p className="staff-overview-desktop-eyebrow">{config.workspaceKicker}</p>
+        <div className="staff-overview-desktop-head-row">
+          <h1 className="staff-overview-desktop-title">{config.roleLabel} overview</h1>
+          <button
+            type="button"
+            className={`staff-overview-desktop-status-chip${healthy ? '' : ' staff-overview-desktop-status-chip--warn'}`}
+            onClick={onReview}
+            disabled={!onReview}
+          >
+            <span className="staff-overview-desktop-status-dot" aria-hidden />
+            <span className="staff-overview-desktop-status-label">
+              {healthy ? 'All clear' : `${pendingReviews} need review`}
+            </span>
+          </button>
+        </div>
+        <p className="staff-overview-desktop-subtitle">{config.focusLine}</p>
+      </div>
+    </header>
+  );
+}
+
 export function StaffOverviewKpiGrid({
   metrics,
   onNavigate,
@@ -464,16 +501,45 @@ export function StaffOverviewKpiGrid({
   );
 }
 
+/** Desktop metric strip — compact white cells instead of tall mobile KPI cards. */
+export function StaffOverviewDesktopKpiStrip({
+  metrics,
+  onNavigate,
+}: {
+  metrics: { label: string; value: string; sub: string; accent?: boolean; navigateTo?: StaffSection }[];
+  onNavigate?: (section: StaffSection) => void;
+}) {
+  if (metrics.length === 0) return null;
+  return (
+    <section className="staff-overview-desktop-metrics" aria-label="Key metrics">
+      <MetricStrip className="staff-overview-desktop-metric-strip">
+        {metrics.map((metric) => (
+          <MetricCell
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            sub={metric.sub}
+            highlight={metric.accent}
+            onClick={metric.navigateTo && onNavigate ? () => onNavigate(metric.navigateTo!) : undefined}
+          />
+        ))}
+      </MetricStrip>
+    </section>
+  );
+}
+
 export function StaffOverviewQueueBoard({
   stats,
   showPayments,
   staffRole,
   onNavigate,
+  layout = 'default',
 }: {
   stats: PlatformStats;
   showPayments: boolean;
   staffRole: PlatformRole;
   onNavigate: (section: StaffSection) => void;
+  layout?: 'default' | 'desktop';
 }) {
   const allRows = [
     {
@@ -532,13 +598,16 @@ export function StaffOverviewQueueBoard({
   const totalPending = rows.reduce((sum, row) => sum + row.count, 0);
 
   return (
-    <WorkbenchPanel className="staff-overview-list-panel staff-overview-pro-queue" padding>
+    <WorkbenchPanel
+      className={`staff-overview-list-panel staff-overview-pro-queue${layout === 'desktop' ? ' staff-overview-pro-queue--desktop' : ''}`}
+      padding
+    >
       <StaffOverviewSectionHeader
         title="Approval & action queue"
         actionLabel={totalPending > 0 ? 'Open queue' : undefined}
         onAction={totalPending > 0 ? () => onNavigate('applications') : undefined}
       />
-      <ul className="staff-overview-pro-queue-grid">
+      <ul className={`staff-overview-pro-queue-grid${layout === 'desktop' ? ' staff-overview-pro-queue-grid--desktop' : ''}`}>
         {rows.map((row) => (
           <li key={row.id}>
             <button
