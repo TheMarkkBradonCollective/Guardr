@@ -15,6 +15,40 @@ export const fieldInputStyle = {
   color: 'contentPrimary',
 };
 
+export function searchBarInputOverrides(className = ''): InputOverrides {
+  return {
+    Root: {
+      props: { className: `app-search-bar-input ${className}`.trim() },
+      style: {
+        width: '100%',
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        borderRadius: 0,
+        boxShadow: 'none',
+        padding: 0,
+        minHeight: 0,
+      },
+    },
+    Input: {
+      style: {
+        ...fieldInputStyle,
+        minHeight: 0,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
+    },
+    InputContainer: {
+      style: { backgroundColor: 'transparent', padding: 0 },
+    },
+    StartEnhancer: {
+      style: { backgroundColor: 'transparent', paddingLeft: 0, paddingRight: 0 },
+    },
+    EndEnhancer: {
+      style: { backgroundColor: 'transparent', paddingLeft: 0, paddingRight: 0 },
+    },
+  };
+}
+
 export function inputOverrides(className = ''): InputOverrides {
   return {
     Root: {

@@ -1865,19 +1865,39 @@ h1, h2, h3, h4 {
   width: 100%;
   min-height: 3rem;
   padding: 0.75rem 1rem;
-  background: var(--brand-bg-sec);
-  border: 1.5px solid var(--brand-border);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
   border-radius: var(--radius-pill);
   color: var(--brand-text-muted);
   font-size: 0.9375rem;
   font-weight: 500;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .app-search-bar:focus-within {
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+  box-shadow: none;
+}
+
+.app-search-bar .app-input,
+.app-search-bar .uber-input,
+.app-search-bar .app-search-bar-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.app-search-bar .app-input:focus,
+.app-search-bar .uber-input:focus,
+.app-search-bar .app-search-bar-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .app-search-bar input {

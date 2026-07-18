@@ -1,7 +1,7 @@
 import React from 'react';
 import { Filter, Search } from 'lucide-react';
 import { Input } from '../../baseui/baseuiShims';
-import { inputOverrides } from '../../baseui/primitives/fieldStyles';
+import { searchBarInputOverrides } from '../../baseui/primitives/fieldStyles';
 import { GuardrButton } from '../../baseui/GuardrButton';
 
 interface WfSearchBarProps {
@@ -41,7 +41,7 @@ export function WfSearchBar({
             </GuardrButton>
           ) : undefined
         }
-        overrides={inputOverrides('app-search-bar-input')}
+        overrides={searchBarInputOverrides()}
       />
     </div>
   );
