@@ -1509,9 +1509,9 @@ export function AuthPage({
             </div>
 
             <div className="dsk-auth-form-scroll">
-              <AppFlowSurface className="dsk-auth-form-inner animate-fade-in">
+              <div className="dsk-auth-form-inner animate-fade-in">
                 {authFormBody}
-              </AppFlowSurface>
+              </div>
             </div>
           </section>
         </div>

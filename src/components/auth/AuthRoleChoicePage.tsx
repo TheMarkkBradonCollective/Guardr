@@ -94,10 +94,14 @@ export function AuthRoleChoicePage({
 
   return (
     <Block
-      minHeight="100vh"
+      minHeight="100dvh"
+      height="100dvh"
       className="auth-role-choice-page"
       data-landing-factor={formFactor}
       backgroundColor="backgroundPrimary"
+      display="flex"
+      flexDirection="column"
+      overflow="hidden"
     >
       <UberLandingNav
         formFactor={factor}
@@ -107,20 +111,19 @@ export function AuthRoleChoicePage({
         onOpenGuide={onOpenGuide}
       />
 
-      <Block as="main" className="auth-role-choice-main" flex="1" display="flex" flexDirection="column">
+      <Block as="main" className="auth-role-choice-main">
         {/* Hero band — pale gray with headline + illustration */}
         <Block
           as="section"
           aria-label={copy.ariaLabel}
           className="auth-role-choice-hero"
-          padding={isMobile ? 'scale800 scale600' : 'scale1200 scale800'}
-          flex="1"
+          padding={isMobile ? 'scale800 scale600' : 'scale1000 scale800'}
         >
           <Block
+            className="auth-role-choice-hero-inner"
             maxWidth="1280px"
             margin="0 auto"
             width="100%"
-            height="100%"
             display="grid"
             gridTemplateColumns={isMobile ? '1fr' : ['1fr', '1fr', '1fr 1fr']}
             gridGap="scale1000"
@@ -149,16 +152,17 @@ export function AuthRoleChoicePage({
         <Block
           as="section"
           className="auth-role-choice-options"
-          padding={isMobile ? 'scale800 scale600' : 'scale1000 scale800'}
+          padding={isMobile ? 'scale700 scale600' : 'scale900 scale800'}
           backgroundColor="backgroundPrimary"
         >
           <Block
+            className="auth-role-choice-options-grid"
             maxWidth="1280px"
             margin="0 auto"
             width="100%"
             display="grid"
             gridTemplateColumns={isMobile ? '1fr' : '1fr 1fr'}
-            gridGap={isMobile ? 0 : 'scale1200'}
+            gridGap={isMobile ? 'scale600' : 'scale1200'}
           >
             {options.map(({ role, icon: Icon, title }) => (
               <Block

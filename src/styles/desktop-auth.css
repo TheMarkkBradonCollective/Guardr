@@ -3,8 +3,15 @@
    Twin of the shadcn "Authentication" layout, Guardr-branded.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-body[data-form-factor="desktop"] .dsk-auth {
-  min-height: 100vh;
+/* Override legacy index.css flex-row auth layout — we use dsk-auth-split grid */
+body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
   background: var(--uber-bg, #ffffff);
   color: var(--uber-text, #000000);
   font-family: var(--uber-font-text, "Uber Move Text", system-ui, sans-serif);
@@ -12,8 +19,11 @@ body[data-form-factor="desktop"] .dsk-auth {
 
 body[data-form-factor="desktop"] .dsk-auth-split {
   display: grid;
-  grid-template-columns: minmax(24rem, 44%) minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-columns: minmax(22rem, 1fr) minmax(22rem, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  flex: 1;
 }
 
 /* ─── Left: black editorial panel ─────────────────────────────────────────── */
@@ -25,6 +35,7 @@ body[data-form-factor="desktop"] .dsk-auth-editorial {
   padding: 2.5rem 2.75rem;
   background: #000000;
   color: #ffffff;
+  min-height: 100%;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-editorial-top {
@@ -85,6 +96,8 @@ body[data-form-factor="desktop"] .dsk-auth-form-panel {
   position: relative;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
   background: var(--uber-bg, #ffffff);
   overflow: hidden;
 }
@@ -96,6 +109,7 @@ body[data-form-factor="desktop"] .dsk-auth-form-topbar {
   gap: 1rem;
   padding: 1.5rem 2rem;
   flex-shrink: 0;
+  width: 100%;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-topbar-actions {
@@ -123,48 +137,36 @@ body[data-form-factor="desktop"] .dsk-auth-back:hover {
   color: var(--uber-text, #000000);
 }
 
-body[data-form-factor="desktop"] .dsk-auth-switch {
-  border: none;
-  background: none;
-  font-family: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--uber-text, #000000);
-  cursor: pointer;
-  padding: 0.4rem 0.25rem;
-  transition: opacity 120ms ease;
-}
-
-body[data-form-factor="desktop"] .dsk-auth-switch:hover {
-  opacity: 0.7;
-}
-
 body[data-form-factor="desktop"] .dsk-auth-form-scroll {
   flex: 1;
   min-height: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0 2rem 3rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0 clamp(1.5rem, 4vw, 3rem) 3rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-/* margin:auto centers the column vertically when it fits, and — unlike
-   justify/align center — never clips the top when the form overflows,
-   so long sign-up forms scroll cleanly instead of looking cut off. */
 body[data-form-factor="desktop"] .dsk-auth-form-inner {
-  width: min(100%, 24rem);
-  margin: auto;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 0 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-input {
   border-radius: 8px;
   border-color: #e2e2e2;
   font-size: 0.9375rem;
+  width: 100%;
 }
 
 body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-label {
@@ -187,4 +189,10 @@ body[data-form-factor="desktop"] .dsk-auth-form-inner label:has(.app-checkbox) {
 /* Hide mobile auth hero when desktop split is active */
 body[data-form-factor="desktop"] .auth-experience:not(.dsk-auth) .auth-hero {
   display: none;
+}
+
+@media (min-width: 1280px) {
+  body[data-form-factor="desktop"] .dsk-auth-split {
+    grid-template-columns: minmax(26rem, 46%) minmax(0, 1fr);
+  }
 }
