@@ -1010,7 +1010,7 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
    Mobile = app-first · Tablet = balanced · Desktop = analytics command center
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Mobile: quick actions first, minimal analytics ── */
+/* ── Mobile: hero first, then quick actions and lightweight analytics ── */
 .staff-overview-mobile-app {
   gap: 14px;
 }
@@ -1021,14 +1021,6 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
 
 .staff-overview-mobile-app .staff-overview-pro-focus {
   font-size: 13px;
-}
-
-.staff-overview-mobile-primary {
-  order: -2;
-}
-
-.staff-overview-mobile-app .staff-overview-pro-kpi {
-  order: -1;
 }
 
 .staff-overview-mobile-ops,
