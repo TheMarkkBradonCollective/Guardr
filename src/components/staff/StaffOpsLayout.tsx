@@ -6,7 +6,7 @@ import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
-import { StaffShellCreateProvider, useStaffSidebarPrimaryAction } from './StaffShellCreateContext';
+import { StaffShellCreateProvider, useStaffSidebarPrimaryActions } from './StaffShellCreateContext';
 import {
   AlertTriangle,
   BarChart3,
@@ -220,13 +220,12 @@ function StaffOpsLayoutInner({
   canAddGuard = false,
   canAddStaff = false,
 }: StaffOpsLayoutInnerProps) {
-  const createEnabled =
-    (navHighlight === 'jobs' && canCreateJob) ||
-    (navHighlight === 'clients' && canAddClient) ||
-    (navHighlight === 'guards' && canAddGuard) ||
-    (navHighlight === 'team' && canAddStaff);
-
-  const sidebarPrimaryAction = useStaffSidebarPrimaryAction(navHighlight, createEnabled);
+  const sidebarPrimaryActions = useStaffSidebarPrimaryActions(navHighlight, {
+    canCreateJob: navHighlight === 'jobs' && canCreateJob,
+    canAddClient: (navHighlight === 'clients' || navHighlight === 'applications') && canAddClient,
+    canAddGuard: (navHighlight === 'guards' || navHighlight === 'applications') && canAddGuard,
+    canAddStaff: navHighlight === 'team' && canAddStaff,
+  });
 
   return (
     <DesktopStaffAdminShell
@@ -248,7 +247,7 @@ function StaffOpsLayoutInner({
       accountNotifications={accountNotifications}
       headerExtension={headerExtension}
       headerOverride={headerOverride}
-      sidebarPrimaryAction={sidebarPrimaryAction}
+      sidebarPrimaryActions={sidebarPrimaryActions}
     >
       {children}
     </DesktopStaffAdminShell>

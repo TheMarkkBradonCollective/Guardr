@@ -32,6 +32,9 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 16px 16px 12px;
   flex-shrink: 0;
 }

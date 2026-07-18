@@ -33,6 +33,7 @@ interface DesktopStaffAdminShellProps {
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
   sidebarPrimaryAction?: SidebarPrimaryAction;
+  sidebarPrimaryActions?: SidebarPrimaryAction[];
 }
 
 /** Uber Direct sidebar groups — order matches staff nav list with section labels. */
@@ -77,6 +78,7 @@ export function DesktopStaffAdminShell({
   headerExtension,
   headerOverride,
   sidebarPrimaryAction,
+  sidebarPrimaryActions,
 }: DesktopStaffAdminShellProps) {
   const { formFactor } = useDevice();
   const isPortableShell = formFactor !== 'desktop';
@@ -155,6 +157,7 @@ export function DesktopStaffAdminShell({
       onNavigate={handleNav}
       accountMenu={accountMenu}
       sidebarPrimaryAction={sidebarPrimaryAction}
+      sidebarPrimaryActions={sidebarPrimaryActions}
       sidebarBrandExtra={
         isDbConnected ? (
           <Block

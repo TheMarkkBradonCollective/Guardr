@@ -79,15 +79,63 @@ export function useStaffSidebarPrimaryAction(
   section: StaffSection,
   enabled: boolean,
 ): SidebarPrimaryAction | undefined {
+  const actions = useStaffSidebarPrimaryActions(section, {
+    canCreateJob: section === 'jobs' && enabled,
+    canAddClient: section === 'clients' && enabled,
+    canAddGuard: section === 'guards' && enabled,
+    canAddStaff: section === 'team' && enabled,
+  });
+  return actions[0];
+}
+
+export function useStaffSidebarPrimaryActions(
+  section: StaffSection,
+  options: {
+    canCreateJob?: boolean;
+    canAddClient?: boolean;
+    canAddGuard?: boolean;
+    canAddStaff?: boolean;
+  },
+): SidebarPrimaryAction[] {
   const { trigger } = useStaffShellCreate();
-  const actionKey = staffSectionCreateAction(section);
 
   return useMemo(() => {
-    if (!enabled || !actionKey) return undefined;
-    return {
-      label: STAFF_CREATE_ACTION_LABELS[actionKey],
-      icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
-      onClick: () => trigger(actionKey),
-    };
-  }, [enabled, actionKey, trigger]);
+    if (section === 'applications') {
+      const actions: SidebarPrimaryAction[] = [];
+      if (options.canAddGuard) {
+        actions.push({
+          label: STAFF_CREATE_ACTION_LABELS.guard,
+          icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+          onClick: () => trigger('guard'),
+        });
+      }
+      if (options.canAddClient) {
+        actions.push({
+          label: STAFF_CREATE_ACTION_LABELS.client,
+          icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+          onClick: () => trigger('client'),
+        });
+      }
+      return actions;
+    }
+
+    const actionKey = staffSectionCreateAction(section);
+    if (!actionKey) return [];
+
+    const enabled =
+      (section === 'jobs' && options.canCreateJob) ||
+      (section === 'clients' && options.canAddClient) ||
+      (section === 'guards' && options.canAddGuard) ||
+      (section === 'team' && options.canAddStaff);
+
+    if (!enabled) return [];
+
+    return [
+      {
+        label: STAFF_CREATE_ACTION_LABELS[actionKey],
+        icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+        onClick: () => trigger(actionKey),
+      },
+    ];
+  }, [section, options.canAddClient, options.canAddGuard, options.canCreateJob, options.canAddStaff, trigger]);
 }
