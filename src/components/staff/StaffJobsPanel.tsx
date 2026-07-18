@@ -1,17 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Briefcase, ChevronRight, Clock, Search } from 'lucide-react';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { PlatformFeeConfig } from '../../lib/payments';
-import { JobStatusBadge } from '../jobs/JobStatusBadge';
-import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
-import { JobListCard } from '../jobs/JobListCard';
-import { WfBadge, WfSearchBar } from '../ui/wireframe';
+import { formatShiftRange } from '../../lib/dates';
+import { useDevice } from '../../lib/platform';
+import { GuardrTag } from '../baseui/GuardrTag';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchPanel,
+  WorkbenchSearchRow,
+  WorkbenchSplit,
+  WorkbenchStatChips,
+} from '../baseui/layout/WorkbenchLayout';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
-import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { Briefcase, Search } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
+
+const FILTER_OPTIONS: { id: JobsFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'open', label: 'Open' },
+  { id: 'active', label: 'Active' },
+  { id: 'complete', label: 'Complete' },
+];
 
 interface StaffJobsPanelProps {
   requests: SecurityRequest[];
@@ -45,6 +58,22 @@ function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
   }
 }
 
+function statusKind(status: SecurityRequest['status']): 'success' | 'warning' | 'danger' | 'neutral' {
+  if (status === 'in-progress' || status === 'accepted' || status === 'completed') return 'success';
+  if (status === 'open' || status === 'pending-review') return 'warning';
+  if (status === 'cancelled') return 'danger';
+  return 'neutral';
+}
+
+function guardMeta(req: SecurityRequest, guards: SecurityGuard[]): string {
+  const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
+  if (assignedGuard) return `Guard: ${assignedGuard.name}`;
+  if (req.status === 'open' && req.applicants.length > 0) {
+    return `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`;
+  }
+  return 'No guard yet';
+}
+
 export function StaffJobsPanel({
   requests,
   guards,
@@ -63,6 +92,7 @@ export function StaffJobsPanel({
   staffRole,
   feeConfig,
 }: StaffJobsPanelProps) {
+  const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
@@ -78,6 +108,17 @@ export function StaffJobsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
+
+  const tallies = useMemo(
+    () => ({
+      all: requests.length,
+      open: requests.filter((r) => matchesFilter(r, 'open')).length,
+      active: requests.filter((r) => matchesFilter(r, 'active')).length,
+      complete: requests.filter((r) => matchesFilter(r, 'complete')).length,
+    }),
+    [requests],
+  );
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return [...requests]
@@ -86,21 +127,36 @@ export function StaffJobsPanel({
         (r) =>
           r.title.toLowerCase().includes(q) ||
           r.clientName.toLowerCase().includes(q) ||
-          r.location.toLowerCase().includes(q)
+          r.location.toLowerCase().includes(q),
       )
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [requests, filter, search]);
 
-  const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
+  const selectedRequest = selectedId ? requests.find((r) => r.id === selectedId) ?? null : null;
 
-  const filters: { id: JobsFilter; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'open', label: 'Open' },
-    { id: 'active', label: 'Active' },
-    { id: 'complete', label: 'Complete' },
-  ];
+  useEffect(() => {
+    if (formFactor === 'mobile') return;
+    if (filtered.length === 0) {
+      if (selectedId) setSelectedId(null);
+      return;
+    }
+    const stillVisible = selectedId ? filtered.some((r) => r.id === selectedId) : false;
+    if (!stillVisible) setSelectedId(filtered[0].id);
+  }, [filter, filtered, selectedId, formFactor]);
 
-  function renderJobDetail(req: SecurityRequest, options?: { onBack?: () => void }) {
+  const createForm =
+    canManageJobs && onCreateJob ? (
+      <StaffCreateJobForm
+        clients={clients}
+        guards={guards}
+        requests={requests}
+        feeConfig={feeConfig}
+        onCreate={onCreateJob}
+        onCreated={(jobId) => setSelectedId(jobId)}
+      />
+    ) : null;
+
+  function renderJobDetail(req: SecurityRequest, onBack?: () => void) {
     return (
       <StaffJobDetailPanel
         req={req}
@@ -111,97 +167,157 @@ export function StaffJobsPanel({
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}
-        onBack={options?.onBack}
+        onBack={onBack}
         staffRole={staffRole}
       />
     );
   }
 
-  const toolbar = !showDetailOnly ? (
-    <>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        {canManageJobs && onCreateJob && (
-          <StaffCreateJobForm
-            clients={clients}
-            guards={guards}
-            requests={requests}
-            feeConfig={feeConfig}
-            onCreate={onCreateJob}
-            onCreated={(jobId) => setSelectedId(jobId)}
-          />
-        )}
-      </div>
-      <div
-        className="flex flex-nowrap gap-1.5 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+  function renderJobTableRows() {
+    return filtered.map((req) => (
+      <tr
+        key={req.id}
+        className={`uber-workbench-table-row${selectedId === req.id ? ' uber-workbench-table-row--selected' : ''}`}
+        onClick={() => setSelectedId(req.id)}
       >
-        {filters.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className="staff-filter-pill shrink-0 whitespace-nowrap"
-            data-active={filter === f.id ? 'true' : undefined}
-          >
-            {f.label}
-          </button>
-        ))}
+        <td>
+          <p className="uber-workbench-table-primary">{req.title}</p>
+          <p className="uber-workbench-table-secondary">{req.clientName}</p>
+        </td>
+        <td className="uber-workbench-table-secondary">{formatShiftRange(req.startDate, req.endDate)}</td>
+        <td className="uber-workbench-table-secondary">{guardMeta(req, guards)}</td>
+        <td className="uber-workbench-table-value">${req.hourlyRate}/hr</td>
+        <td>
+          <GuardrTag closeable={false} kind={statusKind(req.status)}>
+            {req.status}
+          </GuardrTag>
+        </td>
+      </tr>
+    ));
+  }
+
+  if (formFactor === 'desktop') {
+    return (
+      <WorkbenchPage data-tour="staff-jobs">
+        {createForm}
+        <WorkbenchSearchRow
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search client, location, or title"
+        />
+        <WorkbenchStatChips<JobsFilter>
+          items={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
+          activeId={filter}
+          onSelect={setFilter}
+        />
+        <WorkbenchPanel padding={false}>
+          <WorkbenchSplit
+            list={
+              filtered.length === 0 ? (
+                <WorkbenchEmpty
+                  icon={search ? Search : Briefcase}
+                  message={search ? 'No matching jobs' : 'No jobs yet'}
+                />
+              ) : (
+                <table className="uber-workbench-table">
+                  <thead>
+                    <tr>
+                      <th>Job</th>
+                      <th>Schedule</th>
+                      <th>Guard</th>
+                      <th>Rate</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>{renderJobTableRows()}</tbody>
+                </table>
+              )
+            }
+            detail={
+              selectedRequest ? (
+                renderJobDetail(selectedRequest)
+              ) : (
+                <WorkbenchEmpty icon={Clock} message="Select a job to review details and actions" variant="detail" />
+              )
+            }
+          />
+        </WorkbenchPanel>
+      </WorkbenchPage>
+    );
+  }
+
+  if (selectedRequest) {
+    return (
+      <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in" data-tour="staff-jobs">
+        {createForm}
+        <div className="-mx-4 sm:-mx-5 app-full-page-detail flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          {renderJobDetail(selectedRequest, () => setSelectedId(null))}
+        </div>
       </div>
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search client, location, title..."
-        className="max-w-md"
-      />
-    </>
-  ) : null;
+    );
+  }
 
   return (
-    <StaffOpsPageShell toolbar={toolbar} data-tour="staff-jobs">
-      {filtered.length === 0 ? (
-        <div className="app-empty-state">
-          <div className="app-empty-state-icon">
-            {search ? <Search className="w-5 h-5" /> : <Briefcase className="w-5 h-5" />}
-          </div>
-          <p className="app-empty-state-title">{search ? 'No matching jobs' : 'No jobs yet'}</p>
-          <p className="app-empty-state-body">
-            {search ? `No jobs match "${search}". Try adjusting your search or filters.` : 'Jobs will appear here once clients post coverage requests.'}
-          </p>
-        </div>
-      ) : (
-        <ListDetailLayout
-          items={filtered}
-          selectedId={selectedId}
-          onSelectId={setSelectedId}
-          getItemId={(req) => req.id}
-          renderItem={(req, isActive, onSelect) => {
-            const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
-            return (
-              <JobListCard
-                job={req}
-                subtitle={req.clientName}
-                meta={
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <JobStatusBadge job={req} variant="staff" />
-                    <span>
-                      {assignedGuard
-                        ? `Guard: ${assignedGuard.name}`
-                        : req.status === 'open' && req.applicants.length > 0
-                          ? `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`
-                          : 'No guard yet'}
-                    </span>
-                  </div>
-                }
-                onClick={onSelect}
-                selected={isActive}
-                showStatus={false}
-              />
-            );
-          }}
-          renderDetail={renderJobDetail}
-          mobilePresentation="page"
+    <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in" data-tour="staff-jobs">
+      {createForm}
+      <div className="staff-ops-mobile-toolbar space-y-3 -mx-4 sm:-mx-5 px-4 sm:px-5 pb-3">
+        <WorkbenchSearchRow
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search client, location, or title"
         />
-      )}
-    </StaffOpsPageShell>
+        <WorkbenchStatChips<JobsFilter>
+          items={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
+          activeId={filter}
+          onSelect={setFilter}
+        />
+      </div>
+      <div className="staff-ops-mobile-body flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-4 sm:-mx-5 px-4 sm:px-5">
+        {filtered.length === 0 ? (
+          <div className="app-empty-state">
+            <div className="app-empty-state-icon">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <p className="app-empty-state-title">{search ? 'No matching jobs' : 'No jobs yet'}</p>
+            <p className="app-empty-state-body">
+              {search
+                ? `No jobs match "${search}". Try adjusting your search or filters.`
+                : 'Jobs will appear here once clients post coverage requests.'}
+            </p>
+          </div>
+        ) : (
+          <ul className="uber-mobile-list staff-overview-list">
+            {filtered.map((req) => (
+              <li key={req.id}>
+                <button
+                  type="button"
+                  className="uber-mobile-list-row staff-overview-list-row"
+                  onClick={() => setSelectedId(req.id)}
+                >
+                  <span className="staff-overview-list-row-icon">
+                    <Briefcase size={18} aria-hidden />
+                  </span>
+                  <span className="staff-overview-list-row-copy">
+                    <span className="staff-overview-list-row-title-row">
+                      <span className="staff-overview-list-row-title">{req.title}</span>
+                      <GuardrTag closeable={false} kind={statusKind(req.status)}>
+                        {req.status}
+                      </GuardrTag>
+                    </span>
+                    <span className="staff-overview-list-row-description">
+                      {req.clientName} · {req.location}
+                    </span>
+                    <span className="staff-overview-list-row-meta">
+                      {formatShiftRange(req.startDate, req.endDate)} · {guardMeta(req, guards)}
+                    </span>
+                  </span>
+                  <ChevronRight size={16} className="staff-overview-list-row-chevron" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
