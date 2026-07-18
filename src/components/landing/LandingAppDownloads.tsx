@@ -2,13 +2,14 @@ import React from 'react';
 import { AnimatePresence } from 'motion/react';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
-import { Download, Smartphone, ArrowRight } from 'lucide-react';
+import { Download, Smartphone, ArrowRight, QrCode } from 'lucide-react';
 import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt';
 import { PwaInstallGuide } from './PwaInstallGuide';
 import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 
 const APK_DOWNLOAD_URL = '/download/guardr.apk';
+const APK_QR_URL = '/download/apk-qr.png';
 const DOWNLOAD_PAGE_URL = '/download';
 
 const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -19,57 +20,11 @@ interface LandingAppDownloadsProps {
   id?: string;
 }
 
-function DownloadButton({
-  as,
-  href,
-  download,
-  onClick,
-  kind,
-  icon,
-  title,
-  sub,
-}: {
-  as?: 'a';
-  href?: string;
-  download?: string;
-  onClick?: () => void;
-  kind: 'primary' | 'secondary';
-  icon: React.ReactNode;
-  title: string;
-  sub: string;
-}) {
-  return (
-    <GuardrButton
-      kind={kind}
-      onClick={onClick}
-      {...(as ? ({ $as: 'a', href, download } as Record<string, unknown>) : {})}
-      overrides={{
-        BaseButton: {
-          style: {
-            width: '100%',
-            justifyContent: 'flex-start',
-            gap: '12px',
-            paddingTop: '14px',
-            paddingBottom: '14px',
-            paddingLeft: '16px',
-            paddingRight: '16px',
-            borderRadius: '12px',
-            textDecoration: 'none',
-          },
-        },
-      }}
-    >
-      <span aria-hidden style={{ display: 'flex', flexShrink: 0 }}>
-        {icon}
-      </span>
-      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.25 }}>
-        <span style={{ fontWeight: 700, fontSize: '15px' }}>{title}</span>
-        <span style={{ fontWeight: 500, fontSize: '12px', opacity: 0.7 }}>{sub}</span>
-      </span>
-    </GuardrButton>
-  );
-}
-
+/**
+ * "It's easier in the app" — mirrors the Uber.com app section:
+ * heading + two panels (native app + home screen) each with a store action
+ * and a scan-to-download visual.
+ */
 export function LandingAppDownloads({
   formFactor,
   variant = 'hero',
@@ -91,50 +46,50 @@ export function LandingAppDownloads({
 
   const isMobile = formFactor === 'mobile';
   const centered = variant === 'cta';
+  const showScan = !isMobile;
+
+  const panelStyle = {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'space-between',
+    gap: '20px',
+    padding: isMobile ? '20px' : '24px',
+    borderRadius: '16px',
+    border: `1px solid ${theme.colors.borderOpaque}`,
+    background: theme.colors.backgroundPrimary,
+    textAlign: 'left' as const,
+    minHeight: showScan ? '196px' : undefined,
+  };
 
   return (
     <Block
       id={id}
+      width="100%"
+      maxWidth="1120px"
+      margin={centered ? '0 auto' : undefined}
       display="flex"
       flexDirection="column"
-      alignItems={centered ? 'center' : 'flex-start'}
-      gridGap="scale600"
-      width="100%"
-      maxWidth={centered ? '560px' : undefined}
-      margin={centered ? '0 auto' : undefined}
-      $style={{ textAlign: centered ? 'center' : 'left' }}
+      gridGap="scale700"
+      $style={{ textAlign: 'left' }}
     >
-      <Block>
-        <Block
-          as="p"
-          margin="0 0 8px"
-          $style={{
-            fontSize: '12px',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: theme.colors.contentSecondary,
-          }}
-        >
-          Get the app
-        </Block>
+      <Block $style={{ textAlign: centered ? 'center' : 'left' }}>
         <Block
           as="h2"
-          margin="0 0 10px"
+          margin="0 0 8px"
           $style={{
             fontFamily: HEADING_FONT,
             fontWeight: 700,
-            fontSize: isMobile ? '1.375rem' : '1.75rem',
+            fontSize: isMobile ? '1.5rem' : '2rem',
             letterSpacing: '-0.025em',
             color: theme.colors.contentPrimary,
           }}
         >
-          Guardr on your phone
+          It&apos;s easier in the app
         </Block>
         <Block
           as="p"
           margin={0}
-          maxWidth="42ch"
+          maxWidth="52ch"
           $style={{
             fontSize: '15px',
             lineHeight: 1.5,
@@ -142,46 +97,160 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Android APK for field work, or save the web app to your home screen — same account either way.
+          Get the native Android app for field work, or save the web app to your home screen — same
+          account, same features either way.
         </Block>
       </Block>
 
       <Block
         display="grid"
         width="100%"
-        maxWidth={centered ? '440px' : '520px'}
-        gridGap="scale400"
+        gridGap="scale500"
         $style={{ gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}
       >
-        <DownloadButton
-          as="a"
-          href={APK_DOWNLOAD_URL}
-          download="guardr.apk"
-          kind="primary"
-          icon={<Download className="w-4 h-4" />}
-          title="Download Android APK"
-          sub="Native app · best notifications"
-        />
-        <DownloadButton
-          onClick={() => void promptInstall()}
-          kind="secondary"
-          icon={<Smartphone className="w-4 h-4" />}
-          title={pwaLabel}
-          sub="Auto-updates · no reinstall"
-        />
+        {/* Native Android app panel */}
+        <Block $style={panelStyle}>
+          <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale500">
+            <Block flex="1" minWidth={0}>
+              <Block
+                as="h3"
+                margin="0 0 6px"
+                $style={{
+                  fontFamily: HEADING_FONT,
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  letterSpacing: '-0.015em',
+                  color: theme.colors.contentPrimary,
+                }}
+              >
+                Download the Guardr app
+              </Block>
+              <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
+                Native Android APK — reliable notifications, GPS, and camera for on-site guards.
+              </Block>
+            </Block>
+            {showScan && (
+              <Block
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                gridGap="scale100"
+                $style={{ flexShrink: 0 }}
+              >
+                <Block
+                  width="92px"
+                  height="92px"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  overrides={{
+                    Block: {
+                      style: {
+                        borderRadius: '12px',
+                        background: '#ffffff',
+                        border: `1px solid ${theme.colors.borderOpaque}`,
+                        padding: '6px',
+                      },
+                    },
+                  }}
+                >
+                  <img
+                    src={APK_QR_URL}
+                    width={80}
+                    height={80}
+                    alt="Scan to download the Guardr Android app"
+                    style={{ display: 'block', width: '80px', height: '80px' }}
+                  />
+                </Block>
+                <Block
+                  as="span"
+                  display="flex"
+                  alignItems="center"
+                  gridGap="scale0"
+                  $style={{ fontSize: '11px', fontWeight: 600, color: theme.colors.contentSecondary }}
+                >
+                  <QrCode className="w-3 h-3" /> Scan to download
+                </Block>
+              </Block>
+            )}
+          </Block>
+          <GuardrButton
+            kind="primary"
+            {...({ $as: 'a', href: APK_DOWNLOAD_URL, download: 'guardr.apk' } as Record<string, unknown>)}
+            startEnhancer={<Download className="w-4 h-4" />}
+            overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
+          >
+            Download Android APK
+          </GuardrButton>
+        </Block>
+
+        {/* Home screen / PWA panel */}
+        <Block $style={panelStyle}>
+          <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale500">
+            <Block flex="1" minWidth={0}>
+              <Block
+                as="h3"
+                margin="0 0 6px"
+                $style={{
+                  fontFamily: HEADING_FONT,
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  letterSpacing: '-0.015em',
+                  color: theme.colors.contentPrimary,
+                }}
+              >
+                Add to your home screen
+              </Block>
+              <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
+                Install the web app on any device — auto-updates, works offline, no reinstall.
+              </Block>
+            </Block>
+            {showScan && (
+              <Block
+                width="92px"
+                height="92px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                $style={{ flexShrink: 0 }}
+                overrides={{
+                  Block: {
+                    style: {
+                      borderRadius: '12px',
+                      background: theme.colors.backgroundSecondary,
+                      border: `1px solid ${theme.colors.borderOpaque}`,
+                    },
+                  },
+                }}
+              >
+                <Smartphone size={40} strokeWidth={1.5} color={theme.colors.contentPrimary} aria-hidden />
+              </Block>
+            )}
+          </Block>
+          <GuardrButton
+            kind="secondary"
+            onClick={() => void promptInstall()}
+            startEnhancer={<Smartphone className="w-4 h-4" />}
+            overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px' } } }}
+          >
+            {pwaLabel}
+          </GuardrButton>
+        </Block>
       </Block>
 
-      <Block
-        as="a"
-        href={DOWNLOAD_PAGE_URL}
-        className="uber-landing-text-link"
-        display="inline-flex"
-        alignItems="center"
-        gridGap="scale100"
-        $style={{ fontWeight: 600, fontSize: '14px' }}
-      >
-        Compare APK vs home screen
-        <ArrowRight className="w-3.5 h-3.5" />
+      <Block $style={{ textAlign: centered ? 'center' : 'left' }}>
+        <Block
+          as="a"
+          href={DOWNLOAD_PAGE_URL}
+          className="uber-landing-text-link"
+          display="inline-flex"
+          alignItems="center"
+          gridGap="scale100"
+          $style={{ fontWeight: 600, fontSize: '14px' }}
+        >
+          Compare APK vs home screen
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Block>
       </Block>
 
       <AnimatePresence>
