@@ -32,7 +32,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader, AuthModeToggle, AuthRolePicker } from './auth/AuthFormChrome';
+import { AuthFormHeader } from './auth/AuthFormChrome';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -711,11 +711,6 @@ export function AuthPage({
 
   const [, theme] = useStyletron();
 
-  const ROLES = [
-    { id: 'guard' as const, label: 'Guard', desc: 'Licensed security professional', icon: Shield },
-    { id: 'client' as const, label: 'Client', desc: 'Business seeking security', icon: Building2 },
-  ];
-
   const heroContent = AUTH_HERO_CONTENT[role];
   const testimonial = AUTH_TESTIMONIAL[role];
 
@@ -725,53 +720,12 @@ export function AuthPage({
             role={role}
             isSignUp={isSignUp}
             compact={isSheet}
-            hideBadge={isDesktopAuth}
+            hideBadge
             center={isDesktopAuth}
           />
 
-          {!isDesktopAuth && (
-            <AuthModeToggle
-              isSignUp={isSignUp}
-              onSignIn={() => {
-                setIsSignUp(false);
-                setErrorMsg('');
-                onAuthModeChange?.('sign-in');
-              }}
-              onSignUp={() => {
-                setIsSignUp(true);
-                setErrorMsg('');
-                onAuthModeChange?.('sign-up');
-              }}
-            />
-          )}
-
-          {!isSignUp && !isDesktopAuth && (
-            <AuthRolePicker
-              roles={ROLES}
-              value={role}
-              onChange={(id) => {
-                setRole(id);
-                setErrorMsg('');
-                onAuthRoleChange?.(id);
-              }}
-            />
-          )}
-
           <div className="space-y-5">
             {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
-
-            {isSignUp && !isDesktopAuth && (
-              <AuthRolePicker
-                roles={ROLES}
-                value={role}
-                onChange={(id) => {
-                  setRole(id);
-                  setErrorMsg('');
-                  onAuthRoleChange?.(id);
-                }}
-                showDescription
-              />
-            )}
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {isSignUp && (
@@ -1551,18 +1505,6 @@ export function AuthPage({
                     <BookOpen className="w-4 h-4" />
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  className="dsk-auth-switch"
-                  onClick={() => {
-                    const next = !isSignUp;
-                    setIsSignUp(next);
-                    setErrorMsg('');
-                    onAuthModeChange?.(next ? 'sign-up' : 'sign-in');
-                  }}
-                >
-                  {isSignUp ? 'Login' : 'Create account'}
-                </button>
               </div>
             </div>
 

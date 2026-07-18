@@ -19,13 +19,13 @@ export function AuthFormHeader({
   hideBadge?: boolean;
   center?: boolean;
 }) {
-  const title = center && hideBadge
-    ? (isSignUp ? 'Create an account' : 'Sign in')
-    : isSignUp
-      ? role === 'guard'
-        ? 'Create your guard account'
-        : 'Create your client account'
-      : 'Sign in';
+  const title = isSignUp
+    ? role === 'guard'
+      ? 'Create your guard account'
+      : 'Create your client account'
+    : role === 'guard'
+      ? 'Guard sign in'
+      : 'Client sign in';
 
   const subtitle = center && hideBadge
     ? (isSignUp
