@@ -31,7 +31,7 @@ interface DesktopStaffTopShellProps {
   headerOverride?: React.ReactNode;
 }
 
-const PRIMARY_NAV: StaffSection[] = ['map', 'overview', 'jobs', 'guards', 'clients', 'messages'];
+const PRIMARY_NAV: StaffSection[] = ['overview', 'map', 'jobs', 'guards', 'clients', 'messages'];
 const SECONDARY_NAV: StaffSection[] = [
   'applications',
   'credentials',

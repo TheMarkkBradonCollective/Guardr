@@ -32,14 +32,14 @@ interface StaffSidebarNavProps {
   showCities: boolean;
 }
 
-const DASHBOARD_IDS: StaffSection[] = ['map', 'overview'];
+const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
 const OPERATIONS_IDS: StaffSection[] = [
   'jobs',
   'applications',
   'credentials',
-  'clients',
   'guards',
   'crews',
+  'clients',
   'team',
   'messages',
 ];
