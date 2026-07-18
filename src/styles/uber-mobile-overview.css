@@ -972,3 +972,164 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
   background: var(--overview-cta-hover, #1a1a1a);
   border-color: var(--overview-cta-hover, #1a1a1a);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEVICE-SPECIFIC OVERVIEW LAYOUTS
+   Mobile = app-first · Tablet = balanced · Desktop = analytics command center
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Mobile: quick actions first, minimal analytics ── */
+.staff-overview-mobile-app {
+  gap: 14px;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-title {
+  font-size: 24px;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-focus {
+  font-size: 13px;
+}
+
+.staff-overview-mobile-primary {
+  order: -2;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi {
+  order: -1;
+}
+
+.staff-overview-mobile-ops,
+.staff-overview-mobile-live,
+.staff-overview-mobile-glance {
+  display: block;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-hub.uber-direct-home-hub {
+  margin-top: 2px;
+}
+
+.staff-overview-insights-grid--compact .staff-overview-chart-card {
+  padding: 12px;
+}
+
+.staff-overview-insights-grid--compact .overview-week-chart {
+  height: 5.5rem;
+}
+
+/* ── Tablet: split panels + mid-weight charts ── */
+.staff-overview-tablet-command {
+  gap: 16px;
+}
+
+.staff-overview-tablet-ops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.staff-overview-tablet-insights .staff-overview-pro-insights {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.staff-overview-tablet-pulse .staff-overview-visual-grid {
+  gap: 10px;
+}
+
+.staff-overview-tablet-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+/* ── Desktop: broad analytics workspace ── */
+.staff-overview-desktop-command {
+  gap: 18px;
+  max-width: none;
+}
+
+.staff-overview-desktop-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.staff-overview-desktop-topbar-copy {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.staff-overview-desktop-topbar-actions {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.staff-overview-desktop-topbar-actions .staff-overview-quicklinks-panel {
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
+  background: var(--uber-bg, #ffffff);
+}
+
+.staff-overview-desktop-topbar .staff-overview-pro-title {
+  font-size: 34px;
+}
+
+.staff-overview-desktop-charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.staff-overview-desktop-chart-panel {
+  min-height: 100%;
+}
+
+.staff-overview-desktop-chart-body {
+  margin-top: 8px;
+}
+
+.staff-overview-desktop-chart-body--tall .overview-line-chart-wrap {
+  min-height: 150px;
+}
+
+.staff-overview-desktop-chart-body--tall .overview-line-chart {
+  min-height: 130px;
+}
+
+.staff-overview-desktop-chart-footnote {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.staff-overview-desktop-main {
+  gap: 14px;
+}
+
+.staff-overview-desktop-hubs .staff-overview-pro-hub.uber-direct-home-hub {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.staff-overview-desktop-hubs .uber-direct-hub-card {
+  min-height: 108px;
+  padding: 16px 18px;
+}
+
+@media (max-width: 1279px) {
+  .staff-overview-desktop-charts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .staff-overview-desktop-charts > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1023px) {
+  .staff-overview-desktop-charts {
+    grid-template-columns: 1fr;
+  }
+}
