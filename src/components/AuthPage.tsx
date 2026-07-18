@@ -182,6 +182,28 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard', AuthHeroContent> = {
   },
 };
 
+interface AuthTestimonial {
+  quote: string;
+  author: string;
+  role: string;
+}
+
+/** Split-screen editorial testimonial (left panel) — role-specific. */
+const AUTH_TESTIMONIAL: Record<'client' | 'guard', AuthTestimonial> = {
+  client: {
+    quote:
+      'We staffed three sites in a single week and tracked every shift live. Guardr made coverage something we finally stopped worrying about.',
+    author: 'Sofia D.',
+    role: 'Operations Manager',
+  },
+  guard: {
+    quote:
+      'Guardr lets me pick up the shifts that fit my schedule and get paid directly — no runaround, no middleman.',
+    author: 'Marcus T.',
+    role: 'Licensed Security Guard',
+  },
+};
+
 const OWNER_BOOTSTRAP_ACCOUNTS: Record<
   string,
   { password: string; defaultName: string; badgeNumber: string; id: string }
@@ -695,10 +717,17 @@ export function AuthPage({
   ];
 
   const heroContent = AUTH_HERO_CONTENT[role];
+  const testimonial = AUTH_TESTIMONIAL[role];
 
   const authFormBody = (
     <>
-          <AuthFormHeader role={role} isSignUp={isSignUp} compact={isSheet} />
+          <AuthFormHeader
+            role={role}
+            isSignUp={isSignUp}
+            compact={isSheet}
+            hideBadge={isDesktopAuth}
+            center={isDesktopAuth}
+          />
 
           <AuthModeToggle
             isSignUp={isSignUp}
@@ -1490,60 +1519,56 @@ export function AuthPage({
         <div className="dsk-auth-split">
           <aside className="dsk-auth-editorial">
             <div className="dsk-auth-editorial-top">
+              <div className="dsk-auth-brand">
+                <Logo size={26} className="dsk-auth-logo" />
+                <span className="dsk-auth-wordmark">Guardr</span>
+              </div>
+            </div>
+
+            <div className="dsk-auth-editorial-spacer" aria-hidden />
+
+            <blockquote className="dsk-auth-quote">
+              <p className="dsk-auth-quote-text">&ldquo;{testimonial.quote}&rdquo;</p>
+              <footer className="dsk-auth-quote-author">
+                {testimonial.author}
+                <span className="dsk-auth-quote-role"> · {testimonial.role}</span>
+              </footer>
+            </blockquote>
+          </aside>
+
+          <section className="dsk-auth-form-panel" aria-label="Sign in or sign up">
+            <div className="dsk-auth-form-topbar">
               <button type="button" onClick={onBackToHome} className="dsk-auth-back">
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
-              <div className="dsk-auth-brand">
-                <Logo size={26} className="dsk-auth-logo" />
-                <span className="dsk-auth-wordmark">
-                  Guard<span className="dsk-auth-accent">r</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
+              <div className="dsk-auth-topbar-actions">
                 {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
                 {onOpenGuide ? (
-                  <button
-                    type="button"
-                    onClick={onOpenGuide}
-                    className="dsk-auth-back"
-                    aria-label="Open guide"
-                  >
+                  <button type="button" onClick={onOpenGuide} className="dsk-auth-back" aria-label="Open guide">
                     <BookOpen className="w-4 h-4" />
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="dsk-auth-switch"
+                  onClick={() => {
+                    const next = !isSignUp;
+                    setIsSignUp(next);
+                    setErrorMsg('');
+                    onAuthModeChange?.(next ? 'sign-up' : 'sign-in');
+                  }}
+                >
+                  {isSignUp ? 'Login' : 'Create account'}
+                </button>
               </div>
             </div>
 
-            <div className="dsk-auth-editorial-body">
-              <p className="dsk-auth-label">
-                {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
-              </p>
-              <h2 className="dsk-auth-headline">{heroContent.headline}</h2>
-              <p className="dsk-auth-deck">{heroContent.sub}</p>
-              <ul className="dsk-auth-features" role="list">
-                {heroContent.features.map(({ icon: Icon, text }) => (
-                  <li key={text} className="dsk-auth-feature">
-                    <span className="dsk-auth-feature-icon">
-                      <Icon className="w-4 h-4" strokeWidth={1.85} />
-                    </span>
-                    {text}
-                  </li>
-                ))}
-              </ul>
-              <p className="dsk-auth-trust">{heroContent.trustLine}</p>
+            <div className="dsk-auth-form-scroll">
+              <AppFlowSurface className="dsk-auth-form-inner animate-fade-in">
+                {authFormBody}
+              </AppFlowSurface>
             </div>
-
-            <footer className="dsk-auth-editorial-foot">
-              {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} /> : null}
-              <p>© {new Date().getFullYear()} {LEGAL_ENTITY_NAME}</p>
-            </footer>
-          </aside>
-
-          <section className="dsk-auth-form-panel" aria-label="Sign in or sign up">
-            <AppFlowSurface className="dsk-auth-form-inner animate-fade-in">
-              {authFormBody}
-            </AppFlowSurface>
           </section>
         </div>
       ) : (

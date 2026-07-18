@@ -10,10 +10,14 @@ export function AuthFormHeader({
   role,
   isSignUp,
   compact = false,
+  hideBadge = false,
+  center = false,
 }: {
   role: 'guard' | 'client';
   isSignUp: boolean;
   compact?: boolean;
+  hideBadge?: boolean;
+  center?: boolean;
 }) {
   const title = isSignUp
     ? role === 'guard'
@@ -30,10 +34,12 @@ export function AuthFormHeader({
       : 'Welcome back — your requests and coverage are ready.';
 
   return (
-    <Block marginBottom={compact ? 'scale600' : 'scale800'}>
-      <LandingBadge>{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</LandingBadge>
+    <Block marginBottom={compact ? 'scale600' : 'scale800'} $style={center ? { textAlign: 'center' } : undefined}>
+      {hideBadge ? null : (
+        <LandingBadge center={center}>{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</LandingBadge>
+      )}
       <HeadingLarge
-        marginTop="scale200"
+        marginTop={hideBadge ? '0' : 'scale200'}
         marginBottom="scale300"
         overrides={{
           Block: {
