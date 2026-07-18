@@ -194,14 +194,17 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
     const base = jobsByTab[activeTab];
     const query = searchQuery.trim().toLowerCase();
     if (!query) return base;
-    return base.filter((job) =>
-      [job.title, job.siteName, job.location, job.assignedGuardName, job.id]
+    return base.filter((job) => {
+      const guardName = job.assignedGuardId
+        ? guards.find((guard) => guard.id === job.assignedGuardId)?.name
+        : undefined;
+      return [job.title, job.siteName, job.location, guardName, job.id]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
-        .includes(query),
-    );
-  }, [jobsByTab, activeTab, searchQuery]);
+        .includes(query);
+    });
+  }, [jobsByTab, activeTab, searchQuery, guards]);
 
   const updateSelectedId = (jobId: string | null) => {
     setSelectedId(jobId);

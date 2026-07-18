@@ -112,7 +112,7 @@ export function ClientHomeDesktop({
         job.title,
         job.siteName,
         job.location,
-        job.assignedGuardName,
+        job.contactName,
         job.id,
       ]
         .filter(Boolean)
@@ -225,7 +225,7 @@ export function ClientHomeDesktop({
                 >
                   <td>
                     <p className="uber-workbench-table-primary">
-                      {job.assignedGuardName || job.title}
+                      {job.contactName || job.title}
                     </p>
                     <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
                   </td>
