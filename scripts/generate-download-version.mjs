@@ -37,7 +37,7 @@ await QRCode.toFile(qrPath, `${APK_DIRECT_URL}${apkCacheQuery}`, {
   type: 'png',
   width: 320,
   margin: 2,
-  color: { dark: '#5e7b61', light: '#ffffff' },
+  color: { dark: '#000000', light: '#ffffff' },
 });
 
 const gradlePath = path.join(ROOT, 'android/app/build.gradle');
