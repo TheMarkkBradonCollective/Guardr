@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
 import type { StaffSection } from '../../lib/staffOps';
 
-export type StaffCreateActionKey = 'job' | 'client' | 'guard' | 'staff';
+export type StaffCreateActionKey = 'job' | 'client' | 'guard' | 'staff' | 'credential';
 
 export function staffSectionCreateAction(section: StaffSection): StaffCreateActionKey | null {
   switch (section) {
@@ -25,6 +25,7 @@ export const STAFF_CREATE_ACTION_LABELS: Record<StaffCreateActionKey, string> = 
   client: '+ Add client',
   guard: '+ Add guard',
   staff: '+ Add staff',
+  credential: '+ Add credential',
 };
 
 type StaffShellCreateContextValue = {
@@ -95,6 +96,7 @@ export function useStaffSidebarPrimaryActions(
     canAddClient?: boolean;
     canAddGuard?: boolean;
     canAddStaff?: boolean;
+    canAddCredential?: boolean;
   },
 ): SidebarPrimaryAction[] {
   const { trigger } = useStaffShellCreate();
@@ -119,6 +121,16 @@ export function useStaffSidebarPrimaryActions(
       return actions;
     }
 
+    if (section === 'credentials' && options.canAddCredential) {
+      return [
+        {
+          label: STAFF_CREATE_ACTION_LABELS.credential,
+          icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+          onClick: () => trigger('credential'),
+        },
+      ];
+    }
+
     const actionKey = staffSectionCreateAction(section);
     if (!actionKey) return [];
 
@@ -137,5 +149,13 @@ export function useStaffSidebarPrimaryActions(
         onClick: () => trigger(actionKey),
       },
     ];
-  }, [section, options.canAddClient, options.canAddGuard, options.canCreateJob, options.canAddStaff, trigger]);
+  }, [
+    section,
+    options.canAddClient,
+    options.canAddCredential,
+    options.canAddGuard,
+    options.canCreateJob,
+    options.canAddStaff,
+    trigger,
+  ]);
 }

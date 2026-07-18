@@ -1160,6 +1160,7 @@ export function StaffDashboard({
       canAddClient={canManageClientAccounts}
       canAddGuard={canManageGuardAccounts}
       canAddStaff={canProposeStaff}
+      canAddCredential={canManageGuardAccounts}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}
