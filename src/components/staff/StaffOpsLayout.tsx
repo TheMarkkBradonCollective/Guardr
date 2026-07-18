@@ -183,7 +183,8 @@ export function StaffOpsLayout({
   );
 }
 
-interface StaffOpsLayoutInnerProps extends StaffOpsLayoutProps {
+interface StaffOpsLayoutInnerProps
+  extends Omit<StaffOpsLayoutProps, 'themeMode' | 'onChangeTheme' | 'fullBleed' | 'badges'> {
   navItems: StaffNavItem[];
   screenTitle: string;
   navHighlight: StaffSection;

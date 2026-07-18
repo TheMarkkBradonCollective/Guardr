@@ -63,6 +63,7 @@ const AUTH_ROLE_OPTIONS = [
   { id: 'client' as const, label: 'Client', icon: Building2 },
 ];
 const MAX_GUARD_HOURLY_RATE = 300;
+const MIN_GUARD_HOURLY_RATE = 15;
 const DEFAULT_GUARD_HOURLY_RATE = 35;
 
 /** Matches the hourly-rate input's own min={15}/max={300} — parseInt(x) || 35
