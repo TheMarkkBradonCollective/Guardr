@@ -18,10 +18,15 @@ export interface StaffAddClientInput {
 interface StaffAddClientFormProps {
   onAdd: (input: StaffAddClientInput) => Promise<string | void>;
   onCreated?: (clientId: string) => void;
+  showInlineTriggerOnDesktop?: boolean;
 }
 
-export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps) {
-  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('client');
+export function StaffAddClientForm({
+  onAdd,
+  onCreated,
+  showInlineTriggerOnDesktop = false,
+}: StaffAddClientFormProps) {
+  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('client', { showInlineTriggerOnDesktop });
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');

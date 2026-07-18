@@ -19,10 +19,15 @@ export interface StaffAddGuardInput {
 interface StaffAddGuardFormProps {
   onAdd: (input: StaffAddGuardInput) => Promise<string | void>;
   onCreated?: (guardId: string) => void;
+  showInlineTriggerOnDesktop?: boolean;
 }
 
-export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) {
-  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('guard');
+export function StaffAddGuardForm({
+  onAdd,
+  onCreated,
+  showInlineTriggerOnDesktop = false,
+}: StaffAddGuardFormProps) {
+  const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('guard', { showInlineTriggerOnDesktop });
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
