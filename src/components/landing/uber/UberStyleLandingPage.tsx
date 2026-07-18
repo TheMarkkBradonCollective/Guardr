@@ -13,6 +13,8 @@ import { LandingAppDownloads } from '../LandingAppDownloads';
 import { UberLandingNav, UberLandingHero } from './UberLandingChrome';
 import { UberExploreGrid, UberLoginBand } from './UberExploreGrid';
 import { UberLandingHeroVisual, UberLandingLoginVisual } from './UberLandingVisuals';
+import { UberCoverageEstimator } from './UberCoverageEstimator';
+import { UberHomePromoSections } from './UberHomeSections';
 import type { LandingSectionsProps } from '../shared/LandingSections';
 
 type UberFormFactor = 'mobile' | 'tablet' | 'desktop';
@@ -115,6 +117,10 @@ export function UberStyleLandingPage({
       <TrustStrip isMobile={isMobile} />
 
       <UberExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+
+      <UberCoverageEstimator formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+
+      <UberHomePromoSections formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
 
       <UberLoginBand
         formFactor={formFactor}
