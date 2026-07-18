@@ -6,7 +6,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import type { AccountMenuNotificationProps } from './AccountMenu';
-import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings, Receipt } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen, MapPin, FileText, Settings, Receipt, Plus } from 'lucide-react';
 
 interface ClientAppLayoutProps {
   children: React.ReactNode;
@@ -133,7 +133,7 @@ export function ClientAppLayout({
             active: activeView === 'guide',
           },
         ],
-        footer: accountFooter,
+        footer: undefined,
         ...accountNotifications,
       }}
       navItems={navItems}
@@ -144,6 +144,16 @@ export function ClientAppLayout({
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
       workspaceLabel="Client workspace"
+      sidebarPrimaryAction={
+        !accountPending
+          ? {
+              label: '+ Post a job',
+              icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+              onClick: () => onNavigate?.('request'),
+            }
+          : undefined
+      }
+      sidebarFooter={accountFooter}
     >
       {children}
     </RoleAppShell>

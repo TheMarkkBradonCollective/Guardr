@@ -11,6 +11,12 @@ import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { useDevice } from '../../../lib/platform';
 import { prefersReducedMotion } from '../../../theme/motionTokens';
 
+export interface SidebarPrimaryAction {
+  label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+}
+
 export interface GuardrDrawerShellProps {
   workspaceLabel: string;
   title: string;
@@ -20,6 +26,7 @@ export interface GuardrDrawerShellProps {
   accountMenu: React.ReactNode;
   notifications?: React.ReactNode;
   sidebarBrandExtra?: React.ReactNode;
+  sidebarPrimaryAction?: SidebarPrimaryAction;
   sidebarFooter?: React.ReactNode;
   hideHeader?: boolean;
   headerOverride?: React.ReactNode;
@@ -44,6 +51,7 @@ export function GuardrDrawerShell({
   accountMenu,
   notifications,
   sidebarBrandExtra,
+  sidebarPrimaryAction,
   sidebarFooter,
   hideHeader = false,
   headerOverride,
@@ -137,6 +145,7 @@ export function GuardrDrawerShell({
   const sidebarNode = (
     <Block
       as="aside"
+      className={isDesktopWorkspace ? 'uber-direct-sidebar' : undefined}
       aria-label={ariaLabel}
       aria-hidden={!sidebarVisible}
       display="flex"
@@ -179,6 +188,7 @@ export function GuardrDrawerShell({
     >
       {/* Sidebar brand — white Uber Direct rail on desktop; compact on mobile drawer */}
       <Block
+        className={isDesktopWorkspace ? 'uber-direct-sidebar-brand' : undefined}
         display="flex"
         alignItems="center"
         gridGap="scale400"
@@ -204,6 +214,7 @@ export function GuardrDrawerShell({
         <Block flex="1" minWidth="0">
           <ParagraphMedium
             margin={0}
+            className={isDesktopWorkspace ? 'uber-direct-wordmark' : undefined}
             $style={{
               fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
               fontWeight: 800,
@@ -231,7 +242,21 @@ export function GuardrDrawerShell({
         {sidebarBrandExtra}
       </Block>
 
+      {isDesktopWorkspace && sidebarPrimaryAction ? (
+        <div className="uber-direct-sidebar-cta-wrap">
+          <button
+            type="button"
+            className="uber-direct-sidebar-cta"
+            onClick={sidebarPrimaryAction.onClick}
+          >
+            {sidebarPrimaryAction.icon}
+            <span>{sidebarPrimaryAction.label}</span>
+          </button>
+        </div>
+      ) : null}
+
       <Block
+        className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : undefined}
         flex="1"
         minHeight={0}
         overflow="auto"
@@ -245,6 +270,7 @@ export function GuardrDrawerShell({
 
       {sidebarFooter ? (
         <Block
+          className={isDesktopWorkspace ? 'uber-direct-sidebar-footer' : undefined}
           paddingLeft="scale500"
           paddingRight="scale500"
           paddingBottom="scale400"
@@ -414,6 +440,7 @@ export function GuardrDrawerShell({
 
         {!hideHeader && !headerOverride && showPageTitleBand ? (
           <Block
+            className={isDesktopWorkspace ? 'uber-direct-page-header' : undefined}
             paddingTop={isDesktopWorkspace ? 'scale800' : 'scale600'}
             paddingBottom={isDesktopWorkspace ? 'scale600' : 'scale600'}
             paddingLeft="scale800"
@@ -440,6 +467,7 @@ export function GuardrDrawerShell({
               <Block minWidth={0} flex="1">
                 <ParagraphMedium
                   margin={0}
+                  className={isDesktopWorkspace ? 'uber-direct-page-title' : undefined}
                   $style={{
                     fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
                     fontSize: isDesktopWorkspace ? '32px' : '28px',
@@ -483,7 +511,7 @@ export function GuardrDrawerShell({
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <Block
-            className="mobility-content-inner"
+            className={`mobility-content-inner${isDesktopWorkspace ? ` uber-direct-content-inner${bleed ? ' uber-direct-content-inner--bleed' : ''}` : ''}`}
             height="100%"
             maxWidth={chrome.contentMaxWidth ?? '100%'}
             minWidth={0}
