@@ -249,12 +249,12 @@ html.theme-dark .uber-stat-chip--active {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.85rem;
+  padding: 0.4rem 0.75rem;
   border: 1px solid var(--uber-border, #e2e2e2);
   border-radius: 999px;
   background: var(--uber-bg, #fff);
   color: var(--uber-text, #000);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease;
@@ -277,14 +277,13 @@ html.theme-dark .uber-stat-chip--active {
   border-color: var(--overview-cta-hover, #000000);
 }
 
-.staff-overview-desktop-quicklinks-panel .staff-overview-desktop-quick-links {
-  padding: 10px 12px;
-  justify-content: flex-end;
+.staff-overview-desktop-toolbar .staff-overview-desktop-quick-links {
+  flex-wrap: wrap;
 }
 
 body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi,
 body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: none;
 }
 
 body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-visual-grid,

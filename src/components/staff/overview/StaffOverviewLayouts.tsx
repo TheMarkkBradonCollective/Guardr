@@ -8,13 +8,11 @@ import {
   WorkbenchGridCell,
   WorkbenchPage,
   WorkbenchPanel,
-  WorkbenchQuickLinks,
 } from '../../baseui/layout/WorkbenchLayout';
 import {
   OverviewLineChart,
   OverviewPieChart,
   OverviewSegmentBar,
-  OverviewVisualGrid,
   OverviewWeekChart,
 } from './OverviewCharts';
 import { StaffOverviewSectionHeader } from './StaffOverviewUberParts';
@@ -219,65 +217,58 @@ export function StaffOverviewDesktopLayout({
       data-tour="staff-overview"
       data-staff-role={staffRole}
     >
-      <header className="staff-overview-desktop-topbar">
-        <div className="staff-overview-desktop-topbar-copy">{header}</div>
-        <div className="staff-overview-desktop-topbar-actions">{shortcuts}</div>
-      </header>
+      <div className="staff-overview-desktop-shell">
+        <div className="staff-overview-desktop-shell-head">
+          {header}
+          <div className="staff-overview-desktop-toolbar" aria-label="Quick navigation">
+            {shortcuts}
+          </div>
+          {kpiGrid}
+        </div>
 
-      {kpiGrid}
+        <div className="staff-overview-desktop-workspace">
+          <div className="staff-overview-desktop-primary">
+            <DesktopChartsBand
+              weeklySeries={weeklySeries}
+              jobPipelineSegments={jobPipelineSegments}
+              queuePieSegments={queuePieSegments}
+              healthPieSegments={healthPieSegments}
+              showPipeline={config.showPipelineInsight}
+            />
 
-      <DesktopChartsBand
-        weeklySeries={weeklySeries}
-        jobPipelineSegments={jobPipelineSegments}
-        queuePieSegments={queuePieSegments}
-        healthPieSegments={healthPieSegments}
-        showPipeline={config.showPipelineInsight}
-      />
+            <WorkbenchGrid className="staff-overview-desktop-main staff-overview-pro-main">
+              {financialsPanel ? <WorkbenchGridCell span={12}>{financialsPanel}</WorkbenchGridCell> : null}
 
-      {queueBoard}
+              {pulsePanel && operationsPanel ? (
+                <>
+                  <WorkbenchGridCell span={8}>{pulsePanel}</WorkbenchGridCell>
+                  <WorkbenchGridCell span={4}>{operationsPanel}</WorkbenchGridCell>
+                </>
+              ) : (
+                <>
+                  {pulsePanel ? <WorkbenchGridCell span={12}>{pulsePanel}</WorkbenchGridCell> : null}
+                  {operationsPanel ? <WorkbenchGridCell span={12}>{operationsPanel}</WorkbenchGridCell> : null}
+                </>
+              )}
 
-      <WorkbenchGrid className="staff-overview-desktop-main staff-overview-pro-main">
-        {financialsPanel ? <WorkbenchGridCell span={12}>{financialsPanel}</WorkbenchGridCell> : null}
+              {activityPanel ? <WorkbenchGridCell span={12}>{activityPanel}</WorkbenchGridCell> : null}
 
-        {pulsePanel && operationsPanel ? (
-          <>
-            <WorkbenchGridCell span={8}>{pulsePanel}</WorkbenchGridCell>
-            <WorkbenchGridCell span={4}>{operationsPanel}</WorkbenchGridCell>
-          </>
-        ) : (
-          <>
-            {pulsePanel ? <WorkbenchGridCell span={12}>{pulsePanel}</WorkbenchGridCell> : null}
-            {operationsPanel ? <WorkbenchGridCell span={12}>{operationsPanel}</WorkbenchGridCell> : null}
-          </>
-        )}
+              <WorkbenchGridCell span={12}>
+                <section className="staff-overview-desktop-destinations">
+                  <StaffOverviewSectionHeader title="Destinations" />
+                  {hubCards}
+                </section>
+              </WorkbenchGridCell>
+            </WorkbenchGrid>
+          </div>
 
-        {!pulsePanel && config.showPlatformPulse && platformPulseCards.length > 0 ? (
-          <WorkbenchGridCell span={12}>
-            <WorkbenchPanel className="staff-overview-list-panel" padding>
-              <StaffOverviewSectionHeader title="Platform pulse" actionLabel="Analytics" onAction={onNavigateAnalytics} />
-              <OverviewVisualGrid cards={platformPulseCards} columns={3} variant="full" />
-            </WorkbenchPanel>
-          </WorkbenchGridCell>
-        ) : null}
-
-        {!operationsPanel && config.showOperationsSnapshot && operationsSnapshotCards.length > 0 ? (
-          <WorkbenchGridCell span={12}>
-            <WorkbenchPanel className="staff-overview-list-panel" padding>
-              <StaffOverviewSectionHeader title="Operations snapshot" />
-              <OverviewVisualGrid cards={operationsSnapshotCards} columns={3} variant="full" />
-            </WorkbenchPanel>
-          </WorkbenchGridCell>
-        ) : null}
-
-        <WorkbenchGridCell span={6}>{attentionPanel}</WorkbenchGridCell>
-        <WorkbenchGridCell span={6}>{livePanel}</WorkbenchGridCell>
-
-        {activityPanel ? <WorkbenchGridCell span={12}>{activityPanel}</WorkbenchGridCell> : null}
-
-        <WorkbenchGridCell span={12}>
-          <section className="staff-overview-desktop-hubs">{hubCards}</section>
-        </WorkbenchGridCell>
-      </WorkbenchGrid>
+          <aside className="staff-overview-desktop-rail" aria-label="Operations rail">
+            {queueBoard}
+            {attentionPanel}
+            {livePanel}
+          </aside>
+        </div>
+      </div>
     </WorkbenchPage>
   );
 }
