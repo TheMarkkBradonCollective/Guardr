@@ -81,8 +81,7 @@ export function GuardrDrawerShell({
   const isMapMode = variant === 'dark';
   const useBottomNav = isMobile && !!mobileBottomNavItems?.length;
   const showChromeHeader = !hideHeader && !isDesktopWorkspace;
-  const showPageTitleBand =
-    (showTitleBand || isDesktopWorkspace) && !hideHeader && !headerOverride;
+  const showPageTitleBand = showTitleBand && !hideHeader && !headerOverride;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
 
   useEffect(() => {
@@ -469,7 +468,9 @@ export function GuardrDrawerShell({
           minHeight={0}
           minWidth={0}
           overflow="hidden"
-          backgroundColor={isMapMode ? 'backgroundPrimary' : 'backgroundSecondary'}
+          backgroundColor={
+            isMapMode ? 'backgroundPrimary' : isDesktopWorkspace ? 'backgroundPrimary' : 'backgroundSecondary'
+          }
           className="uber-shell-content"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >

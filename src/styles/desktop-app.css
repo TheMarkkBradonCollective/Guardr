@@ -2650,5 +2650,5 @@ body[data-form-factor="desktop"] .uber-app-shell[data-mobility-layout="desktop"]
 /* Desktop GuardrDrawerShell sidebar nav active: bottom border on header,
    then white body for nav */
 body[data-form-factor="desktop"] .uber-app-shell[data-mobility-layout="desktop"] .mobility-content-pane {
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, #ffffff);
 }
