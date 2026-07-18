@@ -32,7 +32,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader } from './auth/AuthFormChrome';
+import { AuthFormHeader, AuthModeToggle, AuthRolePicker } from './auth/AuthFormChrome';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -58,7 +58,10 @@ import {
   type GuardCardStatus,
 } from '../lib/guardApplicationIntake';
 
-const MIN_GUARD_HOURLY_RATE = 15;
+const AUTH_ROLE_OPTIONS = [
+  { id: 'guard' as const, label: 'Guard', icon: Shield },
+  { id: 'client' as const, label: 'Client', icon: Building2 },
+];
 const MAX_GUARD_HOURLY_RATE = 300;
 const DEFAULT_GUARD_HOURLY_RATE = 35;
 
@@ -717,18 +720,47 @@ export function AuthPage({
 
   const authFormBody = (
     <>
-          <AuthFormHeader
-            role={role}
-            isSignUp={isSignUp}
-            compact={isSheet}
-            hideBadge
-            center={isDesktopAuth}
-          />
+      <div className={!isDesktopAuth ? 'auth-sheet-form' : undefined}>
+        <AuthFormHeader
+          role={role}
+          isSignUp={isSignUp}
+          compact={isSheet || !isDesktopAuth}
+          hideBadge={isDesktopAuth}
+          center={isDesktopAuth}
+          variant={isSheet ? 'sheet' : isDesktopAuth ? 'desktop' : 'sheet'}
+        />
 
-          <div className="space-y-5">
-            {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
+        {!isDesktopAuth ? (
+          <div className={isSheet ? 'auth-sheet-controls' : 'flex flex-col gap-4 mb-2'}>
+            <div className={isSheet ? 'auth-sheet-segmented' : undefined}>
+              <AuthModeToggle
+                isSignUp={isSignUp}
+                onSignIn={() => {
+                  setIsSignUp(false);
+                  onAuthModeChange?.('sign-in');
+                }}
+                onSignUp={() => {
+                  setIsSignUp(true);
+                  onAuthModeChange?.('sign-up');
+                }}
+              />
+            </div>
+            <AuthRolePicker
+              roles={AUTH_ROLE_OPTIONS}
+              value={role}
+              onChange={(nextRole) => {
+                setRole(nextRole);
+                onAuthRoleChange?.(nextRole);
+              }}
+              variant={isSheet ? 'sheet' : 'sheet'}
+            />
+          </div>
+        ) : null}
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
+        <div className={!isDesktopAuth ? 'auth-sheet-fields' : 'space-y-5'}>
+          {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
+
+          <form onSubmit={handleAuthSubmit} className={isSheet ? 'space-y-4' : 'space-y-4'}>
               {isSignUp && (
                 <PersonNameFields
                   firstName={firstName}
@@ -1415,18 +1447,19 @@ export function AuthPage({
                 </label>
               )}
 
-              <AppButton type="submit" fullWidth className="mt-3">
+              <AppButton type="submit" fullWidth className={isSheet ? 'auth-sheet-submit mt-3' : 'mt-3'}>
                 {isSignUp ? 'Create account' : 'Sign in'}
                 <ArrowRight className="w-4 h-4" />
               </AppButton>
             </form>
-          </div>
+        </div>
 
-          {onOpenLegal && !isDesktopAuth && (
-            <div className={`flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
-              <LegalFooterLinks onOpenLegal={onOpenLegal} />
-            </div>
-          )}
+        {onOpenLegal && !isDesktopAuth && (
+          <div className={isSheet ? 'auth-sheet-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
+            <LegalFooterLinks onOpenLegal={onOpenLegal} />
+          </div>
+        )}
+      </div>
     </>
   );
 
@@ -1435,7 +1468,7 @@ export function AuthPage({
       <GuardrSheet
         open={open}
         onClose={onBackToHome}
-        panelClassName={`auth-sheet-panel auth-sheet-panel--${shellKind} rounded-t-[1.35rem] max-h-[92dvh]`}
+        panelClassName={`auth-sheet-panel auth-sheet-panel--${shellKind} max-h-[92dvh]`}
         className={`auth-sheet-root auth-sheet--${viewSurface}`}
         ariaLabel={isSignUp ? 'Create account' : 'Sign in'}
         zIndex={2200}
@@ -1443,24 +1476,17 @@ export function AuthPage({
         <div className="auth-sheet-grabber-wrap" aria-hidden="true">
           <span className="auth-sheet-grabber" />
         </div>
-        <header className="auth-sheet-header flex items-center justify-between gap-3 px-5 pb-3 pt-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <Logo size={22} className="shrink-0" />
-            <span className="font-black text-base tracking-[-0.04em] truncate">
-              {isSignUp ? 'Create account' : 'Sign in'}
-            </span>
-          </div>
-          <AppButton
-            variant="ghost"
-            size="sm"
+        <div className="auth-sheet-topbar">
+          <button
+            type="button"
             onClick={onBackToHome}
+            className="auth-sheet-close"
             aria-label="Close"
-            className="!min-w-0 !rounded-full !p-2"
           >
             <X className="w-4 h-4" />
-          </AppButton>
-        </header>
-        <div className="auth-sheet-scroll px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          </button>
+        </div>
+        <div className="auth-sheet-scroll">
           {authFormBody}
         </div>
       </GuardrSheet>
