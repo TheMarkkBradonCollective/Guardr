@@ -1754,6 +1754,13 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
   background: transparent !important;
 }
 
+.staff-ops-mobile-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+
 /* App section body has no padding override needed — uber-in-app already set it */
 
 /* ═══════════════════════════════════════════════════════════════════════════
