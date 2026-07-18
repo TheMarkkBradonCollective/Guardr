@@ -18,6 +18,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffCreateCrewForm } from './StaffCreateCrewForm';
 import { Briefcase, MessageCircle, Shield, Users } from 'lucide-react';
 
 type CrewFilter = 'all' | StaffCrewPhase;
@@ -64,6 +65,7 @@ interface StaffGuardCrewsPanelProps {
   onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
   onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
+  onCreateCrew?: (guardId: string) => void | Promise<void>;
 }
 
 export function StaffGuardCrewsPanel({
@@ -82,6 +84,7 @@ export function StaffGuardCrewsPanel({
   onRemoveCrewMember,
   onApproveCrewLeadRequest,
   onDeclineCrewLeadRequest,
+  onCreateCrew,
 }: StaffGuardCrewsPanelProps) {
   const [view, setView] = useState<CrewView>('standing');
   const [search, setSearch] = useState('');
@@ -146,6 +149,19 @@ export function StaffGuardCrewsPanel({
 
   const { showDetailOnly: showJobDetailOnly } = useSplitListDetail(selectedJobId, 'page');
   const { showDetailOnly: showStandingDetailOnly } = useSplitListDetail(selectedStandingLeadId, 'page');
+
+  const createForm =
+    onCreateCrew && canManage ? (
+      <StaffCreateCrewForm
+        guards={guards}
+        standingCrewMembers={standingCrewMembers}
+        onCreate={onCreateCrew}
+        onCreated={(guardId) => {
+          setView('standing');
+          setSelectedStandingLeadId(guardId);
+        }}
+      />
+    ) : null;
 
   function renderCrewDetail(crew: StaffCrewListing, job: SecurityRequest, options?: { onBack?: () => void }) {
     const coordinator = crew.coordinatorId ? guards.find((g) => g.id === crew.coordinatorId) : undefined;
@@ -307,6 +323,7 @@ export function StaffGuardCrewsPanel({
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-crews-panel">
+      {createForm}
 
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
@@ -399,7 +416,7 @@ export function StaffGuardCrewsPanel({
               </p>
               <p className="app-empty-state-body">
                 {standingCrewLeads.length === 0
-                  ? 'Standing crews appear here once a trusted guard is set up as a crew lead. Approve crew lead requests above or use Make crew lead on a guard profile.'
+                  ? 'Standing crews appear here once a trusted guard is set up as a crew lead. Use Create crew in the sidebar or approve crew lead requests above.'
                   : 'No standing crews match your search.'}
               </p>
             </div>
