@@ -199,12 +199,14 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 /* Workbench on white canvas — panels keep subtle borders for structure */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-workspace {
-  background: var(--uber-bg, #ffffff);
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list {
-  background: var(--uber-bg, #ffffff);
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .staff-overview-desktop-grid {
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-split {
