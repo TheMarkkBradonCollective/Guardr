@@ -51,6 +51,7 @@ export function RoleAppShell({
   const { formFactor } = useDevice();
   const isMapMode = variant === 'dark';
   const isMobileShell = formFactor === 'mobile';
+  const isDesktopShell = formFactor === 'desktop';
 
   const navGroups = useMemo(
     () => [
@@ -78,7 +79,7 @@ export function RoleAppShell({
       navGroups={navGroups}
       activeNavId={activeNavId}
       onNavigate={onNavigate}
-      accountMenu={<AccountMenu {...accountMenu} />}
+      accountMenu={<AccountMenu {...accountMenu} triggerVariant={isDesktopShell ? 'uber-direct' : 'default'} />}
       notifications={notifications ?? headerRight}
       hideHeader={hideHeader}
       headerExtension={headerExtension}

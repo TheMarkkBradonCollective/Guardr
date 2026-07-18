@@ -125,6 +125,7 @@ export function DesktopStaffAdminShell({
       onOpenSettings={() => onNavigate('preferences')}
       onSignOut={onSignOut}
       active={activeSection === 'profile' || activeSection === 'preferences'}
+      triggerVariant="uber-direct"
       {...accountNotifications}
     />
   );

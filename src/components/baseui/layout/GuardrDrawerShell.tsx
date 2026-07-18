@@ -6,6 +6,7 @@ import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
 import { GuardrBottomNav } from './GuardrBottomNav';
+import { UberDirectTopHeader } from './UberDirectTopHeader';
 import { resolveMobilityChrome } from './mobilityChrome';
 import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { useDevice } from '../../../lib/platform';
@@ -189,7 +190,8 @@ export function GuardrDrawerShell({
         },
       }}
     >
-      {/* Sidebar brand — white Uber Direct rail on desktop; compact on mobile drawer */}
+      {/* Sidebar brand — hidden on Uber Direct desktop (logo lives in global top bar) */}
+      {!isDesktopWorkspace ? (
       <Block
         className={isDesktopWorkspace ? 'uber-direct-sidebar-brand' : undefined}
         display="flex"
@@ -246,6 +248,7 @@ export function GuardrDrawerShell({
         </Block>
         {sidebarBrandExtra}
       </Block>
+      ) : null}
 
       {isDesktopWorkspace && sidebarPrimaryAction ? (
         <div className="uber-direct-sidebar-cta-wrap">
@@ -287,53 +290,8 @@ export function GuardrDrawerShell({
     </Block>
   );
 
-  return (
-    <Block
-      className={`uber-app-shell mobility-shell mobility-shell--${chrome.shellKind} page-shell`}
-      position="fixed"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      display="flex"
-      flexDirection="row"
-      height="100dvh"
-      maxHeight="100dvh"
-      overflow="hidden"
-      backgroundColor="backgroundPrimary"
-      color="contentPrimary"
-      data-uber-shell=""
-      data-mobility-layout={chrome.layout}
-      data-sidebar-open={sidebarOpen ? 'true' : 'false'}
-      data-view-surface={viewSurface}
-      data-uber-direct={isDesktopWorkspace ? 'true' : undefined}
-    >
-      {showDrawerBackdrop ? (
-        <Block
-          as="button"
-          type="button"
-          onClick={closeSidebar}
-          aria-label="Close navigation"
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="rgba(0, 0, 0, 0.35)"
-          overrides={{
-            Block: {
-              style: {
-                zIndex: 40,
-                border: 'none',
-                padding: 0,
-                margin: 0,
-                cursor: 'default',
-              },
-            },
-          }}
-        />
-      ) : null}
-
+  const workspaceBody = (
+    <>
       {sidebarNode}
 
       <Block
@@ -493,7 +451,6 @@ export function GuardrDrawerShell({
                 <Block display="flex" alignItems="center" gridGap="scale400" overrides={{ Block: { style: { flexShrink: 0 } } }}>
                   {headerContext}
                   {notifications}
-                  {accountMenu}
                 </Block>
               ) : null}
             </Block>
@@ -549,6 +506,77 @@ export function GuardrDrawerShell({
             />
           </Block>
         ) : null}
+      </Block>
+    </>
+  );
+
+  return (
+    <Block
+      className={`uber-app-shell mobility-shell mobility-shell--${chrome.shellKind} page-shell`}
+      position="fixed"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      display="flex"
+      flexDirection={isDesktopWorkspace ? 'column' : 'row'}
+      height="100dvh"
+      maxHeight="100dvh"
+      overflow="hidden"
+      backgroundColor="backgroundPrimary"
+      color="contentPrimary"
+      data-uber-shell=""
+      data-mobility-layout={chrome.layout}
+      data-sidebar-open={sidebarOpen ? 'true' : 'false'}
+      data-view-surface={viewSurface}
+      data-uber-direct={isDesktopWorkspace ? 'true' : undefined}
+    >
+      {showDrawerBackdrop ? (
+        <Block
+          as="button"
+          type="button"
+          onClick={closeSidebar}
+          aria-label="Close navigation"
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="rgba(0, 0, 0, 0.35)"
+          overrides={{
+            Block: {
+              style: {
+                zIndex: 40,
+                border: 'none',
+                padding: 0,
+                margin: 0,
+                cursor: 'default',
+              },
+            },
+          }}
+        />
+      ) : null}
+
+      {isDesktopWorkspace ? (
+        <UberDirectTopHeader
+          trailing={
+            <Block display="flex" alignItems="center" gridGap="scale300">
+              {notifications}
+              {accountMenu}
+            </Block>
+          }
+        />
+      ) : null}
+
+      <Block
+        display="flex"
+        flexDirection="row"
+        flex="1"
+        minHeight={0}
+        minWidth={0}
+        className={isDesktopWorkspace ? 'uber-direct-workspace-body' : undefined}
+      >
+        {workspaceBody}
       </Block>
     </Block>
   );
