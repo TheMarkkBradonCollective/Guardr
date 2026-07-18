@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Pencil, X } from 'lucide-react';
+import { AppButton } from '../ui/AppButton';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { CERT_CATEGORY_LABELS } from '../../lib/certCatalog';
 import { coiViewSectionLabel } from '../../lib/guardCredentialSections';
@@ -145,28 +146,21 @@ export function GuardCoiDetailModal({
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {canEdit && onSave && !editing && (
-              onEditFullPage ? (
-                <button
-                  type="button"
-                  onClick={() => {
+              <AppButton
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (onEditFullPage) {
                     onEditFullPage();
                     onClose();
-                  }}
-                  className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Edit
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Edit
-                </button>
-              )
+                  } else {
+                    setEditing(true);
+                  }
+                }}
+                startEnhancer={<Pencil className="w-3.5 h-3.5" />}
+              >
+                Edit
+              </AppButton>
             )}
             <button
               type="button"
@@ -251,23 +245,17 @@ export function GuardCoiDetailModal({
               </div>
               {submitError && <p className="text-xs text-red-500">{submitError}</p>}
               <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  type="button"
-                  className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-2 disabled:opacity-50"
+                <AppButton
+                  variant="primary"
                   disabled={saving}
                   onClick={handleSave}
+                  startEnhancer={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   {saving ? 'Saving…' : staffMode ? 'Save credential' : 'Submit for review'}
-                </button>
-                <button
-                  type="button"
-                  className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
-                  disabled={saving}
-                  onClick={handleCancelEdit}
-                >
+                </AppButton>
+                <AppButton variant="outline" disabled={saving} onClick={handleCancelEdit}>
                   Cancel
-                </button>
+                </AppButton>
               </div>
             </div>
           ) : (
@@ -279,10 +267,9 @@ export function GuardCoiDetailModal({
 
           {staffMode && onReview && policy && status === 'pending' && (
             <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
-              <button
-                type="button"
+              <AppButton
+                variant="primary"
                 disabled={saving}
-                className="app-button-primary disabled:opacity-50"
                 onClick={() => {
                   if (saving) return;
                   setSaving(true);
@@ -294,7 +281,7 @@ export function GuardCoiDetailModal({
                 }}
               >
                 Verify insurance
-              </button>
+              </AppButton>
               <input
                 className="uber-input flex-1 min-w-[12rem]"
                 placeholder="Rejection reason (if rejecting)"
@@ -302,10 +289,9 @@ export function GuardCoiDetailModal({
                 onChange={(e) => setRejectionReason(e.target.value)}
                 disabled={saving}
               />
-              <button
-                type="button"
+              <AppButton
+                variant="danger"
                 disabled={saving}
-                className="app-button-secondary disabled:opacity-50"
                 onClick={() => {
                   if (saving) return;
                   setSaving(true);
@@ -317,7 +303,7 @@ export function GuardCoiDetailModal({
                 }}
               >
                 Reject
-              </button>
+              </AppButton>
             </div>
           )}
         </div>

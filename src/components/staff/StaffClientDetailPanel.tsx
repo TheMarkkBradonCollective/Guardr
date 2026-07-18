@@ -12,6 +12,7 @@ import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
@@ -175,25 +176,26 @@ export function StaffClientDetailPanel({
           <WfSectionHeader title="Account controls" className="mb-0" />
           <div className="app-action-row--equal">
             {isPending && (
-              <button type="button" onClick={() => void handleApproveClient()} className="app-button-primary app-btn-sm">
+              <AppButton variant="primary" size="sm" onClick={() => void handleApproveClient()}>
                 Approve client account
-              </button>
+              </AppButton>
             )}
             {isSuspended && (
-              <button type="button" onClick={() => void handleRestoreClient()} className="app-button-primary app-btn-sm">
+              <AppButton variant="primary" size="sm" onClick={() => void handleRestoreClient()}>
                 Restore client account
-              </button>
+              </AppButton>
             )}
             {!isPending && !isSuspended && (
-              <button type="button" onClick={() => void handleSuspendClient()} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
+              <AppButton variant="danger" size="sm" onClick={() => void handleSuspendClient()}>
                 Suspend client account
-              </button>
+              </AppButton>
             )}
             {onSetClientTrusted && (
-              <button
-                type="button"
+              <AppButton
+                variant="outline"
+                size="sm"
+                className={client.trusted ? 'text-amber-500 border-amber-500/40' : ''}
                 onClick={() => void handleToggleTrusted()}
-                className={`app-button-outline app-btn-sm ${client.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
                 title={
                   client.trusted
                     ? 'Remove trusted status — client jobs will require staff approval'
@@ -201,17 +203,17 @@ export function StaffClientDetailPanel({
                 }
               >
                 {client.trusted ? 'Remove trusted' : 'Mark as trusted'}
-              </button>
+              </AppButton>
             )}
             {onDeleteClient && (
-              <button
-                type="button"
+              <AppButton
+                variant="danger"
+                size="sm"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
               >
                 {deleting ? 'Deleting…' : 'Delete account'}
-              </button>
+              </AppButton>
             )}
           </div>
         </section>
