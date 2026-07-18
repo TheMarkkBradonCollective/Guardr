@@ -47,6 +47,7 @@ import {
   StaffOverviewMetricChips,
   StaffOverviewQuickGrid,
   StaffOverviewSectionHeader,
+  StaffOverviewShortcutRow,
   StaffOverviewStatusBanner,
 } from './overview/StaffOverviewUberParts';
 
@@ -358,20 +359,14 @@ export function StaffOverviewDesktop({
 
   return (
     <WorkbenchPage
-      className="staff-overview-uber uber-direct-home uber-mobile-overview mobility-workspace"
+      className="staff-overview-uber staff-overview-mobile uber-mobile-overview mobility-workspace"
       data-tour="staff-overview"
     >
-      <div className="uber-mobile-overview-header">
-        <p className="uber-mobile-overview-focus">{config.focusLine}</p>
-      </div>
-
       <StaffOverviewStatusBanner
         healthy={stats.platformHealthy}
         pendingReviews={stats.pendingReviews}
         onReview={stats.pendingReviews > 0 ? () => onNavigate('applications') : undefined}
       />
-
-      <StaffOverviewQuickGrid items={quickGridItems} />
 
       <StaffOverviewMetricChips
         metrics={metrics.map((metric) => ({
@@ -382,12 +377,39 @@ export function StaffOverviewDesktop({
         onNavigate={(section) => onNavigate(section as StaffSection)}
       />
 
+      <StaffOverviewQuickGrid items={quickGridItems} />
+
       {attentionPanel}
       {livePanel}
-      {pulsePanel}
-      {financialsPanel}
-      {operationsPanel}
-      {insightsPanel}
+
+      {config.showPlatformPulse || config.showDirectorFinancials || config.showOperationsSnapshot ? (
+        <WorkbenchPanel className="staff-overview-list-panel staff-overview-mobile-shortcuts" padding>
+          <StaffOverviewSectionHeader title="Go deeper" />
+          <ul className="uber-mobile-list staff-overview-list">
+            {config.showPlatformPulse ? (
+              <StaffOverviewShortcutRow
+                title="Platform pulse"
+                description="Coverage, pipeline, and quality signals"
+                onClick={() => onNavigate('analytics')}
+              />
+            ) : null}
+            {config.showDirectorFinancials ? (
+              <StaffOverviewShortcutRow
+                title="Company financials"
+                description="Revenue, payouts, and settlements"
+                onClick={() => onNavigate('payments')}
+              />
+            ) : null}
+            {config.showOperationsSnapshot ? (
+              <StaffOverviewShortcutRow
+                title="Operations snapshot"
+                description="Pipeline, marketplace, and people mix"
+                onClick={() => onNavigate('stats')}
+              />
+            ) : null}
+          </ul>
+        </WorkbenchPanel>
+      ) : null}
     </WorkbenchPage>
   );
 }
