@@ -79,12 +79,7 @@ export function GuardrDrawerShell({
   const isDesktopWorkspace = chrome.layout === 'desktop';
   const isFlowSidebar = !isMobile;
   const isMapMode = variant === 'dark';
-  const useBottomNav = isMobile && !!mobileBottomNavItems?.length;
-  const mobileTabShell = useBottomNav;
-  const drawerNavGroups =
-    mobileTabShell && (mobileBottomNavOverflow?.length ?? 0) > 0
-      ? [{ title: 'More', items: mobileBottomNavOverflow! }]
-      : navGroups;
+  const useBottomNav = chrome.layout !== 'desktop' && !!mobileBottomNavItems?.length;
   const showChromeHeader = !hideHeader && !isDesktopWorkspace;
   const showPageTitleBand = showTitleBand && !hideHeader && !headerOverride;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
@@ -153,7 +148,7 @@ export function GuardrDrawerShell({
   const sidebarNode = (
     <Block
       as="aside"
-      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer'}${mobileTabShell ? ' mobility-drawer--overflow' : ''}`.trim()}
+      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer'}${useBottomNav ? ' mobility-drawer--bottom-nav' : ''}`.trim()}
       aria-label={ariaLabel}
       aria-hidden={!sidebarVisible}
       display="flex"
@@ -184,7 +179,7 @@ export function GuardrDrawerShell({
                   left: 0,
                   bottom: 0,
                   width: drawerPanelWidth,
-                  zIndex: 50,
+                  zIndex: 120,
                   transform: sidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
                   paddingTop: 'max(0px, env(safe-area-inset-top))',
@@ -236,7 +231,7 @@ export function GuardrDrawerShell({
           >
             Guardr
           </ParagraphMedium>
-          {!isDesktopWorkspace && !mobileTabShell ? (
+          {!isDesktopWorkspace ? (
             <LabelSmall
               margin={0}
               $style={{
@@ -249,22 +244,8 @@ export function GuardrDrawerShell({
               {workspaceLabel}
             </LabelSmall>
           ) : null}
-          {mobileTabShell ? (
-            <LabelSmall
-              margin={0}
-              $style={{
-                color: theme.colors.contentSecondary,
-                fontSize: '12px',
-                fontWeight: 500,
-                textTransform: 'none',
-                letterSpacing: 'normal',
-              }}
-            >
-              {mobileBottomNavOverflow?.length ? 'More destinations' : workspaceLabel}
-            </LabelSmall>
-          ) : null}
         </Block>
-        {mobileTabShell ? (
+        {!isFlowSidebar ? (
           <Block
             as="button"
             type="button"
@@ -304,7 +285,7 @@ export function GuardrDrawerShell({
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
         backgroundColor="backgroundPrimary"
       >
-        <GuardrSideNav groups={drawerNavGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
+        <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
       </Block>
 
       {sidebarFooter ? (
@@ -358,55 +339,49 @@ export function GuardrDrawerShell({
           }}
         >
           <Block display="flex" alignItems="center" gridGap="scale400" minWidth={0} flex="1">
-            {!mobileTabShell ? (
-              <Block
-                as="button"
-                type="button"
-                className="mobility-icon-btn"
-                onClick={toggleSidebar}
-                aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
-                aria-expanded={sidebarOpen}
-                overrides={{
-                  Block: {
-                    style: iconBtnStyle,
-                  },
+            <Block
+              as="button"
+              type="button"
+              className="mobility-icon-btn"
+              onClick={toggleSidebar}
+              aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={sidebarOpen}
+              overrides={{
+                Block: {
+                  style: iconBtnStyle,
+                },
+              }}
+            >
+              <Menu size={18} />
+            </Block>
+            <Block minWidth={0}>
+              <HeadingXSmall
+                margin={0}
+                $style={{
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  color: theme.colors.contentPrimary,
                 }}
+                className="truncate"
               >
-                <Menu size={18} />
-              </Block>
-            ) : (
-              <Logo size={24} className="shrink-0" />
-            )}
-            {!mobileTabShell ? (
-              <Block minWidth={0}>
-                <HeadingXSmall
+                {title}
+              </HeadingXSmall>
+              {chrome.layout !== 'mobile' ? (
+                <LabelSmall
                   margin={0}
-                  $style={{
-                    fontWeight: 700,
-                    lineHeight: 1.2,
-                    color: theme.colors.contentPrimary,
-                  }}
+                  $style={{ color: theme.colors.contentSecondary }}
                   className="truncate"
                 >
-                  {title}
-                </HeadingXSmall>
-                {chrome.layout !== 'mobile' ? (
-                  <LabelSmall
-                    margin={0}
-                    $style={{ color: theme.colors.contentSecondary }}
-                    className="truncate"
-                  >
-                    {workspaceLabel}
-                  </LabelSmall>
-                ) : null}
-              </Block>
-            ) : null}
+                  {workspaceLabel}
+                </LabelSmall>
+              ) : null}
+            </Block>
           </Block>
 
           <Block display="flex" alignItems="center" gridGap="scale300" overrides={{ Block: { style: { flexShrink: 0 } } }}>
             {notifications}
             {accountMenu}
-            {onSettingsClick && !mobileTabShell ? (
+            {onSettingsClick ? (
               <Block
                 as="button"
                 type="button"
@@ -539,9 +514,6 @@ export function GuardrDrawerShell({
               items={mobileBottomNavItems}
               activeId={activeNavId}
               onNavigate={handleNavigate}
-              showMore={mobileBottomNavOverflow.length > 0}
-              moreActive={sidebarOpen}
-              onMoreClick={() => setSidebarOpen(true)}
             />
           </Block>
         ) : null}
@@ -585,7 +557,7 @@ export function GuardrDrawerShell({
           overrides={{
             Block: {
               style: {
-                zIndex: 40,
+                zIndex: 110,
                 border: 'none',
                 padding: 0,
                 margin: 0,

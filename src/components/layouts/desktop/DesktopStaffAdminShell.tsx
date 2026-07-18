@@ -79,7 +79,7 @@ export function DesktopStaffAdminShell({
   sidebarPrimaryAction,
 }: DesktopStaffAdminShellProps) {
   const { formFactor } = useDevice();
-  const isMobileShell = formFactor === 'mobile';
+  const isPortableShell = formFactor !== 'desktop';
   const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesSection(activeSection);
@@ -108,15 +108,19 @@ export function DesktopStaffAdminShell({
     [navGroups],
   );
 
-  const mobileBottomNavItems = useMemo(
-    () => (isMobileShell ? flatNavItems.slice(0, 4) : undefined),
-    [isMobileShell, flatNavItems],
-  );
+  const STAFF_BOTTOM_NAV_IDS: StaffSection[] = ['overview', 'jobs', 'clients', 'guards', 'team'];
 
-  const mobileBottomNavOverflow = useMemo(
-    () => (isMobileShell ? flatNavItems.slice(4) : undefined),
-    [isMobileShell, flatNavItems],
-  );
+  const mobileBottomNavItems = useMemo(() => {
+    if (!isPortableShell) return undefined;
+    return STAFF_BOTTOM_NAV_IDS.map((id) => {
+      const item = flatNavItems.find((nav) => nav.id === id);
+      if (!item) return null;
+      return {
+        ...item,
+        label: id === 'guards' ? 'Guard' : item.label,
+      };
+    }).filter((item): item is NonNullable<typeof item> => item != null);
+  }, [isPortableShell, flatNavItems]);
 
   const handleNav = (id: string) => {
     const section = id as StaffSection;
@@ -182,7 +186,6 @@ export function DesktopStaffAdminShell({
       onSettingsClick={() => onNavigate('settings')}
       ariaLabel="Staff navigation"
       mobileBottomNavItems={mobileBottomNavItems}
-      mobileBottomNavOverflow={mobileBottomNavOverflow}
     >
       {children}
     </GuardrDrawerShell>
