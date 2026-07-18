@@ -96,6 +96,7 @@ export function GuardrDrawerShell({
     if (isMobile) closeSidebar();
   };
 
+  const sidebarVisible = sidebarOpen;
   const isMobileDrawer = isMobile;
   const showDrawerBackdrop = sidebarVisible && isMobileDrawer;
   const flowSidebarWidth = sidebarVisible ? chrome.sidebarWidth : '0px';
