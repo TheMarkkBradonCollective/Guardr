@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { BottomNavItem } from './BottomNavBar';
-import { GuardrDrawerShell } from '../baseui/layout/GuardrDrawerShell';
+import { GuardrDrawerShell, type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
 import { useDevice } from '../../lib/platform';
 
 interface RoleAppShellProps {
@@ -21,6 +21,8 @@ interface RoleAppShellProps {
   headerOverride?: React.ReactNode;
   variant?: 'default' | 'dark';
   workspaceLabel?: string;
+  sidebarPrimaryAction?: SidebarPrimaryAction;
+  sidebarFooter?: React.ReactNode;
 }
 
 const MOBILE_BOTTOM_TAB_COUNT = 4;
@@ -41,6 +43,8 @@ export function RoleAppShell({
   headerOverride,
   variant = 'default',
   workspaceLabel,
+  sidebarPrimaryAction,
+  sidebarFooter,
 }: RoleAppShellProps) {
   const { formFactor } = useDevice();
   const isMapMode = variant === 'dark';
@@ -48,8 +52,8 @@ export function RoleAppShell({
 
   const navGroups = useMemo(
     () => [
-      { title: 'Menu', items: navItems },
-      ...(overflowNavItems.length > 0 ? [{ title: 'Account', items: overflowNavItems }] : []),
+      { items: navItems },
+      ...(overflowNavItems.length > 0 ? [{ title: 'Management', items: overflowNavItems }] : []),
     ],
     [navItems, overflowNavItems],
   );
@@ -82,6 +86,8 @@ export function RoleAppShell({
       onSettingsClick={accountMenu.onOpenSettings}
       mobileBottomNavItems={mobileBottomNavItems}
       mobileBottomNavOverflow={mobileBottomNavOverflow}
+      sidebarPrimaryAction={sidebarPrimaryAction}
+      sidebarFooter={sidebarFooter}
     >
       {children}
     </GuardrDrawerShell>

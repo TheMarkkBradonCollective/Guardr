@@ -66,10 +66,11 @@ import { RoleAppShell } from './layouts/RoleAppShell';
 import { AccountMenu, type AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { AppGuidePage } from './docs/AppGuidePage';
+import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, Plus } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -1267,11 +1268,14 @@ export function GuardDashboard({
 
   const showVehicleTab = guardVehicleTabVisible(guard);
 
-  const SIDEBAR_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
+  const GUARD_PRIMARY_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
     ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
+  ];
+
+  const GUARD_MANAGEMENT_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'availability', icon: CalendarDays, label: 'Availability' },
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
     { id: 'performance', icon: BarChart3, label: 'Performance' },
@@ -1943,13 +1947,25 @@ export function GuardDashboard({
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
-      navItems={accountNeedsActivation ? [] : SIDEBAR_NAV}
-      overflowNavItems={[]}
+      navItems={accountNeedsActivation ? [] : GUARD_PRIMARY_NAV}
+      overflowNavItems={accountNeedsActivation ? [] : GUARD_MANAGEMENT_NAV}
       activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}
       workspaceLabel="Guard workspace"
+      sidebarPrimaryAction={
+        !accountNeedsActivation
+          ? {
+              label: '+ Find jobs',
+              icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
+              onClick: () => setTab('map'),
+            }
+          : undefined
+      }
+      sidebarFooter={
+        onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : undefined
+      }
     >
       <div className="relative h-full min-h-0">
         {visibleMainPanel}
