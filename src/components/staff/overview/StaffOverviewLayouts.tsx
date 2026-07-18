@@ -32,7 +32,7 @@ export interface StaffOverviewLayoutProps {
   operationsPanel: React.ReactNode | null;
   insightsPanel: React.ReactNode | null;
   activityPanel: React.ReactNode | null;
-  shortcuts: React.ReactNode;
+  shortcuts?: React.ReactNode;
   weeklySeries: WeeklyJobPoint[];
   jobPipelineSegments: OverviewSegment[];
   platformPulseCards: OverviewVisualCard[];
@@ -202,7 +202,6 @@ export function StaffOverviewDesktopLayout({
   financialsPanel,
   operationsPanel,
   activityPanel,
-  shortcuts,
   weeklySeries,
   jobPipelineSegments,
   platformPulseCards,
@@ -220,9 +219,6 @@ export function StaffOverviewDesktopLayout({
       <div className="staff-overview-desktop-shell">
         <div className="staff-overview-desktop-shell-head">
           {header}
-          <div className="staff-overview-desktop-toolbar" aria-label="Quick navigation">
-            {shortcuts}
-          </div>
           {kpiGrid}
         </div>
 

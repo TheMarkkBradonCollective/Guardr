@@ -348,8 +348,6 @@ export function StaffOverviewDesktop({
     </WorkbenchPanel>
   );
 
-  const desktopShortcuts = <WorkbenchQuickLinks items={quickLinks} />;
-
   const sharedLayoutProps = {
     config,
     staffRole,
@@ -382,5 +380,5 @@ export function StaffOverviewDesktop({
     return <StaffOverviewTabletLayout {...sharedLayoutProps} shortcuts={tabletShortcuts} />;
   }
 
-  return <StaffOverviewDesktopLayout {...sharedLayoutProps} shortcuts={desktopShortcuts} />;
+  return <StaffOverviewDesktopLayout {...sharedLayoutProps} />;
 }
