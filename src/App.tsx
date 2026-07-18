@@ -12504,32 +12504,38 @@ export default function App() {
           </>
         );
       }
+      if (isAuthView) {
+        return (
+          <>
+            <AuthPage
+              onSignIn={handleSignIn}
+              onSignUp={handleSignUp}
+              guardsList={guards}
+              clientsList={clients}
+              isDbConnected={isDbConnected}
+              isAppLoading={loading}
+              onBackToHome={closeAuthView}
+              onOpenLegal={openLegalPage}
+              onOpenGuide={openPublicGuide}
+              onAuthModeChange={setAuthViewMode}
+              onAuthRoleChange={setAuthViewRole}
+              initialRole={initialAuthRole}
+              initialMode={initialAuthMode}
+              themeMode={themeMode}
+              onChangeTheme={changeThemeMode}
+              presentation="page"
+            />
+            <InstallPrompt />
+          </>
+        );
+      }
       return (
         <>
           <AppHomeScreen
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
-            authSheetOpen={isAuthView}
             onNavigateToAuth={navigateToAuth}
             onOpenLegal={openLegalPage}
-          />
-          <AuthPage
-            presentation="sheet"
-            open={isAuthView}
-            onSignIn={handleSignIn}
-            onSignUp={handleSignUp}
-            guardsList={guards}
-            clientsList={clients}
-            isDbConnected={isDbConnected}
-            isAppLoading={loading}
-            onBackToHome={closeAuthView}
-            onOpenLegal={openLegalPage}
-            onAuthModeChange={setAuthViewMode}
-            onAuthRoleChange={setAuthViewRole}
-            initialRole={initialAuthRole}
-            initialMode={initialAuthMode}
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
           />
           <InstallPrompt />
         </>
