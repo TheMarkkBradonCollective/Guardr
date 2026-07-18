@@ -40,6 +40,8 @@ export interface GuardrDrawerShellProps {
   /** Primary tabs for Uber-style bottom nav on mobile/PWA/APK. */
   mobileBottomNavItems?: GuardrNavItem[];
   mobileBottomNavOverflow?: GuardrNavItem[];
+  /** Org/location selector shown in desktop page header (Uber Direct). */
+  headerContext?: React.ReactNode;
 }
 
 export function GuardrDrawerShell({
@@ -64,6 +66,7 @@ export function GuardrDrawerShell({
   showTitleBand = false,
   mobileBottomNavItems,
   mobileBottomNavOverflow = [],
+  headerContext,
 }: GuardrDrawerShellProps) {
   const [, theme] = useStyletron();
   const { viewSurface, experienceTier } = useDevice();
@@ -200,7 +203,9 @@ export function GuardrDrawerShell({
         overrides={{
           Block: {
             style: {
-              borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+              borderBottom: isDesktopWorkspace
+                ? 'none'
+                : `1px solid ${theme.colors.borderOpaque}`,
               minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
               flexShrink: 0,
             },
@@ -452,7 +457,7 @@ export function GuardrDrawerShell({
                 style: {
                   flexShrink: 0,
                   borderBottom: isDesktopWorkspace
-                    ? 'none'
+                    ? `1px solid ${theme.colors.borderOpaque}`
                     : `1px solid ${theme.colors.borderOpaque}`,
                 },
               },
@@ -485,7 +490,8 @@ export function GuardrDrawerShell({
                 ) : null}
               </Block>
               {isDesktopWorkspace ? (
-                <Block display="flex" alignItems="center" gridGap="scale300" overrides={{ Block: { style: { flexShrink: 0 } } }}>
+                <Block display="flex" alignItems="center" gridGap="scale400" overrides={{ Block: { style: { flexShrink: 0 } } }}>
+                  {headerContext}
                   {notifications}
                   {accountMenu}
                 </Block>

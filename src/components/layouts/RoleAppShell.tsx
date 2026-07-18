@@ -23,6 +23,7 @@ interface RoleAppShellProps {
   workspaceLabel?: string;
   sidebarPrimaryAction?: SidebarPrimaryAction;
   sidebarFooter?: React.ReactNode;
+  headerContext?: React.ReactNode;
 }
 
 const MOBILE_BOTTOM_TAB_COUNT = 4;
@@ -45,6 +46,7 @@ export function RoleAppShell({
   workspaceLabel,
   sidebarPrimaryAction,
   sidebarFooter,
+  headerContext,
 }: RoleAppShellProps) {
   const { formFactor } = useDevice();
   const isMapMode = variant === 'dark';
@@ -88,6 +90,7 @@ export function RoleAppShell({
       mobileBottomNavOverflow={mobileBottomNavOverflow}
       sidebarPrimaryAction={sidebarPrimaryAction}
       sidebarFooter={sidebarFooter}
+      headerContext={headerContext}
     >
       {children}
     </GuardrDrawerShell>

@@ -37,7 +37,7 @@ import {
   Radio,
 } from 'lucide-react';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map' | 'locations';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map' | 'locations' | 'invoices';
 
 interface ClientHomeScreenProps {
   companyName: string;

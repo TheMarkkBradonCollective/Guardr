@@ -5,21 +5,22 @@ import type { OvertimeDisputeInput } from '../../lib/shiftBilling';
 import { formatShiftRange } from '../../lib/dates';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
-import { ClipboardList, Clock, Plus } from 'lucide-react';
+import { ClipboardList, Clock, Plus, Search } from 'lucide-react';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
+  WorkbenchPanel,
+  WorkbenchSearchRow,
   WorkbenchSplit,
   WorkbenchStatChips,
-  WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { GuardrTag } from '../baseui/GuardrTag';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
 import { isJobMissed, JOB_TALLY_LABELS, splitCompletedAndMissed } from '../../lib/jobTallies';
-import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 
@@ -63,6 +64,7 @@ export interface ClientRequestsDesktopProps {
   onOpenJobChat?: (requestId: string) => void;
   onSelectedJobIdChange?: (jobId: string | null) => void;
   initialSelectedId?: string | null;
+  initialJobTab?: JobTab;
   feeConfig?: import('../../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
     requestId: string,
@@ -84,9 +86,9 @@ const TAB_OPTIONS: { id: JobTab; label: string }[] = [
   { id: 'missed', label: JOB_TALLY_LABELS.missed },
 ];
 
-function statusTone(status: SecurityRequest['status']): string {
-  if (status === 'in-progress' || status === 'accepted') return 'success';
-  if (status === 'open' || status === 'pending-review') return 'warn';
+function statusKind(status: SecurityRequest['status']): 'success' | 'warning' | 'danger' | 'neutral' {
+  if (status === 'in-progress' || status === 'accepted' || status === 'completed') return 'success';
+  if (status === 'open' || status === 'pending-review') return 'warning';
   if (status === 'cancelled') return 'danger';
   return 'neutral';
 }
@@ -125,6 +127,7 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
     onOpenJobChat,
     onSelectedJobIdChange,
     initialSelectedId = null,
+    initialJobTab = 'open',
     feeConfig,
     onSubmitPriceOffer,
     onAcceptPriceOffer,
@@ -132,9 +135,14 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
   } = props;
 
   const billingSettings = crewSettings ?? teamLeadSettings;
-  const [activeTab, setActiveTab] = useState<JobTab>('open');
+  const [activeTab, setActiveTab] = useState<JobTab>(initialJobTab);
+  const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+
+  useEffect(() => {
+    setActiveTab(initialJobTab);
+  }, [initialJobTab]);
 
   useEffect(() => {
     setSelectedId(initialSelectedId);
@@ -182,7 +190,18 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
     missed: missedJobs,
   };
 
-  const listJobs = jobsByTab[activeTab];
+  const listJobs = useMemo(() => {
+    const base = jobsByTab[activeTab];
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return base;
+    return base.filter((job) =>
+      [job.title, job.siteName, job.location, job.assignedGuardName, job.id]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [jobsByTab, activeTab, searchQuery]);
 
   const updateSelectedId = (jobId: string | null) => {
     setSelectedId(jobId);
@@ -200,28 +219,14 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
     if (!stillVisible) updateSelectedId(listJobs[0].id);
   }, [activeTab, listJobs, selectedId]);
 
-  const nextScheduled = useMemo(() => {
-    if (scheduledJobs.length === 0) return null;
-    return [...scheduledJobs].sort(
-      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-    )[0];
-  }, [scheduledJobs]);
-
-  const subtitle = useMemo(() => {
-    if (nextScheduled) {
-      return `Next: ${nextScheduled.title} — ${formatTimeUntilShift(nextScheduled.startDate)}`;
-    }
-    if (tallies.open > 0) return `${tallies.open} open posting${tallies.open === 1 ? '' : 's'} awaiting guards.`;
-    return 'Post a job to get matched with licensed guards.';
-  }, [nextScheduled, tallies.open]);
-
   return (
     <WorkbenchPage data-tour="client-jobs">
-      <WorkbenchToolbar
-        eyebrow="Your coverage"
-        subtitle={subtitle}
+      <WorkbenchSearchRow
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search for a job or location"
         actions={
-          <GuardrButton kind="primary" onClick={onRequestNew}>
+          <GuardrButton kind="primary" size="compact" onClick={onRequestNew}>
             <Plus className="w-4 h-4" />
             Post job
           </GuardrButton>
@@ -234,6 +239,7 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
         onSelect={setActiveTab}
       />
 
+      <WorkbenchPanel padding={false}>
       <WorkbenchSplit
         list={
           listJobs.length === 0 ? (
@@ -272,7 +278,9 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
                     <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
                     <td className="uber-workbench-table-value">${job.hourlyRate}/hr</td>
                     <td>
-                      <span className={`adm-pill adm-pill--${statusTone(job.status)}`}>{job.status}</span>
+                      <GuardrTag closeable={false} kind={statusKind(job.status)}>
+                        {job.status}
+                      </GuardrTag>
                     </td>
                   </tr>
                 ))}
@@ -285,9 +293,9 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-bold m-0">{selectedRequest.title}</h2>
-                <span className={`adm-pill adm-pill--${statusTone(selectedRequest.status)}`}>
+                <GuardrTag closeable={false} kind={statusKind(selectedRequest.status)}>
                   {selectedRequest.status}
-                </span>
+                </GuardrTag>
               </div>
               <JobListingProfile
                 job={selectedRequest}
@@ -345,6 +353,7 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
           )
         }
       />
+      </WorkbenchPanel>
 
       <EditRequestSheet
         open={!!editingRequest}

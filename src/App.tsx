@@ -754,6 +754,9 @@ export default function App() {
     }
     return null;
   });
+  const [clientRequestsJobTab, setClientRequestsJobTab] = useState<
+    'open' | 'scheduled' | 'completed' | 'missed'
+  >('open');
   const [clientInvoiceRequestId, setClientInvoiceRequestIdState] = useState<string | null>(
     () =>
       initialRoute?.role === 'client' && initialRoute.clientView === 'invoices'
@@ -12853,8 +12856,11 @@ export default function App() {
         {marketplaceLegalGate}
         <ClientAppLayout
           currentUser={currentUser}
+          companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your company'}
           onSignOut={handleSignOut}
           activeView={clientView}
+          requestsJobTab={clientRequestsJobTab}
+          onRequestsJobTabChange={setClientRequestsJobTab}
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
@@ -12971,6 +12977,7 @@ export default function App() {
               onOpenSupportReport={openClientSupportReport}
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
               requestsSelectedId={clientRequestsSelectedId}
+              requestsJobTab={clientRequestsJobTab}
               clientInvoices={clientInvoices}
               invoiceRequestId={clientInvoiceRequestId}
               onInvoiceRequestIdChange={setClientInvoiceRequestId}
