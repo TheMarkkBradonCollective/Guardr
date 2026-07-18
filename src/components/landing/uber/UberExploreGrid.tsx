@@ -189,7 +189,7 @@ export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLogi
               type="button"
               className="uber-landing-text-link"
               style={{ fontWeight: 600 }}
-              onClick={() => onNavigateToAuth('client', 'sign-up')}
+              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
             >
               Create an account
             </button>
