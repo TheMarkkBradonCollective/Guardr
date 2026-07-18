@@ -570,6 +570,7 @@ export function ClientDashboard({
       <>
         {tutorialDemoBanner}
         <ClientMessagesPanel
+        scope="messages"
         requests={requests}
         guards={guards}
         currentUser={currentUser}
@@ -597,6 +598,39 @@ export function ClientDashboard({
       />
       </>,
       'client-messages'
+    );
+  }
+
+  if (view === 'support' && currentUser && onSendSupportMessage) {
+    return page(
+      'support',
+      <>
+        {tutorialDemoBanner}
+        <ClientMessagesPanel
+          scope="support"
+          requests={requests}
+          guards={guards}
+          currentUser={currentUser}
+          accountStatus={accountStatus}
+          approved={approved}
+          jobChatThreads={jobChatThreads}
+          jobChatMessages={jobChatMessages}
+          clientMessages={clientMessages}
+          supportTickets={supportTickets}
+          onSendJobChatMessage={onSendJobChatMessage!}
+          onSendClientMessage={onSendClientMessage}
+          onRefreshClientMessages={onRefreshClientMessages}
+          onSendSupportMessage={onSendSupportMessage}
+          initialSupportTicketId={supportTicketId}
+          onSupportTicketIdChange={onSupportTicketIdChange}
+          onOpenCompose={onOpenSupportCompose}
+          onOpenReport={onOpenSupportReport}
+          onDetailOpenChange={onMessagesDetailOpenChange}
+          onMessagesChromeChange={onMessagesChromeChange}
+          shellHeaderTrailing={messagesShellHeaderTrailing}
+        />
+      </>,
+      'client-support'
     );
   }
 

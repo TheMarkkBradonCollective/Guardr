@@ -9,6 +9,7 @@ interface RoleAppShellProps {
   accountMenu: AccountMenuProps;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
+  messagesNavItems?: BottomNavItem[];
   activeNavId: string;
   onNavigate: (id: string) => void;
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export function RoleAppShell({
   accountMenu,
   navItems,
   overflowNavItems = [],
+  messagesNavItems = [],
   activeNavId,
   onNavigate,
   children,
@@ -56,21 +58,27 @@ export function RoleAppShell({
   const navGroups = useMemo(
     () => [
       { items: navItems },
+      ...(messagesNavItems.length > 0 ? [{ title: 'Messages', items: messagesNavItems }] : []),
       ...(overflowNavItems.length > 0 ? [{ title: 'Management', items: overflowNavItems }] : []),
     ],
-    [navItems, overflowNavItems],
+    [navItems, messagesNavItems, overflowNavItems],
+  );
+
+  const allNavItems = useMemo(
+    () => [...navItems, ...messagesNavItems, ...overflowNavItems],
+    [navItems, messagesNavItems, overflowNavItems],
   );
 
   const mobileBottomNavItems = useMemo(
-    () => (isMobileShell ? navItems.slice(0, MOBILE_BOTTOM_TAB_COUNT) : undefined),
-    [isMobileShell, navItems],
+    () => (isMobileShell ? allNavItems.slice(0, MOBILE_BOTTOM_TAB_COUNT) : undefined),
+    [isMobileShell, allNavItems],
   );
 
   const mobileBottomNavOverflow = useMemo(() => {
     if (!isMobileShell) return undefined;
-    const rest = navItems.slice(MOBILE_BOTTOM_TAB_COUNT);
-    return [...rest, ...overflowNavItems];
-  }, [isMobileShell, navItems, overflowNavItems]);
+    const rest = allNavItems.slice(MOBILE_BOTTOM_TAB_COUNT);
+    return rest;
+  }, [isMobileShell, allNavItems]);
 
   return (
     <GuardrDrawerShell

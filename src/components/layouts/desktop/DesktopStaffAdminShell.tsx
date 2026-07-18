@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Block } from 'baseui/block';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
-import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../../lib/staffOps';
+import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
 import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../../lib/staffNavAccess';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
@@ -76,7 +76,7 @@ export function DesktopStaffAdminShell({
   const isPortableShell = formFactor !== 'desktop';
   const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
-  const bleed = isMap || isStaffMessagesSection(activeSection);
+  const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
   const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 

@@ -54,10 +54,18 @@ export type StaffSection =
   | 'profile'
   | 'preferences';
 
-const LEGACY_MESSAGE_SECTIONS: StaffSection[] = ['support', 'team-chat', 'job-chats'];
+const LEGACY_MESSAGE_SECTIONS: StaffSection[] = ['team-chat', 'job-chats'];
 
 export function isStaffMessagesSection(section: StaffSection): boolean {
   return section === 'messages' || LEGACY_MESSAGE_SECTIONS.includes(section);
+}
+
+export function isStaffSupportSection(section: StaffSection): boolean {
+  return section === 'support';
+}
+
+export function isStaffMessagesHubSection(section: StaffSection): boolean {
+  return isStaffMessagesSection(section) || isStaffSupportSection(section);
 }
 
 export function isStaffOpsMapSection(section: StaffSection): boolean {
@@ -70,12 +78,13 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   if (section === 'live-jobs') return 'jobs';
   if (section === 'approvals') return 'applications';
   if (section === 'design-qa') return 'overview';
-  if (section === 'messages' || section === 'team-chat' || section === 'job-chats' || section === 'support') {
+  if (section === 'messages' || section === 'team-chat' || section === 'job-chats') {
     return 'messages';
   }
+  if (section === 'support') return 'support';
   const valid: StaffSection[] = [
     'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
-    'incidents', 'messages', 'payments', 'payment-settings', 'agreements', 'audit-log', 'disputes', 'violations', 'stats', 'analytics', 'settings', 'permissions', 'integrations', 'cities', 'guide', 'dev-updates', 'profile', 'preferences',
+    'incidents', 'messages', 'support', 'payments', 'payment-settings', 'agreements', 'audit-log', 'disputes', 'violations', 'stats', 'analytics', 'settings', 'permissions', 'integrations', 'cities', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }
@@ -111,7 +120,7 @@ export function resolveStaffRouteSection(
   }
   const normalized = normalizeStaffSection(staffSection);
   const resolved = resolveStaffSection(normalized, staffMessageTab);
-  return isStaffMessagesSection(resolved ?? 'overview') ? 'messages' : (resolved ?? 'overview');
+  return resolved ?? 'overview';
 }
 
 /** Legacy /staff/messages and ?mtab= deep links */
@@ -127,6 +136,7 @@ export function resolveStaffSection(
   if (section === 'messages' || LEGACY_MESSAGE_SECTIONS.includes(section as StaffSection)) {
     return 'messages';
   }
+  if (section === 'support') return 'support';
   return section;
 }
 
@@ -700,7 +710,7 @@ export function buildOverviewActionQueue(
       title: 'Reply to support tickets',
       description: 'Clients or guards are waiting on staff',
       count: supportCount,
-      section: 'messages',
+      section: 'support',
       tone: 'normal',
     });
   }

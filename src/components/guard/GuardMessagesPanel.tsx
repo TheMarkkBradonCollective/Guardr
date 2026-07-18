@@ -53,6 +53,7 @@ type ActiveView =
 type InboxTab = 'chats' | 'teams' | 'jobs' | 'support';
 
 interface GuardMessagesPanelProps {
+  scope?: 'messages' | 'support';
   upcomingJobs: GuardJobView[];
   pastJobs: GuardJobView[];
   guard: SecurityGuard;
@@ -121,6 +122,7 @@ export function GuardMessagesPanel({
   onDetailOpenChange,
   onMessagesChromeChange,
   shellHeaderTrailing,
+  scope = 'messages',
 }: GuardMessagesPanelProps) {
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
@@ -137,10 +139,12 @@ export function GuardMessagesPanel({
     return { kind: 'list' };
   });
 
+  const isSupportScope = scope === 'support';
+
   const [activeTab, setActiveTab] = useState<InboxTab>(() => {
+    if (isSupportScope || initialSupportTicketId) return 'support';
     if (initialTeamChatRequestId) return 'teams';
     if (initialJobChatOpen || initialJobChatRequestId) return 'jobs';
-    if (initialSupportTicketId) return 'support';
     return 'chats';
   });
 
@@ -209,13 +213,14 @@ export function GuardMessagesPanel({
   );
 
   const tabRows = useMemo((): InboxRow[] => {
+    if (isSupportScope) return supportRows;
     switch (activeTab) {
       case 'chats':   return [communityRow];
       case 'teams':   return teamRows;
       case 'jobs':    return jobRows;
       case 'support': return supportRows;
     }
-  }, [activeTab, communityRow, teamRows, jobRows, supportRows]);
+  }, [activeTab, communityRow, isSupportScope, teamRows, jobRows, supportRows]);
 
   const openRow = (row: InboxRow) => {
     if (row.channel === 'guard-community') {
@@ -267,7 +272,7 @@ export function GuardMessagesPanel({
   }, [formFactor, hasSelection, onDetailOpenChange]);
 
   // ── Header: inbox tabs (title lives in AppScreenHeader) ──
-  const header = (
+  const header = isSupportScope ? null : (
     <MessagesInboxTabs
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
@@ -275,7 +280,6 @@ export function GuardMessagesPanel({
         { id: 'chats', label: 'Chats', icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
         { id: 'teams', label: 'Teams', icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
         { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
   );
@@ -358,7 +362,7 @@ export function GuardMessagesPanel({
   const list = (
     <>
       {/* Quick actions shown on Support tab */}
-      {activeTab === 'support' && (
+      {(isSupportScope || activeTab === 'support') && (
         <MessagesQuickActions
           onContactSupport={onOpenSupportCompose}
           onFileReport={onOpenSupportReport}

@@ -50,10 +50,9 @@ type StaffMessageSelection =
   | { kind: 'guard-channel' }
   | { kind: 'client-channel' }
   | { kind: 'job'; requestId: string }
-  | { kind: 'team'; requestId: string }
-  | { kind: 'support'; ticketId: string };
+  | { kind: 'team'; requestId: string };
 
-type InboxTab = 'team' | 'jobs' | 'support';
+type InboxTab = 'team' | 'jobs';
 
 interface StaffMessagesPanelProps {
   requests: SecurityRequest[];
@@ -136,13 +135,11 @@ export function StaffMessagesPanel({
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
     if (initialTeamChatRequestId) return { kind: 'team', requestId: initialTeamChatRequestId };
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
-    if (initialSupportTicketId)  return { kind: 'support', ticketId: initialSupportTicketId };
     return null;
   });
 
   const [activeTab, setActiveTab] = useState<InboxTab>(() => {
     if (initialStaffMessagesTab === 'jobs' || initialJobChatRequestId) return 'jobs';
-    if (initialSupportTicketId)  return 'support';
     return 'team';
   });
 
@@ -161,12 +158,6 @@ export function StaffMessagesPanel({
     onSelectedJobChatRequestIdChange?.(initialJobChatRequestId);
     onSelectedTeamChatRequestIdChange?.(null);
   }, [initialJobChatRequestId, onSelectedJobChatRequestIdChange, onSelectedTeamChatRequestIdChange]);
-
-  useEffect(() => {
-    if (!initialSupportTicketId) return;
-    setActiveTab('support');
-    setSelection({ kind: 'support', ticketId: initialSupportTicketId });
-  }, [initialSupportTicketId]);
 
   const staffUpdatedAt = useMemo(() => {
     const sorted = sortedStaffMessages(staffMessages);
@@ -212,76 +203,55 @@ export function StaffMessagesPanel({
     [allRows]
   );
   const jobRows     = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
-  const supportRowsAll = useMemo(
-    () => allRows.filter((r) => r.channel === 'support' || r.channel === 'report'),
-    [allRows]
-  );
 
   const tabRows = useMemo((): InboxRow[] => {
     switch (activeTab) {
       case 'team':    return teamRows;
       case 'jobs':    return jobRows;
-      case 'support': return supportRowsAll;
     }
-  }, [activeTab, teamRows, jobRows, supportRowsAll]);
+  }, [activeTab, teamRows, jobRows]);
 
   const selectRow = (row: InboxRow) => {
     if (row.channel === 'staff-community') {
       setSelection({ kind: 'staff-channel' });
       onSelectedJobChatRequestIdChange?.(null);
-      onSelectedSupportTicketIdChange?.(null);
       return;
     }
     if (row.channel === 'guard-community') {
       setSelection({ kind: 'guard-channel' });
       onSelectedJobChatRequestIdChange?.(null);
-      onSelectedSupportTicketIdChange?.(null);
       return;
     }
     if (row.channel === 'client-community') {
       setSelection({ kind: 'client-channel' });
       onSelectedJobChatRequestIdChange?.(null);
-      onSelectedSupportTicketIdChange?.(null);
       return;
     }
     if (row.requestId && row.channel === 'team-crew') {
       setSelection({ kind: 'team', requestId: row.requestId });
       onSelectedJobChatRequestIdChange?.(null);
-      onSelectedSupportTicketIdChange?.(null);
       return;
     }
     if (row.requestId) {
       setSelection({ kind: 'job', requestId: row.requestId });
       onSelectedJobChatRequestIdChange?.(row.requestId);
-      onSelectedSupportTicketIdChange?.(null);
-      return;
-    }
-    if (row.ticketId) {
-      setSelection({ kind: 'support', ticketId: row.ticketId });
-      onSelectedSupportTicketIdChange?.(row.ticketId);
-      onSelectedJobChatRequestIdChange?.(null);
     }
   };
 
   const clearSelection = () => {
     setSelection(null);
     onSelectedJobChatRequestIdChange?.(null);
-    onSelectedSupportTicketIdChange?.(null);
   };
 
   const controlledTeamId =
     selectedTeamChatRequestId ?? (selection?.kind === 'team' ? selection.requestId : null);
   const controlledJobId =
     selectedJobChatRequestId ?? (selection?.kind === 'job' ? selection.requestId : null);
-  const controlledSupportId =
-    selectedSupportTicketId ?? (selection?.kind === 'support' ? selection.ticketId : null);
-  const effectiveSelection: StaffMessageSelection | null = controlledSupportId
-    ? { kind: 'support', ticketId: controlledSupportId }
-    : controlledTeamId
+  const effectiveSelection: StaffMessageSelection | null = controlledTeamId
     ? { kind: 'team', requestId: controlledTeamId }
     : controlledJobId
-    ? { kind: 'job', requestId: controlledJobId }
-    : selection;
+      ? { kind: 'job', requestId: controlledJobId }
+      : selection;
 
   const hasSelection = !!effectiveSelection;
   const embedHeaderInShell = !splitView && hasSelection;
@@ -296,7 +266,6 @@ export function StaffMessagesPanel({
     if (row.channel === 'client-community' && effectiveSelection?.kind === 'client-channel') return true;
     if (row.requestId && row.channel === 'team-crew' && effectiveSelection?.kind === 'team' && effectiveSelection.requestId === row.requestId) return true;
     if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
-    if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) return true;
     return false;
   };
 
@@ -307,7 +276,6 @@ export function StaffMessagesPanel({
       tabs={[
         { id: 'team', label: 'Team', icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
         { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
   );
@@ -353,60 +321,6 @@ export function StaffMessagesPanel({
             />
           );
         }
-      } else if (effectiveSelection.kind === 'support') {
-        const ticket = supportTickets.find((t) => t.id === effectiveSelection.ticketId);
-        if (ticket) {
-          const canDelete =
-            !!onDeleteSupportTicket &&
-            canDeleteResolvedSupportChat(currentUser) &&
-            isDeletableResolvedSupportChat(ticket);
-          override = (
-            <AppChatHeader
-              title={ticket.subject}
-              subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
-              onBack={clearSelection}
-              trailing={
-                <div className="flex items-center gap-2 shrink-0">
-                  {canDelete && onDeleteSupportTicket && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void onDeleteSupportTicket(ticket.id);
-                        clearSelection();
-                      }}
-                      className="app-chat-header-action app-chat-header-action-danger"
-                      aria-label="Delete resolved conversation"
-                      title="Delete conversation"
-                    >
-                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-                    </button>
-                  )}
-                  <select
-                    value={ticket.status}
-                    onChange={(e) =>
-                      void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
-                    }
-                    className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-                  >
-                    {(
-                      Object.keys(
-                        ticket.kind === 'report'
-                          ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                          : SUPPORT_STATUS_LABEL
-                      ) as SupportTicketStatus[]
-                    ).map((s) => (
-                      <option key={s} value={s}>
-                        {ticket.kind === 'report'
-                          ? supportStatusLabel({ kind: 'report', status: s })
-                          : SUPPORT_STATUS_LABEL[s]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              }
-            />
-          );
-        }
       }
     }
 
@@ -418,13 +332,8 @@ export function StaffMessagesPanel({
     activeTab,
     teamRows.length,
     jobRows.length,
-    supportRowsAll.length,
     effectiveSelection,
     requests,
-    supportTickets,
-    currentUser,
-    onDeleteSupportTicket,
-    onUpdateSupportStatus,
   ]);
 
   const header = inboxTabs;
@@ -436,15 +345,11 @@ export function StaffMessagesPanel({
         <AppEmptyState
           dashed
           icon={<MessageCircle className="w-5 h-5" />}
-          title={
-            activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'No team conversations'
-          }
+          title={activeTab === 'jobs' ? 'No job chats' : 'No team conversations'}
         >
           {activeTab === 'jobs'
             ? 'Job chats appear here when a guard is assigned to a booking.'
-            : activeTab === 'support'
-              ? 'Support and report tickets from users will appear here.'
-              : 'Staff chat and multi-guard crew chats appear here.'}
+            : 'Staff chat and multi-guard crew chats appear here.'}
         </AppEmptyState>
       ) : (
         <AppInboxList>
@@ -465,10 +370,6 @@ export function StaffMessagesPanel({
                   <MessageCircle className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'team-crew' ? (
                   <Users className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'report' ? (
-                  <FileText className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'support' ? (
-                  <LifeBuoy className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'job' ? (
                   <Briefcase className="w-5 h-5 text-brand-primary" />
                 ) : undefined
@@ -600,94 +501,7 @@ export function StaffMessagesPanel({
       );
     }
 
-    if (effectiveSelection.kind !== 'support') return null;
-
-    const ticket = supportTickets.find((t) => t.id === effectiveSelection.ticketId);
-    if (!ticket) return null;
-
-    const handleSend = async (body: string) => {
-      await onSendSupportMessage(ticket.id, body);
-      if (ticket.status === 'open') {
-        await onUpdateSupportStatus(ticket.id, 'in-progress');
-      }
-    };
-
-    const canDelete =
-      !!onDeleteSupportTicket &&
-      canDeleteResolvedSupportChat(currentUser) &&
-      isDeletableResolvedSupportChat(ticket);
-
-    const handleDelete = async () => {
-      if (!onDeleteSupportTicket) return;
-      await onDeleteSupportTicket(ticket.id);
-      clearSelection();
-    };
-
-    return (
-      <div className="flex flex-col h-full min-h-0 bg-brand-bg app-full-page-screen">
-        {!embedHeaderInShell && (
-          <AppChatHeader
-            title={ticket.subject}
-            subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
-            onBack={clearSelection}
-            hideBackOnDesktop
-            trailing={
-              <div className="flex items-center gap-2 shrink-0">
-                {canDelete && (
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete()}
-                    className="app-chat-header-action app-chat-header-action-danger"
-                    aria-label="Delete resolved conversation"
-                    title="Delete conversation"
-                  >
-                    <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-                  </button>
-                )}
-                <select
-                  value={ticket.status}
-                  onChange={(e) =>
-                    void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
-                  }
-                  className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-                >
-                  {(
-                    Object.keys(
-                      ticket.kind === 'report'
-                        ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                        : SUPPORT_STATUS_LABEL
-                    ) as SupportTicketStatus[]
-                  ).map((s) => (
-                    <option key={s} value={s}>
-                      {ticket.kind === 'report'
-                        ? supportStatusLabel({ kind: 'report', status: s })
-                        : SUPPORT_STATUS_LABEL[s]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            }
-          />
-        )}
-        <div className="flex-1 min-h-0">
-          <ChatThreadPanel
-            messages={ticket.messages.map((msg) => ({
-              id: msg.id,
-              senderId: msg.senderId,
-              senderName: msg.senderName,
-              senderRole: msg.senderRole,
-              body: msg.body,
-              createdAt: msg.createdAt,
-            }))}
-            currentUserId={currentUser.id}
-            viewerRole={currentUser.role}
-            onSend={handleSend}
-            placeholder={ticket.kind === 'report' ? 'Staff note or follow-up…' : 'Reply to user…'}
-            teamChat
-          />
-        </div>
-      </div>
-    );
+    return null;
   })();
 
   return (
@@ -698,7 +512,7 @@ export function StaffMessagesPanel({
       hasSelection={hasSelection && !!detailView}
       shellInboxHeader
       emptyDetailTitle="Select a conversation"
-      emptyDetailHint="Staff channel, crew chats, job threads, and support"
+      emptyDetailHint="Staff channel, crew chats, and job threads"
     />
   );
 }

@@ -79,6 +79,7 @@ import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffViolationsPanel } from './staff/StaffViolationsPanel';
 import { StaffStatsPanel } from './staff/StaffStatsPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
+import { StaffSupportPanel } from './staff/StaffSupportPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
@@ -883,10 +884,9 @@ export function StaffDashboard({
       case 'incidents':
         return <StaffIncidentsPanel incidents={incidents} incidentDetails={incidentDetails} onOpenJob={openJob} />;
       case 'messages':
-      case 'support':
       case 'team-chat':
       case 'job-chats':
-        return onSendStaffMessage && onSendJobChat && onSendTeamChatMessage && onSendSupportMessage && onUpdateSupportStatus ? (
+        return onSendStaffMessage && onSendJobChat && onSendTeamChatMessage ? (
           <div data-tour="staff-messages" className="app-messages-hub h-full min-h-0">
             <StaffMessagesPanel
               requests={requests}
@@ -912,12 +912,9 @@ export function StaffDashboard({
               onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
               selectedTeamChatRequestId={selectedTeamChatRequestId}
               onSelectedTeamChatRequestIdChange={onSelectedTeamChatRequestIdChange}
-              selectedSupportTicketId={selectedSupportTicketId}
-              onSelectedSupportTicketIdChange={onSelectedSupportTicketIdChange}
               initialJobChatRequestId={selectedJobChatRequestId}
               initialTeamChatRequestId={selectedTeamChatRequestId}
               initialStaffMessagesTab={initialStaffMessagesTab}
-              initialSupportTicketId={selectedSupportTicketId}
               onMessagesChromeChange={setStaffMessagesChrome}
             />
           </div>
@@ -925,7 +922,27 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.messages!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.messages!.message}
-            placeholders={['Job chats', 'Team chat', 'Support inbox']}
+            placeholders={['Job chats', 'Team chat']}
+          />
+        );
+      case 'support':
+        return onSendSupportMessage && onUpdateSupportStatus ? (
+          <div data-tour="staff-support" className="app-messages-hub h-full min-h-0">
+            <StaffSupportPanel
+              tickets={supportTickets}
+              currentUser={currentUser}
+              onSendMessage={onSendSupportMessage}
+              onUpdateStatus={onUpdateSupportStatus}
+              selectedTicketId={selectedSupportTicketId}
+              onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
+              initialSelectedTicketId={selectedSupportTicketId}
+            />
+          </div>
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.messages!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.messages!.message}
+            placeholders={['Support inbox', 'Reports']}
           />
         );
       case 'payments':

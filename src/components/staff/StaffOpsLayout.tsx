@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets } from '../../lib/permissions';
-import { isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
+import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   Map,
   MessagesSquare,
+  LifeBuoy,
   Scale,
   Settings,
   ScrollText,
@@ -72,7 +73,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   clients: 'Clients',
   incidents: 'Incidents',
   messages: 'Messages',
-  support: 'Messages',
+  support: 'Support',
   'team-chat': 'Messages',
   'job-chats': 'Messages',
   payments: 'Payments',
@@ -133,6 +134,7 @@ export function StaffOpsLayout({
       { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
+      { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
       { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
       { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
@@ -152,7 +154,11 @@ export function StaffOpsLayout({
     [badges],
   );
 
-  const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
+  const navHighlight = isStaffMessagesHubSection(activeSection)
+    ? activeSection === 'support'
+      ? 'support'
+      : 'messages'
+    : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
 
   return (
