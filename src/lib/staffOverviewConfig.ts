@@ -44,7 +44,7 @@ const ADMIN_METRICS = [
 ];
 
 const STAFF_OVERVIEW_CONFIG: Record<
-  Extract<PlatformRole, 'moderator' | 'administrator' | 'director' | 'owner'>,
+  Extract<PlatformRole, 'moderator' | 'administrator' | 'manager' | 'director' | 'owner'>,
   StaffOverviewConfig
 > = {
   moderator: {
@@ -82,6 +82,37 @@ const STAFF_OVERVIEW_CONFIG: Record<
     emptyAttentionCopy:
       'No approvals or incidents waiting. Review analytics or open the ops map.',
     quickLinkSections: ['applications', 'jobs', 'clients', 'analytics', 'messages'],
+  },
+  manager: {
+    roleLabel: ROLE_LABELS.manager,
+    workspaceKicker: 'Manager workspace',
+    focusLine:
+      'Operations lead — live command, payouts and fees, company jobs, audit visibility, and city coverage within your assigned markets.',
+    layout: 'executive',
+    metricLabels: 'all',
+    showPaymentsInQueue: true,
+    showDirectorFinancials: true,
+    showOperationsSnapshot: true,
+    showPlatformPulse: true,
+    pulseFullDetail: true,
+    showPipelineInsight: true,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'Nothing urgent in the queue. Review payouts, live coverage, or operations in your assigned cities.',
+    quickLinkSections: [
+      'map',
+      'jobs',
+      'payments',
+      'clients',
+      'applications',
+      'analytics',
+      'audit-log',
+      'cities',
+      'permissions',
+      'guards',
+      'messages',
+    ],
   },
   director: {
     roleLabel: ROLE_LABELS.director,
@@ -122,7 +153,13 @@ const STAFF_OVERVIEW_CONFIG: Record<
 };
 
 export function getStaffOverviewConfig(role: PlatformRole): StaffOverviewConfig {
-  if (role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner') {
+  if (
+    role === 'moderator' ||
+    role === 'administrator' ||
+    role === 'manager' ||
+    role === 'director' ||
+    role === 'owner'
+  ) {
     return STAFF_OVERVIEW_CONFIG[role];
   }
   return STAFF_OVERVIEW_CONFIG.moderator;
