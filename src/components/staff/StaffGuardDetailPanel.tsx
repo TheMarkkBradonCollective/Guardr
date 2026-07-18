@@ -37,6 +37,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppButton } from '../ui/AppButton';
 import { ArrowLeft, Camera, Check, Save, User, Users, X } from 'lucide-react';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import type { StaffGuardDetailTab } from '../../lib/appNavigation';
@@ -441,13 +442,14 @@ export function StaffGuardDetailPanel({
 
     if (onOpenGuardCredential) {
       return (
-        <button
-          type="button"
+        <AppButton
+          variant="primary"
+          size="sm"
           onClick={() => onOpenGuardCredential(guard.id, cert.id)}
-          className="app-button-primary app-btn-sm gap-1"
+          startEnhancer={<Check className="w-3 h-3" />}
         >
-          <Check className="w-3 h-3" /> Review credential
-        </button>
+          Review credential
+        </AppButton>
       );
     }
 
@@ -455,23 +457,25 @@ export function StaffGuardDetailPanel({
       <div className="flex flex-col items-stretch gap-1.5 w-full">
         <div className="app-action-row--equal w-full">
           {cert.imageUrl && onRequestCertImageResubmit && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => requestCertResubmit(cert)}
-              className="app-button-outline app-btn-sm gap-1"
             >
               Request clearer photo
-            </button>
+            </AppButton>
           )}
-          <button
-            type="button"
+          <AppButton
+            variant="danger"
+            size="sm"
             onClick={() => onRejectCert(guard.id, cert.id)}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+            startEnhancer={<X className="w-3 h-3" />}
           >
-            <X className="w-3 h-3" /> Reject
-          </button>
-          <button
-            type="button"
+            Reject
+          </AppButton>
+          <AppButton
+            variant="primary"
+            size="sm"
             disabled={!staffCanVerifyCertification(cert, guard)}
             title={staffVerifyCertificationBlocker(cert, guard) ?? 'Verify credential'}
             onClick={() => {
@@ -483,10 +487,10 @@ export function StaffGuardDetailPanel({
                 }
               })();
             }}
-            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+            startEnhancer={<Check className="w-3 h-3" />}
           >
-            <Check className="w-3 h-3" /> Verify
-          </button>
+            Verify
+          </AppButton>
         </div>
         {staffVerifyCertificationBlocker(cert, guard) && (
           <p className="text-xs text-amber-500 leading-relaxed break-words">
@@ -511,23 +515,19 @@ export function StaffGuardDetailPanel({
           )}
           {canEdit && !guard.isStaff && staffGuardTab === 'profile' && (
             <div className="app-action-row" style={{ width: 'auto', flex: '0 1 auto' }}>
-              <button
-                type="button"
+              <AppButton
+                variant="primary"
+                size="sm"
                 onClick={() => (editing ? void handleSave() : setEditing(true))}
                 disabled={saving}
-                className="app-button-primary app-btn-sm gap-1.5 disabled:opacity-50"
+                startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
               >
-                {editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                 {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-              </button>
+              </AppButton>
               {editing && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="app-button-outline app-btn-sm"
-                >
+                <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
                   Cancel
-                </button>
+                </AppButton>
               )}
             </div>
           )}
@@ -634,8 +634,9 @@ export function StaffGuardDetailPanel({
             <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
             <div className="staff-detail-actions">
               {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
-                <button
-                  type="button"
+                <AppButton
+                  variant="primary"
+                  size="sm"
                   onClick={() => {
                     if (onOpenGuardApplication) {
                       onOpenGuardApplication(guard.id);
@@ -644,7 +645,6 @@ export function StaffGuardDetailPanel({
                     void handleApproveProfile();
                   }}
                   disabled={!onOpenGuardApplication && !guardCanStaffApproveProfile(guard)}
-                  className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
                     onOpenGuardApplication
                       ? 'Open this application in Applications to review and approve'
@@ -654,63 +654,60 @@ export function StaffGuardDetailPanel({
                   }
                 >
                   {onOpenGuardApplication ? 'Review application' : 'Approve application'}
-                </button>
+                </AppButton>
               )}
               {(guardAccountStatus === 'pending' || guardAccountStatus === 'approved') &&
                 onRejectGuardApplication && (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="danger"
+                    size="sm"
                     onClick={() => void handleRevokeApplication()}
                     disabled={revoking}
-                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
                   >
                     {revoking ? 'Revoking…' : 'Revoke application'}
-                  </button>
+                  </AppButton>
                 )}
               {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
-                <button
-                  type="button"
+                <AppButton
+                  variant="danger"
+                  size="sm"
                   onClick={() => void handleDeleteGuard()}
                   disabled={deleting}
-                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                 >
                   {deleting ? 'Deleting…' : 'Delete account'}
-                </button>
+                </AppButton>
               )}
               {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => void handleUpdateUserStatus('suspended')} className="app-button-outline app-btn-sm">
+                <AppButton variant="outline" size="sm" onClick={() => void handleUpdateUserStatus('suspended')}>
                   Suspend
-                </button>
+                </AppButton>
               )}
               {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => void handleUpdateUserStatus('blocked')} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
+                <AppButton variant="danger" size="sm" onClick={() => void handleUpdateUserStatus('blocked')}>
                   Flag / Block
-                </button>
+                </AppButton>
               )}
               {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
-                <button type="button" onClick={() => void handleUpdateUserStatus('active')} className="app-button-primary app-btn-sm">
+                <AppButton variant="primary" size="sm" onClick={() => void handleUpdateUserStatus('active')}>
                   Restore account
-                </button>
+                </AppButton>
               )}
               {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <button type="button" onClick={() => void handleResetAuditFailures()} className="app-button-outline app-btn-sm">
+                <AppButton variant="outline" size="sm" onClick={() => void handleResetAuditFailures()}>
                   Clear violations ({guard.failedAudits}/3)
-                </button>
+                </AppButton>
               )}
               {onUpdateBackgroundChecked && (
-                <button
-                  type="button"
-                  onClick={() => void handleBackgroundCheckToggle()}
-                  className="app-button-outline app-btn-sm"
-                >
+                <AppButton variant="outline" size="sm" onClick={() => void handleBackgroundCheckToggle()}>
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
-                </button>
+                </AppButton>
               )}
               {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
-                <button
-                  type="button"
+                <AppButton
+                  variant="outline"
+                  size="sm"
                   onClick={() => void handleToggleTrusted()}
-                  className={`app-button-outline app-btn-sm ${guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
+                  className={guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}
                   title={
                     guard.trusted
                       ? 'Remove trusted status — guard will require Guardr applicant review'
@@ -718,23 +715,23 @@ export function StaffGuardDetailPanel({
                   }
                 >
                   {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
-                </button>
+                </AppButton>
               )}
               {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
-                <button
-                  type="button"
+                <AppButton
+                  variant="outline"
+                  size="sm"
                   disabled
-                  className="app-button-outline app-btn-sm opacity-50 cursor-not-allowed"
                   title="Guard must be approved and active before they can be marked as trusted."
                 >
                   Mark as trusted
-                </button>
+                </AppButton>
               )}
               {onMakeCrewLead && (
-                <button
-                  type="button"
+                <AppButton
+                  variant="outline"
+                  size="sm"
                   onClick={() => void handleMakeCrewLead()}
-                  className="app-button-outline app-btn-sm"
                   title={
                     guard.trusted
                       ? 'Initialize this guard as a standing crew lead'
@@ -742,7 +739,7 @@ export function StaffGuardDetailPanel({
                   }
                 >
                   Make crew lead
-                </button>
+                </AppButton>
               )}
             </div>
           </section>

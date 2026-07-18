@@ -22,6 +22,8 @@ export type AppButtonProps = Omit<GuardrButtonProps, 'kind' | 'size'> & {
   variant?: AppButtonVariant;
   size?: AppButtonSize;
   className?: string;
+  /** Native tooltip — forwarded to the underlying button element */
+  title?: string;
 };
 
 /**
@@ -32,15 +34,28 @@ export function AppButton({
   size = 'md',
   className = '',
   fullWidth,
+  title,
+  overrides,
   children,
   ...rest
 }: AppButtonProps) {
+  const mergedOverrides = title
+    ? {
+        ...overrides,
+        BaseButton: {
+          ...overrides?.BaseButton,
+          props: { title, ...(overrides?.BaseButton?.props as object | undefined) },
+        },
+      }
+    : overrides;
+
   return (
     <GuardrButton
       kind={VARIANT_MAP[variant]}
       size={SIZE_MAP[size]}
       fullWidth={fullWidth}
       className={className || undefined}
+      overrides={mergedOverrides}
       {...rest}
     >
       {children}
