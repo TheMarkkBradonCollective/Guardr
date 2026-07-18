@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, ROLE_LABELS } from '../../lib/permissions';
-import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets } from '../../lib/permissions';
+import { isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
+import { StaffShellCreateProvider, useStaffSidebarPrimaryAction } from './StaffShellCreateContext';
 import {
   AlertTriangle,
   BarChart3,
@@ -51,6 +52,10 @@ interface StaffOpsLayoutProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
+  canCreateJob?: boolean;
+  canAddClient?: boolean;
+  canAddGuard?: boolean;
+  canAddStaff?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -58,12 +63,12 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   applications: 'Applications',
   credentials: 'Credentials',
   jobs: 'Jobs',
-  map: 'Operations map',
-  guards: 'Field guards',
+  map: 'Map',
+  guards: 'Guards',
   team: 'Staff',
   crews: 'Crews',
   clients: 'Clients',
-  incidents: 'Client incidents',
+  incidents: 'Incidents',
   messages: 'Messages',
   support: 'Messages',
   'team-chat': 'Messages',
@@ -102,6 +107,10 @@ export function StaffOpsLayout({
   accountNotifications,
   headerExtension,
   headerOverride,
+  canCreateJob = false,
+  canAddClient = false,
+  canAddGuard = false,
+  canAddStaff = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
@@ -115,9 +124,9 @@ export function StaffOpsLayout({
       { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
       { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
       { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
-      { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
       { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
       { id: 'crews', label: 'Crews', icon: UsersRound, badge: badges.crews },
+      { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
       { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
@@ -129,18 +138,94 @@ export function StaffOpsLayout({
       { id: 'stats', label: 'Stats', icon: BarChart3 },
       { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-      { id: 'guide', label: 'Guide', icon: BookOpen },
-      { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
       { id: 'cities', label: 'Operations', icon: MapPinned, citiesOnly: true },
       { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
       { id: 'settings', label: 'Public Information', icon: Settings },
       { id: 'integrations', label: 'Integrations', icon: Plug },
+      { id: 'guide', label: 'Guide', icon: BookOpen },
+      { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     ],
     [badges],
   );
 
   const navHighlight = isStaffMessagesSection(activeSection) ? 'messages' : activeSection;
   const screenTitle = SECTION_TITLES[navHighlight];
+
+  return (
+    <StaffShellCreateProvider>
+      <StaffOpsLayoutInner
+        currentUser={currentUser}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+        onSignOut={onSignOut}
+        isDbConnected={isDbConnected}
+        navItems={navItems}
+        screenTitle={screenTitle}
+        navHighlight={navHighlight}
+        showFinance={showFinance}
+        showSettings={true}
+        showPermissions={showPermissions}
+        showDisputes={showDisputes}
+        showCities={showCities}
+        onOpenLegal={onOpenLegal}
+        hideHeader={hideHeader}
+        accountNotifications={accountNotifications}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+        canCreateJob={canCreateJob}
+        canAddClient={canAddClient}
+        canAddGuard={canAddGuard}
+        canAddStaff={canAddStaff}
+      >
+        {children}
+      </StaffOpsLayoutInner>
+    </StaffShellCreateProvider>
+  );
+}
+
+interface StaffOpsLayoutInnerProps extends StaffOpsLayoutProps {
+  navItems: StaffNavItem[];
+  screenTitle: string;
+  navHighlight: StaffSection;
+  showFinance: boolean;
+  showSettings: boolean;
+  showPermissions: boolean;
+  showDisputes: boolean;
+  showCities: boolean;
+}
+
+function StaffOpsLayoutInner({
+  children,
+  currentUser,
+  activeSection,
+  onNavigate,
+  onSignOut,
+  isDbConnected,
+  navItems,
+  screenTitle,
+  navHighlight,
+  showFinance,
+  showSettings,
+  showPermissions,
+  showDisputes,
+  showCities,
+  onOpenLegal,
+  hideHeader = false,
+  accountNotifications,
+  headerExtension,
+  headerOverride,
+  canCreateJob = false,
+  canAddClient = false,
+  canAddGuard = false,
+  canAddStaff = false,
+}: StaffOpsLayoutInnerProps) {
+  const createEnabled =
+    (navHighlight === 'jobs' && canCreateJob) ||
+    (navHighlight === 'clients' && canAddClient) ||
+    (navHighlight === 'guards' && canAddGuard) ||
+    (navHighlight === 'team' && canAddStaff);
+
+  const sidebarPrimaryAction = useStaffSidebarPrimaryAction(navHighlight, createEnabled);
 
   return (
     <DesktopStaffAdminShell
@@ -153,7 +238,7 @@ export function StaffOpsLayout({
       screenTitle={screenTitle}
       navHighlight={navHighlight}
       showFinance={showFinance}
-      showSettings={true}
+      showSettings={showSettings}
       showPermissions={showPermissions}
       showDisputes={showDisputes}
       showCities={showCities}
@@ -162,6 +247,7 @@ export function StaffOpsLayout({
       accountNotifications={accountNotifications}
       headerExtension={headerExtension}
       headerOverride={headerOverride}
+      sidebarPrimaryAction={sidebarPrimaryAction}
     >
       {children}
     </DesktopStaffAdminShell>

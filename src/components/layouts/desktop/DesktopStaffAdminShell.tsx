@@ -9,7 +9,7 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
-import { GuardrDrawerShell } from '../../baseui/layout/GuardrDrawerShell';
+import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
 import { useDevice } from '../../../lib/platform';
 
 interface DesktopStaffAdminShellProps {
@@ -32,16 +32,27 @@ interface DesktopStaffAdminShellProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
+  sidebarPrimaryAction?: SidebarPrimaryAction;
 }
 
-const MENU_GROUPS: { label: string; ids: StaffSection[] }[] = [
-  { label: 'Command', ids: ['overview', 'map'] },
+/** Uber Direct sidebar groups — order matches staff nav list with section labels. */
+const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   {
-    label: 'Operations',
-    ids: ['jobs', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team', 'messages'],
+    ids: [
+      'overview',
+      'map',
+      'jobs',
+      'applications',
+      'credentials',
+      'guards',
+      'crews',
+      'clients',
+      'team',
+      'messages',
+    ],
   },
-  { label: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
-  { label: 'Support & insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
+  { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
+  { ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
@@ -65,6 +76,7 @@ export function DesktopStaffAdminShell({
   accountNotifications,
   headerExtension,
   headerOverride,
+  sidebarPrimaryAction,
 }: DesktopStaffAdminShellProps) {
   const { formFactor } = useDevice();
   const isMobileShell = formFactor === 'mobile';
@@ -132,12 +144,13 @@ export function DesktopStaffAdminShell({
 
   return (
     <GuardrDrawerShell
-      workspaceLabel="Operations"
+      workspaceLabel="Staff workspace"
       title={screenTitle}
       navGroups={navGroups}
       activeNavId={navHighlight}
       onNavigate={handleNav}
       accountMenu={accountMenu}
+      sidebarPrimaryAction={sidebarPrimaryAction}
       sidebarBrandExtra={
         isDbConnected ? (
           <Block
@@ -150,7 +163,16 @@ export function DesktopStaffAdminShell({
         ) : null
       }
       sidebarFooter={
-        onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" /> : undefined
+        <div className="uber-direct-sidebar-footer-links">
+          <button
+            type="button"
+            className="uber-direct-sidebar-footer-link"
+            onClick={() => onNavigate('preferences')}
+          >
+            Account settings
+          </button>
+          {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : null}
+        </div>
       }
       hideHeader={hideHeader}
       headerExtension={headerExtension}
