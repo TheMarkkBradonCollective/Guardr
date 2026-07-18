@@ -28,6 +28,8 @@ export interface GuardrDrawerShellProps {
   notifications?: React.ReactNode;
   sidebarBrandExtra?: React.ReactNode;
   sidebarPrimaryAction?: SidebarPrimaryAction;
+  /** When set, renders stacked sidebar CTAs (e.g. Applications: add guard + add client). */
+  sidebarPrimaryActions?: SidebarPrimaryAction[];
   sidebarFooter?: React.ReactNode;
   hideHeader?: boolean;
   headerOverride?: React.ReactNode;
@@ -55,6 +57,7 @@ export function GuardrDrawerShell({
   notifications,
   sidebarBrandExtra,
   sidebarPrimaryAction,
+  sidebarPrimaryActions,
   sidebarFooter,
   hideHeader = false,
   headerOverride,
@@ -98,6 +101,8 @@ export function GuardrDrawerShell({
 
   const sidebarVisible = sidebarOpen;
   const isMobileDrawer = isMobile;
+  const sidebarCtaActions =
+    sidebarPrimaryActions ?? (sidebarPrimaryAction ? [sidebarPrimaryAction] : []);
   const showDrawerBackdrop = sidebarVisible && isMobileDrawer;
   const flowSidebarWidth = sidebarVisible ? chrome.sidebarWidth : '0px';
   const drawerPanelWidth = chrome.drawerWidth;
@@ -268,16 +273,19 @@ export function GuardrDrawerShell({
       </Block>
       ) : null}
 
-      {isDesktopWorkspace && sidebarPrimaryAction ? (
+      {isDesktopWorkspace && sidebarCtaActions.length > 0 ? (
         <div className="uber-direct-sidebar-cta-wrap">
-          <button
-            type="button"
-            className="uber-direct-sidebar-cta"
-            onClick={sidebarPrimaryAction.onClick}
-          >
-            {sidebarPrimaryAction.icon}
-            <span>{sidebarPrimaryAction.label}</span>
-          </button>
+          {sidebarCtaActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              className="uber-direct-sidebar-cta"
+              onClick={action.onClick}
+            >
+              {action.icon}
+              <span>{action.label}</span>
+            </button>
+          ))}
         </div>
       ) : null}
 
