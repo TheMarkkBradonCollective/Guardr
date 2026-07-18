@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingXSmall, LabelSmall, ParagraphMedium } from 'baseui/typography';
-import { Menu, Settings, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
@@ -36,7 +36,6 @@ export interface GuardrDrawerShellProps {
   headerExtension?: React.ReactNode;
   bleed?: boolean;
   variant?: 'default' | 'dark';
-  onSettingsClick?: () => void;
   children: React.ReactNode;
   ariaLabel?: string;
   showTitleBand?: boolean;
@@ -64,7 +63,6 @@ export function GuardrDrawerShell({
   headerExtension,
   bleed = false,
   variant = 'default',
-  onSettingsClick,
   children,
   ariaLabel = 'Main navigation',
   showTitleBand = false,
@@ -416,18 +414,6 @@ export function GuardrDrawerShell({
           <Block display="flex" alignItems="center" gridGap="scale300" overrides={{ Block: { style: { flexShrink: 0 } } }}>
             {notifications}
             {accountMenu}
-            {onSettingsClick ? (
-              <Block
-                as="button"
-                type="button"
-                className="mobility-icon-btn"
-                onClick={onSettingsClick}
-                aria-label="Settings"
-                overrides={{ Block: { style: iconBtnStyle } }}
-              >
-                <Settings size={16} />
-              </Block>
-            ) : null}
           </Block>
         </Block>
         ) : null}
