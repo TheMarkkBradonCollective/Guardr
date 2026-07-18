@@ -36,7 +36,10 @@ import {
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { DashboardHero, MetricCell, MetricStrip } from '../baseui/dashboard';
-import { GuardrButton } from '../baseui/GuardrButton';
+import { AppButton } from '../ui/AppButton';
+import { GuardrTag } from '../baseui/GuardrTag';
+import { Block } from 'baseui/block';
+import { LabelXSmall, ParagraphSmall } from 'baseui/typography';
 import {
   BookOpen,
   Briefcase,
@@ -277,7 +280,7 @@ export function GuardProfileScreen({
               <WfSectionHeader title="Specialties" className="mb-2" />
               <div className="flex flex-wrap gap-2">
                 {guard.specialties.map((s) => (
-                  <span key={s} className="chip chip-active text-xs">{s}</span>
+                  <GuardrTag key={s} kind="accent" closeable={false}>{s}</GuardrTag>
                 ))}
               </div>
             </section>
@@ -409,30 +412,20 @@ export function GuardProfileScreen({
           </section>
         </div>
 
-      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2${formFactor === 'desktop' ? '' : ''}`}>
+      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
         {canMessageFromProfile && messageableRequest && (
-          <button
-            type="button"
+          <AppButton
+            variant="outline"
+            fullWidth
             onClick={() => openJobChat(messageableRequest.id)}
-            className="app-button-outline w-full gap-1.5"
+            startEnhancer={<MessageCircle className="w-4 h-4" />}
           >
-            <MessageCircle className="w-4 h-4" />
             {jobChatActionLabel(messageableRequest)}
-          </button>
+          </AppButton>
         )}
-        {formFactor === 'desktop' ? (
-          <GuardrButton kind="primary" onClick={() => onRequestGuard(guard)} className="w-full">
-            Send assignment request to {guardFirstName}
-          </GuardrButton>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onRequestGuard(guard)}
-            className="app-button-primary"
-          >
-            Send assignment request to {guardFirstName}
-          </button>
-        )}
+        <AppButton variant="primary" fullWidth onClick={() => onRequestGuard(guard)}>
+          Send assignment request to {guardFirstName}
+        </AppButton>
         <p className="text-center text-xs text-brand-text-muted mt-2">
           Separate from posting a general job to all guards
         </p>
@@ -451,12 +444,26 @@ function FactCard({
   icon?: typeof MapPin;
 }) {
   return (
-    <div className="wf-metric-tile">
-      <p className="wf-metric-label flex items-center gap-1.5">
+    <Block
+      className="wf-metric-tile"
+      padding="scale500"
+      backgroundColor="backgroundSecondary"
+      $style={{ borderRadius: '12px' }}
+    >
+      <LabelXSmall
+        color="contentSecondary"
+        display="flex"
+        alignItems="center"
+        gridGap="scale200"
+        marginBottom="scale200"
+        $style={{ textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}
+      >
         {Icon && <Icon className="w-3.5 h-3.5" />}
         {label}
-      </p>
-      <p className="wf-metric-value text-base leading-relaxed">{value}</p>
-    </div>
+      </LabelXSmall>
+      <ParagraphSmall margin={0} $style={{ fontSize: '15px', lineHeight: 1.5, fontWeight: 500 }}>
+        {value}
+      </ParagraphSmall>
+    </Block>
   );
 }
