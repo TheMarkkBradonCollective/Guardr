@@ -31,6 +31,9 @@ import {
   UsersRound,
 } from 'lucide-react';
 import type { StaffSection } from '../../../lib/staffOps';
+import type { StaffOverviewConfig } from '../../../lib/staffOverviewConfig';
+import type { PlatformStats } from '../../../lib/staffOps';
+import type { PlatformRole } from '../../../types';
 
 export const QUICK_LINK_META: Record<
   StaffSection,
@@ -200,7 +203,7 @@ export function buildStaffOverviewHubItems(
     tryAdd(section);
   }
 
-  return items.slice(0, 3);
+  return items.slice(0, 4);
 }
 
 export function StaffOverviewHubCards({
@@ -400,6 +403,186 @@ export function StaffOverviewShortcutRow({
         <ChevronRight size={16} className="staff-overview-list-row-chevron" aria-hidden />
       </button>
     </li>
+  );
+}
+
+export function StaffOverviewRoleHeader({
+  config,
+  healthy,
+  pendingReviews,
+  onReview,
+}: {
+  config: StaffOverviewConfig;
+  healthy: boolean;
+  pendingReviews: number;
+  onReview?: () => void;
+}) {
+  return (
+    <header className="staff-overview-pro-hero">
+      <p className="staff-overview-pro-kicker">{config.workspaceKicker}</p>
+      <h1 className="staff-overview-pro-title">{config.roleLabel} overview</h1>
+      <p className="staff-overview-pro-focus">{config.focusLine}</p>
+      <StaffOverviewStatusBanner healthy={healthy} pendingReviews={pendingReviews} onReview={onReview} />
+    </header>
+  );
+}
+
+export function StaffOverviewKpiGrid({
+  metrics,
+  onNavigate,
+}: {
+  metrics: { label: string; value: string; sub: string; accent?: boolean; navigateTo?: StaffSection }[];
+  onNavigate?: (section: StaffSection) => void;
+}) {
+  if (metrics.length === 0) return null;
+  return (
+    <section className="staff-overview-pro-kpi" aria-label="Key metrics">
+      {metrics.map((metric) => (
+        <button
+          key={metric.label}
+          type="button"
+          className={`staff-overview-pro-kpi-card${metric.accent ? ' staff-overview-pro-kpi-card--accent' : ''}`}
+          onClick={metric.navigateTo && onNavigate ? () => onNavigate(metric.navigateTo!) : undefined}
+          disabled={!metric.navigateTo || !onNavigate}
+        >
+          <span className="staff-overview-pro-kpi-value">{metric.value}</span>
+          <span className="staff-overview-pro-kpi-label">{metric.label}</span>
+          <span className="staff-overview-pro-kpi-sub">{metric.sub}</span>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+export function StaffOverviewQueueBoard({
+  stats,
+  showPayments,
+  staffRole,
+  onNavigate,
+}: {
+  stats: PlatformStats;
+  showPayments: boolean;
+  staffRole: PlatformRole;
+  onNavigate: (section: StaffSection) => void;
+}) {
+  const allRows = [
+    {
+      id: 'job-offers',
+      label: 'Job offers',
+      count: stats.pendingJobApprovals,
+      description: 'New job requests waiting for staff approval',
+      section: 'applications' as StaffSection,
+      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+    },
+    {
+      id: 'schedule-changes',
+      label: 'Schedule changes',
+      count: stats.pendingScheduleChanges,
+      description: 'Guard or client requested a schedule update',
+      section: 'applications' as StaffSection,
+      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+    },
+    {
+      id: 'credentials',
+      label: 'Credentials',
+      count: stats.pendingCertApprovals,
+      description: 'Licenses and certifications to verify',
+      section: 'credentials' as StaffSection,
+      roles: ['moderator', 'administrator', 'director', 'owner'] as PlatformRole[],
+    },
+    {
+      id: 'applications',
+      label: 'Account applications',
+      count: stats.pendingAccountApplications,
+      description: 'New guard, client, or staff sign-ups',
+      section: 'applications' as StaffSection,
+      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+    },
+    {
+      id: 'payments',
+      label: 'Payments',
+      count: stats.paymentsNeedingAction,
+      description: 'Deposits, payouts, or billing follow-up',
+      section: 'payments' as StaffSection,
+      roles: ['director', 'owner'] as PlatformRole[],
+      hidden: !showPayments,
+    },
+    {
+      id: 'incidents',
+      label: 'Active incidents',
+      count: stats.activeIncidents,
+      description: 'Open incident reports needing follow-up',
+      section: 'incidents' as StaffSection,
+      roles: ['moderator', 'administrator', 'director', 'owner'] as PlatformRole[],
+    },
+  ];
+
+  const rows = allRows.filter((row) => !row.hidden && row.roles.includes(staffRole));
+
+  const totalPending = rows.reduce((sum, row) => sum + row.count, 0);
+
+  return (
+    <WorkbenchPanel className="staff-overview-list-panel staff-overview-pro-queue" padding>
+      <StaffOverviewSectionHeader
+        title="Approval & action queue"
+        actionLabel={totalPending > 0 ? 'Open queue' : undefined}
+        onAction={totalPending > 0 ? () => onNavigate('applications') : undefined}
+      />
+      <ul className="staff-overview-pro-queue-grid">
+        {rows.map((row) => (
+          <li key={row.id}>
+            <button
+              type="button"
+              className={`staff-overview-pro-queue-card${row.count > 0 ? ' staff-overview-pro-queue-card--active' : ''}`}
+              onClick={() => onNavigate(row.section)}
+            >
+              <span className="staff-overview-pro-queue-count">{row.count}</span>
+              <span className="staff-overview-pro-queue-label">{row.label}</span>
+              <span className="staff-overview-pro-queue-desc">{row.description}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </WorkbenchPanel>
+  );
+}
+
+export function StaffOverviewActivityPanel({
+  items,
+  formatTime,
+  onViewAll,
+}: {
+  items: { id: string; message: string; timestamp: string }[];
+  formatTime: (iso: string) => string;
+  onViewAll?: () => void;
+}) {
+  return (
+    <WorkbenchPanel className="staff-overview-list-panel staff-overview-pro-activity" padding>
+      <StaffOverviewSectionHeader title="Recent activity" actionLabel={onViewAll ? 'View all' : undefined} onAction={onViewAll} />
+      {items.length === 0 ? (
+        <div className="staff-overview-empty-card staff-overview-empty-card--panel">
+          <CheckCircle2 className="w-5 h-5 uber-text-muted shrink-0" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold">No recent activity</p>
+            <p className="text-xs uber-text-muted mt-0.5 leading-relaxed">
+              Check-ins, patrol reports, and new jobs will show here as they happen.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <ul className="staff-overview-feed-list">
+          {items.map((item) => (
+            <li key={item.id} className="staff-overview-feed-item">
+              <span className="staff-overview-feed-dot" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-sm leading-snug">{item.message}</p>
+                <p className="text-[11px] uber-text-muted mt-0.5">{formatTime(item.timestamp)}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </WorkbenchPanel>
   );
 }
 
