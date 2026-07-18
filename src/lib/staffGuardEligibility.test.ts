@@ -5,7 +5,9 @@ import { buildStaffGuardStatRows } from './staffStats';
 import {
   buildStaffGuardEligibilityRecommendations,
   isCrewLeadEligible,
+  isStaffCrewLeadCandidate,
   isTrustedEligible,
+  listGuardsEligibleForStaffCrewCreation,
 } from './staffGuardEligibility';
 
 function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -64,5 +66,33 @@ describe('staffGuardEligibility', () => {
     const [row] = buildStaffGuardStatRows(guards, []);
     const elite = { ...row, overallRating: 90, tier: { ...row.tier, id: 'elite', name: 'Elite', level: 3, threshold: 85 } };
     assert.equal(isCrewLeadEligible(guards[0], elite, [], []), false);
+  });
+
+  it('lists trusted guards who are not already on a crew for staff crew creation', () => {
+    const eligible = guard({ id: 'g1', trusted: true, name: 'Alpha Guard' });
+    const alreadyLead = guard({ id: 'g2', trusted: true, standingCrewName: 'Beta Crew' });
+    const member = guard({ id: 'g3', trusted: true, name: 'Charlie Guard' });
+    const untrusted = guard({ id: 'g4', trusted: false, name: 'Delta Guard' });
+    const members = [
+      {
+        id: 'm1',
+        leadGuardId: 'lead-1',
+        memberGuardId: 'g3',
+        status: 'active' as const,
+        invitedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ];
+
+    assert.equal(isStaffCrewLeadCandidate(eligible, members), true);
+    assert.equal(isStaffCrewLeadCandidate(alreadyLead, members), false);
+    assert.equal(isStaffCrewLeadCandidate(member, members), false);
+    assert.equal(isStaffCrewLeadCandidate(untrusted, members), false);
+
+    const listed = listGuardsEligibleForStaffCrewCreation(
+      [eligible, alreadyLead, member, untrusted],
+      members,
+      'alpha',
+    );
+    assert.deepEqual(listed.map((g) => g.id), ['g1']);
   });
 });

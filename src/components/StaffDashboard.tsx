@@ -860,6 +860,7 @@ export function StaffDashboard({
             onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
             onApproveCrewLeadRequest={canManageCrews ? onApproveCrewLeadRequest : undefined}
             onDeclineCrewLeadRequest={canManageCrews ? onDeclineCrewLeadRequest : undefined}
+            onCreateCrew={canManageGuardAccounts ? onMakeGuardCrewLead : undefined}
           />
         );
       case 'clients':
@@ -1161,6 +1162,7 @@ export function StaffDashboard({
       canAddGuard={canManageGuardAccounts}
       canAddStaff={canProposeStaff}
       canAddCredential={canManageGuardAccounts}
+      canCreateCrew={canManageGuardAccounts}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}

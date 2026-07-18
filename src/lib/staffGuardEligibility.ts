@@ -44,6 +44,38 @@ export function isTrustedEligible(
   return hasCleanAccountabilityRecord(row);
 }
 
+/** Trusted guards staff can pick when creating a new standing crew lead. */
+export function isStaffCrewLeadCandidate(
+  guard: SecurityGuard,
+  standingCrewMembers: GuardStandingCrewMember[],
+): boolean {
+  if (guard.isStaff) return false;
+  if (guard.userStatus !== 'active') return false;
+  if (!guard.verified) return false;
+  if (!isGuardTrusted(guard)) return false;
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
+  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) return false;
+  return true;
+}
+
+export function listGuardsEligibleForStaffCrewCreation(
+  guards: SecurityGuard[],
+  standingCrewMembers: GuardStandingCrewMember[],
+  query = '',
+): SecurityGuard[] {
+  const q = query.trim().toLowerCase();
+  return guards
+    .filter((guard) => isStaffCrewLeadCandidate(guard, standingCrewMembers))
+    .filter(
+      (guard) =>
+        !q ||
+        guard.name.toLowerCase().includes(q) ||
+        guard.email.toLowerCase().includes(q) ||
+        guard.badgeNumber.toLowerCase().includes(q),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** Trusted guards who meet Elite-tier performance for staff to consider as crew leads. */
 export function isCrewLeadEligible(
   guard: SecurityGuard,
