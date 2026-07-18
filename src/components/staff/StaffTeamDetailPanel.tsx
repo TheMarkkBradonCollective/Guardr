@@ -23,6 +23,7 @@ import {
 } from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { ArrowLeft } from 'lucide-react';
 
@@ -211,14 +212,9 @@ export function StaffTeamDetailPanel({
               ))}
             </select>
             {role !== member.staffRole && (
-              <button
-                type="button"
-                onClick={handleRoleSave}
-                disabled={savingRole}
-                className="app-button-primary app-btn-sm"
-              >
+              <AppButton variant="primary" size="sm" onClick={handleRoleSave} disabled={savingRole}>
                 {savingRole ? 'Saving…' : `Save as ${role}`}
-              </button>
+              </AppButton>
             )}
             {roleError && <p className="text-sm text-red-400">{roleError}</p>}
             {roleMsg && <p className="text-sm text-brand-primary">{roleMsg}</p>}
@@ -262,14 +258,14 @@ export function StaffTeamDetailPanel({
               </select>
             </div>
           ) : null}
-          <button
-            type="button"
+          <AppButton
+            variant="primary"
+            size="sm"
             onClick={() => void handleCityAccessSave()}
             disabled={savingCities}
-            className="app-button-primary app-btn-sm"
           >
             {savingCities ? 'Saving…' : 'Save operations access'}
-          </button>
+          </AppButton>
           {cityError && <p className="text-sm text-red-400">{cityError}</p>}
           {cityMsg && <p className="text-sm text-brand-primary">{cityMsg}</p>}
         </section>
@@ -280,31 +276,19 @@ export function StaffTeamDetailPanel({
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="app-action-row--equal">
             {accountStatus !== 'suspended' && (
-              <button
-                type="button"
-                onClick={() => void handleUpdateUserStatus('suspended')}
-                className="app-button-outline app-btn-sm"
-              >
+              <AppButton variant="outline" size="sm" onClick={() => void handleUpdateUserStatus('suspended')}>
                 Suspend
-              </button>
+              </AppButton>
             )}
             {accountStatus !== 'blocked' && (
-              <button
-                type="button"
-                onClick={() => void handleUpdateUserStatus('blocked')}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-              >
+              <AppButton variant="danger" size="sm" onClick={() => void handleUpdateUserStatus('blocked')}>
                 Block
-              </button>
+              </AppButton>
             )}
             {accountStatus !== 'active' && (
-              <button
-                type="button"
-                onClick={() => void handleUpdateUserStatus('active')}
-                className="app-button-primary app-btn-sm"
-              >
+              <AppButton variant="primary" size="sm" onClick={() => void handleUpdateUserStatus('active')}>
                 Restore account
-              </button>
+              </AppButton>
             )}
           </div>
         </section>

@@ -11,6 +11,7 @@ import type { GuardStandingCrewMember } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppEmptyState } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
 import { GuardCrewJoinSection } from './GuardCrewJoinSection';
@@ -217,14 +218,15 @@ function CrewRosterRow({
         )}
       </div>
       {!pending && onRemove && (
-        <button
-          type="button"
-          className="app-button-outline app-btn-sm inline-flex items-center gap-1 text-red-400 border-red-500/30 shrink-0"
+        <AppButton
+          variant="danger"
+          size="sm"
+          className="shrink-0"
           onClick={() => void onRemove(member.memberGuardId)}
+          startEnhancer={<UserMinus className="w-3.5 h-3.5" />}
         >
-          <UserMinus className="w-3.5 h-3.5" />
           Remove
-        </button>
+        </AppButton>
       )}
     </li>
   );
@@ -503,20 +505,12 @@ export function GuardStandingCrewPanel({
                     Join their standing team for future coordinated jobs.
                   </p>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <button
-                      type="button"
-                      className="app-button-primary app-btn-sm"
-                      onClick={() => onAcceptInvite?.(invite.id)}
-                    >
+                    <AppButton variant="primary" size="sm" onClick={() => onAcceptInvite?.(invite.id)}>
                       Accept
-                    </button>
-                    <button
-                      type="button"
-                      className="app-button-outline app-btn-sm"
-                      onClick={() => onDeclineInvite?.(invite.id)}
-                    >
+                    </AppButton>
+                    <AppButton variant="outline" size="sm" onClick={() => onDeclineInvite?.(invite.id)}>
                       Decline
-                    </button>
+                    </AppButton>
                   </div>
                 </li>
               ))}
@@ -563,20 +557,12 @@ export function GuardStandingCrewPanel({
                   Join their standing team for future coordinated jobs.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <button
-                    type="button"
-                    className="app-button-primary app-btn-sm"
-                    onClick={() => onAcceptInvite?.(invite.id)}
-                  >
+                  <AppButton variant="primary" size="sm" onClick={() => onAcceptInvite?.(invite.id)}>
                     Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="app-button-outline app-btn-sm"
-                    onClick={() => onDeclineInvite?.(invite.id)}
-                  >
+                  </AppButton>
+                  <AppButton variant="outline" size="sm" onClick={() => onDeclineInvite?.(invite.id)}>
                     Decline
-                  </button>
+                  </AppButton>
                 </div>
               </li>
             ))}
@@ -603,14 +589,14 @@ export function GuardStandingCrewPanel({
                   <WfBadge tone="warning">Crew lead request pending staff review</WfBadge>
                 ) : (
                   onRequestCrewLead && (
-                    <button
-                      type="button"
-                      className="app-button-primary app-btn-sm"
+                    <AppButton
+                      variant="primary"
+                      size="sm"
                       disabled={requestingPlacement}
                       onClick={() => void handleRequestCrewLead()}
                     >
                       {requestingPlacement ? 'Submitting…' : 'Request to lead a crew'}
-                    </button>
+                    </AppButton>
                   )
                 )}
               </div>
@@ -702,15 +688,16 @@ export function GuardStandingCrewPanel({
                         <p className="text-sm font-semibold truncate">{g.name}</p>
                         <p className="text-xs text-brand-text-muted">#{g.badgeNumber}</p>
                       </div>
-                      <button
-                        type="button"
+                      <AppButton
+                        variant="primary"
+                        size="sm"
+                        className="shrink-0"
                         disabled={invitingId === g.id}
                         onClick={() => void handleInvite(g.id)}
-                        className="app-button-primary app-btn-sm inline-flex items-center gap-1 shrink-0"
+                        startEnhancer={<UserPlus className="w-3.5 h-3.5" />}
                       >
-                        <UserPlus className="w-3.5 h-3.5" />
                         {invitingId === g.id ? 'Sending…' : 'Add'}
-                      </button>
+                      </AppButton>
                     </div>
                   ))
                 )}

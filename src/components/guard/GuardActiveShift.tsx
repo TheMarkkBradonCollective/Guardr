@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useStyletron } from 'baseui';
+import { Block } from 'baseui/block';
+import { HeadingSmall, LabelSmall, LabelXSmall, ParagraphSmall, ParagraphXSmall } from 'baseui/typography';
 import { GuardJobView } from '../../lib/guardJobView';
 import { ShiftPhase } from '../../lib/guardJobs';
 import { formatDuration } from '../../lib/dates';
+import { AppButton } from '../ui/AppButton';
 import {
   activeShiftBreak,
   breakMinutesRemaining,
@@ -136,25 +140,32 @@ export function GuardActiveShift({
   const jobHasCoords = typeof job.latitude === 'number' && typeof job.longitude === 'number';
   const gpsRequired = jobHasCoords;
   const notOnSiteBlocked = gpsRequired && !onSite;
+  const [, theme] = useStyletron();
 
   const panelBody = (
-      <div className="guard-scroll-panel px-5 pb-8 space-y-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-brand-primary mb-1">Active shift</p>
-            <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
-            <p className="text-sm text-brand-text-muted mt-1 truncate">{job.clientName}</p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-xs text-brand-text-muted flex items-center justify-end gap-1">
-              <DollarSign className="w-3.5 h-3.5" />
+      <Block className="guard-scroll-panel" paddingLeft="scale600" paddingRight="scale600" paddingBottom="scale900" display="flex" flexDirection="column" gridGap="scale600">
+        <Block display="flex" alignItems="flex-start" justifyContent="space-between" gridGap="scale400">
+          <Block minWidth={0}>
+            <LabelSmall color="accent" marginBottom="scale100" margin={0} $style={{ fontWeight: 600 }}>
+              Active shift
+            </LabelSmall>
+            <HeadingSmall margin={0} $style={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {job.title}
+            </HeadingSmall>
+            <ParagraphSmall color="contentSecondary" marginTop="scale100" margin={0} $style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {job.clientName}
+            </ParagraphSmall>
+          </Block>
+          <Block $style={{ flexShrink: 0, textAlign: 'right' }}>
+            <LabelXSmall color="contentSecondary" display="flex" alignItems="center" justifyContent="flex-end" gridGap="scale100">
+              <DollarSign size={14} />
               Your pay
-            </p>
-            <div className="text-sm font-bold text-brand-primary mt-0.5">
+            </LabelXSmall>
+            <Block color="accent" marginTop="scale100" $style={{ fontSize: '14px', fontWeight: 700 }}>
               <JobBillingSummaryFromGuardJob job={job} />
-            </div>
-          </div>
-        </div>
+            </Block>
+          </Block>
+        </Block>
 
         <ShiftPeriodStatusBar
           startDate={job.startDate}
@@ -187,37 +198,57 @@ export function GuardActiveShift({
         </div>
 
         {phase === 'on-duty' && (
-          <div className="text-center py-4 border-y border-brand-border bg-brand-primary/5">
-            <p className="text-xs text-brand-text-muted mb-1">Time on site</p>
-            <p className="text-3xl font-bold tracking-tight tabular-nums">{formatTimer(dutySeconds)}</p>
-            <p className="text-sm text-brand-text-muted mt-2">{formatDuration(job.durationHours)} scheduled</p>
-          </div>
+          <Block
+            paddingTop="scale600"
+            paddingBottom="scale600"
+            backgroundColor="accent50"
+            $style={{
+              textAlign: 'center',
+              borderTop: `1px solid ${theme.colors.borderOpaque}`,
+              borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+            }}
+          >
+            <LabelXSmall color="contentSecondary" marginBottom="scale100">Time on site</LabelXSmall>
+            <Block $style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+              {formatTimer(dutySeconds)}
+            </Block>
+            <ParagraphSmall color="contentSecondary" marginTop="scale300" margin={0}>
+              {formatDuration(job.durationHours)} scheduled
+            </ParagraphSmall>
+          </Block>
         )}
 
-        <div className="space-y-4 py-2 border-b border-brand-border">
-          <div className="flex items-start gap-3 w-full">
-            <MapPin className="w-5 h-5 shrink-0 mt-0.5 text-brand-primary" strokeWidth={1.5} />
-            <div>
-              <p className="text-sm text-brand-text-muted">Site location</p>
-              <p className="font-medium mt-0.5">{address}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 w-full">
-            <Navigation className="w-5 h-5 shrink-0 mt-0.5 text-brand-primary" strokeWidth={1.5} />
-            <div>
-              <p className="text-sm text-brand-text-muted">Client contact</p>
-              <p className="font-medium mt-0.5">{job.clientName}</p>
-            </div>
-          </div>
-        </div>
+        <Block
+          display="flex"
+          flexDirection="column"
+          gridGap="scale500"
+          paddingTop="scale300"
+          paddingBottom="scale300"
+          $style={{ borderBottom: `1px solid ${theme.colors.borderOpaque}` }}
+        >
+          <Block display="flex" alignItems="flex-start" gridGap="scale400" width="100%">
+            <MapPin size={20} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: '2px', color: theme.colors.accent }} />
+            <Block>
+              <LabelSmall color="contentSecondary" margin={0}>Site location</LabelSmall>
+              <ParagraphSmall marginTop="scale100" margin={0} $style={{ fontWeight: 500 }}>{address}</ParagraphSmall>
+            </Block>
+          </Block>
+          <Block display="flex" alignItems="flex-start" gridGap="scale400" width="100%">
+            <Navigation size={20} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: '2px', color: theme.colors.accent }} />
+            <Block>
+              <LabelSmall color="contentSecondary" margin={0}>Client contact</LabelSmall>
+              <ParagraphSmall marginTop="scale100" margin={0} $style={{ fontWeight: 500 }}>{job.clientName}</ParagraphSmall>
+            </Block>
+          </Block>
+        </Block>
 
         {job.siteInstructions && (
-          <div className="py-2 border-b border-brand-border">
-            <p className="text-sm text-brand-text-muted flex items-center gap-1.5 mb-2">
-              <FileText className="w-4 h-4" strokeWidth={1.5} /> Site instructions
-            </p>
-            <p className="text-sm leading-relaxed">{job.siteInstructions}</p>
-          </div>
+          <Block paddingTop="scale300" paddingBottom="scale300" $style={{ borderBottom: `1px solid ${theme.colors.borderOpaque}` }}>
+            <LabelSmall color="contentSecondary" display="flex" alignItems="center" gridGap="scale200" marginBottom="scale300">
+              <FileText size={16} strokeWidth={1.5} /> Site instructions
+            </LabelSmall>
+            <ParagraphSmall margin={0} $style={{ lineHeight: 1.55 }}>{job.siteInstructions}</ParagraphSmall>
+          </Block>
         )}
 
         {(phase === 'on-duty' || phase === 'complete') && (
@@ -225,10 +256,10 @@ export function GuardActiveShift({
         )}
 
         {phase === 'en-route' && (
-          <div className="space-y-3">
-            <p className="text-xs text-center text-brand-text-muted">
+          <Block display="flex" flexDirection="column" gridGap="scale400">
+            <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
               Share your location with the client while en route.
-            </p>
+            </ParagraphXSmall>
             <SlideToConfirm
               label={gpsRequired && !onSite ? 'Must be on site to arrive' : 'Slide to arrive on site'}
               confirmedLabel="Arrived"
@@ -240,11 +271,11 @@ export function GuardActiveShift({
                   : 'Move within range of the site pin.'
               }
             />
-          </div>
+          </Block>
         )}
 
         {phase === 'upcoming' && (
-          <div className="space-y-3">
+          <Block display="flex" flexDirection="column" gridGap="scale400">
             {onSite ? (
               <SlideToConfirm
                 label="Slide to clock in"
@@ -268,17 +299,21 @@ export function GuardActiveShift({
               />
             )}
             {!onSite && (
-              <p className={`text-xs text-center ${notOnSiteBlocked ? 'text-amber-700 dark:text-amber-300' : 'text-brand-text-muted'}`}>
+              <ParagraphXSmall
+                margin={0}
+                color={notOnSiteBlocked ? undefined : 'contentSecondary'}
+                $style={{ textAlign: 'center', color: notOnSiteBlocked ? theme.colors.warning : undefined }}
+              >
                 {notOnSiteBlocked
                   ? 'GPS location required — move to the job site to enable clock-in.'
                   : 'The Arrived step glows when you are within range of the site.'}
-              </p>
+              </ParagraphXSmall>
             )}
-          </div>
+          </Block>
         )}
 
         {phase === 'arrived' && (
-          <div className="app-button-stack">
+          <Block display="flex" flexDirection="column" gridGap="scale400" className="app-button-stack">
             <SlideToConfirm
               label="Slide to start shift"
               confirmedLabel="Starting…"
@@ -290,25 +325,25 @@ export function GuardActiveShift({
                   : clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`
               }
             />
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
               onClick={onSkipAudit}
               disabled={!clockInOpen}
-              className="app-button-outline app-btn-md disabled:opacity-40 text-amber-700 dark:text-amber-400 border-amber-500/40"
+              fullWidth
             >
               Skip self audit · clock in
-            </button>
-            <p className="text-xs text-brand-text-muted text-center">
+            </AppButton>
+            <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
               Skipping flags missing start items automatically for client review.
-            </p>
-          </div>
+            </ParagraphXSmall>
+          </Block>
         )}
 
         {phase === 'upcoming' && clockInOpen && (
-          <p className="text-xs text-brand-text-muted text-center flex items-center justify-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
+          <ParagraphXSmall color="contentSecondary" margin={0} display="flex" alignItems="center" justifyContent="center" gridGap="scale200">
+            <Clock size={14} />
             Clock-in open from {clockInOpensLabel} until job ends
-          </p>
+          </ParagraphXSmall>
         )}
 
         {phase === 'on-duty' && midShiftCheckInDue && onMidShiftCheckIn && captureSelfie && (
@@ -320,63 +355,72 @@ export function GuardActiveShift({
         )}
 
         {phase === 'on-duty' && (
-          <div className="space-y-3">
+          <Block display="flex" flexDirection="column" gridGap="scale400">
             {breakAllowed && (
-              <div className="rounded-xl border border-brand-border bg-brand-bg-sec/60 p-4 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold flex items-center gap-2">
-                      <Coffee className="w-4 h-4 text-brand-primary" />
+              <Block
+                padding="scale600"
+                display="flex"
+                flexDirection="column"
+                gridGap="scale400"
+                backgroundColor="backgroundSecondary"
+                $style={{ borderRadius: '12px', border: `1px solid ${theme.colors.borderOpaque}` }}
+              >
+                <Block display="flex" alignItems="center" justifyContent="space-between" gridGap="scale400">
+                  <Block>
+                    <LabelSmall margin={0} display="flex" alignItems="center" gridGap="scale300" $style={{ fontWeight: 600 }}>
+                      <Coffee size={16} style={{ color: theme.colors.accent }} />
                       {onBreak ? 'On break' : 'Scheduled breaks'}
-                    </p>
-                    <p className="text-xs text-brand-text-muted mt-1">
+                    </LabelSmall>
+                    <LabelXSmall color="contentSecondary" marginTop="scale100">
                       {onBreak
                         ? `${Math.ceil(totalBreakMinutesUsed(job) / 1)}m used · ${breakRemaining}m remaining`
                         : `${breakRemaining} of ${job.breakMinutes} minutes available`}
-                    </p>
-                  </div>
-                </div>
+                    </LabelXSmall>
+                  </Block>
+                </Block>
                 {onBreak ? (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="primary"
+                    fullWidth
                     onClick={onEndBreak}
                     disabled={!canGuardEndBreak(job) || !onEndBreak}
-                    className="w-full app-button-primary app-btn-md disabled:opacity-40"
                   >
                     End break · back on duty
-                  </button>
+                  </AppButton>
                 ) : (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="outline"
+                    fullWidth
                     onClick={onStartBreak}
                     disabled={!canGuardStartBreak(job) || !onStartBreak}
-                    className="w-full app-button-outline app-btn-md disabled:opacity-40"
                   >
                     Start break
-                  </button>
+                  </AppButton>
                 )}
                 {breakBlocked && !onBreak && (
-                  <p className="text-xs text-brand-text-muted text-center">{breakBlocked}</p>
+                  <LabelXSmall color="contentSecondary" $style={{ textAlign: 'center' }}>{breakBlocked}</LabelXSmall>
                 )}
-              </div>
+              </Block>
             )}
-            <div className="app-action-row--2">
-              <button type="button" onClick={onIncidentReport} className="app-button-outline app-btn-md gap-2">
-                <AlertTriangle className="w-4 h-4" /> Report incident
-              </button>
-              <button type="button" onClick={onActivityReport} className="app-button-outline app-btn-md gap-2">
-                <Activity className="w-4 h-4" /> Activity report
-              </button>
-              <button
-                type="button"
-                onClick={onOpenJobChat}
-                disabled={!onOpenJobChat}
-                className="app-button-primary app-btn-md gap-2 col-span-2 disabled:opacity-40"
-                style={{ gridColumn: '1 / -1' }}
-              >
-                <MessageCircle className="w-4 h-4" /> Message client
-              </button>
-            </div>
+            <Block display="grid" gridGap="scale300" $style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+              <AppButton variant="outline" onClick={onIncidentReport} startEnhancer={<AlertTriangle size={16} />}>
+                Report incident
+              </AppButton>
+              <AppButton variant="outline" onClick={onActivityReport} startEnhancer={<Activity size={16} />}>
+                Activity report
+              </AppButton>
+              <Block $style={{ gridColumn: '1 / -1' }}>
+                <AppButton
+                  variant="primary"
+                  fullWidth
+                  onClick={onOpenJobChat}
+                  disabled={!onOpenJobChat}
+                  startEnhancer={<MessageCircle size={16} />}
+                >
+                  Message client
+                </AppButton>
+              </Block>
+            </Block>
             <SlideToConfirm
               label="Slide to end shift"
               confirmedLabel="Ending…"
@@ -388,14 +432,14 @@ export function GuardActiveShift({
               }
             />
             {clockOutOpen && (
-              <p className="text-xs text-brand-text-muted text-center flex items-center justify-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
+              <ParagraphXSmall color="contentSecondary" margin={0} display="flex" alignItems="center" justifyContent="center" gridGap="scale200">
+                <Clock size={14} />
                 Clock-out open from {clockOutOpensLabel}
-              </p>
+              </ParagraphXSmall>
             )}
-          </div>
+          </Block>
         )}
-      </div>
+      </Block>
   );
 
   return (

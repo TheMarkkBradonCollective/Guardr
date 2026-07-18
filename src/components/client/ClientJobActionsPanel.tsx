@@ -49,6 +49,7 @@ import { showAppConfirm } from '../ui/AppConfirm';
 import { CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { AppButton } from '../ui/AppButton';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientShiftStartVerification } from './ClientShiftStartVerification';
 import { ClientShiftEndVerification } from './ClientShiftEndVerification';
@@ -384,21 +385,22 @@ export function ClientJobActionsPanel({
 
         {showEditActions && canClientEditJobListing(req) && (
           <div className="flex flex-wrap gap-2 w-full">
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => onRequestEdit(req.id)}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+              startEnhancer={<Pencil className="w-3 h-3" />}
             >
-              <Pencil className="w-3 h-3 inline" />{' '}
               {canClientReschedulePaidSchedule(req)
                 ? 'Reschedule'
                 : isJobScheduleLocked(req)
                   ? 'Edit title & location'
                   : 'Edit'}
-            </button>
+            </AppButton>
             {onCancelRequest && canClientCancelRequest(req) && (
-              <button
-                type="button"
+              <AppButton
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   void (async () => {
                     if (
@@ -413,10 +415,10 @@ export function ClientJobActionsPanel({
                     }
                   })();
                 }}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                startEnhancer={<X className="w-3 h-3" />}
               >
-                <X className="w-3 h-3 inline" /> Cancel
-              </button>
+                Cancel
+              </AppButton>
             )}
           </div>
         )}
@@ -477,8 +479,9 @@ export function ClientJobActionsPanel({
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="primary"
+                    size="sm"
                     onClick={async () => {
                       setPendingGuardActionId(req.id);
                       try {
@@ -488,16 +491,16 @@ export function ClientJobActionsPanel({
                       }
                     }}
                     disabled={pendingGuardActionId === req.id}
-                    className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
                   >
                     {pendingGuardActionId === req.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Confirming...</>
                     ) : (
                       <><CheckCircle2 className="w-3.5 h-3.5" /> Approve guard</>
                     )}
-                  </button>
-                  <button
-                    type="button"
+                  </AppButton>
+                  <AppButton
+                    variant="danger"
+                    size="sm"
                     onClick={async () => {
                       setPendingGuardActionId(req.id);
                       try {
@@ -507,10 +510,10 @@ export function ClientJobActionsPanel({
                       }
                     }}
                     disabled={pendingGuardActionId === req.id}
-                    className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 text-red-400 border-red-500/40 disabled:opacity-50"
+                    startEnhancer={<X className="w-3.5 h-3.5" />}
                   >
-                    <X className="w-3.5 h-3.5" /> Decline guard
-                  </button>
+                    Decline guard
+                  </AppButton>
                 </div>
               </div>
             )}
@@ -539,32 +542,32 @@ export function ClientJobActionsPanel({
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 shrink-0">
                   {canClientPayWithStripe(req, paymentGates) && (
-                    <button
-                      type="button"
+                    <AppButton
+                      variant="primary"
+                      size="sm"
                       onClick={() => void handlePayNow()}
                       disabled={payingJobId === req.id || payingSquareJobId === req.id}
-                      className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
                     >
                       {payingJobId === req.id ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                       ) : (
                         <><CreditCard className="w-3.5 h-3.5" /> Pay with Stripe</>
                       )}
-                    </button>
+                    </AppButton>
                   )}
                   {canClientPayWithSquare(req, paymentGates) && (
-                    <button
-                      type="button"
+                    <AppButton
+                      variant="outline"
+                      size="sm"
                       onClick={() => void handlePayWithSquare()}
                       disabled={payingJobId === req.id || payingSquareJobId === req.id}
-                      className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
                     >
                       {payingSquareJobId === req.id ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                       ) : (
                         <><CreditCard className="w-3.5 h-3.5" /> Pay with Square</>
                       )}
-                    </button>
+                    </AppButton>
                   )}
                 </div>
               </div>
@@ -583,13 +586,15 @@ export function ClientJobActionsPanel({
 
         {req.status === 'accepted' && hiredGuard && !hideMessaging && onOpenJobChat && currentUser && (
           <div className="border-t border-brand-border pt-3 w-full">
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
+              fullWidth
               onClick={() => onOpenJobChat(req.id)}
-              className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+              startEnhancer={<MessageCircle className="w-3.5 h-3.5" />}
             >
-              <MessageCircle className="w-3.5 h-3.5" /> Message guard
-            </button>
+              Message guard
+            </AppButton>
           </div>
         )}
 
@@ -643,8 +648,10 @@ export function ClientJobActionsPanel({
 
             {canClientApproveOvertime(req) && onApproveOvertime && (
               <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  className="flex-1"
                   onClick={async () => {
                     setOvertimeApproveJobId(req.id);
                     try {
@@ -654,23 +661,23 @@ export function ClientJobActionsPanel({
                     }
                   }}
                   disabled={overtimeApproveJobId === req.id || overtimeDisputing}
-                  className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                 >
                   {overtimeApproveJobId === req.id ? (
                     <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
                   ) : (
                     <><CheckCircle2 className="w-3.5 h-3.5" /> Approve overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
                   )}
-                </button>
+                </AppButton>
                 {onDisputeOvertime && (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
                     onClick={openDispute}
                     disabled={overtimeApproveJobId === req.id || overtimeDisputing}
-                    className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                   >
                     Dispute charge
-                  </button>
+                  </AppButton>
                 )}
               </div>
             )}
@@ -678,32 +685,34 @@ export function ClientJobActionsPanel({
             {hasUnpaidOvertime(req) && (
               <div className="flex flex-col sm:flex-row gap-2">
                 {canClientPayOvertimeStripe(req, paymentGates) && (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="primary"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => void handlePayOvertime()}
                     disabled={payingOvertimeJobId === req.id}
-                    className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                   >
                     {payingOvertimeJobId === req.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                     ) : (
                       <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} with Stripe</>
                     )}
-                  </button>
+                  </AppButton>
                 )}
                 {canClientPayOvertimeSquare(req, paymentGates) && (
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => void handlePayOvertimeWithSquare()}
                     disabled={payingSquareJobId === req.id}
-                    className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                   >
                     {payingSquareJobId === req.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                     ) : (
                       <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} with Square</>
                     )}
-                  </button>
+                  </AppButton>
                 )}
               </div>
             )}
@@ -737,8 +746,10 @@ export function ClientJobActionsPanel({
 
             {canClientApproveStaffScheduleChange(req) && onApproveScheduleChange && onRejectScheduleChange && (
               <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  className="flex-1"
                   onClick={async () => {
                     setScheduleApproveJobId(req.id);
                     try {
@@ -748,16 +759,17 @@ export function ClientJobActionsPanel({
                     }
                   }}
                   disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
-                  className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                 >
                   {scheduleApproveJobId === req.id ? (
                     <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
                   ) : (
                     <><CheckCircle2 className="w-3.5 h-3.5" /> Approve new times</>
                   )}
-                </button>
-                <button
-                  type="button"
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
                   onClick={async () => {
                     setScheduleRejectJobId(req.id);
                     try {
@@ -767,30 +779,30 @@ export function ClientJobActionsPanel({
                     }
                   }}
                   disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
-                  className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
                 >
                   {scheduleRejectJobId === req.id ? (
                     <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Declining...</>
                   ) : (
                     'Decline'
                   )}
-                </button>
+                </AppButton>
               </div>
             )}
 
             {canClientPayScheduleChangeExtension(req) && paymentGates.allowStripe && (
-              <button
-                type="button"
+              <AppButton
+                variant="primary"
+                size="sm"
+                fullWidth
                 onClick={() => void handlePayScheduleExtension()}
                 disabled={payingScheduleJobId === req.id}
-                className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
               >
                 {payingScheduleJobId === req.id ? (
                   <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting checkout...</>
                 ) : (
                   <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} extension</>
                 )}
-              </button>
+              </AppButton>
             )}
           </div>
         )}
@@ -812,13 +824,15 @@ export function ClientJobActionsPanel({
         )}
 
         {req.status === 'in-progress' && hiredGuard && onUpdateStatus && context === 'jobs' && (
-          <button
-            type="button"
+          <AppButton
+            variant="primary"
+            size="sm"
+            fullWidth
             onClick={() => onUpdateStatus(req.id, 'completed')}
-            className="app-button-primary !h-9 !text-xs w-full"
+            startEnhancer={<Check className="w-3.5 h-3.5" />}
           >
-            <Check className="w-3.5 h-3.5 inline" /> Complete job
-          </button>
+            Complete job
+          </AppButton>
         )}
 
         {!hideMessaging &&
@@ -827,25 +841,29 @@ export function ClientJobActionsPanel({
           onOpenJobChat &&
           currentUser &&
           context === 'jobs' && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
+              fullWidth
               onClick={() => onOpenJobChat(req.id)}
-              className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+              startEnhancer={<MessageCircle className="w-3.5 h-3.5" />}
             >
-              <MessageCircle className="w-3.5 h-3.5" /> Message guard on shift
-            </button>
+              Message guard on shift
+            </AppButton>
           )}
 
         {(req.status === 'completed' || req.status === 'closed') &&
           onOpenJobChat &&
           threadForRequest(jobChatThreads, req.id) && (
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
+              fullWidth
               onClick={() => onOpenJobChat(req.id)}
-              className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+              startEnhancer={<MessageCircle className="w-3.5 h-3.5" />}
             >
-              <MessageCircle className="w-3.5 h-3.5" /> View job chat history
-            </button>
+              View job chat history
+            </AppButton>
           )}
 
         {req.status === 'completed' && hiredGuard && req.ratingGiven && req.tipPaymentStatus === 'paid' && (req.tipAmount ?? 0) > 0 && (
@@ -856,29 +874,33 @@ export function ClientJobActionsPanel({
 
         {req.status === 'completed' && hiredGuard && !req.ratingGiven && onAddReview && (
           <div className="border-t border-brand-border pt-3 w-full">
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
+              fullWidth
               onClick={openReviewSheet}
-              className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
+              startEnhancer={<Award className="w-3.5 h-3.5" />}
             >
-              <Award className="w-3.5 h-3.5" /> Rate guard
-            </button>
+              Rate guard
+            </AppButton>
           </div>
         )}
 
         {onReportViolation && canClientReportViolation(req) && (
           <div className={`${req.status === 'completed' && hiredGuard && !req.ratingGiven && onAddReview ? 'pt-2' : 'border-t border-brand-border pt-3'} w-full`}>
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              size="sm"
+              fullWidth
+              className="client-violation-report-btn"
               onClick={() => setViolationOpen(true)}
-              className="client-violation-report-btn app-button-outline !w-full !h-9 !text-xs gap-1.5"
+              startEnhancer={<AlertTriangle className="w-3.5 h-3.5" />}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
               Report violation
               {listClientViolationReports(req).length > 0
                 ? ` (${listClientViolationReports(req).length})`
                 : ''}
-            </button>
+            </AppButton>
           </div>
         )}
       </div>
@@ -923,16 +945,17 @@ export function ClientJobActionsPanel({
             rows={4}
           />
           <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
+            <AppButton
+              variant="outline"
+              className="flex-1"
               disabled={overtimeDisputing}
               onClick={() => setOvertimeDisputeOpen(false)}
-              className="app-button-outline flex-1 disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
-              type="button"
+            </AppButton>
+            <AppButton
+              variant="primary"
+              className="flex-1"
               disabled={!overtimeDisputeReason.trim() || !disputeClockOutIso || !onDisputeOvertime || overtimeDisputing}
               onClick={async () => {
                 if (!onDisputeOvertime || !disputeClockOutIso) return;
@@ -947,14 +970,13 @@ export function ClientJobActionsPanel({
                   setOvertimeDisputing(false);
                 }
               }}
-              className="app-button-primary flex-1 disabled:opacity-50 gap-1.5"
             >
               {overtimeDisputing ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting...</>
               ) : (
                 'Submit dispute'
               )}
-            </button>
+            </AppButton>
           </div>
         </div>
       </AppFormSheet>
@@ -1035,8 +1057,9 @@ export function ClientJobActionsPanel({
               )}
             </div>
           )}
-          <button
-            type="button"
+          <AppButton
+            variant="primary"
+            fullWidth
             disabled={
               reviewSubmitting ||
               (customTip.length > 0 && customTipCents != null && !isValidTipCents(customTipCents))
@@ -1069,14 +1092,13 @@ export function ClientJobActionsPanel({
                 setReviewSubmitting(false);
               }
             }}
-            className="app-button-primary w-full disabled:opacity-50"
           >
             {reviewSubmitting
               ? 'Submitting…'
               : resolvedTipCents > 0
                 ? `Submit review & tip ${formatTipAmountCents(resolvedTipCents)}`
                 : 'Submit review'}
-          </button>
+          </AppButton>
         </div>
       </AppFormSheet>
 

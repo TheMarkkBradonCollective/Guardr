@@ -492,9 +492,9 @@ export function DirectGuardRequestFlow({
             </GuardrButton>
           )
         ) : step < 8 ? (
-          <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">
-            Continue <ArrowRight className="w-4 h-4" />
-          </button>
+          <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()} endEnhancer={<ArrowRight className="w-4 h-4" />}>
+            Continue
+          </GuardrButton>
         ) : (
           <SlideToConfirm
             label={`Slide to send request to ${guard.name.split(' ')[0]}`}

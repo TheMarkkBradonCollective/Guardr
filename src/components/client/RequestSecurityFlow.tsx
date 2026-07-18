@@ -851,15 +851,14 @@ export function RequestSecurityFlow({
               </GuardrButton>
             )
           ) : step < 9 ? (
-            <button
-              type="button"
+            <GuardrButton
+              kind="primary"
               onClick={goNext}
               disabled={!canNext()}
-              className="app-button-primary gap-2 disabled:opacity-40"
+              endEnhancer={<ArrowRight className="w-4 h-4" />}
             >
               Continue
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            </GuardrButton>
           ) : (
             <SlideToConfirm
               label="Slide to post job offer"
