@@ -1,4 +1,6 @@
 import React from 'react';
+import { Block } from 'baseui/block';
+import { HeadingXSmall, LabelSmall, LabelXSmall, ParagraphXSmall } from 'baseui/typography';
 import { SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import {
@@ -12,6 +14,7 @@ import {
 import { formatDuration } from '../../lib/dates';
 import { GuardJobDetailContent } from './GuardJobDetailContent';
 import { WfBadge } from '../ui/wireframe';
+import { GuardrCard } from '../baseui/GuardrCard';
 import { MapPin } from 'lucide-react';
 
 interface GuardJobCardProps {
@@ -68,35 +71,49 @@ export function GuardJobCard({
   if (compact) {
     const distance = getJobDistance(job);
     return (
-      <button
+      <Block
+        as="button"
         type="button"
         onClick={onSelect}
-        className="app-item-card app-item-card-align-top w-full flex-col !items-stretch gap-2.5 text-left"
+        width="100%"
+        $style={{ textAlign: 'left', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
       >
-        <div className="flex justify-between items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap gap-1.5 mb-1.5">
-              <WfBadge tone="default">{JOB_TYPE_LABELS[job.type]}</WfBadge>
-              {job.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
-              {job.requestType === 'direct' && <WfBadge tone="primary">Direct</WfBadge>}
-            </div>
-            <p className="font-bold leading-snug tracking-tight">{job.title}</p>
-            <p className="text-sm text-brand-text-muted mt-1">{job.clientName}</p>
-            <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
-              <MapPin className="w-3 h-3 shrink-0" />
-              {job.siteName || job.location}
-              {distance != null ? ` · ${distance} mi` : ''}
-            </p>
-            <p className="text-xs text-brand-text-muted mt-0.5">
-              {formatJobDate(job)} · {formatJobTimeRange(job)} · {formatDuration(job.durationHours)}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-xl font-black text-brand-primary tracking-tight">${hourlyPay}/hr</p>
-            <p className="text-xs text-brand-text-muted">${estimated} est.</p>
-          </div>
-        </div>
-      </button>
+        <GuardrCard interactive>
+          <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale400">
+            <Block minWidth={0} flex="1">
+              <Block display="flex" gridGap="scale200" marginBottom="scale200" $style={{ flexWrap: 'wrap' }}>
+                <WfBadge tone="default">{JOB_TYPE_LABELS[job.type]}</WfBadge>
+                {job.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
+                {job.requestType === 'direct' && <WfBadge tone="primary">Direct</WfBadge>}
+              </Block>
+              <HeadingXSmall margin={0} $style={{ fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+                {job.title}
+              </HeadingXSmall>
+              <LabelSmall color="contentSecondary" marginTop="scale100" margin={0}>
+                {job.clientName}
+              </LabelSmall>
+              <Block display="flex" alignItems="center" gridGap="scale100" marginTop="scale100" color="contentSecondary">
+                <MapPin size={12} style={{ flexShrink: 0 }} />
+                <LabelXSmall color="contentSecondary" margin={0}>
+                  {job.siteName || job.location}
+                  {distance != null ? ` · ${distance} mi` : ''}
+                </LabelXSmall>
+              </Block>
+              <LabelXSmall color="contentSecondary" marginTop="scale100">
+                {formatJobDate(job)} · {formatJobTimeRange(job)} · {formatDuration(job.durationHours)}
+              </LabelXSmall>
+            </Block>
+            <Block $style={{ textAlign: 'right', flexShrink: 0 }}>
+              <HeadingXSmall margin={0} color="accent" $style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
+                ${hourlyPay}/hr
+              </HeadingXSmall>
+              <ParagraphXSmall margin={0} color="contentSecondary">
+                ${estimated} est.
+              </ParagraphXSmall>
+            </Block>
+          </Block>
+        </GuardrCard>
+      </Block>
     );
   }
 

@@ -1,4 +1,6 @@
 import React from 'react';
+import { useStyletron } from 'baseui';
+import { Block } from 'baseui/block';
 import { SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { WfListCard } from '../ui/wireframe';
@@ -22,21 +24,33 @@ export function JobListCard({
   selected = false,
   showStatus = true,
 }: JobListCardProps) {
+  const [, theme] = useStyletron();
   return (
     <WfListCard
       avatar={
-        <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
-          <Briefcase className="w-5 h-5 text-brand-primary" />
-        </div>
+        <Block
+          width="40px"
+          height="40px"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="accent50"
+          color="accent"
+          $style={{ borderRadius: '12px' }}
+        >
+          <Briefcase size={20} style={{ color: theme.colors.accent }} />
+        </Block>
       }
       title={job.title}
       subtitle={subtitle ?? `${job.clientName} · ${job.location}`}
       meta={
         meta ?? (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <Block display="flex" alignItems="center" gridGap="scale200" $style={{ flexWrap: 'wrap' }}>
             {showStatus && <JobStatusBadge job={job} />}
-            <span>{formatShiftRange(job.startDate, job.endDate)}</span>
-          </div>
+            <Block as="span" font="font100" color="contentSecondary">
+              {formatShiftRange(job.startDate, job.endDate)}
+            </Block>
+          </Block>
         )
       }
       onClick={onClick}

@@ -1,4 +1,7 @@
 import React from 'react';
+import { useStyletron } from 'baseui';
+import { Block } from 'baseui/block';
+import { HeadingLarge, LabelXSmall, LabelSmall, ParagraphSmall } from 'baseui/typography';
 import {
   Briefcase,
   Clock,
@@ -28,6 +31,33 @@ import { JobOperationalBriefingProfile } from './JobOperationalBriefingProfile';
 import { JobOperationalDetails } from '../../types';
 import { SecurityRequest } from '../../types';
 import { WfBadge } from '../ui/wireframe';
+import { GuardrTag } from '../baseui/GuardrTag';
+
+function FieldLabel({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
+  const [, theme] = useStyletron();
+  return (
+    <LabelXSmall
+      marginTop={0}
+      marginBottom="scale200"
+      display="flex"
+      alignItems="center"
+      gridGap="scale200"
+      color="contentSecondary"
+      $style={{
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        fontWeight: 700,
+      }}
+    >
+      {icon ? (
+        <Block as="span" display="flex" color={theme.colors.contentSecondary} $style={{ flexShrink: 0 }}>
+          {icon}
+        </Block>
+      ) : null}
+      {children}
+    </LabelXSmall>
+  );
+}
 
 function DetailField({
   icon,
@@ -38,15 +68,19 @@ function DetailField({
   title: string;
   children: React.ReactNode;
 }) {
+  const [, theme] = useStyletron();
   if (!children || (typeof children === 'string' && !children.trim())) return null;
   return (
-    <div className="detail-field">
-      <p className="detail-field-label">
-        {icon}
-        {title}
-      </p>
-      <div className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">{children}</div>
-    </div>
+    <Block
+      paddingTop="scale400"
+      marginTop="scale400"
+      $style={{ borderTop: `1px solid ${theme.colors.borderOpaque}` }}
+    >
+      <FieldLabel icon={icon}>{title}</FieldLabel>
+      <ParagraphSmall margin={0} $style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+        {children}
+      </ParagraphSmall>
+    </Block>
   );
 }
 
@@ -73,32 +107,65 @@ export function JobListingProfile({
   operationalBriefingLocked = false,
   jobStatus,
 }: JobListingProfileProps) {
+  const [, theme] = useStyletron();
   const credentialLabels = getJobRequiredCredentialLabels(job);
   const typeLabel = JOB_TYPE_LABELS[job.type] || jobTypeLabel(job);
 
   return (
-    <div className="staff-detail-pane space-y-4">
+    <Block display="flex" flexDirection="column" gridGap="scale600">
       {showClientHeader && (
-        <div className="flex items-start gap-3.5">
-          <div className="w-12 h-12 bg-brand-primary/12 border border-brand-primary/22 flex items-center justify-center shrink-0 rounded-xl">
-            <span className="text-sm font-black text-brand-primary tracking-tight">{job.clientLogo || job.clientName.slice(0, 2).toUpperCase()}</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-primary mb-1">Client offer</p>
-            <h3 className="text-2xl font-black tracking-[-0.04em] leading-tight">{job.title}</h3>
-            <p className="text-sm text-brand-text-muted mt-1.5 font-medium">{job.clientName}</p>
+        <Block display="flex" alignItems="flex-start" gridGap="scale500">
+          <Block
+            width="48px"
+            height="48px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="accent50"
+            $style={{
+              flexShrink: 0,
+              borderRadius: '12px',
+              border: `1px solid ${theme.colors.accent}`,
+            }}
+          >
+            <LabelSmall color="accent" margin={0} $style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
+              {job.clientLogo || job.clientName.slice(0, 2).toUpperCase()}
+            </LabelSmall>
+          </Block>
+          <Block minWidth={0} flex="1">
+            <LabelXSmall
+              color="accent"
+              marginBottom="scale100"
+              $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}
+            >
+              Client offer
+            </LabelXSmall>
+            <HeadingLarge margin={0} $style={{ fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
+              {job.title}
+            </HeadingLarge>
+            <ParagraphSmall marginTop="scale200" marginBottom={0} color="contentSecondary" $style={{ fontWeight: 500 }}>
+              {job.clientName}
+            </ParagraphSmall>
             {job.clientRating != null && (
-              <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1 font-medium">
-                <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />
-                {job.clientRating.toFixed(1)} client rating
-              </p>
+              <Block
+                display="flex"
+                alignItems="center"
+                gridGap="scale100"
+                marginTop="scale100"
+                color="contentSecondary"
+              >
+                <Star size={14} className="fill-current" style={{ color: theme.colors.accent }} />
+                <LabelXSmall color="contentSecondary" margin={0} $style={{ fontWeight: 500 }}>
+                  {job.clientRating.toFixed(1)} client rating
+                </LabelXSmall>
+              </Block>
             )}
-          </div>
-        </div>
+          </Block>
+        </Block>
       )}
 
       {showBadges && (
-        <div className="flex flex-wrap gap-2">
+        <Block display="flex" gridGap="scale300" $style={{ flexWrap: 'wrap' }}>
           {job.status && <JobStatusBadge job={{ status: job.status }} />}
           <WfBadge tone="default">{typeLabel}</WfBadge>
           {job.armedRequired && <WfBadge tone="warning">Armed post</WfBadge>}
@@ -113,106 +180,117 @@ export function JobListingProfile({
               })()}
             </WfBadge>
           )}
-        </div>
+        </Block>
       )}
 
       {job.description?.trim() && (
-        <p className="text-sm text-brand-text leading-relaxed border-l-2 border-brand-primary pl-3">
+        <ParagraphSmall
+          margin={0}
+          paddingLeft="scale400"
+          $style={{ lineHeight: 1.55, borderLeft: `2px solid ${theme.colors.accent}` }}
+        >
           {job.description}
-        </p>
+        </ParagraphSmall>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-        <div className="detail-field !border-t-0 !pt-0">
-          <p className="detail-field-label">
-            <MapPin className="w-3.5 h-3.5 text-brand-primary" />
-            Location
-          </p>
-          {job.siteName && <p className="text-sm font-medium">{job.siteName}</p>}
-          {job.address && <p className="text-sm">{job.address}</p>}
+      <Block
+        display="grid"
+        gridGap="scale500"
+        $style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+      >
+        <Block>
+          <FieldLabel icon={<MapPin size={14} style={{ color: theme.colors.accent }} />}>Location</FieldLabel>
+          {job.siteName && (
+            <ParagraphSmall margin={0} $style={{ fontWeight: 500 }}>
+              {job.siteName}
+            </ParagraphSmall>
+          )}
+          {job.address && <ParagraphSmall margin={0}>{job.address}</ParagraphSmall>}
           {job.state && (
-            <p className="text-xs text-brand-text-muted">
+            <LabelXSmall color="contentSecondary" marginTop="scale100">
               {formatCityLabel(job.state)}
               {distanceMiles != null ? ` · ${distanceMiles} mi away` : ''}
-            </p>
+            </LabelXSmall>
           )}
-        </div>
+        </Block>
 
-        <div className="detail-field !border-t-0 !pt-0 sm:border-t-0">
-          <p className="detail-field-label">
-            <Clock className="w-3.5 h-3.5 text-brand-primary" />
-            Schedule
-          </p>
-          <p className="text-sm font-medium">{formatShiftRange(job.startDate, job.endDate)}</p>
-          <p className="text-xs text-brand-text-muted">{formatDuration(job.durationHours)} coverage</p>
+        <Block>
+          <FieldLabel icon={<Clock size={14} style={{ color: theme.colors.accent }} />}>Schedule</FieldLabel>
+          <ParagraphSmall margin={0} $style={{ fontWeight: 500 }}>
+            {formatShiftRange(job.startDate, job.endDate)}
+          </ParagraphSmall>
+          <LabelXSmall color="contentSecondary" marginTop="scale100">
+            {formatDuration(job.durationHours)} coverage
+          </LabelXSmall>
           {(job.breakMinutes ?? 0) > 0 && (
-            <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
-              <Coffee className="w-3.5 h-3.5 text-brand-primary" />
-              {job.breakMinutes} min {(job as { breakPaid?: boolean }).breakPaid === false ? 'unpaid' : 'paid'} break
-            </p>
+            <Block display="flex" alignItems="center" gridGap="scale100" marginTop="scale100" color="contentSecondary">
+              <Coffee size={14} style={{ color: theme.colors.accent }} />
+              <LabelXSmall color="contentSecondary" margin={0}>
+                {job.breakMinutes} min {(job as { breakPaid?: boolean }).breakPaid === false ? 'unpaid' : 'paid'} break
+              </LabelXSmall>
+            </Block>
           )}
-        </div>
-      </div>
+        </Block>
+      </Block>
 
-      {payLine && <div className="detail-pay-block">{payLine}</div>}
+      {payLine && <Block className="detail-pay-block">{payLine}</Block>}
 
-      <div className="detail-field">
-        <p className="detail-field-label">
-          <Shield className="w-3.5 h-3.5 text-brand-primary" />
-          Guard requirements
-        </p>
-        <p className="text-sm">
-          Minimum status: <span className="font-medium">{guardJobMinQualificationLabel(job.minGuardQualification)}</span>
-        </p>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {credentialLabels.map((label) => (
-            <span key={label} className="chip chip-inactive text-xs">
-              {label}
-            </span>
-          ))}
-        </div>
-      </div>
+      <Block paddingTop="scale400" $style={{ borderTop: `1px solid ${theme.colors.borderOpaque}` }}>
+        <FieldLabel icon={<Shield size={14} style={{ color: theme.colors.accent }} />}>Guard requirements</FieldLabel>
+        <ParagraphSmall margin={0}>
+          Minimum status:{' '}
+          <Block as="span" $style={{ fontWeight: 600 }}>
+            {guardJobMinQualificationLabel(job.minGuardQualification)}
+          </Block>
+        </ParagraphSmall>
+        {credentialLabels.length > 0 && (
+          <Block display="flex" gridGap="scale200" marginTop="scale300" $style={{ flexWrap: 'wrap' }}>
+            {credentialLabels.map((label) => (
+              <GuardrTag key={label} kind="neutral" closeable={false}>
+                {label}
+              </GuardrTag>
+            ))}
+          </Block>
+        )}
+      </Block>
 
-      <div className="space-y-0">
-        <p className="detail-field-label mb-2">
-          <Briefcase className="w-3.5 h-3.5" />
-          Post orders & professional standards
-        </p>
+      <Block>
+        <FieldLabel icon={<Briefcase size={14} />}>Post orders &amp; professional standards</FieldLabel>
 
-        <DetailField icon={<Shirt className="w-3.5 h-3.5" />} title="Dress code & uniform">
+        <DetailField icon={<Shirt size={14} />} title="Dress code & uniform">
           {job.uniformRequirements}
         </DetailField>
 
-        <DetailField icon={<Wrench className="w-3.5 h-3.5" />} title="Equipment">
+        <DetailField icon={<Wrench size={14} />} title="Equipment">
           {job.equipmentRequirements}
         </DetailField>
 
-        <DetailField icon={<FileText className="w-3.5 h-3.5" />} title="Site instructions">
+        <DetailField icon={<FileText size={14} />} title="Site instructions">
           {!operationalBriefingLocked ? job.siteInstructions : null}
         </DetailField>
 
-        <DetailField icon={<Car className="w-3.5 h-3.5" />} title="Parking & arrival">
+        <DetailField icon={<Car size={14} />} title="Parking & arrival">
           {!operationalBriefingLocked ? job.parkingInstructions : null}
         </DetailField>
 
-        <DetailField icon={<DoorOpen className="w-3.5 h-3.5" />} title="Access & check-in">
+        <DetailField icon={<DoorOpen size={14} />} title="Access & check-in">
           {!operationalBriefingLocked ? job.accessInstructions : null}
         </DetailField>
 
         {!operationalBriefingLocked && (job.contactName || job.contactPhone) && (
-          <DetailField icon={<User className="w-3.5 h-3.5" />} title="On-site contact">
+          <DetailField icon={<User size={14} />} title="On-site contact">
             <>
               {job.contactName}
               {job.contactPhone && (
-                <p className="flex items-center gap-1.5 mt-1 text-brand-text-muted">
-                  <Phone className="w-3.5 h-3.5" />
+                <Block display="flex" alignItems="center" gridGap="scale200" marginTop="scale100" color="contentSecondary">
+                  <Phone size={14} />
                   {job.contactPhone}
-                </p>
+                </Block>
               )}
             </>
           </DetailField>
         )}
-      </div>
+      </Block>
 
       <JobOperationalBriefingProfile
         details={operationalDetails}
@@ -221,6 +299,6 @@ export function JobListingProfile({
       />
 
       {footer}
-    </div>
+    </Block>
   );
 }
