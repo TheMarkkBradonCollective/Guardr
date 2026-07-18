@@ -43,6 +43,36 @@ const ADMIN_METRICS = [
   'Active guards',
 ];
 
+const EXECUTIVE_OVERVIEW_FIELDS = {
+  layout: 'executive' as const,
+  metricLabels: 'all' as const,
+  showPaymentsInQueue: true,
+  showDirectorFinancials: true,
+  showOperationsSnapshot: true,
+  showPlatformPulse: true,
+  pulseFullDetail: true,
+  showPipelineInsight: true,
+  showWeeklyInsight: true,
+  showActivityFeed: true,
+};
+
+const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
+  'map',
+  'payments',
+  'payment-settings',
+  'agreements',
+  'audit-log',
+  'team',
+  'analytics',
+  'jobs',
+  'applications',
+  'clients',
+  'cities',
+  'permissions',
+  'guards',
+  'messages',
+];
+
 const STAFF_OVERVIEW_CONFIG: Record<
   Extract<PlatformRole, 'moderator' | 'administrator' | 'manager' | 'director' | 'owner'>,
   StaffOverviewConfig
@@ -87,50 +117,21 @@ const STAFF_OVERVIEW_CONFIG: Record<
     roleLabel: ROLE_LABELS.manager,
     workspaceKicker: 'Manager workspace',
     focusLine:
-      'Operations lead — live command, payouts and fees, company jobs, audit visibility, and city coverage within your assigned markets.',
-    layout: 'executive',
-    metricLabels: 'all',
-    showPaymentsInQueue: true,
-    showDirectorFinancials: true,
-    showOperationsSnapshot: true,
-    showPlatformPulse: true,
-    pulseFullDetail: true,
-    showPipelineInsight: true,
-    showWeeklyInsight: true,
-    showActivityFeed: true,
+      'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
+    ...EXECUTIVE_OVERVIEW_FIELDS,
     emptyAttentionCopy:
       'Nothing urgent in the queue. Review payouts, live coverage, or operations in your assigned cities.',
-    quickLinkSections: [
-      'map',
-      'jobs',
-      'payments',
-      'clients',
-      'applications',
-      'analytics',
-      'audit-log',
-      'cities',
-      'permissions',
-      'guards',
-      'messages',
-    ],
+    quickLinkSections: EXECUTIVE_QUICK_LINKS,
   },
   director: {
     roleLabel: ROLE_LABELS.director,
     workspaceKicker: 'Director workspace',
-    focusLine: 'Executive operations — company financials, team oversight, and live command.',
-    layout: 'executive',
-    metricLabels: 'all',
-    showPaymentsInQueue: true,
-    showDirectorFinancials: true,
-    showOperationsSnapshot: true,
-    showPlatformPulse: true,
-    pulseFullDetail: true,
-    showPipelineInsight: true,
-    showWeeklyInsight: true,
-    showActivityFeed: true,
+    focusLine:
+      'Executive operations with global city markets and governance-adjacent controls shared with Founder.',
+    ...EXECUTIVE_OVERVIEW_FIELDS,
     emptyAttentionCopy:
-      'Nothing urgent in the queue. Review financials, team activity, or live jobs on the map.',
-    quickLinkSections: ['map', 'payments', 'payment-settings', 'agreements', 'audit-log', 'team', 'analytics', 'jobs', 'applications'],
+      'Nothing urgent in the queue. Review financials, city markets, team activity, or live jobs on the map.',
+    quickLinkSections: EXECUTIVE_QUICK_LINKS,
   },
   owner: {
     roleLabel: ROLE_LABELS.owner,

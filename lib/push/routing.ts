@@ -166,6 +166,7 @@ export function resolveNotificationUrlForRole(
   const isStaff =
     role === 'moderator' ||
     role === 'administrator' ||
+    role === 'manager' ||
     role === 'director' ||
     role === 'owner';
 

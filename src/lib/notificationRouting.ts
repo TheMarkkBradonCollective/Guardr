@@ -14,6 +14,7 @@ function appRoleForUser(user: SessionUser): AppRole | null {
   if (
     user.role === 'moderator' ||
     user.role === 'administrator' ||
+    user.role === 'manager' ||
     user.role === 'director' ||
     user.role === 'owner'
   ) {

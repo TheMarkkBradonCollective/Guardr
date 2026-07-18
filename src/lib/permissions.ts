@@ -116,14 +116,15 @@ const MANAGER_PERMISSIONS: Permission[] = [
   'director.access_audit_logs',
   'director.manage_company_operations',
   'director.recommend_city_open',
-];
-
-const DIRECTOR_PERMISSIONS: Permission[] = [
-  ...MANAGER_PERMISSIONS,
   'director.manage_administrators',
   'director.manage_moderators',
-  'director.manage_city_markets',
   'director.override_restrictions',
+];
+
+/** Director adds global city-market control; Founder adds platform governance above this. */
+const DIRECTOR_PERMISSIONS: Permission[] = [
+  ...MANAGER_PERMISSIONS,
+  'director.manage_city_markets',
 ];
 
 const OWNER_PERMISSIONS: Permission[] = [
@@ -158,8 +159,8 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   guard: 'Independent licensed security professionals.',
   moderator: 'Approves guard and client applications, monitors activity, and escalates issues.',
   administrator: 'Verifies credentials, reviews jobs and disputes, and manages daily operations.',
-  manager: 'Operations lead — payouts, fees, company jobs, and audit visibility below Director.',
-  director: 'Executive platform operations and unrestricted staff-side access.',
+  manager: 'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
+  director: 'Executive operations with global city markets and governance-adjacent controls shared with Founder.',
   owner: 'Platform governance overseer — manages staff below the Founder tier.',
 };
 
@@ -260,6 +261,15 @@ export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administ
   );
 }
 
+export function isExecutiveOpsRole(role: PlatformRole): boolean {
+  return role === 'manager' || role === 'director' || role === 'owner';
+}
+
+/** Director and Founder — global city markets and governance-adjacent platform controls */
+export function isDirectorTierRole(role: PlatformRole): boolean {
+  return role === 'director' || role === 'owner';
+}
+
 export function isDirector(user: Pick<SessionUser, 'role'>): boolean {
   return user.role === 'director';
 }
@@ -276,16 +286,15 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
   return isFounder(user);
 }
 
-/** Director and Founder share executive payment and ops controls */
+/** Manager, Director, and Founder share executive payment and ops controls */
 export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
-  return user.role === 'manager' || user.role === 'director' || user.role === 'owner';
+  return isExecutiveOpsRole(user.role);
 }
 
-/** Director has unrestricted staff-side operational access; Founder inherits the same overrides */
+/** Manager+ operational overrides (job edits, staff job management) */
 export function hasDirectorStaffOverride(user: Pick<SessionUser, 'role'>): boolean {
   return (
-    isDirector(user) ||
-    isFounder(user) ||
+    isExecutiveOpsRole(user.role) ||
     hasPermission(user, 'director.override_restrictions')
   );
 }
@@ -320,7 +329,7 @@ export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: P
   return permissions.some((p) => hasPermission(user, p));
 }
 
-/** Payouts, fees, cash handling, and financial analytics — Director and Founder only */
+/** Payouts, fees, cash handling, and financial analytics — Manager, Director, and Founder */
 export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boolean {
   return hasExecutivePaymentControls(user);
 }
@@ -492,9 +501,14 @@ export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boole
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
 }
 
-/** Administrators, Directors, and Founders may delete resolved support chat tickets */
+/** Administrators, Managers, Directors, and Founders may delete resolved support chat tickets */
 export function canDeleteResolvedSupportChat(user: Pick<SessionUser, 'role'>): boolean {
-  return user.role === 'administrator' || user.role === 'director' || user.role === 'owner';
+  return (
+    user.role === 'administrator' ||
+    user.role === 'manager' ||
+    user.role === 'director' ||
+    user.role === 'owner'
+  );
 }
 
 /** Director and Founder receive all staff job-management capabilities */
