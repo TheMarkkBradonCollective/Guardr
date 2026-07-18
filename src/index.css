@@ -20179,7 +20179,8 @@ textarea.uber-input {
 .staff-shell .staff-ops-mobile-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
 }
 
 .staff-shell .staff-ops-mobile-body:has(> .app-full-page-detail),
