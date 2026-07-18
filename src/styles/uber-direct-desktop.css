@@ -98,6 +98,11 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li {
   list-style: none;
+  background: transparent !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li:hover {
+  background: transparent !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a {
@@ -109,6 +114,11 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   font-size: 14px !important;
   font-weight: 500 !important;
   color: var(--uber-text, #000000) !important;
+  background: transparent !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a > * {
+  background: transparent !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
