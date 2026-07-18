@@ -5,6 +5,7 @@ import { CrewDetailsEditor } from '../guard/CrewDetailsEditor';
 import { confirmApproveFullTeam, confirmApproveTeamSlot, confirmDenyFullTeam, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { Check, Clock, UserPlus } from 'lucide-react';
 
 const SLOT_STATUS_LABEL: Record<JobGuardSlot['status'], string> = {
@@ -192,59 +193,59 @@ export function JobTeamRoster({
                 )}
                 {showClientActions && (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
+                    <AppButton
+                      variant="primary"
+                      size="sm"
                       onClick={() => {
                         void (async () => {
                           if (!(await confirmApproveTeamSlot(guard.name, job.title))) return;
                           await onApproveSlot!(slot.id!);
                         })();
                       }}
-                      className="app-button-primary app-btn-sm"
                     >
                       Approve {guard.name}
-                    </button>
-                    <button
-                      type="button"
+                    </AppButton>
+                    <AppButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => {
                         void (async () => {
                           if (!(await confirmDenyTeamSlot(guard.name, job.title))) return;
                           await onDenySlot!(slot.id!);
                         })();
                       }}
-                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                     >
                       Decline
-                    </button>
+                    </AppButton>
                   </div>
                 )}
                 {showStaffReviewActions && (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
+                    <AppButton
+                      variant="primary"
+                      size="sm"
                       onClick={() => void onStaffApproveSlot!(guard!.id)}
-                      className="app-button-primary app-btn-sm"
                     >
                       Approve for crew
-                    </button>
-                    <button
-                      type="button"
+                    </AppButton>
+                    <AppButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => void onStaffDenySlot!(guard!.id)}
-                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                     >
                       Decline
-                    </button>
+                    </AppButton>
                   </div>
                 )}
                 {showStaffRemoveAction && (
                   <div className="pt-1">
-                    <button
-                      type="button"
+                    <AppButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => void onStaffRemoveFromCrew!(guard!.id)}
-                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                     >
                       Remove from crew
-                    </button>
+                    </AppButton>
                   </div>
                 )}
               </div>
@@ -255,30 +256,30 @@ export function JobTeamRoster({
 
       {showFullTeamActions && onApproveFullTeam && onDenyFullTeam && (
         <div className="flex flex-wrap gap-2 pt-1 border-t border-brand-border">
-          <button
-            type="button"
+          <AppButton
+            variant="primary"
+            size="sm"
             onClick={() => {
               void (async () => {
                 if (!(await confirmApproveFullTeam(job.title, guardsNeeded))) return;
                 await onApproveFullTeam();
               })();
             }}
-            className="app-button-primary app-btn-sm"
           >
             Approve full crew
-          </button>
-          <button
-            type="button"
+          </AppButton>
+          <AppButton
+            variant="danger"
+            size="sm"
             onClick={() => {
               void (async () => {
                 if (!(await confirmDenyFullTeam(job.title, guardsNeeded))) return;
                 await onDenyFullTeam();
               })();
             }}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
           >
             Decline full crew
-          </button>
+          </AppButton>
         </div>
       )}
     </div>

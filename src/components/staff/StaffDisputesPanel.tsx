@@ -4,6 +4,7 @@ import { DisputeResolutionAction, OpsDispute } from '../../lib/staffOps';
 import { computeOvertimeAmount } from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
@@ -204,64 +205,64 @@ export function StaffDisputesPanel({
             </div>
 
             <div className="app-action-row--equal pt-1">
-              <button
-                type="button"
+              <AppButton
+                variant="danger"
+                size="sm"
                 disabled={busy}
                 onClick={() => void resolveOvertime(d, 'waive')}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Waive charge'}
-              </button>
-              <button
-                type="button"
+              </AppButton>
+              <AppButton
+                variant="primary"
+                size="sm"
                 disabled={busy}
                 onClick={() => void resolveOvertime(d, 'uphold')}
-                className="app-button-primary app-btn-sm disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Uphold original'}
-              </button>
-              <button
-                type="button"
+              </AppButton>
+              <AppButton
+                variant="outline"
+                size="sm"
                 disabled={busy || !(adjustedHours > 0)}
                 onClick={() => void resolveOvertime(d, 'adjust', adjustedHours)}
-                className="app-button-outline app-btn-sm disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply adjustment'}
-              </button>
+              </AppButton>
             </div>
           </div>
         )}
 
         {!isOvertime && status === 'open' && onResolveDispute && (
           <div className="app-action-row--equal pt-4">
-            <button
-              type="button"
+            <AppButton
+              variant="primary"
+              size="sm"
               onClick={() => resolveTicketDispute(d, 'resolved', 'approve_payout', 'Payout approved.')}
-              className="app-button-primary app-btn-sm"
             >
               Approve Payout
-            </button>
-            <button
-              type="button"
+            </AppButton>
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => resolveTicketDispute(d, 'held', 'hold_funds', 'Funds held pending review.')}
-              className="app-button-outline app-btn-sm"
             >
               Hold Funds
-            </button>
-            <button
-              type="button"
+            </AppButton>
+            <AppButton
+              variant="outline"
+              size="sm"
               onClick={() => resolveTicketDispute(d, 'resolved', 'partial_payout', 'Partial payout issued.')}
-              className="app-button-outline app-btn-sm"
             >
               Partial Payout
-            </button>
-            <button
-              type="button"
+            </AppButton>
+            <AppButton
+              variant="danger"
+              size="sm"
               onClick={() => resolveTicketDispute(d, 'resolved', 'cancel_payout', 'Job payout cancelled.')}
-              className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
             >
               Cancel Payout
-            </button>
+            </AppButton>
           </div>
         )}
       </div>
@@ -295,14 +296,15 @@ export function StaffDisputesPanel({
   const tabBar = (
     <div className="flex gap-2 mb-4">
       {(['all', 'overtime'] as DisputeTab[]).map((key) => (
-        <button
+        <AppButton
           key={key}
-          type="button"
+          variant={tab === key ? 'primary' : 'outline'}
+          size="sm"
           onClick={() => setTab(key)}
-          className={`app-button-outline app-btn-sm capitalize ${tab === key ? '!border-brand-primary !text-brand-primary' : ''}`}
+          className="capitalize"
         >
           {key}
-        </button>
+        </AppButton>
       ))}
     </div>
   );
