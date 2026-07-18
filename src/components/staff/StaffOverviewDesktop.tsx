@@ -25,6 +25,7 @@ import {
   filterOverviewMetrics,
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
+import { isStaffRole } from '../../lib/permissions';
 import { useDevice } from '../../lib/platform';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
@@ -177,7 +178,7 @@ export function StaffOverviewDesktop({
     };
   });
 
-  const showQueueBoard = staffRole === 'moderator' || staffRole === 'administrator' || staffRole === 'director' || staffRole === 'owner';
+  const showQueueBoard = isStaffRole(staffRole);
 
   const attentionPanel = (
     <StaffOverviewListPanel

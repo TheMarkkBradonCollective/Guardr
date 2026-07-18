@@ -165,6 +165,16 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     description: 'Guard performance and reporting',
     iconTone: 'green',
   },
+  cities: {
+    title: 'Operations',
+    description: 'City markets and coverage in your assigned areas',
+    iconTone: 'green',
+  },
+  permissions: {
+    title: 'Permissions',
+    description: 'Staff roles, approval rules, and access',
+    iconTone: 'orange',
+  },
 };
 
 const DEFAULT_HUB_SECTIONS: StaffSection[] = ['map', 'jobs', 'applications', 'payments', 'analytics'];
@@ -472,7 +482,7 @@ export function StaffOverviewQueueBoard({
       count: stats.pendingJobApprovals,
       description: 'New job requests waiting for staff approval',
       section: 'applications' as StaffSection,
-      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+      roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {
       id: 'schedule-changes',
@@ -480,7 +490,7 @@ export function StaffOverviewQueueBoard({
       count: stats.pendingScheduleChanges,
       description: 'Guard or client requested a schedule update',
       section: 'applications' as StaffSection,
-      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+      roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {
       id: 'credentials',
@@ -488,7 +498,7 @@ export function StaffOverviewQueueBoard({
       count: stats.pendingCertApprovals,
       description: 'Licenses and certifications to verify',
       section: 'credentials' as StaffSection,
-      roles: ['moderator', 'administrator', 'director', 'owner'] as PlatformRole[],
+      roles: ['moderator', 'administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {
       id: 'applications',
@@ -496,7 +506,7 @@ export function StaffOverviewQueueBoard({
       count: stats.pendingAccountApplications,
       description: 'New guard, client, or staff sign-ups',
       section: 'applications' as StaffSection,
-      roles: ['administrator', 'director', 'owner'] as PlatformRole[],
+      roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {
       id: 'payments',
@@ -504,7 +514,7 @@ export function StaffOverviewQueueBoard({
       count: stats.paymentsNeedingAction,
       description: 'Deposits, payouts, or billing follow-up',
       section: 'payments' as StaffSection,
-      roles: ['director', 'owner'] as PlatformRole[],
+      roles: ['manager', 'director', 'owner'] as PlatformRole[],
       hidden: !showPayments,
     },
     {
@@ -513,7 +523,7 @@ export function StaffOverviewQueueBoard({
       count: stats.activeIncidents,
       description: 'Open incident reports needing follow-up',
       section: 'incidents' as StaffSection,
-      roles: ['moderator', 'administrator', 'director', 'owner'] as PlatformRole[],
+      roles: ['moderator', 'administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
   ];
 
