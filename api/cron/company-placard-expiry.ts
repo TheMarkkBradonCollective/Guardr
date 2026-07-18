@@ -128,7 +128,7 @@ function resolveNotificationUrl(type, options = {}) {
   }
 }
 function resolveNotificationUrlForRole(type, role, options = {}) {
-  const isStaff = role === "moderator" || role === "administrator" || role === "director" || role === "owner";
+  const isStaff = role === "moderator" || role === "administrator" || role === "manager" || role === "director" || role === "owner";
   switch (type) {
     case "guard_arrived":
     case "guard_en_route":

@@ -59,9 +59,9 @@ export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {
   return LISTING_EDIT_STATUSES.includes(req.status);
 }
 
-/** Staff listing edits — directors may update through completed; administrators follow client window */
+/** Staff listing edits — executive roles may update through completed; administrators follow client window */
 export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: PlatformRole): boolean {
-  if (role === 'director' || role === 'owner') return req.status !== 'closed';
+  if (role === 'manager' || role === 'director' || role === 'owner') return req.status !== 'closed';
   if (role === 'administrator') return canEditJobTitleAndLocation(req);
   return false;
 }
@@ -85,7 +85,7 @@ export function canEditUnpaidJobSchedule(req: SecurityRequest): boolean {
 /** Staff may edit unpaid schedules wherever they can edit the listing (directors: any non-closed job). */
 export function canStaffEditUnpaidJobSchedule(req: SecurityRequest, role: PlatformRole): boolean {
   if (isJobPaid(req)) return false;
-  if (role === 'director' || role === 'owner') return req.status !== 'closed';
+  if (role === 'manager' || role === 'director' || role === 'owner') return req.status !== 'closed';
   return LISTING_EDIT_STATUSES.includes(req.status);
 }
 

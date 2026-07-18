@@ -31,9 +31,9 @@ export function getStaffNavAccessNotice(
 ): StaffNavAccessNotice | null {
   if (FINANCE_SECTIONS.has(section) && !flags.showFinance) {
     return {
-      title: 'Director access required',
+      title: 'Executive access required',
       message:
-        'Financial controls, payment settings, agreements, audit log, and dev notes are limited to Director and Founder roles. Ask your Director if you need access.',
+        'Financial controls, payment settings, agreements, audit log, and dev notes are limited to Manager, Director, and Founder roles. Ask your Director if you need access.',
     };
   }
   if (PERMISSIONS_SECTIONS.has(section) && !flags.showPermissions) {
@@ -94,7 +94,7 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   payments: {
     title: 'Payments',
     message:
-      'Financial controls are limited to Director and Founder roles. If money is owed on jobs, ask your Director to review the Payments section.',
+      'Financial controls are limited to Manager, Director, and Founder roles. If money is owed on jobs, ask your Director to review the Payments section.',
   },
   disputes: {
     title: 'Disputes',
@@ -103,20 +103,20 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   },
   'dev-updates': {
     title: 'Dev notes',
-    message: 'Dev notes are available to Director and Founder accounts.',
+    message: 'Dev notes are available to Manager, Director, and Founder accounts.',
   },
   'payment-settings': {
     title: 'Payment settings',
     message:
-      'Platform fee and crew pay settings are limited to Director and Founder roles. Ask your Director to review or update these controls.',
+      'Platform fee and crew pay settings are limited to Manager, Director, and Founder roles. Ask your Director to review or update these controls.',
   },
   agreements: {
     title: 'Agreements',
-    message: 'Agreement compliance is limited to Director and Founder roles.',
+    message: 'Agreement compliance is limited to Manager, Director, and Founder roles.',
   },
   'audit-log': {
     title: 'Audit log',
-    message: 'The platform audit log is limited to Director and Founder roles.',
+    message: 'The platform audit log is limited to Manager, Director, and Founder roles.',
   },
   settings: {
     title: 'Public Information',
