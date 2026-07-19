@@ -694,6 +694,25 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ---
 
+## Sunday, July 19, 2026 — /updateit → v1.0.83
+
+**Uber-style mobile polish (#708–#709)**
+- **#708** — Staff cert review: flat on-page latest info, full-screen image viewer, history for prior uploads only, no title ellipsis
+- **#709** — Global subscreen headers wrap titles (never `...`); auth mobile/PWA safe-area padding matches role-choice page; staff credential/application inbox rows wrap full titles
+
+**Credentials & auth (#705–#707)**
+- **#705** — Staff credentials: solid overlays, inline records, no edge clipping
+- **#706** — Credential timeline dedupe — history shows prior uploads only
+- **#707** — Auth role-choice page safe horizontal padding
+
+**Release:** **v1.0.83** (build **183**) — web + PWA cache bust (`guardr-cache-v1-0-83`) + CI FCM APK
+
+**Test coverage:** 427 unit tests, e2e public-page tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
+
+---
+
 ## Saturday, July 18, 2026 — /updateit → v1.0.82
 
 **Mobile auth polish (#699, #700, #703)**

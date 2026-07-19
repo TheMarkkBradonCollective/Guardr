@@ -36,7 +36,8 @@ html.theme-dark .auth-sheet-panel {
   align-items: center;
   justify-content: flex-end;
   flex-shrink: 0;
-  padding: 0 16px 8px;
+  padding: 0 max(1.25rem, env(safe-area-inset-right, 0px)) 8px
+    max(1.25rem, env(safe-area-inset-left, 0px));
   min-height: 40px;
 }
 
@@ -70,7 +71,9 @@ html.theme-dark .auth-sheet-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0 20px max(20px, env(safe-area-inset-bottom));
+  padding: 0 max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px))
+    max(1.25rem, env(safe-area-inset-left, 0px));
 }
 
 .auth-sheet-form {
@@ -242,7 +245,8 @@ html.theme-dark .auth-sheet-panel {
   justify-content: space-between;
   flex-shrink: 0;
   gap: 12px;
-  padding: max(10px, env(safe-area-inset-top)) 16px 8px;
+  padding: max(10px, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right, 0px)) 8px
+    max(1.25rem, env(safe-area-inset-left, 0px));
 }
 
 .auth-mobile-page-back {
@@ -286,7 +290,9 @@ html.theme-dark .auth-sheet-panel {
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  padding: 0 20px max(20px, env(safe-area-inset-bottom));
+  padding: 0 max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px))
+    max(1.25rem, env(safe-area-inset-left, 0px));
 }
 
 .auth-mobile-page-logo-wrap {

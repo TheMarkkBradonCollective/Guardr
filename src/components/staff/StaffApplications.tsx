@@ -104,9 +104,9 @@ function ApplicationFeedRow({
             <WfBadge tone={kind === 'guard' ? 'primary' : 'default'}>
               {kind === 'guard' ? 'Guard' : 'Client'}
             </WfBadge>
-            <p className="text-sm font-semibold truncate">{item.title}</p>
+            <p className="uber-feed-row-title">{item.title}</p>
           </div>
-          {item.subtitle && <p className="text-xs text-brand-text-muted mt-1 truncate">{item.subtitle}</p>}
+          {item.subtitle && <p className="uber-feed-row-subtitle mt-1">{item.subtitle}</p>}
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
             <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
             {item.submittedAt && pending && (
@@ -300,7 +300,7 @@ export function StaffApplications({
       return (
         <div className="animate-fade-in">
           <div className="app-dashboard-zone-head !px-0 !mb-3">
-            <h2 className="app-dashboard-zone-title truncate">{guard.name}</h2>
+            <h2 className="app-dashboard-zone-title break-words">{guard.name}</h2>
           </div>
           {detailBody}
         </div>
@@ -339,7 +339,7 @@ export function StaffApplications({
     return (
       <div className="animate-fade-in">
         <div className="app-dashboard-zone-head !px-0 !mb-3">
-          <h2 className="app-dashboard-zone-title truncate">{client.companyName || client.name}</h2>
+          <h2 className="app-dashboard-zone-title break-words">{client.companyName || client.name}</h2>
         </div>
         {detailBody}
       </div>
