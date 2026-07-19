@@ -4,6 +4,7 @@ import type { Certification } from '../types';
 import {
   certHasPendingUpdate,
   certUpdateSubmissionAllowed,
+  getCertificationArchiveHistory,
   getCertificationRevisionTimeline,
   pendingUpdateFromPayload,
   snapshotCertRevision,
@@ -85,5 +86,23 @@ describe('certRevisionHistory', () => {
     assert.equal(timeline[0]?.label, 'Current on file');
     assert.equal(timeline[1]?.isArchiveHistory, true);
     assert.equal(timeline[1]?.number, 'GC-1');
+  });
+
+  it('getCertificationArchiveHistory excludes workflow duplicates of current doc', () => {
+    const cert = baseCert({
+      revisionHistory: [
+        snapshotCertRevision(
+          {
+            issuer: 'BSIS',
+            number: 'GC-1',
+            imageUrl: 'https://example.com/card.jpg',
+            status: 'verified',
+          },
+          'verified',
+          { recordedAt: '2026-07-19T02:45:00.000Z' }
+        ),
+      ],
+    });
+    assert.equal(getCertificationArchiveHistory(cert).length, 0);
   });
 });

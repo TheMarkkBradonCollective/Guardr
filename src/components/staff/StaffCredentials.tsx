@@ -27,9 +27,8 @@ import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
 import { promptStaffCredentialUpdateNote, promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { certHasPendingUpdate, getCertificationRevisionTimeline } from '../../lib/certRevisionHistory';
-import { CertItemCard } from '../credentials/CertItemCard';
-import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
+import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
+import { StaffCertReviewDetail } from './StaffCertReviewDetail';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -528,82 +527,66 @@ export function StaffCredentials({
 
     const detailBody = (
       <div className="staff-detail-pane staff-credential-review space-y-4 min-w-0 max-w-full">
-        <CredentialReviewMeta item={feedItem} />
-        {onOpenGuardProfile && (
-          <button
-            type="button"
-            onClick={() => onOpenGuardProfile(guard.id)}
-            className="text-xs font-semibold text-brand-primary hover:underline"
-          >
-            View full guard profile →
-          </button>
-        )}
-
-        {context.kind === 'cert' && (
-          <div className="space-y-3 min-w-0">
-            <CertItemCard
-              cert={context.cert}
-              guardName={guard.name}
-              staffMode
-              openDetailOnClick={false}
-              onUpdate={
-                onUpdateCertification
-                  ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
-                  : undefined
-              }
-              onEditFullPage={
-                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-              }
-            />
-            {getCertificationRevisionTimeline(context.cert).length > 0 ? (
-              <CredentialRecordsList
-                items={getCertificationRevisionTimeline(context.cert)}
-                title={context.cert.status === 'verified' ? 'Current on file' : 'Current submission'}
-                description="Tap any image for full size."
-              />
+        {context.kind === 'cert' ? (
+          <StaffCertReviewDetail
+            cert={context.cert}
+            feedItem={feedItem}
+            onOpenGuardProfile={onOpenGuardProfile ? () => onOpenGuardProfile(guard.id) : undefined}
+            actions={renderCertActions(guard, context.cert)}
+          />
+        ) : (
+          <>
+            <CredentialReviewMeta item={feedItem} />
+            {onOpenGuardProfile ? (
+              <button
+                type="button"
+                onClick={() => onOpenGuardProfile(guard.id)}
+                className="text-xs font-semibold text-brand-primary hover:underline"
+              >
+                View full guard profile →
+              </button>
             ) : null}
-            {renderCertActions(guard, context.cert)}
-          </div>
-        )}
 
-        {context.kind === 'coi' && (
-          <div className="space-y-3">
-            <GuardCoiItemCard
-              guard={guard}
-              staffMode
-              onReview={
-                onReviewGuardInsurance
-                  ? async (status, rejectionReason) => {
-                      await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                    }
-                  : undefined
-              }
-              onEditFullPage={
-                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-              }
-            />
-            {renderCoiActions(guard)}
-            {renderCoiUpdateRequest(guard)}
-          </div>
-        )}
+            {context.kind === 'coi' ? (
+              <div className="space-y-3">
+                <GuardCoiItemCard
+                  guard={guard}
+                  staffMode
+                  onReview={
+                    onReviewGuardInsurance
+                      ? async (status, rejectionReason) => {
+                          await onReviewGuardInsurance(guard.id, status, rejectionReason);
+                        }
+                      : undefined
+                  }
+                  onEditFullPage={
+                    onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+                  }
+                />
+                {renderCoiActions(guard)}
+                {renderCoiUpdateRequest(guard)}
+              </div>
+            ) : null}
 
-        {context.kind === 'gov-id' && (
-          <div className="space-y-3">
-            <GuardIdItemCard
-              guard={guard}
-              staffMode
-              asCredentialSection
-              onEditFullPage={
-                onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-              }
-            />
-            {renderGovIdActions(guard)}
-            {renderGovIdUpdateRequest(guard)}
-          </div>
-        )}
+            {context.kind === 'gov-id' ? (
+              <div className="space-y-3">
+                <GuardIdItemCard
+                  guard={guard}
+                  staffMode
+                  asCredentialSection
+                  onEditFullPage={
+                    onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+                  }
+                />
+                {renderGovIdActions(guard)}
+                {renderGovIdUpdateRequest(guard)}
+              </div>
+            ) : null}
 
-        {context.kind === 'activation-pending' && (
-          <StaffActivationCredentialSection guard={guard} stepKey={context.stepKey} />
+            {context.kind === 'activation-pending' ? (
+              <StaffActivationCredentialSection guard={guard} stepKey={context.stepKey} />
+            ) : null}
+          </>
         )}
       </div>
     );
@@ -615,6 +598,7 @@ export function StaffCredentials({
             title={feedItem.title ?? 'Credential review'}
             onBack={options.onBack}
             backLabel="Credentials"
+            wrapTitle
           />
           {detailBody}
         </div>
@@ -624,7 +608,7 @@ export function StaffCredentials({
     return (
       <div className="animate-fade-in">
         <div className="app-dashboard-zone-head !px-0 !mb-3">
-          <h2 className="app-dashboard-zone-title truncate">{feedItem.title ?? 'Credential review'}</h2>
+          <h2 className="app-dashboard-zone-title break-words">{feedItem.title ?? 'Credential review'}</h2>
         </div>
         {detailBody}
       </div>

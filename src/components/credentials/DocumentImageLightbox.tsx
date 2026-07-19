@@ -1,5 +1,5 @@
 import React from 'react';
-import { Block } from 'baseui/block';
+import { X } from 'lucide-react';
 import { AppModal } from '../ui/motion/AppMotion';
 
 interface DocumentImageLightboxProps {
@@ -7,36 +7,65 @@ interface DocumentImageLightboxProps {
   imageUrl: string;
   alt: string;
   onClose: () => void;
+  fullscreen?: boolean;
 }
 
 /** Full-screen document image viewer. */
-export function DocumentImageLightbox({ open, imageUrl, alt, onClose }: DocumentImageLightboxProps) {
+export function DocumentImageLightbox({
+  open,
+  imageUrl,
+  alt,
+  onClose,
+  fullscreen = false,
+}: DocumentImageLightboxProps) {
+  if (fullscreen) {
+    return (
+      <AppModal
+        open={open}
+        onClose={onClose}
+        align="center"
+        zIndex={2300}
+        ariaLabelledBy="document-lightbox"
+        panelClassName="document-lightbox-panel--fullscreen"
+      >
+        <div className="document-lightbox-shell" onClick={onClose} role="presentation">
+          <button
+            type="button"
+            className="document-lightbox-close"
+            onClick={onClose}
+            aria-label="Close full screen image"
+          >
+            <X className="w-5 h-5" aria-hidden />
+          </button>
+          <img
+            src={imageUrl}
+            alt={alt}
+            id="document-lightbox"
+            className="document-lightbox-image"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </AppModal>
+    );
+  }
+
   return (
     <AppModal open={open} onClose={onClose} align="center" zIndex={2300} ariaLabelledBy="document-lightbox">
-      <Block
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        padding="scale600"
+      <div
+        className="document-lightbox-shell"
+        style={{ minHeight: '40vh', background: 'var(--brand-bg, #ffffff)', cursor: 'zoom-out' }}
         onClick={onClose}
-        overrides={{
-          Block: {
-            style: {
-              minHeight: '40vh',
-              cursor: 'zoom-out',
-              backgroundColor: 'var(--brand-bg, #ffffff)',
-            },
-          },
-        }}
+        role="presentation"
       >
         <img
           src={imageUrl}
           alt={alt}
           id="document-lightbox"
-          className="max-w-full max-h-[90vh] object-contain rounded-xl border border-brand-border bg-brand-bg"
+          className="document-lightbox-image"
+          style={{ maxHeight: '90vh', borderRadius: '0.75rem', border: '1px solid var(--brand-border)' }}
           onClick={(e) => e.stopPropagation()}
         />
-      </Block>
+      </div>
     </AppModal>
   );
 }
@@ -73,16 +102,18 @@ export function DocumentImagePreview({
         className="block w-full text-left group"
         aria-label={`View full ${alt}`}
       >
-        <img
-          src={imageUrl}
-          alt={alt}
-          className={`${className} cursor-zoom-in`}
-        />
+        <img src={imageUrl} alt={alt} className={`${className} cursor-zoom-in`} />
         <p className="text-[10px] uber-text-accent mt-1.5">Tap to view full size</p>
       </button>
-      {!onOpen && (
-        <DocumentImageLightbox open={open} imageUrl={imageUrl} alt={alt} onClose={() => setOpen(false)} />
-      )}
+      {!onOpen ? (
+        <DocumentImageLightbox
+          open={open}
+          imageUrl={imageUrl}
+          alt={alt}
+          onClose={() => setOpen(false)}
+          fullscreen
+        />
+      ) : null}
     </>
   );
 }
