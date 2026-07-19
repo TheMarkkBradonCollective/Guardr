@@ -108,18 +108,20 @@ export function AppSubScreenHeader({
   title,
   onBack,
   backLabel = 'Back',
+  wrapTitle = false,
 }: {
   title: string;
   onBack: () => void;
   backLabel?: string;
+  wrapTitle?: boolean;
 }) {
   return (
-    <div className="app-subscreen-header">
+    <div className={`app-subscreen-header${wrapTitle ? ' app-subscreen-header--wrap' : ''}`}>
       <button type="button" onClick={onBack} className="app-subscreen-back">
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </button>
-      <h1 className="app-subscreen-title truncate flex-1 min-w-0">{title}</h1>
+      <h1 className={`app-subscreen-title flex-1 min-w-0${wrapTitle ? '' : ' truncate'}`}>{title}</h1>
     </div>
   );
 }

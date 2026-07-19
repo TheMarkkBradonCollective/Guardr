@@ -22,7 +22,7 @@ export function CredentialCategoryBadge({
       className={`credential-category-badge inline-flex items-center max-w-full text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full border credential-category-${category} ${className}`.trim()}
       title={certCategoryLabel(cert)}
     >
-      <span className="truncate">{label}</span>
+      <span className="credential-category-badge__label">{label}</span>
     </span>
   );
 }

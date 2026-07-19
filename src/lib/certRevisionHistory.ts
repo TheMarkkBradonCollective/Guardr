@@ -262,6 +262,21 @@ export function getCertificationRevisionTimeline(cert: Certification): Credentia
   return [...items, ...historyItems];
 }
 
+/** Prior uploads only — excludes the current on-file submission. */
+export function getCertificationArchiveHistory(cert: Certification): CredentialRecordDisplayItem[] {
+  const currentFingerprint = documentFingerprint(cert);
+  const pendingFingerprint = cert.pendingUpdate ? documentFingerprint(cert.pendingUpdate) : null;
+
+  return dedupeArchiveItems(
+    [...(cert.revisionHistory ?? [])]
+      .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
+      .filter((revision) =>
+        revisionQualifiesAsArchiveHistory(revision, currentFingerprint, pendingFingerprint)
+      )
+      .map(revisionToArchiveItem)
+  );
+}
+
 export function parseCertificationRevisionHistory(value: unknown): CertificationRevision[] {
   if (!Array.isArray(value)) return [];
   return value
