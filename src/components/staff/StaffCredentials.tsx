@@ -558,7 +558,7 @@ export function StaffCredentials({
             {getCertificationRevisionTimeline(context.cert).length > 0 ? (
               <CredentialRecordsList
                 items={getCertificationRevisionTimeline(context.cert)}
-                title="Current submission"
+                title={context.cert.status === 'verified' ? 'Current on file' : 'Current submission'}
                 description="Tap any image for full size."
               />
             ) : null}
