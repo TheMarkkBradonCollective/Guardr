@@ -240,13 +240,13 @@ export function CertDetailModal({
         </div>
 
         {cert.status === 'rejected' && cert.rejectionReason && (
-          <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
+          <p className="text-sm text-amber-600 border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed dark:text-amber-400 dark:border-amber-900 dark:bg-amber-950">
             {cert.rejectionReason}
           </p>
         )}
 
         {cert.updateRequestNote && !cert.pendingUpdate && (
-          <p className="text-sm text-brand-primary border border-brand-primary/30 bg-brand-primary/10 rounded-lg px-3 py-2 leading-relaxed">
+          <p className="text-sm text-brand-primary border border-brand-border bg-brand-bg-sec rounded-lg px-3 py-2 leading-relaxed">
             {cert.updateRequestNote}
           </p>
         )}

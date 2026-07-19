@@ -110,7 +110,7 @@ export function StaffIncidentsPanel({
   if (selectedIncident && selectedDetail) {
     return (
       <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in">
-        <div className="-mx-4 sm:-mx-5 app-full-page-detail flex-1 min-h-0">
+        <div className="app-full-page-detail flex-1 min-h-0 min-w-0 max-w-full">
           <AppSubScreenHeader
             title={selectedIncident.location}
             onBack={() => setSelectedId(null)}

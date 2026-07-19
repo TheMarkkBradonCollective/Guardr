@@ -119,7 +119,7 @@ export function AppSubScreenHeader({
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </button>
-      <h1 className="app-subscreen-title truncate">{title}</h1>
+      <h1 className="app-subscreen-title truncate flex-1 min-w-0">{title}</h1>
     </div>
   );
 }

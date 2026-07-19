@@ -1,6 +1,16 @@
 import type { ModalOverrides } from 'baseui/modal';
 import type { DrawerOverrides } from 'baseui/drawer';
 
+const solidBackdropStyle = {
+  backgroundColor: '#000000',
+  opacity: 1,
+} as const;
+
+const solidPanelStyle = {
+  backgroundColor: 'backgroundPrimary',
+  opacity: 1,
+} as const;
+
 export function modalOverrides(options: {
   zIndex?: number;
   panelClassName?: string;
@@ -11,6 +21,7 @@ export function modalOverrides(options: {
     Root: {
       style: {
         zIndex,
+        backgroundColor: '#000000',
       },
     },
     Dialog: {
@@ -18,7 +29,7 @@ export function modalOverrides(options: {
         borderRadius: centered ? '14px' : '22px 22px 0 0',
         border: '1px solid',
         borderColor: 'borderOpaque',
-        backgroundColor: 'backgroundPrimary',
+        ...solidPanelStyle,
         color: 'contentPrimary',
         maxHeight: '90vh',
         overflowY: 'auto',
@@ -42,6 +53,9 @@ export function sheetOverrides(options: {
     Root: {
       style: { zIndex },
     },
+    Backdrop: {
+      style: solidBackdropStyle,
+    },
     DrawerContainer: {
       style: {
         borderTopLeftRadius: '22px',
@@ -49,7 +63,7 @@ export function sheetOverrides(options: {
         border: '1px solid',
         borderColor: 'borderOpaque',
         borderBottom: 'none',
-        backgroundColor: 'backgroundPrimary',
+        ...solidPanelStyle,
         color: 'contentPrimary',
         maxHeight: '85dvh',
         paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
@@ -68,11 +82,14 @@ export function drawerOverrides(options: { zIndex?: number; width?: string }): D
     Root: {
       style: { zIndex },
     },
+    Backdrop: {
+      style: solidBackdropStyle,
+    },
     DrawerContainer: {
       style: {
         width,
         maxWidth: '90vw',
-        backgroundColor: 'backgroundPrimary',
+        ...solidPanelStyle,
         color: 'contentPrimary',
         borderRight: '1px solid',
         borderColor: 'borderOpaque',

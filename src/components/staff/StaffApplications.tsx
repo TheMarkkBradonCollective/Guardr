@@ -290,7 +290,7 @@ export function StaffApplications({
 
       if (options?.onBack) {
         return (
-          <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+          <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
             <AppSubScreenHeader title={guard.name} onBack={options.onBack} backLabel="Applications" />
             {detailBody}
           </div>
@@ -325,7 +325,7 @@ export function StaffApplications({
 
     if (options?.onBack) {
       return (
-        <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+        <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
           <AppSubScreenHeader
             title={client.companyName || client.name}
             onBack={options.onBack}

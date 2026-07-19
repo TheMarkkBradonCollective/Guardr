@@ -12,20 +12,28 @@ interface DocumentImageLightboxProps {
 /** Full-screen document image viewer. */
 export function DocumentImageLightbox({ open, imageUrl, alt, onClose }: DocumentImageLightboxProps) {
   return (
-    <AppModal open={open} onClose={onClose} align="center" zIndex={70} ariaLabelledBy="document-lightbox">
+    <AppModal open={open} onClose={onClose} align="center" zIndex={2300} ariaLabelledBy="document-lightbox">
       <Block
         display="flex"
         alignItems="center"
         justifyContent="center"
         padding="scale600"
         onClick={onClose}
-        overrides={{ Block: { style: { minHeight: '40vh', cursor: 'zoom-out' } } }}
+        overrides={{
+          Block: {
+            style: {
+              minHeight: '40vh',
+              cursor: 'zoom-out',
+              backgroundColor: 'var(--brand-bg, #ffffff)',
+            },
+          },
+        }}
       >
         <img
           src={imageUrl}
           alt={alt}
           id="document-lightbox"
-          className="max-w-full max-h-[90vh] object-contain rounded-xl"
+          className="max-w-full max-h-[90vh] object-contain rounded-xl border border-brand-border bg-brand-bg"
           onClick={(e) => e.stopPropagation()}
         />
       </Block>
@@ -68,7 +76,7 @@ export function DocumentImagePreview({
         <img
           src={imageUrl}
           alt={alt}
-          className={`${className} group-hover:opacity-90 transition-opacity cursor-zoom-in`}
+          className={`${className} cursor-zoom-in`}
         />
         <p className="text-[10px] uber-text-accent mt-1.5">Tap to view full size</p>
       </button>

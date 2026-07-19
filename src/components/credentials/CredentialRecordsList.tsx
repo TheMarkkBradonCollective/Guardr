@@ -60,12 +60,12 @@ export function CredentialRecordsList({
           return (
             <div
               key={item.id}
-              className="rounded-xl border border-brand-border bg-brand-bg-sec/40 overflow-hidden"
+              className="rounded-xl border border-brand-border bg-brand-bg-sec overflow-hidden"
             >
               <button
                 type="button"
                 onClick={() => setExpandedId(expanded ? null : item.id)}
-                className="w-full px-4 py-3 text-left flex items-start gap-3 hover:bg-brand-bg-sec/80 transition-colors"
+                className="w-full px-4 py-3 text-left flex items-start gap-3 hover:bg-brand-bg transition-colors"
               >
                 {thumbnail ? (
                   <span
@@ -88,7 +88,7 @@ export function CredentialRecordsList({
                     <img
                       src={thumbnail}
                       alt=""
-                      className="w-11 h-11 rounded-lg object-cover border border-brand-border bg-brand-bg-sec cursor-zoom-in hover:opacity-90 transition-opacity"
+                      className="w-11 h-11 rounded-lg object-cover border border-brand-border bg-brand-bg-sec cursor-zoom-in"
                     />
                   </span>
                 ) : (
@@ -110,7 +110,7 @@ export function CredentialRecordsList({
               {expanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-brand-border">
                   {item.note && (
-                    <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
+                    <p className="text-sm text-amber-600 border border-amber-200 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed dark:text-amber-400 dark:border-amber-900 dark:bg-amber-950">
                       {item.note}
                     </p>
                   )}
