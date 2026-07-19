@@ -23,12 +23,22 @@
   overscroll-behavior: contain;
 }
 
+.auth-role-choice-page .uber-direct-top-header-inner {
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+}
+
 .auth-role-choice-hero {
   flex: 0 0 auto;
   background: #f6f6f6;
   min-height: clamp(220px, 42vh, 480px);
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
 }
 
 html.theme-dark .auth-role-choice-hero {
@@ -57,6 +67,11 @@ html.theme-dark .auth-role-choice-hero {
 .auth-role-choice-options {
   flex: 0 0 auto;
   border-top: 1px solid #eeeeee;
+  box-sizing: border-box;
+  padding-top: 1.75rem;
+  padding-bottom: max(1.75rem, env(safe-area-inset-bottom, 0px));
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
 }
 
 html.theme-dark .auth-role-choice-options {
@@ -74,8 +89,10 @@ html.theme-dark .auth-role-choice-options {
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-  padding: 0;
+  padding: 0.25rem 0;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   transition: opacity 120ms ease;
 }
 
@@ -100,6 +117,8 @@ html.theme-dark .auth-role-choice-option:focus-visible {
 @media (max-width: 639px) {
   .auth-role-choice-hero {
     min-height: clamp(180px, 34vh, 320px);
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
   }
 
   .auth-role-choice-option + .auth-role-choice-option {
@@ -107,10 +126,30 @@ html.theme-dark .auth-role-choice-option:focus-visible {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
+  .auth-role-choice-page .uber-direct-top-header-inner,
+  .auth-role-choice-hero,
   .auth-role-choice-options {
-    padding-top: 48px !important;
-    padding-bottom: 64px !important;
+    padding-left: max(2rem, env(safe-area-inset-left, 0px));
+    padding-right: max(2rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-role-choice-page .uber-direct-top-header-inner {
+    padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .auth-role-choice-hero,
+  .auth-role-choice-options {
+    padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .auth-role-choice-options {
+    padding-top: 48px;
+    padding-bottom: 64px;
   }
 
   .auth-role-choice-options-grid {
