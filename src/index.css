@@ -3899,7 +3899,7 @@ button.app-cert-item-interactive {
 }
 
 button.app-cert-item-interactive:hover {
-  background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-bg-sec));
 }
 
 .app-cert-item-body {
@@ -20232,7 +20232,7 @@ textarea.uber-input {
   }}
 
 .staff-shell .staff-main-content--padded > div {
-  overflow-x: clip !important;
+  overflow-x: hidden !important;
   overflow-y: auto;
   overscroll-behavior: contain;
   overscroll-behavior-x: none;
@@ -20323,8 +20323,36 @@ textarea.uber-input {
 
 .staff-shell .app-screen-header,
 .staff-shell .app-subscreen-header {
-  padding-inline: 0 !important;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px)) !important;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.staff-shell .staff-credential-review {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.staff-shell .staff-credential-review .app-cert-item {
+  background: var(--brand-bg-sec) !important;
+  border: 1px solid var(--brand-border) !important;
+  border-radius: var(--radius-app-lg) !important;
+  padding: 0.875rem 1rem !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.staff-shell .staff-credential-review .app-action-row--equal {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) {
+  .staff-shell .staff-credential-review .app-action-row--equal {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  }
 }
 
 .staff-shell {
@@ -21890,4 +21918,22 @@ html.theme-light .auth-experience--uber .auth-hero {
     color-mix(in srgb, var(--uber-accent, #4A6B4E) 35%, #f2f4f2) 50%,
     var(--uber-bg, #ffffff) 100%
   );
+}
+
+/* Solid overlay surfaces — no translucent panels or ghosting behind popups */
+[data-baseweb="drawer"] > div:first-child,
+[data-baseweb="modal"] > div:first-child {
+  background-color: #000000 !important;
+  opacity: 1 !important;
+}
+
+[data-baseweb="drawer"] [data-baseweb="drawer-container"],
+[data-baseweb="modal"] [role="dialog"] {
+  background-color: var(--brand-bg, #ffffff) !important;
+  opacity: 1 !important;
+}
+
+html.theme-dark [data-baseweb="drawer"] [data-baseweb="drawer-container"],
+html.theme-dark [data-baseweb="modal"] [role="dialog"] {
+  background-color: var(--brand-bg, #000000) !important;
 }

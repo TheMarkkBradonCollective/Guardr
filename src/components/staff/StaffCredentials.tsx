@@ -27,8 +27,9 @@ import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
 import { promptStaffCredentialUpdateNote, promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { certHasPendingUpdate } from '../../lib/certRevisionHistory';
+import { certHasPendingUpdate, getCertificationRevisionTimeline } from '../../lib/certRevisionHistory';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
 import { GuardCoiItemCard } from '../profile/GuardCoiItemCard';
 import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -526,7 +527,7 @@ export function StaffCredentials({
     const { guard } = context;
 
     const detailBody = (
-      <div className="staff-detail-pane space-y-4">
+      <div className="staff-detail-pane staff-credential-review space-y-4 min-w-0 max-w-full">
         <CredentialReviewMeta item={feedItem} />
         {onOpenGuardProfile && (
           <button
@@ -539,11 +540,12 @@ export function StaffCredentials({
         )}
 
         {context.kind === 'cert' && (
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             <CertItemCard
               cert={context.cert}
               guardName={guard.name}
               staffMode
+              openDetailOnClick={false}
               onUpdate={
                 onUpdateCertification
                   ? (payload) => onUpdateCertification(guard.id, context.cert.id, payload)
@@ -553,6 +555,13 @@ export function StaffCredentials({
                 onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
               }
             />
+            {getCertificationRevisionTimeline(context.cert).length > 0 ? (
+              <CredentialRecordsList
+                items={getCertificationRevisionTimeline(context.cert)}
+                title="Current submission"
+                description="Tap any image for full size."
+              />
+            ) : null}
             {renderCertActions(guard, context.cert)}
           </div>
         )}
@@ -601,7 +610,7 @@ export function StaffCredentials({
 
     if (options?.onBack) {
       return (
-        <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+        <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
           <AppSubScreenHeader
             title={feedItem.title ?? 'Credential review'}
             onBack={options.onBack}

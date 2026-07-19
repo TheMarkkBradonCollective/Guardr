@@ -29,6 +29,8 @@ interface CertItemCardProps {
   onViewFull?: () => void;
   viewFullLabel?: string;
   onEditFullPage?: () => void;
+  /** When false, card is display-only (no detail sheet). Use with inline records on staff review. */
+  openDetailOnClick?: boolean;
 }
 
 /** Individual license or certificate — clickable to view full details and document photo. */
@@ -47,6 +49,7 @@ export function CertItemCard({
   onViewFull,
   viewFullLabel,
   onEditFullPage,
+  openDetailOnClick = true,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
@@ -64,6 +67,7 @@ export function CertItemCard({
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
 
   const openDetail = () => {
+    if (!openDetailOnClick) return;
     if (openInEditMode && onEditFullPage) {
       onEditFullPage();
       return;
@@ -74,6 +78,7 @@ export function CertItemCard({
   return (
     <>
       <div className={`app-cert-item ${compact ? 'app-cert-item-compact' : ''}`}>
+        {openDetailOnClick ? (
         <button
           type="button"
           onClick={openDetail}
@@ -110,6 +115,40 @@ export function CertItemCard({
             )}
           </div>
         </button>
+        ) : (
+        <div className="app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3">
+          {cert.imageUrl ? (
+            <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />
+          ) : (
+            <div
+              className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
+              aria-hidden
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">No photo</span>
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+              <div className="shrink-0">
+                <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
+              </div>
+            </div>
+            {showCategory && (
+              <div className="mt-1">
+                <CredentialCategoryBadge cert={cert} />
+              </div>
+            )}
+            <p className="text-xs text-brand-text-muted mt-1 break-words line-clamp-2">
+              {cert.state ? `${formatStateName(cert.state)} · ` : ''}
+              {cert.issuer} · #{cert.number}
+            </p>
+            {cert.status === 'rejected' && cert.rejectionReason && (
+              <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
+            )}
+          </div>
+        </div>
+        )}
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
           {cert.imageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
