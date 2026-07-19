@@ -111,7 +111,6 @@ export function AuthRoleChoicePage({
           as="section"
           aria-label={copy.ariaLabel}
           className="auth-role-choice-hero"
-          padding={isMobile ? 'scale800 scale600' : 'scale1000 scale800'}
         >
           <Block
             className="auth-role-choice-hero-inner"
@@ -146,7 +145,6 @@ export function AuthRoleChoicePage({
         <Block
           as="section"
           className="auth-role-choice-options"
-          padding={isMobile ? 'scale700 scale600' : 'scale900 scale800'}
           backgroundColor="backgroundPrimary"
         >
           <Block
