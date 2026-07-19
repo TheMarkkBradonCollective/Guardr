@@ -6,6 +6,7 @@ import {
   certUpdateSubmissionAllowed,
   getCertificationRevisionTimeline,
   pendingUpdateFromPayload,
+  snapshotCertRevision,
 } from './certRevisionHistory';
 
 function baseCert(overrides: Partial<Certification> = {}): Certification {
@@ -39,5 +40,50 @@ describe('certRevisionHistory', () => {
     assert.equal(timeline[0]?.label, 'Update submitted');
     assert.equal(timeline[1]?.label, 'Current on file');
     assert.equal(certHasPendingUpdate(cert), true);
+  });
+
+  it('does not duplicate verified workflow snapshots in the timeline', () => {
+    const cert = baseCert({
+      revisionHistory: [
+        snapshotCertRevision(
+          {
+            issuer: 'BSIS',
+            number: 'GC-1',
+            imageUrl: 'https://example.com/card.jpg',
+            status: 'verified',
+          },
+          'verified',
+          { recordedAt: '2026-07-19T02:45:00.000Z' }
+        ),
+      ],
+    });
+    const timeline = getCertificationRevisionTimeline(cert);
+    assert.equal(timeline.length, 1);
+    assert.equal(timeline[0]?.label, 'Current on file');
+    assert.equal(timeline[0]?.isArchiveHistory, undefined);
+  });
+
+  it('shows superseded uploads as plain history without badges', () => {
+    const cert = baseCert({
+      imageUrl: 'https://example.com/card-new.jpg',
+      number: 'GC-2',
+      revisionHistory: [
+        snapshotCertRevision(
+          {
+            issuer: 'BSIS',
+            number: 'GC-1',
+            imageUrl: 'https://example.com/card-old.jpg',
+            status: 'verified',
+          },
+          'superseded',
+          { recordedAt: '2026-07-18T17:00:00.000Z' }
+        ),
+      ],
+    });
+    const timeline = getCertificationRevisionTimeline(cert);
+    assert.equal(timeline.length, 2);
+    assert.equal(timeline[0]?.label, 'Current on file');
+    assert.equal(timeline[1]?.isArchiveHistory, true);
+    assert.equal(timeline[1]?.number, 'GC-1');
   });
 });

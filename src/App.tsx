@@ -4518,28 +4518,14 @@ export default function App() {
           updateRequestedAt: undefined,
           updateRequestNote: undefined,
           revisionHistory: prependCertRevision(
-            prependCertRevision(cert.revisionHistory, snapshotCertRevision(cert, 'superseded')),
-            snapshotCertRevision(
-              {
-                issuer: cert.pendingUpdate!.issuer,
-                number: cert.pendingUpdate!.number,
-                state: cert.pendingUpdate!.state,
-                expiryDate: cert.pendingUpdate!.expiryDate,
-                imageUrl: cert.pendingUpdate!.imageUrl,
-                status: 'verified',
-              },
-              'verified'
-            )
+            cert.revisionHistory,
+            snapshotCertRevision(cert, 'superseded')
           ),
         }
       : {
           ...cert,
           status: 'verified',
           rejectionReason: undefined,
-          revisionHistory: prependCertRevision(
-            cert.revisionHistory,
-            snapshotCertRevision({ ...cert, status: 'verified' }, 'verified')
-          ),
         };
 
     setGuards((prev) =>

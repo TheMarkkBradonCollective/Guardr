@@ -21,6 +21,8 @@ export interface CredentialRecordDisplayItem {
   number?: string;
   isCurrentOnFile?: boolean;
   isPendingReview?: boolean;
+  /** Earlier upload — show without status badges */
+  isArchiveHistory?: boolean;
   details?: CredentialRecordDetail[];
   images?: CredentialRecordImage[];
 }

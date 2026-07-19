@@ -7,15 +7,6 @@ import type {
 import type { CredentialRecordDisplayItem } from './credentialRecords';
 import { formatStateName } from './states';
 
-const REVISION_EVENT_LABELS: Record<CertificationRevisionEvent, string> = {
-  submitted: 'Submitted',
-  verified: 'Verified',
-  rejected: 'Rejected',
-  update_requested: 'Update requested',
-  update_submitted: 'Update submitted',
-  superseded: 'Previous version',
-};
-
 export function certUpdateSubmissionAllowed(
   cert: Pick<Certification, 'status' | 'updateRequestedAt' | 'pendingUpdate'>
 ): boolean {
@@ -121,6 +112,7 @@ function certRecordFromParts(parts: {
   note?: string;
   isCurrentOnFile?: boolean;
   isPendingReview?: boolean;
+  isArchiveHistory?: boolean;
 }): CredentialRecordDisplayItem {
   const imageUrl = parts.imageUrl?.trim();
   const { issuer, state, expiryDate, imageUrl: _imageUrl, ...rest } = parts;
@@ -132,11 +124,53 @@ function certRecordFromParts(parts: {
   };
 }
 
-function revisionToDisplayItem(revision: CertificationRevision): CredentialRecordDisplayItem {
+function formatArchiveLabel(recordedAt: string): string {
+  const date = new Date(recordedAt);
+  if (Number.isNaN(date.getTime())) return 'Previous upload';
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function documentFingerprint(parts: {
+  imageUrl?: string;
+  number?: string;
+  issuer?: string;
+}): string {
+  return [parts.imageUrl?.trim() ?? '', parts.number?.trim() ?? '', parts.issuer?.trim() ?? ''].join('|');
+}
+
+function revisionQualifiesAsArchiveHistory(
+  revision: CertificationRevision,
+  currentFingerprint: string,
+  pendingFingerprint: string | null
+): boolean {
+  const fp = documentFingerprint(revision);
+
+  if (revision.event === 'superseded') {
+    return Boolean(revision.imageUrl?.trim());
+  }
+
+  if (revision.event === 'rejected') {
+    return Boolean(revision.imageUrl?.trim()) && fp !== currentFingerprint && fp !== pendingFingerprint;
+  }
+
+  if (revision.event === 'update_submitted') {
+    return Boolean(revision.imageUrl?.trim()) && fp !== currentFingerprint && fp !== pendingFingerprint;
+  }
+
+  return false;
+}
+
+function revisionToArchiveItem(revision: CertificationRevision): CredentialRecordDisplayItem {
   return certRecordFromParts({
     id: revision.id,
     recordedAt: revision.recordedAt,
-    label: REVISION_EVENT_LABELS[revision.event],
+    label: formatArchiveLabel(revision.recordedAt),
     status: revision.status,
     issuer: revision.issuer,
     number: revision.number,
@@ -144,6 +178,22 @@ function revisionToDisplayItem(revision: CertificationRevision): CredentialRecor
     expiryDate: revision.expiryDate,
     imageUrl: revision.imageUrl,
     note: revision.note,
+    isArchiveHistory: true,
+  });
+}
+
+function dedupeArchiveItems(items: CredentialRecordDisplayItem[]): CredentialRecordDisplayItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const fp = documentFingerprint({
+      imageUrl: item.thumbnailUrl,
+      number: item.number,
+      issuer: item.details?.find((d) => d.label === 'Issuing organization')?.value,
+    });
+    if (!fp.replace(/\|/g, '')) return true;
+    if (seen.has(fp)) return false;
+    seen.add(fp);
+    return true;
   });
 }
 
@@ -197,9 +247,17 @@ export function getCertificationRevisionTimeline(cert: Certification): Credentia
     );
   }
 
-  const historyItems = [...(cert.revisionHistory ?? [])]
-    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
-    .map(revisionToDisplayItem);
+  const currentFingerprint = documentFingerprint(cert);
+  const pendingFingerprint = cert.pendingUpdate ? documentFingerprint(cert.pendingUpdate) : null;
+
+  const historyItems = dedupeArchiveItems(
+    [...(cert.revisionHistory ?? [])]
+      .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
+      .filter((revision) =>
+        revisionQualifiesAsArchiveHistory(revision, currentFingerprint, pendingFingerprint)
+      )
+      .map(revisionToArchiveItem)
+  );
 
   return [...items, ...historyItems];
 }
