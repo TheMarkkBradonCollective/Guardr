@@ -130,10 +130,10 @@ function CredentialFeedRow({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold truncate">{item.title}</p>
+            <p className="uber-feed-row-title">{item.title}</p>
             <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
           </div>
-          {item.subtitle && <p className="text-xs text-brand-text-muted mt-1 truncate">{item.subtitle}</p>}
+          {item.subtitle && <p className="uber-feed-row-subtitle mt-1">{item.subtitle}</p>}
           {item.submittedAt && (item.status === 'pending' || item.status === 'in_review') && (
             <p className="text-[11px] text-brand-text-muted mt-1">
               Submitted {formatApprovalTimestamp(item.submittedAt)}
@@ -598,7 +598,6 @@ export function StaffCredentials({
             title={feedItem.title ?? 'Credential review'}
             onBack={options.onBack}
             backLabel="Credentials"
-            wrapTitle
           />
           {detailBody}
         </div>

@@ -1107,13 +1107,16 @@ html.theme-dark .app-screen-header { background: var(--uber-bg, #000); }
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 14px max(1.25rem, env(safe-area-inset-right, 0px)) 14px
+    max(1.25rem, env(safe-area-inset-left, 0px));
   background: var(--uber-bg, #fff);
   border-bottom: 1px solid var(--uber-border, #eeeeee);
   min-height: 56px;
   position: sticky;
   top: 0;
   z-index: 5;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 html.theme-dark .app-subscreen-header { background: var(--uber-bg, #000); }
@@ -1143,14 +1146,50 @@ html.theme-dark .app-subscreen-back { color: #fff; }
   color: var(--uber-text, #000);
   letter-spacing: -0.02em;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.25;
 }
 
 html.theme-dark .app-subscreen-title { color: #fff; }
 
-/* ─── App flow surface (form containers) ─────────────────────────────────── */
+/* Subscreen titles wrap to full width — never ellipsize with "..." */
+.app-subscreen-header--wrap {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.75rem;
+}
+
+.app-subscreen-header--wrap .app-subscreen-back {
+  flex-shrink: 0;
+}
+
+.app-subscreen-header--wrap .app-subscreen-title {
+  flex: 1 1 100%;
+  order: 2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+/* Feed / inbox row titles — wrap fully, never ellipsize */
+.uber-feed-row-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+  word-break: break-word;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.uber-feed-row-subtitle {
+  font-size: 12px;
+  color: var(--uber-text-muted, #767676);
+  word-break: break-word;
+  line-height: 1.35;
+  margin: 0;
+}
+
+html.theme-dark .uber-feed-row-title { color: #fff; }
 
 .app-flow-surface {
   background: var(--uber-bg, #fff);

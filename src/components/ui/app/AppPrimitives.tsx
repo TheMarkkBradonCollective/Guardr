@@ -108,11 +108,12 @@ export function AppSubScreenHeader({
   title,
   onBack,
   backLabel = 'Back',
-  wrapTitle = false,
+  wrapTitle = true,
 }: {
   title: string;
   onBack: () => void;
   backLabel?: string;
+  /** When true (default), title wraps to full width — never ellipsizes with "...". */
   wrapTitle?: boolean;
 }) {
   return (
@@ -121,7 +122,7 @@ export function AppSubScreenHeader({
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </button>
-      <h1 className={`app-subscreen-title flex-1 min-w-0${wrapTitle ? '' : ' truncate'}`}>{title}</h1>
+      <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1>
     </div>
   );
 }
