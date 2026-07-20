@@ -209,7 +209,7 @@ interface GuardDashboardProps {
   onAckBriefing?: (requestId: string) => void | Promise<void>;
   onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
   onCompleteJobTypeOnboarding?: (jobType: import('../types').JobType) => void | Promise<void>;
-  onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
+  onUpdateJobAudit: (requestId: string, auditPayload: any) => void | Promise<boolean | void>;
   onStartEnRoute?: (requestId: string) => void | Promise<void>;
   onUpdateGuardLiveLocation?: (
     requestId: string,
@@ -524,8 +524,14 @@ export function GuardDashboard({
   const activePhase: ShiftPhase | null = useMemo(() => {
     if (!activeShiftJob) return null;
     if (activeShiftJob.status === 'in-progress') return 'on-duty';
+    // Prefer persisted server milestones so refresh/device switch keeps phase.
+    if (activeShiftJob.arrivedAt && !activeShiftJob.checkInAudit?.checkedAt) return 'arrived';
+    if (activeShiftJob.enRouteAt && !activeShiftJob.checkInAudit?.checkedAt) {
+      const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
+      if (stored === 'arrived') return 'arrived';
+      return 'en-route';
+    }
     const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
-    if (activeShiftJob.enRouteAt && (stored === 'upcoming' || stored === 'en-route')) return 'en-route';
     return stored;
   }, [activeShiftJob, shiftPhases, guard.id]);
 
@@ -564,13 +570,20 @@ export function GuardDashboard({
   );
 
   const mapJobs = useMemo(() => {
+    const briefingOpen =
+      !!activeShiftJob && isPreShiftBriefingWindowOpen(activeShiftJob);
+    const lateClockInPath =
+      !!activeShiftJob &&
+      activeShiftJob.status === 'accepted' &&
+      activePhase === 'upcoming' &&
+      (canGuardClockIn(activeShiftJob) || !briefingOpen);
     const onDutyOverlay =
       activeTab === 'map' &&
       activeShiftJob &&
       (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
       activePhase &&
       activePhase !== 'complete' &&
-      (activePhase !== 'upcoming' || isPreShiftBriefingWindowOpen(activeShiftJob));
+      (activePhase !== 'upcoming' || briefingOpen || lateClockInPath);
     if (onDutyOverlay) {
       return requests.filter(
         (j) =>
@@ -808,21 +821,23 @@ export function GuardDashboard({
       showAppToast(workBlocked, { tone: 'error' });
       return;
     }
-    const blocked = guardClockInBlockedMessage(activeShiftJob);
-    if (blocked) {
-      showAppToast(blocked, { tone: 'error' });
-      return;
-    }
-    const proximity = await verifyOnSiteForJob(activeShiftJob);
-    if (!proximity.onSite) {
-      showAppToast('Not on site yet', {
+    try {
+      const proximity = await verifyOnSiteForJob(activeShiftJob);
+      if (!proximity.onSite) {
+        showAppToast('Not on site yet', {
+          tone: 'error',
+          body: formatSiteProximityHint(proximity.distanceMeters),
+        });
+        return;
+      }
+      updatePhase(activeShiftJob.id, 'arrived');
+      onGuardArrived?.(activeShiftJob.id);
+    } catch (err) {
+      showAppToast('Location required', {
         tone: 'error',
-        body: formatSiteProximityHint(proximity.distanceMeters),
+        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
       });
-      return;
     }
-    updatePhase(activeShiftJob.id, 'arrived');
-    onGuardArrived?.(activeShiftJob.id);
   };
 
   const handleStartEnRoute = (jobId?: string) => {
@@ -886,28 +901,36 @@ export function GuardDashboard({
       showAppToast(blocked, { tone: 'error' });
       return;
     }
-    const proximity = await verifyOnSiteForJob(activeShiftJob);
-    if (!proximity.onSite) {
-      showAppToast('Must be on site to clock in', {
+    try {
+      const proximity = await verifyOnSiteForJob(activeShiftJob);
+      if (!proximity.onSite) {
+        showAppToast('Must be on site to clock in', {
+          tone: 'error',
+          body: formatSiteProximityHint(proximity.distanceMeters),
+        });
+        return;
+      }
+      setShowSelfAudit(true);
+    } catch (err) {
+      showAppToast('Location required', {
         tone: 'error',
-        body: formatSiteProximityHint(proximity.distanceMeters),
+        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
       });
-      return;
     }
-    setShowSelfAudit(true);
   };
 
-  const finalizeClockIn = (
+  const finalizeClockIn = async (
     checkInAudit: NonNullable<SecurityRequest['checkInAudit']>,
     skipViolations: import('../types').ShiftAuditViolation[]
   ) => {
     if (!activeShiftJob) return;
     const mergedViolations = mergeShiftAuditViolations(activeShiftJob.shiftAuditViolations, skipViolations);
-    onUpdateJobAudit(activeShiftJob.id, {
+    const ok = await onUpdateJobAudit(activeShiftJob.id, {
       status: 'in-progress',
       checkInAudit,
       shiftAuditViolations: mergedViolations,
     });
+    if (ok === false) return;
     updatePhase(activeShiftJob.id, 'on-duty');
     setShowSelfAudit(false);
     setShowBriefingGate(false);
@@ -927,14 +950,14 @@ export function GuardDashboard({
       setShowBriefingGate(true);
       return;
     }
-    finalizeClockIn(checkInAudit, skipViolations);
+    void finalizeClockIn(checkInAudit, skipViolations);
   };
 
   const handleBriefingGateAck = async () => {
     if (!activeShiftJob || !onAckBriefing) return;
     await onAckBriefing(activeShiftJob.id);
     if (pendingCheckInAudit) {
-      finalizeClockIn(pendingCheckInAudit, pendingStartViolations);
+      await finalizeClockIn(pendingCheckInAudit, pendingStartViolations);
     }
   };
 
@@ -1004,6 +1027,22 @@ export function GuardDashboard({
       return;
     }
     void (async () => {
+      try {
+        const proximity = await verifyOnSiteForJob(activeShiftJob);
+        if (!proximity.onSite) {
+          showAppToast('Must be on site to clock in', {
+            tone: 'error',
+            body: formatSiteProximityHint(proximity.distanceMeters),
+          });
+          return;
+        }
+      } catch (err) {
+        showAppToast('Location required', {
+          tone: 'error',
+          body: err instanceof Error ? err.message : 'Enable GPS and try again.',
+        });
+        return;
+      }
       if (!(await showAppConfirm({
         title: 'Skip start package?',
         message:
@@ -1264,14 +1303,20 @@ export function GuardDashboard({
     activePhase === 'upcoming' &&
     isPreShiftBriefingWindowOpen(activeShiftJob);
 
+  const showLateClockInPath =
+    !!activeShiftJob &&
+    activeShiftJob.status === 'accepted' &&
+    activePhase === 'upcoming' &&
+    (canGuardClockIn(activeShiftJob) || !isPreShiftBriefingWindowOpen(activeShiftJob));
+
   const showShiftOverlay =
     activeTab === 'map' &&
     !!activeShiftJob &&
     (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
     activePhase &&
     activePhase !== 'complete' &&
-    activePhase !== 'upcoming' &&
-    !showBriefingOverlay;
+    !showBriefingOverlay &&
+    (activePhase !== 'upcoming' || showLateClockInPath);
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const showVehicleTab = guardVehicleTabVisible(guard);

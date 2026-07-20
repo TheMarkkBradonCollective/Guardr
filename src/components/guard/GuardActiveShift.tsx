@@ -286,15 +286,14 @@ export function GuardActiveShift({
               />
             ) : (
               <SlideToConfirm
-                label={gpsRequired ? 'Must be on site to clock in' : 'Slide to arrive on site'}
+                label={gpsRequired ? 'Must be on site to arrive' : 'Slide to arrive on site'}
                 confirmedLabel="Arrived"
                 onConfirm={onArrived}
-                disabled={!clockInOpen || notOnSiteBlocked}
+                disabled={notOnSiteBlocked}
                 disabledHint={
                   notOnSiteBlocked
-                    ? 'GPS requires you to be within 150m of the site pin to clock in.'
-                    : clockInMsg ??
-                      `Move within range of the site pin. Clock-in opens at ${clockInOpensLabel}.`
+                    ? 'GPS requires you to be within 150m of the site pin.'
+                    : 'Move within range of the site pin.'
                 }
               />
             )}
@@ -305,8 +304,10 @@ export function GuardActiveShift({
                 $style={{ textAlign: 'center', color: notOnSiteBlocked ? theme.colors.warning : undefined }}
               >
                 {notOnSiteBlocked
-                  ? 'GPS location required — move to the job site to enable clock-in.'
-                  : 'The Arrived step glows when you are within range of the site.'}
+                  ? 'GPS location required — move to the job site to enable arrival.'
+                  : clockInOpen
+                    ? 'The Arrived step glows when you are within range of the site.'
+                    : `Arrive on site when ready. Clock-in opens at ${clockInOpensLabel}.`}
               </ParagraphXSmall>
             )}
           </Block>
@@ -328,7 +329,7 @@ export function GuardActiveShift({
             <AppButton
               variant="outline"
               onClick={onSkipAudit}
-              disabled={!clockInOpen}
+              disabled={!clockInOpen || !onSite}
               fullWidth
             >
               Skip self audit · clock in

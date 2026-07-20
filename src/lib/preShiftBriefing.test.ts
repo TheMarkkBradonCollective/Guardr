@@ -65,6 +65,24 @@ test('evaluatePreShiftBriefingReminder skips after en route', () => {
   assert.equal(evaluatePreShiftBriefingReminder(req, start.getTime() - 30 * 60 * 1000), null);
 });
 
+test('evaluatePreShiftBriefingReminder skips after arrived', () => {
+  const start = new Date('2026-07-16T20:00:00.000Z');
+  const req = {
+    ...job(start.toISOString()),
+    arrivedAt: new Date().toISOString(),
+  };
+  assert.equal(evaluatePreShiftBriefingReminder(req, start.getTime() - 30 * 60 * 1000), null);
+});
+
+test('canGuardStartEnRoute blocks after arrived', () => {
+  const start = new Date('2026-07-16T20:00:00.000Z');
+  const req = {
+    ...job(start.toISOString()),
+    arrivedAt: new Date().toISOString(),
+  };
+  assert.equal(canGuardStartEnRoute(req, start.getTime() - 15 * 60 * 1000), false);
+});
+
 test('msUntilEnRouteUnlock counts down to one hour before start', () => {
   const start = new Date('2026-07-16T20:00:00.000Z');
   const now = start.getTime() - 90 * 60 * 1000;

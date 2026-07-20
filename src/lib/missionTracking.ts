@@ -47,8 +47,9 @@ const STEP_ORDER: MissionTimelineStep[] = [
 ];
 
 export function inferMissionPhase(req: SecurityRequest): ClientShiftPhase {
-  if (req.enRouteAt && req.status === 'accepted' && !req.checkInAudit?.checkedAt) {
-    return 'en-route';
+  if (req.status === 'accepted' && !req.checkInAudit?.checkedAt) {
+    if (req.arrivedAt) return 'on-site';
+    if (req.enRouteAt) return 'en-route';
   }
   return inferClientShiftPhase(req);
 }
@@ -71,7 +72,7 @@ export function buildMissionTimeline(
   const timestamps: Partial<Record<MissionTimelineStep, string | undefined>> = {
     assigned: req.assignedGuardId ? req.startDate : undefined,
     'en-route': req.enRouteAt,
-    arrived: req.checkInAudit?.checkedAt,
+    arrived: req.arrivedAt,
     'on-duty': req.checkInAudit?.checkedAt,
     incident: incidentReport?.submittedAt,
     emergency: hasEmergency ? incidentReport?.submittedAt : undefined,

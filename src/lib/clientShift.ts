@@ -49,11 +49,8 @@ export function inferClientShiftPhase(req: SecurityRequest): ClientShiftPhase {
   if (req.status === 'completed' || req.status === 'closed') return 'complete';
   if (req.status === 'in-progress') return 'on-duty';
   if (req.status === 'accepted') {
-    if (req.checkInAudit?.checkedAt) return 'on-site';
+    if (req.arrivedAt) return 'on-site';
     if (req.enRouteAt) return 'en-route';
-    const startMs = new Date(req.startDate).getTime();
-    const now = Date.now();
-    if (startMs - now <= 60 * 60 * 1000) return 'en-route';
     return 'scheduled';
   }
   return 'scheduled';
