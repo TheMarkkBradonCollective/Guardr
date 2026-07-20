@@ -5,6 +5,7 @@ import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
 import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../../lib/staffNavAccess';
 import type { LegalPageId } from '../../../lib/legalContent';
+import type { ThemeMode } from '../../../lib/platform/theme';
 import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
@@ -29,6 +30,8 @@ interface DesktopStaffAdminShellProps {
   showCities: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
+  themeMode?: ThemeMode;
+  onChangeTheme?: (mode: ThemeMode) => void;
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
@@ -66,6 +69,8 @@ export function DesktopStaffAdminShell({
   showCities,
   onOpenLegal,
   hideHeader = false,
+  themeMode,
+  onChangeTheme,
   accountNotifications,
   headerExtension,
   headerOverride,
@@ -135,6 +140,8 @@ export function DesktopStaffAdminShell({
       onOpenSettings={() => onNavigate('preferences')}
       onSignOut={onSignOut}
       active={activeSection === 'profile' || activeSection === 'preferences'}
+      themeMode={themeMode}
+      onChangeTheme={onChangeTheme}
       triggerVariant="uber-direct"
       {...accountNotifications}
     />

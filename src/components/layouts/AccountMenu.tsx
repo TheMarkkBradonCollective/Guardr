@@ -2,7 +2,9 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
 import type { UserNotification } from '../../types';
+import type { ThemeMode } from '../../lib/platform/theme';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
 import {
   NotificationInboxSection,
@@ -37,6 +39,8 @@ export interface AccountMenuProps {
   notifications?: UserNotification[];
   onNotificationClick?: (notification: UserNotification) => void | Promise<void>;
   onMarkAllNotificationsRead?: () => void | Promise<void>;
+  themeMode?: ThemeMode;
+  onChangeTheme?: (mode: ThemeMode) => void;
   /** Uber Direct desktop — black circle avatar only, no chevron. */
   triggerVariant?: 'default' | 'uber-direct';
 }
@@ -55,6 +59,8 @@ export function AccountMenu({
   notifications,
   onNotificationClick,
   onMarkAllNotificationsRead,
+  themeMode,
+  onChangeTheme,
   triggerVariant = 'default',
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
@@ -219,6 +225,18 @@ export function AccountMenu({
               ))}
             </div>
           )}
+
+          {themeMode && onChangeTheme ? (
+            <div className="px-3 py-3 border-b border-brand-border space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Appearance</p>
+              <ThemeToggle
+                value={themeMode}
+                onChange={onChangeTheme}
+                size="sm"
+                className="w-full justify-center"
+              />
+            </div>
+          ) : null}
 
           <div className="p-2">
             <button

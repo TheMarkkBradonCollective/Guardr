@@ -19,7 +19,6 @@ interface StaffDesktopShellProps {
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
-  /** Passed through for API parity with StaffOpsLayout; theme switching lives in settings. */
   isDbConnected: boolean;
   navItems: StaffNavItem[];
   screenTitle: string;
@@ -41,6 +40,8 @@ export function StaffDesktopShell({
   currentUser,
   activeSection,
   onNavigate,
+  themeMode,
+  onChangeTheme,
   onSignOut,
   isDbConnected,
   navItems,
@@ -65,6 +66,8 @@ export function StaffDesktopShell({
     onOpenSettings: () => onNavigate('preferences'),
     onSignOut,
     active: activeSection === 'profile' || activeSection === 'preferences',
+    themeMode,
+    onChangeTheme,
   };
 
   const brandingTrailing = isDbConnected ? (

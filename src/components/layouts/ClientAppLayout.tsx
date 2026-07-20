@@ -6,6 +6,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import type { AccountMenuNotificationProps } from './AccountMenu';
+import type { ThemeMode } from '../../lib/platform/theme';
 import { UberDirectContextSelect } from '../baseui/layout/UberDirectContextSelect';
 import {
   MessagesSquare,
@@ -44,6 +45,8 @@ interface ClientAppLayoutProps {
   messagesChrome?: MessagesChrome;
   invoicesBadge?: number;
   accountNotifications?: AccountMenuNotificationProps;
+  themeMode?: ThemeMode;
+  onChangeTheme?: (mode: ThemeMode) => void;
 }
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -111,6 +114,8 @@ export function ClientAppLayout({
   headerRight,
   messagesChrome = EMPTY_MESSAGES_CHROME,
   accountNotifications,
+  themeMode,
+  onChangeTheme,
 }: ClientAppLayoutProps) {
   const screenTitle =
     activeView === 'home'
@@ -234,6 +239,8 @@ export function ClientAppLayout({
         ],
         footer: undefined,
         ...accountNotifications,
+        themeMode,
+        onChangeTheme,
       }}
       navItems={navItems}
       messagesNavItems={messagesNavItems}

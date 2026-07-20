@@ -12458,6 +12458,8 @@ export default function App() {
                 onOpenSettings={() => undefined}
                 onSignOut={handleSignOut}
                 hideProfile
+                themeMode={themeMode}
+                onChangeTheme={changeThemeMode}
                 {...accountNotificationMenuProps}
               />
             ) : undefined
@@ -12603,6 +12605,8 @@ export default function App() {
               onOpenSettings={() => setGuardTab('settings')}
               onSignOut={handleSignOut}
               hideProfile
+              themeMode={themeMode}
+              onChangeTheme={changeThemeMode}
               {...accountNotificationMenuProps}
             />
           </header>
@@ -12632,6 +12636,8 @@ export default function App() {
                 onOpenSettings={() => setGuardTab('settings')}
                 onSignOut={handleSignOut}
                 hideProfile
+                themeMode={themeMode}
+                onChangeTheme={changeThemeMode}
                 {...accountNotificationMenuProps}
               />
             </header>
@@ -12884,6 +12890,8 @@ export default function App() {
             onOpenSettings={() => handleClientNavigate('settings')}
             onSignOut={handleSignOut}
             active={false}
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
             {...accountNotificationMenuProps}
           />
         </div>
@@ -12908,6 +12916,8 @@ export default function App() {
           hideHeader={clientHideHeader}
           accountNotifications={accountNotificationMenuProps}
           messagesChrome={clientMessagesChrome}
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -12918,8 +12928,6 @@ export default function App() {
           ) : clientView === 'settings' ? (
             <UserSettingsScreen
               currentUser={currentUser}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
               isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
             />
@@ -13201,6 +13209,8 @@ export default function App() {
           onOpenSettings={() => undefined}
           onSignOut={handleSignOut}
           hideProfile
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
           {...accountNotificationMenuProps}
         />
       </header>
