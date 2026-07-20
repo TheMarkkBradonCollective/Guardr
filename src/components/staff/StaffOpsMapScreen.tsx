@@ -122,7 +122,7 @@ export function StaffOpsMapScreen({
             items={browseItems}
             selectedId={selectedJobId}
             onSelect={setSelectedJobId}
-            emptyMessage="No jobs match this filter. Try another status or zoom the map."
+            emptyMessage="No jobs matching your preferences and availability."
             bottomOffsetClass="map-browse-offset"
           />
         ) : null}
