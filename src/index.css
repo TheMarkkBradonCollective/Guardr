@@ -4673,18 +4673,17 @@ html.theme-light .staff-ops-btn-primary:hover {
 }
 
 .uber-side-nav-item {
-  position: relative;
-  border-radius: 0 !important;
+  border-radius: 8px !important;
 }
 
 .uber-side-nav-item-active {
-  box-shadow: inset 3px 0 0 var(--brand-primary);
+  box-shadow: none;
 }
 
 .staff-sidebar-brand .uber-side-nav-item-active {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: #000000 !important;
   color: #ffffff !important;
-  box-shadow: inset 3px 0 0 var(--brand-primary);
+  box-shadow: none !important;
 }
 
 .guardr-bottom-sheet-uber,
@@ -7601,12 +7600,12 @@ html.theme-dark .staff-sidebar.staff-sidebar-light .staff-sidebar-footer {
 
 .staff-sidebar.staff-sidebar-light .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
   color: var(--brand-text) !important;
-  background: var(--brand-bg-sec) !important;
+  background: #eeeeee !important;
 }
 
 .staff-sidebar.staff-sidebar-light .uber-side-nav-item.uber-side-nav-item-active {
-  color: var(--brand-accent-text) !important;
-  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  background: #000000 !important;
   box-shadow: none !important;
 }
 
@@ -7643,13 +7642,13 @@ html.theme-dark .staff-sidebar.staff-sidebar-light .staff-sidebar-footer {
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
   color: rgba(255, 255, 255, 0.88) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: #2b2b2b !important;
 }
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item.uber-side-nav-item-active {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.09) !important;
-  box-shadow: inset 3px 0 0 var(--brand-primary) !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
 }
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item svg {
@@ -7657,7 +7656,7 @@ html.theme-dark .staff-sidebar.staff-sidebar-light .staff-sidebar-footer {
 }
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item.uber-side-nav-item-active svg {
-  color: var(--brand-primary) !important;
+  color: #000000 !important;
   opacity: 1;
 }
 
@@ -13522,19 +13521,19 @@ html.theme-dark .modal-panel {
 }
 
 .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec)) !important;
+  background: #eeeeee !important;
   color: var(--brand-text) !important;
 }
 
 .uber-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 14%, transparent) !important;
-  color: var(--brand-primary) !important;
+  background: #000000 !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
   box-shadow: none !important;
 }
 
 .uber-side-nav-item-active svg {
-  color: var(--brand-primary) !important;
+  color: #ffffff !important;
 }
 
 .map-offer-card {
@@ -17928,18 +17927,24 @@ html.theme-dark .role-side-nav-brand {
 }
 
 .role-side-nav-item:hover:not(.role-side-nav-item-active) {
-  background: color-mix(in srgb, var(--uber-accent, #4A6B4E) 8%, transparent);
+  background: #eeeeee;
   color: var(--uber-text, var(--brand-text));
 }
 
 .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--uber-accent, #4A6B4E) 14%, transparent);
-  color: var(--uber-accent, var(--brand-primary));
+  background: #000000;
+  color: #ffffff;
   font-weight: 700;
 }
 
+html.theme-dark .role-side-nav-item:hover:not(.role-side-nav-item-active) {
+  background: #2b2b2b;
+  color: #ffffff;
+}
+
 html.theme-dark .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--uber-accent, #4A6B4E) 18%, transparent);
+  background: #ffffff;
+  color: #000000;
 }
 
 .role-side-nav-item-icon {
@@ -18247,16 +18252,10 @@ body[data-form-factor="desktop"] .app-screen-header-title {
   letter-spacing: 0.01em;
 }
 
+/* Removed vertical line indicator — active nav uses solid pill background */
 .role-side-nav-item-active::before {
-  content: "";
-  position: absolute;
-  left: -0.625rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 1.25rem;
-  border-radius: 0 2px 2px 0;
-  background: var(--brand-primary);
+  display: none;
+  content: none;
 }
 
 body[data-form-factor="tablet"] .client-home-stat-pill,
@@ -18809,13 +18808,14 @@ html.theme-light .uber-select {
 }
 
 .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 14%, transparent) !important;
-  color: var(--brand-primary) !important;
+  background: #000000 !important;
+  color: #ffffff !important;
   font-weight: 700;
 }
 
 html.theme-dark .role-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 18%, #1a1a1a) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
 .modal-overlay {
@@ -19173,9 +19173,9 @@ textarea:focus-visible {
 }
 
 .staff-sidebar.staff-sidebar-light .uber-side-nav-item-active {
-  background: var(--brand-primary) !important;
-  color: var(--brand-accent-text) !important;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent) !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 .staff-sidebar.staff-sidebar-light .uber-side-nav-item-active svg {
@@ -19184,13 +19184,13 @@ textarea:focus-visible {
 }
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item-active {
-  background: color-mix(in srgb, var(--brand-primary) 16%, rgba(255, 255, 255, 0.06)) !important;
-  color: #ffffff !important;
-  box-shadow: inset 3px 0 0 var(--brand-primary) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: none !important;
 }
 
 .staff-sidebar.staff-sidebar-dark .uber-side-nav-item-active svg {
-  color: var(--brand-primary) !important;
+  color: #000000 !important;
   opacity: 1 !important;
 }
 

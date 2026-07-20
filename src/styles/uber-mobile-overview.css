@@ -506,24 +506,115 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility
   padding-bottom: 8px;
 }
 
-body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"],
-body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"],
-body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow [data-baseweb="side-nav"] {
-  padding-top: 4px;
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"],
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"],
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"],
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] {
+  padding: 4px 8px 0;
 }
 
-body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"],
-body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"],
-body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] {
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] li {
+  background: transparent !important;
+  list-style: none;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a {
+  border-radius: 8px !important;
+  margin: 1px 0 !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  min-height: 44px !important;
+  border: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--uber-text, #000000) !important;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a::before {
+  display: none !important;
+  content: none !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+  background: #eeeeee !important;
+  color: var(--uber-text, #000000) !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] {
   background: #000000 !important;
   color: #ffffff !important;
   border-radius: 8px;
+  border: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
 }
 
-body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg,
-body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg,
-body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer--overflow a[aria-current="page"] svg {
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg {
   color: #ffffff !important;
+}
+
+html.theme-dark body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+html.theme-dark body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+html.theme-dark body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+html.theme-dark body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+html.theme-dark body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]),
+html.theme-dark body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+  background: #2b2b2b !important;
+  color: #ffffff !important;
+}
+
+html.theme-dark body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+html.theme-dark body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+html.theme-dark body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+html.theme-dark body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+html.theme-dark body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"],
+html.theme-dark body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.theme-dark body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+html.theme-dark body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+html.theme-dark body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+html.theme-dark body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+html.theme-dark body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg,
+html.theme-dark body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer a[aria-current="page"] svg {
+  color: #000000 !important;
 }
 
 /* ─── Portable overview (mobile + tablet) ─────────────────────────────── */
