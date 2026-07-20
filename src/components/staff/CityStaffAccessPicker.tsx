@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import type { PlatformRole, SecurityGuard } from '../../types';
 import { ROLE_LABELS, canModerateStaffMember, staffRoleToPlatformRole } from '../../lib/permissions';
-import { formatCityLabel, normalizeManagedCities } from '../../lib/platformCities';
+import { formatCityLabel } from '../../lib/californiaCities';
+import { normalizeManagedCities } from '../../lib/platformCities';
 import type { PlatformCity } from '../../lib/platformCities';
 import { WfSearchBar } from '../ui/wireframe';
 
