@@ -53,18 +53,20 @@ body.shell-native .app-welcome-signin-btn:active {
   transform: scale(0.98);
 }
 
-body[data-shell="native"] .tablet-admin-rail,
-body.shell-native .tablet-admin-rail {
+body[data-shell="native"] .uber-app-shell.mobility-shell aside,
+body.shell-native .uber-app-shell.mobility-shell aside {
   padding-left: max(0px, var(--gr-safe-area-left, env(safe-area-inset-left, 0px)));
 }
 
-body[data-shell="native"] .tablet-admin-main,
-body.shell-native .tablet-admin-main {
+body[data-shell="native"] .uber-app-shell.mobility-shell .mobility-content,
+body.shell-native .uber-app-shell.mobility-shell .mobility-content {
   padding-right: max(0px, var(--gr-safe-area-right, env(safe-area-inset-right, 0px)));
 }
 
-body[data-shell="native"] .tablet-admin-rail-item:active,
-body.shell-native .tablet-admin-rail-item:active {
+body[data-shell="native"] .mobility-nav-item:active,
+body.shell-native .mobility-nav-item:active,
+body[data-shell="native"] .mobility-icon-btn:active,
+body.shell-native .mobility-icon-btn:active {
   transform: scale(0.94);
   background: color-mix(in srgb, var(--uber-accent, #000000) 22%, transparent);
 }

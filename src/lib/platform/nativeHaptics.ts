@@ -23,7 +23,8 @@ function activeTier(override?: ExperienceTier): ExperienceTier {
 
 /**
  * Fire a short haptic pulse when the experience allows it (Premium APK).
- * Uses Vibration API when available — Capacitor Haptics plugin optional later.
+ * Uses the Vibration API on Capacitor WebView. A dedicated `@capacitor/haptics`
+ * plugin can replace this later for richer patterns — not required for Premium gating.
  */
 export async function triggerHaptic(
   kind: HapticKind = 'light',

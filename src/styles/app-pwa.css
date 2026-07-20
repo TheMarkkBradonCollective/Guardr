@@ -53,8 +53,8 @@ body.shell-pwa .role-app-shell--compact {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-body[data-shell="pwa"] .tablet-admin-rail,
-body.shell-pwa .tablet-admin-rail {
+body[data-shell="pwa"] .uber-app-shell.mobility-shell aside,
+body.shell-pwa .uber-app-shell.mobility-shell aside {
   backdrop-filter: blur(10px);
   background: color-mix(in srgb, var(--uber-bg, var(--brand-surface)) 92%, transparent);
 }

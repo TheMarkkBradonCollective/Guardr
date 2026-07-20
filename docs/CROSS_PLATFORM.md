@@ -10,9 +10,9 @@ This document maps the product cross-platform plan to the current codebase and b
 |-------|------------------------|-------|
 | Web app | React + Vite + Tailwind | Responsive SPA; equivalent role to Next.js for this product (no SSR required yet) |
 | PWA | `public/manifest.json`, `public/sw.js`, `InstallPrompt` | Installable on iOS, Android, Chromebook |
-| Native apps | `capacitor.config.ts` (scaffold) | Add Capacitor deps when ready for store submission |
+| Native apps | Capacitor 7 (`capacitor.config.ts`, `android/`) | Android APK via `npm run android:apk`; iOS pending Apple Developer account |
 | Backend | Supabase PostgreSQL | Shared across all surfaces |
-| Offline field mode | `src/lib/platform/offlineQueue.ts` | IndexedDB queue; sync layer TBD |
+| Offline field mode | `src/lib/platform/offlineQueue.ts` | IndexedDB queue; flush on `online` (Background Sync API not used) |
 
 A future migration to **Next.js** is optional if you need SSR, API routes, or edge rendering. The current Vite stack already satisfies steps 1–4 of the rollout plan.
 
@@ -30,7 +30,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 | Device | Primary users | UI behavior |
 |--------|---------------|-------------|
 | Phone | Guards, clients | Single column, bottom nav (`BottomNavBar` + `MoreMenuSheet`), big actions |
-| Tablet | Staff, guards, clients | **Merge shell** — icon rail + command bar + touch content (`TabletAdminShell`) |
+| Tablet | Staff, guards, clients | **Merge shell** — persistent sidebar (~220px) + command bar + touch content (`GuardrDrawerShell` / `resolveMobilityChrome`) |
 | Desktop / Chromebook | Staff, clients, admin | Full dashboards, analytics, financial controls (`DesktopAdminShell`) |
 | PWA standalone | All | No browser chrome; safe-area padding; `app-pwa.css` styling |
 | Native APK | All | Capacitor shell; native safe areas; `app-native.css` styling |
@@ -49,7 +49,7 @@ shellKind (browser | pwa | native)  ×  formFactor (mobile | tablet | desktop)  
 | Surface | Example |
 |---------|---------|
 | `browser-desktop` | Advanced marketing + admin workspace |
-| `browser-tablet` | Landing merge + `TabletAdminShell` |
+| `browser-tablet` | Landing merge + persistent tablet sidebar (`GuardrDrawerShell`) |
 | `browser-mobile` | Simple mobile website |
 | `pwa-mobile` / `pwa-tablet` | Installed PWA welcome + app chrome |
 | `native-mobile` / `native-tablet` | APK welcome + native touch/safe-area |
@@ -59,8 +59,8 @@ Central files:
 ```
 src/lib/platform/shellKind.ts       — browser | pwa | native
 src/lib/platform/viewSurface.ts     — combined surface resolver
-src/components/layouts/tablet/      — TabletAdminShell, TabletStaffAdminShell
-src/styles/tablet-app.css           — tablet merge styles
+src/components/layouts/tablet/      — deprecated aliases → GuardrDrawerShell / DesktopStaffAdminShell
+src/styles/tablet-app.css           — tablet merge styles (split panels, welcome, touch)
 src/styles/app-pwa.css              — PWA overrides
 src/styles/app-native.css           — APK overrides
 .cursor/commands/fixit.md           — slash command for UI/UX surface work
@@ -103,8 +103,8 @@ src/styles/platform-optimizations.css — per-surface + per-tier CSS
 | `browser-desktop` | `DesktopLandingPage` | Base Web split editorial + preview |
 | `browser-tablet` | `TabletLandingPage` | Touch-first 2-column landing (not scaled desktop) |
 | `browser-mobile` | `MobileLandingPage` | Thumb-first landing + fixed CTA bar |
-| `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Glass dock, “Installed” badge, Uber accent hero copy |
-| `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet) | Solid dock, safe-area padding, native press feedback |
+| `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Glass dock, “Installed” badge, Uber accent hero copy |
+| `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Solid dock, safe-area padding, native press feedback |
 
 Central files:
 
@@ -256,15 +256,15 @@ src/lib/platform/
   offlineQueue.ts     — IndexedDB offline queue
   DeviceProvider.tsx  — React context + body data attributes
 src/components/layouts/tablet/
-  TabletAdminShell.tsx
-  TabletStaffAdminShell.tsx
+  TabletAdminShell.tsx          — deprecated alias → GuardrDrawerShell
+  TabletStaffAdminShell.tsx     — deprecated alias → DesktopStaffAdminShell
 src/styles/
-  tablet-app.css              — tablet merge shell
+  tablet-app.css              — tablet merge shell (split panels, welcome, touch)
   app-pwa.css                 — PWA standalone overrides
   app-native.css              — APK native overrides
   platform-optimizations.css  — per-surface + per-tier CSS
-capacitor.config.ts   — native wrapper config (when Capacitor added)
-public/manifest.json  — PWA manifest
+capacitor.config.ts   — Capacitor 7 native wrapper
+public/manifest.json  — PWA manifest (icons + install screenshots)
 public/sw.js          — service worker shell cache
 ```
 
@@ -276,9 +276,14 @@ public/sw.js          — service worker shell cache
 - [x] Offline connectivity banner (`OfflineBanner`, `useOnlineStatus`)
 - [ ] Conflict resolution for offline sync
 - [x] PNG icon set (192, 512) for store requirements
-- [ ] Tablet split panels for staff live jobs (staff-ops branch)
+- [x] Tablet staff/guard/client merge shell via `GuardrDrawerShell` (persistent sidebar; bottom nav mobile-only)
+- [x] Staff jobs / messages / roster list-detail split on tablet (`ListDetailLayout`)
 - [x] Add Capacitor FCM push notification plugin (native APK; Web/PWA still uses Web Push)
-- [ ] Generate manifest screenshots for install UX
+- [x] Generate manifest screenshots for install UX
 - [x] Mobile bottom navigation (`BottomNavBar` + `MoreMenuSheet` in `RoleAppShell`, `StaffOpsLayout`)
 - [x] PWA install registration on standalone startup (`registerPwaInstall` in `main.tsx`)
+- [x] PWA/APK sheet auth over `AppHomeScreen`
 - [ ] E2E test PWA install on iOS Safari + Android Chrome
+- [ ] Background Sync API (optional; online-event flush already works)
+- [ ] Capacitor Haptics plugin (Premium APK currently uses Vibration API)
+- [ ] Biometrics / Play Store release signing when store-ready

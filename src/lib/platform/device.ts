@@ -29,6 +29,11 @@ export function resolveFormFactor(width = getViewportWidth()): FormFactor {
   return 'desktop';
 }
 
+/** Tablet + desktop — denser content, split panels, persistent sidebar. */
+export function isWideFormFactor(formFactor: FormFactor): boolean {
+  return formFactor === 'tablet' || formFactor === 'desktop';
+}
+
 export function isStandaloneDisplay(): boolean {
   if (typeof window === 'undefined') return false;
   return (
