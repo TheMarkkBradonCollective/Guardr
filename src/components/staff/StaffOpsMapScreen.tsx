@@ -7,6 +7,7 @@ import { MapPinFilterStepper } from '../map/MapPinFilterStepper';
 import { MapBrowseDock } from '../map/MapBrowseDock';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { staffMapBrowseItems } from '../../lib/mapBrowseItems';
+import { STAFF_MAP_BROWSE_EMPTY_MESSAGE } from '../../lib/mapEmptyMessages';
 import {
   STAFF_MAP_STATUS_FILTERS,
   staffJobMatchesMapStatusFilter,
@@ -122,7 +123,7 @@ export function StaffOpsMapScreen({
             items={browseItems}
             selectedId={selectedJobId}
             onSelect={setSelectedJobId}
-            emptyMessage="No jobs matching your preferences and availability."
+            emptyMessage={STAFF_MAP_BROWSE_EMPTY_MESSAGE}
             bottomOffsetClass="map-browse-offset"
           />
         ) : null}
