@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    GUARDR × UBER DESIGN TOKENS — real Uber app visual language
    Black primary · white surfaces · gray inputs · no colored accent
-   Matches the actual Uber mobile UI kit (screenshots reference)
+   Light/dark contract: monochrome UI inverts (#000 ↔ #FFF) via these tokens.
+   Components should use var(--uber-*) / var(--brand-*) — not per-theme hex.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root,
@@ -114,7 +115,7 @@ html.theme-dark {
   --brand-primary-hover:  var(--uber-accent-hover);
   --brand-bg:             var(--uber-bg);
   --brand-bg-sec:         var(--uber-surface);
-  --brand-surface:        var(--uber-surface);
+  --brand-surface:        var(--uber-bg);
   --brand-elevated:       var(--uber-elevated);
   --brand-border:         var(--uber-border);
   --brand-text:           var(--uber-text);
