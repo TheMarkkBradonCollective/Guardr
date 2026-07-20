@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SessionUser } from '../../types';
+import { PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import {
+  canAssignStaffCityAccess,
   canManageCityMarkets,
   canRecommendCityMarket,
   canViewCityMarkets,
@@ -18,6 +19,7 @@ import {
   type CityMarketStatus,
   type CityWaitlistAudience,
   type PlatformCity,
+  staffCanManageCity,
 } from '../../lib/platformCities';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
@@ -28,13 +30,14 @@ import {
 } from '../baseui/layout/WorkbenchLayout';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { CityStaffAccessPicker } from './CityStaffAccessPicker';
 import { MapPin } from 'lucide-react';
 
 interface StaffCitiesPanelProps {
   currentUser: SessionUser;
   cities: PlatformCity[];
   actorManagedCities?: string[];
-  staffRoster?: Array<{ id: string; name: string; staffRole?: string }>;
+  staffRoster?: SecurityGuard[];
   onUpdateCity: (
     cityId: string,
     patch: {
@@ -42,6 +45,10 @@ interface StaffCitiesPanelProps {
       waitlistAudience?: CityWaitlistAudience;
       recommendOpen?: boolean;
     }
+  ) => Promise<void>;
+  onUpdateStaffCityAccess?: (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
 }
 
@@ -102,17 +109,30 @@ function CityDetailPanel({
   busy,
   canManageStatus,
   canRecommend,
+  canEditStaffAccess,
+  staffRoster,
+  platformCities,
+  currentUser,
   onUpdate,
+  onUpdateStaffCityAccess,
 }: {
   city: PlatformCity;
   busy: boolean;
   canManageStatus: boolean;
   canRecommend: boolean;
+  canEditStaffAccess: boolean;
+  staffRoster: SecurityGuard[];
+  platformCities: PlatformCity[];
+  currentUser: SessionUser;
   onUpdate: (patch: {
     status?: CityMarketStatus;
     waitlistAudience?: CityWaitlistAudience;
     recommendOpen?: boolean;
   }) => void;
+  onUpdateStaffCityAccess?: (
+    staffId: string,
+    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
+  ) => Promise<void>;
 }) {
   const directorValue = getDirectorActionValue(city);
   const managerValue = getManagerActionValue(city);
@@ -179,6 +199,22 @@ function CityDetailPanel({
           As a Manager you can recommend cities for review. Directors and Founders control operations status.
         </p>
       )}
+
+      {onUpdateStaffCityAccess && staffRoster.length > 0 ? (
+        <div className="border-t border-brand-border pt-4">
+          <CityStaffAccessPicker
+            cityName={city.name}
+            staffRoster={staffRoster}
+            platformCities={platformCities}
+            currentUserId={currentUser.id}
+            currentUserRole={currentUser.role as PlatformRole}
+            canEdit={canEditStaffAccess}
+            onUpdateStaffCityAccess={async (staffId, patch) => {
+              await onUpdateStaffCityAccess(staffId, patch);
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -187,7 +223,9 @@ export function StaffCitiesPanel({
   currentUser,
   cities,
   actorManagedCities = [],
+  staffRoster = [],
   onUpdateCity,
+  onUpdateStaffCityAccess,
 }: StaffCitiesPanelProps) {
   const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
@@ -222,7 +260,6 @@ export function StaffCitiesPanel({
   );
 
   useEffect(() => {
-    if (formFactor !== 'desktop') return;
     if (filtered.length === 0) {
       setSelectedId(null);
       return;
@@ -230,9 +267,14 @@ export function StaffCitiesPanel({
     if (!selectedId || !filtered.some((city) => city.id === selectedId)) {
       setSelectedId(filtered[0].id);
     }
-  }, [formFactor, filtered, selectedId]);
+  }, [filtered, selectedId]);
 
   const selectedCity = filtered.find((city) => city.id === selectedId) ?? null;
+
+  const canEditStaffAccessForCity = (cityName: string) =>
+    Boolean(onUpdateStaffCityAccess) &&
+    canAssignStaffCityAccess(currentUser) &&
+    staffCanManageCity(currentUser.role as PlatformRole, actorManagedCities, cityName);
 
   const applyUpdate = async (
     city: PlatformCity,
@@ -363,7 +405,12 @@ export function StaffCitiesPanel({
                   busy={savingId === selectedCity.id}
                   canManageStatus={canManageStatus}
                   canRecommend={canRecommend}
+                  canEditStaffAccess={canEditStaffAccessForCity(selectedCity.name)}
+                  staffRoster={staffRoster}
+                  platformCities={cities}
+                  currentUser={currentUser}
                   onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
+                  onUpdateStaffCityAccess={onUpdateStaffCityAccess}
                 />
               ) : (
                 <WorkbenchEmpty icon={MapPin} message="Select a city to manage" variant="detail" />
@@ -430,7 +477,12 @@ export function StaffCitiesPanel({
 
             return (
               <div key={city.id} className="app-list-row app-list-row-align-top">
-                <div className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => setSelectedId(city.id)}
+                  aria-pressed={selectedId === city.id}
+                >
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold leading-snug truncate">{city.name}</p>
                     <span className="text-xs text-brand-text-muted shrink-0">{city.stateCode}</span>
@@ -444,7 +496,7 @@ export function StaffCitiesPanel({
                       Wait list · {city.waitlistAudience}
                     </p>
                   )}
-                </div>
+                </button>
 
                 {canManageStatus ? (
                   <label className="shrink-0">
@@ -494,6 +546,23 @@ export function StaffCitiesPanel({
           })}
         </div>
       )}
+
+      {selectedCity ? (
+        <div className="rounded-xl border border-brand-border p-4">
+          <CityDetailPanel
+            city={selectedCity}
+            busy={savingId === selectedCity.id}
+            canManageStatus={canManageStatus}
+            canRecommend={canRecommend}
+            canEditStaffAccess={canEditStaffAccessForCity(selectedCity.name)}
+            staffRoster={staffRoster}
+            platformCities={cities}
+            currentUser={currentUser}
+            onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
+            onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

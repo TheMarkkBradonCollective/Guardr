@@ -1092,7 +1092,9 @@ export function StaffDashboard({
             currentUser={currentUser}
             cities={platformCities}
             actorManagedCities={actorStaffProfile?.managedCities}
+            staffRoster={guards.filter((guard) => guard.isStaff)}
             onUpdateCity={onUpdatePlatformCity}
+            onUpdateStaffCityAccess={onUpdateStaffCityAccess}
           />
         ) : (
           <AppBlockedAccessScreen
