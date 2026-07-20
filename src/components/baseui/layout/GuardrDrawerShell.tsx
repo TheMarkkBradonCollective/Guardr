@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingXSmall, LabelSmall, ParagraphMedium } from 'baseui/typography';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
@@ -254,20 +254,7 @@ export function GuardrDrawerShell({
             </LabelSmall>
           ) : null}
         </Block>
-        {!isFlowSidebar ? (
-          <Block
-            as="button"
-            type="button"
-            className="mobility-icon-btn mobility-drawer-close"
-            onClick={closeSidebar}
-            aria-label="Close menu"
-            overrides={{ Block: { style: iconBtnStyle } }}
-          >
-            <X size={18} />
-          </Block>
-        ) : (
-          sidebarBrandExtra
-        )}
+        {isFlowSidebar ? sidebarBrandExtra : null}
       </Block>
       ) : null}
 
@@ -325,29 +312,7 @@ export function GuardrDrawerShell({
         minWidth={0}
         minHeight={0}
         className={`mobility-content-pane${showDrawerBackdrop ? ' mobility-content-pane--drawer-open' : ''}`}
-        onClick={showDrawerBackdrop ? closeSidebar : undefined}
       >
-        {showDrawerBackdrop ? (
-        <Block
-          className="mobility-drawer-backdrop"
-          aria-hidden
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="rgba(0, 0, 0, 0.35)"
-          overrides={{
-            Block: {
-              style: {
-                zIndex: 1,
-                pointerEvents: 'none',
-              },
-            },
-          }}
-        />
-      ) : null}
-
       {showChromeHeader ? (
         <Block
           className={`mobility-header${chrome.headerGlass ? ' mobility-header--glass' : ''}${chrome.nativeChrome ? ' mobility-header--native' : ''}`}
@@ -592,6 +557,29 @@ export function GuardrDrawerShell({
       >
         {workspaceBody}
       </Block>
+
+      {isMobileDrawer && showDrawerBackdrop ? (
+        <Block
+          className="mobility-drawer-backdrop"
+          role="presentation"
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          onClick={closeSidebar}
+          overrides={{
+            Block: {
+              style: {
+                zIndex: 120,
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                pointerEvents: 'auto',
+                cursor: 'default',
+              },
+            },
+          }}
+        />
+      ) : null}
 
       {isMobileDrawer ? sidebarNode : null}
     </Block>

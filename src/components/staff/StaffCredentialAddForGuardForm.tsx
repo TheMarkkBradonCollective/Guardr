@@ -43,7 +43,7 @@ function SelectedCredentialBanner({
     <div className="flex items-center gap-3 rounded-xl border border-brand-border bg-brand-bg-sec/60 px-3 py-2.5 mb-4">
       <div className="min-w-0 flex-1">
         <p className="text-xs text-brand-text-muted">Credential type</p>
-        <p className="text-sm font-semibold truncate">{title}</p>
+        <p className="text-sm font-semibold break-words">{title}</p>
       </div>
       {onChange && (
         <button type="button" onClick={onChange} className="text-xs font-semibold text-brand-primary shrink-0">
@@ -204,8 +204,8 @@ export function StaffCredentialAddForGuardForm({
                     <div className="flex items-center gap-3 w-full text-left min-w-0">
                       <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate">{guard.name}</p>
-                        <p className="text-xs text-brand-text-muted truncate">
+                        <p className="text-sm font-semibold break-words">{guard.name}</p>
+                        <p className="text-xs text-brand-text-muted break-words">
                           {guard.badgeNumber} · {guard.email}
                         </p>
                       </div>

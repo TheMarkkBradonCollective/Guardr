@@ -20574,11 +20574,35 @@ to {
 .app-screen-header .app-chrome-btn,
 .app-form-sheet-close {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--uber-surface, var(--brand-bg-sec));
+  color: var(--brand-text);
+  cursor: pointer;
 }
 
 .app-form-sheet-panel {
   border-top-left-radius: var(--radius-sheet) !important;
   border-top-right-radius: var(--radius-sheet) !important;
+  background: var(--uber-bg, #ffffff) !important;
+  box-shadow: 0 -8px 48px rgba(0, 0, 0, 0.16) !important;
+  border-top: 1px solid var(--brand-border) !important;
+}
+
+html.theme-dark .app-form-sheet-panel {
+  box-shadow: 0 -8px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+.app-form-sheet-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: 90dvh;
+  min-height: 0;
 }
 
 .app-form-sheet-handle {
