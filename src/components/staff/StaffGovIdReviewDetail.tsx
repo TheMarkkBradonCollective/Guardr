@@ -11,7 +11,7 @@ import { getGovIdArchiveHistory } from '../../lib/govIdRevisionHistory';
 import type { ApprovalFeedItem } from '../../lib/staffApprovalsFeed';
 import { formatStateName } from '../../lib/states';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
-import { StaffCredentialReviewDetail } from './StaffCredentialReviewDetail';
+import { StaffCredentialReviewDetail, type StaffCredentialReviewPhoto } from './StaffCredentialReviewDetail';
 
 interface StaffGovIdReviewDetailProps {
   guard: SecurityGuard;
@@ -68,22 +68,21 @@ export function StaffGovIdReviewDetail({
   const backUrl = guard.idBackUrl?.trim();
   const selfieUrl = guard.idSelfieUrl?.trim();
 
-  const additionalPhotos = [
-    backUrl
-      ? {
-          url: backUrl,
-          label: ID_VERIFICATION_SLOT_LABELS.back,
-          alt: `${guard.name} ${ID_VERIFICATION_SLOT_LABELS.back}`,
-        }
-      : null,
-    selfieUrl
-      ? {
-          url: selfieUrl,
-          label: ID_VERIFICATION_SLOT_LABELS.selfie,
-          alt: `${guard.name} ${ID_VERIFICATION_SLOT_LABELS.selfie}`,
-        }
-      : null,
-  ].filter((photo): photo is { url: string; label: string; alt: string } => photo != null);
+  const additionalPhotos: StaffCredentialReviewPhoto[] = [];
+  if (backUrl) {
+    additionalPhotos.push({
+      url: backUrl,
+      label: ID_VERIFICATION_SLOT_LABELS.back,
+      alt: `${guard.name} ${ID_VERIFICATION_SLOT_LABELS.back}`,
+    });
+  }
+  if (selfieUrl) {
+    additionalPhotos.push({
+      url: selfieUrl,
+      label: ID_VERIFICATION_SLOT_LABELS.selfie,
+      alt: `${guard.name} ${ID_VERIFICATION_SLOT_LABELS.selfie}`,
+    });
+  }
 
   return (
     <StaffCredentialReviewDetail
