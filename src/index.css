@@ -12662,8 +12662,9 @@ textarea:focus:not(:focus-visible) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
-  color: var(--brand-primary);
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  color: var(--brand-text-muted);
   margin-bottom: 0.25rem;
 }
 
@@ -13250,8 +13251,9 @@ html.theme-dark .status-badge-error {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
-  color: var(--brand-primary);
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  color: var(--brand-text-muted);
   margin-bottom: 1rem;
   flex-shrink: 0;
 }
@@ -18957,8 +18959,9 @@ html.theme-dark .role-side-nav-item-active {
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
-  color: var(--brand-primary);
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  color: var(--brand-text-muted);
   margin-bottom: 0.75rem;
 }
 
@@ -20125,6 +20128,36 @@ textarea.uber-input {
   padding-bottom: 0.5rem;
 }
 
+.staff-shell .app-search-bar {
+  background: transparent !important;
+  border-color: var(--brand-border) !important;
+  box-shadow: none !important;
+}
+
+.staff-shell .app-empty-state,
+.staff-shell .app-empty-state--dashed {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.staff-shell .app-empty-state-icon {
+  background: transparent !important;
+  border: 1px solid var(--brand-border) !important;
+  color: var(--brand-text-muted) !important;
+}
+
+.staff-shell .uber-workbench {
+  background: var(--brand-bg) !important;
+}
+
+.staff-shell .uber-workbench-panel {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 .staff-shell .staff-ops-mobile-body:has(> .app-full-page-detail),
 .staff-shell .staff-ops-mobile-body:has(> .tablet-split-panel) {
   overflow: hidden;
@@ -20772,8 +20805,9 @@ html.theme-light .uber-select {
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius-app-lg);
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
-  color: var(--brand-primary);
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  color: var(--brand-text-muted);
   margin-bottom: 0.25rem;
 }
 

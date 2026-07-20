@@ -1853,8 +1853,9 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
 }
 
 .app-empty-state-icon {
-  background: var(--uber-surface, #f6f6f6) !important;
+  background: transparent !important;
   color: var(--uber-text-muted, #888) !important;
+  border: 1px solid var(--uber-border, #eeeeee) !important;
   border-radius: 16px !important;
   width: 56px !important;
   height: 56px !important;
@@ -1865,8 +1866,9 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
 }
 
 html.theme-dark .app-empty-state-icon {
-  background: #1a1a1a !important;
-  color: #666 !important;
+  background: transparent !important;
+  border-color: var(--uber-border, #2b2b2b) !important;
+  color: var(--uber-text-muted, #9e9e9e) !important;
 }
 
 .app-empty-state-title {
@@ -1930,14 +1932,15 @@ html.theme-dark .guard-factors-heading { color: #fff; }
 }
 
 html.theme-dark .staff-filter-pill {
-  border-color: #444;
-  color: #aaa;
+  border-color: color-mix(in srgb, var(--uber-text, #ffffff) 28%, transparent);
+  color: var(--uber-text-muted, #9e9e9e);
+  background: transparent;
 }
 
 html.theme-dark .staff-filter-pill[data-active="true"] {
-  border-color: #fff;
-  background: #fff;
-  color: #000;
+  border-color: var(--uber-text, #ffffff);
+  background: var(--uber-text, #ffffff);
+  color: var(--uber-bg, #000000);
 }
 
 .staff-filter-pill:hover:not([data-active="true"]) {
