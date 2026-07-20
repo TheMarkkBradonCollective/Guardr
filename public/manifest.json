@@ -34,7 +34,22 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/narrow.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Guardr mobile workspace"
+    },
+    {
+      "src": "/screenshots/wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Guardr tablet and desktop ops"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Open Guardr",

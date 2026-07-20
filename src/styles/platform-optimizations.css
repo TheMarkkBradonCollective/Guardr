@@ -136,7 +136,7 @@ body[data-view-surface="pwa-tablet"] {
 
   .uber-app-shell aside { width: var(--sidebar-width-tablet, 220px); }
 
-  .tablet-admin-rail {
+  .uber-app-shell.mobility-shell aside {
     backdrop-filter: blur(12px) saturate(150%);
     background: color-mix(in srgb, var(--uber-bg, #fff) 90%, transparent);
   }
@@ -157,7 +157,7 @@ body.experience-lite {
   /* Crisp chrome — no blur filters on lite */
   .mobility-header,
   .bottom-nav-bar,
-  .tablet-admin-rail,
+  .uber-app-shell.mobility-shell aside,
   .app-welcome-dock {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;

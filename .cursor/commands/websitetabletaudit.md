@@ -6,10 +6,11 @@ Audit only the **Tablet Website** (`browser-tablet`, 768–1023px).
 
 - **Landscape** and **portrait** orientations
 - Touch navigation and tablet menus
-- Icon rail, command bar, and hybrid shell (`TabletAdminShell`, `TabletStaffAdminShell`)
+- Persistent sidebar, command bar, and hybrid shell (`GuardrDrawerShell` / `resolveMobilityChrome`)
 - Responsive layouts — merge of desktop density and mobile touch patterns
 - Forms, dialogs, scrolling, gestures
 - Performance at tablet widths
+- No dual chrome (sidebar + bottom nav) on tablet
 
 ## Repair
 
@@ -25,8 +26,8 @@ Audit only the **Tablet Website** (`browser-tablet`, 768–1023px).
 ## Architecture
 
 ```
-src/components/layouts/tablet/TabletAdminShell.tsx
-src/components/layouts/tablet/TabletStaffAdminShell.tsx
+src/components/baseui/layout/GuardrDrawerShell.tsx
+src/components/baseui/layout/mobilityChrome.ts
 src/styles/tablet-app.css
 body[data-form-factor="tablet"]
 ```

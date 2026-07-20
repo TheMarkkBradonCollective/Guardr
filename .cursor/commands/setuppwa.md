@@ -4,11 +4,10 @@ Build or rebuild the **PWA** (`shellKind: pwa`).
 
 ## Create
 
-- Installable application (`public/manifest.json`)
+- Installable application (`public/manifest.json`) including install screenshots
 - Service worker (`public/sw.js`) with caching strategy
-- Offline mode and offline queue where applicable
+- Offline mode and offline queue where applicable (flush on `online`; Background Sync optional)
 - Push notifications (web push)
-- Background sync (where implemented)
 - Install prompt and standalone chrome
 
 ## Design goals
@@ -16,7 +15,7 @@ Build or rebuild the **PWA** (`shellKind: pwa`).
 - **Lightweight experience** — fast startup, low bandwidth
 - Optimized mobile workflow
 - No marketing landing in app shell — use `AppHomeScreen`
-- Sheet auth, safe-area padding, `app-pwa.css` styling
+- Sheet auth over welcome, safe-area padding, `app-pwa.css` styling
 
 ## Maintain
 
@@ -25,7 +24,7 @@ Feature parity with website where practical, prioritizing **speed** and **offlin
 ## Architecture
 
 ```
-public/manifest.json, public/sw.js
+public/manifest.json, public/sw.js, public/screenshots/
 src/lib/platform/appExperience.ts, shellKind.ts
 src/styles/app-pwa.css
 src/lib/platform/offlineQueue.ts

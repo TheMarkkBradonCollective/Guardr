@@ -78,7 +78,8 @@ export function DesktopStaffAdminShell({
   sidebarPrimaryActions,
 }: DesktopStaffAdminShellProps) {
   const { formFactor } = useDevice();
-  const isPortableShell = formFactor !== 'desktop';
+  // Bottom nav is mobile-only — tablet uses persistent sidebar (merge shell), matching RoleAppShell.
+  const isMobileShell = formFactor === 'mobile';
   const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
@@ -110,7 +111,7 @@ export function DesktopStaffAdminShell({
   const STAFF_BOTTOM_NAV_IDS: StaffSection[] = ['overview', 'jobs', 'clients', 'guards', 'team'];
 
   const mobileBottomNavItems = useMemo(() => {
-    if (!isPortableShell) return undefined;
+    if (!isMobileShell) return undefined;
     return STAFF_BOTTOM_NAV_IDS.map((id) => {
       const item = flatNavItems.find((nav) => nav.id === id);
       if (!item) return null;
@@ -119,7 +120,7 @@ export function DesktopStaffAdminShell({
         label: id === 'guards' ? 'Guard' : item.label,
       };
     }).filter((item): item is NonNullable<typeof item> => item != null);
-  }, [isPortableShell, flatNavItems]);
+  }, [isMobileShell, flatNavItems]);
 
   const handleNav = (id: string) => {
     const section = id as StaffSection;

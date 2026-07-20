@@ -12539,9 +12539,16 @@ export default function App() {
           </>
         );
       }
-      if (isAuthView) {
-        return (
-          <>
+      // PWA/APK: keep AppHomeScreen under sheet auth (docs: AppHomeScreen + AuthPage sheet).
+      return (
+        <>
+          <AppHomeScreen
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            onNavigateToAuth={navigateToAuth}
+            onOpenLegal={openLegalPage}
+          />
+          {isAuthView ? (
             <AuthPage
               onSignIn={handleSignIn}
               onSignUp={handleSignUp}
@@ -12558,20 +12565,10 @@ export default function App() {
               initialMode={initialAuthMode}
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
-              presentation="page"
+              presentation="sheet"
+              open={isAuthView}
             />
-            <InstallPrompt />
-          </>
-        );
-      }
-      return (
-        <>
-          <AppHomeScreen
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            onNavigateToAuth={navigateToAuth}
-            onOpenLegal={openLegalPage}
-          />
+          ) : null}
           <InstallPrompt />
         </>
       );

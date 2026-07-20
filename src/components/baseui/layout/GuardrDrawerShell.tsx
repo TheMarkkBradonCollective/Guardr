@@ -80,7 +80,7 @@ export function GuardrDrawerShell({
   const isDesktopWorkspace = chrome.layout === 'desktop';
   const isFlowSidebar = !isMobile;
   const isMapMode = variant === 'dark';
-  const useBottomNav = chrome.layout !== 'desktop' && !!mobileBottomNavItems?.length;
+  const useBottomNav = chrome.layout === 'mobile' && !!mobileBottomNavItems?.length;
   const showChromeHeader = !hideHeader && !isDesktopWorkspace;
   const showPageTitleBand = showTitleBand && !hideHeader && !headerOverride;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);

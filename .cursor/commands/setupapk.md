@@ -6,10 +6,9 @@ Build or rebuild the **Android APK** (`shellKind: native`, Capacitor).
 
 - Native-style navigation and back-button handling
 - Material Design touch feedback
-- Permissions flow (camera, GPS, notifications, storage, biometrics)
+- Permissions flow (camera, GPS, notifications; storage/biometrics when added)
 - FCM push notifications
-- Background services where needed
-- Device integrations (camera, GPS, storage)
+- Device integrations (camera, GPS)
 
 ## Optimize
 
@@ -17,6 +16,7 @@ Build or rebuild the **Android APK** (`shellKind: native`, Capacitor).
 - Enhanced animations and native interactions
 - Edge-to-edge safe areas (`app-native.css`, `nativeSafeArea.ts`)
 - APK binary version sync with `package.json`
+- Premium haptic confirm via Vibration API (`nativeHaptics.ts`)
 
 ## Deliver
 

@@ -197,27 +197,18 @@ body.shell-native .app-welcome-dock {
   border-top: 1px solid var(--uber-border, #e2e2e2);
 }
 
-body[data-shell="native"] .tablet-admin-rail-item:active,
-body.shell-native .tablet-admin-rail-item:active {
+body[data-shell="native"] .mobility-nav-item:active,
+body.shell-native .mobility-nav-item:active {
   background: var(--uber-accent-50, color-mix(in srgb, #4A6B4E 12%, transparent));
 }
 
-body[data-form-factor="tablet"] .tablet-admin-shell {
+body[data-form-factor="tablet"] .uber-app-shell.mobility-shell {
   background: var(--uber-bg, #ffffff);
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail {
+body[data-form-factor="tablet"] .uber-app-shell.mobility-shell aside {
   background: var(--uber-bg, #ffffff);
   border-right-color: var(--uber-border, #e2e2e2);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-live {
-  background: var(--uber-positive, #0e8345);
-  box-shadow: 0 0 0 2px var(--uber-bg, #fff);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-label {
-  color: var(--uber-text-muted, #6b6b6b);
 }
 
 /* ─── Desktop admin legacy remap ───────────────────────────────────────── */

@@ -1,165 +1,65 @@
-/* Tablet merge shell — Uber Base Web icon rail + command bar + touch content.
-   Applies to browser, PWA, and APK at tablet widths (768–1023px). */
+/* Tablet merge shell — persistent sidebar + touch content (768–1023px).
+   Signed-in chrome uses GuardrDrawerShell via resolveMobilityChrome (not a separate icon rail).
+   Applies to browser, PWA, and APK at tablet widths. */
 
-body[data-form-factor="tablet"] .tablet-admin-shell {
-  display: flex;
-  flex-direction: row;
-  background: var(--uber-bg, var(--brand-bg));
+body[data-form-factor="tablet"] {
+  --sidebar-width-tablet: 220px;
+  --space-touch-tablet: 44px;
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail {
-  display: flex;
-  flex-direction: column;
-  width: 4.75rem;
-  flex-shrink: 0;
-  padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0 max(0.75rem, env(safe-area-inset-bottom, 0px));
-  border-right: 1px solid var(--uber-border, var(--brand-border));
-  background: var(--uber-bg, var(--brand-surface));
-  z-index: 20;
+body[data-form-factor="tablet"] .uber-app-shell.mobility-shell {
+  --mobility-sidebar-width: var(--sidebar-width-tablet, 220px);
 }
 
-html.theme-dark body[data-form-factor="tablet"] .tablet-admin-rail {
-  background: color-mix(in srgb, var(--uber-bg, var(--brand-bg)) 88%, #000);
+/* Touch-first controls — no hover-only affordances */
+body[data-form-factor="tablet"] .mobility-icon-btn,
+body[data-form-factor="tablet"] button:not(.link-btn),
+body[data-form-factor="tablet"] [role="button"] {
+  min-height: var(--space-touch-tablet, 44px);
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail--staff {
-  width: 5rem;
+body[data-form-factor="tablet"] .uber-workbench-table td,
+body[data-form-factor="tablet"] .uber-workbench-table th {
+  padding: 12px 14px;
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.5rem 0.85rem;
-  position: relative;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-label {
-  font-size: 0.5625rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brand-text-muted);
-  text-align: center;
-  line-height: 1.1;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-live {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.65rem;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 999px;
-  background: var(--uber-accent, var(--brand-primary));
-  box-shadow: 0 0 0 2px var(--uber-bg, var(--brand-surface));
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 1;
+/* List/detail split — hybrid density */
+body[data-form-factor="tablet"] .tablet-split-panel {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr);
+  gap: 1rem;
   min-height: 0;
-  padding: 0 0.45rem;
-  overflow-y: auto;
+  align-items: stretch;
+}
+
+body[data-form-factor="tablet"] .tablet-split-panel .split-list-pane,
+body[data-form-factor="tablet"] .tablet-split-panel .split-detail-pane {
+  min-height: 0;
+  overflow: auto;
   overscroll-behavior: contain;
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail-nav--scroll {
-  scrollbar-width: none;
+/* Landscape tablet — wider list column, more horizontal breathing room */
+@media (orientation: landscape) and (min-width: 768px) and (max-width: 1023px) {
+  body[data-form-factor="tablet"] .tablet-split-panel {
+    grid-template-columns: minmax(18rem, 0.38fr) minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  body[data-form-factor="tablet"] .mobility-content-inner {
+    padding-inline: 1.25rem;
+  }
 }
 
-body[data-form-factor="tablet"] .tablet-admin-rail-nav--scroll::-webkit-scrollbar {
-  display: none;
-}
+/* Portrait tablet — slightly taller list, tighter gutters */
+@media (orientation: portrait) and (min-width: 768px) and (max-width: 1023px) {
+  body[data-form-factor="tablet"] .tablet-split-panel {
+    grid-template-columns: minmax(14rem, 0.46fr) minmax(0, 1fr);
+  }
 
-body[data-form-factor="tablet"] .tablet-admin-rail-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 0.85rem;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--brand-text-muted);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-item:hover {
-  background: var(--uber-surface, #f6f6f6);
-  color: var(--uber-text, #000);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-item--active {
-  background: var(--uber-surface, #f6f6f6);
-  border-color: var(--uber-border, #e2e2e2);
-  color: var(--uber-text, #000);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-item-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-item-badge {
-  position: absolute;
-  top: 0.2rem;
-  right: 0.2rem;
-  min-width: 1rem;
-  height: 1rem;
-  padding: 0 0.2rem;
-  border-radius: 999px;
-  background: var(--status-danger);
-  color: #fff;
-  font-size: 0.5625rem;
-  font-weight: 800;
-  line-height: 1rem;
-  text-align: center;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-footer {
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 0.35rem 0;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-rail-footer .account-menu-trigger {
-  width: 2.75rem;
-  height: 2.75rem;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-main {
-  min-width: 0;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-header-slot {
-  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
-  border-bottom: 1px solid var(--brand-border);
-  background: var(--brand-surface);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-content {
-  background: var(--brand-bg);
-}
-
-body[data-form-factor="tablet"] .tablet-admin-shell--map .tablet-admin-content,
-body[data-form-factor="tablet"] .tablet-admin-shell--map .desktop-command-bar--map {
-  background: var(--brand-bg);
-}
-
-/* Tablet command bar — slightly denser than desktop */
-body[data-form-factor="tablet"] .tablet-admin-shell .desktop-command-bar {
-  padding: 0.65rem 1rem 0.55rem;
-}
-
-body[data-form-factor="tablet"] .tablet-admin-shell .desktop-command-bar-title {
-  font-size: 1.125rem;
+  body[data-form-factor="tablet"] {
+    --space-gutter: 0.875rem;
+  }
 }
 
 /* App welcome tablet split — hero left, sign-in dock right */

@@ -7,19 +7,19 @@ Build or rebuild the **Tablet Website** only (`browser-tablet`, 768–1023px).
 - Touch-first interaction
 - **Portrait** and **landscape** orientations
 - Medium screens — hybrid of desktop density and mobile touch
-- Icon rail + header + touch-friendly content (`TabletAdminShell`)
+- Persistent sidebar + header + touch-friendly content (`GuardrDrawerShell` via `resolveMobilityChrome`)
 - Tablet gestures and split panels (`ListDetailLayout` tablet mode)
 
 ## Deliver
 
-- `TabletAdminShell` / `TabletStaffAdminShell` wiring
+- Tablet chrome via `RoleAppShell` / `DesktopStaffAdminShell` → `GuardrDrawerShell` (not a separate icon rail)
 - Tablet page content (not just shell — wide layouts inside tablet shell)
 - `tablet-app.css` and `body[data-form-factor="tablet"]` rules
-- No hover-only affordances
+- No hover-only affordances; bottom nav is **mobile-only**
 
 ## Rules
 
-- Tablet merges desktop and mobile DNA — rail + sheets + touch targets
+- Tablet merges desktop and mobile DNA — persistent sidebar + sheets + touch targets
 - Use `isWideFormFactor` or `formFactor !== 'mobile'` for content density where appropriate
 - Run `npm run lint` and `npm test`
 
