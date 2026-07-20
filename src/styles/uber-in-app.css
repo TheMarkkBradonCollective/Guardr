@@ -1800,6 +1800,19 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
   padding-bottom: 0.5rem;
 }
 
+/* Stacked full-width CTAs (e.g. Applications: Add guard + Add client) */
+.staff-ops-cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.staff-ops-cta-stack > .app-button-primary {
+  width: 100% !important;
+  max-width: 100%;
+}
+
 /* App section body has no padding override needed — uber-in-app already set it */
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -358,7 +358,7 @@ export function StaffApplications({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="flex flex-row flex-wrap items-center gap-2">
+      <div className="staff-ops-cta-stack">
         {canManageGuardAccounts && onAddGuard && (
           <StaffAddGuardForm
             onAdd={onAddGuard}
