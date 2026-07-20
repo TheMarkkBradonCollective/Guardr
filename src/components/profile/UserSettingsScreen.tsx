@@ -1,7 +1,10 @@
 import React from 'react';
 import type { SessionUser } from '../../types';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
-import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import {
+  AppSettingsHead,
+  AppSettingsSection,
+} from '../ui/app/AppPrimitives';
 import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { LegalInfoCards } from '../legal/LegalInfoCards';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -34,31 +37,37 @@ export function UserSettingsScreen({
   const formContent = (
     <>
       {currentUser.role === 'guard' && (
-        <AppFormSection title="Work preferences">
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            Job alerts are under <span className="font-semibold text-brand-text">Preferences</span>{' '}
-            in the sidebar. Weekly availability is under{' '}
-            <span className="font-semibold text-brand-text">Availability</span>.
-          </p>
-        </AppFormSection>
+        <>
+          <AppSettingsHead>Work preferences</AppSettingsHead>
+          <AppSettingsSection>
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              Job alerts are under <span className="font-semibold text-brand-text">Preferences</span>{' '}
+              in the sidebar. Weekly availability is under{' '}
+              <span className="font-semibold text-brand-text">Availability</span>.
+            </p>
+          </AppSettingsSection>
+        </>
       )}
 
-      <AppFormSection title="Appearance">
+      <AppSettingsHead>Appearance</AppSettingsHead>
+      <AppSettingsSection>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
-      </AppFormSection>
+      </AppSettingsSection>
 
-      <section className="border-b border-brand-border">
-        <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
-      </section>
+      <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
 
       {onOpenLegal && (
-        <AppFormSection title="Legal">
-          <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-2">{LEGAL_DISCLAIMER_SHORT}</p>
-          <LegalInfoCards onOpenLegal={onOpenLegal} />
-        </AppFormSection>
+        <>
+          <AppSettingsHead>Legal</AppSettingsHead>
+          <AppSettingsSection>
+            <p className="text-xs text-brand-text-muted leading-relaxed mb-4">{LEGAL_DISCLAIMER_SHORT}</p>
+            <LegalInfoCards onOpenLegal={onOpenLegal} />
+          </AppSettingsSection>
+        </>
       )}
 
-      <AppFormSection title="About">
+      <AppSettingsHead>About</AppSettingsHead>
+      <AppSettingsSection>
         <p className="text-sm text-brand-text-muted">
           {appVersionLabel()}
           {' · '}
@@ -73,13 +82,17 @@ export function UserSettingsScreen({
             .
           </p>
         )}
-      </AppFormSection>
+      </AppSettingsSection>
     </>
   );
 
   return (
     <ResponsivePage screenClassName="guard-settings-screen">
-      <ResponsiveFormPage title="Settings" subtitle="Appearance, notifications, and legal">
+      <ResponsiveFormPage
+        title="Settings"
+        subtitle="Appearance, notifications, and legal"
+        className="guard-settings-screen"
+      >
         {formContent}
       </ResponsiveFormPage>
     </ResponsivePage>
