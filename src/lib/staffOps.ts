@@ -69,7 +69,7 @@ export function isStaffMessagesHubSection(section: StaffSection): boolean {
 }
 
 /** Roster / workflow pages under the Operations sidebar group. */
-export const STAFF_OPERATIONS_SECTIONS: StaffSection[] = [
+export const STAFF_OPERATIONS_SECTIONS = [
   'jobs',
   'applications',
   'credentials',
@@ -77,10 +77,12 @@ export const STAFF_OPERATIONS_SECTIONS: StaffSection[] = [
   'crews',
   'clients',
   'team',
-];
+] as const satisfies readonly StaffSection[];
+
+export type StaffOperationsSection = (typeof STAFF_OPERATIONS_SECTIONS)[number];
 
 export function isStaffOperationsSection(section: StaffSection): boolean {
-  return STAFF_OPERATIONS_SECTIONS.includes(section);
+  return (STAFF_OPERATIONS_SECTIONS as readonly StaffSection[]).includes(section);
 }
 
 export function isStaffOpsMapSection(section: StaffSection): boolean {

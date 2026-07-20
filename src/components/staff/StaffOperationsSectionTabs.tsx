@@ -12,12 +12,11 @@ import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import {
   isStaffOperationsSection,
   STAFF_OPERATIONS_SECTIONS,
+  type StaffOperationsSection,
   type StaffSection,
 } from '../../lib/staffOps';
 
-type OperationsSection = (typeof STAFF_OPERATIONS_SECTIONS)[number];
-
-const OPS_TAB_META: Record<OperationsSection, { label: string; icon: React.ReactNode }> = {
+const OPS_TAB_META: Record<StaffOperationsSection, { label: string; icon: React.ReactNode }> = {
   jobs: {
     label: 'Jobs',
     icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} />,
