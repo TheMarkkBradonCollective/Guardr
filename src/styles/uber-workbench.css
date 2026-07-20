@@ -8,7 +8,7 @@
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, #ffffff);
   font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -63,7 +63,7 @@
 }
 
 .uber-stat-chip:hover {
-  background: var(--uber-surface, #f6f6f6);
+  background: transparent;
   border-color: var(--uber-text, #000);
 }
 

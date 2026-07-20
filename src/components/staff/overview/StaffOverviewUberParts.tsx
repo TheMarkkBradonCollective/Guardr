@@ -272,13 +272,9 @@ export function StaffOverviewStatusBanner({
   pendingReviews: number;
   onReview?: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      className={`staff-overview-status-banner${healthy ? ' staff-overview-status-banner--ok' : ' staff-overview-status-banner--warn'}`}
-      onClick={onReview}
-      disabled={!onReview}
-    >
+  const className = `staff-overview-status-banner${healthy ? ' staff-overview-status-banner--ok' : ' staff-overview-status-banner--warn'}`;
+  const copy = (
+    <>
       <span className="staff-overview-status-banner-dot" aria-hidden />
       <span className="staff-overview-status-banner-copy">
         <span className="staff-overview-status-banner-title">
@@ -291,6 +287,20 @@ export function StaffOverviewStatusBanner({
         </span>
       </span>
       {onReview ? <ChevronRight size={18} aria-hidden className="staff-overview-status-banner-chevron" /> : null}
+    </>
+  );
+
+  if (!onReview) {
+    return (
+      <div className={className} role="status" aria-live="polite">
+        {copy}
+      </div>
+    );
+  }
+
+  return (
+    <button type="button" className={className} onClick={onReview}>
+      {copy}
     </button>
   );
 }

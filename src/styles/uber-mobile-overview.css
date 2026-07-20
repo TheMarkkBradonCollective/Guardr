@@ -53,6 +53,10 @@
   cursor: default;
 }
 
+.staff-overview-status-banner[role='status'] {
+  cursor: default;
+}
+
 .staff-overview-status-banner--warn {
   background: #f2f8ff;
   border-color: #c8ddff;
@@ -153,14 +157,16 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--uber-surface, #f6f6f6);
+  background: transparent;
+  border: 1px solid var(--uber-border, #eeeeee);
   color: var(--uber-text, #000000);
   flex-shrink: 0;
 }
 
 .staff-overview-list-row--urgent .staff-overview-list-row-icon {
-  background: #fff4e5;
-  color: #9a6b00;
+  background: transparent;
+  border-color: var(--uber-border, #eeeeee);
+  color: var(--uber-text, #000000);
 }
 
 .staff-overview-list-row-copy {
@@ -690,10 +696,10 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility
   flex-direction: column;
   gap: 16px;
   padding-bottom: max(20px, env(safe-area-inset-bottom));
-  --overview-cta-bg: #000000;
-  --overview-cta-hover: #000000;
-  --overview-cta-text: #ffffff;
-  --overview-cta-muted: rgba(255, 255, 255, 0.72);
+  --overview-cta-bg: var(--uber-text, #000000);
+  --overview-cta-hover: var(--uber-text, #000000);
+  --overview-cta-text: var(--uber-bg, #ffffff);
+  --overview-cta-muted: color-mix(in srgb, var(--uber-bg, #ffffff) 72%, transparent);
 }
 
 .staff-overview-pro-hero {
@@ -1015,10 +1021,11 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
 
 .staff-overview-pro .staff-overview-chart-card,
 .staff-overview-pro .staff-overview-feed-card {
-  border: 1px solid var(--uber-border, #eeeeee);
-  border-radius: 10px;
-  padding: 14px;
-  background: var(--uber-surface, #f6f6f6);
+  border: none;
+  border-radius: 0;
+  padding: 14px 0;
+  background: transparent;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
 }
 
 .staff-overview-pro .staff-overview-feed-list {
@@ -1112,6 +1119,81 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
 
 .staff-overview-mobile-app .staff-overview-pro-focus {
   font-size: 13px;
+}
+
+/* Mobile overview — flat screen; only quick actions / nav hubs stay as cards */
+.staff-overview-mobile-app.uber-workbench {
+  background: var(--uber-bg, #ffffff) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-list-panel.uber-workbench-panel,
+.staff-overview-mobile-app .staff-overview-insights-panel.uber-workbench-panel,
+.staff-overview-mobile-app .staff-overview-quicklinks-panel.uber-workbench-panel {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.staff-overview-mobile-app .staff-overview-list-panel.uber-workbench-panel--padded,
+.staff-overview-mobile-app .staff-overview-insights-panel.uber-workbench-panel--padded {
+  padding: 0 !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner[role='status'],
+.staff-overview-mobile-app .staff-overview-status-banner--ok {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
+  border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
+  transform: none !important;
+  cursor: default;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner[role='status'] .staff-overview-status-banner-title,
+.staff-overview-mobile-app .staff-overview-status-banner--ok .staff-overview-status-banner-title {
+  color: var(--uber-text, #000000) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner[role='status'] .staff-overview-status-banner-sub,
+.staff-overview-mobile-app .staff-overview-status-banner--ok .staff-overview-status-banner-sub {
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
+  border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
+  cursor: default;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi-card:not(:disabled) {
+  cursor: pointer;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi-value,
+.staff-overview-mobile-app .staff-overview-pro-kpi-label {
+  color: var(--uber-text, #000000) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi-sub {
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kpi-card:not(:disabled):hover {
+  background: transparent !important;
+  border-color: var(--uber-border, #eeeeee) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-empty-card,
+.staff-overview-mobile-app .staff-overview-empty-card--panel {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 12px 0 !important;
 }
 
 .staff-overview-mobile-ops,
