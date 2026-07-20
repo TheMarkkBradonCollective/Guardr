@@ -467,9 +467,7 @@ export function GuardrDrawerShell({
           minHeight={0}
           minWidth={0}
           overflow="hidden"
-          backgroundColor={
-            isMapMode ? 'backgroundPrimary' : isDesktopWorkspace ? 'backgroundPrimary' : 'backgroundSecondary'
-          }
+          backgroundColor="backgroundPrimary"
           className="uber-shell-content"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           overrides={{

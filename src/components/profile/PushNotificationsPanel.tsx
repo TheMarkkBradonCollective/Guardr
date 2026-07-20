@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, BellOff, Music2, Send } from 'lucide-react';
+import { Music2, Send } from 'lucide-react';
 import type { NotificationPreferences, SessionUser } from '../../types';
 import {
   getExistingPushSubscription,
@@ -37,7 +37,12 @@ import {
   saveNotificationPreferencesToStorage,
 } from '../../lib/notificationPreferences';
 import { supabase } from '../../lib/supabase';
-import { AppFormSection } from '../ui/app/AppPrimitives';
+import {
+  AppSettingsChoice,
+  AppSettingsHead,
+  AppSettingsSection,
+  AppSettingsToggleRow,
+} from '../ui/app/AppPrimitives';
 
 interface PushNotificationsPanelProps {
   currentUser: SessionUser;
@@ -320,12 +325,14 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
   if (!supported) {
     return (
-      <AppFormSection>
-        <p className="uber-label">Push notifications</p>
-        <p className="text-sm text-brand-text-muted mt-2">
-          Push notifications are not available in this environment.
-        </p>
-      </AppFormSection>
+      <>
+        <AppSettingsHead>Push notifications</AppSettingsHead>
+        <AppSettingsSection>
+          <p className="text-sm text-brand-text-muted leading-relaxed">
+            Push notifications are not available in this environment.
+          </p>
+        </AppSettingsSection>
+      </>
     );
   }
 
@@ -335,257 +342,241 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   const osNotificationsAllowed = permission === 'granted';
 
   return (
-    <AppFormSection className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="uber-label">Push notifications</p>
-        </div>
-        {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
-      </div>
+    <>
+      <AppSettingsHead>Push notifications</AppSettingsHead>
+      <AppSettingsSection className="space-y-4">
+        {!configured && !nativeApp && (
+          <p className="text-xs text-amber-600 leading-relaxed">
+            Server VAPID keys are not configured yet. Push notifications will be available once the server is set up.
+          </p>
+        )}
 
-      {!configured && !nativeApp && (
-        <p className="text-xs text-amber-600">
-          Server VAPID keys are not configured yet. Push notifications will be available once the server is set up.
-        </p>
-      )}
+        {nativeApp && !nativeFcmReady && (
+          <p className="text-xs text-amber-600 leading-relaxed">
+            {NATIVE_FCM_NOT_CONFIGURED_MESSAGE}
+          </p>
+        )}
 
-      {nativeApp && !nativeFcmReady && (
-        <p className="text-xs text-amber-600 leading-relaxed">
-          {NATIVE_FCM_NOT_CONFIGURED_MESSAGE}
-        </p>
-      )}
+        {nativeApp && nativeFcmReady && (
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Guardr app notifications use Firebase Cloud Messaging. Android may already allow alerts — use the toggle
+            below to register this device with Guardr.
+          </p>
+        )}
 
-      {nativeApp && nativeFcmReady && (
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Guardr app notifications use Firebase Cloud Messaging. Android may already allow alerts — use the toggle
-          below to register this device with Guardr.
-        </p>
-      )}
-
-      <div className="flex items-center justify-between gap-3 py-2 border-t border-brand-border">
-        <span className="text-sm font-medium">Register this device</span>
-        <button
-          type="button"
-          disabled={!canTogglePush}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void handleToggle();
-          }}
-          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
-            enabled ? 'bg-brand-primary' : 'bg-brand-border'
-          }`}
-          aria-pressed={enabled}
-          aria-label={enabled ? 'Disable push notifications' : 'Enable push notifications'}
-        >
-          <span
-            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-              enabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
-
-      <div className="space-y-3 border-t border-brand-border pt-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="uber-label">Notification sound</p>
-            <p className="text-xs text-brand-text-muted mt-1">
-              {soundPref?.label ?? labelForNotificationSoundMode('guardr')}
-            </p>
-          </div>
+        <AppSettingsToggleRow label="Register this device">
           <button
             type="button"
-            disabled={soundBusy}
-            onClick={() => void handlePreviewSound()}
-            className="flex items-center gap-1.5 text-xs app-button-outline !h-9 !px-3 disabled:opacity-50"
+            disabled={!canTogglePush}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void handleToggle();
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+              enabled ? 'bg-brand-primary' : 'bg-brand-border'
+            }`}
+            aria-pressed={enabled}
+            aria-label={enabled ? 'Disable push notifications' : 'Enable push notifications'}
           >
-            <Music2 className="w-3.5 h-3.5" />
-            Preview
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                enabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
           </button>
-        </div>
+        </AppSettingsToggleRow>
 
-        <div className="space-y-2">
-          {soundOptions.map((opt) => {
-            const selected = (soundPref?.mode ?? 'guardr') === opt.mode;
-            return (
-              <label
-                key={opt.mode}
-                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
-                  selected ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border'
-                }`}
-              >
+        <div className="space-y-3 pt-1">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="uber-label">Notification sound</p>
+              <p className="text-xs text-brand-text-muted mt-1">
+                {soundPref?.label ?? labelForNotificationSoundMode('guardr')}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={soundBusy}
+              onClick={() => void handlePreviewSound()}
+              className="flex items-center gap-1.5 text-xs app-button-outline !h-9 !px-3 disabled:opacity-50"
+            >
+              <Music2 className="w-3.5 h-3.5" />
+              Preview
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {soundOptions.map((opt) => {
+              const selected = (soundPref?.mode ?? 'guardr') === opt.mode;
+              return (
+                <AppSettingsChoice key={opt.mode} selected={selected}>
+                  <input
+                    type="radio"
+                    name="notification-sound"
+                    checked={selected}
+                    disabled={soundBusy}
+                    onChange={() => void handleSoundModeChange(opt.mode)}
+                    className="mt-1"
+                  />
+                  <span className="min-w-0">
+                    <span className="text-sm font-medium block">{opt.label}</span>
+                    <span className="text-xs text-brand-text-muted">{opt.description}</span>
+                  </span>
+                </AppSettingsChoice>
+              );
+            })}
+
+            {isSystemNotificationSoundPickerAvailable() && (
+              <AppSettingsChoice selected={soundPref?.mode === 'system_custom'}>
                 <input
                   type="radio"
                   name="notification-sound"
-                  checked={selected}
+                  checked={soundPref?.mode === 'system_custom'}
                   disabled={soundBusy}
-                  onChange={() => void handleSoundModeChange(opt.mode)}
+                  onChange={() => void handlePickSystemSound()}
                   className="mt-1"
                 />
                 <span className="min-w-0">
-                  <span className="text-sm font-medium block">{opt.label}</span>
-                  <span className="text-xs text-brand-text-muted">{opt.description}</span>
+                  <span className="text-sm font-medium block">Choose system tone</span>
+                  <span className="text-xs text-brand-text-muted">
+                    Pick any notification sound installed on this device
+                    {soundPref?.mode === 'system_custom' && soundPref.label ? ` — ${soundPref.label}` : ''}
+                  </span>
                 </span>
-              </label>
-            );
-          })}
+              </AppSettingsChoice>
+            )}
+          </div>
 
-          {isSystemNotificationSoundPickerAvailable() && (
-            <label
-              className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
-                soundPref?.mode === 'system_custom'
-                  ? 'border-brand-primary bg-brand-primary/5'
-                  : 'border-brand-border'
-              }`}
-            >
-              <input
-                type="radio"
-                name="notification-sound"
-                checked={soundPref?.mode === 'system_custom'}
-                disabled={soundBusy}
-                onChange={() => void handlePickSystemSound()}
-                className="mt-1"
-              />
-              <span className="min-w-0">
-                <span className="text-sm font-medium block">Choose system tone</span>
-                <span className="text-xs text-brand-text-muted">
-                  Pick any notification sound installed on this device
-                  {soundPref?.mode === 'system_custom' && soundPref.label ? ` — ${soundPref.label}` : ''}
-                </span>
-              </span>
-            </label>
+          {nativeApp && (
+            <p className="text-xs text-brand-text-muted leading-relaxed">
+              Android uses a notification channel for alert sounds. Changing the tone updates the Guardr alerts channel on
+              this device.
+            </p>
           )}
         </div>
 
-        {nativeApp && (
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            Android uses a notification channel for alert sounds. Changing the tone updates the Guardr alerts channel on
-            this device.
+        {enabled && typeOptions.length > 0 && (
+          <div className="space-y-1 pt-1">
+            <p className="uber-label mb-2">Alert types</p>
+            {typeOptions.map((opt) => (
+              <AppSettingsToggleRow
+                key={opt.key}
+                label={opt.label}
+                description={opt.description}
+              >
+                <button
+                  type="button"
+                  onClick={() => void handleTogglePref(opt.key)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors mt-0.5 ${
+                    prefs[opt.key] ? 'bg-brand-primary' : 'bg-brand-border'
+                  }`}
+                  aria-pressed={prefs[opt.key]}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      prefs[opt.key] ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </AppSettingsToggleRow>
+            ))}
+          </div>
+        )}
+
+        {currentUser.role === 'guard' && (
+          <div className="space-y-3 pt-1">
+            <label className="block">
+              <span className="uber-label">Site / location tag (optional)</span>
+              <input
+                type="text"
+                value={siteId}
+                onChange={(e) => setSiteId(e.target.value)}
+                placeholder="e.g. west-gate"
+                className="uber-input w-full mt-1"
+              />
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={useQuietHours}
+                onChange={(e) => setUseQuietHours(e.target.checked)}
+              />
+              Quiet hours (skip non-emergency alerts)
+            </label>
+
+            {useQuietHours && (
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm">
+                  <span className="uber-label">Start</span>
+                  <input type="time" value={quietStart} onChange={(e) => setQuietStart(e.target.value)} className="uber-input w-full mt-1" />
+                </label>
+                <label className="block text-sm">
+                  <span className="uber-label">End</span>
+                  <input type="time" value={quietEnd} onChange={(e) => setQuietEnd(e.target.value)} className="uber-input w-full mt-1" />
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        <button
+          type="button"
+          disabled={busy || !enabled}
+          onClick={() => void handleTest()}
+          className="w-full flex items-center justify-center gap-2 app-button-outline !h-11 !text-sm disabled:opacity-50"
+        >
+          <Send className="w-4 h-4" />
+          Test notification
+        </button>
+
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          {nativeApp ? (
+            <>
+              Android notifications: {osNotificationsAllowed ? 'Allowed' : permission}
+              {' · '}
+              Guardr device registration: {enabled ? 'On' : 'Off'}
+              {!nativeFcmReady
+                ? ' — install a push-enabled APK (built with google-services.json).'
+                : permission === 'denied'
+                  ? ' — enable notifications for Guardr in Android settings.'
+                  : !enabled && !busy && !message
+                    ? ' — turn on the toggle above to register this device.'
+                    : ''}
+            </>
+          ) : (
+            <>
+              Browser permission: {permission}
+              {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
+              {permission === 'granted' && !serverSynced && enabled
+                ? ' — device subscribed locally but not synced to server yet.'
+                : ''}
+              {permission === 'granted' && !enabled && !busy && !message
+                ? ' — turn on the toggle above to register this device.'
+                : ''}
+            </>
+          )}
+        </p>
+
+        {message && (
+          <p
+            className={`text-xs ${
+              message.includes('unavailable') ||
+              message.includes('failed') ||
+              message.includes('not configured') ||
+              message.includes('google-services') ||
+              message.includes('Firebase') ||
+              message.includes('Unauthorized') ||
+              message.includes('missing')
+                ? 'text-amber-600'
+                : 'text-brand-text-muted'
+            }`}
+          >
+            {message}
           </p>
         )}
-      </div>
-
-      {enabled && typeOptions.length > 0 && (
-        <div className="space-y-3 border-t border-brand-border pt-3">
-          <p className="uber-label">Alert types</p>
-          {typeOptions.map((opt) => (
-            <label key={opt.key} className="flex items-start justify-between gap-3 py-1">
-              <span className="min-w-0">
-                <span className="text-sm font-medium block">{opt.label}</span>
-                <span className="text-xs text-brand-text-muted">{opt.description}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => void handleTogglePref(opt.key)}
-                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors mt-0.5 ${
-                  prefs[opt.key] ? 'bg-brand-primary' : 'bg-brand-border'
-                }`}
-                aria-pressed={prefs[opt.key]}
-              >
-                <span
-                  className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                    prefs[opt.key] ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </label>
-          ))}
-        </div>
-      )}
-
-      {currentUser.role === 'guard' && (
-        <div className="space-y-3 border-t border-brand-border pt-3">
-          <label className="block">
-            <span className="uber-label">Site / location tag (optional)</span>
-            <input
-              type="text"
-              value={siteId}
-              onChange={(e) => setSiteId(e.target.value)}
-              placeholder="e.g. west-gate"
-              className="uber-input w-full mt-1"
-            />
-          </label>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={useQuietHours}
-              onChange={(e) => setUseQuietHours(e.target.checked)}
-            />
-            Quiet hours (skip non-emergency alerts)
-          </label>
-
-          {useQuietHours && (
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block text-sm">
-                <span className="uber-label">Start</span>
-                <input type="time" value={quietStart} onChange={(e) => setQuietStart(e.target.value)} className="uber-input w-full mt-1" />
-              </label>
-              <label className="block text-sm">
-                <span className="uber-label">End</span>
-                <input type="time" value={quietEnd} onChange={(e) => setQuietEnd(e.target.value)} className="uber-input w-full mt-1" />
-              </label>
-            </div>
-          )}
-        </div>
-      )}
-
-      <button
-        type="button"
-        disabled={busy || !enabled}
-        onClick={() => void handleTest()}
-        className="w-full flex items-center justify-center gap-2 app-button-outline !h-11 !text-sm disabled:opacity-50"
-      >
-        <Send className="w-4 h-4" />
-        Test notification
-      </button>
-
-      <p className="text-xs text-brand-text-muted leading-relaxed">
-        {nativeApp ? (
-          <>
-            Android notifications: {osNotificationsAllowed ? 'Allowed' : permission}
-            {' · '}
-            Guardr device registration: {enabled ? 'On' : 'Off'}
-            {!nativeFcmReady
-              ? ' — install a push-enabled APK (built with google-services.json).'
-              : permission === 'denied'
-                ? ' — enable notifications for Guardr in Android settings.'
-                : !enabled && !busy && !message
-                  ? ' — turn on the toggle above to register this device.'
-                  : ''}
-          </>
-        ) : (
-          <>
-            Browser permission: {permission}
-            {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
-            {permission === 'granted' && !serverSynced && enabled
-              ? ' — device subscribed locally but not synced to server yet.'
-              : ''}
-            {permission === 'granted' && !enabled && !busy && !message
-              ? ' — turn on the toggle above to register this device.'
-              : ''}
-          </>
-        )}
-      </p>
-
-      {message && (
-        <p
-          className={`text-xs ${
-            message.includes('unavailable') ||
-            message.includes('failed') ||
-            message.includes('not configured') ||
-            message.includes('google-services') ||
-            message.includes('Firebase') ||
-            message.includes('Unauthorized') ||
-            message.includes('missing')
-              ? 'text-amber-600'
-              : 'text-brand-text-muted'
-          }`}
-        >
-          {message}
-        </p>
-      )}
-    </AppFormSection>
+      </AppSettingsSection>
+    </>
   );
 }

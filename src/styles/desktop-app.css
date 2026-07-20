@@ -1250,6 +1250,19 @@ body[data-form-factor="desktop"] .adm-settings-panel .app-form-section {
   border-color: var(--adm-border);
 }
 
+body[data-form-factor="desktop"] .adm-form-page.guard-settings-screen .app-form-section,
+body[data-form-factor="desktop"] .adm-form-page.guard-settings-screen .settings-section {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--adm-border) !important;
+}
+
+body[data-form-factor="desktop"] .adm-form-page.guard-settings-screen .settings-section-head {
+  padding-inline: 0;
+}
+
 /* SLA / analytics metric grids */
 body[data-form-factor="desktop"] .adm-dashboard-grid--metrics {
   grid-template-columns: repeat(4, minmax(0, 1fr));

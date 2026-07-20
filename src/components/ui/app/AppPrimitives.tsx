@@ -252,6 +252,62 @@ export function AppFormSection({
   );
 }
 
+/** Flat native-style settings section — content sits on the app screen, not in a card. */
+export function AppSettingsHead({ children }: { children: React.ReactNode }) {
+  return <h3 className="settings-section-head">{children}</h3>;
+}
+
+export function AppSettingsSection({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <section className={`settings-section ${className}`.trim()}>{children}</section>;
+}
+
+export function AppSettingsToggleRow({
+  label,
+  description,
+  children,
+  className = '',
+}: {
+  label: React.ReactNode;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`settings-toggle-row ${className}`.trim()}>
+      <div className="min-w-0">
+        {typeof label === 'string' ? <span className="text-sm font-medium block">{label}</span> : label}
+        {description ? (
+          <span className="text-xs text-brand-text-muted block mt-0.5 leading-relaxed">{description}</span>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Bordered card for a single interactive settings control (radio row, picker, etc.). */
+export function AppSettingsChoice({
+  selected = false,
+  children,
+  className = '',
+  ...props
+}: React.LabelHTMLAttributes<HTMLLabelElement> & { selected?: boolean }) {
+  return (
+    <label
+      className={`app-settings-choice${selected ? ' app-settings-choice--selected' : ''} ${className}`.trim()}
+      {...props}
+    >
+      {children}
+    </label>
+  );
+}
+
 export function AppList({ children }: { children: React.ReactNode }) {
   return <div className="app-list">{children}</div>;
 }
