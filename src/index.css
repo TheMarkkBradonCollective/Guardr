@@ -2764,6 +2764,9 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 1.25rem;
+  padding-bottom: calc(1rem + max(var(--app-safe-bottom, 0px), env(safe-area-inset-bottom, 0px)));
 }
 
 .map-offer-card-actions {
@@ -20601,8 +20604,47 @@ html.theme-dark .app-form-sheet-panel {
 .app-form-sheet-shell {
   display: flex;
   flex-direction: column;
-  max-height: 90dvh;
+  flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
+  max-height: 100%;
+}
+
+.guardr-sheet-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+  overflow: hidden;
+}
+
+.more-menu-sheet-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.more-menu-sheet-header,
+.more-menu-sheet-footer {
+  flex-shrink: 0;
+}
+
+.more-menu-sheet-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(0.75rem + max(var(--app-safe-bottom, 0px), env(safe-area-inset-bottom, 0px)));
+}
+
+.popup-card-scroll-body {
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(2rem + max(var(--app-safe-bottom, 0px), env(safe-area-inset-bottom, 0px))) !important;
 }
 
 .app-form-sheet-handle {
@@ -20643,8 +20685,9 @@ html.theme-dark .app-form-sheet-panel {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: var(--space-gutter);
-  padding-bottom: calc(var(--space-gutter) + var(--app-safe-bottom));
+  padding-bottom: calc(var(--space-gutter) + max(var(--app-safe-bottom, 0px), env(safe-area-inset-bottom, 0px)));
 }
 
 .app-section {

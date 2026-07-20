@@ -24,7 +24,8 @@ export function MoreMenuSheet({
 }: MoreMenuSheetProps) {
   return (
     <AppOverlaySheet open={open} onClose={onClose} ariaLabel={title} panelClassName="more-menu-panel">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border">
+      <div className="more-menu-sheet-shell">
+      <div className="more-menu-sheet-header flex items-center justify-between px-5 py-4 border-b border-brand-border">
         <p className="text-base font-black tracking-[-0.03em]">{title}</p>
         <button
           type="button"
@@ -35,7 +36,7 @@ export function MoreMenuSheet({
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="overflow-y-auto overscroll-contain">
+      <div className="more-menu-sheet-scroll overflow-y-auto overscroll-contain">
         <div className="divide-y divide-brand-border border-b border-brand-border">
           {items.map(({ id, label, icon: Icon, badge }) => {
             const active = activeId === id;
@@ -66,7 +67,8 @@ export function MoreMenuSheet({
           })}
         </div>
       </div>
-      {footer && <div className="shrink-0 px-4 py-3 border-t border-brand-border">{footer}</div>}
+      {footer && <div className="more-menu-sheet-footer shrink-0 px-4 py-3 border-t border-brand-border">{footer}</div>}
+      </div>
     </AppOverlaySheet>
   );
 }

@@ -182,7 +182,7 @@ export function CertDetailModal({
 
   return (
     <AppOverlaySheet open onClose={onClose} ariaLabel={title} panelClassName="rounded-t-2xl">
-      <div className="flex flex-col max-h-[85dvh]">
+      <div className="flex flex-col flex-1 min-h-0 h-full">
       <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
         <div className="min-w-0">
           {guardName && <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>}
@@ -234,7 +234,7 @@ export function CertDetailModal({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 pb-8 space-y-5">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 space-y-5 popup-card-scroll-body">
         <div className="flex flex-wrap gap-2">
           <CredentialStatusBadges cert={displayCert} />
         </div>
