@@ -368,6 +368,7 @@ html.theme-dark .uber-app-shell .adm-card--welcome {
   flex-direction: column;
   gap: 0;
   min-height: 0;
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 .uber-app-shell .app-screen-title,
