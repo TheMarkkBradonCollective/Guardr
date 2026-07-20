@@ -980,11 +980,11 @@ export default function App() {
   };
 
   const closeClientSupportForm = (_section: 'support' | 'reports' = 'support') => {
-    setClientViewState('messages');
+    setClientViewState('support');
     syncAppRoute(
       buildAppRoute({
         role: 'client',
-        clientView: 'messages',
+        clientView: 'support',
         supportTicketId: undefined,
         supportSection: undefined,
         supportMode: undefined,
@@ -3087,6 +3087,7 @@ export default function App() {
     if (role === 'client') {
       return (
         clientView === 'messages' ||
+        clientView === 'support' ||
         clientView === 'support-compose' ||
         clientView === 'support-report'
       );
@@ -3099,7 +3100,7 @@ export default function App() {
       );
     }
     if (role === 'staff') {
-      return isStaffMessagesSection(staffSection);
+      return isStaffMessagesSection(staffSection) || staffSection === 'support';
     }
     return false;
   }, [currentUser, clientView, guardTab, staffSection, openJobChat]);
@@ -12874,7 +12875,7 @@ export default function App() {
       (clientView === 'invoices' && !!clientInvoiceRequestId);
 
     const clientMessagesShellHeaderTrailing =
-      clientView === 'messages' ? (
+      clientView === 'messages' || clientView === 'support' ? (
         <div className="shrink-0 flex items-center gap-2">
           <AccountMenu
             userName={currentUser.name}

@@ -58,6 +58,7 @@ import {
   getPendingGuardAccounts,
   isStaffOpsMapSection,
   isStaffMessagesSection,
+  isStaffMessagesHubSection,
   StaffSection,
 } from '../lib/staffOps';
 import { buildIncidentReportViews } from '../lib/incidentReports';
@@ -496,7 +497,7 @@ export function StaffDashboard({
   const [staffMessagesChrome, setStaffMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
 
   useEffect(() => {
-    if (!isStaffMessagesSection(section)) {
+    if (!isStaffMessagesHubSection(section)) {
       setStaffMessagesChrome(EMPTY_MESSAGES_CHROME);
     }
   }, [section]);
@@ -936,6 +937,7 @@ export function StaffDashboard({
               selectedTicketId={selectedSupportTicketId}
               onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
               initialSelectedTicketId={selectedSupportTicketId}
+              onMessagesChromeChange={setStaffMessagesChrome}
             />
           </div>
         ) : (
@@ -1159,7 +1161,7 @@ export function StaffDashboard({
     }
   };
 
-  const messagesChromeActive = isStaffMessagesSection(section);
+  const messagesChromeActive = isStaffMessagesHubSection(section);
 
   return (
     <StaffOpsLayout

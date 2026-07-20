@@ -9,15 +9,20 @@ import {
 import { ROLE_LABELS } from '../../lib/permissions';
 import {
   AppChatHeader,
+  AppEmptyState,
   AppInboxList,
   AppInboxRow,
-  AppSegmentedControl,
 } from '../ui/app/AppPrimitives';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { WfBadge } from '../ui/wireframe';
 import { FileText, LifeBuoy } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
 type SupportInboxSection = 'support' | 'reports';
+type StatusFilter = 'open' | 'all';
 
 interface StaffSupportPanelProps {
   tickets: SupportTicket[];
@@ -27,6 +32,17 @@ interface StaffSupportPanelProps {
   selectedTicketId?: string | null;
   onSelectedTicketIdChange?: (ticketId: string | null) => void;
   initialSelectedTicketId?: string | null;
+  onDetailOpenChange?: (open: boolean) => void;
+  onMessagesChromeChange?: (chrome: MessagesChrome) => void;
+}
+
+function formatInboxMeta(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function StaffSupportPanel({
@@ -37,9 +53,14 @@ export function StaffSupportPanel({
   selectedTicketId: controlledSelectedId,
   onSelectedTicketIdChange,
   initialSelectedTicketId = null,
+  onDetailOpenChange,
+  onMessagesChromeChange,
 }: StaffSupportPanelProps) {
+  const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+
   const [section, setSection] = useState<SupportInboxSection>('support');
-  const [statusFilter, setStatusFilter] = useState<'open' | 'all'>('open');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('open');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedTicketId);
 
   const selectedId = controlledSelectedId ?? internalSelectedId;
@@ -50,13 +71,12 @@ export function StaffSupportPanel({
   };
 
   useEffect(() => {
-    if (initialSelectedTicketId) {
-      const ticket = tickets.find((t) => t.id === initialSelectedTicketId);
-      if (ticket) {
-        setSection(ticket.kind === 'report' ? 'reports' : 'support');
-      }
-      setSelectedId(initialSelectedTicketId);
+    if (!initialSelectedTicketId) return;
+    const ticket = tickets.find((t) => t.id === initialSelectedTicketId);
+    if (ticket) {
+      setSection(ticket.kind === 'report' ? 'reports' : 'support');
     }
+    setSelectedId(initialSelectedTicketId);
   }, [initialSelectedTicketId, tickets]);
 
   const sectionTickets = useMemo(
@@ -85,6 +105,13 @@ export function StaffSupportPanel({
     }
   }, [sectionTickets, selectedId]);
 
+  const hasSelection = !!selected;
+  const embedHeaderInShell = !splitView && hasSelection;
+
+  useEffect(() => {
+    onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
+  }, [formFactor, hasSelection, onDetailOpenChange]);
+
   const handleSend = async (body: string) => {
     if (!selected) return;
     await onSendMessage(selected.id, body);
@@ -93,118 +120,169 @@ export function StaffSupportPanel({
     }
   };
 
+  const clearSelection = () => setSelectedId(null);
 
-  const listView = (
-    <div className="flex flex-col min-h-0 h-full px-4 sm:px-5 py-4">
-      <AppSegmentedControl
-        options={[
-          { id: 'support', label: 'Support' },
-          { id: 'reports', label: 'Reports' },
-        ]}
-        value={section}
-        onChange={(id) => {
-          setSection(id as SupportInboxSection);
-          setSelectedId(null);
-        }}
-      />
-
-      {section === 'support' && (
-        <div className="mt-3">
-          <AppSegmentedControl
-            options={[
-              { id: 'open', label: 'Open' },
-              { id: 'all', label: 'All' },
-            ]}
-            value={statusFilter}
-            onChange={(id) => setStatusFilter(id as 'open' | 'all')}
-          />
-        </div>
-      )}
-
-      <div className="flex-1 min-h-0 overflow-y-auto mt-4">
-        {filtered.length === 0 ? (
-          <p className="staff-empty-state">
-            {section === 'support' ? 'No support chats in this view.' : 'No reports yet.'}
-          </p>
-        ) : (
-          <AppInboxList>
-            {filtered.map((ticket) => {
-              const preview =
-                ticket.kind === 'report'
-                  ? ticket.messages[0]?.body
-                  : ticket.messages[ticket.messages.length - 1]?.body;
-              const statusLabel = supportStatusLabel(ticket);
-              return (
-                <AppInboxRow
-                  key={ticket.id}
-                  title={ticket.subject}
-                  preview={preview}
-                  meta={new Date(ticket.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  badges={
-                    <>
-                      <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
-                        {statusLabel}
-                      </WfBadge>
-                      <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
-                      {ticket.priority !== 'normal' && (
-                        <WfBadge tone="warning">{priorityLabel(ticket.priority)}</WfBadge>
-                      )}
-                    </>
-                  }
-                  onClick={() => setSelectedId(ticket.id)}
-                />
-              );
-            })}
-          </AppInboxList>
-        )}
-      </div>
-    </div>
+  const sectionTabs = (
+    <MessagesInboxTabs
+      activeTab={section}
+      onTabChange={(tabId) => {
+        setSection(tabId as SupportInboxSection);
+        setSelectedId(null);
+      }}
+      tabs={[
+        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'reports', label: 'Reports', icon: <FileText className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
   );
 
-  const threadView = !selected ? (
-    <div className="staff-empty-state flex-1 flex items-center justify-center h-full">
-      <div className="text-center px-6">
-        {section === 'support' ? (
-          <LifeBuoy className="w-10 h-10 mx-auto mb-3 opacity-40" />
-        ) : (
-          <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-        )}
-        <p className="text-sm font-semibold">
-          {section === 'support' ? 'Select a support chat' : 'Select a report'}
-        </p>
-        <p className="text-xs text-brand-text-muted mt-1">
+  const header = (
+    <>
+      {sectionTabs}
+      {section === 'support' ? (
+        <MessagesInboxTabs
+          activeTab={statusFilter}
+          onTabChange={(tabId) => setStatusFilter(tabId as StatusFilter)}
+          tabs={[
+            { id: 'open', label: 'Open' },
+            { id: 'all', label: 'All' },
+          ]}
+        />
+      ) : null}
+    </>
+  );
+
+  useEffect(() => {
+    if (!onMessagesChromeChange) return;
+
+    const extension = !embedHeaderInShell ? header : null;
+    let override: React.ReactNode | null = null;
+
+    if (embedHeaderInShell && selected) {
+      override = (
+        <AppChatHeader
+          title={selected.subject}
+          subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
+          onBack={clearSelection}
+          trailing={
+            <select
+              value={selected.status}
+              onChange={(e) => void onUpdateStatus(selected.id, e.target.value as SupportTicketStatus)}
+              className="uber-input text-xs py-1.5 max-w-[8.5rem]"
+            >
+              {(Object.keys(
+                selected.kind === 'report'
+                  ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+                  : SUPPORT_STATUS_LABEL
+              ) as SupportTicketStatus[]).map((s) => (
+                <option key={s} value={s}>
+                  {selected.kind === 'report'
+                    ? supportStatusLabel({ kind: 'report', status: s })
+                    : SUPPORT_STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
+          }
+        />
+      );
+    }
+
+    onMessagesChromeChange({ extension, override });
+    return () => onMessagesChromeChange(EMPTY_MESSAGES_CHROME);
+  }, [
+    onMessagesChromeChange,
+    embedHeaderInShell,
+    section,
+    statusFilter,
+    selected,
+    onUpdateStatus,
+  ]);
+
+  const list = (
+    <>
+      {filtered.length === 0 ? (
+        <AppEmptyState
+          dashed
+          icon={section === 'support' ? <LifeBuoy className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+          title={section === 'support' ? 'No support chats in this view' : 'No reports yet'}
+        >
           {section === 'support'
-            ? 'Choose a conversation from the list to reply.'
-            : 'Choose a submitted report to review.'}
-        </p>
-      </div>
-    </div>
-  ) : (
-    <div className="flex flex-col h-full min-h-0 bg-brand-bg">
-      <AppChatHeader
-        title={selected.subject}
-        subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
-        onBack={() => setSelectedId(null)}
-        trailing={
-          <select
-            value={selected.status}
-            onChange={(e) => void onUpdateStatus(selected.id, e.target.value as SupportTicketStatus)}
-            className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-          >
-            {(Object.keys(
-              selected.kind === 'report'
-                ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                : SUPPORT_STATUS_LABEL
-            ) as SupportTicketStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {selected.kind === 'report'
-                  ? supportStatusLabel({ kind: 'report', status: s })
-                  : SUPPORT_STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        }
-      />
+            ? statusFilter === 'open'
+              ? 'Open support conversations appear here.'
+              : 'Support chats will appear here when users contact Guardr.'
+            : 'Submitted reports will appear here for review.'}
+        </AppEmptyState>
+      ) : (
+        <AppInboxList>
+          {filtered.map((ticket) => {
+            const preview =
+              ticket.kind === 'report'
+                ? ticket.messages[0]?.body
+                : ticket.messages[ticket.messages.length - 1]?.body;
+            const statusLabel = supportStatusLabel(ticket);
+            return (
+              <AppInboxRow
+                key={ticket.id}
+                title={ticket.subject}
+                preview={preview}
+                meta={formatInboxMeta(ticket.updatedAt)}
+                selected={selectedId === ticket.id}
+                leading={
+                  ticket.kind === 'report' ? (
+                    <FileText className="w-5 h-5 text-brand-primary" strokeWidth={1.5} />
+                  ) : (
+                    <LifeBuoy className="w-5 h-5 text-brand-primary" strokeWidth={1.5} />
+                  )
+                }
+                badges={
+                  <>
+                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
+                      {statusLabel}
+                    </WfBadge>
+                    <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
+                    {ticket.priority !== 'normal' && (
+                      <WfBadge tone="warning">{priorityLabel(ticket.priority)}</WfBadge>
+                    )}
+                  </>
+                }
+                onClick={() => setSelectedId(ticket.id)}
+              />
+            );
+          })}
+        </AppInboxList>
+      )}
+    </>
+  );
+
+  const detailView = selected ? (
+    <div className="flex flex-col h-full min-h-0 app-full-page-screen">
+      {!embedHeaderInShell && (
+        <AppChatHeader
+          title={selected.subject}
+          subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
+          onBack={clearSelection}
+          hideBackOnDesktop
+          trailing={
+            <select
+              value={selected.status}
+              onChange={(e) => void onUpdateStatus(selected.id, e.target.value as SupportTicketStatus)}
+              className="uber-input text-xs py-1.5 max-w-[8.5rem]"
+            >
+              {(Object.keys(
+                selected.kind === 'report'
+                  ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+                  : SUPPORT_STATUS_LABEL
+              ) as SupportTicketStatus[]).map((s) => (
+                <option key={s} value={s}>
+                  {selected.kind === 'report'
+                    ? supportStatusLabel({ kind: 'report', status: s })
+                    : SUPPORT_STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
+          }
+        />
+      )}
       <div className="flex-1 min-h-0">
         <ChatThreadPanel
           messages={selected.messages.map((msg) => ({
@@ -222,11 +300,21 @@ export function StaffSupportPanel({
         />
       </div>
     </div>
-  );
+  ) : null;
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      {selected ? threadView : listView}
-    </div>
+    <MessagesHubLayout
+      header={header}
+      list={list}
+      detail={detailView ?? <div />}
+      hasSelection={hasSelection && !!detailView}
+      shellInboxHeader
+      emptyDetailTitle={section === 'support' ? 'Select a support chat' : 'Select a report'}
+      emptyDetailHint={
+        section === 'support'
+          ? 'Choose a conversation from the list to reply.'
+          : 'Choose a submitted report to review.'
+      }
+    />
   );
 }
