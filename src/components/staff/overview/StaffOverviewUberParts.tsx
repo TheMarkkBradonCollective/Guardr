@@ -53,7 +53,7 @@ export const QUICK_LINK_META: Record<
   violations: { label: 'Violations', icon: ShieldAlert, sub: 'Shift issues' },
   stats: { label: 'Stats', icon: BarChart3, sub: 'Reporting' },
   messages: { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
-  support: { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
+  support: { label: 'Support', icon: LifeBuoy, sub: 'Tickets' },
   'team-chat': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
   'job-chats': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
   payments: { label: 'Payments', icon: DollarSign, sub: 'Billing' },
