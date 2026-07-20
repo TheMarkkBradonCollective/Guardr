@@ -192,7 +192,7 @@ export function ClientAppLayout({
     </div>
   );
 
-  const chromeActive = activeView === 'messages';
+  const chromeActive = activeView === 'messages' || activeView === 'support';
   const shellHeaderOverride = chromeActive ? messagesChrome.override : null;
   const shellHeaderExtension = chromeActive ? messagesChrome.extension : null;
   const shellHideHeader = hideHeader && !shellHeaderOverride;

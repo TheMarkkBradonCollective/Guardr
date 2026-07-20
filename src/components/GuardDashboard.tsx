@@ -448,7 +448,7 @@ export function GuardDashboard({
   const [crewJobDetailOpen, setCrewJobDetailOpen] = useState(false);
 
   useEffect(() => {
-    if (tab !== 'messages') {
+    if (tab !== 'messages' && tab !== 'support') {
       setGuardMessagesChrome(EMPTY_MESSAGES_CHROME);
     }
   }, [tab]);
@@ -1320,7 +1320,7 @@ export function GuardDashboard({
   };
 
   const messagesChromeActive =
-    tab === 'messages' && supportMode !== 'compose' && supportMode !== 'report';
+    (tab === 'messages' || tab === 'support') && supportMode !== 'compose' && supportMode !== 'report';
   const messagesShellHeaderTrailing =
     messagesChromeActive ? (
       <div className="shrink-0 flex items-center gap-2">
@@ -1690,6 +1690,7 @@ export function GuardDashboard({
                   onOpenSupportCompose={onOpenSupportCompose}
                   onOpenSupportReport={onOpenSupportReport}
                   onDetailOpenChange={setGuardMessagesDetailOpen}
+                  onMessagesChromeChange={setGuardMessagesChrome}
                   shellHeaderTrailing={messagesShellHeaderTrailing}
                 />
               )}

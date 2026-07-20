@@ -50,7 +50,7 @@ type ActiveView =
   | { kind: 'team'; requestId: string }
   | { kind: 'support'; ticketId: string };
 
-type InboxTab = 'chats' | 'teams' | 'jobs' | 'support';
+type InboxTab = 'chats' | 'teams' | 'jobs' | 'support' | 'reports';
 
 interface GuardMessagesPanelProps {
   scope?: 'messages' | 'support';
@@ -160,18 +160,19 @@ export function GuardMessagesPanel({
     setActiveView({ kind: 'job', requestId: initialJobChatRequestId });
   }, [initialJobChatRequestId]);
 
-  useEffect(() => {
-    if (!initialSupportTicketId) return;
-    setActiveTab('support');
-    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
-  }, [initialSupportTicketId]);
-
   const allJobs = useMemo(() => [...upcomingJobs, ...pastJobs], [upcomingJobs, pastJobs]);
   const jobById = useMemo(() => new Map(allJobs.map((j) => [j.id, j])), [allJobs]);
   const myTickets = useMemo(
     () => ticketsForUser(supportTickets, currentUser),
     [supportTickets, currentUser]
   );
+
+  useEffect(() => {
+    if (!initialSupportTicketId) return;
+    const ticket = myTickets.find((t) => t.id === initialSupportTicketId);
+    setActiveTab(ticket?.kind === 'report' ? 'reports' : 'support');
+    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
+  }, [initialSupportTicketId, myTickets]);
 
   const guardChannelUpdatedAt = useMemo(() => {
     const sorted = sortedGuardMessages(guardMessages);
@@ -213,7 +214,11 @@ export function GuardMessagesPanel({
   );
 
   const tabRows = useMemo((): InboxRow[] => {
-    if (isSupportScope) return supportRows;
+    if (isSupportScope) {
+      return supportRows.filter((r) =>
+        activeTab === 'reports' ? r.channel === 'report' : r.channel === 'support'
+      );
+    }
     switch (activeTab) {
       case 'chats':   return [communityRow];
       case 'teams':   return teamRows;
@@ -272,7 +277,20 @@ export function GuardMessagesPanel({
   }, [formFactor, hasSelection, onDetailOpenChange]);
 
   // ── Header: inbox tabs (title lives in AppScreenHeader) ──
-  const header = isSupportScope ? null : (
+  const header = isSupportScope ? (
+    <MessagesInboxTabs
+      activeTab={activeTab}
+      onTabChange={(tabId) => {
+        setActiveTab(tabId as InboxTab);
+        setActiveView({ kind: 'list' });
+        onSupportTicketIdChange?.(null);
+      }}
+      tabs={[
+        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'reports', label: 'Reports', icon: <FileText className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
+  ) : (
     <MessagesInboxTabs
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
@@ -374,14 +392,24 @@ export function GuardMessagesPanel({
           dashed
           icon={<MessageCircle className="w-5 h-5" />}
           title={
-            activeTab === 'teams'
-              ? 'No team chats yet'
-              : activeTab === 'jobs'
-                ? 'No job chats yet'
-                : 'No conversations yet'
+            isSupportScope
+              ? activeTab === 'reports'
+                ? 'No reports yet'
+                : 'No support conversations'
+              : activeTab === 'teams'
+                ? 'No team chats yet'
+                : activeTab === 'jobs'
+                  ? 'No job chats yet'
+                  : activeTab === 'support'
+                    ? 'No support conversations'
+                    : 'No conversations yet'
           }
         >
-          {activeTab === 'teams'
+          {isSupportScope
+            ? activeTab === 'reports'
+              ? 'Use the button above to file a report.'
+              : 'Use the buttons above to contact support or file a report.'
+            : activeTab === 'teams'
             ? 'Join a multi-guard crew to coordinate in team chat.'
             : activeTab === 'jobs'
               ? 'Job chats open once you are assigned to an active job.'
@@ -549,8 +577,12 @@ export function GuardMessagesPanel({
         detail={detailView ?? <div />}
         hasSelection={hasSelection && !!detailView}
         shellInboxHeader
-        emptyDetailTitle="Your conversations"
-        emptyDetailHint="Select guard chat, a team crew, a job thread, or support from the inbox"
+        emptyDetailTitle={isSupportScope ? 'Your support conversations' : 'Your conversations'}
+        emptyDetailHint={
+          isSupportScope
+            ? 'Select a support chat or report from the inbox'
+            : 'Select guard chat, a team crew, a job thread, or support from the inbox'
+        }
       />
     </div>
   );

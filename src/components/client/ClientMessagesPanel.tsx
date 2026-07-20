@@ -41,7 +41,7 @@ type ActiveView =
   | { kind: 'job'; requestId: string }
   | { kind: 'support'; ticketId: string };
 
-type InboxTab = 'chats' | 'jobs' | 'support';
+type InboxTab = 'chats' | 'jobs' | 'support' | 'reports';
 
 interface ClientMessagesPanelProps {
   scope?: 'messages' | 'support';
@@ -134,17 +134,18 @@ export function ClientMessagesPanel({
     setActiveView({ kind: 'job', requestId: initialChatRequestId });
   }, [initialChatRequestId]);
 
-  useEffect(() => {
-    if (!initialSupportTicketId) return;
-    setActiveTab('support');
-    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
-  }, [initialSupportTicketId]);
-
   const requestById = useMemo(() => new Map(requests.map((r) => [r.id, r])), [requests]);
   const myTickets = useMemo(
     () => ticketsForUser(supportTickets, currentUser),
     [supportTickets, currentUser]
   );
+
+  useEffect(() => {
+    if (!initialSupportTicketId) return;
+    const ticket = myTickets.find((t) => t.id === initialSupportTicketId);
+    setActiveTab(ticket?.kind === 'report' ? 'reports' : 'support');
+    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
+  }, [initialSupportTicketId, myTickets]);
 
   const clientChannelUpdatedAt = useMemo(() => {
     const sorted = sortedClientMessages(clientMessages);
@@ -189,7 +190,11 @@ export function ClientMessagesPanel({
   );
 
   const tabRows = useMemo((): InboxRow[] => {
-    if (isSupportScope) return supportRowsAll;
+    if (isSupportScope) {
+      return supportRowsAll.filter((r) =>
+        activeTab === 'reports' ? r.channel === 'report' : r.channel === 'support'
+      );
+    }
     switch (activeTab) {
       case 'chats': return [communityRow];
       case 'jobs': return jobRows;
@@ -261,7 +266,20 @@ export function ClientMessagesPanel({
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
-  const header = isSupportScope ? null : (
+  const header = isSupportScope ? (
+    <MessagesInboxTabs
+      activeTab={activeTab}
+      onTabChange={(tabId) => {
+        setActiveTab(tabId as InboxTab);
+        setActiveView({ kind: 'list' });
+        onSupportTicketIdChange?.(null);
+      }}
+      tabs={[
+        { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        { id: 'reports', label: 'Reports', icon: <FileText className="w-3.5 h-3.5" strokeWidth={2} /> },
+      ]}
+    />
+  ) : (
     <MessagesInboxTabs
       activeTab={activeTab}
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
@@ -347,10 +365,22 @@ export function ClientMessagesPanel({
           dashed
           icon={<MessageCircle className="w-5 h-5" />}
           title={
-            activeTab === 'jobs' ? 'No job chats yet' : activeTab === 'support' ? 'No support conversations' : 'No conversations yet'
+            isSupportScope
+              ? activeTab === 'reports'
+                ? 'No reports yet'
+                : 'No support conversations'
+              : activeTab === 'jobs'
+                ? 'No job chats yet'
+                : activeTab === 'support'
+                  ? 'No support conversations'
+                  : 'No conversations yet'
           }
         >
-          {activeTab === 'jobs'
+          {isSupportScope
+            ? activeTab === 'reports'
+              ? 'Use the button above to file a report.'
+              : 'Use the buttons above to contact support or file a report.'
+            : activeTab === 'jobs'
             ? 'Job chats appear here once a guard is assigned to your booking.'
             : activeTab === 'support'
               ? 'Use the buttons above to contact support or file a report.'
@@ -494,8 +524,12 @@ export function ClientMessagesPanel({
         detail={detailView ?? <div />}
         hasSelection={hasSelection && !!detailView}
         shellInboxHeader
-        emptyDetailTitle="Your conversations"
-        emptyDetailHint="Select client chat, a job thread, or support from the inbox"
+        emptyDetailTitle={isSupportScope ? 'Your support conversations' : 'Your conversations'}
+        emptyDetailHint={
+          isSupportScope
+            ? 'Select a support chat or report from the inbox'
+            : 'Select client chat, a job thread, or support from the inbox'
+        }
       />
     </div>
   );
