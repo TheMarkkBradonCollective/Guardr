@@ -19277,8 +19277,8 @@ textarea:focus-visible {
 
 .staff-sidebar .uber-side-nav-item {
   border-radius: 0.625rem !important;
-  margin: 0.125rem 0.625rem !important;
-  padding: 0.625rem 0.875rem !important;
+  margin: 0.125rem 0.875rem !important;
+  padding: 0.625rem 1rem !important;
 }
 
 .staff-sidebar.staff-sidebar-light .uber-side-nav-item-active {

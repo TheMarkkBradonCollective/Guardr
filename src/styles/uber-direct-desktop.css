@@ -96,7 +96,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 /* Side nav — Uber Direct pills + section labels */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav [data-baseweb="side-nav"] {
-  padding: 0 8px;
+  padding: 0 16px;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li {
@@ -110,9 +110,9 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a {
   border-radius: 8px !important;
-  margin: 1px 0 !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  margin: 2px 0 !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   min-height: 44px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
@@ -130,8 +130,13 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   font-weight: 600 !important;
 }
 
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   color: #ffffff !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+  stroke: #ffffff !important;
 }
 
 html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
@@ -139,8 +144,13 @@ html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-di
   color: #000000 !important;
 }
 
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
 html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   color: #000000 !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+  stroke: #000000 !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {

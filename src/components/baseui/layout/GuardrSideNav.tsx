@@ -96,7 +96,17 @@ export function GuardrSideNav({
           const id = String(item.itemId ?? '');
           if (!id.startsWith('__')) onSelect(id);
         }}
-        overrides={shellNavOverrides}
+        overrides={{
+          ...shellNavOverrides,
+          NavLink: {
+            ...shellNavOverrides.NavLink,
+            // Base Web Side Nav never sets aria-current; CSS active tabs key off it.
+            props: (props: { $active?: boolean } & Record<string, unknown>) => ({
+              ...props,
+              'aria-current': props.$active ? 'page' : undefined,
+            }),
+          },
+        } as typeof shellNavOverrides}
       />
     </Block>
   );
