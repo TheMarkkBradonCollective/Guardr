@@ -138,7 +138,7 @@ export function StaffSidebarNav({
         accessFlags={accessFlags}
       />
       <NavGroup
-        title="Messages"
+        title="Communications"
         itemIds={MESSAGES_IDS}
         items={items}
         activeSection={activeSection}
