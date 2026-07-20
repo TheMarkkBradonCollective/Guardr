@@ -143,8 +143,8 @@ html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-di
   color: #000000 !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover {
-  background: var(--uber-surface, #f6f6f6) !important;
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+  background: #eeeeee !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
