@@ -7,8 +7,12 @@ import { formatShiftRange } from '../../lib/dates';
 import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
 import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrButton } from '../baseui/GuardrButton';
-import { AppScreen } from '../ui/app/AppPrimitives';
-import { WorkbenchCardTitle, WorkbenchGrid, WorkbenchGridCell } from '../baseui/layout/WorkbenchLayout';
+import {
+  WorkbenchCardTitle,
+  WorkbenchGrid,
+  WorkbenchGridCell,
+  WorkbenchPage,
+} from '../baseui/layout/WorkbenchLayout';
 
 export interface GuardEarningsDesktopProps {
   breakdown: GuardEarningsBreakdown;
@@ -47,7 +51,7 @@ export function GuardEarningsDesktop({
   const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
 
   return (
-    <AppScreen className="mobility-workspace" data-tour="guard-earnings">
+    <WorkbenchPage className="mobility-workspace" data-tour="guard-earnings">
       <WorkbenchGrid>
         <WorkbenchGridCell span={4}>
           <GuardrCard>
@@ -161,6 +165,6 @@ export function GuardEarningsDesktop({
           </GuardrCard>
         </WorkbenchGridCell>
       </WorkbenchGrid>
-    </AppScreen>
+    </WorkbenchPage>
   );
 }

@@ -27,8 +27,9 @@ const config = {
       showSpinner: false,
     },
     StatusBar: {
-      // Light status-bar icons on the black APK shell (PWA stays white in manifest).
-      style: 'LIGHT',
+      // Light (white) status-bar icons on the black APK splash/shell.
+      // Capacitor: Style.Dark = light icons; Style.Light = dark icons.
+      style: 'DARK',
       backgroundColor: '#000000',
       overlaysWebView: false,
     },

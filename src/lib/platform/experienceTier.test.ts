@@ -76,7 +76,8 @@ describe('experience capability helpers', () => {
     assert.equal(experienceAllowsGlassChrome(lite), false);
     assert.equal(experienceAllowsGlassChrome(fullPwa), true);
     assert.equal(experienceAllowsHaptics(premium), true);
-    assert.equal(experienceAllowsHaptics(fullApk), false);
+    assert.equal(experienceAllowsHaptics(fullApk), true);
+    assert.equal(experienceAllowsHaptics(fullPwa), false);
     assert.equal(experienceMotionScale(lite), 0.55);
     assert.ok(experienceMotionScale(premium) > 1);
   });

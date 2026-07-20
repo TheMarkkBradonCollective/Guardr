@@ -25,8 +25,8 @@ body.shell-native .app-welcome-dock {
   border-top: 1px solid var(--uber-border, #e2e2e2);
 }
 
-body[data-shell="native"] .bottom-nav-bar,
-body.shell-native .bottom-nav-bar {
+body[data-shell="native"] .uber-bottom-nav,
+body.shell-native .uber-bottom-nav {
   background: var(--uber-bg, #ffffff);
   border-top: 1px solid var(--uber-border, #e2e2e2);
   padding-bottom: max(0.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));

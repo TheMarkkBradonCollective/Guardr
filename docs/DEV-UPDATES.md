@@ -1,13 +1,39 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Friday, July 17, 2026  
+**Last updated:** Monday, July 20, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.79**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.84**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Monday, July 20, 2026 — /mergeit + /updateit → v1.0.84
+
+**Platform shells (#725–#727)**
+- **#725** — Tablet website/PWA/APK hardening: staff tablet dual chrome fix, PWA sheet auth over AppHomeScreen, install screenshots, cross-platform docs
+- **#726** — Mobile shell fixes: safe-area insets, bottom nav retarget, APK haptics, PWA install prompt, status-bar icons
+- **#727** — Desktop client home job selection, guard earnings workbench parity, landing nav legal/guide links
+
+**Settings & UX (#722–#724, #728–#730)**
+- **#722** — Flat native settings layout (no gray card canvases)
+- **#723** — Strict black/white staff Overview/Jobs screens
+- **#724** — City-centric staff operations access in Operations tab
+- **#728** — Appearance theme toggle moved to profile menu popup
+- **#729** — Support inbox matches Messages hub style (client, guard, staff)
+- **#730** — App home simplified to Sign in / Sign up → role picker
+
+**PR cleanup**
+- Merged **#725–#730**; all open PRs closed
+
+**Release:** **v1.0.84** (build **184**) — web + PWA cache bust (`guardr-cache-v1-0-84`) + CI FCM APK
+
+**Test coverage:** 429 unit tests, lint and build clean.
+
+**Supabase:** No schema changes — nothing to run.
 
 ---
 

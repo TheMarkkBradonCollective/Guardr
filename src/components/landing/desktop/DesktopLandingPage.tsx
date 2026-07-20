@@ -10,7 +10,7 @@
  *   Footer
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { ParagraphMedium, LabelSmall } from 'baseui/typography';
@@ -54,11 +54,34 @@ interface DesktopLandingPageProps {
 function DesktopNav({
   onNavigateToAuth,
   onOpenGuide,
+  onOpenLegal,
 }: {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   onOpenGuide?: () => void;
+  onOpenLegal: (page: LegalPageId) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!moreWrapRef.current?.contains(event.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [moreOpen]);
 
   return (
     <header
@@ -79,7 +102,7 @@ function DesktopNav({
             <button type="button" className="dsk-landing-nav-link" onClick={() => onNavigateToAuth('guard', 'sign-up')}>
               For guards
             </button>
-            <button type="button" className="dsk-landing-nav-link" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
+            <button type="button" className="dsk-landing-nav-link" onClick={() => onOpenLegal('privacy')}>
               Safety
             </button>
             {onOpenGuide ? (
@@ -87,28 +110,52 @@ function DesktopNav({
                 Help
               </button>
             ) : null}
-            <div className="dsk-landing-nav-more-wrap">
+            <div className="dsk-landing-nav-more-wrap" ref={moreWrapRef}>
               <button
                 type="button"
                 className="dsk-landing-nav-link dsk-landing-nav-link--more"
                 onClick={() => setMoreOpen((v) => !v)}
                 aria-expanded={moreOpen}
+                aria-haspopup="menu"
               >
                 More <ChevronDown size={14} />
               </button>
               {moreOpen ? (
                 <div className="dsk-landing-nav-dropdown" role="menu">
-                  {['Company', 'Newsroom', 'Investors', 'Blog', 'Careers'].map((item) => (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dsk-landing-nav-dropdown-item"
+                    onClick={() => { setMoreOpen(false); onOpenLegal('terms'); }}
+                  >
+                    Terms of Service
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dsk-landing-nav-dropdown-item"
+                    onClick={() => { setMoreOpen(false); onOpenLegal('privacy'); }}
+                  >
+                    Privacy Policy
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dsk-landing-nav-dropdown-item"
+                    onClick={() => { setMoreOpen(false); onOpenLegal('guard-conduct'); }}
+                  >
+                    Guard conduct
+                  </button>
+                  {onOpenGuide ? (
                     <button
-                      key={item}
                       type="button"
                       role="menuitem"
                       className="dsk-landing-nav-dropdown-item"
-                      onClick={() => { setMoreOpen(false); onNavigateToAuth(undefined, 'sign-in'); }}
+                      onClick={() => { setMoreOpen(false); onOpenGuide(); }}
                     >
-                      {item}
+                      Product guide
                     </button>
-                  ))}
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -432,7 +479,11 @@ export function DesktopLandingPage({
 }: DesktopLandingPageProps) {
   return (
     <div className="dsk-landing-page">
-      <DesktopNav onNavigateToAuth={onNavigateToAuth} onOpenGuide={onOpenGuide} />
+      <DesktopNav
+        onNavigateToAuth={onNavigateToAuth}
+        onOpenGuide={onOpenGuide}
+        onOpenLegal={onOpenLegal}
+      />
       <DesktopHero onNavigateToAuth={onNavigateToAuth} />
       <ExploreSection onNavigateToAuth={onNavigateToAuth} />
       <LoginBand onNavigateToAuth={onNavigateToAuth} />

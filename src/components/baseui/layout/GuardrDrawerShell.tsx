@@ -11,6 +11,8 @@ import { resolveMobilityChrome } from './mobilityChrome';
 import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { useDevice } from '../../../lib/platform';
 import { prefersReducedMotion } from '../../../theme/motionTokens';
+import { MoreMenuSheet } from '../../layouts/MoreMenuSheet';
+import type { BottomNavItem } from '../../layouts/BottomNavBar';
 
 export interface SidebarPrimaryAction {
   label: string;
@@ -84,18 +86,32 @@ export function GuardrDrawerShell({
   const showChromeHeader = !hideHeader && !isDesktopWorkspace;
   const showPageTitleBand = showTitleBand && !hideHeader && !headerOverride;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     setSidebarOpen(chrome.defaultSidebarOpen);
   }, [chrome.defaultSidebarOpen, viewSurface]);
 
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [viewSurface, activeNavId]);
+
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
+  const openMore = useCallback(() => setMoreOpen(true), []);
 
   const handleNavigate = (id: string) => {
     onNavigate(id);
     if (isMobile) closeSidebar();
+    setMoreOpen(false);
   };
+
+  const overflowItems = mobileBottomNavOverflow ?? [];
+  const showMoreTab = useBottomNav && overflowItems.length > 0;
+  const moreActive = showMoreTab && overflowItems.some((item) => item.id === activeNavId);
+  const moreBadge = overflowItems.reduce((sum, item) => sum + (item.badge && item.badge > 0 ? item.badge : 0), 0);
+  const moreSheetItems = overflowItems as BottomNavItem[];
 
   const sidebarVisible = sidebarOpen;
   const isMobileDrawer = isMobile;
@@ -174,8 +190,8 @@ export function GuardrDrawerShell({
               ? {
                   position: 'relative',
                   height: '100%',
-                  paddingTop: 'max(0px, env(safe-area-inset-top))',
-                  paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
+                  paddingTop: 'max(0px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
+                  paddingBottom: 'max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
                 }
               : {
                   position: 'fixed',
@@ -187,8 +203,8 @@ export function GuardrDrawerShell({
                   pointerEvents: sidebarVisible ? 'auto' : 'none',
                   transform: sidebarVisible ? 'translateX(0)' : 'translateX(-100%)',
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
-                  paddingTop: 'max(0px, env(safe-area-inset-top))',
-                  paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
+                  paddingTop: 'max(0px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
+                  paddingBottom: 'max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
                   overflowY: 'auto',
                   overflowX: 'hidden',
                   overscrollBehavior: 'contain',
@@ -330,7 +346,7 @@ export function GuardrDrawerShell({
               style: {
                 borderBottom: `1px solid ${theme.colors.borderOpaque}`,
                 flexShrink: 0,
-                paddingTop: 'max(10px, env(safe-area-inset-top))',
+                paddingTop: 'max(10px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
                 minHeight: 'var(--mobility-header-h, 56px)',
               },
             },
@@ -506,8 +522,22 @@ export function GuardrDrawerShell({
               items={mobileBottomNavItems}
               activeId={activeNavId}
               onNavigate={handleNavigate}
+              showMore={showMoreTab}
+              moreActive={moreActive}
+              moreBadge={moreBadge}
+              onMoreClick={openMore}
             />
           </Block>
+        ) : null}
+
+        {showMoreTab ? (
+          <MoreMenuSheet
+            open={moreOpen}
+            items={moreSheetItems}
+            activeId={activeNavId}
+            onNavigate={handleNavigate}
+            onClose={closeMore}
+          />
         ) : null}
       </Block>
     </>
