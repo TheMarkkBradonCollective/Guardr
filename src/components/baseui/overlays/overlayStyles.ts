@@ -1,14 +1,13 @@
 import type { ModalOverrides } from 'baseui/modal';
 import type { DrawerOverrides } from 'baseui/drawer';
 
-const solidBackdropStyle = {
-  backgroundColor: '#000000',
-  opacity: 1,
+const dimBackdropStyle = {
+  backgroundColor: 'rgba(0, 0, 0, 0.52)',
 } as const;
 
-const solidPanelStyle = {
-  backgroundColor: 'backgroundPrimary',
-  opacity: 1,
+const sheetPanelStyle = {
+  backgroundColor: 'var(--uber-bg, #ffffff)',
+  boxShadow: '0 -8px 48px rgba(0, 0, 0, 0.16)',
 } as const;
 
 export function modalOverrides(options: {
@@ -21,7 +20,7 @@ export function modalOverrides(options: {
     Root: {
       style: {
         zIndex,
-        backgroundColor: '#000000',
+        backgroundColor: 'rgba(0, 0, 0, 0.52)',
       },
     },
     Dialog: {
@@ -29,10 +28,11 @@ export function modalOverrides(options: {
         borderRadius: centered ? '14px' : '22px 22px 0 0',
         border: '1px solid',
         borderColor: 'borderOpaque',
-        ...solidPanelStyle,
+        backgroundColor: 'var(--uber-bg, #ffffff)',
         color: 'contentPrimary',
         maxHeight: '90vh',
         overflowY: 'auto',
+        boxShadow: '0 24px 64px rgba(0, 0, 0, 0.22)',
       },
       props: panelClassName ? { className: panelClassName } : {},
     },
@@ -54,7 +54,7 @@ export function sheetOverrides(options: {
       style: { zIndex },
     },
     Backdrop: {
-      style: solidBackdropStyle,
+      style: dimBackdropStyle,
     },
     DrawerContainer: {
       style: {
@@ -63,7 +63,7 @@ export function sheetOverrides(options: {
         border: '1px solid',
         borderColor: 'borderOpaque',
         borderBottom: 'none',
-        ...solidPanelStyle,
+        ...sheetPanelStyle,
         color: 'contentPrimary',
         maxHeight: '85dvh',
         paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
@@ -83,13 +83,13 @@ export function drawerOverrides(options: { zIndex?: number; width?: string }): D
       style: { zIndex },
     },
     Backdrop: {
-      style: solidBackdropStyle,
+      style: dimBackdropStyle,
     },
     DrawerContainer: {
       style: {
         width,
         maxWidth: '90vw',
-        ...solidPanelStyle,
+        backgroundColor: 'var(--uber-bg, #ffffff)',
         color: 'contentPrimary',
         borderRight: '1px solid',
         borderColor: 'borderOpaque',

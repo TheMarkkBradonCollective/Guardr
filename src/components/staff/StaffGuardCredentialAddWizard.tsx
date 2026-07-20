@@ -39,8 +39,8 @@ export function SelectedGuardBanner({
       <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
       <div className="min-w-0 flex-1">
         <p className="text-xs text-brand-text-muted">Adding credential for</p>
-        <p className="text-sm font-semibold truncate">{guard.name}</p>
-        <p className="text-xs text-brand-text-muted truncate">{guard.badgeNumber}</p>
+        <p className="text-sm font-semibold break-words">{guard.name}</p>
+        <p className="text-xs text-brand-text-muted break-words">{guard.badgeNumber}</p>
       </div>
       {onChangeGuard && (
         <button type="button" onClick={onChangeGuard} className="text-xs font-semibold text-brand-primary shrink-0">
@@ -69,9 +69,9 @@ function WizardFooter({
   submitting?: boolean;
 }) {
   return (
-    <div className="flex gap-2 pt-2">
+    <div className="flex items-center justify-end gap-2 pt-2">
       {onBack && (
-        <button type="button" onClick={onBack} className="flex-1 app-button-outline !h-11 !text-sm">
+        <button type="button" onClick={onBack} className="app-button-outline !w-auto !min-w-[5.5rem] !h-11 !px-4 !text-sm">
           Back
         </button>
       )}
@@ -80,7 +80,7 @@ function WizardFooter({
           type="button"
           onClick={onSubmit}
           disabled={submitting}
-          className="flex-1 app-button-primary !h-11 !text-sm gap-2 disabled:opacity-50"
+          className="app-button-primary !w-auto !min-w-[7.5rem] !h-11 !px-5 !text-sm gap-2 disabled:opacity-50"
         >
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           {submitting ? 'Adding…' : submitLabel}
@@ -90,7 +90,7 @@ function WizardFooter({
           type="button"
           onClick={onNext}
           disabled={nextDisabled}
-          className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+          className="app-button-primary !w-auto !min-w-[7.5rem] !h-11 !px-5 !text-sm disabled:opacity-50"
         >
           {nextLabel}
         </button>
