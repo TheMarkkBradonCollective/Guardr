@@ -72,7 +72,12 @@ export function StaffOpsMapScreen({
   const liveGuardPins = useMemo(
     () =>
       requests
-        .filter((job) => job.status === 'in-progress' && job.guardLiveLocation)
+        .filter(
+          (job) =>
+            !!job.guardLiveLocation &&
+            (job.status === 'in-progress' ||
+              (job.status === 'accepted' && (!!job.enRouteAt || !!job.arrivedAt)))
+        )
         .map((job) => ({
           requestId: job.id,
           lat: job.guardLiveLocation!.lat,

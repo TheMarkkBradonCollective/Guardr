@@ -23,7 +23,7 @@ export function ShiftPeriodStatusBar({ startDate, endDate, live = false }: Shift
     ? `Starts in ${snapshot.startsInLabel}`
     : snapshot.remainingMs > 0
       ? `${snapshot.remainingLabel} left`
-      : 'Shift window ended';
+      : 'Job window ended';
 
   return (
     <div className="shift-period-status-bar border border-brand-border bg-brand-bg-sec px-3 py-2.5 space-y-2">

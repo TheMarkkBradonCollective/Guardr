@@ -32,10 +32,12 @@ import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import { MapBrowseDock } from './map/MapBrowseDock';
 import { guardMapBrowseItems } from '../lib/mapBrowseItems';
 import { GUARD_MAP_BROWSE_EMPTY_MESSAGE } from '../lib/mapEmptyMessages';
+import { getGuardNextShift } from '../lib/guardNextShift';
 import type { SecurityRequest } from '../types';
 import { isJobMissed } from '../lib/jobTallies';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';
+import { GuardNextShiftCard } from './guard/GuardNextShiftCard';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
 import { activeReplacementOffers } from '../lib/emergencyReplacement';
 import { useGuardLiveLocation } from '../lib/useGuardLiveLocation';
@@ -209,7 +211,7 @@ interface GuardDashboardProps {
   onAckBriefing?: (requestId: string) => void | Promise<void>;
   onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
   onCompleteJobTypeOnboarding?: (jobType: import('../types').JobType) => void | Promise<void>;
-  onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
+  onUpdateJobAudit: (requestId: string, auditPayload: any) => void | Promise<boolean | void>;
   onStartEnRoute?: (requestId: string) => void | Promise<void>;
   onUpdateGuardLiveLocation?: (
     requestId: string,
@@ -505,6 +507,11 @@ export function GuardDashboard({
     return assignedJobs.find((r) => r.status === 'accepted') ?? null;
   }, [assignedJobs]);
 
+  const nextShiftJob = useMemo(
+    () => getGuardNextShift(assignedJobs, guard.id),
+    [assignedJobs, guard.id]
+  );
+
   const manualBriefingJob = useMemo(
     () =>
       manualBriefingJobId
@@ -524,8 +531,14 @@ export function GuardDashboard({
   const activePhase: ShiftPhase | null = useMemo(() => {
     if (!activeShiftJob) return null;
     if (activeShiftJob.status === 'in-progress') return 'on-duty';
+    // Prefer persisted server milestones so refresh/device switch keeps phase.
+    if (activeShiftJob.arrivedAt && !activeShiftJob.checkInAudit?.checkedAt) return 'arrived';
+    if (activeShiftJob.enRouteAt && !activeShiftJob.checkInAudit?.checkedAt) {
+      const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
+      if (stored === 'arrived') return 'arrived';
+      return 'en-route';
+    }
     const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
-    if (activeShiftJob.enRouteAt && (stored === 'upcoming' || stored === 'en-route')) return 'en-route';
     return stored;
   }, [activeShiftJob, shiftPhases, guard.id]);
 
@@ -564,13 +577,19 @@ export function GuardDashboard({
   );
 
   const mapJobs = useMemo(() => {
+    // Active shift overlay (en route / arrived / on duty / late clock-in after briefing window)
+    const lateClockInPath =
+      !!activeShiftJob &&
+      activeShiftJob.status === 'accepted' &&
+      activePhase === 'upcoming' &&
+      !isPreShiftBriefingWindowOpen(activeShiftJob);
     const onDutyOverlay =
       activeTab === 'map' &&
       activeShiftJob &&
       (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
       activePhase &&
       activePhase !== 'complete' &&
-      (activePhase !== 'upcoming' || isPreShiftBriefingWindowOpen(activeShiftJob));
+      (activePhase !== 'upcoming' || lateClockInPath);
     if (onDutyOverlay) {
       return requests.filter(
         (j) =>
@@ -578,7 +597,15 @@ export function GuardDashboard({
           (j.status === 'in-progress' || j.status === 'accepted')
       );
     }
-    return filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    const browse = filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    if (
+      nextShiftJob &&
+      activePhase === 'upcoming' &&
+      !browse.some((j) => j.id === nextShiftJob.id)
+    ) {
+      return [nextShiftJob, ...browse];
+    }
+    return browse;
   }, [
     requests,
     guard.id,
@@ -587,12 +614,15 @@ export function GuardDashboard({
     activePhase,
     mapStatusFilter,
     browseJobLists.all,
+    nextShiftJob,
   ]);
 
-  const mapBrowseItems = useMemo(
-    () => guardMapBrowseItems(guard.id, mapJobs),
-    [guard.id, mapJobs],
-  );
+  const mapBrowseItems = useMemo(() => {
+    const browse = filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    return guardMapBrowseItems(guard.id, browse).filter(
+      (item) => item.id !== nextShiftJob?.id
+    );
+  }, [guard.id, browseJobLists.all, mapStatusFilter, nextShiftJob?.id]);
 
   useEffect(() => {
     if (
@@ -634,15 +664,8 @@ export function GuardDashboard({
       const job = browseJobLists.all.find((j) => j.id === jobId);
       if (!job) return;
       const kind = guardMapPinKind(guard.id, job as unknown as SecurityRequest);
-      if (kind === 'available') handleBrowseTabChange('available');
+      if (kind === 'available' || kind === 'direct') handleBrowseTabChange('available');
       else if (kind === 'scheduled') handleBrowseTabChange('scheduled');
-      else if (kind === 'past') {
-        handleBrowseTabChange(
-          isJobMissed(job as unknown as SecurityRequest, { guardId: guard.id })
-            ? 'missed'
-            : 'completed'
-        );
-      }
     },
     [browseJobLists.all, guard.id, handleBrowseTabChange]
   );
@@ -808,21 +831,23 @@ export function GuardDashboard({
       showAppToast(workBlocked, { tone: 'error' });
       return;
     }
-    const blocked = guardClockInBlockedMessage(activeShiftJob);
-    if (blocked) {
-      showAppToast(blocked, { tone: 'error' });
-      return;
-    }
-    const proximity = await verifyOnSiteForJob(activeShiftJob);
-    if (!proximity.onSite) {
-      showAppToast('Not on site yet', {
+    try {
+      const proximity = await verifyOnSiteForJob(activeShiftJob);
+      if (!proximity.onSite) {
+        showAppToast('Not on site yet', {
+          tone: 'error',
+          body: formatSiteProximityHint(proximity.distanceMeters),
+        });
+        return;
+      }
+      updatePhase(activeShiftJob.id, 'arrived');
+      onGuardArrived?.(activeShiftJob.id);
+    } catch (err) {
+      showAppToast('Location required', {
         tone: 'error',
-        body: formatSiteProximityHint(proximity.distanceMeters),
+        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
       });
-      return;
     }
-    updatePhase(activeShiftJob.id, 'arrived');
-    onGuardArrived?.(activeShiftJob.id);
   };
 
   const handleStartEnRoute = (jobId?: string) => {
@@ -836,7 +861,7 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardStartEnRoute(targetJob)) {
-      showAppToast('Start heading unlocks 1 hour before your shift.', { tone: 'error' });
+      showAppToast('Start heading unlocks 1 hour before your job.', { tone: 'error' });
       return;
     }
     if (jobRequiresPostOrdersAck(targetJob, guard.id)) {
@@ -845,7 +870,7 @@ export function GuardDashboard({
     }
     updatePhase(targetJob.id, 'en-route');
     setManualBriefingJobId(null);
-    if (jobId && tab !== 'map') setTab('map');
+    if (tab !== 'map') setTab('map');
     void onStartEnRoute(targetJob.id);
   };
 
@@ -886,28 +911,36 @@ export function GuardDashboard({
       showAppToast(blocked, { tone: 'error' });
       return;
     }
-    const proximity = await verifyOnSiteForJob(activeShiftJob);
-    if (!proximity.onSite) {
-      showAppToast('Must be on site to clock in', {
+    try {
+      const proximity = await verifyOnSiteForJob(activeShiftJob);
+      if (!proximity.onSite) {
+        showAppToast('Must be on site to start the job', {
+          tone: 'error',
+          body: formatSiteProximityHint(proximity.distanceMeters),
+        });
+        return;
+      }
+      setShowSelfAudit(true);
+    } catch (err) {
+      showAppToast('Location required', {
         tone: 'error',
-        body: formatSiteProximityHint(proximity.distanceMeters),
+        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
       });
-      return;
     }
-    setShowSelfAudit(true);
   };
 
-  const finalizeClockIn = (
+  const finalizeClockIn = async (
     checkInAudit: NonNullable<SecurityRequest['checkInAudit']>,
     skipViolations: import('../types').ShiftAuditViolation[]
   ) => {
     if (!activeShiftJob) return;
     const mergedViolations = mergeShiftAuditViolations(activeShiftJob.shiftAuditViolations, skipViolations);
-    onUpdateJobAudit(activeShiftJob.id, {
+    const ok = await onUpdateJobAudit(activeShiftJob.id, {
       status: 'in-progress',
       checkInAudit,
       shiftAuditViolations: mergedViolations,
     });
+    if (ok === false) return;
     updatePhase(activeShiftJob.id, 'on-duty');
     setShowSelfAudit(false);
     setShowBriefingGate(false);
@@ -927,14 +960,14 @@ export function GuardDashboard({
       setShowBriefingGate(true);
       return;
     }
-    finalizeClockIn(checkInAudit, skipViolations);
+    void finalizeClockIn(checkInAudit, skipViolations);
   };
 
   const handleBriefingGateAck = async () => {
     if (!activeShiftJob || !onAckBriefing) return;
     await onAckBriefing(activeShiftJob.id);
     if (pendingCheckInAudit) {
-      finalizeClockIn(pendingCheckInAudit, pendingStartViolations);
+      await finalizeClockIn(pendingCheckInAudit, pendingStartViolations);
     }
   };
 
@@ -953,7 +986,7 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Job start is not open yet.', { tone: 'error' });
       return;
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
@@ -1000,10 +1033,26 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Job start is not open yet.', { tone: 'error' });
       return;
     }
     void (async () => {
+      try {
+        const proximity = await verifyOnSiteForJob(activeShiftJob);
+        if (!proximity.onSite) {
+          showAppToast('Must be on site to start the job', {
+            tone: 'error',
+            body: formatSiteProximityHint(proximity.distanceMeters),
+          });
+          return;
+        }
+      } catch (err) {
+        showAppToast('Location required', {
+          tone: 'error',
+          body: err instanceof Error ? err.message : 'Enable GPS and try again.',
+        });
+        return;
+      }
       if (!(await showAppConfirm({
         title: 'Skip start package?',
         message:
@@ -1124,7 +1173,7 @@ export function GuardDashboard({
   }) => {
     if (!activeShiftJob) return;
     if (!canGuardClockOut(activeShiftJob)) {
-      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.', { tone: 'error' });
+      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Complete job is not available right now.', { tone: 'error' });
       setShowEndCheckpoint(false);
       return;
     }
@@ -1257,12 +1306,11 @@ export function GuardDashboard({
     );
   }
 
-  const showBriefingOverlay =
-    activeTab === 'map' &&
+  const showLateClockInPath =
     !!activeShiftJob &&
     activeShiftJob.status === 'accepted' &&
     activePhase === 'upcoming' &&
-    isPreShiftBriefingWindowOpen(activeShiftJob);
+    !isPreShiftBriefingWindowOpen(activeShiftJob);
 
   const showShiftOverlay =
     activeTab === 'map' &&
@@ -1270,8 +1318,20 @@ export function GuardDashboard({
     (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
     activePhase &&
     activePhase !== 'complete' &&
-    activePhase !== 'upcoming' &&
-    !showBriefingOverlay;
+    (activePhase !== 'upcoming' || showLateClockInPath);
+
+  const showNextShiftOnDock =
+    !!nextShiftJob &&
+    activePhase === 'upcoming' &&
+    nextShiftJob.status === 'accepted' &&
+    !showShiftOverlay;
+
+  // Uber-style trip lock: stay on the job map (messages allowed for client chat).
+  useEffect(() => {
+    if (!showShiftOverlay) return;
+    if (tab !== 'map' && tab !== 'messages') setTab('map');
+  }, [showShiftOverlay, tab, setTab]);
+
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const showVehicleTab = guardVehicleTabVisible(guard);
@@ -1390,29 +1450,23 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
+      {activeTab === 'map' && !showShiftOverlay && !guardSelectedJobId ? (
         <MapBrowseDock
           items={mapBrowseItems}
           selectedId={guardSelectedJobId}
           onSelect={handleGuardSelectedJobChange}
           emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
           bottomOffsetClass="map-browse-offset"
+          leading={
+            showNextShiftOnDock && nextShiftJob ? (
+              <GuardNextShiftCard
+                job={nextShiftJob}
+                onOpen={() => openBriefingForJob(nextShiftJob.id)}
+              />
+            ) : null
+          }
         />
       ) : null}
-
-      {activeTab === 'map' && showBriefingOverlay && activeShiftJob && (
-        <GuardPreShiftBriefing
-          job={activeShiftJob}
-          guardId={guard.id}
-          onStartEnRoute={() => handleStartEnRoute(activeShiftJob.id)}
-          onAckPostOrders={
-            onAckPostOrders ? () => onAckPostOrders(activeShiftJob.id) : undefined
-          }
-          onAckBriefing={
-            onAckBriefing ? () => onAckBriefing(activeShiftJob.id) : undefined
-          }
-        />
-      )}
 
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
         <GuardActiveShift
@@ -1437,16 +1491,6 @@ export function GuardDashboard({
           midShiftCheckInDue={midShiftDue}
         />
       )}
-
-      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
-        <MapBrowseDock
-          items={mapBrowseItems}
-          selectedId={guardSelectedJobId}
-          onSelect={handleGuardSelectedJobChange}
-          emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
-          bottomOffsetClass="map-browse-offset"
-        />
-      ) : null}
 
       {activeTab === 'map' && replacementOffers.length > 0 && !showShiftOverlay && (
         <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2 map-browse-offset">
@@ -1976,7 +2020,9 @@ export function GuardDashboard({
         : GUARD_TAB_TITLES[tab];
   const guardHeaderStatus =
     activeShiftJob?.status === 'in-progress'
-      ? `On shift · ${activeShiftJob.siteName || activeShiftJob.location}`
+      ? `On job · ${activeShiftJob.siteName || activeShiftJob.location}`
+      : activeShiftJob?.enRouteAt && activeShiftJob.status === 'accepted'
+        ? `En route · ${activeShiftJob.siteName || activeShiftJob.location}`
       : credentialRestricted
         ? 'Restricted — upload and verify expired credentials'
         : accountNeedsActivation
@@ -2007,6 +2053,7 @@ export function GuardDashboard({
       activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
+      hideBottomNav={showShiftOverlay}
       variant={shellVariant}
       workspaceLabel="Guard workspace"
       sidebarPrimaryAction={

@@ -1211,6 +1211,8 @@ export interface SecurityRequest {
   }>;
   /** Guard tapped "En route" or auto-inferred heading to site. */
   enRouteAt?: string;
+  /** Guard arrived on site (GPS-verified). Distinct from clock-in / on-duty. */
+  arrivedAt?: string;
   /** Live GPS pin shared during accepted / in-progress shifts. */
   guardLiveLocation?: {
     lat: number;

@@ -63,7 +63,7 @@ export function guardClockInBlockedMessage(
   now = new Date()
 ): string | null {
   if (canGuardClockIn(job, now)) return null;
-  return `Clock-in opens ${formatWhen(shiftClockInOpensAt(job.startDate))} (15 min before job start).`;
+  return `Job start opens ${formatWhen(shiftClockInOpensAt(job.startDate))} (15 min before job start).`;
 }
 
 export function guardClockOutBlockedMessage(
@@ -71,5 +71,5 @@ export function guardClockOutBlockedMessage(
   now = new Date()
 ): string | null {
   if (canGuardClockOut(job, now)) return null;
-  return `Clock-out opens at scheduled end time (${formatWhen(shiftClockOutOpensAt(job.endDate))}).`;
+  return `Complete job opens at scheduled end time (${formatWhen(shiftClockOutOpensAt(job.endDate))}).`;
 }

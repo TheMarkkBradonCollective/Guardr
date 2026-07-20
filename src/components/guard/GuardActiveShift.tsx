@@ -75,11 +75,11 @@ const PHASE_LABELS: Record<ShiftPhase, string> = {
   upcoming: 'Upcoming',
   'en-route': 'En route',
   arrived: 'Arrived',
-  'on-duty': 'On duty',
+  'on-duty': 'On job',
   complete: 'Complete',
 };
 
-function formatClockWindowTime(d: Date): string {
+function formatJobWindowTime(d: Date): string {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
@@ -125,14 +125,14 @@ export function GuardActiveShift({
 
   const address = job.address || job.location;
   const statusSteps: ShiftPhase[] = ['upcoming', 'en-route', 'arrived', 'on-duty', 'complete'];
-  const displaySteps = statusSteps.filter((s) => s !== 'complete');
+  const displaySteps = statusSteps.filter((s) => s !== 'complete' && s !== 'upcoming');
   const currentIdx = statusSteps.indexOf(phase);
-  const clockInOpen = canGuardClockIn(job, now);
-  const clockOutOpen = canGuardClockOut(job, now);
-  const clockInMsg = guardClockInBlockedMessage(job, now);
-  const clockOutMsg = guardClockOutBlockedMessage(job, now);
-  const clockInOpensLabel = formatClockWindowTime(shiftClockInOpensAt(job.startDate));
-  const clockOutOpensLabel = formatClockWindowTime(shiftClockOutOpensAt(job.endDate));
+  const jobStartOpen = canGuardClockIn(job, now);
+  const jobCompleteOpen = canGuardClockOut(job, now);
+  const jobStartMsg = guardClockInBlockedMessage(job, now);
+  const jobCompleteMsg = guardClockOutBlockedMessage(job, now);
+  const jobStartOpensLabel = formatJobWindowTime(shiftClockInOpensAt(job.startDate));
+  const jobCompleteOpensLabel = formatJobWindowTime(shiftClockOutOpensAt(job.endDate));
   const onBreak = !!activeShiftBreak(job);
   const breakRemaining = breakMinutesRemaining(job);
   const breakAllowed = (job.breakMinutes ?? 0) > 0;
@@ -141,13 +141,14 @@ export function GuardActiveShift({
   const gpsRequired = jobHasCoords;
   const notOnSiteBlocked = gpsRequired && !onSite;
   const [, theme] = useStyletron();
+  const tripMode = phase === 'en-route' || phase === 'arrived' || phase === 'on-duty' || phase === 'complete';
 
   const panelBody = (
       <Block className="guard-scroll-panel" paddingLeft="scale600" paddingRight="scale600" paddingBottom="scale900" display="flex" flexDirection="column" gridGap="scale600">
         <Block display="flex" alignItems="flex-start" justifyContent="space-between" gridGap="scale400">
           <Block minWidth={0}>
             <LabelSmall color="accent" marginBottom="scale100" margin={0} $style={{ fontWeight: 600 }}>
-              Active shift
+              Active job
             </LabelSmall>
             <HeadingSmall margin={0} $style={{ fontWeight: 700, lineHeight: 1.2 }}>
               {job.title}
@@ -178,7 +179,9 @@ export function GuardActiveShift({
             const stepIdx = statusSteps.indexOf(step);
             const isReached = stepIdx <= currentIdx;
             const isCurrent = step === phase;
-            const glowArrived = step === 'arrived' && (phase === 'arrived' || (phase === 'upcoming' && onSite) || phase === 'en-route' && onSite);
+            const glowArrived =
+              step === 'arrived' &&
+              (phase === 'arrived' || ((phase === 'upcoming' || phase === 'en-route') && onSite));
             return (
               <span
                 key={step}
@@ -208,7 +211,7 @@ export function GuardActiveShift({
               borderBottom: `1px solid ${theme.colors.borderOpaque}`,
             }}
           >
-            <LabelXSmall color="contentSecondary" marginBottom="scale100">Time on site</LabelXSmall>
+            <LabelXSmall color="contentSecondary" marginBottom="scale100">Time on job</LabelXSmall>
             <Block $style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {formatTimer(dutySeconds)}
             </Block>
@@ -258,7 +261,7 @@ export function GuardActiveShift({
         {phase === 'en-route' && (
           <Block display="flex" flexDirection="column" gridGap="scale400">
             <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
-              Share your location with the client while en route.
+              Your location is shared with the client while you head to the site.
             </ParagraphXSmall>
             <SlideToConfirm
               label={gpsRequired && !onSite ? 'Must be on site to arrive' : 'Slide to arrive on site'}
@@ -278,23 +281,22 @@ export function GuardActiveShift({
           <Block display="flex" flexDirection="column" gridGap="scale400">
             {onSite ? (
               <SlideToConfirm
-                label="Slide to clock in"
-                confirmedLabel="Clocking in…"
+                label="Slide to start job"
+                confirmedLabel="Starting…"
                 onConfirm={onBeginAudit}
-                disabled={!clockInOpen}
-                disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
+                disabled={!jobStartOpen}
+                disabledHint={jobStartMsg ?? `Job start opens at ${jobStartOpensLabel} (15 min before start).`}
               />
             ) : (
               <SlideToConfirm
-                label={gpsRequired ? 'Must be on site to clock in' : 'Slide to arrive on site'}
+                label={gpsRequired ? 'Must be on site to arrive' : 'Slide to arrive on site'}
                 confirmedLabel="Arrived"
                 onConfirm={onArrived}
-                disabled={!clockInOpen || notOnSiteBlocked}
+                disabled={notOnSiteBlocked}
                 disabledHint={
                   notOnSiteBlocked
-                    ? 'GPS requires you to be within 150m of the site pin to clock in.'
-                    : clockInMsg ??
-                      `Move within range of the site pin. Clock-in opens at ${clockInOpensLabel}.`
+                    ? 'GPS requires you to be within 150m of the site pin.'
+                    : 'Move within range of the site pin.'
                 }
               />
             )}
@@ -305,8 +307,10 @@ export function GuardActiveShift({
                 $style={{ textAlign: 'center', color: notOnSiteBlocked ? theme.colors.warning : undefined }}
               >
                 {notOnSiteBlocked
-                  ? 'GPS location required — move to the job site to enable clock-in.'
-                  : 'The Arrived step glows when you are within range of the site.'}
+                  ? 'GPS location required — move to the job site to enable arrival.'
+                  : jobStartOpen
+                    ? 'The Arrived step glows when you are within range of the site.'
+                    : `Arrive on site when ready. Job start opens at ${jobStartOpensLabel}.`}
               </ParagraphXSmall>
             )}
           </Block>
@@ -315,23 +319,23 @@ export function GuardActiveShift({
         {phase === 'arrived' && (
           <Block display="flex" flexDirection="column" gridGap="scale400" className="app-button-stack">
             <SlideToConfirm
-              label="Slide to start shift"
+              label="Slide to start job"
               confirmedLabel="Starting…"
               onConfirm={onBeginAudit}
-              disabled={!clockInOpen || !onSite}
+              disabled={!jobStartOpen || !onSite}
               disabledHint={
                 !onSite
-                  ? 'Move within range of the site pin to clock in.'
-                  : clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`
+                  ? 'Move within range of the site pin to start the job.'
+                  : jobStartMsg ?? `Job start opens at ${jobStartOpensLabel} (15 min before start).`
               }
             />
             <AppButton
               variant="outline"
               onClick={onSkipAudit}
-              disabled={!clockInOpen}
+              disabled={!jobStartOpen || !onSite}
               fullWidth
             >
-              Skip self audit · clock in
+              Skip self audit · start job
             </AppButton>
             <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
               Skipping flags missing start items automatically for client review.
@@ -339,10 +343,10 @@ export function GuardActiveShift({
           </Block>
         )}
 
-        {phase === 'upcoming' && clockInOpen && (
+        {phase === 'upcoming' && jobStartOpen && (
           <ParagraphXSmall color="contentSecondary" margin={0} display="flex" alignItems="center" justifyContent="center" gridGap="scale200">
             <Clock size={14} />
-            Clock-in open from {clockInOpensLabel} until job ends
+            Job start open from {jobStartOpensLabel} until the job ends
           </ParagraphXSmall>
         )}
 
@@ -385,7 +389,7 @@ export function GuardActiveShift({
                     onClick={onEndBreak}
                     disabled={!canGuardEndBreak(job) || !onEndBreak}
                   >
-                    End break · back on duty
+                    End break · resume job
                   </AppButton>
                 ) : (
                   <AppButton
@@ -422,19 +426,19 @@ export function GuardActiveShift({
               </Block>
             </Block>
             <SlideToConfirm
-              label="Slide to end shift"
-              confirmedLabel="Ending…"
+              label="Slide to complete job"
+              confirmedLabel="Completing…"
               tone="success"
               onConfirm={onEndShift}
-              disabled={!clockOutOpen}
+              disabled={!jobCompleteOpen}
               disabledHint={
-                clockOutMsg ?? `Clock-out opens at ${clockOutOpensLabel} (scheduled end).`
+                jobCompleteMsg ?? `Complete job opens at ${jobCompleteOpensLabel} (scheduled end).`
               }
             />
-            {clockOutOpen && (
+            {jobCompleteOpen && (
               <ParagraphXSmall color="contentSecondary" margin={0} display="flex" alignItems="center" justifyContent="center" gridGap="scale200">
                 <Clock size={14} />
-                Clock-out open from {clockOutOpensLabel}
+                Complete job open from {jobCompleteOpensLabel}
               </ParagraphXSmall>
             )}
           </Block>
@@ -443,8 +447,8 @@ export function GuardActiveShift({
   );
 
   return (
-    <MapDesktopInspector label="Active shift">
-      <MapMobileBottomSheet className="guardr-active-shift">
+    <MapDesktopInspector label="Active job" className={tripMode ? 'dsk-map-inspector--trip' : undefined}>
+      <MapMobileBottomSheet mode={tripMode ? 'trip' : 'sheet'} className="guardr-active-shift">
         {panelBody}
       </MapMobileBottomSheet>
     </MapDesktopInspector>

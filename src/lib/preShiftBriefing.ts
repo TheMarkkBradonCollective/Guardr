@@ -21,7 +21,7 @@ export const PRE_SHIFT_BRIEFING_REMINDER_TIERS: {
 
 type BriefingJob = Pick<
   SecurityRequest,
-  'status' | 'assignedGuardId' | 'startDate' | 'enRouteAt' | 'checkInAudit'
+  'status' | 'assignedGuardId' | 'startDate' | 'enRouteAt' | 'arrivedAt' | 'checkInAudit'
 >;
 
 export function shiftStartMs(startDate: string): number {
@@ -43,7 +43,7 @@ export function canGuardStartEnRoute(
   nowMs: number = Date.now()
 ): boolean {
   if (!isPreShiftBriefingWindowOpen(req, nowMs)) return false;
-  if (req.enRouteAt || req.checkInAudit?.checkedAt) return false;
+  if (req.enRouteAt || req.arrivedAt || req.checkInAudit?.checkedAt) return false;
   const start = shiftStartMs(req.startDate);
   if (Number.isNaN(start)) return false;
   return nowMs >= start - PRE_SHIFT_EN_ROUTE_UNLOCK_MS;
@@ -79,7 +79,7 @@ export function evaluatePreShiftBriefingReminder(
   nowMs: number = Date.now()
 ): PreShiftBriefingReminderTier | null {
   if (req.status !== 'accepted' || !req.assignedGuardId) return null;
-  if (req.enRouteAt || req.checkInAudit?.checkedAt) return null;
+  if (req.enRouteAt || req.arrivedAt || req.checkInAudit?.checkedAt) return null;
 
   const start = shiftStartMs(req.startDate);
   if (Number.isNaN(start)) return null;
@@ -159,6 +159,7 @@ export function guardCanOpenPreShiftBriefing(
 }
 
 export function enRouteBlockedMessage(req: BriefingJob, nowMs: number = Date.now()): string | null {
+  if (req.arrivedAt) return 'You are already on site.';
   if (req.enRouteAt) return 'You are already en route.';
   if (!isPreShiftBriefingWindowOpen(req, nowMs)) {
     return 'Shift briefing unlocks 24 hours before your scheduled start.';

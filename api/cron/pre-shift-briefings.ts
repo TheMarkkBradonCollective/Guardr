@@ -1260,14 +1260,14 @@ async function scanAndNotifyPreShiftBriefings(db) {
   }
   await pruneStaleNotificationDedup(db);
   const now = Date.now();
-  const { data: jobs, error } = await db.from("security_requests").select("id, title, start_date, assigned_guard_id, en_route_at, check_in_audit").eq("status", "accepted").not("assigned_guard_id", "is", null).gte("start_date", new Date(now - 15 * 60 * 1e3).toISOString()).lte("start_date", new Date(now + BRIEFING_UNLOCK_MS).toISOString());
+  const { data: jobs, error } = await db.from("security_requests").select("id, title, start_date, assigned_guard_id, en_route_at, arrived_at, check_in_audit").eq("status", "accepted").not("assigned_guard_id", "is", null).gte("start_date", new Date(now - 15 * 60 * 1e3).toISOString()).lte("start_date", new Date(now + BRIEFING_UNLOCK_MS).toISOString());
   if (error) throw new Error(error.message);
   let notified = 0;
   let skipped = 0;
   let sent = 0;
   let failed = 0;
   for (const job of jobs ?? []) {
-    if (!job.assigned_guard_id || job.en_route_at || job.check_in_audit?.checkedAt) {
+    if (!job.assigned_guard_id || job.en_route_at || job.arrived_at || job.check_in_audit?.checkedAt) {
       skipped += 1;
       continue;
     }

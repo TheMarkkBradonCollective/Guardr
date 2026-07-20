@@ -1556,6 +1556,7 @@ html.theme-dark .uber-job-row-price { color: #fff; }
 
 .uber-job-row-badge-open { background: #111; }
 .uber-job-row-badge-available { background: #111; }
+.uber-job-row-badge-direct { background: #ff9500; }
 .uber-job-row-badge-live { background: #34c759; }
 .uber-job-row-badge-scheduled { background: #007aff; }
 .uber-job-row-badge-upcoming { background: #007aff; }
@@ -1563,6 +1564,16 @@ html.theme-dark .uber-job-row-price { color: #fff; }
 .uber-job-row-badge-past { background: #8e8e93; }
 .uber-job-row-badge-missed,
 .uber-job-row-badge-cancelled { background: #ff3b30; }
+
+.uber-job-row--flash {
+  animation: map-row-flash 1.6s ease-in-out infinite;
+  border-color: color-mix(in srgb, #ff9500 55%, var(--brand-border, #e5e5e5));
+}
+
+@keyframes map-row-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.18); }
+}
 
 /* Section header — like Uber's "Economy" / "Premium" dividers */
 .uber-section-header {

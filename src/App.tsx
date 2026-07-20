@@ -2401,6 +2401,7 @@ export default function App() {
           spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
           midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
           enRouteAt: r.en_route_at ?? undefined,
+          arrivedAt: r.arrived_at ?? undefined,
           guardLiveLocation: r.guard_live_location ?? undefined,
           replacementRequest: r.replacement_request ?? undefined,
           noShow: !!r.no_show,
@@ -10510,27 +10511,27 @@ export default function App() {
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
-  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; shiftAuditViolations?: SecurityRequest['shiftAuditViolations']; status?: SecurityRequest['status']; }) => {
+  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; shiftAuditViolations?: SecurityRequest['shiftAuditViolations']; status?: SecurityRequest['status']; }): Promise<boolean> => {
     const req = requests.find((r) => r.id === requestId);
     if (req && payload.status === 'in-progress' && payload.checkInAudit) {
       const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
       if (workBlocked) {
         appToast(workBlocked, 'error');
-        return;
+        return false;
       }
       if (jobRequiresPostOrdersAck(req, activeGuardId)) {
         appToast('Review and acknowledge post orders before clocking in.', 'error');
-        return;
+        return false;
       }
       if (!canGuardClockIn(req)) {
-        appToast(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.', 'error');
-        return;
+        appToast(guardClockInBlockedMessage(req) ?? 'Job start is not open yet.', 'error');
+        return false;
       }
     }
     if (req && payload.status === 'completed') {
       if (!canGuardClockOut(req)) {
-        appToast(guardClockOutBlockedMessage(req) ?? 'Clock-out is not available right now.', 'error');
-        return;
+        appToast(guardClockOutBlockedMessage(req) ?? 'Complete job is not available right now.', 'error');
+        return false;
       }
     }
     const nextMidShiftAudits = payload.midShiftAudit
@@ -10641,7 +10642,7 @@ export default function App() {
             );
           }
           appToast('Could not save photos or job update. Please try again.', 'error');
-          return;
+          return false;
         }
       }
     }
@@ -10721,7 +10722,7 @@ export default function App() {
         notifyJobStatusUpdate(
           currentUser,
           req,
-          'Shift completed',
+          'Job completed',
           `${guard?.name ?? 'Your guard'} completed "${req.title}".`,
           { guardId: req.assignedGuardId }
         );
@@ -10803,6 +10804,7 @@ export default function App() {
       await archiveJobChatThread(requestId);
       await archiveTeamChatThread(requestId);
     }
+    return true;
   };
 
   const handleStartEnRoute = async (requestId: string) => {
@@ -10811,11 +10813,23 @@ export default function App() {
     if (!canGuardStartEnRoute(req)) return;
     if (jobRequiresPostOrdersAck(req, activeGuardId)) return;
     const enRouteAt = new Date().toISOString();
+    const previous = req;
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, enRouteAt } : r))
     );
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ en_route_at: enRouteAt }).eq('id', requestId);
+      const { error } = await supabase
+        .from('security_requests')
+        .update({ en_route_at: enRouteAt })
+        .eq('id', requestId);
+      if (error) {
+        console.error('En route update error:', error);
+        setRequests((prev) =>
+          prev.map((r) => (r.id === requestId ? previous : r))
+        );
+        appToast('Could not start en route. Please try again.', 'error');
+        return;
+      }
     }
     if (currentUser) {
       void reportPushEvent(currentUser, {
@@ -10827,6 +10841,55 @@ export default function App() {
         body: `${activeGuard?.name ?? 'Guard'} is en route to "${req.title}".`,
       });
     }
+  };
+
+  const handleGuardArrived = async (requestId: string) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.assignedGuardId !== activeGuardId) return;
+    if (req.arrivedAt) {
+      // Already persisted — still notify if needed for briefing violation path below.
+    }
+    const arrivedAt = req.arrivedAt ?? new Date().toISOString();
+    const previous = req;
+    if (!req.arrivedAt) {
+      setRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, arrivedAt } : r))
+      );
+      if (isDbConnected) {
+        const { error } = await supabase
+          .from('security_requests')
+          .update({ arrived_at: arrivedAt })
+          .eq('id', requestId);
+        if (error) {
+          console.error('Arrived update error:', error);
+          setRequests((prev) =>
+            prev.map((r) => (r.id === requestId ? previous : r))
+          );
+          appToast('Could not record arrival. Please try again.', 'error');
+          return;
+        }
+      }
+    }
+    if (!currentUser) return;
+    const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
+    if (jobHasBriefingContent(req) && !guardAcknowledgedBriefing(req, guard?.id ?? activeGuardId)) {
+      const violation = createNotReadyBriefingViolation(guard?.id ?? activeGuardId);
+      const violations = mergeShiftAuditViolations(req.shiftAuditViolations, [violation]);
+      void persistShiftAuditViolations(requestId, violations);
+      notifyAccountUpdate(
+        currentUser,
+        guard?.id ?? activeGuardId,
+        "You weren't ready",
+        `You arrived without reviewing the briefing for "${req.title}". Complete it before starting the job.`
+      );
+    }
+    void reportPushEvent(currentUser, {
+      type: 'guard_arrived',
+      guardId: guard?.id,
+      guardName: guard?.name,
+      requestId,
+      location: req.location,
+    });
   };
 
   const handleUpdateGuardLiveLocation = async (
@@ -10941,6 +11004,7 @@ export default function App() {
           pending_guard_id: null,
           staff_approved_guard_at: null,
           en_route_at: null,
+          arrived_at: null,
           guard_live_location: null,
           applicants: result.patch.applicants,
         })
@@ -11009,7 +11073,7 @@ export default function App() {
           recipientUserId: job.clientId,
           requestId: job.id,
           title: 'Guard no-show',
-          body: `Scheduled guard did not clock in for "${job.title}". Searching for a replacement.`,
+          body: `Scheduled guard did not start the job for "${job.title}". Searching for a replacement.`,
           priority: 'high',
         });
       }
@@ -12733,27 +12797,7 @@ export default function App() {
             void handleAcceptReplacementOffer(requestId, activeGuardId)
           }
           onGuardArrived={(requestId) => {
-            if (!currentUser) return;
-            const req = requests.find((r) => r.id === requestId);
-            const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
-            if (req && guard && jobHasBriefingContent(req) && !guardAcknowledgedBriefing(req, guard.id)) {
-              const violation = createNotReadyBriefingViolation(guard.id);
-              const violations = mergeShiftAuditViolations(req.shiftAuditViolations, [violation]);
-              void persistShiftAuditViolations(requestId, violations);
-              notifyAccountUpdate(
-                currentUser,
-                guard.id,
-                "You weren't ready",
-                `You arrived without reviewing the briefing for "${req.title}". Complete it before clock-in.`
-              );
-            }
-            void reportPushEvent(currentUser, {
-              type: 'guard_arrived',
-              guardId: guard?.id,
-              guardName: guard?.name,
-              requestId,
-              location: req?.location,
-            });
+            void handleGuardArrived(requestId);
           }}
           onAckBriefing={handleAckBriefing}
           onGeofenceLeave={(requestId) => {

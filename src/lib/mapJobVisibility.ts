@@ -6,6 +6,7 @@ import { guardHasApplied } from './jobApplications';
 import { isMultiGuardJob } from './guardTeams';
 import { hasScheduleDateChange } from './jobScheduleChange';
 import { isJobPaid } from './jobEditRules';
+import { isJobMissed } from './jobTallies';
 
 export function clientOwnsRequest(
   req: SecurityRequest,
@@ -21,30 +22,58 @@ export function clientOwnsRequest(
 }
 
 export type MapViewerRole = 'guard' | 'client' | 'staff';
-type GuardMapJobLike = Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status' | 'startDate' | 'endDate'>;
 
-/** Staff sees all jobs — active, completed, past, and cancelled. */
-export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
-  return [...requests];
+type GuardMapJobLike = Pick<
+  SecurityRequest,
+  | 'assignedGuardId'
+  | 'guardSlots'
+  | 'status'
+  | 'startDate'
+  | 'endDate'
+  | 'requestType'
+  | 'targetGuardId'
+  | 'noShow'
+  | 'replacementRequest'
+  | 'checkInAudit'
+>;
+
+/** Terminal / history jobs belong on Jobs pages — never on the map. */
+export function isMapHistoryStatus(status: SecurityRequest['status']): boolean {
+  return status === 'completed' || status === 'closed' || status === 'cancelled';
 }
 
-/** Guards see available, their booked/scheduled, and their past work — not others' completed or cancelled jobs. */
-export function guardMapPinKind(guardId: string, req: GuardMapJobLike): 'available' | 'scheduled' | 'past' | null {
-  const isMine =
+function guardOwnsJob(guardId: string, req: GuardMapJobLike): boolean {
+  return (
     req.assignedGuardId === guardId ||
-    (req.guardSlots ?? []).some((s) => s.guardId === guardId);
+    (req.guardSlots ?? []).some((s) => s.guardId === guardId)
+  );
+}
+
+export type GuardMapPinKind = 'available' | 'direct' | 'scheduled';
+
+/**
+ * Guard map pins — available offers, direct client requests, and claimed upcoming/live jobs.
+ * Past / canceled / missed never appear on the map.
+ */
+export function guardMapPinKind(guardId: string, req: GuardMapJobLike): GuardMapPinKind | null {
+  if (isMapHistoryStatus(req.status)) return null;
+
   if (req.status === 'open') {
+    if (req.requestType === 'direct' && req.targetGuardId === guardId) return 'direct';
     return guardIsAvailableForJob(guardId, req) ? 'available' : null;
   }
-  if (isMine && (req.status === 'accepted' || req.status === 'in-progress')) return 'scheduled';
-  if (isMine && (req.status === 'completed' || req.status === 'closed')) return 'past';
+
+  if (guardOwnsJob(guardId, req) && (req.status === 'accepted' || req.status === 'in-progress')) {
+    if (isJobMissed(req as SecurityRequest, { guardId })) return null;
+    return 'scheduled';
+  }
+
   return null;
 }
 
-/** Driving directions — only for jobs the guard is booked on or has completed. */
+/** Driving directions — only for jobs the guard is booked on. */
 export function guardMapShouldRouteToJob(guardId: string, req: SecurityRequest): boolean {
-  const kind = guardMapPinKind(guardId, req);
-  return kind === 'scheduled' || kind === 'past';
+  return guardMapPinKind(guardId, req) === 'scheduled';
 }
 
 /** Map accept slide — open marketplace/direct offers the guard has not claimed yet. */
@@ -62,10 +91,10 @@ export function guardMapIsUnclaimedOpenOffer(
   return !guardHasApplied(job, guard.id);
 }
 
-/** Client browse pins — route only to scheduled or completed jobs (not cancelled). */
+/** Client browse pins — route only to upcoming / live owned jobs. */
 export function clientMapShouldRouteToJob(req: SecurityRequest): boolean {
   const kind = clientMapPinKind(req);
-  return kind === 'upcoming' || kind === 'past';
+  return kind === 'upcoming' || kind === 'live';
 }
 
 export function guardVisibleMapJobs(
@@ -77,34 +106,41 @@ export function guardVisibleMapJobs(
   return requests
     .filter((r) => guardMapPinKind(guardId, r) !== null)
     .map((r) => viewById.get(r.id) ?? ({ ...r, guardPay: 0 } as GuardJobView))
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 }
 
-export type StaffMapPinKind = 'open' | 'live' | 'scheduled' | 'past' | 'cancelled' | 'other';
+export type StaffMapPinKind = 'open' | 'live' | 'scheduled';
 
-export function staffMapPinKind(req: SecurityRequest): StaffMapPinKind {
-  if (req.status === 'completed' || req.status === 'closed') return 'past';
+export function staffMapPinKind(req: SecurityRequest): StaffMapPinKind | null {
+  if (isMapHistoryStatus(req.status)) return null;
   if (req.status === 'in-progress') return 'live';
-  if (req.status === 'accepted') return 'scheduled';
+  if (req.status === 'accepted') {
+    if (isJobMissed(req)) return null;
+    return 'scheduled';
+  }
   if (req.status === 'open' || req.status === 'pending-review') return 'open';
-  if (req.status === 'cancelled') return 'cancelled';
-  return 'other';
+  return null;
 }
 
-/** Staff sees all current, past, and cancelled jobs. */
+/** Staff map — all active / upcoming site jobs (no past, canceled, or missed). */
 export function staffVisibleMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
-  return [...requests].sort(
-    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-  );
+  return requests
+    .filter((r) => staffMapPinKind(r) !== null)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 }
-export type StaffMapStatusFilter = 'all' | 'live' | 'open' | 'scheduled' | 'past';
+
+/** @deprecated Use staffVisibleMapJobs — kept for callers that still import staffMapJobs. */
+export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
+  return staffVisibleMapJobs(requests);
+}
+
+export type StaffMapStatusFilter = 'all' | 'live' | 'open' | 'scheduled';
 
 export const STAFF_MAP_STATUS_FILTERS: { id: StaffMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All jobs' },
   { id: 'live', label: 'Live' },
   { id: 'open', label: 'Open' },
   { id: 'scheduled', label: 'Scheduled' },
-  { id: 'past', label: 'Past' },
 ];
 
 export function staffJobMatchesMapStatusFilter(
@@ -112,17 +148,17 @@ export function staffJobMatchesMapStatusFilter(
   filter: StaffMapStatusFilter
 ): boolean {
   const kind = staffMapPinKind(req);
+  if (kind === null) return false;
   if (filter === 'all') return true;
   if (filter === 'live') return kind === 'live';
   if (filter === 'open') return kind === 'open';
   if (filter === 'scheduled') return kind === 'scheduled';
-  if (filter === 'past') return kind === 'past' || kind === 'cancelled';
   return true;
 }
 
-/** Staff routes to any job with coordinates when selected. */
+/** Staff routes to any active job with coordinates when selected. */
 export function staffMapShouldRouteToJob(req: SecurityRequest): boolean {
-  return staffMapPinKind(req) !== 'cancelled';
+  return staffMapPinKind(req) !== null;
 }
 
 export function clientVisibleMapJobs(
@@ -133,29 +169,26 @@ export function clientVisibleMapJobs(
 ): SecurityRequest[] {
   return requests.filter((r) => {
     if (!clientOwnsRequest(r, clientId, clientName, altClientName)) return false;
-    return ['open', 'accepted', 'in-progress', 'completed', 'cancelled', 'pending-review'].includes(
-      r.status
-    );
+    return clientMapPinKind(r) !== null;
   });
 }
 
-export type ClientMapPinKind = 'open' | 'pending' | 'upcoming' | 'live' | 'past' | 'cancelled';
+export type ClientMapPinKind = 'open' | 'pending' | 'upcoming' | 'live';
 
-export type GuardMapStatusFilter = 'all' | 'available' | 'upcoming' | 'complete';
-export type ClientMapStatusFilter = 'all' | 'open' | 'scheduled' | 'complete';
+export type GuardMapStatusFilter = 'all' | 'available' | 'upcoming' | 'direct';
+export type ClientMapStatusFilter = 'all' | 'open' | 'scheduled';
 
 export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'available', label: 'Available' },
-  { id: 'upcoming', label: 'Scheduled' },
-  { id: 'complete', label: 'Past' },
+  { id: 'direct', label: 'Requests' },
+  { id: 'upcoming', label: 'My jobs' },
 ];
 
 export const CLIENT_MAP_STATUS_FILTERS: { id: ClientMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'open', label: 'Open' },
-  { id: 'scheduled', label: 'Scheduled' },
-  { id: 'complete', label: 'Complete' },
+  { id: 'scheduled', label: 'Upcoming' },
 ];
 
 export function guardJobMatchesMapStatusFilter(
@@ -163,11 +196,12 @@ export function guardJobMatchesMapStatusFilter(
   req: SecurityRequest,
   filter: GuardMapStatusFilter
 ): boolean {
-  if (filter === 'all') return guardMapPinKind(guardId, req) !== null;
   const kind = guardMapPinKind(guardId, req);
+  if (kind === null) return false;
+  if (filter === 'all') return true;
   if (filter === 'available') return kind === 'available';
+  if (filter === 'direct') return kind === 'direct';
   if (filter === 'upcoming') return kind === 'scheduled';
-  if (filter === 'complete') return kind === 'past';
   return true;
 }
 
@@ -180,21 +214,26 @@ export function clientJobMatchesMapStatusFilter(
   if (filter === 'all') return true;
   if (filter === 'open') return kind === 'open' || kind === 'pending';
   if (filter === 'scheduled') return kind === 'upcoming' || kind === 'live';
-  if (filter === 'complete') return kind === 'past' || kind === 'cancelled';
   return true;
 }
 
+/**
+ * Client map pins — own open / pending / upcoming / live jobs only.
+ * Past, canceled, and missed stay on the Jobs page.
+ */
 export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null {
-  if (req.status === 'completed' || req.status === 'closed') return 'past';
+  if (isMapHistoryStatus(req.status)) return null;
   if (req.status === 'in-progress') return 'live';
-  if (req.status === 'accepted') return 'upcoming';
+  if (req.status === 'accepted') {
+    if (isJobMissed(req)) return null;
+    return 'upcoming';
+  }
   if (req.status === 'open') return 'open';
   if (req.status === 'pending-review') return 'pending';
-  if (req.status === 'cancelled') return 'cancelled';
   return null;
 }
 
-/** Client map pins — open listings, pending review, scheduled, live, and history. */
+/** Client map — active / upcoming owned jobs only. */
 export function clientBrowseMapJobs(
   clientId: string,
   clientName: string | undefined,
@@ -203,7 +242,7 @@ export function clientBrowseMapJobs(
 ): SecurityRequest[] {
   return requests
     .filter((r) => clientOwnsRequest(r, clientId, clientName, altClientName) && clientMapPinKind(r) !== null)
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 }
 
 export function unpaidStaffScheduleChangeNeedsClientApproval(

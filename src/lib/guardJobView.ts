@@ -68,6 +68,7 @@ export interface GuardJobView {
   checkInAudit?: SecurityRequest['checkInAudit'];
   midShiftAudits?: SecurityRequest['midShiftAudits'];
   enRouteAt?: string;
+  arrivedAt?: string;
   guardLiveLocation?: SecurityRequest['guardLiveLocation'];
   replacementRequest?: SecurityRequest['replacementRequest'];
   breakMinutes?: number;
@@ -248,6 +249,7 @@ export function toGuardJobView(
     checkInAudit: req.checkInAudit,
     midShiftAudits: req.midShiftAudits,
     enRouteAt: req.enRouteAt,
+    arrivedAt: req.arrivedAt,
     guardLiveLocation: req.guardLiveLocation,
     replacementRequest: req.replacementRequest,
     breakMinutes: req.breakMinutes,

@@ -110,7 +110,7 @@ export function ClientActiveShift({
   const panelBody = (
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-brand-primary mb-1">Live shift</p>
+          <p className="text-sm font-medium text-brand-primary mb-1">Live job</p>
           <h2 className="text-xl font-bold leading-tight">{request.title}</h2>
         </div>
 

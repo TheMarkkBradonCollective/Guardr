@@ -32,42 +32,65 @@ export function withAppBreakpoints<T extends Theme>(theme: T): T {
 /** @deprecated Use `withAppBreakpoints` */
 export const withGuardrBreakpoints = withAppBreakpoints;
 
+function isDarkShellTheme(theme: Theme): boolean {
+  const bg = String(theme.colors.backgroundPrimary || '').toLowerCase();
+  return bg === '#000' || bg === '#000000' || bg === 'black';
+}
+
 export const shellNavOverrides = {
   Root: {
     style: {
       paddingTop: '4px',
       paddingBottom: '4px',
+      paddingLeft: '4px',
+      paddingRight: '4px',
     },
   },
   NavItem: {
-    style: ({ $active }: { $active: boolean }) => ({
-      borderRadius: '8px',
-      marginLeft: '8px',
-      marginRight: '8px',
-      marginBottom: '2px',
-      paddingLeft: '0',
-      paddingRight: '0',
-      backgroundColor: 'transparent',
-      border: 'none',
-      transition: 'background-color 120ms ease',
-      ':hover': {
+    style: ({ $active, $theme }: { $active: boolean; $theme: Theme }) => {
+      const dark = isDarkShellTheme($theme);
+      return {
+        borderRadius: '8px',
+        marginLeft: '0',
+        marginRight: '0',
+        marginBottom: '2px',
+        paddingLeft: '0',
+        paddingRight: '0',
+        // Highlight lives on the link (aria-current) via CSS / NavLink styles.
         backgroundColor: 'transparent',
-      },
-    }),
+        backgroundImage: 'none',
+        color: $active ? (dark ? '#000000' : '#ffffff') : undefined,
+        border: 'none',
+        borderLeftWidth: 0,
+        borderLeftStyle: 'none',
+        borderLeftColor: 'transparent',
+        transition: 'background-color 120ms ease, color 120ms ease',
+        ':hover': {
+          backgroundColor: 'transparent',
+        },
+      };
+    },
   },
   NavLink: {
-    style: ({ $active }: { $active: boolean }) => ({
-      fontWeight: $active ? 700 : 500,
-      fontSize: '14px',
-      lineHeight: '20px',
-      paddingTop: '10px',
-      paddingBottom: '10px',
-      minHeight: '44px',
-      display: 'flex',
-      alignItems: 'center',
-      color: $active ? 'contentPrimary' : 'contentSecondary',
-      transition: 'color 120ms ease',
-    }),
+    style: ({ $active, $theme }: { $active: boolean; $theme: Theme }) => {
+      const dark = isDarkShellTheme($theme);
+      return {
+        fontWeight: $active ? 700 : 500,
+        fontSize: '14px',
+        lineHeight: '20px',
+        paddingTop: '10px',
+        paddingBottom: '10px',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        minHeight: '44px',
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: '8px',
+        backgroundColor: $active ? (dark ? '#ffffff' : '#000000') : 'transparent',
+        color: $active ? (dark ? '#000000' : '#ffffff') : 'contentSecondary',
+        transition: 'background-color 120ms ease, color 120ms ease',
+      };
+    },
   },
 };
 

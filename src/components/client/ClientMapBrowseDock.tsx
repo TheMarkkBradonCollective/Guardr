@@ -68,7 +68,7 @@ export function ClientMapBrowseDock({
       selectedId={selectedJobId}
       onSelect={onSelectJob}
       bottomOffsetClass={bottomOffsetClass}
-      emptyMessage="Your completed, scheduled, and canceled jobs appear here. Tap New to post coverage."
+      emptyMessage="No upcoming jobs on the map. Tap + to post coverage."
       leading={<ClientMapPostMenu onPostJob={onPostJob} onRequestGuard={onRequestGuard} />}
     />
   );

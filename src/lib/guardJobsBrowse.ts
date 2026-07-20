@@ -6,6 +6,7 @@ import {
   guardJobMatchesMapStatusFilter,
   guardMapPinKind,
   guardVisibleMapJobs,
+  isMapHistoryStatus,
   type GuardMapStatusFilter,
 } from './mapJobVisibility';
 
@@ -13,53 +14,63 @@ import {
 export type GuardJobsBrowseTab = 'available' | 'scheduled' | 'completed' | 'missed';
 
 export interface GuardBrowseJobLists {
+  /** Active / upcoming jobs for the map (no past / canceled / missed). */
   all: GuardJobView[];
   available: GuardJobView[];
   scheduled: GuardJobView[];
   completed: GuardJobView[];
   missed: GuardJobView[];
-  /** Completed + missed history (messages, map past filter). */
+  /** Completed + missed history (Jobs page only). */
   past: GuardJobView[];
 }
 
-/** Jobs visible on map / Jobs tab (excludes in-progress — active shift uses overlay). */
+function guardOwnsJob(guardId: string, job: GuardJobView): boolean {
+  return (
+    job.assignedGuardId === guardId ||
+    (job.guardSlots ?? []).some((slot) => slot.guardId === guardId)
+  );
+}
+
+/**
+ * Jobs for map + Jobs tabs.
+ * - `all` / available / scheduled → map (active & upcoming only)
+ * - completed / missed / past → Jobs page history only
+ */
 export function getGuardBrowseJobLists(
   guard: Pick<SecurityGuard, 'id' | 'serviceAreas'>,
   jobs: GuardJobView[]
 ): GuardBrowseJobLists {
   const guardId = guard.id;
   const requests = jobs as unknown as SecurityRequest[];
+
   const all = guardVisibleMapJobs(guardId, requests, jobs).filter(
     (job) => job.status !== 'in-progress'
   );
 
-  const available = all.filter(
-    (job) =>
-      guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'available' &&
-      guardJobInServiceArea(guard, job as unknown as SecurityRequest)
-  );
+  const available = all.filter((job) => {
+    const kind = guardMapPinKind(guardId, job as unknown as SecurityRequest);
+    if (kind !== 'available' && kind !== 'direct') return false;
+    if (kind === 'direct') return true;
+    return guardJobInServiceArea(guard, job as unknown as SecurityRequest);
+  });
 
-  const booked = all.filter(
+  const scheduled = all.filter(
     (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'scheduled'
   );
-  const scheduled = booked.filter(
-    (job) => !isJobMissed(job as unknown as SecurityRequest, { guardId })
-  );
-  const missedFromBooked = booked.filter((job) =>
+
+  const historyMine = jobs.filter((job) => {
+    if (!guardOwnsJob(guardId, job)) return false;
+    const asReq = job as unknown as SecurityRequest;
+    if (isJobMissed(asReq, { guardId })) return true;
+    return isMapHistoryStatus(job.status);
+  });
+
+  const missed = historyMine.filter((job) =>
     isJobMissed(job as unknown as SecurityRequest, { guardId })
   );
-
-  const pastJobs = all.filter(
-    (job) => guardMapPinKind(guardId, job as unknown as SecurityRequest) === 'past'
-  );
-  const completed = pastJobs.filter(
+  const completed = historyMine.filter(
     (job) => !isJobMissed(job as unknown as SecurityRequest, { guardId })
   );
-  const missedFromPast = pastJobs.filter((job) =>
-    isJobMissed(job as unknown as SecurityRequest, { guardId })
-  );
-
-  const missed = [...missedFromBooked, ...missedFromPast];
 
   return {
     all,
@@ -83,12 +94,12 @@ export function filterGuardBrowseJobs(
 
 export function guardBrowseTabFromMapFilter(filter: GuardMapStatusFilter): GuardJobsBrowseTab {
   if (filter === 'upcoming') return 'scheduled';
-  if (filter === 'complete') return 'completed';
+  if (filter === 'direct') return 'available';
   return 'available';
 }
 
 export function mapFilterFromBrowseTab(tab: GuardJobsBrowseTab): GuardMapStatusFilter {
-  if (tab === 'completed' || tab === 'missed') return 'complete';
+  if (tab === 'completed' || tab === 'missed') return 'all';
   if (tab === 'scheduled') return 'upcoming';
-  return tab;
+  return 'available';
 }

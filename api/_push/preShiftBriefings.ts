@@ -29,6 +29,7 @@ interface AcceptedJob {
   start_date: string;
   assigned_guard_id: string | null;
   en_route_at: string | null;
+  arrived_at?: string | null;
   check_in_audit: { checkedAt?: string } | null;
 }
 
@@ -103,7 +104,7 @@ export async function scanAndNotifyPreShiftBriefings(
   const now = Date.now();
   const { data: jobs, error } = await db
     .from('security_requests')
-    .select('id, title, start_date, assigned_guard_id, en_route_at, check_in_audit')
+    .select('id, title, start_date, assigned_guard_id, en_route_at, arrived_at, check_in_audit')
     .eq('status', 'accepted')
     .not('assigned_guard_id', 'is', null)
     .gte('start_date', new Date(now - 15 * 60 * 1000).toISOString())
@@ -117,7 +118,12 @@ export async function scanAndNotifyPreShiftBriefings(
   let failed = 0;
 
   for (const job of (jobs ?? []) as AcceptedJob[]) {
-    if (!job.assigned_guard_id || job.en_route_at || job.check_in_audit?.checkedAt) {
+    if (
+      !job.assigned_guard_id ||
+      job.en_route_at ||
+      job.arrived_at ||
+      job.check_in_audit?.checkedAt
+    ) {
       skipped += 1;
       continue;
     }

@@ -20,11 +20,11 @@ export function useGuardLiveLocation({
   onUpdateRef.current = onUpdate;
 
   useEffect(() => {
-    if (!enabled || !activeJob?.id) return;
-    const trackable =
-      activeJob.status === 'accepted' ||
-      activeJob.status === 'in-progress';
-    if (!trackable || !activeJob.assignedGuardId) return;
+    if (!enabled || !activeJob?.id || !activeJob.assignedGuardId) return;
+    const enRouteOrOnSite =
+      activeJob.status === 'accepted' && (!!activeJob.enRouteAt || !!activeJob.arrivedAt);
+    const onDuty = activeJob.status === 'in-progress';
+    if (!enRouteOrOnSite && !onDuty) return;
 
     let cancelled = false;
 
@@ -48,5 +48,12 @@ export function useGuardLiveLocation({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [enabled, activeJob?.id, activeJob?.status, activeJob?.assignedGuardId]);
+  }, [
+    enabled,
+    activeJob?.id,
+    activeJob?.status,
+    activeJob?.assignedGuardId,
+    activeJob?.enRouteAt,
+    activeJob?.arrivedAt,
+  ]);
 }

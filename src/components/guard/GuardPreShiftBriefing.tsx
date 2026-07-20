@@ -59,14 +59,14 @@ export function GuardPreShiftBriefing({
       : enRouteBlocked ?? 'Review the briefing, then start heading when the slide unlocks.';
   const enRouteWarning =
     needsBriefingAck && !briefingAcked
-      ? 'You have not acknowledged the site briefing. Arriving on site without reading it will be recorded as a violation and you must complete it before clock-in.'
+      ? 'You have not acknowledged the site briefing. Arriving on site without reading it will be recorded as a violation and you must complete it before starting the job.'
       : null;
 
   const panelBody = (
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium uber-text-accent mb-1">Pre-shift briefing</p>
+            <p className="text-sm font-medium uber-text-accent mb-1">Job briefing</p>
             <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
             <p className="text-sm uber-text-muted mt-1 truncate">{job.clientName}</p>
           </div>
@@ -96,7 +96,7 @@ export function GuardPreShiftBriefing({
         <div className="rounded-xl border border-brand-border bg-brand-bg-sec px-3 py-2.5 text-xs uber-text-muted leading-relaxed flex gap-2">
           <Clock className="w-4 h-4 shrink-0 mt-0.5 uber-text-accent" />
           <span>
-            Shift window: {formatShiftRange(job.startDate, job.endDate)}. Review post orders and site
+            Job window: {formatShiftRange(job.startDate, job.endDate)}. Review post orders and site
             briefing before you head out.
             {!enRouteOpen && enRouteCountdownMs > 0
               ? ` Start heading unlocks in ${formatCountdown(enRouteCountdownMs)}.`
@@ -143,7 +143,7 @@ export function GuardPreShiftBriefing({
               <h3 className="font-bold text-sm">Acknowledge site briefing</h3>
               <p className="text-xs uber-text-muted mt-1 leading-relaxed">
                 Confirm you have reviewed the full site briefing before heading out. Skipping this may delay
-                clock-in and count as a violation if you arrive unprepared.
+                starting the job and count as a violation if you arrive unprepared.
               </p>
             </div>
             <SlideToConfirm
@@ -185,7 +185,7 @@ export function GuardPreShiftBriefing({
   }
 
   return (
-    <MapDesktopInspector label="Pre-shift briefing">
+    <MapDesktopInspector label="Job briefing">
       <MapMobileBottomSheet className="guardr-active-shift">
         {panelBody}
       </MapMobileBottomSheet>

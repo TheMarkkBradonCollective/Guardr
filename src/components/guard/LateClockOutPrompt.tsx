@@ -98,18 +98,18 @@ export function LateClockOutPrompt({
         <>
           <h3 className="font-bold text-lg">Past your scheduled end</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Your shift was scheduled to end at {formatWhen(endDate)}. Tell us how to record your
+            This job was scheduled to end at {formatWhen(endDate)}. Tell us how to record your
             departure — overtime only applies if you stayed past that time or set a later leave time.
           </p>
           <div className="space-y-2">
             <AppButton variant="primary" fullWidth onClick={handleStayed}>
-              I stayed — clock out now
+              I stayed — complete job now
             </AppButton>
             <AppButton variant="outline" fullWidth onClick={() => setStep('adjust')}>
               Set when I left
             </AppButton>
             <AppButton variant="outline" fullWidth onClick={handleLeftOnTime}>
-              I left at scheduled end — forgot to clock out
+              I left at scheduled end — forgot to complete
             </AppButton>
             <AppButton variant="outline" fullWidth onClick={onClose}>
               Cancel

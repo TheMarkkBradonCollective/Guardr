@@ -8,6 +8,7 @@ export type MapBrowseChipVariant =
   | 'scheduled'
   | 'live'
   | 'open'
+  | 'direct'
   | 'default';
 
 export interface MapBrowseDockItem {
@@ -17,6 +18,8 @@ export interface MapBrowseDockItem {
   schedule: string;
   chip: string;
   chipVariant: MapBrowseChipVariant;
+  /** Pulse highlight — client requests, next-job urgency, etc. */
+  flash?: boolean;
 }
 
 interface MapBrowseDockProps {
@@ -44,15 +47,15 @@ export function MapBrowseDock({
       <div className="map-browse-dock-inner">
         <div className="map-offer-card-handle" aria-hidden />
 
-        <div className="map-browse-scroll scrollbar-hide">
-          {leading}
+        {leading ? <div className="map-browse-leading">{leading}</div> : null}
 
+        <div className="map-browse-scroll scrollbar-hide">
           {items.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
-              className="uber-job-row"
+              className={`uber-job-row${item.flash ? ' uber-job-row--flash' : ''}`}
             >
               <span className="uber-job-row-icon" aria-hidden>
                 <svg width="44" height="28" viewBox="0 0 52 32" fill="none">
@@ -75,7 +78,7 @@ export function MapBrowseDock({
           ))}
         </div>
 
-        {items.length === 0 && !leading && (
+        {items.length === 0 && (
           <p className="map-browse-empty">{emptyMessage}</p>
         )}
       </div>

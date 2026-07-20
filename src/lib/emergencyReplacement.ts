@@ -106,6 +106,7 @@ export function acceptReplacementOffer(
       pendingGuardId: undefined,
       staffApprovedGuardAt: undefined,
       enRouteAt: undefined,
+      arrivedAt: undefined,
       guardLiveLocation: undefined,
       applicants: [...new Set([...job.applicants, guardId])],
     },

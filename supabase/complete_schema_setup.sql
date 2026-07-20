@@ -403,6 +403,7 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_in_audit JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS spot_checks JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS mid_shift_audits JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS en_route_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_live_location JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS replacement_request JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS no_show BOOLEAN NOT NULL DEFAULT FALSE;
@@ -1912,7 +1913,7 @@ WHERE table_schema = 'public'
     'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
     'overtime_guard_payout_method',
     'break_minutes', 'shift_breaks',
-    'check_in_audit', 'spot_checks', 'mid_shift_audits', 'en_route_at', 'guard_live_location', 'replacement_request', 'no_show', 'client_violation_reports', 'check_out_audit',
+    'check_in_audit', 'spot_checks', 'mid_shift_audits', 'en_route_at', 'arrived_at', 'guard_live_location', 'replacement_request', 'no_show', 'client_violation_reports', 'check_out_audit',
     'pending_guard_id', 'staff_approved_guard_at',
     'team_lead_id', 'opened_at', 'team_code', 'crew_name', 'crew_description',
     'service_agreement', 'auto_payout_scheduled_at',
