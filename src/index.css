@@ -2008,6 +2008,12 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   color: #ffffff;
 }
 
+.guardr-shift-pin-kind--direct .guardr-shift-pin-inner {
+  background: #ff9500;
+  color: #ffffff;
+  animation: map-row-flash 1.6s ease-in-out infinite;
+}
+
 .guardr-shift-pin-kind--pending .guardr-shift-pin-inner {
   background: #d97706;
   color: #ffffff;
