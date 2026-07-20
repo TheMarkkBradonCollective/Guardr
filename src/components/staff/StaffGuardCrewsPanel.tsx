@@ -255,6 +255,11 @@ export function StaffGuardCrewsPanel({
 
   const toolbar = (
     <>
+      {view === 'standing' && !showStandingDetailOnly ? (
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          {createForm}
+        </div>
+      ) : null}
       <div className="flex gap-2 flex-wrap">
         <button
           type="button"
@@ -323,7 +328,6 @@ export function StaffGuardCrewsPanel({
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-crews-panel">
-      {createForm}
 
       {/* ── Standing crews view ── */}
       {view === 'standing' && (
