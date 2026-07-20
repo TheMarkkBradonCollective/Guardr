@@ -68,6 +68,21 @@ export function isStaffMessagesHubSection(section: StaffSection): boolean {
   return isStaffMessagesSection(section) || isStaffSupportSection(section);
 }
 
+/** Roster / workflow pages under the Operations sidebar group. */
+export const STAFF_OPERATIONS_SECTIONS: StaffSection[] = [
+  'jobs',
+  'applications',
+  'credentials',
+  'guards',
+  'crews',
+  'clients',
+  'team',
+];
+
+export function isStaffOperationsSection(section: StaffSection): boolean {
+  return STAFF_OPERATIONS_SECTIONS.includes(section);
+}
+
 export function isStaffOpsMapSection(section: StaffSection): boolean {
   return section === 'map';
 }

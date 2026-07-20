@@ -6423,9 +6423,17 @@ html.theme-light .app-messages-empty-detail {
   line-height: 1;
 }
 
-.app-inbox-tab-active .app-inbox-tab-badge {
-  background: color-mix(in srgb, var(--brand-primary) 15%, var(--brand-surface));
-  color: var(--brand-primary);
+.app-inbox-tabs.staff-operations-section-tabs .app-inbox-tab {
+  flex: 0 0 auto;
+  min-width: 5.5rem;
+  padding-inline: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .app-inbox-tabs.staff-operations-section-tabs .app-inbox-tab {
+    flex: 1 1 0;
+    min-width: 0;
+  }
 }
 
 .app-inbox-tab-empty {

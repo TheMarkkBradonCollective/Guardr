@@ -59,10 +59,12 @@ import {
   isStaffOpsMapSection,
   isStaffMessagesSection,
   isStaffMessagesHubSection,
+  isStaffOperationsSection,
   StaffSection,
 } from '../lib/staffOps';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
+import { StaffOperationsSectionTabs } from './staff/StaffOperationsSectionTabs';
 import type { AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
@@ -1160,6 +1162,14 @@ export function StaffDashboard({
   };
 
   const messagesChromeActive = isStaffMessagesHubSection(section);
+  const operationsChromeActive = isStaffOperationsSection(section);
+  const operationsSectionTabs = operationsChromeActive ? (
+    <StaffOperationsSectionTabs
+      activeSection={section}
+      onNavigate={navigateSection}
+      badges={badges}
+    />
+  ) : null;
 
   return (
     <StaffOpsLayout
@@ -1174,7 +1184,11 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
       accountNotifications={accountNotifications}
-      headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
+      headerExtension={
+        messagesChromeActive
+          ? staffMessagesChrome.extension
+          : operationsSectionTabs ?? undefined
+      }
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}
       canCreateJob={canManageJobs}
       canAddClient={canManageClientAccounts}

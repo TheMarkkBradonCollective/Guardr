@@ -4,17 +4,24 @@ export interface MessagesInboxTab {
   id: string;
   label: string;
   icon?: React.ReactNode;
+  badge?: number;
 }
 
 interface MessagesInboxTabsProps {
   tabs: MessagesInboxTab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  className?: string;
 }
 
-export function MessagesInboxTabs({ tabs, activeTab, onTabChange }: MessagesInboxTabsProps) {
+export function MessagesInboxTabs({
+  tabs,
+  activeTab,
+  onTabChange,
+  className = '',
+}: MessagesInboxTabsProps) {
   return (
-    <div className="app-inbox-tabs" role="tablist">
+    <div className={`app-inbox-tabs${className ? ` ${className}` : ''}`} role="tablist">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -25,7 +32,10 @@ export function MessagesInboxTabs({ tabs, activeTab, onTabChange }: MessagesInbo
           onClick={() => onTabChange(tab.id)}
         >
           {tab.icon}
-          {tab.label}
+          <span>{tab.label}</span>
+          {typeof tab.badge === 'number' && tab.badge > 0 ? (
+            <span className="app-inbox-tab-badge">{tab.badge > 99 ? '99+' : tab.badge}</span>
+          ) : null}
         </button>
       ))}
     </div>
