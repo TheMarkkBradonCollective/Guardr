@@ -28,7 +28,11 @@ export function GuardNextShiftCard({ job, onOpen }: GuardNextShiftCardProps) {
   const started = countdown === '00:00:00' && countdownActive;
 
   return (
-    <button type="button" onClick={onOpen} className="guard-next-shift-card">
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`guard-next-shift-card${countdownActive ? ' guard-next-shift-card--flash' : ''}`}
+    >
       <div className="guard-next-shift-card-top">
         <p className="guard-next-shift-eyebrow">Next Job</p>
         <ChevronRight className="w-4 h-4 shrink-0 opacity-60" aria-hidden />
@@ -46,7 +50,7 @@ export function GuardNextShiftCard({ job, onOpen }: GuardNextShiftCardProps) {
         <p className="guard-next-shift-meta">{formatShiftRange(job.startDate, job.endDate)}</p>
       )}
       <p className="guard-next-shift-cta">
-        {countdownActive ? 'See full details · start heading' : 'See shift details'}
+        {countdownActive ? 'See full details · start heading' : 'See job details'}
       </p>
     </button>
   );

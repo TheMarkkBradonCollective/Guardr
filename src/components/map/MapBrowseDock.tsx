@@ -8,6 +8,7 @@ export type MapBrowseChipVariant =
   | 'scheduled'
   | 'live'
   | 'open'
+  | 'direct'
   | 'default';
 
 export interface MapBrowseDockItem {
@@ -17,6 +18,8 @@ export interface MapBrowseDockItem {
   schedule: string;
   chip: string;
   chipVariant: MapBrowseChipVariant;
+  /** Pulse highlight — client requests, next-job urgency, etc. */
+  flash?: boolean;
 }
 
 interface MapBrowseDockProps {
@@ -52,7 +55,7 @@ export function MapBrowseDock({
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
-              className="uber-job-row"
+              className={`uber-job-row${item.flash ? ' uber-job-row--flash' : ''}`}
             >
               <span className="uber-job-row-icon" aria-hidden>
                 <svg width="44" height="28" viewBox="0 0 52 32" fill="none">

@@ -16,25 +16,20 @@ function jobLocation(req: Pick<SecurityRequest, 'state' | 'address' | 'location'
 const CLIENT_CHIP: Record<NonNullable<ReturnType<typeof clientMapPinKind>>, { label: string; variant: MapBrowseChipVariant }> = {
   open: { label: 'Open', variant: 'open' },
   pending: { label: 'Pending', variant: 'default' },
-  upcoming: { label: 'Scheduled', variant: 'upcoming' },
+  upcoming: { label: 'Upcoming', variant: 'upcoming' },
   live: { label: 'Live', variant: 'live' },
-  past: { label: 'Past', variant: 'past' },
-  cancelled: { label: 'Canceled', variant: 'cancelled' },
 };
 
 const GUARD_CHIP: Record<NonNullable<ReturnType<typeof guardMapPinKind>>, { label: string; variant: MapBrowseChipVariant }> = {
   available: { label: 'Available', variant: 'available' },
-  scheduled: { label: 'Scheduled', variant: 'scheduled' },
-  past: { label: 'Past', variant: 'past' },
+  direct: { label: 'Request', variant: 'direct' },
+  scheduled: { label: 'My job', variant: 'scheduled' },
 };
 
 const STAFF_CHIP: Record<NonNullable<ReturnType<typeof staffMapPinKind>>, { label: string; variant: MapBrowseChipVariant }> = {
   open: { label: 'Open', variant: 'open' },
   live: { label: 'Live', variant: 'live' },
   scheduled: { label: 'Scheduled', variant: 'scheduled' },
-  past: { label: 'Past', variant: 'past' },
-  cancelled: { label: 'Canceled', variant: 'cancelled' },
-  other: { label: 'Job', variant: 'default' },
 };
 
 export function clientMapBrowseItems(jobs: SecurityRequest[]): MapBrowseDockItem[] {
@@ -57,7 +52,7 @@ export function clientMapBrowseItems(jobs: SecurityRequest[]): MapBrowseDockItem
 
 export function guardMapBrowseItems(guardId: string, jobs: GuardJobView[]): MapBrowseDockItem[] {
   return jobs
-    .map((job) => {
+    .map((job): MapBrowseDockItem | null => {
       const kind = guardMapPinKind(guardId, job as SecurityRequest);
       if (!kind) return null;
       const chip = GUARD_CHIP[kind];
@@ -68,22 +63,26 @@ export function guardMapBrowseItems(guardId: string, jobs: GuardJobView[]): MapB
         schedule: formatShiftRange(job.startDate, job.endDate),
         chip: chip.label,
         chipVariant: chip.variant,
+        ...(kind === 'direct' ? { flash: true } : {}),
       };
     })
     .filter((item): item is MapBrowseDockItem => item !== null);
 }
 
 export function staffMapBrowseItems(jobs: SecurityRequest[]): MapBrowseDockItem[] {
-  return jobs.map((job) => {
-    const kind = staffMapPinKind(job);
-    const chip = STAFF_CHIP[kind];
-    return {
-      id: job.id,
-      title: job.title,
-      location: jobLocation(job),
-      schedule: formatShiftRange(job.startDate, job.endDate),
-      chip: chip.label,
-      chipVariant: chip.variant,
-    };
-  });
+  return jobs
+    .map((job) => {
+      const kind = staffMapPinKind(job);
+      if (!kind) return null;
+      const chip = STAFF_CHIP[kind];
+      return {
+        id: job.id,
+        title: job.title,
+        location: jobLocation(job),
+        schedule: formatShiftRange(job.startDate, job.endDate),
+        chip: chip.label,
+        chipVariant: chip.variant,
+      };
+    })
+    .filter((item): item is MapBrowseDockItem => item !== null);
 }

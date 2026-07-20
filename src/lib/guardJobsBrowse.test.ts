@@ -23,6 +23,31 @@ function openJob(id: string, city: string): GuardJobView {
   } as GuardJobView;
 }
 
+function acceptedJob(id: string, guardId: string): GuardJobView {
+  return {
+    id,
+    status: 'accepted',
+    assignedGuardId: guardId,
+    state: 'Los Angeles',
+    startDate: '2026-07-22T10:00:00',
+    endDate: '2026-07-22T16:00:00',
+    guardPay: 30,
+    durationHours: 6,
+    title: `Booked ${id}`,
+    location: 'Los Angeles',
+    type: 'event-wedding',
+  } as GuardJobView;
+}
+
+function completedJob(id: string, guardId: string): GuardJobView {
+  return {
+    ...acceptedJob(id, guardId),
+    status: 'completed',
+    startDate: '2026-07-10T10:00:00',
+    endDate: '2026-07-10T16:00:00',
+  };
+}
+
 const guard = {
   id: 'g1',
   serviceAreas: ['Los Angeles'],
@@ -32,24 +57,28 @@ describe('guardJobsBrowse tab sync', () => {
   it('maps browse tabs to map filters', () => {
     assert.equal(mapFilterFromBrowseTab('available'), 'available');
     assert.equal(mapFilterFromBrowseTab('scheduled'), 'upcoming');
-    assert.equal(mapFilterFromBrowseTab('completed'), 'complete');
-    assert.equal(mapFilterFromBrowseTab('missed'), 'complete');
+    assert.equal(mapFilterFromBrowseTab('completed'), 'all');
+    assert.equal(mapFilterFromBrowseTab('missed'), 'all');
   });
 
   it('maps map filters to browse tabs', () => {
     assert.equal(guardBrowseTabFromMapFilter('available'), 'available');
     assert.equal(guardBrowseTabFromMapFilter('upcoming'), 'scheduled');
-    assert.equal(guardBrowseTabFromMapFilter('complete'), 'completed');
+    assert.equal(guardBrowseTabFromMapFilter('direct'), 'available');
     assert.equal(guardBrowseTabFromMapFilter('all'), 'available');
   });
 });
 
-describe('getGuardBrowseJobLists service areas', () => {
-  it('filters available tab by guard service cities but keeps all jobs for map', () => {
-    const jobs = [openJob('la', 'Los Angeles'), openJob('sd', 'San Diego')];
+describe('getGuardBrowseJobLists map vs jobs history', () => {
+  it('keeps completed jobs on Jobs history, not map all', () => {
+    const jobs = [
+      openJob('la', 'Los Angeles'),
+      acceptedJob('booked', 'g1'),
+      completedJob('done', 'g1'),
+    ];
     const lists = getGuardBrowseJobLists(guard, jobs);
-    assert.equal(lists.all.length, 2);
-    assert.equal(lists.available.length, 1);
-    assert.equal(lists.available[0]?.id, 'la');
+    assert.ok(lists.all.every((j) => j.status !== 'completed'));
+    assert.equal(lists.completed.some((j) => j.id === 'done'), true);
+    assert.equal(lists.scheduled.some((j) => j.id === 'booked'), true);
   });
 });

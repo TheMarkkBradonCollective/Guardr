@@ -2706,6 +2706,11 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   gap: 0.2rem;
 }
 
+.guard-next-shift-card--flash {
+  animation: map-row-flash 1.6s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--uber-text-accent, #7C9A7A) 55%, var(--brand-border, #e5e5e5));
+}
+
 .guard-next-shift-card:active {
   transform: scale(0.99);
 }

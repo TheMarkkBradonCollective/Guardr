@@ -18,6 +18,9 @@ import { MapPinFilterStepper } from '../map/MapPinFilterStepper';
 import { getClientLiveJobs, getClientTrackableJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob, isClientTrackableJob } from '../../lib/clientShift';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 import { ClientMapPostMenu } from './ClientMapBrowseDock';
+import { MapBrowseDock } from '../map/MapBrowseDock';
+import { clientMapBrowseItems } from '../../lib/mapBrowseItems';
+import { CLIENT_MAP_BROWSE_EMPTY_MESSAGE } from '../../lib/mapEmptyMessages';
 import type { ClientJobActionsBindings } from './clientJobActionsTypes';
 import {
   canClientReschedulePaidSchedule,
@@ -232,6 +235,16 @@ export function ClientMapScreen({
             setEditingId(null);
           }}
           onClose={() => setEditingId(null)}
+        />
+      )}
+
+      {!showShiftOverlay && !selectedBrowseJobId && (
+        <MapBrowseDock
+          items={clientMapBrowseItems(filteredBrowseJobs)}
+          selectedId={selectedBrowseJobId}
+          onSelect={setSelectedBrowseJobId}
+          emptyMessage={CLIENT_MAP_BROWSE_EMPTY_MESSAGE}
+          bottomOffsetClass="map-browse-offset"
         />
       )}
 

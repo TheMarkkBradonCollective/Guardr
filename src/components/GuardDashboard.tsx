@@ -664,15 +664,8 @@ export function GuardDashboard({
       const job = browseJobLists.all.find((j) => j.id === jobId);
       if (!job) return;
       const kind = guardMapPinKind(guard.id, job as unknown as SecurityRequest);
-      if (kind === 'available') handleBrowseTabChange('available');
+      if (kind === 'available' || kind === 'direct') handleBrowseTabChange('available');
       else if (kind === 'scheduled') handleBrowseTabChange('scheduled');
-      else if (kind === 'past') {
-        handleBrowseTabChange(
-          isJobMissed(job as unknown as SecurityRequest, { guardId: guard.id })
-            ? 'missed'
-            : 'completed'
-        );
-      }
     },
     [browseJobLists.all, guard.id, handleBrowseTabChange]
   );
