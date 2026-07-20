@@ -22,13 +22,17 @@ import {
   WorkbenchPanel,
   WorkbenchSearchRow,
 } from '../baseui/layout/WorkbenchLayout';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
   Briefcase,
   Clock,
   CreditCard,
+  Star,
   Users,
 } from 'lucide-react';
 import type { ClientHomeAction } from './ClientHomeScreen';
+
+const HOME_TABLE_LIMIT = 25;
 
 interface ClientHomeDesktopProps {
   companyName: string;
@@ -38,9 +42,11 @@ interface ClientHomeDesktopProps {
   accountPending?: boolean;
   onOpenProfile?: () => void;
   onAction: (action: ClientHomeAction) => void;
+  onOpenRequest?: (jobId: string) => void;
   recentGuards?: SecurityGuard[];
   onHireGuard?: (guard: SecurityGuard) => void;
   onViewGuard?: (guard: SecurityGuard) => void;
+  guards?: SecurityGuard[];
 }
 
 function clientActionCount(requests: SecurityRequest[]): number {
@@ -74,6 +80,14 @@ function formatStatusLabel(req: SecurityRequest): string {
   return req.status;
 }
 
+function jobTotalLabel(job: SecurityRequest): string {
+  const total =
+    typeof job.estimatedPayout === 'number' && job.estimatedPayout > 0
+      ? job.estimatedPayout
+      : job.hourlyRate * (job.durationHours || 0);
+  return `US$${total.toFixed(2)}`;
+}
+
 export function ClientHomeDesktop({
   companyName,
   coverage,
@@ -82,6 +96,11 @@ export function ClientHomeDesktop({
   accountPending = false,
   onOpenProfile,
   onAction,
+  onOpenRequest,
+  recentGuards = [],
+  onHireGuard,
+  onViewGuard,
+  guards = [],
 }: ClientHomeDesktopProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | SecurityRequest['status']>('all');
@@ -92,12 +111,39 @@ export function ClientHomeDesktop({
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
 
+  const guardById = useMemo(() => {
+    const map = new Map<string, SecurityGuard>();
+    for (const guard of guards) map.set(guard.id, guard);
+    for (const guard of recentGuards) map.set(guard.id, guard);
+    return map;
+  }, [guards, recentGuards]);
+
   const run = (action: ClientHomeAction) => {
     if (accountPending && action !== 'messages') {
       onOpenProfile?.();
       return;
     }
     onAction(action);
+  };
+
+  const openJob = (jobId: string) => {
+    if (accountPending) {
+      onOpenProfile?.();
+      return;
+    }
+    if (onOpenRequest) {
+      onOpenRequest(jobId);
+      return;
+    }
+    onAction('requests');
+  };
+
+  const runProtected = (fn?: () => void) => {
+    if (accountPending) {
+      onOpenProfile?.();
+      return;
+    }
+    fn?.();
   };
 
   const tableJobs = useMemo(() => {
@@ -108,19 +154,24 @@ export function ClientHomeDesktop({
     return sorted.filter((job) => {
       if (statusFilter !== 'all' && job.status !== statusFilter) return false;
       if (!query) return true;
+      const assigned = job.assignedGuardId ? guardById.get(job.assignedGuardId) : undefined;
       const haystack = [
         job.title,
         job.siteName,
         job.location,
         job.contactName,
         job.id,
+        assigned?.name,
       ]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
       return haystack.includes(query);
     });
-  }, [requests, searchQuery, statusFilter]);
+  }, [requests, searchQuery, statusFilter, guardById]);
+
+  const visibleJobs = tableJobs.slice(0, HOME_TABLE_LIMIT);
+  const hasMoreJobs = tableJobs.length > HOME_TABLE_LIMIT;
 
   return (
     <WorkbenchPage className="client-home-desktop mobility-workspace uber-direct-home">
@@ -160,13 +211,58 @@ export function ClientHomeDesktop({
           onClick={() => run('invoices')}
         />
         <UberDirectHubCard
-          title="Users"
-          description="Manage your employees and user permissions"
+          title="Guards"
+          description="Browse licensed guards and rehire trusted coverage"
           icon={Users}
           iconTone="orange"
           onClick={() => run('guards')}
         />
       </div>
+
+      {recentGuards.length > 0 && (onHireGuard || onViewGuard) ? (
+        <WorkbenchPanel className="uber-direct-home-recent-guards">
+          <div className="uber-direct-home-recent-guards-header">
+            <LabelSmall margin={0} $style={{ fontWeight: 700, textTransform: 'none', fontSize: '14px' }}>
+              Your guards
+            </LabelSmall>
+            <button type="button" className="uber-direct-inline-link" onClick={() => run('guards')}>
+              Browse all
+            </button>
+          </div>
+          <div className="uber-direct-home-recent-guards-grid">
+            {recentGuards.slice(0, 5).map((guard) => (
+              <div key={guard.id} className="uber-direct-home-recent-guard">
+                <button
+                  type="button"
+                  className="uber-direct-home-recent-guard-profile"
+                  onClick={() => runProtected(() => onViewGuard?.(guard))}
+                  disabled={accountPending && !onOpenProfile}
+                >
+                  <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" className="w-12 h-12 text-sm" />
+                  <span className="uber-direct-home-recent-guard-name">{guard.name}</span>
+                  <span className="uber-direct-home-recent-guard-rating">
+                    <Star className="w-3 h-3" aria-hidden />
+                    {guard.rating.toFixed(1)}
+                  </span>
+                </button>
+                {onHireGuard ? (
+                  <AppButton
+                    type="button"
+                    variant="ghost"
+                    size="inline"
+                    fullWidth
+                    onClick={() => runProtected(() => onHireGuard(guard))}
+                    disabled={accountPending}
+                    className="!text-[11px] uber-bg-accent-soft uber-text-accent"
+                  >
+                    Hire again
+                  </AppButton>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </WorkbenchPanel>
+      ) : null}
 
       <WorkbenchSearchRow
         searchValue={searchQuery}
@@ -196,59 +292,69 @@ export function ClientHomeDesktop({
             </button>
           </>
         }
-        actions={
-          <button type="button" className="uber-workbench-search-btn" onClick={() => setSearchQuery(searchQuery)}>
-            Search
-          </button>
-        }
       />
 
       <WorkbenchPanel>
         {tableJobs.length === 0 ? (
           <AppEmptyState title="No jobs yet">Post a job to get matched with licensed guards.</AppEmptyState>
         ) : (
-          <table className="uber-workbench-table uber-direct-deliveries-table">
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Details</th>
-                <th>Status</th>
-                <th className="uber-workbench-table-col-total">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableJobs.slice(0, 25).map((job) => (
-                <tr
-                  key={job.id}
-                  className="uber-workbench-table-row"
-                  onClick={() => run('requests')}
-                >
-                  <td>
-                    <p className="uber-workbench-table-primary">
-                      {job.contactName || job.title}
-                    </p>
-                    <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
-                  </td>
-                  <td>
-                    <p className="uber-workbench-table-primary">Guardr</p>
-                    <p className="uber-workbench-table-secondary">
-                      {job.siteName || companyName}
-                    </p>
-                    <p className="uber-workbench-table-secondary">{job.id.slice(0, 8).toUpperCase()}</p>
-                  </td>
-                  <td>
-                    <p className="uber-workbench-table-primary">{formatStatusLabel(job)}</p>
-                    <p className="uber-workbench-table-secondary">
-                      {formatShiftTimeRange(job.startDate, job.endDate)}
-                    </p>
-                  </td>
-                  <td className="uber-workbench-table-value uber-workbench-table-col-total">
-                    US${job.hourlyRate ? (job.hourlyRate * 6).toFixed(2) : '0.00'}
-                  </td>
+          <>
+            <table className="uber-workbench-table uber-direct-deliveries-table">
+              <thead>
+                <tr>
+                  <th>Job</th>
+                  <th>Guard</th>
+                  <th>Status</th>
+                  <th className="uber-workbench-table-col-total">Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visibleJobs.map((job) => {
+                  const assigned = job.assignedGuardId ? guardById.get(job.assignedGuardId) : undefined;
+                  return (
+                    <tr
+                      key={job.id}
+                      className="uber-workbench-table-row"
+                      onClick={() => openJob(job.id)}
+                    >
+                      <td>
+                        <p className="uber-workbench-table-primary">
+                          {job.title || job.contactName || 'Security job'}
+                        </p>
+                        <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
+                      </td>
+                      <td>
+                        <p className="uber-workbench-table-primary">{assigned?.name || 'Unassigned'}</p>
+                        <p className="uber-workbench-table-secondary">
+                          {job.siteName || companyName}
+                        </p>
+                        <p className="uber-workbench-table-secondary">{job.id.slice(0, 8).toUpperCase()}</p>
+                      </td>
+                      <td>
+                        <p className="uber-workbench-table-primary">{formatStatusLabel(job)}</p>
+                        <p className="uber-workbench-table-secondary">
+                          {formatShiftTimeRange(job.startDate, job.endDate)}
+                        </p>
+                      </td>
+                      <td className="uber-workbench-table-value uber-workbench-table-col-total">
+                        {jobTotalLabel(job)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {hasMoreJobs ? (
+              <div className="uber-direct-home-table-footer">
+                <p className="uber-workbench-table-secondary">
+                  Showing {HOME_TABLE_LIMIT} of {tableJobs.length} jobs
+                </p>
+                <button type="button" className="uber-direct-inline-link" onClick={() => run('requests')}>
+                  View all jobs
+                </button>
+              </div>
+            ) : null}
+          </>
         )}
       </WorkbenchPanel>
 
