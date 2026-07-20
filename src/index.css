@@ -3476,12 +3476,32 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Split header + scroll body — professional mobile detail pages */
+.app-full-page-detail--scroll {
+  overflow: hidden;
+}
+
+.app-full-page-detail-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .app-full-page-detail .app-subscreen-header {
   position: sticky;
   top: 0;
   z-index: 2;
+  flex-shrink: 0;
   background: var(--brand-bg);
   border-bottom: 1px solid var(--brand-border);
+}
+
+.app-full-page-detail--scroll .app-subscreen-header {
+  position: relative;
+  top: auto;
 }
 
 .app-screen-title {
@@ -20229,9 +20249,21 @@ textarea.uber-input {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 
-@media (min-width: 640px) {.staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
+.staff-shell .app-full-page-detail > .app-full-page-detail-scroll {
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  padding-top: 1rem;
+  padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem));
+}
+
+@media (min-width: 640px) {
+  .staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
     padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
-  }}
+  }
+
+  .staff-shell .app-full-page-detail > .app-full-page-detail-scroll {
+    padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+}
 
 .staff-shell .staff-main-content--padded > div {
   overflow-x: hidden !important;
