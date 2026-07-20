@@ -327,6 +327,22 @@ export interface GuardPayoutInvoice {
   resolvedAt?: string;
 }
 
+export type CoiRevisionEvent = 'submitted' | 'verified' | 'rejected' | 'update_submitted' | 'superseded';
+
+export interface CoiRevision {
+  id: string;
+  recordedAt: string;
+  event: CoiRevisionEvent;
+  status: 'verified' | 'pending' | 'rejected';
+  carrier?: string;
+  policyNumber?: string;
+  generalLiabilityLimit?: number;
+  effectiveDate?: string;
+  expiryDate?: string;
+  documentUrl?: string;
+  note?: string;
+}
+
 export interface GuardInsurancePolicy {
   id: string;
   guardId: string;
@@ -344,9 +360,29 @@ export interface GuardInsurancePolicy {
   /** Staff or automation asked for an updated COI while the verified copy stays on file. */
   updateRequestedAt?: string;
   updateRequestNote?: string;
+  /** Prior COI uploads and review events, newest events prepended by handlers. */
+  revisionHistory?: CoiRevision[];
 }
 
 export type GovernmentIdDocumentType = 'state_id' | 'drivers_license';
+
+export type GovIdRevisionEvent = 'submitted' | 'verified' | 'rejected' | 'update_submitted' | 'superseded';
+
+export interface GovIdRevision {
+  id: string;
+  recordedAt: string;
+  event: GovIdRevisionEvent;
+  status: 'verified' | 'pending' | 'rejected';
+  idDocumentType?: GovernmentIdDocumentType;
+  idLicenseClass?: string;
+  idState?: string;
+  idNumber?: string;
+  idExpiryDate?: string;
+  idFrontUrl?: string;
+  idBackUrl?: string;
+  idSelfieUrl?: string;
+  note?: string;
+}
 
 export const DRIVER_LICENSE_CLASSES = ['Class A', 'Class B', 'Class C', 'Class M'] as const;
 
@@ -584,6 +620,8 @@ export interface SecurityGuard {
   idDocumentType?: GovernmentIdDocumentType;
   /** Shown when idDocumentType is drivers_license (e.g. Class C). */
   idLicenseClass?: string;
+  /** Prior government ID uploads and review events, newest events prepended by handlers. */
+  idRevisionHistory?: GovIdRevision[];
   /** Auto insurance credential for driving / patrol work. */
   vehicleInsurancePolicy?: GuardVehicleInsurancePolicy;
   /** Guard vehicle submitted for staff approval before driving priority unlocks. */

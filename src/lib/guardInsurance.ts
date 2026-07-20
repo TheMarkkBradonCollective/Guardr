@@ -1,6 +1,7 @@
 import type { GuardInsurancePolicy, SecurityGuard } from '../types';
 import type { CourseUploadStatus } from './certStatus';
 import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
+import { parseCoiRevisionHistory } from './coiRevisionHistory';
 
 export const INSURANCE_STATUS_LABELS: Record<GuardInsurancePolicy['status'], string> = {
   not_submitted: 'Not submitted',
@@ -239,6 +240,7 @@ export function insurancePolicyFromRow(row: Record<string, unknown>): GuardInsur
     reviewedBy: row.reviewed_by ? String(row.reviewed_by) : undefined,
     updateRequestedAt: row.update_requested_at ? String(row.update_requested_at) : undefined,
     updateRequestNote: row.update_request_note ? String(row.update_request_note) : undefined,
+    revisionHistory: parseCoiRevisionHistory(row.revision_history),
   };
 }
 
@@ -260,6 +262,7 @@ export function insurancePolicyToDbRow(
     reviewed_by: policy.reviewedBy ?? null,
     update_requested_at: policy.updateRequestedAt ?? null,
     update_request_note: policy.updateRequestNote ?? null,
+    revision_history: policy.revisionHistory ?? [],
     updated_at: new Date().toISOString(),
   };
 }

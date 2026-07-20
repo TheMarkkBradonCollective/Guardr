@@ -157,6 +157,15 @@ import {
   parseCertificationRevisionHistory,
 } from './lib/certRevisionHistory';
 import {
+  prependCoiRevision,
+  snapshotCoiRevision,
+} from './lib/coiRevisionHistory';
+import {
+  prependGovIdRevision,
+  parseGovIdRevisionHistory,
+  snapshotGovIdRevision,
+} from './lib/govIdRevisionHistory';
+import {
   getGuardIdVerificationStatus,
   staffApproveIdVerificationBlocker,
   staffCanApproveIdVerification,
@@ -2117,6 +2126,7 @@ export default function App() {
             ? g.id_document_type
             : undefined,
         idLicenseClass: g.id_license_class ?? undefined,
+        idRevisionHistory: parseGovIdRevisionHistory(g.id_revision_history),
         credentialGraceDeadline: g.credential_grace_deadline ?? undefined,
         credentialGraceMissing: Array.isArray(g.credential_grace_missing)
           ? (g.credential_grace_missing as string[])
@@ -3447,6 +3457,21 @@ export default function App() {
     policy: Partial<GuardInsurancePolicy> & { guardId: string }
   ) => {
     const existing = guards.find((g) => g.id === policy.guardId)?.insurancePolicy;
+    const documentChanged = Boolean(
+      policy.documentUrl?.trim() &&
+        policy.documentUrl.trim() !== (existing?.documentUrl ?? '').trim()
+    );
+    let revisionHistory = existing?.revisionHistory;
+    if (
+      existing &&
+      documentChanged &&
+      resolveInsuranceStatus(existing) === 'verified'
+    ) {
+      revisionHistory = prependCoiRevision(
+        revisionHistory,
+        snapshotCoiRevision({ ...existing, status: 'verified' }, 'superseded')
+      );
+    }
     const nextPolicy: GuardInsurancePolicy = {
       id: existing?.id ?? policy.id ?? `ins-${policy.guardId}`,
       guardId: policy.guardId,
@@ -3463,6 +3488,7 @@ export default function App() {
       reviewedBy: policy.reviewedBy,
       updateRequestedAt: policy.updateRequestedAt ?? existing?.updateRequestedAt,
       updateRequestNote: policy.updateRequestNote ?? existing?.updateRequestNote,
+      revisionHistory,
     };
     if (isDbConnected) {
       const { error } = await supabase
@@ -5956,6 +5982,18 @@ export default function App() {
 
     const previous = { ...guard };
     const submittedAt = new Date().toISOString();
+    const wasVerified = getGuardIdVerificationStatus(guard) === 'verified';
+    const photosChanged =
+      front !== (guard.idFrontUrl ?? '').trim() ||
+      back !== (guard.idBackUrl ?? '').trim() ||
+      selfie !== (guard.idSelfieUrl ?? '').trim();
+    let idRevisionHistory = guard.idRevisionHistory;
+    if (wasVerified && photosChanged) {
+      idRevisionHistory = prependGovIdRevision(
+        idRevisionHistory,
+        snapshotGovIdRevision(guard, 'superseded')
+      );
+    }
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
@@ -5975,6 +6013,7 @@ export default function App() {
               idUpdateRequestedAt: undefined,
               idUpdateRequestNote: undefined,
               idSubmittedBy: 'guard' as const,
+              idRevisionHistory,
             }
           : g
       )
@@ -5999,6 +6038,7 @@ export default function App() {
           id_update_requested_at: null,
           id_update_request_note: null,
           id_submitted_by: 'guard',
+          id_revision_history: idRevisionHistory ?? [],
         })
         .eq('id', guardId);
       if (error) {

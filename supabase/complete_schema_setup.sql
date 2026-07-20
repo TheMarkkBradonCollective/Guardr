@@ -71,6 +71,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAM
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_expiry_restricted BOOLEAN NOT NULL DEFAULT FALSE;
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_id_verification_status_check;
@@ -1264,6 +1265,7 @@ COMMENT ON TABLE guard_insurance_policies IS
 
 ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
 ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_request_note TEXT;
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS guard_vehicle_insurance_policies (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
