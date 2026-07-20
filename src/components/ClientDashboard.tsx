@@ -763,12 +763,17 @@ export function ClientDashboard({
     accountPending,
     onOpenProfile: () => navigate('profile'),
     onAction: handleHomeAction,
+    onOpenRequest: (jobId: string) => {
+      onRequestsSelectedIdChange?.(jobId);
+      navigate('requests');
+    },
     recentGuards: getClientRehireableGuards(clientId, requests, guards).slice(0, 5),
     onHireGuard: startDirectGuardRequest,
     onViewGuard: (guard: SecurityGuard) => {
       setSelectedGuard(guard);
       navigate('guards');
     },
+    guards,
   };
 
   return page(
