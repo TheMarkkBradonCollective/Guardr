@@ -1,7 +1,7 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
-import { ArrowRight, Shield, User } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
 import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
@@ -71,6 +71,7 @@ interface AuthRoleChoicePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   onSelectRole: (role: 'guard' | 'client') => void;
   onOpenGuide?: () => void;
+  onBack?: () => void;
 }
 
 /**
@@ -84,6 +85,7 @@ export function AuthRoleChoicePage({
   onNavigateToAuth,
   onSelectRole,
   onOpenGuide,
+  onBack,
 }: AuthRoleChoicePageProps) {
   const [, theme] = useStyletron();
   const { formFactor } = useDevice();
@@ -103,7 +105,21 @@ export function AuthRoleChoicePage({
       flexDirection="column"
       overflow="hidden"
     >
-      <UberDirectTopHeader />
+      <UberDirectTopHeader
+        onBrandClick={onBack}
+        trailing={
+          onBack ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand-text hover:text-brand-primary transition-colors"
+              onClick={onBack}
+            >
+              <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden />
+              Back
+            </button>
+          ) : undefined
+        }
+      />
 
       <Block as="main" className="auth-role-choice-main">
         {/* Hero band — pale gray with headline + illustration */}

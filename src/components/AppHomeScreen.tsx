@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Block } from 'baseui/block';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
@@ -42,7 +42,6 @@ export function AppHomeScreen({
   authSheetOpen = false,
   previewOverrides,
 }: AppHomeScreenProps) {
-  const [signInRole, setSignInRole] = useState<'guard' | 'client'>('guard');
   const device = useDevice();
   const shellKind = previewOverrides?.shellKind ?? device.shellKind;
   const formFactor = previewOverrides?.formFactor ?? device.formFactor;
@@ -102,8 +101,6 @@ export function AppHomeScreen({
         <AppWelcomeHero shellKind={shellKind} isTablet={isTablet} experienceTier={experienceTier} />
 
         <AppWelcomeSignInDock
-          signInRole={signInRole}
-          setSignInRole={setSignInRole}
           onNavigateToAuth={onNavigateToAuth}
           onOpenLegal={onOpenLegal}
           viewSurface={viewSurface}

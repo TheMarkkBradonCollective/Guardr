@@ -12492,6 +12492,7 @@ export default function App() {
             onNavigateToAuth={navigateToAuth}
             onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
             onOpenGuide={openPublicGuide}
+            onBack={closeAuthChoice}
           />
           <InstallPrompt />
         </>
