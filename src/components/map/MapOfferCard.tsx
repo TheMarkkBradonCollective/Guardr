@@ -42,7 +42,7 @@ export const MapOfferCard = React.forwardRef<HTMLDivElement, MapOfferCardProps>(
       </div>
 
       {expanded && children && (
-        <div className="map-offer-card-body-scroll mt-3 pr-1 -mr-1">{children}</div>
+        <div className="map-offer-card-body-scroll mt-3">{children}</div>
       )}
 
       {!expanded && onExpand && (

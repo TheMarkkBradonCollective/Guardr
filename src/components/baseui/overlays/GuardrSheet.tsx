@@ -49,7 +49,9 @@ export function GuardrSheet({
       }
       overrides={sheetOverrides({ zIndex, panelClassName })}
     >
-      <div className={className} role="dialog" aria-label={ariaLabel}>{children}</div>
+      <div className={`guardr-sheet-root${className ? ` ${className}` : ''}`} role="dialog" aria-label={ariaLabel}>
+        {children}
+      </div>
     </Drawer>
   );
 }
