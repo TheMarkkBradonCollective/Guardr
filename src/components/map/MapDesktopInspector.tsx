@@ -31,17 +31,26 @@ export function MapDesktopInspector({ label, children, className = '' }: MapDesk
 export function MapMobileBottomSheet({
   children,
   className = '',
+  mode = 'sheet',
 }: {
   children: React.ReactNode;
   className?: string;
+  /** `trip` = Uber-style full-bleed active job from en route through complete. */
+  mode?: 'sheet' | 'trip';
 }) {
   const { formFactor } = useDevice();
   if (formFactor === 'desktop') return <>{children}</>;
   return (
     <div
-      className={`absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden ${className}`.trim()}
+      className={[
+        'absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet flex flex-col overflow-hidden',
+        mode === 'trip' ? 'guardr-active-job-trip' : 'guardr-active-shift rounded-t-2xl',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
+      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3 shrink-0" />
       {children}
     </div>
   );

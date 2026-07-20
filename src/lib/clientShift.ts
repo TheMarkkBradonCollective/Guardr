@@ -10,12 +10,12 @@ export function isClientLiveJob(req: SecurityRequest): boolean {
   return req.status === CLOCKED_IN_STATUS && !!req.assignedGuardId;
 }
 
-/** Accepted or in-progress shifts the client can track on the map. */
+/** Accepted jobs the client can live-track once the guard is en route (or on the job). */
 export function isClientTrackableJob(req: SecurityRequest): boolean {
-  return (
-    !!req.assignedGuardId &&
-    (req.status === 'accepted' || req.status === CLOCKED_IN_STATUS)
-  );
+  if (!req.assignedGuardId) return false;
+  if (req.status === CLOCKED_IN_STATUS) return true;
+  if (req.status !== 'accepted') return false;
+  return !!req.enRouteAt || !!req.arrivedAt;
 }
 
 export function getClientTrackableJobs(requests: SecurityRequest[]): SecurityRequest[] {
@@ -60,7 +60,7 @@ export const CLIENT_SHIFT_PHASE_LABELS: Record<ClientShiftPhase, string> = {
   scheduled: 'Scheduled',
   'en-route': 'En route',
   'on-site': 'On site',
-  'on-duty': 'On duty',
+  'on-duty': 'On job',
   complete: 'Complete',
 };
 

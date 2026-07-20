@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { inferClientShiftPhase } from './clientShift';
+import { inferClientShiftPhase, isClientTrackableJob } from './clientShift';
 import type { SecurityRequest } from '../types';
 
 function baseJob(overrides: Partial<SecurityRequest> = {}): SecurityRequest {
@@ -43,4 +43,13 @@ test('inferClientShiftPhase uses explicit enRouteAt and arrivedAt', () => {
 test('inferClientShiftPhase does not auto-infer en-route from start proximity', () => {
   const soon = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   assert.equal(inferClientShiftPhase(baseJob({ startDate: soon })), 'scheduled');
+});
+
+test('isClientTrackableJob only after en route or on job', () => {
+  assert.equal(isClientTrackableJob(baseJob()), false);
+  assert.equal(
+    isClientTrackableJob(baseJob({ enRouteAt: '2026-07-20T17:00:00.000Z' })),
+    true
+  );
+  assert.equal(isClientTrackableJob(baseJob({ status: 'in-progress' })), true);
 });

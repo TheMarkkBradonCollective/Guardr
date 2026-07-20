@@ -30,7 +30,7 @@ export function GuardNextShiftCard({ job, onOpen }: GuardNextShiftCardProps) {
   return (
     <button type="button" onClick={onOpen} className="guard-next-shift-card">
       <div className="guard-next-shift-card-top">
-        <p className="guard-next-shift-eyebrow">Next Shift</p>
+        <p className="guard-next-shift-eyebrow">Next Job</p>
         <ChevronRight className="w-4 h-4 shrink-0 opacity-60" aria-hidden />
       </div>
       <p className="guard-next-shift-title">{job.title}</p>

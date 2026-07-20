@@ -18,6 +18,8 @@ interface RoleAppShellProps {
   headerRight?: React.ReactNode;
   fullBleed?: boolean;
   hideHeader?: boolean;
+  /** Hide mobile bottom nav (e.g. during an active job trip). */
+  hideBottomNav?: boolean;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
   variant?: 'default' | 'dark';
@@ -42,6 +44,7 @@ export function RoleAppShell({
   headerRight,
   fullBleed = false,
   hideHeader = false,
+  hideBottomNav = false,
   headerExtension,
   headerOverride,
   variant = 'default',
@@ -94,8 +97,8 @@ export function RoleAppShell({
       headerOverride={headerOverride}
       bleed={fullBleed || isMapMode}
       variant={variant}
-      mobileBottomNavItems={mobileBottomNavItems}
-      mobileBottomNavOverflow={mobileBottomNavOverflow}
+      mobileBottomNavItems={hideBottomNav ? undefined : mobileBottomNavItems}
+      mobileBottomNavOverflow={hideBottomNav ? undefined : mobileBottomNavOverflow}
       sidebarPrimaryAction={sidebarPrimaryAction}
       sidebarFooter={sidebarFooter}
       headerContext={headerContext}

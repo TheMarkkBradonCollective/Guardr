@@ -868,7 +868,7 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardStartEnRoute(targetJob)) {
-      showAppToast('Start heading unlocks 1 hour before your shift.', { tone: 'error' });
+      showAppToast('Start heading unlocks 1 hour before your job.', { tone: 'error' });
       return;
     }
     if (jobRequiresPostOrdersAck(targetJob, guard.id)) {
@@ -877,7 +877,7 @@ export function GuardDashboard({
     }
     updatePhase(targetJob.id, 'en-route');
     setManualBriefingJobId(null);
-    if (jobId && tab !== 'map') setTab('map');
+    if (tab !== 'map') setTab('map');
     void onStartEnRoute(targetJob.id);
   };
 
@@ -921,7 +921,7 @@ export function GuardDashboard({
     try {
       const proximity = await verifyOnSiteForJob(activeShiftJob);
       if (!proximity.onSite) {
-        showAppToast('Must be on site to clock in', {
+        showAppToast('Must be on site to start the job', {
           tone: 'error',
           body: formatSiteProximityHint(proximity.distanceMeters),
         });
@@ -993,7 +993,7 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Job start is not open yet.', { tone: 'error' });
       return;
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
@@ -1040,14 +1040,14 @@ export function GuardDashboard({
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Job start is not open yet.', { tone: 'error' });
       return;
     }
     void (async () => {
       try {
         const proximity = await verifyOnSiteForJob(activeShiftJob);
         if (!proximity.onSite) {
-          showAppToast('Must be on site to clock in', {
+          showAppToast('Must be on site to start the job', {
             tone: 'error',
             body: formatSiteProximityHint(proximity.distanceMeters),
           });
@@ -1180,7 +1180,7 @@ export function GuardDashboard({
   }) => {
     if (!activeShiftJob) return;
     if (!canGuardClockOut(activeShiftJob)) {
-      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.', { tone: 'error' });
+      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Complete job is not available right now.', { tone: 'error' });
       setShowEndCheckpoint(false);
       return;
     }
@@ -1332,6 +1332,13 @@ export function GuardDashboard({
     activePhase === 'upcoming' &&
     nextShiftJob.status === 'accepted' &&
     !showShiftOverlay;
+
+  // Uber-style trip lock: stay on the job map (messages allowed for client chat).
+  useEffect(() => {
+    if (!showShiftOverlay) return;
+    if (tab !== 'map' && tab !== 'messages') setTab('map');
+  }, [showShiftOverlay, tab, setTab]);
+
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const showVehicleTab = guardVehicleTabVisible(guard);
@@ -2020,7 +2027,9 @@ export function GuardDashboard({
         : GUARD_TAB_TITLES[tab];
   const guardHeaderStatus =
     activeShiftJob?.status === 'in-progress'
-      ? `On shift · ${activeShiftJob.siteName || activeShiftJob.location}`
+      ? `On job · ${activeShiftJob.siteName || activeShiftJob.location}`
+      : activeShiftJob?.enRouteAt && activeShiftJob.status === 'accepted'
+        ? `En route · ${activeShiftJob.siteName || activeShiftJob.location}`
       : credentialRestricted
         ? 'Restricted — upload and verify expired credentials'
         : accountNeedsActivation
@@ -2051,6 +2060,7 @@ export function GuardDashboard({
       activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
+      hideBottomNav={showShiftOverlay}
       variant={shellVariant}
       workspaceLabel="Guard workspace"
       sidebarPrimaryAction={

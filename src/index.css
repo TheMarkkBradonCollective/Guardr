@@ -4129,6 +4129,24 @@ button.app-cert-item-interactive:hover {
   max-height: 62dvh !important;
 }
 
+/* Uber-style active job: map peeks above; sheet fills the rest until job complete */
+.guardr-active-job-trip {
+  top: max(5.5rem, 14vh) !important;
+  bottom: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  border-top-left-radius: 1.25rem !important;
+  border-top-right-radius: 1.25rem !important;
+  padding-bottom: var(--app-safe-bottom);
+  background: var(--brand-surface) !important;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.28);
+}
+
+.guardr-active-job-trip .guard-scroll-panel {
+  flex: 1;
+  min-height: 0;
+}
+
 .social-auth-btn {
   width: 2.75rem;
   height: 2.75rem;

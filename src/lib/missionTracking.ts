@@ -22,10 +22,10 @@ const STEP_LABELS: Record<MissionTimelineStep, string> = {
   assigned: 'Guard assigned',
   'en-route': 'Guard en route',
   arrived: 'Arrived on site',
-  'on-duty': 'On duty',
+  'on-duty': 'On job',
   incident: 'Incident report filed',
   emergency: 'Emergency',
-  complete: 'Shift complete',
+  complete: 'Job complete',
 };
 
 const PHASE_TO_STEP: Record<ClientShiftPhase, MissionTimelineStep> = {

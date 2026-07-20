@@ -65,13 +65,13 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
     <AppModal open={open} position="absolute" zIndex={1003} onClose={onClose} ariaLabelledBy="guard-self-audit-title">
       <OverlaySheetHeader
         titleId="guard-self-audit-title"
-        title="Start of shift package"
+        title="Start of job package"
         onClose={onClose}
       />
 
       <div className="uber-overlay-sheet-body space-y-5">
         <p className="text-xs uber-text-muted leading-relaxed">
-          Self-audit and location photo before clock-in. Skipping items from the previous screen is allowed but
+          Self-audit and location photo before you start the job. Skipping items from the previous screen is allowed but
           automatically flagged for the client.
         </p>
 
@@ -156,11 +156,11 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
         </div>
 
         <SlideToConfirm
-          label="Slide to start shift"
-          confirmedLabel="Clocking in…"
+          label="Slide to start job"
+          confirmedLabel="Starting…"
           onConfirm={handleSubmit}
           disabled={!photos.self}
-          disabledHint="Capture your selfie before clocking in."
+          disabledHint="Capture your selfie before starting the job."
         />
       </div>
     </AppModal>

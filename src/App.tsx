@@ -10524,13 +10524,13 @@ export default function App() {
         return false;
       }
       if (!canGuardClockIn(req)) {
-        appToast(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.', 'error');
+        appToast(guardClockInBlockedMessage(req) ?? 'Job start is not open yet.', 'error');
         return false;
       }
     }
     if (req && payload.status === 'completed') {
       if (!canGuardClockOut(req)) {
-        appToast(guardClockOutBlockedMessage(req) ?? 'Clock-out is not available right now.', 'error');
+        appToast(guardClockOutBlockedMessage(req) ?? 'Complete job is not available right now.', 'error');
         return false;
       }
     }
@@ -10722,7 +10722,7 @@ export default function App() {
         notifyJobStatusUpdate(
           currentUser,
           req,
-          'Shift completed',
+          'Job completed',
           `${guard?.name ?? 'Your guard'} completed "${req.title}".`,
           { guardId: req.assignedGuardId }
         );
@@ -10880,7 +10880,7 @@ export default function App() {
         currentUser,
         guard?.id ?? activeGuardId,
         "You weren't ready",
-        `You arrived without reviewing the briefing for "${req.title}". Complete it before clock-in.`
+        `You arrived without reviewing the briefing for "${req.title}". Complete it before starting the job.`
       );
     }
     void reportPushEvent(currentUser, {
@@ -11073,7 +11073,7 @@ export default function App() {
           recipientUserId: job.clientId,
           requestId: job.id,
           title: 'Guard no-show',
-          body: `Scheduled guard did not clock in for "${job.title}". Searching for a replacement.`,
+          body: `Scheduled guard did not start the job for "${job.title}". Searching for a replacement.`,
           priority: 'high',
         });
       }
