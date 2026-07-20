@@ -449,7 +449,7 @@ body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop,
 body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop,
 body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-backdrop {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Tablet flow sidebar */
