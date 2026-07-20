@@ -7,7 +7,7 @@ This guide explains how Guardr works: which page to open, where actions appear, 
 Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
-- **Guards** upload required credentials on the **activation screen** while their application is under review, become **active** after staff approve and verify credentials, then apply for work, clock in and out, complete self-audits, submit reports, and collect pay.
+- **Guards** upload required credentials on the **activation screen** while their application is under review, become **active** after staff approve and verify credentials, then apply for work, head to jobs, complete self-audits, submit reports, and collect pay.
 - **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below.
 
 ### Where to open this guide
@@ -162,8 +162,8 @@ Every job offer moves through these statuses:
 | **Draft** | Client started a job but has not submitted it yet | Client job-posting flow |
 | **Pending review** | Client submitted the job and staff must approve it | Client **Jobs** page; staff **Applications** (job offers) and **Jobs** |
 | **Open** | Staff approved the listing; guards can apply, or payment/assignment can continue | Client **Jobs** page; guard **Map**; staff **Jobs** |
-| **Accepted** | A guard is assigned and confirmed | Client **Jobs** / **Live coverage**; guard **Map** / **Jobs**; staff **Jobs** / **Map** |
-| **In progress** | Guard arrived, started the shift, and completed or skipped self-audit | Client **Live coverage** / **Jobs**; guard **Map**; staff **Map** / **Jobs** |
+| **Accepted** | A guard is assigned and confirmed | Client **Jobs** / live job; guard **Map** / **Jobs**; staff **Jobs** / **Map** |
+| **In progress** | Guard arrived, started the job, and completed or skipped self-audit | Client live job / **Jobs**; guard **Map** (full-screen active job); staff **Map** / **Jobs** |
 | **Completed** | Guard ended the shift | Client **Jobs**; guard **Jobs** / **Pay**; staff **Payments** |
 | **Closed** | Job is archived, cancelled, or no longer active | Staff **Jobs** and historical views |
 
@@ -665,30 +665,32 @@ Trusted guards can build a **standing crew** — a reusable roster for multi-gua
 3. Submit for staff approval — driving priority stays locked until approved.
 4. Renew insurance before expiry — expired insurance blocks vehicle/driving access.
 
-### 8. Start a shift
+### 8. Start a job
 
-Clock-in opens around the scheduled start window.
+Within about 24 hours of start, **Map** can show a **Next Job** card with a live countdown. Tap it for full briefing details and **Slide to start heading**.
 
-1. Travel to the site.
-2. Open **Map**.
-3. The active job sheet or active shift overlay appears.
-4. Use **Slide to arrive on site** when you are physically at the location.
-5. Use **Slide to start shift**.
+Once you start heading, the app opens a full-screen active job until the job is complete. Clients see your live location from en route onward.
+
+1. Open **Map** (or the **Next Job** card).
+2. Review the job briefing and acknowledge when prompted.
+3. Use **Slide to start heading** to go en route.
+4. Use **Slide to arrive on site** when you are physically at the location (GPS required; not limited to the old 15-minute start window).
+5. Use **Slide to start job**.
 6. Complete the self-audit modal:
    - Selfie.
    - Uniform photo.
    - Shoes photo.
-7. Submit the self-audit to start the shift.
+7. Submit the self-audit to start the job.
 8. The job becomes **In progress**.
 
 If you cannot complete the self-audit:
 
-- Use **Skip self audit · clock in** only when necessary.
+- Use **Skip self audit** only when necessary (still requires on-site GPS).
 - The job is flagged **No Self Audit** until you upload the three required photos yourself.
 
-### 9. Work the shift
+### 9. Work the job
 
-During an active shift, use the active shift controls:
+During an active job, use the full-screen job controls:
 
 - **Message client** for job chat.
 - **Report incident** for safety or security incidents.
@@ -710,19 +712,19 @@ Activity reporting:
 3. Submit it.
 4. The app confirms **Activity logged**.
 
-### 10. End a shift
+### 10. Complete a job
 
-1. At the end of the shift, open **Map** if the active shift controls are not already visible.
-2. Use **Slide to end shift** during the allowed clock-out window.
+1. At the end of the job, use the full-screen active job controls (or open **Map** if needed).
+2. Use **Slide to complete job** during the allowed end window.
 3. Confirm checkout details.
 4. Complete any optional client rating prompt.
 5. The job becomes **Completed**.
 6. Earnings appear under **Pay** after the payment/payout rules are satisfied.
 
-Late clock-out:
+Late completion:
 
-- If you clock out late, the app may ask for a time confirmation.
-- Late clock-out can create overtime that both guard and client must approve.
+- If you complete late, the app may ask for a time confirmation.
+- Late completion can create overtime that both guard and client must approve.
 
 ### 11. Review overtime
 
@@ -750,7 +752,7 @@ Payouts depend on:
 
 1. Open **Messages** for job chats.
 2. Open **Support** for help tickets and formal reports.
-3. During an active shift, **Message client** opens the relevant job chat.
+3. During an active job, **Message client** opens the relevant job chat.
 
 ---
 
@@ -1014,8 +1016,8 @@ Client opens Home or Jobs
 | Pay for job | **Jobs → Pay Now** | — | — |
 | Apply for job | — | **Map → Slide to apply for job** | — |
 | Approve guard | **Jobs → Approve guard** / **Decline guard** | — | Dispute/safety placement only |
-| Start shift | Watch from **Live coverage** / **Jobs** | **Map → Slide to arrive on site → Slide to start shift** | **Map** / **Jobs** |
-| Self-audit | **Jobs** or **Live coverage → Confirm self-audit photos** | Self-audit modal after start shift | **Jobs** — view **No Self Audit** flags |
+| Start job | Watch live location / **Jobs** | **Map → Next Job / Slide to start heading → arrive → start job** | **Map** / **Jobs** |
+| Self-audit | **Jobs** or live job → Confirm self-audit photos | Self-audit modal after start job | **Jobs** — view **No Self Audit** flags |
 | On-duty messages | **Messages** / job chat | **Message client** / **Messages** | **Messages** |
 | Incident/activity reports | **Home → Reports** to review | **Report incident** / **Activity report** | **Incidents** |
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
@@ -1138,7 +1140,7 @@ Open **Pay** and use **Connect bank account** to link Stripe Connect for bank tr
 
 **What it is:** A mandatory photo check performed by the guard at the start of each shift — selfie, uniform, and shoes. It confirms the guard arrived prepared and in the correct appearance.
 
-**For guards:** When you start a shift, the self-audit modal opens automatically. Take and submit all three photos to start the shift. If you need to skip temporarily, use **Skip self audit · clock in** — the job is flagged **No Self Audit** until you upload the photos yourself.
+**For guards:** When you start a job, the self-audit modal opens automatically. Take and submit all three photos to start the job. If you need to skip temporarily, use **Skip self audit** (on-site GPS required) — the job is flagged **No Self Audit** until you upload the photos yourself.
 
 **For clients:** Self-audit photos appear in the job detail under **Guard self-audit photos**. Review the photos and tap **Confirm self-audit photos** when they are acceptable.
 
