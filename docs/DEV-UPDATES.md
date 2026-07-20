@@ -3,11 +3,46 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Monday, July 20, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.84**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.85**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Monday, July 20, 2026 (evening) — /mergeit + /updateit → v1.0.85
+
+**En route → on-site → start job (#732)**
+- Persist **`arrived_at`** separately from clock-in / self-audit
+- Arrival no longer blocked by the 15-minute start window (GPS only)
+- Skip self-audit requires current on-site GPS; late path restored after briefing
+- Live location shared with the client from en route / arrived / on job
+- Active job uses **job** language (not clock-in / shift) in the trip UI
+
+**Map & Next Job**
+- Empty map dock shows **Next Job** with live countdown inside 24h; tap → briefing + slide to start heading
+- Full-screen Uber-style active job from en route through complete
+- Map browse: guards see available + claimed + flashing direct requests; clients see own upcoming; staff sees site-wide active/upcoming; past/canceled/missed stay on **Jobs** only
+
+**Staff UX**
+- Operations pages (Jobs…Staff) use Communications-style inbox tabs
+- Side nav: more edge padding; active page is an inverted tab (light: black tab / white text; dark: white tab / black text)
+
+**PR cleanup**
+- Merged **#732**; no open PRs remaining
+
+**Release:** **v1.0.85** (build **185**) — web + PWA cache bust (`guardr-cache-v1-0-85`) + CI FCM APK
+
+**Test coverage:** unit tests + lint + production build (see release commit).
+
+**Supabase:** run if missing on production:
+
+```sql
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMPTZ;
+```
+
+Also already reflected in `supabase/complete_schema_setup.sql`.
 
 ---
 
