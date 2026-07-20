@@ -45,6 +45,7 @@ function staffCertDisplay(cert: Certification) {
 interface StaffCertReviewDetailProps {
   cert: Certification;
   feedItem?: ApprovalFeedItem;
+  guardName?: string;
   onOpenGuardProfile?: () => void;
   actions?: React.ReactNode;
 }
@@ -53,6 +54,7 @@ interface StaffCertReviewDetailProps {
 export function StaffCertReviewDetail({
   cert,
   feedItem,
+  guardName,
   onOpenGuardProfile,
   actions,
 }: StaffCertReviewDetailProps) {
@@ -64,6 +66,16 @@ export function StaffCertReviewDetail({
 
   return (
     <section className="staff-cert-uber" aria-label={`${title} review`}>
+      <header className="staff-cert-uber-page-lead">
+        {guardName ? <p className="staff-cert-uber-guard-name">{guardName}</p> : null}
+        <p className="staff-cert-uber-kicker">{display.kicker}</p>
+        <h2 className="staff-cert-uber-title">{title}</h2>
+        <div className="staff-cert-uber-badges">
+          <CredentialCategoryBadge cert={cert} variant="category" />
+          <CredentialStatusBadges cert={cert} staffMode />
+        </div>
+      </header>
+
       {feedItem ? (
         <dl className="staff-cert-uber-review-meta">
           <div>
@@ -96,15 +108,6 @@ export function StaffCertReviewDetail({
           View full guard profile →
         </button>
       ) : null}
-
-      <div className="staff-cert-uber-head">
-        <p className="staff-cert-uber-kicker">{display.kicker}</p>
-        <h2 className="staff-cert-uber-title">{title}</h2>
-        <div className="staff-cert-uber-badges">
-          <CredentialCategoryBadge cert={cert} variant="category" />
-          <CredentialStatusBadges cert={cert} staffMode />
-        </div>
-      </div>
 
       <dl className="staff-cert-uber-fields">
         {display.state ? (

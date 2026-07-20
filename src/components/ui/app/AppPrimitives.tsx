@@ -109,20 +109,25 @@ export function AppSubScreenHeader({
   onBack,
   backLabel = 'Back',
   wrapTitle = true,
+  hideTitle = false,
 }: {
   title: string;
   onBack: () => void;
   backLabel?: string;
   /** When true (default), title wraps to full width — never ellipsizes with "...". */
   wrapTitle?: boolean;
+  /** Back control only — title lives in the scrolling page body. */
+  hideTitle?: boolean;
 }) {
   return (
-    <div className={`app-subscreen-header${wrapTitle ? ' app-subscreen-header--wrap' : ''}`}>
+    <div
+      className={`app-subscreen-header app-subscreen-header--shrink${wrapTitle && !hideTitle ? ' app-subscreen-header--wrap' : ''}${hideTitle ? ' app-subscreen-header--back-only' : ''}`}
+    >
       <button type="button" onClick={onBack} className="app-subscreen-back">
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </button>
-      <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1>
+      {!hideTitle ? <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1> : null}
     </div>
   );
 }

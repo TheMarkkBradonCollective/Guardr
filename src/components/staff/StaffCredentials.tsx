@@ -525,81 +525,81 @@ export function StaffCredentials({
 
     const { guard } = context;
 
-    const detailBody = (
-      <div className="staff-detail-pane staff-credential-review space-y-4 min-w-0 max-w-full">
-        {context.kind === 'cert' ? (
-          <StaffCertReviewDetail
-            cert={context.cert}
-            feedItem={feedItem}
-            onOpenGuardProfile={onOpenGuardProfile ? () => onOpenGuardProfile(guard.id) : undefined}
-            actions={renderCertActions(guard, context.cert)}
-          />
-        ) : (
-          <>
-            <CredentialReviewMeta item={feedItem} />
-            {onOpenGuardProfile ? (
-              <button
-                type="button"
-                onClick={() => onOpenGuardProfile(guard.id)}
-                className="text-xs font-semibold text-brand-primary hover:underline"
-              >
-                View full guard profile →
-              </button>
-            ) : null}
+    const detailBody =
+      context.kind === 'cert' ? (
+        <StaffCertReviewDetail
+          cert={context.cert}
+          feedItem={feedItem}
+          guardName={guard.name}
+          onOpenGuardProfile={onOpenGuardProfile ? () => onOpenGuardProfile(guard.id) : undefined}
+          actions={renderCertActions(guard, context.cert)}
+        />
+      ) : (
+        <div className="staff-detail-pane staff-credential-review space-y-4 min-w-0 max-w-full">
+          <CredentialReviewMeta item={feedItem} />
+          {onOpenGuardProfile ? (
+            <button
+              type="button"
+              onClick={() => onOpenGuardProfile(guard.id)}
+              className="text-xs font-semibold text-brand-primary hover:underline"
+            >
+              View full guard profile →
+            </button>
+          ) : null}
 
-            {context.kind === 'coi' ? (
-              <div className="space-y-3">
-                <GuardCoiItemCard
-                  guard={guard}
-                  staffMode
-                  onReview={
-                    onReviewGuardInsurance
-                      ? async (status, rejectionReason) => {
-                          await onReviewGuardInsurance(guard.id, status, rejectionReason);
-                        }
-                      : undefined
-                  }
-                  onEditFullPage={
-                    onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-                  }
-                />
-                {renderCoiActions(guard)}
-                {renderCoiUpdateRequest(guard)}
-              </div>
-            ) : null}
+          {context.kind === 'coi' ? (
+            <div className="space-y-3">
+              <GuardCoiItemCard
+                guard={guard}
+                staffMode
+                onReview={
+                  onReviewGuardInsurance
+                    ? async (status, rejectionReason) => {
+                        await onReviewGuardInsurance(guard.id, status, rejectionReason);
+                      }
+                    : undefined
+                }
+                onEditFullPage={
+                  onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+                }
+              />
+              {renderCoiActions(guard)}
+              {renderCoiUpdateRequest(guard)}
+            </div>
+          ) : null}
 
-            {context.kind === 'gov-id' ? (
-              <div className="space-y-3">
-                <GuardIdItemCard
-                  guard={guard}
-                  staffMode
-                  asCredentialSection
-                  onEditFullPage={
-                    onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
-                  }
-                />
-                {renderGovIdActions(guard)}
-                {renderGovIdUpdateRequest(guard)}
-              </div>
-            ) : null}
+          {context.kind === 'gov-id' ? (
+            <div className="space-y-3">
+              <GuardIdItemCard
+                guard={guard}
+                staffMode
+                asCredentialSection
+                onEditFullPage={
+                  onEditGuardProfile ? () => onEditGuardProfile(guard.id) : undefined
+                }
+              />
+              {renderGovIdActions(guard)}
+              {renderGovIdUpdateRequest(guard)}
+            </div>
+          ) : null}
 
-            {context.kind === 'activation-pending' ? (
-              <StaffActivationCredentialSection guard={guard} stepKey={context.stepKey} />
-            ) : null}
-          </>
-        )}
-      </div>
-    );
+          {context.kind === 'activation-pending' ? (
+            <StaffActivationCredentialSection guard={guard} stepKey={context.stepKey} />
+          ) : null}
+        </div>
+      );
 
     if (options?.onBack) {
+      const isCertDetail = context.kind === 'cert';
       return (
-        <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
+        <div className="app-full-page-detail app-full-page-detail--scroll animate-fade-in min-w-0 max-w-full">
           <AppSubScreenHeader
             title={feedItem.title ?? 'Credential review'}
             onBack={options.onBack}
             backLabel="Credentials"
+            hideTitle={isCertDetail}
           />
-          {detailBody}
+          <div className="app-full-page-detail-scroll">{detailBody}</div>
         </div>
       );
     }
