@@ -2,7 +2,7 @@ import React from 'react';
 import { Block } from 'baseui/block';
 import { HeadingLarge, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
-import { Building2, Shield, ArrowRight, MapPin, Radio } from 'lucide-react';
+import { ArrowRight, MapPin, Radio, Shield } from 'lucide-react';
 import type { ViewSurface } from '../../lib/platform/viewSurface';
 import type { ShellKind } from '../../lib/platform/shellKind';
 import type { ExperienceTier } from '../../lib/platform/experienceTier';
@@ -183,23 +183,14 @@ export function AppWelcomeHero({
 }
 
 export function AppWelcomeSignInDock({
-  signInRole,
-  setSignInRole,
   onNavigateToAuth,
   onOpenLegal,
   viewSurface,
 }: {
-  signInRole: 'guard' | 'client';
-  setSignInRole: (role: 'guard' | 'client') => void;
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   onOpenLegal: (page: LegalPageId) => void;
   viewSurface: ViewSurface;
 }) {
-  const roles = [
-    { id: 'guard' as const, label: 'Guard', icon: Shield },
-    { id: 'client' as const, label: 'Client', icon: Building2 },
-  ];
-
   return (
     <div
       className="app-welcome-dock shrink-0"
@@ -211,41 +202,23 @@ export function AppWelcomeSignInDock({
       }}
       data-view-surface={viewSurface}
     >
-      {/* Role toggle — single segmented row */}
-      <div className="app-welcome-role-row">
-        {roles.map(({ id, label, icon: Icon }) => {
-          const selected = signInRole === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => setSignInRole(id)}
-              className="app-welcome-role-seg"
-              data-active={selected ? 'true' : undefined}
-            >
-              <Icon size={16} strokeWidth={1.75} aria-hidden />
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
       <AppButton
         fullWidth
-        className="app-welcome-signin-btn mt-4"
-        onClick={() => onNavigateToAuth(signInRole, 'sign-in')}
+        className="app-welcome-signin-btn"
+        onClick={() => onNavigateToAuth(undefined, 'sign-in')}
       >
         Sign in
         <ArrowRight className="w-4 h-4" />
       </AppButton>
 
-      <div className="flex justify-center items-center gap-1 mt-3">
-        <span className="text-xs" style={{ color: 'var(--uber-text-muted)' }}>New here?</span>
-        <AppButton variant="ghost" size="inline" onClick={() => onNavigateToAuth(signInRole, 'sign-up')}>
-          Create {signInRole === 'guard' ? 'guard' : 'client'} account
-        </AppButton>
-      </div>
+      <AppButton
+        fullWidth
+        variant="outline"
+        className="mt-3"
+        onClick={() => onNavigateToAuth(undefined, 'sign-up')}
+      >
+        Sign up
+      </AppButton>
 
       <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--uber-border)' }}>
         <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
