@@ -10,6 +10,26 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+const DISMISS_KEY = 'guardr_install_prompt_dismissed_at';
+/** Re-show the install prompt after this many days if the user tapped Later. */
+const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+
+function isDismissCooldownActive(): boolean {
+  const raw = localStorage.getItem(DISMISS_KEY);
+  if (!raw) {
+    // Migrate legacy permanent dismiss flag into a timed cooldown once.
+    if (localStorage.getItem('guardr_install_prompt_dismissed') === 'true') {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+      localStorage.removeItem('guardr_install_prompt_dismissed');
+      return true;
+    }
+    return false;
+  }
+  const dismissedAt = Number(raw);
+  if (!Number.isFinite(dismissedAt)) return false;
+  return Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -36,8 +56,7 @@ export function InstallPrompt() {
       return;
     }
 
-    const isDismissed = localStorage.getItem('guardr_install_prompt_dismissed');
-    if (isDismissed === 'true') {
+    if (isDismissCooldownActive()) {
       return;
     }
 
@@ -49,15 +68,16 @@ export function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (isIphoneOrIpad) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setIsVisible(true);
       }, 4000);
-      return () => clearTimeout(timer);
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -74,7 +94,8 @@ export function InstallPrompt() {
   };
 
   const dismissPrompt = () => {
-    localStorage.setItem('guardr_install_prompt_dismissed', 'true');
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    localStorage.removeItem('guardr_install_prompt_dismissed');
     setIsVisible(false);
   };
 
