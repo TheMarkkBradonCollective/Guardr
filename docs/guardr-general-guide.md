@@ -752,7 +752,7 @@ Payouts depend on:
 
 1. Open **Messages** for job chats.
 2. Open **Support** for help tickets and formal reports.
-3. During an active shift, **Message client** opens the relevant job chat.
+3. During an active job, **Message client** opens the relevant job chat.
 
 ---
 
@@ -1016,8 +1016,8 @@ Client opens Home or Jobs
 | Pay for job | **Jobs → Pay Now** | — | — |
 | Apply for job | — | **Map → Slide to apply for job** | — |
 | Approve guard | **Jobs → Approve guard** / **Decline guard** | — | Dispute/safety placement only |
-| Start shift | Watch from **Live coverage** / **Jobs** | **Map → Slide to arrive on site → Slide to start shift** | **Map** / **Jobs** |
-| Self-audit | **Jobs** or **Live coverage → Confirm self-audit photos** | Self-audit modal after start shift | **Jobs** — view **No Self Audit** flags |
+| Start job | Watch live location / **Jobs** | **Map → Next Job / Slide to start heading → arrive → start job** | **Map** / **Jobs** |
+| Self-audit | **Jobs** or live job → Confirm self-audit photos | Self-audit modal after start job | **Jobs** — view **No Self Audit** flags |
 | On-duty messages | **Messages** / job chat | **Message client** / **Messages** | **Messages** |
 | Incident/activity reports | **Home → Reports** to review | **Report incident** / **Activity report** | **Incidents** |
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
@@ -1140,7 +1140,7 @@ Open **Pay** and use **Connect bank account** to link Stripe Connect for bank tr
 
 **What it is:** A mandatory photo check performed by the guard at the start of each shift — selfie, uniform, and shoes. It confirms the guard arrived prepared and in the correct appearance.
 
-**For guards:** When you start a shift, the self-audit modal opens automatically. Take and submit all three photos to start the shift. If you need to skip temporarily, use **Skip self audit · clock in** — the job is flagged **No Self Audit** until you upload the photos yourself.
+**For guards:** When you start a job, the self-audit modal opens automatically. Take and submit all three photos to start the job. If you need to skip temporarily, use **Skip self audit** (on-site GPS required) — the job is flagged **No Self Audit** until you upload the photos yourself.
 
 **For clients:** Self-audit photos appear in the job detail under **Guard self-audit photos**. Review the photos and tap **Confirm self-audit photos** when they are acceptable.
 
