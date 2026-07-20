@@ -34,7 +34,7 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 **Release:** **v1.0.85** (build **185**) — web + PWA cache bust (`guardr-cache-v1-0-85`) + CI FCM APK
 
-**Test coverage:** unit tests + lint + production build (see release commit).
+**Test coverage:** 449 unit tests, lint and build clean.
 
 **Supabase:** run if missing on production:
 
