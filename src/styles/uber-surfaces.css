@@ -61,25 +61,25 @@ html.theme-dark .uber-app-shell {
   box-shadow: none;
 }
 
-/* Uber black welcome card — solid black like real Uber app */
+/* Welcome card — inverted accent panel (black in light, white in dark) */
 .uber-app-shell .adm-card--welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: #000000;
+  background: var(--uber-accent);
   border-color: transparent;
-  color: #fff;
+  color: var(--brand-accent-text);
 }
 
 html.theme-light .uber-app-shell .adm-card--welcome {
-  background: #000000;
-  color: #fff;
+  background: var(--uber-accent);
+  color: var(--brand-accent-text);
 }
 
 html.theme-dark .uber-app-shell .adm-card--welcome {
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--uber-accent);
+  color: var(--brand-accent-text);
 }
 
 .uber-app-shell .adm-card-eyebrow {

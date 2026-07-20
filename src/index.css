@@ -120,42 +120,42 @@ html.theme-dark {
   --uber-accent-hover: #E2E2E2;
   --uber-accent-50: #1A1A1A;
   --uber-accent-100: #2B2B2B;
-  --uber-bg: #141414;
-  --uber-surface: #1f1f1f;
-  --uber-elevated: #2b2b2b;
-  --uber-text: #ffffff;
-  --uber-text-muted: #a6a6a6;
-  --uber-border: #333333;
-  --uber-positive: #66d19e;
-  --uber-negative: #f1998e;
-  --uber-warning: #ffc043;
-  --uber-black: #ffffff;
-  --uber-black-hover: #e2e2e2;
+  --uber-bg: #000000;
+  --uber-surface: #1A1A1A;
+  --uber-elevated: #2B2B2B;
+  --uber-text: #FFFFFF;
+  --uber-text-muted: #9E9E9E;
+  --uber-border: #2B2B2B;
+  --uber-positive: #66D19E;
+  --uber-negative: #F1998E;
+  --uber-warning: #FFC043;
+  --uber-black: #FFFFFF;
+  --uber-black-hover: #E2E2E2;
   --brand-primary: var(--uber-accent);
   --brand-primary-hover: var(--uber-accent-hover);
   --brand-bg: var(--uber-bg);
-  --brand-bg-sec: #0a0a0a;
-  --brand-surface: var(--uber-surface);
+  --brand-bg-sec: var(--uber-surface);
+  --brand-surface: var(--uber-bg);
   --brand-elevated: var(--uber-elevated);
   --brand-border: var(--uber-border);
   --brand-text: var(--uber-text);
   --brand-text-muted: var(--uber-text-muted);
   --brand-accent: var(--uber-accent);
-  --brand-accent-text: #ffffff;
+  --brand-accent-text: #000000;
   --brand-overlay: rgba(0, 0, 0, 0.94);
-  --brand-chrome: #000000;
-  --brand-chrome-deep: #000000;
+  --brand-chrome: var(--uber-bg);
+  --brand-chrome-deep: var(--uber-surface);
   --brand-chrome-text: var(--uber-text);
   --brand-chrome-muted: var(--uber-text-muted);
-  --brand-chrome-border: color-mix(in srgb, var(--uber-accent) 28%, var(--uber-border));
+  --brand-chrome-border: var(--uber-border);
   --status-success: var(--uber-positive);
   --status-warning: var(--uber-warning);
   --status-danger: var(--uber-negative);
   --status-info: var(--uber-accent);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 1px 4px rgba(255, 255, 255, 0.04);
   --shadow-card: none;
-  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.48);
-  --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.60);
+  --shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.08);
   --radius-card: 12px;
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--uber-accent) 28%, transparent);
 }
@@ -5732,16 +5732,6 @@ html.theme-dark .app-inbox-row-leading {
   min-height: 3.5rem;
 }
 
-html.theme-dark .app-chat-header {
-  background: #111111;
-  border-bottom-color: #1e1e1e;
-}
-
-html.theme-light .app-chat-header {
-  background: #ffffff;
-  border-bottom-color: #e5e5e5;
-}
-
 .app-chat-header-back {
   display: inline-flex;
   align-items: center;
@@ -5811,14 +5801,6 @@ html.theme-light .app-chat-header {
   flex-direction: column;
   gap: 0;
   overscroll-behavior: contain;
-}
-
-html.theme-dark .app-chat-pane {
-  background: #080808;
-}
-
-html.theme-light .app-chat-pane {
-  background: #f5f5f5;
 }
 
 .app-chat-thread {
@@ -5925,7 +5907,7 @@ html.theme-dark .app-chat-date-sep > span {
 
 .app-chat-bubble-outgoing {
   background: var(--brand-primary);
-  color: #ffffff;
+  color: var(--brand-accent-text);
   border: none;
   border-bottom-right-radius: 0.3125rem;
   box-shadow: 0 1px 3px color-mix(in srgb, var(--brand-primary) 45%, transparent);
@@ -5941,18 +5923,7 @@ html.theme-dark .app-chat-bubble-outgoing {
   color: var(--brand-text);
   border: 1px solid var(--brand-border);
   border-bottom-left-radius: 0.3125rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-
-html.theme-dark .app-chat-bubble-incoming {
-  background: #1c1c1c;
-  border-color: #2a2a2a;
-  box-shadow: none;
-}
-
-html.theme-light .app-chat-bubble-incoming {
-  background: #ffffff;
-  border-color: #e0e0e0;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--brand-text) 4%, transparent);
 }
 
 .app-chat-bubble-staff {
@@ -5960,12 +5931,12 @@ html.theme-light .app-chat-bubble-incoming {
   color: var(--brand-text);
   border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
   border-bottom-left-radius: 0.3125rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--brand-text) 4%, transparent);
 }
 
 html.theme-dark .app-chat-bubble-staff {
-  background: color-mix(in srgb, var(--brand-primary) 14%, #1a1a1a);
-  border-color: color-mix(in srgb, var(--brand-primary) 30%, #2a2a2a);
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
 }
 
 .app-chat-bubble-system {
@@ -6079,16 +6050,6 @@ html.theme-dark .app-chat-bubble-staff {
   flex-shrink: 0;
 }
 
-html.theme-dark .app-chat-composer {
-  background: #111111;
-  border-top-color: #1e1e1e;
-}
-
-html.theme-light .app-chat-composer {
-  background: #ffffff;
-  border-top-color: #e5e5e5;
-}
-
 .app-chat-composer-inner {
   padding: 0.625rem 0.75rem calc(0.625rem + var(--app-safe-bottom));
 }
@@ -6102,16 +6063,6 @@ html.theme-light .app-chat-composer {
   border-radius: 1.5rem;
   background: var(--brand-bg-sec);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-html.theme-dark .app-chat-composer-field {
-  background: #1a1a1a;
-  border-color: #282828;
-}
-
-html.theme-light .app-chat-composer-field {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
 }
 
 .app-chat-composer-input {
@@ -6679,16 +6630,6 @@ html.theme-dark .app-chat-reply-bar {
   border: 1px solid var(--brand-border);
   border-radius: 1.25rem;
   border-bottom-left-radius: 0.3125rem;
-}
-
-html.theme-dark .app-chat-typing-bubble {
-  background: #1c1c1c;
-  border-color: #2a2a2a;
-}
-
-html.theme-light .app-chat-typing-bubble {
-  background: #ffffff;
-  border-color: #e0e0e0;
 }
 
 .app-chat-typing-dot {
@@ -7749,43 +7690,23 @@ textarea.uber-input {
   border-width: 1.5px !important;
 }
 
+.uber-input,
+input.uber-input,
+textarea.uber-input,
+.uber-select {
+  background: var(--uber-surface) !important;
+  border-color: var(--uber-border) !important;
+  color: var(--uber-text) !important;
+}
+
 .uber-input:focus,
 input.uber-input:focus,
 textarea.uber-input:focus,
 .uber-select:focus {
+  background: var(--uber-surface) !important;
   border-color: var(--brand-primary) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent) !important;
   outline: none !important;
-}
-
-html.theme-dark .uber-input,
-html.theme-dark input.uber-input,
-html.theme-dark textarea.uber-input,
-html.theme-dark .uber-select {
-  background: #1a1a1a !important;
-  border-color: #2c2c2c !important;
-  color: #f5f5f5 !important;
-}
-
-html.theme-dark .uber-input:focus,
-html.theme-dark input.uber-input:focus,
-html.theme-dark textarea.uber-input:focus {
-  background: #1e1e1e !important;
-  border-color: var(--brand-primary) !important;
-}
-
-html.theme-light .uber-input,
-html.theme-light input.uber-input,
-html.theme-light textarea.uber-input,
-html.theme-light .uber-select {
-  background: #ffffff !important;
-  border-color: #e2e2e2 !important;
-  color: #000000 !important;
-}
-
-html.theme-light .uber-input:focus,
-html.theme-light input.uber-input:focus {
-  border-color: var(--brand-primary) !important;
 }
 
 .segmented-control {
@@ -8594,10 +8515,6 @@ html.theme-dark .wf-badge-success {
 
 .guard-rating-body {
   background: var(--uber-bg, #fff);
-}
-
-html.theme-dark .guard-rating-body {
-  background: #111;
 }
 
 /* ─── Uber compact hero — replaces the 22rem translucent banner ─────────── */

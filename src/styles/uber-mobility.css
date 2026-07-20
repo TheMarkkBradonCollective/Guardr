@@ -34,16 +34,6 @@ html.theme-grey {
   --brand-chrome-deep: var(--uber-surface, #f6f6f6);
 }
 
-html.theme-dark {
-  --brand-bg: var(--uber-bg, #141414);
-  --brand-bg-sec: var(--uber-surface, #1c1c1c);
-  --brand-surface: var(--uber-bg, #141414);
-  --brand-elevated: var(--uber-surface, #1c1c1c);
-  --brand-text: var(--uber-text, #f0f0f0);
-  --brand-chrome: var(--uber-bg, #141414);
-  --brand-chrome-text: var(--uber-text, #f0f0f0);
-}
-
 /* ─── Shell: shared mobility chrome ─────────────────────────────────────── */
 
 .uber-app-shell.mobility-shell {
@@ -56,7 +46,7 @@ html.theme-dark {
 }
 
 html.theme-dark .uber-app-shell.mobility-shell .mobility-header--glass {
-  background-color: color-mix(in srgb, var(--uber-bg, #141414) 86%, transparent) !important;
+  background-color: color-mix(in srgb, var(--uber-bg, #000000) 86%, transparent) !important;
 }
 
 .uber-app-shell.mobility-shell.mobility-shell--native .mobility-header {
@@ -283,11 +273,6 @@ html.theme-dark .uber-app-shell .app-button-primary {
 body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] aside {
   background: var(--uber-bg, #ffffff);
   border-right: 1px solid var(--uber-border, #eeeeee);
-}
-
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] aside {
-  background: var(--uber-bg, #141414);
-  border-right-color: var(--uber-border, #2b2b2b);
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .uber-shell-content {

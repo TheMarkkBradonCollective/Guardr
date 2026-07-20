@@ -48,6 +48,12 @@ export const guardrLightTheme: Theme = createLightTheme({
   primaryFontFamily: FONT_FAMILY,
   colors: {
     ...GUARDR_ACCENT_LIGHT,
+    backgroundPrimary: '#FFFFFF',
+    backgroundSecondary: '#F6F6F6',
+    backgroundTertiary: '#F6F6F6',
+    contentPrimary: '#000000',
+    contentSecondary: '#767676',
+    borderOpaque: '#EEEEEE',
     // Primary button: solid black → white text
     buttonPrimaryFill:   '#000000',
     buttonPrimaryText:   '#FFFFFF',
@@ -66,6 +72,12 @@ export const guardrDarkTheme: Theme = createDarkTheme({
   primaryFontFamily: FONT_FAMILY,
   colors: {
     ...GUARDR_ACCENT_DARK,
+    backgroundPrimary: '#000000',
+    backgroundSecondary: '#1A1A1A',
+    backgroundTertiary: '#2B2B2B',
+    contentPrimary: '#FFFFFF',
+    contentSecondary: '#9E9E9E',
+    borderOpaque: '#2B2B2B',
     buttonPrimaryFill:   '#FFFFFF',
     buttonPrimaryText:   '#000000',
     buttonPrimaryHover:  '#E2E2E2',
