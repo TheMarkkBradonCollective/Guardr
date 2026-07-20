@@ -1962,9 +1962,7 @@ export function GuardDashboard({
   const shellHeaderExtension = messagesChromeActive ? guardMessagesChrome.extension : null;
 
   const shellHideHeader =
-    (tab === 'map' ||
-      (tab === 'myJobs' && !!guardSelectedJobId) ||
-      (tab === 'crew' && crewJobDetailOpen)) &&
+    ((tab === 'myJobs' && !!guardSelectedJobId) || (tab === 'crew' && crewJobDetailOpen)) &&
     !shellHeaderOverride;
 
   return (
