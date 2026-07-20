@@ -29,6 +29,9 @@ import {
   type GuardJobsBrowseTab,
 } from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
+import { MapBrowseDock } from './map/MapBrowseDock';
+import { guardMapBrowseItems } from '../lib/mapBrowseItems';
+import { GUARD_MAP_BROWSE_EMPTY_MESSAGE } from '../lib/mapEmptyMessages';
 import type { SecurityRequest } from '../types';
 import { isJobMissed } from '../lib/jobTallies';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -585,6 +588,11 @@ export function GuardDashboard({
     mapStatusFilter,
     browseJobLists.all,
   ]);
+
+  const mapBrowseItems = useMemo(
+    () => guardMapBrowseItems(guard.id, mapJobs),
+    [guard.id, mapJobs],
+  );
 
   useEffect(() => {
     if (
@@ -1380,6 +1388,16 @@ export function GuardDashboard({
         />
       )}
 
+      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
+        <MapBrowseDock
+          items={mapBrowseItems}
+          selectedId={guardSelectedJobId}
+          onSelect={handleGuardSelectedJobChange}
+          emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
+          bottomOffsetClass="map-browse-offset"
+        />
+      ) : null}
+
       {activeTab === 'map' && showBriefingOverlay && activeShiftJob && (
         <GuardPreShiftBriefing
           job={activeShiftJob}
@@ -1417,6 +1435,16 @@ export function GuardDashboard({
           midShiftCheckInDue={midShiftDue}
         />
       )}
+
+      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
+        <MapBrowseDock
+          items={mapBrowseItems}
+          selectedId={guardSelectedJobId}
+          onSelect={handleGuardSelectedJobChange}
+          emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
+          bottomOffsetClass="map-browse-offset"
+        />
+      ) : null}
 
       {activeTab === 'map' && replacementOffers.length > 0 && !showShiftOverlay && (
         <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2 map-browse-offset">
