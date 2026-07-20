@@ -229,7 +229,8 @@ textarea::placeholder { color: var(--uber-text-muted, #767676); }
 }
 
 /* Bottom nav — clean, no color */
-.bottom-nav-bar {
+.bottom-nav-bar,
+.uber-bottom-nav {
   background: var(--uber-bg, #fff);
   border-top: 1px solid var(--uber-border, #eeeeee);
   box-shadow: var(--shadow-nav, 0 -1px 0 rgba(0,0,0,0.06));

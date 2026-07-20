@@ -27,13 +27,13 @@ body.shell-pwa .app-welcome-dock {
   backdrop-filter: blur(16px);
 }
 
-body[data-shell="pwa"] .bottom-nav-bar,
-body.shell-pwa .bottom-nav-bar {
+body[data-shell="pwa"] .uber-bottom-nav,
+body.shell-pwa .uber-bottom-nav {
   background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
   backdrop-filter: saturate(180%) blur(20px);
   border-top: 1px solid var(--uber-border, #e2e2e2);
   box-shadow: none;
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(0.35rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 body[data-view-surface="pwa-mobile"] .auth-sheet-panel,
@@ -50,7 +50,7 @@ body.shell-pwa .auth-sheet-panel {
 
 body[data-shell="pwa"] .role-app-shell--compact,
 body.shell-pwa .role-app-shell--compact {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px));
 }
 
 body[data-shell="pwa"] .tablet-admin-rail,
@@ -66,7 +66,7 @@ body.shell-pwa .app-welcome-shell-badge--pwa {
 
 body[data-view-surface="pwa-mobile"] .auth-sheet--pwa-mobile .auth-sheet-scroll,
 body[data-view-surface="pwa-tablet"] .auth-sheet--pwa-tablet .auth-sheet-scroll {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* PWA tablet — softer card chrome */
@@ -83,8 +83,8 @@ body[data-experience-tier="pwa-lite"] .app-welcome-dock {
   border-top: 1px solid var(--uber-border, #e2e2e2);
 }
 
-body[data-shell="pwa"][data-pwa-mode="lite"] .bottom-nav-bar,
-body[data-experience-tier="pwa-lite"] .bottom-nav-bar {
+body[data-shell="pwa"][data-pwa-mode="lite"] .uber-bottom-nav,
+body[data-experience-tier="pwa-lite"] .uber-bottom-nav {
   backdrop-filter: none;
   background: var(--uber-bg, #ffffff);
 }

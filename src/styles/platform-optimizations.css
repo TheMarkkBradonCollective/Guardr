@@ -100,8 +100,8 @@ body[data-view-surface="browser-mobile"] {
 body[data-view-surface^="pwa-"] {
 
   /* Safe area insets */
-  .uber-app-shell { padding-top: env(safe-area-inset-top, 0px); }
-  .mobility-content-inner { padding-bottom: max(0px, env(safe-area-inset-bottom, 0px)); }
+  .uber-app-shell { padding-top: var(--gr-safe-area-top, env(safe-area-inset-top, 0px)); }
+  .mobility-content-inner { padding-bottom: max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px))); }
 }
 
 body[data-shell="pwa"][data-pwa-mode="full"],
@@ -113,7 +113,7 @@ body[data-experience-tier="pwa-full"] {
     backdrop-filter: saturate(180%) blur(20px);
   }
 
-  .bottom-nav-bar {
+  .uber-bottom-nav {
     background: color-mix(in srgb, var(--uber-bg, #fff) 92%, transparent);
     backdrop-filter: saturate(180%) blur(20px);
   }
@@ -126,8 +126,8 @@ body[data-view-surface="pwa-mobile"] {
   .app-metric-cell-clickable { min-height: 80px; }
   button, [role="button"] { min-height: 44px; }
 
-  .bottom-nav-bar {
-    padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
+  .uber-bottom-nav {
+    padding-bottom: max(0.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -156,7 +156,7 @@ body.experience-lite {
 
   /* Crisp chrome — no blur filters on lite */
   .mobility-header,
-  .bottom-nav-bar,
+  .uber-bottom-nav,
   .tablet-admin-rail,
   .app-welcome-dock {
     backdrop-filter: none !important;
@@ -205,15 +205,15 @@ body[data-apk-mode="full"][data-view-surface^="native-"] {
   button, [role="button"] { min-height: 48px; }
 
   /* Status bar safe area */
-  .uber-app-shell { padding-top: env(safe-area-inset-top, 0px); }
+  .uber-app-shell { padding-top: var(--gr-safe-area-top, env(safe-area-inset-top, 0px)); }
   .uber-app-shell .mobility-header {
-    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    padding-top: max(12px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
   /* Bottom nav — native height + safe area */
-  .bottom-nav-bar {
-    height: calc(60px + max(0px, env(safe-area-inset-bottom, 0px)));
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  .uber-bottom-nav {
+    min-height: calc(60px + max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px))));
+    padding-bottom: max(0.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
     background: var(--uber-bg, #fff);
     border-top: 1px solid var(--uber-border, #e2e2e2);
   }
@@ -239,8 +239,8 @@ body.experience-premium {
 
   /* Native safe area for tablets / notched phones */
   .uber-app-shell {
-    padding-left: max(0px, env(safe-area-inset-left, 0px));
-    padding-right: max(0px, env(safe-area-inset-right, 0px));
+    padding-left: max(0px, var(--gr-safe-area-left, env(safe-area-inset-left, 0px)));
+    padding-right: max(0px, var(--gr-safe-area-right, env(safe-area-inset-right, 0px)));
   }
 
   /* Richer card elevation */
@@ -287,7 +287,7 @@ body[data-view-surface="native-tablet"][data-apk-mode="premium"] {
 
 @media print {
   .uber-app-shell .mobility-header,
-  .bottom-nav-bar,
+  .uber-bottom-nav,
   .uber-app-shell aside { display: none !important; }
 
   .mobility-content-inner {

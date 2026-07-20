@@ -1292,7 +1292,8 @@ html.theme-dark .map-browse-dock { background: var(--uber-bg, #000); }
   z-index: 50;
   background: var(--uber-bg, #fff);
   border-top: 1px solid var(--uber-border, #eeeeee);
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
+  /* Prefer measured --gr-safe-area-* (Android WebView often reports env() as 0). */
+  padding-bottom: max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 html.theme-dark .uber-bottom-nav {

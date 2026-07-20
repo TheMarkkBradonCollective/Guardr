@@ -207,7 +207,7 @@ export function AppWelcomeSignInDock({
         paddingTop: '1.25rem',
         paddingLeft: '1.25rem',
         paddingRight: '1.25rem',
-        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        paddingBottom: 'max(1.5rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
       }}
       data-view-surface={viewSurface}
     >

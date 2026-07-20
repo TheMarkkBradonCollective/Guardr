@@ -1,6 +1,6 @@
 /**
- * Native haptic feedback for APK Premium experiences.
- * Safe no-ops on web / PWA / Full APK / unsupported devices.
+ * Native haptic feedback for APK experiences (Full + Premium).
+ * Safe no-ops on web / PWA / unsupported devices.
  */
 
 import { Capacitor } from '@capacitor/core';
@@ -22,7 +22,7 @@ function activeTier(override?: ExperienceTier): ExperienceTier {
 }
 
 /**
- * Fire a short haptic pulse when the experience allows it (Premium APK).
+ * Fire a short haptic pulse when the experience allows it (native APK).
  * Uses Vibration API when available — Capacitor Haptics plugin optional later.
  */
 export async function triggerHaptic(

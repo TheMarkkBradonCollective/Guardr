@@ -189,7 +189,7 @@ export function experienceAllowsGlassChrome(tier: ExperienceTier): boolean {
   return false;
 }
 
-/** Whether native haptics should fire (Premium APK only). */
+/** Whether native haptics should fire (all APK shells — phones are the primary field device). */
 export function experienceAllowsHaptics(tier: ExperienceTier): boolean {
-  return isPremiumExperience(tier);
+  return tier.shell === 'native';
 }
