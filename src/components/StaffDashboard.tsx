@@ -1148,8 +1148,6 @@ export function StaffDashboard({
         return (
           <UserSettingsScreen
             currentUser={currentUser}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
             isDbConnected={isDbConnected}
             onOpenLegal={onOpenLegal}
           />

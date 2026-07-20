@@ -9,24 +9,18 @@ import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPa
 import { LegalInfoCards } from '../legal/LegalInfoCards';
 import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
-import { ThemeToggle } from '../ui/ThemeToggle';
-import type { ThemeMode } from '../../lib/platform/theme';
 import { appVersionLabel } from '../../lib/appVersion';
 import { useDevice } from '../../lib/platform';
 import { SITE_URL } from '../../lib/siteConfig';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
-  themeMode: ThemeMode;
-  onChangeTheme: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
 }
 
 export function UserSettingsScreen({
   currentUser,
-  themeMode,
-  onChangeTheme,
   isDbConnected = false,
   onOpenLegal,
 }: UserSettingsScreenProps) {
@@ -48,11 +42,6 @@ export function UserSettingsScreen({
           </AppSettingsSection>
         </>
       )}
-
-      <AppSettingsHead>Appearance</AppSettingsHead>
-      <AppSettingsSection>
-        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
-      </AppSettingsSection>
 
       <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
 
@@ -90,7 +79,7 @@ export function UserSettingsScreen({
     <ResponsivePage screenClassName="guard-settings-screen">
       <ResponsiveFormPage
         title="Settings"
-        subtitle="Appearance, notifications, and legal"
+        subtitle="Notifications and legal"
         className="guard-settings-screen"
       >
         {formContent}

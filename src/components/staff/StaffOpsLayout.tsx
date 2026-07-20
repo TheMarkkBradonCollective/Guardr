@@ -99,8 +99,8 @@ export function StaffOpsLayout({
   currentUser,
   activeSection,
   onNavigate,
-  themeMode: _themeMode,
-  onChangeTheme: _onChangeTheme,
+  themeMode,
+  onChangeTheme,
   onSignOut,
   isDbConnected,
   badges = {},
@@ -167,6 +167,8 @@ export function StaffOpsLayout({
         currentUser={currentUser}
         activeSection={activeSection}
         onNavigate={onNavigate}
+        themeMode={themeMode}
+        onChangeTheme={onChangeTheme}
         onSignOut={onSignOut}
         isDbConnected={isDbConnected}
         navItems={navItems}
@@ -196,7 +198,7 @@ export function StaffOpsLayout({
 }
 
 interface StaffOpsLayoutInnerProps
-  extends Omit<StaffOpsLayoutProps, 'themeMode' | 'onChangeTheme' | 'fullBleed' | 'badges'> {
+  extends Omit<StaffOpsLayoutProps, 'fullBleed' | 'badges'> {
   navItems: StaffNavItem[];
   screenTitle: string;
   navHighlight: StaffSection;
@@ -212,6 +214,8 @@ function StaffOpsLayoutInner({
   currentUser,
   activeSection,
   onNavigate,
+  themeMode,
+  onChangeTheme,
   onSignOut,
   isDbConnected,
   navItems,
@@ -248,6 +252,8 @@ function StaffOpsLayoutInner({
       currentUser={currentUser}
       activeSection={activeSection}
       onNavigate={onNavigate}
+      themeMode={themeMode}
+      onChangeTheme={onChangeTheme}
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
       navItems={navItems}
