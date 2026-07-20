@@ -32,10 +32,12 @@ import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import { MapBrowseDock } from './map/MapBrowseDock';
 import { guardMapBrowseItems } from '../lib/mapBrowseItems';
 import { GUARD_MAP_BROWSE_EMPTY_MESSAGE } from '../lib/mapEmptyMessages';
+import { getGuardNextShift } from '../lib/guardNextShift';
 import type { SecurityRequest } from '../types';
 import { isJobMissed } from '../lib/jobTallies';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';
+import { GuardNextShiftCard } from './guard/GuardNextShiftCard';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
 import { activeReplacementOffers } from '../lib/emergencyReplacement';
 import { useGuardLiveLocation } from '../lib/useGuardLiveLocation';
@@ -505,6 +507,11 @@ export function GuardDashboard({
     return assignedJobs.find((r) => r.status === 'accepted') ?? null;
   }, [assignedJobs]);
 
+  const nextShiftJob = useMemo(
+    () => getGuardNextShift(assignedJobs, guard.id),
+    [assignedJobs, guard.id]
+  );
+
   const manualBriefingJob = useMemo(
     () =>
       manualBriefingJobId
@@ -570,20 +577,19 @@ export function GuardDashboard({
   );
 
   const mapJobs = useMemo(() => {
-    const briefingOpen =
-      !!activeShiftJob && isPreShiftBriefingWindowOpen(activeShiftJob);
+    // Active shift overlay (en route / arrived / on duty / late clock-in after briefing window)
     const lateClockInPath =
       !!activeShiftJob &&
       activeShiftJob.status === 'accepted' &&
       activePhase === 'upcoming' &&
-      (canGuardClockIn(activeShiftJob) || !briefingOpen);
+      !isPreShiftBriefingWindowOpen(activeShiftJob);
     const onDutyOverlay =
       activeTab === 'map' &&
       activeShiftJob &&
       (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
       activePhase &&
       activePhase !== 'complete' &&
-      (activePhase !== 'upcoming' || briefingOpen || lateClockInPath);
+      (activePhase !== 'upcoming' || lateClockInPath);
     if (onDutyOverlay) {
       return requests.filter(
         (j) =>
@@ -591,7 +597,15 @@ export function GuardDashboard({
           (j.status === 'in-progress' || j.status === 'accepted')
       );
     }
-    return filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    const browse = filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    if (
+      nextShiftJob &&
+      activePhase === 'upcoming' &&
+      !browse.some((j) => j.id === nextShiftJob.id)
+    ) {
+      return [nextShiftJob, ...browse];
+    }
+    return browse;
   }, [
     requests,
     guard.id,
@@ -600,12 +614,15 @@ export function GuardDashboard({
     activePhase,
     mapStatusFilter,
     browseJobLists.all,
+    nextShiftJob,
   ]);
 
-  const mapBrowseItems = useMemo(
-    () => guardMapBrowseItems(guard.id, mapJobs),
-    [guard.id, mapJobs],
-  );
+  const mapBrowseItems = useMemo(() => {
+    const browse = filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+    return guardMapBrowseItems(guard.id, browse).filter(
+      (item) => item.id !== nextShiftJob?.id
+    );
+  }, [guard.id, browseJobLists.all, mapStatusFilter, nextShiftJob?.id]);
 
   useEffect(() => {
     if (
@@ -1296,18 +1313,11 @@ export function GuardDashboard({
     );
   }
 
-  const showBriefingOverlay =
-    activeTab === 'map' &&
-    !!activeShiftJob &&
-    activeShiftJob.status === 'accepted' &&
-    activePhase === 'upcoming' &&
-    isPreShiftBriefingWindowOpen(activeShiftJob);
-
   const showLateClockInPath =
     !!activeShiftJob &&
     activeShiftJob.status === 'accepted' &&
     activePhase === 'upcoming' &&
-    (canGuardClockIn(activeShiftJob) || !isPreShiftBriefingWindowOpen(activeShiftJob));
+    !isPreShiftBriefingWindowOpen(activeShiftJob);
 
   const showShiftOverlay =
     activeTab === 'map' &&
@@ -1315,8 +1325,13 @@ export function GuardDashboard({
     (activeShiftJob.status === 'in-progress' || activeShiftJob.status === 'accepted') &&
     activePhase &&
     activePhase !== 'complete' &&
-    !showBriefingOverlay &&
     (activePhase !== 'upcoming' || showLateClockInPath);
+
+  const showNextShiftOnDock =
+    !!nextShiftJob &&
+    activePhase === 'upcoming' &&
+    nextShiftJob.status === 'accepted' &&
+    !showShiftOverlay;
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const showVehicleTab = guardVehicleTabVisible(guard);
@@ -1435,29 +1450,23 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
+      {activeTab === 'map' && !showShiftOverlay && !guardSelectedJobId ? (
         <MapBrowseDock
           items={mapBrowseItems}
           selectedId={guardSelectedJobId}
           onSelect={handleGuardSelectedJobChange}
           emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
           bottomOffsetClass="map-browse-offset"
+          leading={
+            showNextShiftOnDock && nextShiftJob ? (
+              <GuardNextShiftCard
+                job={nextShiftJob}
+                onOpen={() => openBriefingForJob(nextShiftJob.id)}
+              />
+            ) : null
+          }
         />
       ) : null}
-
-      {activeTab === 'map' && showBriefingOverlay && activeShiftJob && (
-        <GuardPreShiftBriefing
-          job={activeShiftJob}
-          guardId={guard.id}
-          onStartEnRoute={() => handleStartEnRoute(activeShiftJob.id)}
-          onAckPostOrders={
-            onAckPostOrders ? () => onAckPostOrders(activeShiftJob.id) : undefined
-          }
-          onAckBriefing={
-            onAckBriefing ? () => onAckBriefing(activeShiftJob.id) : undefined
-          }
-        />
-      )}
 
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
         <GuardActiveShift
@@ -1482,16 +1491,6 @@ export function GuardDashboard({
           midShiftCheckInDue={midShiftDue}
         />
       )}
-
-      {activeTab === 'map' && !showShiftOverlay && !showBriefingOverlay && !guardSelectedJobId ? (
-        <MapBrowseDock
-          items={mapBrowseItems}
-          selectedId={guardSelectedJobId}
-          onSelect={handleGuardSelectedJobChange}
-          emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
-          bottomOffsetClass="map-browse-offset"
-        />
-      ) : null}
 
       {activeTab === 'map' && replacementOffers.length > 0 && !showShiftOverlay && (
         <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2 map-browse-offset">

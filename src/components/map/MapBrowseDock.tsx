@@ -44,9 +44,9 @@ export function MapBrowseDock({
       <div className="map-browse-dock-inner">
         <div className="map-offer-card-handle" aria-hidden />
 
-        <div className="map-browse-scroll scrollbar-hide">
-          {leading}
+        {leading ? <div className="map-browse-leading">{leading}</div> : null}
 
+        <div className="map-browse-scroll scrollbar-hide">
           {items.map((item) => (
             <button
               key={item.id}
@@ -75,7 +75,7 @@ export function MapBrowseDock({
           ))}
         </div>
 
-        {items.length === 0 && !leading && (
+        {items.length === 0 && (
           <p className="map-browse-empty">{emptyMessage}</p>
         )}
       </div>

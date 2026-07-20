@@ -2690,6 +2690,86 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   text-align: center;
 }
 
+.map-browse-leading {
+  padding: 0 0.75rem 0.5rem;
+}
+
+.guard-next-shift-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--brand-border, #e5e5e5);
+  background: var(--brand-bg-sec, #f6f6f6);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.guard-next-shift-card:active {
+  transform: scale(0.99);
+}
+
+.guard-next-shift-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.guard-next-shift-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--uber-text-accent, #7C9A7A);
+}
+
+.guard-next-shift-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--brand-text, #111);
+}
+
+.guard-next-shift-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted, #6b6b6b);
+  line-height: 1.4;
+}
+
+.guard-next-shift-countdown {
+  margin: 0.25rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--brand-text, #111);
+}
+
+.guard-next-shift-cta {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--uber-text-accent, #7C9A7A);
+}
+
+html.theme-dark .guard-next-shift-card {
+  background: #141414;
+  border-color: #2a2a2a;
+}
+
+html.theme-dark .guard-next-shift-title,
+html.theme-dark .guard-next-shift-countdown {
+  color: #fff;
+}
+
 .bottom-nav-center-map {
   position: relative;
   top: -0.65rem;
