@@ -32,6 +32,7 @@ import {
   GuardEquipmentGearId,
   JobType,
   ClientLocation,
+  JobLocation,
   AssignmentMode,
   DifferentialPayRates,
   GuardStandingCrewMember,
@@ -420,6 +421,12 @@ import {
 } from './lib/preShiftBriefing';
 import { resolveGuardPayForJob } from './lib/differentialPay';
 import { approveClientLocation, rejectClientLocation } from './lib/clientLocations';
+import {
+  ensureSharedJobLocation,
+  ensureSharedLocationFromClientLocation,
+  jobLocationRowToRecord,
+  jobLocationToDbRow,
+} from './lib/jobLocations';
 import { isJobType, normalizeJobTypePreferences } from './lib/guardJobPreferences';
 import { normalizeJobTypeOnboarding } from './lib/guardJobTypeOnboarding';
 import { normalizeListedEquipmentGear } from './lib/guardEquipmentGear';
@@ -703,6 +710,7 @@ export default function App() {
   const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
   const [crewJoinRequests, setCrewJoinRequests] = useState<GuardCrewJoinRequest[]>([]);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
+  const [jobLocations, setJobLocations] = useState<JobLocation[]>([]);
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
@@ -2238,11 +2246,22 @@ export default function App() {
           riskLevel: row.risk_level === 'high' || row.risk_level === 'low' ? row.risk_level : 'medium',
           status: row.status === 'active' || row.status === 'rejected' ? row.status : 'pending',
           siteInstructions: row.site_instructions ?? undefined,
+          sharedLocationId: row.shared_location_id ?? undefined,
           createdAt: row.created_at ?? undefined,
           reviewedAt: row.reviewed_at ?? undefined,
           reviewedBy: row.reviewed_by ?? undefined,
         }))
       );
+
+      const { data: dbJobLocations, error: jobLocationsErr } = await supabase
+        .from('job_locations')
+        .select('*');
+      if (jobLocationsErr && jobLocationsErr.code !== '42P01') {
+        console.warn('Job locations load (run migration if missing):', jobLocationsErr);
+      }
+      if (!jobLocationsErr) {
+        setJobLocations((dbJobLocations ?? []).map((row: any) => jobLocationRowToRecord(row)));
+      }
 
       setIsDbConnected(true);
 
@@ -2285,6 +2304,7 @@ export default function App() {
             r.assignment_mode === 'first-to-accept' ? 'first-to-accept' : 'client-approve',
           minYearsExperience: r.min_years_experience ?? undefined,
           clientLocationId: r.client_location_id ?? undefined,
+          jobLocationId: r.job_location_id ?? undefined,
           locationRiskLevel:
             r.location_risk_level === 'high' || r.location_risk_level === 'low'
               ? r.location_risk_level
@@ -5843,26 +5863,69 @@ export default function App() {
     }
   };
 
+  const handleSaveJobLocation = async (location: JobLocation) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      throw new Error('You do not have permission to manage locations.');
+    }
+    const next: JobLocation = {
+      ...location,
+      updatedAt: location.updatedAt ?? new Date().toISOString(),
+    };
+    setJobLocations((prev) => {
+      const existing = prev.find((l) => l.id === next.id);
+      return existing ? prev.map((l) => (l.id === next.id ? next : l)) : [next, ...prev];
+    });
+    if (isDbConnected) {
+      const { error } = await supabase.from('job_locations').upsert(jobLocationToDbRow(next));
+      if (error) {
+        console.error('Job location save error:', error);
+        showAppToast('Could not save location. Run complete_schema_setup.sql if the table is missing.', {
+          tone: 'error',
+        });
+        throw new Error(error.message || 'Could not save location.');
+      }
+    }
+  };
+
   const handleSaveClientLocation = async (location: ClientLocation) => {
+    const client = clients.find((c) => c.id === location.clientId);
+    let linked = location;
+    try {
+      const ensured = ensureSharedLocationFromClientLocation(jobLocations, location, client);
+      setJobLocations(ensured.locations);
+      linked = { ...location, sharedLocationId: ensured.location.id };
+      if (isDbConnected) {
+        const { error: sharedErr } = await supabase
+          .from('job_locations')
+          .upsert(jobLocationToDbRow(ensured.location));
+        if (sharedErr && sharedErr.code !== '42P01') {
+          console.warn('Shared job location upsert:', sharedErr);
+        }
+      }
+    } catch (err) {
+      console.warn('Shared location link skipped:', err);
+    }
+
     setClientLocations((prev) => {
-      const existing = prev.find((l) => l.id === location.id);
-      return existing ? prev.map((l) => (l.id === location.id ? location : l)) : [location, ...prev];
+      const existing = prev.find((l) => l.id === linked.id);
+      return existing ? prev.map((l) => (l.id === linked.id ? linked : l)) : [linked, ...prev];
     });
     if (isDbConnected) {
       const { error } = await supabase.from('client_locations').upsert({
-        id: location.id,
-        client_id: location.clientId,
-        name: location.name,
-        address: location.address,
-        state: location.state ?? null,
-        latitude: location.latitude ?? null,
-        longitude: location.longitude ?? null,
-        risk_level: location.riskLevel,
-        status: location.status,
-        site_instructions: location.siteInstructions ?? null,
-        created_at: location.createdAt ?? new Date().toISOString(),
-        reviewed_at: location.reviewedAt ?? null,
-        reviewed_by: location.reviewedBy ?? null,
+        id: linked.id,
+        client_id: linked.clientId,
+        name: linked.name,
+        address: linked.address,
+        state: linked.state ?? null,
+        latitude: linked.latitude ?? null,
+        longitude: linked.longitude ?? null,
+        risk_level: linked.riskLevel,
+        status: linked.status,
+        site_instructions: linked.siteInstructions ?? null,
+        shared_location_id: linked.sharedLocationId ?? null,
+        created_at: linked.createdAt ?? new Date().toISOString(),
+        reviewed_at: linked.reviewedAt ?? null,
+        reviewed_by: linked.reviewedBy ?? null,
       });
       if (error) {
         console.error('Client location save error:', error);
@@ -6523,6 +6586,38 @@ export default function App() {
     }
     const openedAt = initialStatus === 'open' ? new Date().toISOString() : undefined;
 
+    let linkedJobLocationId = newRequest.jobLocationId;
+    if (address.trim().length >= 4) {
+      try {
+        const ensured = ensureSharedJobLocation(jobLocations, {
+          name: siteName || address,
+          address,
+          state: jobState,
+          latitude,
+          longitude,
+          riskLevel: newRequest.locationRiskLevel,
+          siteInstructions: newRequest.siteInstructions || newRequest.description,
+          parkingInstructions: newRequest.parkingInstructions,
+          accessInstructions: newRequest.accessInstructions,
+          createdByClientId: currentUser?.id,
+          preferredStatus:
+            newRequest.locationRiskLevel && clientIsTrusted ? 'active' : 'pending',
+        });
+        setJobLocations(ensured.locations);
+        linkedJobLocationId = ensured.location.id;
+        if (isDbConnected) {
+          const { error: locErr } = await supabase
+            .from('job_locations')
+            .upsert(jobLocationToDbRow(ensured.location));
+          if (locErr && locErr.code !== '42P01') {
+            console.warn('Job location upsert on post:', locErr);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not link shared job location:', err);
+      }
+    }
+
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
       title: newRequest.title || 'Security Guard Deployment',
@@ -6555,6 +6650,7 @@ export default function App() {
       assignmentMode: newRequest.assignmentMode ?? clientRecord?.defaultAssignmentMode ?? 'client-approve',
       minYearsExperience: newRequest.minYearsExperience,
       clientLocationId: newRequest.clientLocationId,
+      jobLocationId: linkedJobLocationId,
       locationRiskLevel: newRequest.locationRiskLevel,
       tierPayRates: newRequest.tierPayRates,
       postOrdersAcknowledgments: [],
@@ -6651,6 +6747,7 @@ export default function App() {
           assignment_mode: freshJob.assignmentMode ?? 'client-approve',
           min_years_experience: freshJob.minYearsExperience ?? null,
           client_location_id: freshJob.clientLocationId ?? null,
+          job_location_id: freshJob.jobLocationId ?? null,
           location_risk_level: freshJob.locationRiskLevel ?? null,
           tier_pay_rates: freshJob.tierPayRates ?? null,
           post_orders_acknowledgments: freshJob.postOrdersAcknowledgments ?? [],
@@ -6762,6 +6859,35 @@ export default function App() {
     }
 
     const status: SecurityRequest['status'] = assignedGuardId ? 'accepted' : 'open';
+    const jobState = formatCityLabel(input.state) || resolveJobCity(input.state);
+
+    let linkedJobLocationId: string | undefined;
+    try {
+      const ensured = ensureSharedJobLocation(jobLocations, {
+        name: siteName || address,
+        address,
+        state: jobState,
+        latitude,
+        longitude,
+        siteInstructions: input.siteInstructions || input.description,
+        parkingInstructions: input.parkingInstructions,
+        accessInstructions: input.accessInstructions,
+        createdByClientId: clientRecord.id,
+        preferredStatus: 'active',
+      });
+      setJobLocations(ensured.locations);
+      linkedJobLocationId = ensured.location.id;
+      if (isDbConnected) {
+        const { error: locErr } = await supabase
+          .from('job_locations')
+          .upsert(jobLocationToDbRow(ensured.location));
+        if (locErr && locErr.code !== '42P01') {
+          console.warn('Job location upsert on staff create:', locErr);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not link shared job location on staff create:', err);
+    }
 
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
@@ -6773,7 +6899,7 @@ export default function App() {
       clientRating: clientRecord.rating,
       siteName,
       address,
-      state: formatCityLabel(input.state) || resolveJobCity(input.state),
+      state: jobState,
       location,
       type: input.type,
       armedRequired: false,
@@ -6790,6 +6916,7 @@ export default function App() {
       operationalDetails: normalizeJobOperationalDetails(input.operationalDetails),
       startDate: input.startDate,
       endDate: input.endDate,
+      jobLocationId: linkedJobLocationId,
       durationHours: input.durationHours,
       hourlyRate: input.hourlyRate,
       guardPay: input.guardPay,
@@ -6865,6 +6992,7 @@ export default function App() {
           assigned_guard_id: freshJob.assignedGuardId,
           request_type: freshJob.requestType ?? 'marketplace',
           target_guard_id: freshJob.targetGuardId ?? null,
+          job_location_id: freshJob.jobLocationId ?? null,
           required_certifications: freshJob.requiredCertifications,
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
@@ -13214,6 +13342,9 @@ export default function App() {
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           platformSettings={platformSettings}
           platformCities={platformCities}
+          jobLocations={jobLocations}
+          clientLocations={clientLocations}
+          onSaveJobLocation={handleSaveJobLocation}
           onUpdatePlatformCity={handleUpdatePlatformCity}
           onUpdateStaffCityAccess={handleUpdateStaffCityAccess}
           onUpdatePlatformSettings={handleUpdatePlatformSettings}

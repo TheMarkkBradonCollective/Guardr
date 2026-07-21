@@ -19,6 +19,7 @@ describe('staff section routing', () => {
     assert.equal(normalizeStaffSection('permissions'), 'permissions');
     assert.equal(normalizeStaffSection('agreements'), 'agreements');
     assert.equal(normalizeStaffSection('audit-log'), 'audit-log');
+    assert.equal(normalizeStaffSection('locations'), 'locations');
   });
 
   it('maps legacy approval queues to owning sections', () => {

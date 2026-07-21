@@ -45,6 +45,7 @@ export const QUICK_LINK_META: Record<
   applications: { label: 'Applications', icon: UserCheck, sub: 'Review queue' },
   credentials: { label: 'Credentials', icon: ClipboardList, sub: 'Verify uploads' },
   jobs: { label: 'Jobs', icon: Briefcase, sub: 'Pipeline' },
+  locations: { label: 'Locations', icon: MapPin, sub: 'Sites' },
   guards: { label: 'Guards', icon: Shield, sub: 'Field roster' },
   team: { label: 'Staff', icon: Users, sub: 'Platform team' },
   clients: { label: 'Clients', icon: Building2, sub: 'Accounts' },
@@ -170,6 +171,11 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     title: 'Service Areas',
     description: 'City markets and coverage in your assigned areas',
     iconTone: 'green',
+  },
+  locations: {
+    title: 'Locations',
+    description: 'Reusable job sites and quality-control details',
+    iconTone: 'yellow',
   },
   permissions: {
     title: 'Permissions',
