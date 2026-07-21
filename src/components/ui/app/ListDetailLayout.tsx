@@ -94,10 +94,16 @@ export function ListDetailLayout<T>({
   }
 
   if (splitView) {
-    // Tablet panes fill the ops shell; drop caller max-height caps that fight flex scroll.
+    // Tablet: full-page scroll — drop nested max-height / overflow scroll classes.
     const tabletListScrollClassName = listScrollClassName
       .split(/\s+/)
-      .filter((token) => token && !token.startsWith('max-h-'))
+      .filter(
+        (token) =>
+          token &&
+          !token.startsWith('max-h-') &&
+          token !== 'overflow-y-auto' &&
+          token !== 'overflow-auto'
+      )
       .concat('min-h-0')
       .join(' ');
 

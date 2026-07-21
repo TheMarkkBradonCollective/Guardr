@@ -481,7 +481,7 @@ html.theme-dark .uber-app-shell .adm-card--welcome {
 .uber-app-shell .app-item-card-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0;
 }
 
 .uber-app-shell .app-subscreen-header {

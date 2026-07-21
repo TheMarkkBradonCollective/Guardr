@@ -35,62 +35,28 @@ body[data-form-factor="tablet"] .tablet-split-panel {
 body[data-form-factor="tablet"] .tablet-split-panel .split-list-pane,
 body[data-form-factor="tablet"] .tablet-split-panel .split-detail-pane {
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
   overscroll-behavior: contain;
 }
 
-/*
- * Staff ops on tablet live in GuardrDrawerShell (.uber-app-shell), not the
- * legacy .staff-shell. Keep the toolbar pinned and let list/detail panes
- * own vertical scroll inside the remaining viewport height.
- */
+/* Staff ops on tablet: full-page scroll (toolbar + list/detail together). */
 body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell),
 body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.app-full-page-detail) {
-  overflow: hidden !important;
-  display: flex;
-  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell) > .app-page-transition,
-body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.app-full-page-detail) > .app-page-transition {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-shell {
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-}
-
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body:has(> .tablet-split-panel),
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body:has(> .app-full-page-detail) {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .app-full-page-detail {
-  flex: 1;
-  min-height: 0;
-}
-
+body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-shell,
+body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body,
 body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel {
-  flex: 1;
-  min-height: 0 !important;
-  height: 100%;
-  align-items: stretch;
+  height: auto;
+  min-height: 0;
 }
 
 body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-list-pane,
 body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-detail-pane {
   max-height: none !important;
-  min-height: 0 !important;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 }
 
 /* Landscape tablet — wider list column, more horizontal breathing room */
