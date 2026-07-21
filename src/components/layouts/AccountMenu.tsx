@@ -138,7 +138,7 @@ export function AccountMenu({
           <button
             type="button"
             onClick={backToMainMenu}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-text hover:text-brand-primary transition-colors"
+            className="app-subscreen-back"
           >
             <ChevronLeft className="w-4 h-4 shrink-0" strokeWidth={2} />
             Back

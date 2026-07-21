@@ -111,7 +111,7 @@ export function AuthRoleChoicePage({
           onBack ? (
             <button
               type="button"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-brand-text hover:text-brand-primary transition-colors"
+              className="app-subscreen-back"
               onClick={onBack}
             >
               <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden />
