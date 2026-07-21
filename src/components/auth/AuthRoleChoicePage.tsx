@@ -1,9 +1,10 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
-import { ArrowRight, ChevronLeft, Shield, User } from 'lucide-react';
+import { ArrowRight, Briefcase, ChevronLeft, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
+import type { AuthViewRole } from '../../lib/appNavigation';
 import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
 
 const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -11,7 +12,7 @@ const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-seri
 export type AuthRoleChoiceMode = 'sign-in' | 'sign-up';
 
 interface RoleOption {
-  role: 'guard' | 'client';
+  role: AuthViewRole;
   icon: typeof Shield;
   title: string;
 }
@@ -20,10 +21,12 @@ const ROLE_OPTIONS: Record<AuthRoleChoiceMode, RoleOption[]> = {
   'sign-in': [
     { role: 'guard', icon: Shield, title: 'Log in as guard' },
     { role: 'client', icon: User, title: 'Log in as client' },
+    { role: 'staff', icon: Briefcase, title: 'Log in as staff' },
   ],
   'sign-up': [
     { role: 'guard', icon: Shield, title: 'Sign up as guard' },
     { role: 'client', icon: User, title: 'Sign up as client' },
+    { role: 'staff', icon: Briefcase, title: 'Sign up as staff' },
   ],
 };
 
@@ -68,14 +71,14 @@ interface AuthRoleChoicePageProps {
   mode: AuthRoleChoiceMode;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
-  onSelectRole: (role: 'guard' | 'client') => void;
+  onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
+  onSelectRole: (role: AuthViewRole) => void;
   onOpenGuide?: () => void;
   onBack?: () => void;
 }
 
 /**
- * Full-screen Guard/Client picker — mirrors Uber's "Log in to access your account"
+ * Full-screen Guard / Client / Staff picker — mirrors Uber's "Log in to access your account"
  * layout with hero band + large role rows.
  */
 export function AuthRoleChoicePage({
@@ -116,7 +119,6 @@ export function AuthRoleChoicePage({
       ) : null}
 
       <Block as="main" className="auth-role-choice-main">
-        {/* Hero band — pale gray with headline + illustration */}
         <Block
           as="section"
           aria-label={copy.ariaLabel}
@@ -151,7 +153,6 @@ export function AuthRoleChoicePage({
           </Block>
         </Block>
 
-        {/* Role picker — white band with large tappable rows */}
         <Block
           as="section"
           className="auth-role-choice-options"
@@ -163,8 +164,8 @@ export function AuthRoleChoicePage({
             margin="0 auto"
             width="100%"
             display="grid"
-            gridTemplateColumns={isMobile ? '1fr' : '1fr 1fr'}
-            gridGap={isMobile ? 'scale600' : 'scale1200'}
+            gridTemplateColumns="1fr"
+            gridGap={isMobile ? 'scale600' : 'scale800'}
           >
             {options.map(({ role, icon: Icon, title }) => (
               <Block

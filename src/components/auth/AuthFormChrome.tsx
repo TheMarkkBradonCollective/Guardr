@@ -14,7 +14,7 @@ export function AuthFormHeader({
   center = false,
   variant = 'page',
 }: {
-  role: 'guard' | 'client';
+  role: 'guard' | 'client' | 'staff';
   isSignUp: boolean;
   compact?: boolean;
   hideBadge?: boolean;
@@ -25,22 +25,33 @@ export function AuthFormHeader({
   const pageTitle = isSignUp
     ? role === 'guard'
       ? 'Create your guard account'
-      : 'Create your client account'
+      : role === 'staff'
+        ? 'Create your staff account'
+        : 'Create your client account'
     : role === 'guard'
       ? 'Guard sign in'
-      : 'Client sign in';
+      : role === 'staff'
+        ? 'Staff sign in'
+        : 'Client sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
+
+  const workspaceLabel =
+    role === 'guard' ? 'Guard workspace' : role === 'staff' ? 'Staff workspace' : 'Client workspace';
 
   const subtitle =
     variant === 'sheet'
       ? isSignUp
         ? role === 'guard'
           ? 'Independent contractors manage credentials, jobs, and pay here.'
-          : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+          : role === 'staff'
+            ? 'Apply for a staff seat — a Director reviews before you can sign in.'
+            : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
         : role === 'guard'
           ? 'Welcome back — your jobs and earnings are ready.'
-          : 'Welcome back — your requests and coverage are ready.'
+          : role === 'staff'
+            ? 'Welcome back — your operations workspace is ready.'
+            : 'Welcome back — your requests and coverage are ready.'
       : center && hideBadge
         ? isSignUp
           ? 'Enter your email below to create your account'
@@ -48,16 +59,20 @@ export function AuthFormHeader({
         : isSignUp
           ? role === 'guard'
             ? 'Independent contractors manage credentials, jobs, and pay here.'
-            : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+            : role === 'staff'
+              ? 'Apply for a staff seat — a Director reviews before you can sign in.'
+              : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
           : role === 'guard'
             ? 'Welcome back — your jobs and earnings are ready.'
-            : 'Welcome back — your requests and coverage are ready.';
+            : role === 'staff'
+              ? 'Welcome back — your operations workspace is ready.'
+              : 'Welcome back — your requests and coverage are ready.';
 
   if (variant === 'sheet') {
     return (
       <header className="auth-sheet-form-header">
         {!hideBadge ? (
-          <p className="auth-sheet-eyebrow">{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</p>
+          <p className="auth-sheet-eyebrow">{workspaceLabel}</p>
         ) : null}
         <h2 className="auth-sheet-title">{title}</h2>
         <p className="auth-sheet-subtitle">{subtitle}</p>
@@ -68,7 +83,7 @@ export function AuthFormHeader({
   return (
     <Block marginBottom={compact ? 'scale600' : 'scale800'} $style={center ? { textAlign: 'center' } : undefined}>
       {hideBadge ? null : (
-        <LandingBadge center={center}>{role === 'guard' ? 'Guard workspace' : 'Client workspace'}</LandingBadge>
+        <LandingBadge center={center}>{workspaceLabel}</LandingBadge>
       )}
       <HeadingLarge
         marginTop={hideBadge ? '0' : 'scale200'}
