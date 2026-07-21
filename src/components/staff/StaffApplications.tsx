@@ -24,10 +24,6 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Building2, ChevronRight, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
-import { StaffAddGuardForm } from './StaffAddGuardForm';
-import type { StaffAddGuardInput } from './StaffAddGuardForm';
-import { StaffAddClientForm } from './StaffAddClientForm';
-import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -50,8 +46,6 @@ interface StaffApplicationsProps {
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
-  onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
-  onAddClient?: (input: StaffAddClientInput) => Promise<string>;
   initialGuardId?: string | null;
   initialClientId?: string | null;
   onSelectionChange?: (selection: { guardId?: string | null; clientId?: string | null }) => void;
@@ -183,14 +177,12 @@ export function StaffApplications({
   onRejectGuardApplication,
   onOpenGuardProfile,
   onOpenClientProfile,
-  onAddGuard,
-  onAddClient,
   initialGuardId = null,
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('pending');
-  const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
+  const [kindFilter, setKindFilter] = useState<'guard' | 'client'>('guard');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
     if (initialGuardId) return `guard:${initialGuardId}`;
@@ -248,8 +240,10 @@ export function StaffApplications({
     (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
 
   const visibleEntries = useMemo(() => {
+    // "All" shows every application. Pending / Approved also respect Guard vs Client.
+    const kindScope: ApplicationKindFilter = statusFilter === 'all' ? 'all' : kindFilter;
     return applicationEntries
-      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
+      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindScope))
       .filter((entry) =>
         matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
       )
@@ -358,32 +352,6 @@ export function StaffApplications({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="staff-ops-cta-stack">
-        {canManageGuardAccounts && onAddGuard && (
-          <StaffAddGuardForm
-            onAdd={onAddGuard}
-            onCreated={(guardId) => {
-              setSearch('');
-              setStatusFilter('pending');
-              setKindFilter('guard');
-              setActiveItemKey(`guard:${guardId}`);
-              onSelectionChange?.({ guardId, clientId: null });
-            }}
-          />
-        )}
-        {canManageClientAccounts && onAddClient && (
-          <StaffAddClientForm
-            onAdd={onAddClient}
-            onCreated={(clientId) => {
-              setSearch('');
-              setStatusFilter('pending');
-              setKindFilter('client');
-              setActiveItemKey(`client:${clientId}`);
-              onSelectionChange?.({ guardId: null, clientId });
-            }}
-          />
-        )}
-      </div>
       <WfSearchBar
         value={search}
         onChange={setSearch}
@@ -398,16 +366,20 @@ export function StaffApplications({
           tabs={[
             { id: 'all', label: 'All' },
             { id: 'pending', label: 'Pending' },
+            { id: 'approved', label: 'Approved' },
           ]}
         />
         <StaffListFilterTabs
           aria-label="Application type"
-          activeId={kindFilter}
-          onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+          activeId={statusFilter === 'all' ? '__all__' : kindFilter}
+          onChange={(id) => {
+            if (id === '__all__') return;
+            setKindFilter(id as 'guard' | 'client');
+            if (statusFilter === 'all') setStatusFilter('pending');
+          }}
           tabs={[
-            { id: 'all', label: 'All types' },
-            { id: 'guard', label: 'Guards' },
-            { id: 'client', label: 'Clients' },
+            { id: 'guard', label: 'Guard' },
+            { id: 'client', label: 'Client' },
           ]}
         />
       </div>
@@ -422,7 +394,9 @@ export function StaffApplications({
             ? 'No applications match your search.'
             : statusFilter === 'pending'
               ? 'No account applications waiting for review.'
-              : 'No account applications on file yet.'}
+              : statusFilter === 'approved'
+                ? 'No approved applications in this view.'
+                : 'No account applications on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
