@@ -435,10 +435,13 @@ export function StaffApplications({
       />
       <div className="space-y-2">
         <StaffListFilterTabs
-          aria-label="Show all application types"
-          activeId={kindFilter === 'all' ? 'all' : '__none__'}
+          aria-label="Show all applications"
+          activeId={kindFilter === 'all' && statusFilter === 'all' ? 'all' : '__none__'}
           onChange={(id) => {
-            if (id === 'all') setKindFilter('all');
+            if (id === 'all') {
+              setKindFilter('all');
+              setStatusFilter('all');
+            }
           }}
           tabs={[{ id: 'all', label: 'All' }]}
         />
