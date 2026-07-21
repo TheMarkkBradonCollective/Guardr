@@ -164,6 +164,7 @@ export function StaffSupportPanel({
           title={selected.subject}
           subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
           onBack={clearSelection}
+          backLabel="Support"
           trailing={
             <select
               value={selected.status}
@@ -261,6 +262,7 @@ export function StaffSupportPanel({
           title={selected.subject}
           subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
           onBack={clearSelection}
+          backLabel="Support"
           hideBackOnDesktop
           trailing={
             <select

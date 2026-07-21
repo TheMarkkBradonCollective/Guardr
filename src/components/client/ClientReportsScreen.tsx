@@ -56,7 +56,7 @@ export function ClientReportsScreen({
   if (selectedIncident) {
     return (
       <AppScreen className="app-full-page-detail pb-8">
-        <AppSubScreenHeader title="Incident report" onBack={() => onSelectIncident(null)} />
+        <AppSubScreenHeader title="Incident report" onBack={() => onSelectIncident(null)} backLabel="Reports" />
         <div className="px-5">
           <IncidentReportDetailView report={selectedIncident} />
         </div>

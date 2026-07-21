@@ -200,7 +200,7 @@ export function GuardDirectoryScreen({
 
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedListingId(null)} />
+        <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedListingId(null)} backLabel="Find Guards" />
         <div className="app-section-body pb-8 space-y-4">
           {selectedTeam.crewDescription && (
             <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
@@ -296,7 +296,7 @@ export function GuardDirectoryScreen({
 
   return (
     <AppScreen>
-      {onBack && <AppSubScreenHeader title="Find Guards & Teams" onBack={onBack} />}
+      {onBack && <AppSubScreenHeader title="Find Guards & Teams" onBack={onBack} backLabel="Home" />}
 
       <div className="px-4 pt-2">
         <div className="app-inbox-tabs" role="tablist">

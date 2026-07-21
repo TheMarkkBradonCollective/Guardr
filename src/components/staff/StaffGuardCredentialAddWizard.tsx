@@ -53,6 +53,7 @@ export function SelectedGuardBanner({
 
 function WizardFooter({
   onBack,
+  backLabel = 'previous',
   onNext,
   nextLabel = 'Next',
   nextDisabled = false,
@@ -61,6 +62,7 @@ function WizardFooter({
   submitting = false,
 }: {
   onBack?: () => void;
+  backLabel?: string;
   onNext?: () => void;
   nextLabel?: string;
   nextDisabled?: boolean;
@@ -72,7 +74,7 @@ function WizardFooter({
     <div className="flex items-center justify-end gap-2 pt-2">
       {onBack && (
         <button type="button" onClick={onBack} className="app-button-outline !w-auto !min-w-[5.5rem] !h-11 !px-4 !text-sm">
-          Back
+          {/^back to\s+/i.test(backLabel.trim()) ? backLabel.trim() : `Back to ${backLabel.trim()}`}
         </button>
       )}
       {onSubmit ? (
@@ -429,6 +431,7 @@ function StaffGuardCredentialAddWizardFlow({
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <WizardFooter
             onBack={() => (skipTypeStep && onBackFromDetails ? onBackFromDetails() : setStep('type'))}
+            backLabel={skipTypeStep && onBackFromDetails ? 'Credentials' : 'credential type'}
             onNext={() => {
               if (!detailsComplete) {
                 setFormError('Fill in all required credential details.');
@@ -455,6 +458,7 @@ function StaffGuardCredentialAddWizardFlow({
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <WizardFooter
             onBack={() => setStep('details')}
+            backLabel="details"
             onNext={() => {
               const proof = validateCertSubmission(imageUrl);
               if (proof.ok === false) {
@@ -519,6 +523,7 @@ function StaffGuardCredentialAddWizardFlow({
           {formError && <p className="text-xs text-red-400">{formError}</p>}
           <WizardFooter
             onBack={() => setStep('upload')}
+            backLabel="upload"
             onSubmit={() => void handleAdd()}
             submitting={saving}
             submitLabel="Add credential"

@@ -77,10 +77,12 @@ export function StaffJobDetailPanel({
   return (
     <div className="staff-detail-pane space-y-4">
       {onBack && (
-        <button type="button" onClick={onBack} className="app-subscreen-back">
-          <ArrowLeft className="w-4 h-4" />
-          Back to jobs
-        </button>
+        <div className="app-subscreen-header app-subscreen-header--back-only">
+          <button type="button" onClick={onBack} className="app-subscreen-back">
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Jobs
+          </button>
+        </div>
       )}
       {showStatusHeader && (
         <>

@@ -367,7 +367,7 @@ export function ClientRequestsList({
   if (selectedRequest) {
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedRequest.title} onBack={() => updateSelectedId(null)} />
+        <AppSubScreenHeader title={selectedRequest.title} onBack={() => updateSelectedId(null)} backLabel="Requests" />
         <div className="px-5 pb-8">{renderSelectedRequestDetail(selectedRequest)}</div>
         <EditRequestSheet
           open={!!editingRequest}

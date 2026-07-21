@@ -34,7 +34,7 @@ export function GuardContractViolationsList({
 }: GuardContractViolationsListProps) {
   return (
     <div className="guard-contract-violations-screen">
-      <AppSubScreenHeader title="Contract violations" onBack={onBack} />
+      <AppSubScreenHeader title="Contract violations" onBack={onBack} backLabel="Performance" />
       <div className="guard-contract-violations-scroll">
         <section className="guard-contract-violations-intro">
           <p>

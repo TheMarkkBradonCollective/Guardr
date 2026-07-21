@@ -170,10 +170,12 @@ export function StaffGuardCrewsPanel({
     return (
       <div className="space-y-4">
         {options?.onBack && (
-          <button type="button" className="app-subscreen-back lg:hidden" onClick={options.onBack}>
-            <ArrowLeft className="w-4 h-4" />
-            Back to crews
-          </button>
+          <div className="app-subscreen-header app-subscreen-header--back-only lg:hidden">
+            <button type="button" className="app-subscreen-back" onClick={options.onBack}>
+              <ArrowLeft className="w-4 h-4" aria-hidden />
+              Back to Crews
+            </button>
+          </div>
         )}
 
         <div className="rounded-xl border border-brand-border px-4 py-4 space-y-3">
@@ -443,10 +445,12 @@ export function StaffGuardCrewsPanel({
                 return (
                   <div className="space-y-4">
                     {options?.onBack && (
-                      <button type="button" className="app-subscreen-back lg:hidden" onClick={options.onBack}>
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to crews
-                      </button>
+                      <div className="app-subscreen-header app-subscreen-header--back-only lg:hidden">
+                        <button type="button" className="app-subscreen-back" onClick={options.onBack}>
+                          <ArrowLeft className="w-4 h-4" aria-hidden />
+                          Back to Crews
+                        </button>
+                      </div>
                     )}
 
                     {/* Lead profile */}

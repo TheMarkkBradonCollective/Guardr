@@ -37,14 +37,12 @@ function ComplianceDetail({ row, onBack }: { row: LegalComplianceUserRow; onBack
   return (
     <div className="adm-compliance-detail space-y-4">
       {onBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="app-subscreen-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to agreements
-        </button>
+        <div className="app-subscreen-header app-subscreen-header--back-only">
+          <button type="button" onClick={onBack} className="app-subscreen-back">
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Agreements
+          </button>
+        </div>
       )}
       <div>
         <p className="adm-card-eyebrow">{row.roleLabel}</p>

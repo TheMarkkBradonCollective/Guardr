@@ -1207,6 +1207,14 @@ html.theme-dark .app-subscreen-title { color: #fff; }
   flex-shrink: 0;
 }
 
+.app-chat-header--with-back-label {
+  height: auto;
+  min-height: 56px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  align-items: center;
+}
+
 .app-subscreen-header--wrap .app-subscreen-title {
   flex: none;
   width: 100%;

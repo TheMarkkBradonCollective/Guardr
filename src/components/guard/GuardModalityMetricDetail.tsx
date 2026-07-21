@@ -56,7 +56,7 @@ export function GuardModalityMetricDetail({
 
   return (
     <div className="guard-factor-detail-screen">
-      <AppSubScreenHeader title={card.label} onBack={onBack} backLabel="" />
+      <AppSubScreenHeader title={card.label} onBack={onBack} backLabel="Performance" />
 
       <div className="guard-factor-detail-scroll">
         <section className="guard-factor-detail-card guard-jobtype-metric-detail-card">

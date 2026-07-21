@@ -163,10 +163,10 @@ export function StaffTeamDetailPanel({
   return (
     <div className="staff-detail-pane h-full overflow-y-auto space-y-0">
       {onBack && (
-        <div className="px-1 pb-4">
+        <div className="app-subscreen-header app-subscreen-header--back-only">
           <button type="button" onClick={onBack} className="app-subscreen-back">
-            <ArrowLeft className="w-4 h-4" />
-            Back to staff list
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Team
           </button>
         </div>
       )}

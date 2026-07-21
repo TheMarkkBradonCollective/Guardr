@@ -188,7 +188,7 @@ function CrewJobDetail({
 
   return (
     <AppScreen className="app-full-page-detail">
-      <AppSubScreenHeader title={title} onBack={onBack} />
+      <AppSubScreenHeader title={title} onBack={onBack} backLabel="Crew" />
       <div className="app-section-body px-4 pb-8">
         <CrewJobDetailBody
           job={job}

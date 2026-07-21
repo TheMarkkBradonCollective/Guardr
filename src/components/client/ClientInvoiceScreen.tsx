@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ArrowLeft,
   CheckCircle2,
   CreditCard,
   Download,
@@ -140,6 +139,7 @@ export function ClientInvoiceScreen({
         <AppSubScreenHeader
           title="Invoice"
           onBack={() => onSelectRequestId?.(null)}
+          backLabel="Invoices"
         />
         <div className="px-5 space-y-5">
           <div className="rounded-2xl border border-brand-border bg-brand-surface/40 p-4 space-y-3">
@@ -285,15 +285,7 @@ export function ClientInvoiceScreen({
   return (
     <AppScreen className="pb-8">
       {onBack ? (
-        <div className="px-4 pt-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="app-subscreen-back"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-        </div>
+        <AppSubScreenHeader title="Invoices" onBack={onBack} backLabel="Home" hideTitle />
       ) : null}
 
       {unpaid.length > 0 ? (
