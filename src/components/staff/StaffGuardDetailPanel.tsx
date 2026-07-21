@@ -502,7 +502,7 @@ export function StaffGuardDetailPanel({
   };
 
   return (
-    <div className={`staff-detail-pane ${compact ? '' : 'h-full overflow-y-auto'}`}>
+    <div className={`staff-detail-pane ${compact ? '' : 'min-w-0'}`}>
       {(onBack || (canEdit && !guard.isStaff)) && (
         <div className="staff-detail-toolbar">
           {onBack ? (

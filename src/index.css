@@ -20632,8 +20632,68 @@ body[data-form-factor="tablet"] .uber-app-shell {
 }
 
 .uber-app-shell .staff-guard-performance-toolbar {
-  padding: 0.75rem 0 0 !important;
-  gap: 0.625rem;
+  padding: 0 !important;
+  gap: 0;
+}
+
+.uber-app-shell .staff-guard-performance-panel {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  max-height: none !important;
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+}
+
+.uber-app-shell .staff-guard-performance-panel.guard-tiered-screen,
+.uber-app-shell .staff-guard-performance-panel.app-screen {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Staff Guard status — flat light level header instead of black slab */
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero {
+  background: var(--uber-surface, #f6f6f6) !important;
+  color: var(--uber-text, #000) !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  padding: 1rem 0 1.25rem !important;
+  min-height: 0 !important;
+  gap: 0.5rem;
+}
+
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-eyebrow,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-eyebrow {
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-name,
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-score-label,
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-score-value,
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-subtitle,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-name,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-score-label,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-score-value,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-subtitle {
+  color: var(--uber-text, #000) !important;
+}
+
+.uber-app-shell .staff-guard-performance-panel .guard-tier-hero-info,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-hero-info {
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+.uber-app-shell .staff-guard-performance-panel .guard-pref-tier-medal,
+.uber-app-shell .staff-guard-performance-panel .guard-tier-medal-lg,
+.uber-app-shell .staff-guard-performance-rating .guard-pref-tier-medal,
+.uber-app-shell .staff-guard-performance-rating .guard-tier-medal-lg {
+  display: none !important;
+}
+
+.uber-app-shell .staff-detail-pane {
+  height: auto !important;
+  overflow: visible !important;
+  max-height: none !important;
 }
 
 /* Segmented controls — never let active highlight / labels clip at edges */
@@ -20645,8 +20705,11 @@ body[data-form-factor="tablet"] .uber-app-shell {
 
 .uber-app-shell [data-baseweb="segment-highlight"] {
   border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   border-radius: 999px !important;
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 .uber-app-shell .staff-credentials-panel {

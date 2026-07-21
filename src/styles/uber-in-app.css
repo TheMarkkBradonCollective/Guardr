@@ -1968,8 +1968,12 @@ html.theme-dark .staff-filter-pill[data-active="true"] {
 
 [data-baseweb="segment-highlight"] {
   border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   border-radius: 999px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  background: var(--uber-bg, #ffffff) !important;
 }
 
 .segmented-control {
