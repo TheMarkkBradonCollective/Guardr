@@ -29,6 +29,7 @@ interface DesktopStaffAdminShellProps {
   showDisputes: boolean;
   showCities: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  onOpenDownload?: () => void;
   hideHeader?: boolean;
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
@@ -68,6 +69,7 @@ export function DesktopStaffAdminShell({
   showDisputes,
   showCities,
   onOpenLegal,
+  onOpenDownload,
   hideHeader = false,
   themeMode,
   onChangeTheme,
@@ -139,6 +141,7 @@ export function DesktopStaffAdminShell({
       avatarUrl={currentUser.avatar}
       onOpenProfile={() => onNavigate('profile')}
       onOpenSettings={() => onNavigate('preferences')}
+      onOpenDownload={onOpenDownload}
       onSignOut={onSignOut}
       active={activeSection === 'profile' || activeSection === 'preferences'}
       themeMode={themeMode}

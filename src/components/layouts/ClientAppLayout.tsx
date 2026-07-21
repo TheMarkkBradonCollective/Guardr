@@ -38,6 +38,7 @@ interface ClientAppLayoutProps {
   onNavigate?: (view: ClientView) => void;
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  onOpenDownload?: () => void;
   messagesBadge?: number;
   supportBadge?: number;
   hideHeader?: boolean;
@@ -107,6 +108,7 @@ export function ClientAppLayout({
   onNavigate,
   accountPending = false,
   onOpenLegal,
+  onOpenDownload,
   messagesBadge = 0,
   supportBadge = 0,
   invoicesBadge = 0,
@@ -227,6 +229,7 @@ export function ClientAppLayout({
         avatarUrl: currentUser.avatar,
         onOpenProfile: () => onNavigate?.('profile'),
         onOpenSettings: () => onNavigate?.('settings'),
+        onOpenDownload,
         onSignOut,
         active: activeView === 'profile' || activeView === 'settings',
         extraLinks: [

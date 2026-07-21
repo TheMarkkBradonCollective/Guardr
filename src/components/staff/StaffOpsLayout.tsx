@@ -50,6 +50,7 @@ interface StaffOpsLayoutProps {
   badges?: Partial<Record<StaffSection, number>>;
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  onOpenDownload?: () => void;
   hideHeader?: boolean;
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
@@ -108,6 +109,7 @@ export function StaffOpsLayout({
   badges = {},
   fullBleed: _fullBleed = false,
   onOpenLegal,
+  onOpenDownload,
   hideHeader = false,
   accountNotifications,
   headerExtension,
@@ -183,6 +185,7 @@ export function StaffOpsLayout({
         showDisputes={showDisputes}
         showCities={showCities}
         onOpenLegal={onOpenLegal}
+        onOpenDownload={onOpenDownload}
         hideHeader={hideHeader}
         accountNotifications={accountNotifications}
         headerExtension={headerExtension}
@@ -230,6 +233,7 @@ function StaffOpsLayoutInner({
   showDisputes,
   showCities,
   onOpenLegal,
+  onOpenDownload,
   hideHeader = false,
   accountNotifications,
   headerExtension,
@@ -268,6 +272,7 @@ function StaffOpsLayoutInner({
       showDisputes={showDisputes}
       showCities={showCities}
       onOpenLegal={onOpenLegal}
+      onOpenDownload={onOpenDownload}
       hideHeader={hideHeader}
       accountNotifications={accountNotifications}
       headerExtension={headerExtension}
