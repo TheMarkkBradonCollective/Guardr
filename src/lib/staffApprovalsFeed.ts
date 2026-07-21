@@ -15,7 +15,12 @@ import {
   type ActivationCredentialKey,
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
-import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
+import {
+  getGuardIdVerificationStatus,
+  guardGovIdBelongsInCredentialFeed,
+  guardGovIdNeedsDocumentTypeSelection,
+  ID_VERIFICATION_STATUS_LABELS,
+} from './guardIdentityVerification';
 import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
@@ -345,12 +350,16 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
     }
 
     const idStatus = getGuardIdVerificationStatus(guard);
-    if (idStatus !== 'not_submitted') {
+    if (guardGovIdBelongsInCredentialFeed(guard)) {
+      const needsDocumentType = guardGovIdNeedsDocumentTypeSelection(guard);
+      const awaitingReview = idStatus === 'pending' || idStatus === 'not_submitted';
       items.push({
         id: govIdApprovalItemId(guard.id),
         queue: 'credentials',
         title: `${guard.name} — Government ID`,
-        subtitle: ID_VERIFICATION_STATUS_LABELS[idStatus],
+        subtitle: needsDocumentType
+          ? 'Select Government ID or driver’s license'
+          : ID_VERIFICATION_STATUS_LABELS[idStatus === 'not_submitted' ? 'pending' : idStatus],
         status:
           idStatus === 'verified' ? 'approved' : idStatus === 'rejected' ? 'denied' : 'pending',
         statusLabel:
@@ -365,7 +374,7 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
         reviewedByEmail: undefined,
         sortKey: new Date(
           guard.idVerificationReviewedAt ?? guard.idVerificationSubmittedAt ?? 0
-        ).getTime() || Date.now(),
+        ).getTime() || (awaitingReview ? Date.now() : 0),
       });
       guardItemIds.add(govIdApprovalItemId(guard.id));
     }

@@ -145,7 +145,7 @@ export function StaffGuardsPanel({
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<GuardRosterFilter>('pending');
+  const [statusFilter, setStatusFilter] = useState<GuardRosterFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -273,18 +273,36 @@ export function StaffGuardsPanel({
       {filtered.length === 0 ? (
         <div className="app-empty-state app-empty-state--dashed">
           <div className="app-empty-state-icon">
-            {roster.length === 0
+            {roster.length === 0 || !search.trim()
               ? <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               : <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             }
           </div>
           <p className="app-empty-state-title">
-            {roster.length === 0 ? 'No guards on the roster' : 'No guards match your search'}
+            {roster.length === 0
+              ? 'No guards on the roster'
+              : search.trim()
+                ? 'No guards match your search'
+                : statusFilter === 'pending'
+                  ? 'No pending guards'
+                  : statusFilter === 'activated'
+                    ? 'No approved guards'
+                    : statusFilter === 'active'
+                      ? 'No active guards'
+                      : 'No guards to show'}
           </p>
           <p className="app-empty-state-body">
             {roster.length === 0
               ? 'Add the first guard profile to get started.'
-              : `Try adjusting your search term.`}
+              : search.trim()
+                ? 'Try adjusting your search term.'
+                : statusFilter === 'pending'
+                  ? 'No guard applications are waiting for approval.'
+                  : statusFilter === 'activated'
+                    ? 'No approved guard profiles yet.'
+                    : statusFilter === 'active'
+                      ? 'No guards are currently active.'
+                      : 'Try a different status filter.'}
           </p>
         </div>
       ) : (
