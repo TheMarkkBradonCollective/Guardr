@@ -115,7 +115,7 @@ function CredentialFeedRow({
           <img
             src={thumbnailUrl}
             alt={item.title}
-            className={`w-11 h-11 rounded-lg object-cover shrink-0 box-border bg-brand-bg-sec ${
+            className={`w-11 h-11 rounded-lg object-cover shrink-0 box-border bg-transparent ${
               pending
                 ? 'border-2 border-amber-500/50'
                 : 'border border-brand-border'
@@ -123,7 +123,7 @@ function CredentialFeedRow({
           />
         ) : (
           <span
-            className={`w-11 h-11 rounded-lg shrink-0 box-border bg-brand-bg-sec ${
+            className={`w-11 h-11 rounded-lg shrink-0 box-border bg-transparent ${
               pending
                 ? 'border-2 border-dashed border-amber-500/50'
                 : 'border border-dashed border-brand-border'

@@ -38,7 +38,7 @@ export function GuardrSegmented<T extends string = string>({
       overrides={{
         Root: {
           style: {
-            backgroundColor: theme.colors.backgroundSecondary,
+            backgroundColor: 'transparent',
             borderRadius: '999px',
             padding: '4px',
             width: fill ? '100%' : undefined,
@@ -46,6 +46,9 @@ export function GuardrSegmented<T extends string = string>({
             boxSizing: 'border-box',
             gap: '0',
             overflow: 'hidden',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: theme.colors.borderOpaque,
           },
         },
         SegmentList: {
