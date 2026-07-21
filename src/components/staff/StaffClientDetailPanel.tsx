@@ -174,27 +174,27 @@ export function StaffClientDetailPanel({
       {canManage && (
         <section className="staff-detail-section space-y-2">
           <WfSectionHeader title="Account controls" className="mb-0" />
-          <div className="app-action-row--equal">
+          <div className="staff-detail-actions">
             {isPending && (
-              <AppButton variant="primary" size="sm" onClick={() => void handleApproveClient()}>
+              <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
                 Approve client account
               </AppButton>
             )}
             {isSuspended && (
-              <AppButton variant="primary" size="sm" onClick={() => void handleRestoreClient()}>
+              <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleRestoreClient()}>
                 Restore client account
               </AppButton>
             )}
             {!isPending && !isSuspended && (
-              <AppButton variant="danger" size="sm" onClick={() => void handleSuspendClient()}>
+              <AppButton variant="danger" size="sm" className="staff-action-btn--warn" onClick={() => void handleSuspendClient()}>
                 Suspend client account
               </AppButton>
             )}
             {onSetClientTrusted && (
               <AppButton
-                variant="outline"
+                variant={client.trusted ? 'outline' : 'primary'}
                 size="sm"
-                className={client.trusted ? 'text-amber-500 border-amber-500/40' : ''}
+                className={client.trusted ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
                 onClick={() => void handleToggleTrusted()}
                 title={
                   client.trusted
@@ -209,6 +209,7 @@ export function StaffClientDetailPanel({
               <AppButton
                 variant="danger"
                 size="sm"
+                className="staff-action-btn--danger"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
               >
