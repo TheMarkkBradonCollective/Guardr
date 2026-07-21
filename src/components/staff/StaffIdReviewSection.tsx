@@ -29,7 +29,13 @@ interface StaffIdReviewSectionProps {
   onReject?: (guardId: string, reason?: string) => void | Promise<void>;
   approveActionLabel?: string;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
+  /** When set, staff can set Government ID vs driver’s license inline (Credentials review only). */
   onUpdateImages?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
+  /**
+   * Guard profile: show a flag only and send staff to Credentials pending review.
+   * Credentials queue: allow inline document-type correction.
+   */
+  documentTypeEdit?: 'inline' | 'credentials-flag';
 }
 
 /** Staff approve / resubmit actions for government ID — status is shown on the ID credential card. */
@@ -41,6 +47,7 @@ export function StaffIdReviewSection({
   approveActionLabel = 'Approve ID',
   onRequestResubmit,
   onUpdateImages,
+  documentTypeEdit = onUpdateImages ? 'inline' : 'credentials-flag',
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
@@ -73,6 +80,8 @@ export function StaffIdReviewSection({
 
   const needsDocumentType =
     guardGovIdNeedsDocumentTypeSelection(guard) && status !== 'verified';
+  const showInlineDocumentTypeEdit =
+    needsDocumentType && documentTypeEdit === 'inline' && Boolean(onUpdateImages);
 
   const saveDocumentType = async () => {
     if (!onUpdateImages) return;
@@ -97,7 +106,7 @@ export function StaffIdReviewSection({
       return;
     }
     if (!idState || !idNumber || !idExpiryDate) {
-      showAppToast('Tap the ID → Edit to fill state, number, and expiration, then save document type.', {
+      showAppToast('Open Credentials pending review to finish ID details, then save document type.', {
         tone: 'error',
       });
       return;
@@ -115,7 +124,9 @@ export function StaffIdReviewSection({
         idSelfieUrl: selfie,
       });
       if (!result.ok) {
-        showAppToast(result.error, { tone: 'error' });
+        showAppToast('error' in result ? result.error : 'Could not save document type.', {
+          tone: 'error',
+        });
         return;
       }
       showAppToast('Document type saved. You can approve the ID now.', { tone: 'success' });
@@ -146,15 +157,22 @@ export function StaffIdReviewSection({
     })();
   };
 
+  const documentTypeFlag =
+    needsDocumentType && !showInlineDocumentTypeEdit
+      ? 'Document type required — open Credentials → Pending review to select Government ID or driver’s license.'
+      : null;
+
+  const bannerText = documentTypeFlag ?? applicationVerifyBlocker;
+
   return (
     <div className="space-y-3">
-      {applicationVerifyBlocker && (
+      {bannerText && (
         <p className="text-xs text-amber-600 leading-relaxed border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
-          {applicationVerifyBlocker}
+          {bannerText}
         </p>
       )}
 
-      {needsDocumentType && onUpdateImages ? (
+      {showInlineDocumentTypeEdit ? (
         <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
           <p className="text-xs font-semibold text-brand-text">Set document type to continue</p>
           <label className="block space-y-1.5">
@@ -203,13 +221,6 @@ export function StaffIdReviewSection({
         </div>
       ) : null}
 
-      {needsDocumentType && !onUpdateImages ? (
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Tap the ID card → Edit → choose Document type (Government ID or Driver’s license). If it’s a
-          license, also set the license class, then save.
-        </p>
-      ) : null}
-
       {resubmitPending && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
@@ -234,6 +245,20 @@ export function StaffIdReviewSection({
                 }
               })();
             }}
+            startEnhancer={<Check className="w-3.5 h-3.5" />}
+          >
+            {approveActionLabel}
+          </AppButton>
+        )}
+        {needsDocumentType &&
+          !canApprove &&
+          onApprove &&
+          documentTypeEdit === 'credentials-flag' &&
+          approveActionLabel !== 'Approve ID' && (
+          <AppButton
+            variant="primary"
+            size="sm"
+            onClick={() => void onApprove(guard.id)}
             startEnhancer={<Check className="w-3.5 h-3.5" />}
           >
             {approveActionLabel}
