@@ -539,7 +539,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
 | **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
 | **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
-| **Settings** | Account menu | Theme, push notifications, notification sound (APK), legal pages, sign out — available on activation screen too |
+| **Settings** | Account menu | Appearance, push notifications, app update / install options, notification sound (APK), legal pages, sign out — available on activation screen too |
 | **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
 | **Vehicle** | Account menu (active guards, when driving jobs apply) | Vehicle profile, insurance link, staff approval for driving priority |
 | **Preferences** | Account menu (active guards) | Job type and work-style preferences |
@@ -1324,26 +1324,25 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **installable PWA**, and **Android APK** (currently **v1.0.84**, build **184**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.87**, build **187**).
 
 | Surface | How to install |
 |---------|----------------|
-| **Website** | Open [guardr.co](https://www.guardr.co) in any browser |
-| **PWA** | **iOS:** Safari → Share → **Add to Home Screen**. **Android/Chrome:** browser menu or install prompt → **Install** |
-| **Android APK** | [guardr.co/download](https://www.guardr.co/download) — scan QR or tap **Download APK** |
+| **Website** | Open [guardr.co](https://www.guardr.co) in any browser — account menu → **Download** for install options |
+| **PWA (Lite Version)** | **iOS:** Safari → Share → **Add to Home Screen**. **Android/Chrome:** browser menu or install prompt → **Install** — auto-updates when you open it |
+| **APK (Full Version)** | Account menu → **APK (Full Version)** or [guardr.co/download](https://www.guardr.co/download) — scan QR or tap download |
 
-Installing the PWA or APK gives faster access, live shift tracking, and push notifications when Guardr is closed. The APK loads the live site in a native shell with black branding; the PWA uses white branding on the home screen and **updates automatically** when you open it.
+The lite PWA is great for quick access; the full APK is recommended for guards in the field (stronger notifications, GPS, camera).
 
 #### APK updates (important)
 
-The APK does **not** auto-update like the PWA. When a new build ships:
+The full APK does **not** auto-update silently like the lite PWA. When a new build ships:
 
-1. Open [guardr.co/download](https://www.guardr.co/download) in your browser.
-2. If your installed version is older, the page shows **Update available**.
-3. Download and install again (your account data stays in the cloud).
-4. Uninstall the old APK first if Android blocks the install.
+1. Open the app → account menu → **Update**, or go to **Settings → App update**.
+2. Tap **Install update** and confirm when Android prompts.
+3. Alternatively use [guardr.co/download](https://www.guardr.co/download) in a browser.
 
-The install page reads the version from inside the APK — not just the website label — so reinstall when the page says you are behind.
+Your account data stays in the cloud — reinstalling does not wipe your profile.
 
 #### Push notifications
 

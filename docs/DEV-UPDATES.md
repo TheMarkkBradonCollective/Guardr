@@ -3,11 +3,31 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, July 21, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.86**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.87**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, July 21, 2026 (late) — /mergeit + /updateit → v1.0.87
+
+**Install / update UX**
+- In-app **Install options** screen (no URL) from account menu → green **Download** / **APK (Full Version)** / **Update** by surface
+- **Appearance** toggle moved into account menu header with name and title
+- **Settings → App update** with one-tap APK install on native (Capacitor `GuardrApkInstaller` plugin)
+- Surface-specific labels: website shows **PWA (Lite Version)** + **APK (Full Version)**; PWA shows full APK upgrade only; native APK is update-only
+
+**Staff credentials**
+- Credential edit rules and application submission snapshot (merged #783)
+
+**PR cleanup**
+- No open PRs at start of cycle; merged #784–#785 earlier today
+
+**Release:** **v1.0.87** (build **187**) — web + PWA cache bust (`guardr-cache-v1-0-87`) + CI FCM APK
+
+**Supabase:** no new SQL this release (schema current in `complete_schema_setup.sql`).
 
 ---
 
