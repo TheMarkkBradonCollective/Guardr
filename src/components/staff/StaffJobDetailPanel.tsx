@@ -77,7 +77,7 @@ export function StaffJobDetailPanel({
   return (
     <div className="staff-detail-pane space-y-4">
       {onBack && (
-        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+        <button type="button" onClick={onBack} className="app-subscreen-back">
           <ArrowLeft className="w-4 h-4" />
           Back to jobs
         </button>

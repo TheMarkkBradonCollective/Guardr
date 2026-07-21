@@ -252,14 +252,22 @@ html.theme-dark .auth-sheet-panel {
 .auth-mobile-page-back {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: none;
-  background: transparent;
-  color: var(--uber-text, var(--brand-text, #000000));
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 14px;
+  background: var(--uber-text, var(--brand-text, #000000));
+  color: var(--uber-bg, var(--brand-accent-text, #ffffff));
   font-size: 14px;
   font-weight: 600;
-  padding: 8px 0;
   cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.auth-mobile-page-back:hover {
+  opacity: 0.88;
 }
 
 .auth-mobile-page-topbar-actions {

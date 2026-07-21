@@ -289,7 +289,7 @@ export function ClientInvoiceScreen({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm text-brand-text-muted hover:text-brand-text"
+            className="app-subscreen-back"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>

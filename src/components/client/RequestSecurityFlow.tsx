@@ -298,7 +298,7 @@ export function RequestSecurityFlow({
     <ResponsivePage screenClassName="h-full min-h-0">
     <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
       <div className="flex items-center gap-3 mb-7 shrink-0 px-1">
-        <button type="button" onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-bg-sec transition-colors shrink-0 -ml-1" aria-label="Back">
+        <button type="button" onClick={goBack} className="app-chat-header-back" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
