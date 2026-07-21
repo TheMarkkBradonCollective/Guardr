@@ -125,9 +125,9 @@ export function StaffTeamDetailPanel({
         managedCities: normalizeManagedCities(managedCities, platformCities),
         assignedManagerIds,
       });
-      setCityMsg('Operations access updated.');
+      setCityMsg('Service Areas access updated.');
     } catch (err) {
-      setCityError(err instanceof Error ? err.message : 'Could not update operations access.');
+      setCityError(err instanceof Error ? err.message : 'Could not update Service Areas access.');
     } finally {
       setSavingCities(false);
     }
@@ -226,9 +226,9 @@ export function StaffTeamDetailPanel({
 
       {canEditCityAccess && assignableCityNames.length > 0 && (
         <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">Operations access</h3>
+          <h3 className="text-sm font-semibold">Service Areas access</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Choose which cities this staff member may manage in Operations. Directors control
+            Choose which cities this staff member may manage in Service Areas. Directors control
             manager assignments; managers may assign cities within their own scope.
           </p>
           <StaffOperationsAccessPicker
@@ -264,7 +264,7 @@ export function StaffTeamDetailPanel({
             onClick={() => void handleCityAccessSave()}
             disabled={savingCities}
           >
-            {savingCities ? 'Saving…' : 'Save operations access'}
+            {savingCities ? 'Saving…' : 'Save Service Areas access'}
           </AppButton>
           {cityError && <p className="text-sm text-red-400">{cityError}</p>}
           {cityMsg && <p className="text-sm text-brand-primary">{cityMsg}</p>}

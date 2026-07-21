@@ -47,7 +47,7 @@ export function getStaffNavAccessNotice(
     return {
       title: 'Manager access required',
       message:
-        'Operations controls are limited to Manager roles and above. Ask your Director if you need access.',
+        'Service Areas controls are limited to Manager roles and above. Ask your Director if you need access.',
     };
   }
   if (DISPUTES_SECTIONS.has(section) && !flags.showDisputes) {
@@ -134,9 +134,9 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
       'Staff permissions and approval rules are limited to Manager roles and above. Ask your Director if you need access.',
   },
   cities: {
-    title: 'Operations',
+    title: 'Service Areas',
     message:
-      'Operations controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
+      'Service Areas controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
   },
   applications: {
     title: 'No access',

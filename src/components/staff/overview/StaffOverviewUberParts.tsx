@@ -65,7 +65,7 @@ export const QUICK_LINK_META: Record<
   settings: { label: 'Public Information', icon: Settings, sub: 'Company info' },
   permissions: { label: 'Permissions', icon: KeyRound, sub: 'Access rules' },
   integrations: { label: 'Integrations', icon: Plug, sub: 'Connections' },
-  cities: { label: 'Operations', icon: MapPin, sub: 'Markets' },
+  cities: { label: 'Service Areas', icon: MapPin, sub: 'Markets' },
   guide: { label: 'Guide', icon: LayoutDashboard, sub: 'How-to' },
   'dev-updates': { label: 'Dev notes', icon: LayoutDashboard, sub: 'Release log' },
   profile: { label: 'Profile', icon: UserCheck, sub: 'Your account' },
@@ -167,7 +167,7 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     iconTone: 'green',
   },
   cities: {
-    title: 'Operations',
+    title: 'Service Areas',
     description: 'City markets and coverage in your assigned areas',
     iconTone: 'green',
   },

@@ -205,9 +205,9 @@ export const STAFF_PERMISSION_CATALOG: {
   { permission: 'admin.manage_fees', label: 'Manage fees', group: 'Finance' },
   { permission: 'director.view_all_financial_data', label: 'View all financial data', group: 'Finance' },
   { permission: 'director.access_audit_logs', label: 'Access audit log', group: 'Finance' },
-  { permission: 'director.manage_company_operations', label: 'Manage company operations', group: 'Operations' },
-  { permission: 'director.recommend_city_open', label: 'View operations & recommend cities', group: 'Operations' },
-  { permission: 'director.manage_city_markets', label: 'Manage city markets', group: 'Operations' },
+  { permission: 'director.manage_company_operations', label: 'Manage company operations', group: 'Service Areas' },
+  { permission: 'director.recommend_city_open', label: 'View Service Areas & recommend cities', group: 'Service Areas' },
+  { permission: 'director.manage_city_markets', label: 'Manage city markets', group: 'Service Areas' },
   { permission: 'director.manage_administrators', label: 'Manage administrators', group: 'Staff management' },
   { permission: 'director.manage_moderators', label: 'Manage moderators', group: 'Staff management' },
   { permission: 'director.override_restrictions', label: 'Override system restrictions', group: 'Executive' },
@@ -491,7 +491,7 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
   return hasPermission(user, 'director.manage_company_operations');
 }
 
-/** Manager+ may view Operations; Director+ may change open/closed/waitlist status */
+/** Manager+ may view Service Areas; Director+ may change open/closed/waitlist status */
 export function canViewCityMarkets(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.recommend_city_open');
 }

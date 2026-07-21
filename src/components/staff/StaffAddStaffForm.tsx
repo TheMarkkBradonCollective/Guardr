@@ -165,9 +165,9 @@ export function StaffAddStaffForm({
 
           {assignableCityNames.length > 0 && (
             <div className="space-y-2">
-              <label className="uber-label block">Operations access</label>
+              <label className="uber-label block">Service Areas access</label>
               <p className="text-xs text-brand-text-muted">
-                Assign which cities this staff member may manage in Operations.
+                Assign which cities this staff member may manage in Service Areas.
               </p>
               <StaffOperationsAccessPicker
                 id="add-staff-operations-access"
