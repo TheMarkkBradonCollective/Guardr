@@ -869,9 +869,12 @@ export function StaffDashboard({
       case 'clients':
         return (
           <StaffClientsPanel
+            currentUser={currentUser}
             clients={clients}
             requests={requests}
             canManage={canManageClientAccounts}
+            platformSettings={platformSettings}
+            onUpdateStaffPermissions={onUpdateStaffPermissions}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
@@ -1117,7 +1120,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.permissions!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.permissions!.message}
-            placeholders={['Approval rules', 'Staff role permissions']}
+            placeholders={['Staff role permissions', 'Role capabilities']}
           />
         );
       case 'settings':

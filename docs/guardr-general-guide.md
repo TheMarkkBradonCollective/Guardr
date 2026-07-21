@@ -930,7 +930,7 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |
-| **Permissions** | — | — | ✓ job approval rules & role toggles | ✓ |
+| **Permissions** | — | — | ✓ role capability toggles | ✓ |
 | **Settings** | — | ✓ | ✓ | ✓ |
 | **Dev notes** | — | — | ✓ | ✓ |
 

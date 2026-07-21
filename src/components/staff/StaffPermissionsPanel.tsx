@@ -12,9 +12,8 @@ import {
   type Permission,
   type StaffRolePermissionOverrides,
 } from '../../lib/permissions';
-import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { AppFormSection } from '../ui/app/AppPrimitives';
+import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
@@ -156,37 +155,16 @@ export function StaffPermissionsPanel({
   const isDesktop = formFactor === 'desktop';
   const [activeRole, setActiveRole] = useState<StaffRole>('Moderator');
 
-  const persistApprovalSettings = async (patch: Partial<PlatformSettings>) => {
-    if (!onUpdateStaffPermissions || !canEdit) return;
-    await onUpdateStaffPermissions(patch);
-  };
-
-  const approvalSection = (
-    <StaffJobApprovalSettings
-      currentUser={currentUser}
-      platformSettings={platformSettings}
-      canEdit={canEdit}
-      onPersistSettings={persistApprovalSettings}
-      embedded
-    />
-  );
-
   const roleTabs = (
-    <div className="flex flex-wrap gap-2 mb-4">
-      {STAFF_ROLES_ORDERED.map((role) => (
-        <button
-          key={role}
-          type="button"
-          onClick={() => setActiveRole(role)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-            activeRole === role
-              ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-              : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-          }`}
-        >
-          {ROLE_LABELS[staffRoleToPlatformRole(role)]}
-        </button>
-      ))}
+    <div className="staff-stats-tabbar mb-4">
+      <AppSegmentedControl<StaffRole>
+        value={activeRole}
+        onChange={setActiveRole}
+        options={STAFF_ROLES_ORDERED.map((role) => ({
+          id: role,
+          label: ROLE_LABELS[staffRoleToPlatformRole(role)],
+        }))}
+      />
     </div>
   );
 
@@ -205,12 +183,11 @@ export function StaffPermissionsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
-            subtitle="Approval rules and staff role permissions."
+            subtitle="Configure capabilities for each staff role."
           />
         }
       >
         <div className="space-y-3">
-          <DesktopCard title="Approval rules">{approvalSection}</DesktopCard>
           <DesktopCard title="Staff role permissions">
             {!canEdit ? (
               <p className="text-xs text-brand-text-muted mb-3">
@@ -228,9 +205,6 @@ export function StaffPermissionsPanel({
   return (
     <StaffOpsPageShell>
       <div className="space-y-6">
-        <AppFormSection title="Approval rules">
-          <div className="pb-6">{approvalSection}</div>
-        </AppFormSection>
         <section>
           <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Staff role permissions</h3>
           {!canEdit ? (
