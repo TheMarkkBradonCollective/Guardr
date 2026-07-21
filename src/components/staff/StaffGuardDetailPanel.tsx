@@ -23,7 +23,9 @@ import {
 import {
   getActiveStandingCrewMembers,
   getPendingStandingCrewOutgoing,
+  guardLeadsOwnStandingCrew,
 } from '../../lib/guardStandingCrew';
+import { staffMakeCrewLeadBlocker } from '../../lib/staffGuardEligibility';
 import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
@@ -235,6 +237,8 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const guardAccountStatus = getGuardUserStatus(guard);
+  const makeCrewLeadBlocker = staffMakeCrewLeadBlocker(guard, standingCrewMembers);
+  const alreadyCrewLead = guardLeadsOwnStandingCrew(guard, standingCrewMembers);
   const progress = getQualificationProgress(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
@@ -348,6 +352,11 @@ export function StaffGuardDetailPanel({
 
   const handleMakeCrewLead = async () => {
     if (!onMakeCrewLead) return;
+    const blocker = staffMakeCrewLeadBlocker(guard, standingCrewMembers);
+    if (blocker) {
+      showAppToast(blocker, { tone: 'error' });
+      return;
+    }
     await onMakeCrewLead();
   };
 
@@ -756,17 +765,14 @@ export function StaffGuardDetailPanel({
                   Mark as trusted
                 </AppButton>
               )}
-              {onMakeCrewLead && (
+              {onMakeCrewLead && !alreadyCrewLead && (
                 <AppButton
                   variant="primary"
                   size="sm"
                   className="staff-action-btn--ok"
+                  disabled={Boolean(makeCrewLeadBlocker)}
                   onClick={() => void handleMakeCrewLead()}
-                  title={
-                    guard.trusted
-                      ? 'Initialize this guard as a standing crew lead'
-                      : 'Guard must be trusted before they can lead a team'
-                  }
+                  title={makeCrewLeadBlocker ?? 'Initialize this guard as a standing crew lead'}
                 >
                   Make crew lead
                 </AppButton>

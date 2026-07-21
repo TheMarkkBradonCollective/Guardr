@@ -90,6 +90,13 @@ test('makeGuardCrewLeadProfile requires trusted status', () => {
   assert.match(result.error, /trusted guard/i);
 });
 
+test('makeGuardCrewLeadProfile requires active status', () => {
+  const result = makeGuardCrewLeadProfile(trustedGuard({ userStatus: 'approved' }));
+  assert.ok('error' in result);
+  if (!('error' in result)) return;
+  assert.match(result.error, /approved and active/i);
+});
+
 test('makeGuardCrewLeadProfile sets a default crew name', () => {
   const result = makeGuardCrewLeadProfile(trustedGuard());
   assert.ok(!('error' in result));

@@ -157,6 +157,9 @@ export function makeGuardCrewLeadProfile(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[] = []
 ): { standingCrewName: string; standingCrewDescription: string } | { error: string } {
+  if (guard.userStatus !== 'active' || !guard.verified) {
+    return { error: 'Guard must be approved and active before they can lead a crew.' };
+  }
   if (!isGuardTrusted(guard)) {
     return { error: 'Must be a trusted guard to lead a team.' };
   }
