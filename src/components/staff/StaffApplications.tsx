@@ -298,8 +298,8 @@ export function StaffApplications({
       if (options?.onBack) {
         return (
           <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
-            <AppSubScreenHeader title={title} onBack={options.onBack} backLabel="Applications" />
-            {detailBody}
+            <AppSubScreenHeader title={title} onBack={options.onBack} backLabel="Applications" hideTitle />
+            <div className="pb-8 min-w-0">{detailBody}</div>
           </div>
         );
       }
@@ -334,8 +334,8 @@ export function StaffApplications({
       if (options?.onBack) {
         return (
           <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
-            <AppSubScreenHeader title={guard.name} onBack={options.onBack} backLabel="Applications" />
-            {detailBody}
+            <AppSubScreenHeader title={guard.name} onBack={options.onBack} backLabel="Applications" hideTitle />
+            <div className="pb-8 min-w-0">{detailBody}</div>
           </div>
         );
       }
@@ -373,8 +373,9 @@ export function StaffApplications({
             title={client.companyName || client.name}
             onBack={options.onBack}
             backLabel="Applications"
+            hideTitle
           />
-          {detailBody}
+          <div className="pb-8 min-w-0">{detailBody}</div>
         </div>
       );
     }

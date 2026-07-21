@@ -22,12 +22,9 @@ function DetailRow({ label, value }: { label: string; value?: React.ReactNode })
 function ChipList({ items }: { items: string[] }) {
   if (!items.length) return null;
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1">
+    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
       {items.map((item) => (
-        <span
-          key={item}
-          className="inline-flex items-center rounded-full border border-brand-border bg-brand-bg-sec px-2.5 py-0.5 text-xs font-medium text-brand-text"
-        >
+        <span key={item} className="text-sm text-brand-text">
           {item}
         </span>
       ))}
@@ -44,7 +41,7 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
   const hasIntake = guardHasApplicationIntake(guard);
 
   return (
-    <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-4">
+    <section className="staff-detail-section space-y-4 !px-0">
       <div>
         <p className="text-sm font-semibold text-brand-text">Application details</p>
       </div>

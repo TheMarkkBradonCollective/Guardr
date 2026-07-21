@@ -20503,6 +20503,33 @@ body[data-form-factor="tablet"] .uber-app-shell {
   overflow: visible;
 }
 
+/* Full-page detail: grow with content; outer mobility-content-inner scrolls. */
+.uber-app-shell .app-full-page-detail {
+  height: auto !important;
+  min-height: 0;
+  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.uber-app-shell .app-full-page-detail--scroll {
+  overflow: visible !important;
+}
+
+.uber-app-shell .app-full-page-detail-scroll {
+  flex: none;
+  min-height: 0;
+  overflow: visible !important;
+}
+
+.uber-app-shell .app-full-page-detail > :not(.app-subscreen-header) {
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+}
+
+.uber-app-shell .app-full-page-detail > .app-full-page-detail-scroll {
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+}
+
 .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel {
   height: auto;
   min-height: 0;

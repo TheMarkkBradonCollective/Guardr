@@ -40,7 +40,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
 
   if (!hasApplicationData) {
     return (
-      <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-2">
+      <section className="staff-detail-section space-y-2 !px-0">
         <p className="text-sm font-semibold text-brand-text">Application details</p>
         <AppNoticeChip
           label="No intake on file"
@@ -52,7 +52,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-4">
+    <section className="staff-detail-section space-y-4 !px-0">
       <div>
         <p className="text-sm font-semibold text-brand-text">Application details</p>
       </div>
