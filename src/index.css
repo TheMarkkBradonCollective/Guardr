@@ -22371,27 +22371,64 @@ body.capacitor-native .landing-app-download-btn:active {
 
 .app-welcome {
   position: relative;
-  background: var(--brand-bg);
-  transition: filter 0.28s ease, transform 0.28s ease;
+  background: var(--uber-bg, var(--brand-bg));
+  transition: filter 0.28s ease, opacity 0.28s ease;
+  font-family: var(--uber-font-text, "Uber Move Text", "Helvetica Neue", Helvetica, sans-serif);
 }
 
 .app-welcome--dimmed {
-  filter: brightness(0.72) saturate(0.85);
-  transform: scale(0.98);
+  filter: brightness(0.72) saturate(0.9);
+  opacity: 0.92;
   pointer-events: none;
 }
 
-/* Clean map-like backdrop — no grid pattern, no glow blobs */
+/* Atmosphere — soft surface wash + bold black band (Uber Direct) */
 .app-welcome-backdrop {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: var(--brand-bg);
 }
 
-/* Hide the old decorative elements */
+.app-welcome-backdrop-plane {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      165deg,
+      var(--uber-bg, #fff) 0%,
+      var(--uber-surface, #f6f6f6) 48%,
+      var(--uber-bg, #fff) 100%
+    );
+}
+
+.app-welcome-backdrop-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: min(42dvh, 22rem);
+  background: var(--uber-text, #000);
+  clip-path: polygon(0 18%, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.06;
+}
+
+html.theme-dark .app-welcome-backdrop-plane {
+  background:
+    linear-gradient(
+      165deg,
+      var(--uber-bg, #000) 0%,
+      #111 50%,
+      var(--uber-bg, #000) 100%
+    );
+}
+
+html.theme-dark .app-welcome-backdrop-band {
+  background: var(--uber-text, #fff);
+  opacity: 0.08;
+}
+
 .app-welcome-backdrop-grid,
 .app-welcome-backdrop-glow,
 .app-welcome-backdrop-pins,
@@ -22402,51 +22439,151 @@ body.capacitor-native .landing-app-download-btn:active {
   display: none;
 }
 
-.app-welcome-header {
+.app-welcome-topbar {
   position: relative;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding:
+    max(0.65rem, env(safe-area-inset-top, 0px))
+    max(1.25rem, env(safe-area-inset-right, 0px))
+    0.35rem
+    max(1.25rem, env(safe-area-inset-left, 0px));
+}
+
+.app-welcome-shell-status {
+  margin-right: auto;
+  font-family: var(--uber-font-text, "Uber Move Text", sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--uber-text-muted, #767676);
 }
 
 .app-welcome-main {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
+  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
 }
 
 .app-welcome-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
   max-width: 22rem;
+  padding-block: 1rem 1.5rem;
+  animation: app-welcome-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.app-welcome-eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brand-text-muted);
+.app-welcome-brand {
+  margin: 0 0 1.25rem;
+  font-family: var(--uber-font-display, "Uber Move", "Helvetica Neue", Helvetica, sans-serif);
+  font-size: clamp(3.25rem, 14vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.92;
+  color: var(--uber-text, #000);
+  animation: app-welcome-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .app-welcome-headline {
-  margin-top: 0.5rem;
-  font-size: clamp(1.875rem, 7vw, 2.5rem);
-  font-weight: 900;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
+  margin: 0;
+  font-family: var(--uber-font-display, "Uber Move", "Helvetica Neue", Helvetica, sans-serif);
+  font-size: clamp(1.5rem, 5.8vw, 1.875rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: var(--uber-text, #000);
+  animation: app-welcome-rise 620ms 60ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Welcome dock — Uber white bottom sheet anchored to bottom */
+.app-welcome-sub {
+  margin: 0.85rem 0 0;
+  max-width: 20rem;
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.45;
+  color: var(--uber-text-muted, #767676);
+  animation: app-welcome-rise 680ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* CTA strip — flush with page, not a floating sheet/card */
 .app-welcome-dock {
+  position: relative;
+  z-index: 2;
   margin-top: auto;
   width: 100%;
-  padding: 1.25rem 1.25rem 0;
-  border-radius: 16px 16px 0 0;
+  padding:
+    1rem
+    0
+    max(1.35rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   border: none;
-  background: var(--brand-bg);
-  box-shadow: 0 -4px 32px rgba(0,0,0,0.18);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  animation: app-welcome-rise 720ms 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .app-welcome-main > .app-welcome-dock {
-  margin-inline: -1.25rem;
-  width: calc(100% + 2.5rem);
+  margin-inline: 0;
+  width: 100%;
+}
+
+.app-welcome-signin-btn {
+  min-height: 3.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+
+.app-welcome-signup-btn {
+  margin-top: 0.75rem;
+  min-height: 3.25rem !important;
+  font-weight: 600 !important;
+}
+
+.app-welcome-legal {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  opacity: 1;
+}
+
+.app-welcome-legal > div {
+  gap: 0.5rem 1rem !important;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+@keyframes app-welcome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-welcome-hero,
+  .app-welcome-brand,
+  .app-welcome-headline,
+  .app-welcome-sub,
+  .app-welcome-dock {
+    animation: none;
+  }
 }
 
 /* Role row — simple inline segmented (no card boxes) */
@@ -22520,25 +22657,8 @@ body.capacitor-native .landing-app-download-btn:active {
   color: var(--brand-accent-text);
 }
 
-.app-welcome-signin-btn {
-  min-height: 3.35rem;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
 .app-welcome-signup-link:active {
   opacity: 0.85;
-}
-
-.app-welcome-legal {
-  opacity: 0.92;
-}
-
-.app-welcome-legal > div {
-  gap: 0.35rem 0.65rem !important;
-  font-size: 0.6875rem;
-  line-height: 1.35;
 }
 
 .auth-sheet-panel {

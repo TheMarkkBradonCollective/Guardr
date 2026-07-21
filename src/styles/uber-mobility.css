@@ -182,8 +182,8 @@ body.shell-pwa .app-welcome {
 
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
-  border-top: 1px solid var(--uber-border, #e2e2e2);
-  background: var(--uber-surface, #f6f6f6);
+  border-top: none;
+  background: transparent;
 }
 
 body[data-shell="native"] .app-welcome-header,
@@ -193,8 +193,8 @@ body.shell-native .app-welcome-header {
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: var(--uber-surface, #f6f6f6);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
+  background: transparent;
+  border-top: none;
 }
 
 body[data-shell="native"] .mobility-nav-item:active,

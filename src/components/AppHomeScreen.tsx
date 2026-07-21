@@ -11,7 +11,7 @@ import {
   resolveExperienceTier,
   type ExperienceTier,
 } from '../lib/platform/experienceTier';
-import { PublicPageChrome } from './baseui/layout/PublicPageChrome';
+import { ThemeToggle } from './ui/ThemeToggle';
 import type { LegalPageId } from '../lib/legalContent';
 import {
   AppWelcomeBackdrop,
@@ -80,17 +80,14 @@ export function AppHomeScreen({
     >
       {showBackdrop ? <AppWelcomeBackdrop /> : null}
 
-      <PublicPageChrome
-        themeMode={themeMode}
-        onChangeTheme={onChangeTheme}
-        trailing={<AppWelcomeShellBadge shellKind={shellKind} experienceTier={experienceTier} />}
-      />
+      <header className="app-welcome-topbar">
+        <AppWelcomeShellBadge shellKind={shellKind} experienceTier={experienceTier} />
+        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
+      </header>
 
       <Block
         as="main"
-        className={`app-welcome-main relative z-[1] flex-1 min-h-0 ${
-          isTablet ? 'app-welcome-main--tablet' : 'flex flex-col justify-between px-5'
-        }`}
+        className={`app-welcome-main ${isTablet ? 'app-welcome-main--tablet' : ''}`}
         display="flex"
         flexDirection={isTablet ? 'row' : 'column'}
         flex="1"

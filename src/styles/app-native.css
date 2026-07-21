@@ -21,8 +21,8 @@ body.shell-native .app-welcome {
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: var(--uber-surface, #f6f6f6);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
+  background: transparent;
+  border-top: none;
 }
 
 body[data-shell="native"] .uber-bottom-nav,
@@ -82,9 +82,9 @@ body[data-view-surface="native-tablet"] .auth-sheet--native-tablet .auth-sheet-s
 }
 
 body[data-view-surface="native-tablet"] .app-welcome--tablet .app-welcome-dock {
-  border-radius: 1rem;
+  border-radius: 0;
   box-shadow: none;
-  border: 1px solid var(--uber-border, var(--brand-border));
+  border: none;
 }
 
 body[data-view-surface="native-mobile"] .app-welcome--mobile .app-welcome-headline {
@@ -96,11 +96,11 @@ body.shell-native .auth-sheet-panel {
   padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
-/* APK Premium — richer sheet + rail */
+/* APK Premium — keep dock flush with Uber welcome restyle */
 body[data-apk-mode="premium"] .app-welcome-dock,
 body[data-experience-tier="apk-premium"] .app-welcome-dock {
-  border-radius: 1.25rem 1.25rem 0 0;
-  box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0, 0, 0, 0.10));
+  border-radius: 0;
+  box-shadow: none;
 }
 
 body[data-apk-mode="premium"] .mobility-icon-btn,
