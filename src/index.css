@@ -5764,18 +5764,18 @@ html.theme-dark .guardr-lightning-flash {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg-sec));
-  color: var(--brand-primary);
+  background: transparent;
+  color: var(--brand-text);
   font-size: 0.9375rem;
   font-weight: 700;
   overflow: hidden;
-  border: 1.5px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  border: 1.5px solid var(--brand-border);
   align-self: center;
 }
 
 html.theme-dark .app-inbox-row-leading {
-  background: color-mix(in srgb, var(--brand-primary) 16%, #1a1a1a);
-  border-color: color-mix(in srgb, var(--brand-primary) 22%, #2a2a2a);
+  background: transparent;
+  border-color: var(--brand-border);
 }
 
 .app-inbox-row-main {
@@ -6321,11 +6321,11 @@ html.theme-dark .app-chat-composer-field:focus-within {
 }
 
 html.theme-dark .app-messages-empty-detail {
-  background: #080808;
+  background: var(--brand-bg);
 }
 
 html.theme-light .app-messages-empty-detail {
-  background: #f5f5f5;
+  background: var(--brand-bg);
 }
 
 .app-messages-quick-actions {
@@ -17643,11 +17643,11 @@ html.theme-dark .landing-preview-map {
 }
 
 html.theme-dark .app-chat-thread-shell {
-  background: #080808;
+  background: var(--brand-bg);
 }
 
 html.theme-light .app-chat-thread-shell {
-  background: #f5f5f5;
+  background: var(--brand-bg);
 }
 
 .app-chat-pane {
@@ -17686,7 +17686,7 @@ html.theme-light .app-chat-bubble-outgoing {
   flex-wrap: nowrap;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  background: var(--brand-surface);
+  background: var(--brand-bg);
   border-bottom: 1px solid var(--brand-border);
 }
 
@@ -17695,13 +17695,13 @@ html.theme-light .app-chat-bubble-outgoing {
 }
 
 html.theme-dark .app-inbox-tabs {
-  background: #111111;
-  border-bottom-color: #1e1e1e;
+  background: var(--brand-bg);
+  border-bottom-color: var(--brand-border);
 }
 
 html.theme-light .app-inbox-tabs {
-  background: #ffffff;
-  border-bottom-color: #e5e5e5;
+  background: var(--brand-bg);
+  border-bottom-color: var(--brand-border);
 }
 
 .app-inbox-tab {
@@ -17730,37 +17730,37 @@ html.theme-light .app-inbox-tabs {
 }
 
 html.theme-dark .app-inbox-row {
-  background: #111111;
-  border-bottom-color: #1e1e1e;
+  background: var(--brand-bg);
+  border-bottom-color: var(--brand-border);
 }
 
 html.theme-dark .app-inbox-row:hover {
-  background: #161616;
+  background: var(--brand-bg);
 }
 
 html.theme-dark .app-inbox-row-selected {
-  background: color-mix(in srgb, var(--brand-primary) 10%, #111111) !important;
+  background: var(--brand-bg) !important;
 }
 
 html.theme-light .app-inbox-row {
-  background: #ffffff;
-  border-bottom-color: #f0f0f0;
+  background: var(--brand-bg);
+  border-bottom-color: var(--brand-border);
 }
 
 html.theme-light .app-inbox-row:hover {
-  background: #fafafa;
+  background: var(--brand-bg);
 }
 
 @media (min-width: 768px) {.app-messages-split-list {
-    background: var(--brand-surface);
+    background: var(--brand-bg);
   }
 html.theme-dark .app-messages-split-list {
-    background: #111111;
-    border-right-color: #1e1e1e;
+    background: var(--brand-bg);
+    border-right-color: var(--brand-border);
   }
 html.theme-light .app-messages-split-list {
-    background: #fafafa;
-    border-right-color: #e5e5e5;
+    background: var(--brand-bg);
+    border-right-color: var(--brand-border);
   }}
 
 .app-messages-quick-actions {
@@ -17769,8 +17769,8 @@ html.theme-light .app-messages-split-list {
 }
 
 html.theme-dark .app-messages-quick-actions {
-  background: #111111;
-  border-bottom-color: #1e1e1e;
+  background: var(--brand-bg);
+  border-bottom-color: var(--brand-border);
 }
 
 .app-chat-row-group-first:not(:first-child) {
@@ -17805,7 +17805,7 @@ html.theme-dark .app-chat-header {
 }
 
 html.theme-dark .app-messages-hub {
-  background: #111111;
+  background: var(--brand-bg);
 }
 
 .app-chat-readonly-footer {
@@ -17823,8 +17823,8 @@ html.theme-dark .app-messages-hub {
 }
 
 html.theme-dark .app-chat-readonly-footer {
-  background: #111111;
-  border-top-color: #1e1e1e;
+  background: var(--brand-bg);
+  border-top-color: var(--brand-border);
 }
 
 .app-chat-thread-empty {
@@ -19963,6 +19963,15 @@ textarea.uber-input {
   background: var(--brand-bg) !important;
 }
 
+/* Solid brand canvas — no grey secondary surfaces inside staff */
+.staff-shell {
+  --uber-surface: var(--uber-bg);
+  --uber-elevated: var(--uber-bg);
+  --brand-bg-sec: var(--brand-bg);
+  --brand-elevated: var(--brand-bg);
+  --brand-chrome-deep: var(--brand-bg);
+}
+
 .staff-shell .app-dashboard-hero,
 .staff-shell .app-dashboard-zone {
   background: transparent !important;
@@ -20314,8 +20323,21 @@ textarea.uber-input {
 
 .staff-shell .app-search-bar {
   background: transparent !important;
-  border-color: var(--brand-border) !important;
+  border-color: var(--brand-text) !important;
+  color: var(--brand-text) !important;
   box-shadow: none !important;
+}
+
+.staff-shell .app-search-bar input,
+.staff-shell .app-search-bar .app-search-bar-input,
+.staff-shell .app-search-bar svg {
+  color: var(--brand-text) !important;
+}
+
+.staff-shell .app-search-bar input::placeholder,
+.staff-shell .app-search-bar .app-search-bar-input::placeholder {
+  color: var(--brand-text) !important;
+  opacity: 0.45;
 }
 
 .staff-shell .app-empty-state,
@@ -20327,18 +20349,49 @@ textarea.uber-input {
 
 .staff-shell .app-empty-state-icon {
   background: transparent !important;
-  border: 1px solid var(--brand-border) !important;
-  color: var(--brand-text-muted) !important;
+  border: 1px solid var(--brand-text) !important;
+  color: var(--brand-text) !important;
+  opacity: 0.85;
+}
+
+.staff-shell .app-empty-state-title {
+  color: var(--brand-text) !important;
+}
+
+.staff-shell .app-empty-state-body {
+  color: var(--brand-text) !important;
+  opacity: 0.7;
 }
 
 .staff-shell .uber-workbench {
   background: var(--brand-bg) !important;
 }
 
-.staff-shell .uber-workbench-panel {
+.staff-shell .uber-workbench-panel,
+.staff-shell .uber-workbench-detail {
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.staff-shell .staff-ops-mobile-toolbar,
+.staff-shell .uber-ops-toolbar {
+  background: transparent !important;
+}
+
+.staff-shell .bg-brand-surface,
+.staff-shell .bg-brand-surface\/40,
+.staff-shell .bg-brand-bg-sec,
+.staff-shell .bg-brand-elevated,
+.staff-shell [class*="bg-brand-surface"],
+.staff-shell [class*="bg-brand-bg-sec"] {
+  background-color: transparent !important;
+}
+
+.staff-shell .segmented-control {
+  background: transparent !important;
+  border: 1px solid var(--brand-border) !important;
   box-shadow: none !important;
 }
 
@@ -20377,46 +20430,55 @@ textarea.uber-input {
   margin-inline: 0;
 }
 
-.staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+.staff-shell .staff-list-filter-tabs.app-inbox-tabs,
+.staff-shell .app-inbox-tabs {
   margin-inline: -0.25rem;
   border-bottom-width: 1px;
   background: transparent !important;
   border-bottom-color: var(--brand-border) !important;
 }
 
-html.theme-dark .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+html.theme-dark .staff-shell .staff-list-filter-tabs.app-inbox-tabs,
+html.theme-dark .staff-shell .app-inbox-tabs {
   background: transparent !important;
   border-bottom-color: color-mix(in srgb, #ffffff 18%, transparent) !important;
 }
 
-html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs,
+html.theme-light .staff-shell .app-inbox-tabs {
   background: transparent !important;
   border-bottom-color: color-mix(in srgb, #000000 12%, transparent) !important;
 }
 
-.staff-shell .staff-list-filter-tabs .app-inbox-tab {
+.staff-shell .staff-list-filter-tabs .app-inbox-tab,
+.staff-shell .app-inbox-tabs .app-inbox-tab {
   color: var(--brand-text) !important;
   opacity: 0.45;
   background: transparent !important;
 }
 
-.staff-shell .staff-list-filter-tabs .app-inbox-tab:hover {
+.staff-shell .staff-list-filter-tabs .app-inbox-tab:hover,
+.staff-shell .app-inbox-tabs .app-inbox-tab:hover {
   background: transparent !important;
   opacity: 0.75;
 }
 
 .staff-shell .staff-list-filter-tabs .app-inbox-tab-active,
-.staff-shell .staff-list-filter-tabs .app-inbox-tab.app-inbox-tab-active {
+.staff-shell .staff-list-filter-tabs .app-inbox-tab.app-inbox-tab-active,
+.staff-shell .app-inbox-tabs .app-inbox-tab-active,
+.staff-shell .app-inbox-tabs .app-inbox-tab.app-inbox-tab-active {
   color: var(--brand-text) !important;
   opacity: 1;
   font-weight: 700;
 }
 
-.staff-shell .staff-list-filter-tabs .app-inbox-tab-active::after {
+.staff-shell .staff-list-filter-tabs .app-inbox-tab-active::after,
+.staff-shell .app-inbox-tabs .app-inbox-tab-active::after {
   background: var(--brand-text) !important;
 }
 
-.staff-shell .staff-list-filter-tabs .app-inbox-tab-badge {
+.staff-shell .staff-list-filter-tabs .app-inbox-tab-badge,
+.staff-shell .app-inbox-tabs .app-inbox-tab-badge {
   background: transparent !important;
   border: 1px solid currentColor !important;
   color: inherit !important;
@@ -20426,45 +20488,42 @@ html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
   display: none;
 }
 
-/* Crews — high-contrast black/white, no grey wash */
-.staff-shell .staff-crews-panel .app-search-bar {
+/* Messages / Support — solid brand page, no grey inbox banding */
+.staff-shell .app-messages-hub,
+.staff-shell .app-messages-split-list,
+.staff-shell .app-messages-split-detail,
+.staff-shell .app-messages-quick-actions,
+.staff-shell .app-messages-empty-detail,
+.staff-shell .app-chat-readonly-footer {
+  background: var(--brand-bg) !important;
+}
+
+.staff-shell .app-inbox-row,
+html.theme-dark .staff-shell .app-inbox-row,
+html.theme-light .staff-shell .app-inbox-row {
   background: transparent !important;
-  border-color: var(--brand-text) !important;
-  color: var(--brand-text) !important;
-  box-shadow: none !important;
+  border-bottom-color: var(--brand-border) !important;
 }
 
-.staff-shell .staff-crews-panel .app-search-bar input,
-.staff-shell .staff-crews-panel .app-search-bar svg {
-  color: var(--brand-text) !important;
-}
-
-.staff-shell .staff-crews-panel .app-search-bar input::placeholder {
-  color: var(--brand-text) !important;
-  opacity: 0.45;
-}
-
-.staff-shell .staff-crews-panel .app-empty-state-icon {
-  background: transparent !important;
-  border-color: var(--brand-text) !important;
-  color: var(--brand-text) !important;
-  opacity: 0.85;
-}
-
-.staff-shell .staff-crews-panel .app-empty-state-title {
-  color: var(--brand-text) !important;
-}
-
-.staff-shell .staff-crews-panel .app-empty-state-body {
-  color: var(--brand-text) !important;
-  opacity: 0.7;
-}
-
-.staff-shell .staff-crews-panel .staff-ops-mobile-toolbar,
-.staff-shell .staff-crews-panel .uber-ops-toolbar {
+.staff-shell .app-inbox-row:hover,
+html.theme-dark .staff-shell .app-inbox-row:hover,
+html.theme-light .staff-shell .app-inbox-row:hover {
   background: transparent !important;
 }
 
+.staff-shell .app-inbox-row-selected,
+html.theme-dark .staff-shell .app-inbox-row-selected {
+  background: transparent !important;
+  box-shadow: inset 3px 0 0 var(--brand-text) !important;
+}
+
+.staff-shell .app-inbox-row-leading {
+  background: transparent !important;
+  border: 1px solid var(--brand-border) !important;
+  color: var(--brand-text) !important;
+}
+
+/* Crews panel extras kept for specificity with older class hooks */
 .staff-shell .staff-crews-panel .rounded-xl.border,
 .staff-shell .staff-crews-panel .rounded-lg.border {
   background: transparent !important;
@@ -20475,12 +20534,6 @@ html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
 .staff-shell .staff-crews-panel .text-brand-text-muted {
   color: var(--brand-text) !important;
   opacity: 0.65;
-}
-
-.staff-shell .staff-crews-panel .bg-brand-surface,
-.staff-shell .staff-crews-panel .bg-brand-surface\/40,
-.staff-shell .staff-crews-panel [class*="bg-brand-surface"] {
-  background-color: transparent !important;
 }
 
 .staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
@@ -20572,14 +20625,14 @@ html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
 .uber-app-shell button.app-item-card:hover,
 .uber-app-shell a.app-item-card:hover,
 .uber-app-shell .wf-list-card-interactive:hover {
-  background: var(--uber-surface, #f6f6f6) !important;
+  background: transparent !important;
   box-shadow: none !important;
   transform: none !important;
 }
 
 .uber-app-shell .app-item-card-selected,
 .uber-app-shell .app-item-card.ring-2 {
-  background: var(--uber-surface, #f6f6f6) !important;
+  background: transparent !important;
   box-shadow: none !important;
   border-color: var(--uber-border, var(--brand-border)) !important;
   border-left: 3px solid var(--uber-text, #000) !important;
@@ -20837,11 +20890,11 @@ button.staff-action-btn--ok:hover:not(:disabled) {
   overflow: visible !important;
 }
 
-/* Staff Guard status — flat light level header instead of black slab */
+/* Staff Guard status — flat brand header, no grey slab */
 .uber-app-shell .staff-guard-performance-panel .guard-tier-hero,
 .uber-app-shell .staff-guard-performance-rating .guard-tier-hero {
-  background: var(--uber-surface, #f6f6f6) !important;
-  color: var(--uber-text, #000) !important;
+  background: var(--uber-bg, #000) !important;
+  color: var(--uber-text, #fff) !important;
   border-radius: 0 !important;
   border-bottom: 1px solid var(--uber-border, #eeeeee);
   padding: 1rem 0 1.25rem !important;
@@ -22749,7 +22802,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
 
 .uber-app-shell .uber-shell-content .bg-brand-surface,
 .uber-app-shell .uber-shell-content .bg-brand-elevated {
-  background-color: var(--uber-surface, #F6F6F6) !important;
+  background-color: var(--uber-bg, #FFFFFF) !important;
 }
 
 .uber-app-shell .uber-shell-content .text-brand-text,
