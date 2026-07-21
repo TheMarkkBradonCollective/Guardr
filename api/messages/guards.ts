@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
+type PlatformRole = 'client' | 'guard' | 'support' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
 
 function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
+  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator' | 'Support';
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
@@ -22,6 +22,8 @@ function resolvePlatformRole(input: {
         return 'administrator';
       case 'Moderator':
         return 'moderator';
+      case 'Support':
+        return 'support';
     }
   }
   if (input.legacyRole === 'auditor') return 'moderator';
@@ -31,6 +33,7 @@ function resolvePlatformRole(input: {
 
 function isStaffPlatformRole(role: PlatformRole): boolean {
   return (
+    role === 'support' ||
     role === 'moderator' ||
     role === 'administrator' ||
     role === 'manager' ||

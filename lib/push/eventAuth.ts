@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PushNotificationType } from './types';
 import type { VerifiedSession } from '../accountSessionAuth';
 
-const STAFF_ROLES = new Set(['moderator', 'administrator', 'manager', 'director', 'owner', 'staff', 'auditor']);
+const STAFF_ROLES = new Set(['support', 'moderator', 'administrator', 'manager', 'director', 'owner', 'staff', 'auditor']);
 
 export function isStaffSession(session: VerifiedSession): boolean {
   return STAFF_ROLES.has(session.platformRole) || STAFF_ROLES.has(session.role);

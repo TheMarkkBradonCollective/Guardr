@@ -151,7 +151,7 @@ export function updateTutorialDemoData(
 
 function getTourForRoleFromId(tourId?: string) {
   if (!tourId) return null;
-  const roles = ['guard', 'client', 'owner', 'director', 'administrator', 'moderator'];
+  const roles = ['guard', 'client', 'owner', 'director', 'administrator', 'moderator', 'support'];
   for (const role of roles) {
     const tour = getTourForRole(role);
     if (tour?.id === tourId) return tour;

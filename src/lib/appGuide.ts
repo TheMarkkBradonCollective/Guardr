@@ -4,6 +4,7 @@ export type GuideAudience =
   | 'staff'
   | 'guard'
   | 'client'
+  | 'support'
   | 'moderator'
   | 'administrator'
   | 'director'
@@ -15,6 +16,7 @@ export const GUIDE_TITLE = 'Guardr — Guide';
 const ROLE_HEADINGS: Record<Exclude<GuideAudience, 'staff' | 'all'>, string> = {
   client: '## Client guide',
   guard: '## Guard guide',
+  support: '## Support guide',
   moderator: '## Moderator guide',
   administrator: '## Administrator guide',
   director: '## Director guide',

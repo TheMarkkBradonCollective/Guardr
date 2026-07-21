@@ -4,8 +4,10 @@ export function platformRoleToPushRole(role: PlatformRole | string): PushRole {
   switch (role) {
     case 'guard':
       return 'guard';
+    case 'support':
     case 'moderator':
     case 'administrator':
+    case 'manager':
     case 'director':
     case 'owner':
       return 'dispatch';

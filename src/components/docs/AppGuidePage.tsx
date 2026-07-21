@@ -28,6 +28,7 @@ import type { PlatformRole } from '../../types';
 type GuideAudienceTag =
   | 'guard'
   | 'client'
+  | 'support'
   | 'moderator'
   | 'administrator'
   | 'director'
@@ -57,6 +58,11 @@ const SECTION_META: Record<string, SectionMeta> = {
     icon: Shield,
     description: 'Application approval, credentials, shifts, reports, overtime, and pay.',
     audience: 'guard',
+  },
+  'support-guide': {
+    icon: Users,
+    description: 'Handle support messages, review incident reports, and monitor activity.',
+    audience: 'support',
   },
   'moderator-guide': {
     icon: Users,
@@ -121,6 +127,7 @@ const CLIENT_GUARD_TABS: { id: AudienceFilter; label: string }[] = [
 
 const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
   { id: 'all', label: 'All' },
+  { id: 'support', label: 'Support' },
   { id: 'moderator', label: 'Moderator' },
   { id: 'administrator', label: 'Admin' },
   { id: 'director', label: 'Director' },
@@ -131,9 +138,13 @@ const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
 
 function platformRoleToGuideAudience(role?: PlatformRole): GuideAudienceTag | undefined {
   switch (role) {
+    case 'support':
+      return 'support';
     case 'moderator':
       return 'moderator';
     case 'administrator':
+      return 'administrator';
+    case 'manager':
       return 'administrator';
     case 'director':
       return 'director';

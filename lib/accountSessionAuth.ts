@@ -3,13 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 export type PlatformRole =
   | 'client'
   | 'guard'
+  | 'support'
   | 'moderator'
   | 'administrator'
   | 'manager'
   | 'director'
   | 'owner';
 
-export type StaffDbRole = 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
+export type StaffDbRole = 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator' | 'Support';
 
 export interface SessionCredentials {
   userId: string;
@@ -27,6 +28,7 @@ const STAFF_PLATFORM_ROLES = new Set([
   'manager',
   'administrator',
   'moderator',
+  'support',
   'staff',
   'auditor',
 ]);
@@ -50,6 +52,8 @@ export function resolvePlatformRole(input: {
         return 'administrator';
       case 'Moderator':
         return 'moderator';
+      case 'Support':
+        return 'support';
     }
   }
   if (input.legacyRole === 'auditor') return 'moderator';
@@ -59,6 +63,7 @@ export function resolvePlatformRole(input: {
 
 export function isStaffPlatformRole(role: PlatformRole): boolean {
   return (
+    role === 'support' ||
     role === 'moderator' ||
     role === 'administrator' ||
     role === 'manager' ||

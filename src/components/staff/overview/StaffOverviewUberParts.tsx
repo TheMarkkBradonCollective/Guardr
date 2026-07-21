@@ -599,7 +599,7 @@ export function StaffOverviewQueueBoard({
       count: stats.activeIncidents,
       description: 'Open incident reports needing follow-up',
       section: 'incidents' as StaffSection,
-      roles: ['moderator', 'administrator', 'manager', 'director', 'owner'] as PlatformRole[],
+      roles: ['support', 'moderator', 'administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
   ];
 

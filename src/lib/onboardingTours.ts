@@ -217,7 +217,7 @@ const LEGACY_STORAGE_PREFIX = 'guardr_tour_';
 export function getTourForRole(role: string): OnboardingTour | null {
   if (role === 'guard') return GUARD_ONBOARDING_TOUR;
   if (role === 'client') return CLIENT_ONBOARDING_TOUR;
-  if (['owner', 'director', 'administrator', 'moderator'].includes(role)) return STAFF_ONBOARDING_TOUR;
+  if (['owner', 'director', 'manager', 'administrator', 'moderator', 'support'].includes(role)) return STAFF_ONBOARDING_TOUR;
   return null;
 }
 

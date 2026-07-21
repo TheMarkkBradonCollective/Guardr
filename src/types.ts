@@ -81,10 +81,18 @@ export interface ShiftReport {
 }
 
 /** Platform user roles per Guardr spec */
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
+export type PlatformRole =
+  | 'client'
+  | 'guard'
+  | 'support'
+  | 'moderator'
+  | 'administrator'
+  | 'manager'
+  | 'director'
+  | 'owner';
 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
-export type StaffRole = 'Founder' | 'Director' | 'Manager' | 'Administrator' | 'Moderator';
+export type StaffRole = 'Founder' | 'Director' | 'Manager' | 'Administrator' | 'Moderator' | 'Support';
 
 export type CertCategory =
   | 'guard-card'

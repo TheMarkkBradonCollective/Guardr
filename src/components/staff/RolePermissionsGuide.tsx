@@ -5,9 +5,19 @@ import { Shield, Users, Briefcase, DollarSign, Crown, Award } from 'lucide-react
 
 const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: string[] }[] = [
   {
+    role: 'support',
+    icon: Users,
+    permissions: [
+      'Review incident reports & monitor platform activity',
+      'Handle support messages in the staff inbox',
+      'No account approvals, credential verification, or job reviews',
+    ],
+  },
+  {
     role: 'moderator',
     icon: Shield,
     permissions: [
+      'Everything Support can do',
       'Approve guard & client applications',
       'Activate approved guard accounts (manual)',
       'Review reports & monitor platform activity',
@@ -24,6 +34,16 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Suspend users & issue warnings',
       'Manage users, analytics & general settings',
       'No payouts, payment settings, audit log, or agreements',
+    ],
+  },
+  {
+    role: 'manager',
+    icon: DollarSign,
+    permissions: [
+      'Everything Administrators can do',
+      'Payments, payouts, fees, and financial data',
+      'Audit log and company operations',
+      'City actions follow assigned markets',
     ],
   },
   {

@@ -12,6 +12,7 @@ function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
   if (user.role === 'guard') return 'guard';
   if (
+    user.role === 'support' ||
     user.role === 'moderator' ||
     user.role === 'administrator' ||
     user.role === 'manager' ||
