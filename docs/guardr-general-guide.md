@@ -922,6 +922,8 @@ The Founder is the platform governance overseer. You inherit everything Director
 | **Analytics** | — | — | ✓ | + Financials | ✓ |
 | **Payments** | — | — | — | ✓ | ✓ |
 | **Staff** | — | — | — | ✓ | + Directors |
+| **Locations** | — | Review/QC | ✓ | ✓ | ✓ |
+| **Service Areas** | — | — | — | ✓ | ✓ |
 | **Payment settings** | — | — | — | ✓ | + Payment methods |
 | **Marketplace agreements** | — | — | — | ✓ | ✓ |
 | **Audit log** | — | — | — | ✓ | ✓ |
@@ -950,6 +952,8 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Disputes**, **Analytics** | — | ✓ | ✓ | ✓ |
 | **Payments** | — | — | ✓ | ✓ |
 | **Staff** (team roster) | — | — | ✓ | + Directors |
+| **Locations** (shared job sites) | — | QC / approve | ✓ | ✓ |
+| **Service Areas** (city markets) | — | — | ✓ | ✓ |
 | **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |

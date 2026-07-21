@@ -32,6 +32,7 @@ export const SYNC_TABLES = [
   'platform_settings',
   'platform_cities',
   'client_locations',
+  'job_locations',
   'company_public_documents',
   'client_invoices',
   'message_reactions',

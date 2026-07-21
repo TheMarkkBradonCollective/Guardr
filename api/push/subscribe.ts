@@ -51,8 +51,10 @@ function platformRoleToPushRole(role) {
   switch (role) {
     case "guard":
       return "guard";
+    case "support":
     case "moderator":
     case "administrator":
+    case "manager":
     case "director":
     case "owner":
       return "dispatch";
@@ -70,6 +72,7 @@ var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
   "manager",
   "administrator",
   "moderator",
+  "support",
   "staff",
   "auditor"
 ]);
@@ -88,6 +91,8 @@ function resolvePlatformRole(input) {
         return "administrator";
       case "Moderator":
         return "moderator";
+      case "Support":
+        return "support";
     }
   }
   if (input.legacyRole === "auditor") return "moderator";
