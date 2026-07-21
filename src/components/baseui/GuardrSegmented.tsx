@@ -75,11 +75,12 @@ export function GuardrSegmented<T extends string = string>({
           description={opt.description}
           overrides={{
             Tab: {
-              style: ({ $active }: { $active?: boolean }) => ({
+              style: ({ $isActive }: { $isActive?: boolean }) => ({
                 borderRadius: '999px',
-                fontWeight: $active ? 700 : 500,
+                fontWeight: $isActive ? 700 : 500,
                 fontSize: '14px',
-                color: $active
+                // Light: white on black active pill; dark: black on white (inverse primary).
+                color: $isActive
                   ? theme.colors.contentInversePrimary
                   : theme.colors.contentSecondary,
                 backgroundColor: 'transparent',
