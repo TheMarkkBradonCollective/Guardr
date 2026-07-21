@@ -8,6 +8,7 @@ import { PwaInstallGuide } from './PwaInstallGuide';
 import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 
+import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 const APK_DOWNLOAD_URL = '/download/guardr.apk';
 const APK_QR_URL = '/download/apk-qr.png';
 const DOWNLOAD_PAGE_URL = '/download';
@@ -39,10 +40,10 @@ export function LandingAppDownloads({
   }
 
   const pwaLabel = hasDeferredPrompt
-    ? 'Install web app'
+    ? `Install ${INSTALL_PWA_TITLE}`
     : isIOS
       ? 'Add to Home Screen'
-      : 'Install web app';
+      : `Install ${INSTALL_PWA_TITLE}`;
 
   const isMobile = formFactor === 'mobile';
   const centered = variant === 'cta';
@@ -97,8 +98,8 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Get the native Android app for field work, or save the web app to your home screen — same
-          account, same features either way.
+          Get {INSTALL_APK_TITLE} for field work, or save {INSTALL_PWA_TITLE} to your home screen — same
+          account, same login either way.
         </Block>
       </Block>
 
@@ -123,10 +124,10 @@ export function LandingAppDownloads({
                   color: theme.colors.contentPrimary,
                 }}
               >
-                Download the Guardr app
+                {INSTALL_APK_TITLE}
               </Block>
               <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-                Native Android APK — reliable notifications, GPS, and camera for on-site guards.
+                Full Android app — reliable notifications, GPS, and camera for on-site guards.
               </Block>
             </Block>
             {showScan && (
@@ -180,7 +181,7 @@ export function LandingAppDownloads({
             startEnhancer={<Download className="w-4 h-4" />}
             overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
           >
-            Download Android APK
+            Get {INSTALL_APK_TITLE}
           </GuardrButton>
         </Block>
 
@@ -199,10 +200,10 @@ export function LandingAppDownloads({
                   color: theme.colors.contentPrimary,
                 }}
               >
-                Add to your home screen
+                {INSTALL_PWA_TITLE}
               </Block>
               <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-                Install the web app on any device — auto-updates, works offline, no reinstall.
+                Lite home-screen app — auto-updates, works offline, no reinstall.
               </Block>
             </Block>
             {showScan && (
@@ -248,7 +249,7 @@ export function LandingAppDownloads({
           gridGap="scale100"
           $style={{ fontWeight: 600, fontSize: '14px' }}
         >
-          Compare APK vs home screen
+          Compare {INSTALL_PWA_TITLE} vs {INSTALL_APK_TITLE}
           <ArrowRight className="w-3.5 h-3.5" />
         </Block>
       </Block>

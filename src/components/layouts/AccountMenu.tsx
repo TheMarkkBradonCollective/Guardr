@@ -6,6 +6,8 @@ import type { ThemeMode } from '../../lib/platform/theme';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
+import { getShellKind } from '../../lib/platform/shellKind';
+import { accountMenuInstallLabel } from '../../lib/installSurfaceCopy';
 import {
   NotificationInboxSection,
   accountMenuUnreadCount,
@@ -75,6 +77,10 @@ export function AccountMenu({
   const panelWidth = menuView === 'notifications' ? 352 : 288;
   const position = useFloatingPanelPosition(open, triggerRef, 'right', panelWidth);
   const unread = accountMenuUnreadCount(notifications);
+  const shellKind = getShellKind();
+  const installMenuLabel = accountMenuInstallLabel(
+    shellKind === 'native' ? 'apk' : shellKind === 'pwa' ? 'pwa' : 'browser',
+  );
 
   useEffect(() => {
     if (!open) {
@@ -252,7 +258,7 @@ export function AccountMenu({
                 className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-emerald-600 hover:bg-emerald-500/10 transition-colors"
               >
                 <Download className="w-4 h-4 shrink-0 text-emerald-600" strokeWidth={1.75} />
-                Download
+                {installMenuLabel}
               </button>
             ) : null}
             <button
