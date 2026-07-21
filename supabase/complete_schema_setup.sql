@@ -71,6 +71,8 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAM
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_expiry_restricted BOOLEAN NOT NULL DEFAULT FALSE;
 
@@ -194,6 +196,8 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS password TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS account_status TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS favorite_guard_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_type TEXT;

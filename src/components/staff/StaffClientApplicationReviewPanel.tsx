@@ -147,7 +147,7 @@ export function StaffClientApplicationReviewPanel({
                 </button>
               </>
             )}
-            {isApproved && onRequestClientApplicationRevision && (
+            {(isPending || isApproved) && onRequestClientApplicationRevision && (
               <button
                 type="button"
                 onClick={() => void handleRequestRevision()}

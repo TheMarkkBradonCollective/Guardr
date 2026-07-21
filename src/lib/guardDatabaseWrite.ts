@@ -7,6 +7,8 @@ const OPTIONAL_GUARD_COLUMNS = [
   'credential_grace_deadline',
   'credential_grace_missing',
   'credential_grace_hours',
+  'application_revision_requested_at',
+  'application_revision_note',
 ] as const;
 
 function parseMissingColumn(message?: string): string | null {

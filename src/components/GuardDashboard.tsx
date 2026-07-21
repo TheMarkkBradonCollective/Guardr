@@ -284,7 +284,14 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
-const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
+const GUARD_ACTIVATION_BASE_TABS: GuardTab[] = ['settings'];
+
+function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
+  if (guard.applicationRevisionRequestedAt) {
+    return [...GUARD_ACTIVATION_BASE_TABS, 'profile'];
+  }
+  return GUARD_ACTIVATION_BASE_TABS;
+}
 const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'map',
   'myJobs',
@@ -426,8 +433,9 @@ export function GuardDashboard({
 
   const setTab = useCallback(
     (next: GuardTab) => {
+      const allowed = guardActivationAllowedTabs(guard);
       const resolved =
-        !isGuardAccountActive(guard) && !GUARD_ACTIVATION_ALLOWED_TABS.includes(next) ? 'activation' : next;
+        !isGuardAccountActive(guard) && !allowed.includes(next) ? 'activation' : next;
       if (!isControlled) setStandaloneTab(resolved);
       onTabChange?.(resolved);
     },
@@ -440,7 +448,8 @@ export function GuardDashboard({
 
   useEffect(() => {
     if (isGuardAccountActive(guard)) return;
-    if (!GUARD_ACTIVATION_ALLOWED_TABS.includes(tab) && tab !== 'activation') {
+    const allowed = guardActivationAllowedTabs(guard);
+    if (!allowed.includes(tab) && tab !== 'activation') {
       setTab('activation');
     }
   }, [guard, tab, setTab]);
@@ -1289,9 +1298,11 @@ export function GuardDashboard({
   const userStatus = getGuardUserStatus(guard);
   const credentialRestricted = isGuardCredentialExpiryRestricted(guard);
   const accountNeedsActivation = !isGuardAccountActive(guard);
+  const activationAllowedTabs = guardActivationAllowedTabs(guard);
   const showPendingGate =
-    accountNeedsActivation && !GUARD_ACTIVATION_ALLOWED_TABS.includes(tab);
+    accountNeedsActivation && !activationAllowedTabs.includes(tab);
   const accountPreActive = isGuardAccountPreActive(guard);
+  const revisionOpen = Boolean(guard.applicationRevisionRequestedAt);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
       <AppScreen className="flex min-h-screen items-center justify-center p-6">
@@ -1364,7 +1375,7 @@ export function GuardDashboard({
     onSignOut,
     themeMode: themeMode as 'dark' | 'light',
     onChangeTheme: (mode: 'dark' | 'light') => onChangeTheme(mode),
-    hideProfile: accountNeedsActivation,
+    hideProfile: accountNeedsActivation && !revisionOpen,
     active: activeTab === 'profile' || activeTab === 'settings' || activeTab === 'preferences' || activeTab === 'performance' || activeTab === 'availability',
     extraLinks: accountNeedsActivation
       ? []
@@ -1987,6 +1998,7 @@ export function GuardDashboard({
       role="guard"
       guard={guard}
       onOpenProfile={() => setTab('settings')}
+      onOpenApplicationProfile={revisionOpen ? () => setTab('profile') : undefined}
       onAddCertification={onAddCertification}
       onDeleteCertification={onDeleteCertification}
       onAttachCertificationImage={onAttachCertificationImage}

@@ -374,7 +374,11 @@ export function ClientDashboard({
   if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home' && view !== 'guide' && view !== 'invoices') {
     return page(
       'pending',
-      <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
+      <AccountPendingScreen
+        role="client"
+        client={clientRecord ?? { accountStatus, approved }}
+        onOpenProfile={() => navigate('profile')}
+      />
     );
   }
 
