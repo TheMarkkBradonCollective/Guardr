@@ -223,6 +223,9 @@ export function guardIdVerificationCanEdit(
   return status === 'not_submitted' || status === 'rejected';
 }
 
+export const GOV_ID_SUBMITTED_LOCKED_MESSAGE =
+  'Government ID is locked after submission. Staff must request an update before you can change it.';
+
 /** Staff requested clearer ID photos — guard must re-upload before approval. */
 export function guardIdVerificationResubmitPending(
   guard: Pick<SecurityGuard, 'idVerificationStatus'>

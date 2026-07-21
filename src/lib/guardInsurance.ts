@@ -184,16 +184,20 @@ export function buildInsuranceApprovalBlockers(
   return buildInsuranceSubmissionBlockers(guard);
 }
 
-/** Guards may upload COI until staff verifies or while a submission is pending review. */
+/** Guards may edit COI only before first submit, after rejection/expiry, or when staff requested an update. */
 export function guardCoiCanGuardEdit(guard: Pick<SecurityGuard, 'insurancePolicy'>): boolean {
-  if (guardHasValidInsurance(guard)) return false;
   const policy = guard.insurancePolicy;
   if (!policy || policy.status === 'not_submitted') return true;
+  if (policy.updateRequestedAt) return true;
+  if (guardHasValidInsurance(guard)) return false;
   const status = resolveInsuranceStatus(policy);
   if (status === 'rejected' || status === 'expired') return true;
   if (status === 'pending' && policy.documentUrl?.trim()) return false;
   return !policy.documentUrl?.trim();
 }
+
+export const COI_SUBMITTED_LOCKED_MESSAGE =
+  'Certificate of Insurance is locked after submission. Staff must request an update before you can change it.';
 
 export function guardInsuranceBlockedMessage(guard: Pick<SecurityGuard, 'insurancePolicy'>): string | null {
   const policy = guard.insurancePolicy;

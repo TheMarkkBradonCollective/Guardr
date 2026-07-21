@@ -427,7 +427,10 @@ export function StaffCredentials({
   const renderCoiUpdateRequest = (guard: SecurityGuard) => {
     if (!canVerifyCredentials || !onRequestCoiUpdate) return null;
     const policy = guard.insurancePolicy;
-    if (!policy || resolveInsuranceStatus(policy) !== 'verified') return null;
+    if (!policy) return null;
+    const status = resolveInsuranceStatus(policy);
+    if (status !== 'verified' && status !== 'pending') return null;
+    if (status === 'pending' && !policy.documentUrl?.trim()) return null;
     if (policy.updateRequestedAt) return null;
     return (
       <AppButton

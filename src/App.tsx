@@ -171,6 +171,8 @@ import {
   staffApproveIdVerificationBlocker,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
+  guardIdVerificationCanEdit,
+  GOV_ID_SUBMITTED_LOCKED_MESSAGE,
 } from './lib/guardIdentityVerification';
 import { guardApplicationCredentialVerificationBlocker } from './lib/guardApplicationIntake';
 import { computeDurationHours, formatShiftRange } from './lib/dates';
@@ -495,6 +497,8 @@ import {
   insurancePolicyToDbRow,
   isUserSubmittedPendingInsurance,
   resolveInsuranceStatus,
+  guardCoiCanGuardEdit,
+  COI_SUBMITTED_LOCKED_MESSAGE,
 } from './lib/guardInsurance';
 import {
   vehicleInsurancePolicyFromRow,
@@ -3488,7 +3492,15 @@ export default function App() {
   const handleSaveGuardInsurance = async (
     policy: Partial<GuardInsurancePolicy> & { guardId: string }
   ) => {
-    const existing = guards.find((g) => g.id === policy.guardId)?.insurancePolicy;
+    const targetGuard = guards.find((g) => g.id === policy.guardId);
+    const existing = targetGuard?.insurancePolicy;
+    const staffBypass = Boolean(
+      currentUser && currentUser.id !== policy.guardId && isStaffRole(currentUser.role)
+    );
+    if (!staffBypass && targetGuard && !guardCoiCanGuardEdit(targetGuard)) {
+      throw new Error(COI_SUBMITTED_LOCKED_MESSAGE);
+    }
+
     const documentChanged = Boolean(
       policy.documentUrl?.trim() &&
         policy.documentUrl.trim() !== (existing?.documentUrl ?? '').trim()
@@ -3504,6 +3516,7 @@ export default function App() {
         snapshotCoiRevision({ ...existing, status: 'verified' }, 'superseded')
       );
     }
+    const clearUpdateRequest = !staffBypass && Boolean(existing?.updateRequestedAt);
     const nextPolicy: GuardInsurancePolicy = {
       id: existing?.id ?? policy.id ?? `ins-${policy.guardId}`,
       guardId: policy.guardId,
@@ -3518,8 +3531,12 @@ export default function App() {
       submittedAt: policy.submittedAt ?? new Date().toISOString(),
       reviewedAt: policy.reviewedAt,
       reviewedBy: policy.reviewedBy,
-      updateRequestedAt: policy.updateRequestedAt ?? existing?.updateRequestedAt,
-      updateRequestNote: policy.updateRequestNote ?? existing?.updateRequestNote,
+      updateRequestedAt: clearUpdateRequest
+        ? undefined
+        : policy.updateRequestedAt ?? existing?.updateRequestedAt,
+      updateRequestNote: clearUpdateRequest
+        ? undefined
+        : policy.updateRequestNote ?? existing?.updateRequestNote,
       revisionHistory,
     };
     if (isDbConnected) {
@@ -3550,8 +3567,11 @@ export default function App() {
     const before = guards.find((g) => g.id === guardId);
     const policy = before?.insurancePolicy;
     if (!before || !policy) throw new Error('Insurance policy not found.');
-    if (resolveInsuranceStatus(policy) !== 'verified') {
-      throw new Error('Only verified COI can receive an update request.');
+    if (resolveInsuranceStatus(policy) !== 'verified' && resolveInsuranceStatus(policy) !== 'pending') {
+      throw new Error('Only submitted or verified COI can receive an update request.');
+    }
+    if (!policy.documentUrl?.trim() && resolveInsuranceStatus(policy) === 'pending') {
+      throw new Error('COI has no document on file yet.');
     }
     if (policy.updateRequestedAt) {
       throw new Error('An update has already been requested for this COI.');
@@ -6273,6 +6293,13 @@ export default function App() {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
     if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
+
+    const staffBypass = Boolean(
+      currentUser && currentUser.id !== guardId && isStaffRole(currentUser.role)
+    );
+    if (!staffBypass && !guardIdVerificationCanEdit(guard)) {
+      return { ok: false, error: GOV_ID_SUBMITTED_LOCKED_MESSAGE };
+    }
 
     const idState = payload.idState.trim().toUpperCase();
     const idNumber = payload.idNumber.trim();

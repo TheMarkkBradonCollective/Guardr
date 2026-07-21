@@ -5,6 +5,7 @@ import { getCoiSectionStatus } from '../../lib/credentialSectionStatus';
 import {
   formatCoiSummaryLine,
   getCoiUploadStatus,
+  guardCoiCanGuardEdit,
   guardCoiOnFile,
   resolveInsuranceStatus,
 } from '../../lib/guardInsurance';
@@ -42,7 +43,8 @@ export function GuardCoiItemCard({
   const hasOnFile = guardCoiOnFile(guard);
   const uploadStatus = getCoiUploadStatus(guard);
   const sectionStatus = getCoiSectionStatus(guard, staffMode);
-  const canEdit = editing && !staffMode && !!onSave;
+  const coiEditable = guardCoiCanGuardEdit(guard);
+  const canEdit = editing && !staffMode && !!onSave && coiEditable;
   const policy = guard.insurancePolicy;
   const docUrl = policy?.documentUrl?.trim();
   const title = policy?.carrier?.trim() || 'Certificate of Insurance (COI)';
