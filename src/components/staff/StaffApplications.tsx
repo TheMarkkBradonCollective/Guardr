@@ -401,6 +401,7 @@ export function StaffApplications({
             { id: 'all', label: 'All' },
             { id: 'pending', label: 'Pending' },
             { id: 'approved', label: 'Approved' },
+            { id: 'denied', label: 'Denied' },
           ]}
         />
         <StaffListFilterTabs
@@ -430,7 +431,9 @@ export function StaffApplications({
               ? 'No account applications waiting for review.'
               : statusFilter === 'approved'
                 ? 'No approved applications in this view.'
-                : 'No account applications on file yet.'}
+                : statusFilter === 'denied'
+                  ? 'No denied applications in this view.'
+                  : 'No account applications on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout

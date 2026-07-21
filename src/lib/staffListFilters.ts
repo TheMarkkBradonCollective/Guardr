@@ -14,7 +14,7 @@ import {
   isCredentialFeedItemAwaitingStaffReview,
 } from './staffApprovalsFeed';
 
-export type ApplicationStatusFilter = 'all' | 'pending' | 'approved';
+export type ApplicationStatusFilter = 'all' | 'pending' | 'approved' | 'denied';
 export type ApplicationKindFilter = 'all' | 'guard' | 'client';
 
 export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'all';
@@ -45,8 +45,10 @@ export function matchesApplicationStatusFilter(
 ): boolean {
   if (filter === 'all') return true;
   if (filter === 'pending') return isApplicationFeedItemPending(item, guards, clients);
-  // approved — intake completed (approved label / still activating), not still pending review
-  return !isApplicationFeedItemPending(item, guards, clients) && item.status === 'approved';
+  if (filter === 'approved') {
+    return item.status === 'approved' || item.status === 'active';
+  }
+  return item.status === 'denied' || item.status === 'rejected';
 }
 
 export function matchesApplicationKindFilter(

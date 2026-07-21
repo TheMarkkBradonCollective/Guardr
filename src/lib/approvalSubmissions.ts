@@ -24,9 +24,10 @@ export function isSelfSubmittedClientAccount(client: Client): boolean {
   return getClientAccountStatus(client) === 'pending';
 }
 
-/** Client account shown in the Applications review feed. */
+/** Client account shown in the Applications review feed (including denied / suspended). */
 export function belongsInClientApplicationFeed(client: Client): boolean {
-  return getClientAccountStatus(client) !== 'suspended';
+  const status = getClientAccountStatus(client);
+  return status === 'pending' || status === 'active' || status === 'suspended';
 }
 
 /** Pending credential uploaded by the guard (not staff on their behalf). */
