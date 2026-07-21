@@ -22677,3 +22677,115 @@ html.theme-dark [data-baseweb="drawer"] [data-baseweb="drawer-container"],
 html.theme-dark [data-baseweb="modal"] [role="dialog"] {
   background-color: var(--brand-bg, #000000) !important;
 }
+
+/* Payment settings — scroll clear of bottom nav; black/white save pills */
+.staff-shell .staff-payment-settings-panel {
+  min-width: 0;
+  width: 100%;
+}
+
+.staff-shell .staff-payment-settings-panel .staff-ops-mobile-body {
+  overflow: visible;
+  min-width: 0;
+}
+
+.staff-shell .staff-payment-settings-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  padding-bottom: calc(
+    var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px) + 1.5rem
+  );
+}
+
+.staff-shell .staff-payment-settings-panel .app-form-section {
+  padding: 0 0 1.5rem !important;
+  margin: 0 0 1.25rem !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  min-width: 0;
+}
+
+.staff-shell .staff-payment-settings-panel .app-form-section:last-child {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.staff-shell .staff-payment-settings-panel .app-form-section-title {
+  color: var(--brand-text) !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.staff-shell .staff-payment-settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.staff-shell .staff-payment-settings-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--brand-text);
+  color: var(--brand-accent-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.staff-shell .staff-payment-settings-save:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.staff-shell .staff-payment-settings-save:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.staff-shell .staff-payment-settings-save:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.staff-shell .staff-payment-settings-discard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--brand-text);
+  background: transparent;
+  color: var(--brand-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.staff-shell .staff-payment-settings-table {
+  width: 100%;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.staff-shell .staff-payment-settings-panel .uber-input,
+.staff-shell .staff-payment-settings-panel .uber-select,
+.staff-shell .staff-payment-settings-panel select.uber-input {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
