@@ -1,7 +1,7 @@
 import { showAppToast } from '../ui/AppToast';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, RefreshCw, X } from 'lucide-react';
-import { SecurityGuard } from '../../types';
+import { DRIVER_LICENSE_CLASSES, SecurityGuard, type GovernmentIdDocumentType } from '../../types';
 import {
   getGuardIdVerificationStatus,
   guardIdVerificationResubmitPending,
@@ -37,6 +37,7 @@ export function StaffIdReviewSection({
   onReject,
   approveActionLabel = 'Approve ID',
   onRequestResubmit,
+  onUpdateImages,
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
@@ -46,9 +47,78 @@ export function StaffIdReviewSection({
   const canRequestResubmit = staffCanRequestIdResubmit(guard);
   // Prevents a fast double-click from firing duplicate approve/reject writes.
   const [actionPending, setActionPending] = useState(false);
+  const [savingType, setSavingType] = useState(false);
+  const [idDocumentType, setIdDocumentType] = useState<GovernmentIdDocumentType | ''>(
+    guard.idDocumentType ?? ''
+  );
+  const [idLicenseClass, setIdLicenseClass] = useState(guard.idLicenseClass ?? '');
+
+  useEffect(() => {
+    setIdDocumentType(guard.idDocumentType ?? '');
+    setIdLicenseClass(guard.idLicenseClass ?? '');
+  }, [guard.id, guard.idDocumentType, guard.idLicenseClass]);
 
   if (!canManage) return null;
   if (status === 'not_submitted') return null;
+
+  const needsDocumentType =
+    Boolean(applicationVerifyBlocker) &&
+    (!guard.idDocumentType ||
+      (guard.idDocumentType === 'drivers_license' && !guard.idLicenseClass?.trim()));
+
+  const saveDocumentType = async () => {
+    if (!onUpdateImages) return;
+    if (!idDocumentType) {
+      showAppToast('Select Government ID or Driver’s license.', { tone: 'error' });
+      return;
+    }
+    if (idDocumentType === 'drivers_license' && !idLicenseClass.trim()) {
+      showAppToast('Select the driver’s license class.', { tone: 'error' });
+      return;
+    }
+    const front = (guard.idFrontUrl ?? '').trim();
+    const back = (guard.idBackUrl ?? '').trim();
+    const selfie = (guard.idSelfieUrl ?? '').trim();
+    const idState = (guard.idState ?? '').trim();
+    const idNumber = (guard.idNumber ?? '').trim();
+    const idExpiryDate = (guard.idExpiryDate ?? '').trim();
+    if (!front || !back || !selfie) {
+      showAppToast('ID front, back, and selfie must be on file before saving document type.', {
+        tone: 'error',
+      });
+      return;
+    }
+    if (!idState || !idNumber || !idExpiryDate) {
+      showAppToast('Tap the ID → Edit to fill state, number, and expiration, then save document type.', {
+        tone: 'error',
+      });
+      return;
+    }
+    setSavingType(true);
+    try {
+      const result = await onUpdateImages({
+        idDocumentType,
+        idLicenseClass: idDocumentType === 'drivers_license' ? idLicenseClass.trim() : undefined,
+        idState,
+        idNumber,
+        idExpiryDate,
+        idFrontUrl: front,
+        idBackUrl: back,
+        idSelfieUrl: selfie,
+      });
+      if (!result.ok) {
+        showAppToast(result.error, { tone: 'error' });
+        return;
+      }
+      showAppToast('Document type saved. You can approve the ID now.', { tone: 'success' });
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not save document type.', {
+        tone: 'error',
+      });
+    } finally {
+      setSavingType(false);
+    }
+  };
 
   const requestSlot = (slot: IdVerificationSlot) => {
     if (!onRequestResubmit) return;
@@ -71,10 +141,67 @@ export function StaffIdReviewSection({
   return (
     <div className="space-y-3">
       {applicationVerifyBlocker && (
-        <p className="text-xs text-amber-500 leading-relaxed border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
+        <p className="text-xs text-amber-600 leading-relaxed border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
           {applicationVerifyBlocker}
         </p>
       )}
+
+      {needsDocumentType && onUpdateImages ? (
+        <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+          <p className="text-xs font-semibold text-brand-text">Set document type to continue</p>
+          <label className="block space-y-1.5">
+            <span className="uber-label">Document type</span>
+            <select
+              value={idDocumentType}
+              onChange={(e) => {
+                const next = e.target.value as GovernmentIdDocumentType | '';
+                setIdDocumentType(next);
+                if (next !== 'drivers_license') setIdLicenseClass('');
+              }}
+              className="uber-select w-full"
+              aria-label="Government ID document type"
+            >
+              <option value="">Select type…</option>
+              <option value="state_id">Government ID</option>
+              <option value="drivers_license">Driver’s license</option>
+            </select>
+          </label>
+          {idDocumentType === 'drivers_license' ? (
+            <label className="block space-y-1.5">
+              <span className="uber-label">License class</span>
+              <select
+                value={idLicenseClass}
+                onChange={(e) => setIdLicenseClass(e.target.value)}
+                className="uber-select w-full"
+                aria-label="Driver license class"
+              >
+                <option value="">Select class…</option>
+                {DRIVER_LICENSE_CLASSES.map((licenseClass) => (
+                  <option key={licenseClass} value={licenseClass}>
+                    {licenseClass}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <AppButton
+            variant="primary"
+            size="sm"
+            disabled={savingType || !idDocumentType}
+            onClick={() => void saveDocumentType()}
+          >
+            {savingType ? 'Saving…' : 'Save document type'}
+          </AppButton>
+        </div>
+      ) : null}
+
+      {needsDocumentType && !onUpdateImages ? (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Tap the ID card → Edit → choose Document type (Government ID or Driver’s license). If it’s a
+          license, also set the license class, then save.
+        </p>
+      ) : null}
+
       {resubmitPending && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
