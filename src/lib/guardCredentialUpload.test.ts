@@ -36,9 +36,13 @@ test('canUploadGuardCredentials blocks active guards from self-upload path', () 
   );
 });
 
-test('canUploadGuardCredentials always allows staff mode', () => {
+test('canUploadGuardCredentials never allows staff mode upload-for-guard', () => {
   assert.equal(
     canUploadGuardCredentials(false, true, () => undefined, baseGuard({ userStatus: 'pending' })),
-    true
+    false
+  );
+  assert.equal(
+    canUploadGuardCredentials(true, true, () => undefined, baseGuard({ userStatus: 'pending' })),
+    false
   );
 });

@@ -11,12 +11,14 @@ import {
   governmentIdSlotLabels,
   governmentIdDocumentTypeLabel,
 } from '../../lib/guardIdentityVerification';
-import { US_STATES } from '../../lib/states';
+import { staffCanEditGuardGovernmentId } from '../../lib/staffCredentialRules';
+import { formatStateName, US_STATES } from '../../lib/states';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
-import { getGovIdCredentialRecords } from '../../lib/credentialRecordBuilders';
+import { getGovIdArchiveHistory } from '../../lib/govIdRevisionHistory';
+import { DocumentImagePreview } from '../credentials/DocumentImageLightbox';
 import { GuardIdPhotoRow } from './GuardIdPhotoRow';
 import type {
   GuardIdentityVerificationPayload,
@@ -49,10 +51,12 @@ export function GuardIdDetailModal({
   onEditFullPage,
 }: GuardIdDetailModalProps) {
   const status = getGuardIdVerificationStatus(guard);
-  const locked = staffMode ? false : guardIdVerificationIsLocked(guard);
-  const photosLocked = staffMode ? false : locked;
+  const staffMayEdit = staffMode && staffCanEditGuardGovernmentId(guard);
+  const locked = staffMode ? !staffMayEdit : guardIdVerificationIsLocked(guard);
+  const photosLocked = locked;
+  const effectiveCanEdit = canEdit && (staffMode ? staffMayEdit : !locked);
 
-  const [editing, setEditing] = useState(initialEditMode && canEdit && !onEditFullPage);
+  const [editing, setEditing] = useState(initialEditMode && effectiveCanEdit && !onEditFullPage);
   const [idDocumentType, setIdDocumentType] = useState<GovernmentIdDocumentType>(
     guard.idDocumentType ?? 'state_id'
   );
@@ -107,7 +111,7 @@ export function GuardIdDetailModal({
     idSelfieUrl: selfieUrl.trim() || guard.idSelfieUrl,
   };
 
-  const idRecords = getGovIdCredentialRecords(guard);
+  const idHistory = getGovIdArchiveHistory(guard);
 
   const draftState = idState.trim().toUpperCase();
   const draftNumber = idNumber.trim();
@@ -204,7 +208,7 @@ export function GuardIdDetailModal({
           </h2>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {canEdit && !editing && !photosLocked && (
+          {effectiveCanEdit && !editing && !photosLocked && (
             onEditFullPage ? (
               <button
                 type="button"
@@ -368,8 +372,66 @@ export function GuardIdDetailModal({
             </div>
           </div>
         ) : (
-          <>
-            <CredentialRecordsList items={idRecords} />
+          <div className="space-y-5">
+            <section className="space-y-4" aria-label="Current government ID">
+              <dl className="space-y-3">
+                <div>
+                  <dt className="uber-label">Document type</dt>
+                  <dd className="text-sm text-brand-text mt-1">
+                    {governmentIdDocumentTypeLabel(displayGuard.idDocumentType)}
+                  </dd>
+                </div>
+                {displayGuard.idDocumentType === 'drivers_license' && displayGuard.idLicenseClass ? (
+                  <div>
+                    <dt className="uber-label">License class</dt>
+                    <dd className="text-sm text-brand-text mt-1">{displayGuard.idLicenseClass}</dd>
+                  </div>
+                ) : null}
+                {displayGuard.idState ? (
+                  <div>
+                    <dt className="uber-label">Issuing state</dt>
+                    <dd className="text-sm text-brand-text mt-1">{formatStateName(displayGuard.idState)}</dd>
+                  </div>
+                ) : null}
+                {displayGuard.idNumber?.trim() ? (
+                  <div>
+                    <dt className="uber-label">ID number</dt>
+                    <dd className="text-sm text-brand-text mt-1 font-mono">#{displayGuard.idNumber.trim()}</dd>
+                  </div>
+                ) : null}
+                {displayGuard.idExpiryDate?.trim() ? (
+                  <div>
+                    <dt className="uber-label">Expiration date</dt>
+                    <dd className="text-sm text-brand-text mt-1">{displayGuard.idExpiryDate.trim()}</dd>
+                  </div>
+                ) : null}
+              </dl>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {displayGuard.idFrontUrl?.trim() ? (
+                  <DocumentImagePreview
+                    imageUrl={displayGuard.idFrontUrl.trim()}
+                    alt={slotLabels.front}
+                    className="w-full max-h-48 object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                  />
+                ) : null}
+                {displayGuard.idBackUrl?.trim() ? (
+                  <DocumentImagePreview
+                    imageUrl={displayGuard.idBackUrl.trim()}
+                    alt={slotLabels.back}
+                    className="w-full max-h-48 object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                  />
+                ) : null}
+                {displayGuard.idSelfieUrl?.trim() ? (
+                  <div className="sm:col-span-2">
+                    <DocumentImagePreview
+                      imageUrl={displayGuard.idSelfieUrl.trim()}
+                      alt={slotLabels.selfie}
+                      className="w-full max-h-48 object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </section>
 
             {photosLocked && guardIdVerificationPhotosComplete(guard) && status !== 'rejected' && (
               <p className="text-xs text-brand-text-muted">
@@ -383,8 +445,16 @@ export function GuardIdDetailModal({
               </p>
             )}
 
+            {idHistory.length > 0 ? (
+              <CredentialRecordsList
+                items={idHistory}
+                title="History"
+                description="Earlier uploads. Tap any image for full size."
+              />
+            ) : null}
+
             <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
-          </>
+          </div>
         )}
       </div>
       </div>

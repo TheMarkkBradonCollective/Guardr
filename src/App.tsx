@@ -136,6 +136,13 @@ import {
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
 import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage, staffCanVerifyCertification, staffVerifyCertificationBlocker } from './lib/certImagePolicy';
+import {
+  STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE,
+  STAFF_CREDENTIAL_LOCKED_AFTER_DECISION_MESSAGE,
+  staffCanEditCertification,
+  staffCanEditGuardCoi,
+  staffCanEditGuardGovernmentId,
+} from './lib/staffCredentialRules';
 import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
@@ -3505,12 +3512,24 @@ export default function App() {
   ) => {
     const targetGuard = guards.find((g) => g.id === policy.guardId);
     const existing = targetGuard?.insurancePolicy;
-    const staffBypass = Boolean(
+    const staffActor = Boolean(
       currentUser && currentUser.id !== policy.guardId && isStaffRole(currentUser.role)
     );
-    if (!staffBypass && targetGuard && !guardCoiCanGuardEdit(targetGuard)) {
+    if (staffActor) {
+      const hasExistingSubmission =
+        Boolean(existing) &&
+        existing!.status !== 'not_submitted' &&
+        Boolean(existing!.documentUrl?.trim() || existing!.carrier?.trim() || existing!.policyNumber?.trim());
+      if (!hasExistingSubmission) {
+        throw new Error(STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE);
+      }
+      if (targetGuard && !staffCanEditGuardCoi(targetGuard)) {
+        throw new Error(STAFF_CREDENTIAL_LOCKED_AFTER_DECISION_MESSAGE);
+      }
+    } else if (targetGuard && !guardCoiCanGuardEdit(targetGuard)) {
       throw new Error(COI_SUBMITTED_LOCKED_MESSAGE);
     }
+    const staffBypass = staffActor;
 
     const documentChanged = Boolean(
       policy.documentUrl?.trim() &&
@@ -4200,6 +4219,10 @@ export default function App() {
     newCert: Partial<Certification>,
     submittedByRole: 'guard' | 'staff' = 'guard'
   ): Promise<AddCertificationResult> => {
+    if (submittedByRole === 'staff' || newCert.submittedByRole === 'staff') {
+      return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
+    }
+
     const available = validateCertNumberAvailable(guards, {
       number: newCert.number ?? '',
       guardId,
@@ -4453,6 +4476,12 @@ export default function App() {
 
     if (submittedByRole === 'guard' && !guardCertificationCanEdit(cert)) {
       return { ok: false, error: 'This credential cannot be edited while under review.' };
+    }
+
+    if (submittedByRole === 'staff') {
+      if (!guard || !staffCanEditCertification(guard, cert)) {
+        return { ok: false, error: STAFF_CREDENTIAL_LOCKED_AFTER_DECISION_MESSAGE };
+      }
     }
 
     if (
@@ -6362,10 +6391,13 @@ export default function App() {
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
     if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
 
-    const staffBypass = Boolean(
+    const staffActor = Boolean(
       currentUser && currentUser.id !== guardId && isStaffRole(currentUser.role)
     );
-    if (!staffBypass && !guardIdVerificationCanEdit(guard)) {
+    if (staffActor) {
+      return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
+    }
+    if (!guardIdVerificationCanEdit(guard)) {
       return { ok: false, error: GOV_ID_SUBMITTED_LOCKED_MESSAGE };
     }
 
@@ -6428,7 +6460,7 @@ export default function App() {
       idSubmittedBy: 'guard' as const,
       idRevisionHistory,
     };
-    const snapshot = !staffBypass ? captureGovIdApplicationSnapshot(nextGuardBase, submittedAt) : null;
+    const snapshot = captureGovIdApplicationSnapshot(nextGuardBase, submittedAt);
     const nextGuard: SecurityGuard = snapshot
       ? { ...nextGuardBase, applicationSubmissionSnapshot: snapshot }
       : nextGuardBase;
@@ -6629,6 +6661,13 @@ export default function App() {
     if (getGuardUserStatus(guard) === 'blocked') {
       return { ok: false, error: 'This application was rejected — account is blocked.' };
     }
+    if (!staffCanEditGuardGovernmentId(guard)) {
+      const status = getGuardIdVerificationStatus(guard);
+      if (status === 'not_submitted') {
+        return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
+      }
+      return { ok: false, error: STAFF_CREDENTIAL_LOCKED_AFTER_DECISION_MESSAGE };
+    }
 
     const idState = payload.idState?.trim().toUpperCase() || guard.idState?.trim().toUpperCase() || '';
     const idNumber = payload.idNumber?.trim() || guard.idNumber?.trim() || '';
@@ -6698,8 +6737,8 @@ export default function App() {
                 nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
               idVerificationRejectionReason:
                 complete && nextStatus !== 'verified' ? undefined : g.idVerificationRejectionReason,
-              idSubmittedBy:
-                complete && nextStatus === 'pending' ? ('staff' as const) : g.idSubmittedBy,
+              // Preserve who originally submitted — staff never submit for the guard.
+              idSubmittedBy: g.idSubmittedBy,
             }
           : g
       )
@@ -6725,7 +6764,7 @@ export default function App() {
             nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
           id_verification_rejection_reason:
             complete && nextStatus !== 'verified' ? null : guard.idVerificationRejectionReason ?? null,
-          id_submitted_by: complete && nextStatus === 'pending' ? 'staff' : guard.idSubmittedBy ?? null,
+          id_submitted_by: guard.idSubmittedBy ?? null,
         })
         .eq('id', guardId);
       if (error) {
@@ -13732,7 +13771,6 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
           onDeleteCertification={handleDeleteCertification}
           onAttachCertificationImage={handleAttachCertificationImage}
           onUpdateCertification={(guardId, certId, payload) =>

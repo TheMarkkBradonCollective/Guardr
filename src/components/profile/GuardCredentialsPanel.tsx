@@ -51,7 +51,10 @@ import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { GuardOptionalCredentialAddSheet } from '../guard/GuardOptionalCredentialAddSheet';
-import { StaffGuardCredentialAddWizard } from '../staff/StaffGuardCredentialAddWizard';
+import {
+  staffCanEditCertification,
+  staffCanEditGuardGovernmentId,
+} from '../../lib/staffCredentialRules';
 import { WfSearchBar } from '../ui/wireframe';
 
 const CREDENTIAL_SECTIONS: {
@@ -136,7 +139,6 @@ export function GuardCredentialsPanel({
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
   const [optionalAddOpen, setOptionalAddOpen] = useState(false);
-  const [staffWizardOpen, setStaffWizardOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
@@ -224,7 +226,7 @@ export function GuardCredentialsPanel({
     onAttachImage: onAttachCertificationImage
       ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
       : undefined,
-    canEdit: staffMode || guardCertificationCanEdit(cert),
+    canEdit: staffMode ? staffCanEditCertification(guard, cert) : guardCertificationCanEdit(cert),
     staffMode,
     onUpdate: onUpdateCertification
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
@@ -280,7 +282,9 @@ export function GuardCredentialsPanel({
     [otherBsisItems, search]
   );
   const idStatus = getGuardIdVerificationStatus(guard);
-  const canEditId = !guard.isStaff && guardIdVerificationCanEdit(guard);
+  const canEditId = !guard.isStaff && (
+    staffMode ? staffCanEditGuardGovernmentId(guard) : guardIdVerificationCanEdit(guard)
+  );
 
   const credentialAddSheetMeta = (() => {
     if (!openSection) return { title: 'Upload credential' };
@@ -423,14 +427,15 @@ export function GuardCredentialsPanel({
           </p>
           {editing && staffMode && (
             <p className="text-xs text-brand-text-muted leading-relaxed">
-              Upload or update credentials for this guard — same as adding work experience or education.
+              Review and edit submitted credentials before approval or denial. After a decision,
+              request an update so the guard can resubmit — staff cannot upload for the guard.
             </p>
           )}
         </div>
         {canUpload && onAddCertification && (
           <button
             type="button"
-            onClick={() => (staffMode ? setStaffWizardOpen(true) : setOptionalAddOpen(true))}
+            onClick={() => setOptionalAddOpen(true)}
             className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -445,15 +450,6 @@ export function GuardCredentialsPanel({
         placeholder="Search credentials..."
         className="max-w-md"
       />
-
-      {canUpload && onAddCertification && staffMode && (
-        <StaffGuardCredentialAddWizard
-          guard={guard}
-          open={staffWizardOpen}
-          onClose={() => setStaffWizardOpen(false)}
-          onAddCertification={onAddCertification}
-        />
-      )}
 
       {canUpload && onAddCertification && !staffMode && (
         <GuardOptionalCredentialAddSheet
@@ -470,11 +466,11 @@ export function GuardCredentialsPanel({
         </p>
       )}
 
-      {!guard.isStaff && (onSubmitIdentityVerification || (staffMode && onAddCertification)) && (
+      {!guard.isStaff && (onSubmitIdentityVerification || staffMode) && (
         <>
           <GuardIdItemCard
             guard={guard}
-            canEdit={staffMode || canEditId}
+            canEdit={canEditId}
             staffMode={staffMode}
             asCredentialSection
             onSubmit={onSubmitIdentityVerification}

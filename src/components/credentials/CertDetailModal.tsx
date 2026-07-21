@@ -3,9 +3,9 @@ import { Loader2, Pencil, X } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName, credentialRequiresExpiry, getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import { certCategoryLabel, certViewSectionLabel } from '../../lib/guardCredentialSections';
-import { getCertificationRevisionTimeline } from '../../lib/certRevisionHistory';
+import { getCertificationArchiveHistory } from '../../lib/certRevisionHistory';
 import { certPhotoIsLockedForEditor } from '../../lib/certImagePolicy';
-import { US_STATES } from '../../lib/states';
+import { formatStateName, US_STATES } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
@@ -13,6 +13,7 @@ import { CertPhotoRow } from './CertPhotoRow';
 import { CredentialRecordsList } from './CredentialRecordsList';
 
 import { CredentialQuickViewLinks } from './CredentialQuickViewLinks';
+import { DocumentImagePreview } from './DocumentImageLightbox';
 
 export interface CertUpdatePayload {
   issuer: string;
@@ -73,8 +74,8 @@ export function CertDetailModal({
   const [submitError, setSubmitError] = useState('');
 
   const photosLocked = certPhotoIsLockedForEditor(cert, staffMode);
-  const revisionItems = getCertificationRevisionTimeline(cert);
-  const showRevisionList = revisionItems.length > 0;
+  const historyItems = getCertificationArchiveHistory(cert);
+  const showHistoryList = historyItems.length > 0;
 
   React.useEffect(() => {
     if (editing) return;
@@ -108,6 +109,13 @@ export function CertDetailModal({
     expiryDate: requiresExpiry ? expiryDate.trim() || cert.expiryDate : cert.expiryDate,
     imageUrl: imageUrl.trim() || cert.imageUrl,
   };
+  const hasCurrentDetails = Boolean(
+    displayCert.issuer?.trim() ||
+      displayCert.number?.trim() ||
+      displayCert.imageUrl?.trim() ||
+      displayCert.state?.trim() ||
+      displayCert.expiryDate?.trim()
+  );
 
   const draftIssuer = issuer.trim();
   const draftNumber = number.trim();
@@ -337,14 +345,61 @@ export function CertDetailModal({
               </button>
             </div>
           </div>
-        ) : showRevisionList ? (
-          <>
-            <CredentialRecordsList items={revisionItems} />
-            <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
-          </>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
-            <p className="text-sm">No photo uploaded for this credential</p>
+          <div className="space-y-5">
+            {hasCurrentDetails ? (
+              <section className="space-y-4" aria-label="Current credential">
+                <dl className="space-y-3">
+                  {displayCert.issuer?.trim() ? (
+                    <div>
+                      <dt className="uber-label">Issuing organization</dt>
+                      <dd className="text-sm text-brand-text mt-1">{displayCert.issuer.trim()}</dd>
+                    </div>
+                  ) : null}
+                  {displayCert.number?.trim() ? (
+                    <div>
+                      <dt className="uber-label">License / cert number</dt>
+                      <dd className="text-sm text-brand-text mt-1 font-mono">#{displayCert.number.trim()}</dd>
+                    </div>
+                  ) : null}
+                  {requiresState && displayCert.state?.trim() ? (
+                    <div>
+                      <dt className="uber-label">Issuing state</dt>
+                      <dd className="text-sm text-brand-text mt-1">{formatStateName(displayCert.state)}</dd>
+                    </div>
+                  ) : null}
+                  {requiresExpiry && displayCert.expiryDate?.trim() ? (
+                    <div>
+                      <dt className="uber-label">Expiration date</dt>
+                      <dd className="text-sm text-brand-text mt-1">{displayCert.expiryDate.trim()}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+                {displayCert.imageUrl?.trim() ? (
+                  <DocumentImagePreview
+                    imageUrl={displayCert.imageUrl.trim()}
+                    alt={`${title} document`}
+                    className="w-full max-h-[min(52vh,28rem)] object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
+                    <p className="text-sm">No photo uploaded for this credential</p>
+                  </div>
+                )}
+              </section>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
+                <p className="text-sm">No photo uploaded for this credential</p>
+              </div>
+            )}
+            {showHistoryList ? (
+              <CredentialRecordsList
+                items={historyItems}
+                title="History"
+                description="Earlier uploads. Tap any image for full size."
+              />
+            ) : null}
+            <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
           </div>
         )}
       </div>

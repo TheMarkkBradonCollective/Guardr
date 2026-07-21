@@ -5,6 +5,7 @@ import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { CERT_CATEGORY_LABELS } from '../../lib/certCatalog';
 import { coiViewSectionLabel } from '../../lib/guardCredentialSections';
 import { resolveInsuranceStatus, guardCoiCanGuardEdit } from '../../lib/guardInsurance';
+import { staffCanEditGuardCoi } from '../../lib/staffCredentialRules';
 import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { CertPhotoRow } from '../credentials/CertPhotoRow';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
@@ -12,7 +13,8 @@ import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialQuickViewLinks } from '../credentials/CredentialQuickViewLinks';
 import { showAppToast } from '../ui/AppToast';
 import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
-import { getCoiCredentialRecords } from '../../lib/credentialRecordBuilders';
+import { getCoiArchiveHistory } from '../../lib/coiRevisionHistory';
+import { DocumentImagePreview } from '../credentials/DocumentImageLightbox';
 
 interface GuardCoiDetailModalProps {
   guard: SecurityGuard;
@@ -43,8 +45,10 @@ export function GuardCoiDetailModal({
 }: GuardCoiDetailModalProps) {
   const policy = guard.insurancePolicy;
   const status = policy ? resolveInsuranceStatus(policy) : 'not_submitted';
-  const documentLocked = !staffMode && !guardCoiCanGuardEdit(guard);
-  const [editing, setEditing] = useState(initialEditMode && canEdit && !!onSave && !onEditFullPage);
+  const staffMayEdit = staffMode && staffCanEditGuardCoi(guard);
+  const documentLocked = staffMode ? !staffMayEdit : !guardCoiCanGuardEdit(guard);
+  const effectiveCanEdit = canEdit && (staffMode ? staffMayEdit : true);
+  const [editing, setEditing] = useState(initialEditMode && effectiveCanEdit && !!onSave && !onEditFullPage);
   const [carrier, setCarrier] = useState(policy?.carrier ?? '');
   const [policyNumber, setPolicyNumber] = useState(policy?.policyNumber ?? '');
   const [generalLiabilityLimit, setGeneralLiabilityLimit] = useState(
@@ -123,7 +127,7 @@ export function GuardCoiDetailModal({
   const sectionLabel = coiViewSectionLabel();
   const categoryLabel = CERT_CATEGORY_LABELS.industry;
   const title = policy?.carrier?.trim() || sectionLabel;
-  const coiRecords = getCoiCredentialRecords(guard);
+  const coiHistory = policy ? getCoiArchiveHistory(policy) : [];
 
   return (
     <AppOverlaySheet open onClose={onClose} ariaLabel={title} panelClassName="rounded-t-2xl">
@@ -146,7 +150,7 @@ export function GuardCoiDetailModal({
             </h2>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            {canEdit && onSave && !editing && (
+            {effectiveCanEdit && onSave && !editing && (
               <AppButton
                 variant="outline"
                 size="sm"
@@ -260,10 +264,63 @@ export function GuardCoiDetailModal({
               </div>
             </div>
           ) : (
-            <>
-              <CredentialRecordsList items={coiRecords} />
+            <div className="space-y-5">
+              <section className="space-y-4" aria-label="Current Certificate of Insurance">
+                <dl className="space-y-3">
+                  {policy?.carrier?.trim() ? (
+                    <div>
+                      <dt className="uber-label">Insurance carrier</dt>
+                      <dd className="text-sm text-brand-text mt-1">{policy.carrier.trim()}</dd>
+                    </div>
+                  ) : null}
+                  {policy?.policyNumber?.trim() ? (
+                    <div>
+                      <dt className="uber-label">Policy number</dt>
+                      <dd className="text-sm text-brand-text mt-1 font-mono">#{policy.policyNumber.trim()}</dd>
+                    </div>
+                  ) : null}
+                  {policy?.generalLiabilityLimit != null ? (
+                    <div>
+                      <dt className="uber-label">General liability limit</dt>
+                      <dd className="text-sm text-brand-text mt-1">
+                        ${policy.generalLiabilityLimit.toLocaleString()}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {policy?.effectiveDate ? (
+                    <div>
+                      <dt className="uber-label">Effective date</dt>
+                      <dd className="text-sm text-brand-text mt-1">{policy.effectiveDate}</dd>
+                    </div>
+                  ) : null}
+                  {policy?.expiryDate ? (
+                    <div>
+                      <dt className="uber-label">Expiration date</dt>
+                      <dd className="text-sm text-brand-text mt-1">{policy.expiryDate}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+                {policy?.documentUrl?.trim() ? (
+                  <DocumentImagePreview
+                    imageUrl={policy.documentUrl.trim()}
+                    alt="Certificate of Insurance"
+                    className="w-full max-h-[min(52vh,28rem)] object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
+                    <p className="text-sm">No COI document on file</p>
+                  </div>
+                )}
+              </section>
+              {coiHistory.length > 0 ? (
+                <CredentialRecordsList
+                  items={coiHistory}
+                  title="History"
+                  description="Earlier uploads. Tap any image for full size."
+                />
+              ) : null}
               <CredentialQuickViewLinks onViewFull={onViewFull} viewFullLabel={viewFullLabel} />
-            </>
+            </div>
           )}
 
           {staffMode && onReview && policy && status === 'pending' && (
