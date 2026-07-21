@@ -5460,7 +5460,7 @@ export default function App() {
     const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
     const isRecommendChange = patch.recommendOpen !== undefined;
     if (isStatusChange && !canManageCityMarkets(currentUser)) {
-      throw new Error('Only Directors and Founders can change operations status.');
+      throw new Error('Only Directors and Founders can change Service Areas status.');
     }
     if (isRecommendChange && !canRecommendCityMarket(currentUser)) {
       throw new Error('Only Managers can recommend cities.');
@@ -5494,7 +5494,7 @@ export default function App() {
           setPlatformCitiesCache(next);
           return next;
         });
-        throw new Error(error.message || 'Could not update operations.');
+        throw new Error(error.message || 'Could not update Service Areas.');
       }
     }
 
@@ -5529,7 +5529,7 @@ export default function App() {
         .eq('id', staffId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
-        throw new Error(error.message || 'Could not update operations access.');
+        throw new Error(error.message || 'Could not update Service Areas access.');
       }
     }
 

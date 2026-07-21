@@ -140,7 +140,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
       'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
     ...EXECUTIVE_OVERVIEW_FIELDS,
     emptyAttentionCopy:
-      'Nothing urgent in the queue. Review payouts, live coverage, or operations in your assigned cities.',
+      'Nothing urgent in the queue. Review payouts, live coverage, or Service Areas in your assigned cities.',
     quickLinkSections: EXECUTIVE_QUICK_LINKS,
   },
   director: {

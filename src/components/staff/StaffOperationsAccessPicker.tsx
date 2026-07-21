@@ -43,7 +43,7 @@ export function StaffOperationsAccessPicker({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-brand-text-muted">
           {selected.length === 0
-            ? 'No operations cities assigned'
+            ? 'No Service Areas cities assigned'
             : `${selected.length} cit${selected.length === 1 ? 'y' : 'ies'} assigned`}
         </p>
         {selected.length > 0 && (

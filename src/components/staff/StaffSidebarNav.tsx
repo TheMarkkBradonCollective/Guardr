@@ -15,7 +15,7 @@ export interface StaffNavItem {
   settingsOnly?: boolean;
   /** Visible to Manager and above (permissions & approval rules) */
   permissionsOnly?: boolean;
-  /** Visible to Manager and above (Operations controls) */
+  /** Visible to Manager and above (Service Areas controls) */
   citiesOnly?: boolean;
   /** Visible to Administrator and above (dispute resolution) */
   disputesOnly?: boolean;

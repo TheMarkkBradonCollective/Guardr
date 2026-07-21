@@ -155,7 +155,7 @@ function CityDetailPanel({
 
       {canManageStatus ? (
         <label className="block space-y-1.5">
-          <span className="uber-label">Operations status</span>
+          <span className="uber-label">Service area status</span>
           <select
             value={directorValue}
             disabled={busy}
@@ -197,7 +197,7 @@ function CityDetailPanel({
 
       {canRecommend && !canManageStatus && (
         <p className="text-xs text-brand-text-muted">
-          As a Manager you can recommend cities for review. Directors and Founders control operations status.
+          As a Manager you can recommend cities for review. Directors and Founders control service area status.
         </p>
       )}
 
@@ -303,15 +303,15 @@ export function StaffCitiesPanel({
   if (!canView) {
     if (formFactor === 'desktop') {
       return (
-        <WorkbenchEmpty message="Operations unavailable. Operations controls are limited to Manager roles and above." />
+        <WorkbenchEmpty message="Service Areas unavailable. Service Areas controls are limited to Manager roles and above." />
       );
     }
 
     return (
       <div className="app-empty-state app-empty-state--dashed">
-        <p className="app-empty-state-title">Operations unavailable</p>
+        <p className="app-empty-state-title">Service Areas unavailable</p>
         <p className="app-empty-state-body">
-          Operations controls are limited to Manager roles and above.
+          Service Areas controls are limited to Manager roles and above.
         </p>
       </div>
     );
@@ -319,7 +319,7 @@ export function StaffCitiesPanel({
 
   const filterTabs = (
     <StaffListFilterTabs
-      aria-label="Operations city status"
+      aria-label="Service area city status"
       activeId={statusFilter}
       onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
       tabs={[
@@ -434,7 +434,7 @@ export function StaffCitiesPanel({
           <AppSubScreenHeader
             title={selectedCity.name}
             onBack={() => setSelectedId(null)}
-            backLabel="Cities"
+            backLabel="Service Areas"
           />
           <div className="staff-ops-mobile-body min-w-0 pb-8">
             {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
@@ -529,7 +529,7 @@ export function StaffCitiesPanel({
 
                     {canManageStatus ? (
                       <label className="shrink-0">
-                        <span className="sr-only">Set operations status for {city.name}</span>
+                        <span className="sr-only">Set service area status for {city.name}</span>
                         <select
                           value={directorValue}
                           disabled={busy}

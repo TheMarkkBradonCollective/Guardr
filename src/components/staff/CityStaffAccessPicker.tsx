@@ -80,7 +80,7 @@ export function CityStaffAccessPicker({
     try {
       await onUpdateStaffCityAccess(member.id, { managedCities: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update operations access.');
+      setError(err instanceof Error ? err.message : 'Could not update Service Areas access.');
     } finally {
       setBusyId(null);
     }
@@ -89,9 +89,9 @@ export function CityStaffAccessPicker({
   return (
     <div className="space-y-3">
       <div>
-        <h4 className="text-sm font-semibold">Staff operations access</h4>
+        <h4 className="text-sm font-semibold">Staff Service Areas access</h4>
         <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-          Choose which staff may manage operations in {cityName}. Founders and directors have full
+          Choose which staff may manage Service Areas in {cityName}. Founders and directors have full
           platform access automatically.
         </p>
       </div>

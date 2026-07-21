@@ -123,8 +123,8 @@ export async function loadAuditLog(limit = 100): Promise<AuditLogEntry[]> {
 }
 
 const AUDIT_ACTION_LABELS: Partial<Record<AuditAction, string>> = {
-  city_market_updated: 'Operations updated',
-  staff_city_access_updated: 'Operations access updated',
+  city_market_updated: 'Service Areas updated',
+  staff_city_access_updated: 'Service Areas access updated',
 };
 
 export function formatAuditActionLabel(action: AuditAction | string): string {
