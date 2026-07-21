@@ -261,7 +261,7 @@ export function StaffGuardsPanel({
         tabs={[
           { id: 'all', label: 'All' },
           { id: 'pending', label: 'Pending' },
-          { id: 'activated', label: 'Activated' },
+          { id: 'activated', label: 'Approved' },
           { id: 'active', label: 'Active' },
         ]}
       />
