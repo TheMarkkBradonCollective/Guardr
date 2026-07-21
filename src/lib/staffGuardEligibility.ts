@@ -49,13 +49,28 @@ export function isStaffCrewLeadCandidate(
   guard: SecurityGuard,
   standingCrewMembers: GuardStandingCrewMember[],
 ): boolean {
-  if (guard.isStaff) return false;
-  if (guard.userStatus !== 'active') return false;
-  if (!guard.verified) return false;
-  if (!isGuardTrusted(guard)) return false;
-  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) return false;
-  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) return false;
-  return true;
+  return staffMakeCrewLeadBlocker(guard, standingCrewMembers) === null;
+}
+
+/** Why staff cannot tap Make crew lead on a guard profile — null when allowed. */
+export function staffMakeCrewLeadBlocker(
+  guard: SecurityGuard,
+  standingCrewMembers: GuardStandingCrewMember[],
+): string | null {
+  if (guard.isStaff) return 'Staff accounts cannot lead field crews.';
+  if (guardLeadsOwnStandingCrew(guard, standingCrewMembers)) {
+    return 'This guard is already set up as a crew lead.';
+  }
+  if (guard.userStatus !== 'active' || !guard.verified) {
+    return 'Guard must be approved and active before they can lead a crew.';
+  }
+  if (!isGuardTrusted(guard)) {
+    return 'Mark as trusted before making this guard a crew lead.';
+  }
+  if (guardIsMemberOfStandingCrew(standingCrewMembers, guard.id)) {
+    return 'Leave the current standing crew before leading a team.';
+  }
+  return null;
 }
 
 export function listGuardsEligibleForStaffCrewCreation(

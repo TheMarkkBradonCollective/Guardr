@@ -8,6 +8,7 @@ import {
   isStaffCrewLeadCandidate,
   isTrustedEligible,
   listGuardsEligibleForStaffCrewCreation,
+  staffMakeCrewLeadBlocker,
 } from './staffGuardEligibility';
 
 function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -94,5 +95,17 @@ describe('staffGuardEligibility', () => {
       'alpha',
     );
     assert.deepEqual(listed.map((g) => g.id), ['g1']);
+  });
+
+  it('explains make-crew-lead blockers for inactive and untrusted guards', () => {
+    assert.match(
+      staffMakeCrewLeadBlocker(guard({ userStatus: 'approved', trusted: false }), []) ?? '',
+      /approved and active/i
+    );
+    assert.match(
+      staffMakeCrewLeadBlocker(guard({ trusted: false }), []) ?? '',
+      /mark as trusted/i
+    );
+    assert.equal(staffMakeCrewLeadBlocker(guard({ trusted: true }), []), null);
   });
 });
