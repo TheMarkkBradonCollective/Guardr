@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { ArrowLeft, Download, Loader2, QrCode, Smartphone } from 'lucide-react';
+import { ArrowLeft, Download, Loader2, QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { Logo } from '../Logo';
 import { SITE_NAME, SITE_URL } from '../../lib/siteConfig';
 import { useAppDownloadStatus, canInstallApkInApp } from '../../hooks/useAppDownloadStatus';
@@ -8,6 +8,13 @@ import { installLatestApk } from '../../lib/platform/apkUpdate';
 import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt';
 import { PwaInstallGuide } from '../landing/PwaInstallGuide';
 import { showAppAlert } from '../ui/AppConfirm';
+import {
+  INSTALL_APK_TITLE,
+  INSTALL_PWA_TITLE,
+  downloadLiveContextMessage,
+  downloadScreenIntro,
+  downloadScreenTitle,
+} from '../../lib/installSurfaceCopy';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -43,6 +50,10 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
   const { isIOS, promptInstall, hasDeferredPrompt, showGuide, setShowGuide } = usePwaInstallPrompt();
   const [installing, setInstalling] = useState(false);
 
+  const isNativeView = liveContext === 'apk';
+  const isPwaView = liveContext === 'pwa';
+  const isBrowserView = liveContext === 'browser';
+
   const handleApkAction = async () => {
     if (canInstallApkInApp()) {
       setInstalling(true);
@@ -50,7 +61,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
         await installLatestApk(manifest ?? undefined);
       } catch (installError) {
         void showAppAlert({
-          title: 'Install failed',
+          title: isNativeView ? 'Update failed' : 'Install failed',
           message:
             installError instanceof Error ? installError.message : 'Could not start the APK install.',
           tone: 'warning',
@@ -74,20 +85,13 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
   const apkInstalled = Boolean(installedApkVersion);
   const apkButtonLabel = installing
     ? 'Preparing install…'
-    : canInstallApkInApp() && apkNeedsUpdate
-      ? `Install update (v${manifest?.apkVersion ?? ''})`
-      : canInstallApkInApp() && apkInstalled
-        ? `Reinstall APK (v${manifest?.apkVersion ?? ''})`
-        : apkNeedsUpdate
-          ? `Download update (v${manifest?.apkVersion ?? ''})`
-          : `Download APK (v${manifest?.apkVersion ?? ''})`;
-
-  const liveContextCopy =
-    liveContext === 'apk'
-      ? 'You are viewing this page inside the Guardr Android app.'
-      : liveContext === 'pwa'
-        ? 'You are viewing this page from your Guardr home-screen shortcut (auto-updating web app).'
-        : 'You are viewing this page in your browser. Install options are below.';
+    : isNativeView
+      ? apkNeedsUpdate
+        ? `Install update (v${manifest?.apkVersion ?? ''})`
+        : `Reinstall (v${manifest?.apkVersion ?? ''})`
+      : apkNeedsUpdate
+        ? `Download update (v${manifest?.apkVersion ?? ''})`
+        : `Get ${INSTALL_APK_TITLE} (v${manifest?.apkVersion ?? ''})`;
 
   return (
     <div className="page-shell min-h-screen bg-brand-bg text-brand-text">
@@ -111,19 +115,18 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
         <section className="wf-list-card p-5 space-y-3">
           <Logo size={48} className="text-brand-primary" />
           <div>
-            <h1 className="text-2xl font-black tracking-tight">Install Guardr</h1>
+            <h1 className="text-2xl font-black tracking-tight">{downloadScreenTitle(liveContext)}</h1>
             <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
-              Choose how you want Guardr on your phone. This page checks what you have installed and
-              whether an APK update is available.
+              {downloadScreenIntro(liveContext)}
             </p>
           </div>
           <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/10 px-3 py-2.5 text-sm text-brand-text">
-            {loading ? 'Checking your device…' : liveContextCopy}
+            {loading ? 'Checking your device…' : downloadLiveContextMessage(liveContext)}
           </div>
           {manifest ? (
             <p className="text-xs text-brand-text-muted">
-              Latest APK: v{manifest.apkVersion} (build {manifest.apkVersionCode}) · Web: v
-              {manifest.webVersion}
+              Latest {INSTALL_APK_TITLE}: v{manifest.apkVersion} (build {manifest.apkVersionCode}) ·{' '}
+              {INSTALL_PWA_TITLE}: v{manifest.webVersion}
             </p>
           ) : null}
         </section>
@@ -131,26 +134,30 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
         <section className="wf-list-card p-5 space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold">Android app (APK)</h2>
-              <p className="text-xs text-brand-text-muted mt-1">Recommended for guards in the field</p>
+              <h2 className="text-base font-bold">{INSTALL_APK_TITLE}</h2>
+              <p className="text-xs text-brand-text-muted mt-1">
+                {isNativeView
+                  ? 'Full Android app with native notifications and permissions'
+                  : 'Recommended for guards in the field'}
+              </p>
             </div>
             {!loading && (
-              <StatusBadge
-                kind={apkInstalled ? (apkNeedsUpdate ? 'warn' : 'ok') : 'muted'}
-              >
-                {apkInstalled ? (apkNeedsUpdate ? 'Update available' : 'Up to date') : 'Not detected'}
+              <StatusBadge kind={apkInstalled ? (apkNeedsUpdate ? 'warn' : 'ok') : 'muted'}>
+                {apkInstalled ? (apkNeedsUpdate ? 'Update available' : 'Up to date') : 'Not installed'}
               </StatusBadge>
             )}
           </div>
 
           <p className="text-sm text-brand-text-muted leading-relaxed">
             {loading
-              ? 'Checking your installed APK version…'
+              ? 'Checking your installed version…'
               : !apkInstalled
-                ? 'No APK install recorded yet. Download below or open the Guardr app once while online.'
+                ? isNativeView
+                  ? 'Open Guardr while online so we can read your installed version.'
+                  : 'Download the full Android app for the best field experience.'
                 : apkNeedsUpdate
-                  ? `Installed APK v${installedApkVersion} · Latest v${manifest?.apkVersion}. Install again to update (your data stays in your account).`
-                  : `Installed APK v${installedApkVersion} matches the latest release.`}
+                  ? `Installed v${installedApkVersion} · Latest v${manifest?.apkVersion}. Tap install and confirm when Android prompts you.`
+                  : `Installed v${installedApkVersion} matches the latest release.`}
           </p>
 
           <button
@@ -167,7 +174,19 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
             <span>{apkButtonLabel}</span>
           </button>
 
-          {manifest?.apkDirectUrl ? (
+          {isNativeView ? (
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              disabled={loading || installing}
+              className="app-button-outline app-btn-sm inline-flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden />
+              Check again
+            </button>
+          ) : null}
+
+          {!isNativeView && manifest?.apkDirectUrl ? (
             <p className="text-xs text-brand-text-muted break-all">
               Direct link:{' '}
               <a href={manifest.apkDirectUrl} className="text-emerald-500 font-medium">
@@ -176,39 +195,41 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
             </p>
           ) : null}
 
-          <div className="rounded-xl border border-brand-border bg-brand-bg-sec/50 p-4 flex flex-col items-center gap-3">
-            <img
-              src="/download/apk-qr.png"
-              alt="Scan to download the Guardr Android app"
-              className="w-44 h-44 rounded-xl bg-white p-2"
-            />
-            <p className="text-xs text-brand-text-muted text-center inline-flex items-center gap-1.5">
-              <QrCode className="w-3.5 h-3.5" aria-hidden />
-              Scan to download on another device
-            </p>
-          </div>
+          {!isNativeView ? (
+            <div className="rounded-xl border border-brand-border bg-brand-bg-sec/50 p-4 flex flex-col items-center gap-3">
+              <img
+                src="/download/apk-qr.png"
+                alt={`Scan to download ${INSTALL_APK_TITLE}`}
+                className="w-44 h-44 rounded-xl bg-white p-2"
+              />
+              <p className="text-xs text-brand-text-muted text-center inline-flex items-center gap-1.5">
+                <QrCode className="w-3.5 h-3.5" aria-hidden />
+                Scan to download on another device
+              </p>
+            </div>
+          ) : null}
         </section>
 
-        <section className="wf-list-card p-5 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-bold">Save to Home Screen</h2>
-              <p className="text-xs text-brand-text-muted mt-1">Web app shortcut</p>
+        {isBrowserView ? (
+          <section className="wf-list-card p-5 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold">{INSTALL_PWA_TITLE}</h2>
+                <p className="text-xs text-brand-text-muted mt-1">Home-screen shortcut · auto-updates</p>
+              </div>
+              {!loading && (
+                <StatusBadge kind={pwaActive ? 'ok' : 'muted'}>
+                  {pwaActive ? 'Installed' : 'Not installed'}
+                </StatusBadge>
+              )}
             </div>
-            {!loading && (
-              <StatusBadge kind={pwaActive ? 'ok' : 'muted'}>
-                {pwaActive ? 'Optional — auto-updates' : 'Not installed'}
-              </StatusBadge>
-            )}
-          </div>
 
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            {pwaActive
-              ? 'Your home-screen version updates automatically when guardr.co updates — no reinstall needed.'
-              : 'Open guardr.co in Chrome, then use Add to Home screen / Install app for quick access without an APK.'}
-          </p>
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              {pwaActive
+                ? 'Your lite home-screen version updates automatically when guardr.co updates.'
+                : 'Open guardr.co in Chrome, then use Add to Home screen / Install app for quick lite access.'}
+            </p>
 
-          {!canInstallApkInApp() ? (
             <button
               type="button"
               onClick={() => void promptInstall()}
@@ -217,46 +238,48 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
               <Smartphone className="w-4 h-4" aria-hidden />
               <span>
                 {hasDeferredPrompt
-                  ? 'Install web app'
+                  ? `Install ${INSTALL_PWA_TITLE}`
                   : isIOS
                     ? 'Show iOS install guide'
-                    : 'Install web app'}
+                    : `Install ${INSTALL_PWA_TITLE}`}
               </span>
             </button>
-          ) : null}
-        </section>
+          </section>
+        ) : null}
 
-        <section className="wf-list-card p-5 space-y-3">
-          <h2 className="text-base font-bold">Which should I use?</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-brand-text-muted border-b border-brand-border">
-                  <th className="py-2 pr-3 font-semibold">Feature</th>
-                  <th className="py-2 pr-3 font-semibold">APK</th>
-                  <th className="py-2 font-semibold">Home screen</th>
-                </tr>
-              </thead>
-              <tbody className="text-brand-text-muted">
-                <tr className="border-b border-brand-border/70">
-                  <td className="py-2 pr-3">Updates</td>
-                  <td className="py-2 pr-3">Manual reinstall</td>
-                  <td className="py-2">Automatic</td>
-                </tr>
-                <tr className="border-b border-brand-border/70">
-                  <td className="py-2 pr-3">Push alerts</td>
-                  <td className="py-2 pr-3">Strongest (FCM)</td>
-                  <td className="py-2">Web push</td>
-                </tr>
-                <tr>
-                  <td className="py-2 pr-3">Best for</td>
-                  <td className="py-2 pr-3">Guards in the field</td>
-                  <td className="py-2">Quick access, clients, staff</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+        {isBrowserView ? (
+          <section className="wf-list-card p-5 space-y-3">
+            <h2 className="text-base font-bold">Lite vs full</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-brand-text-muted border-b border-brand-border">
+                    <th className="py-2 pr-3 font-semibold">Feature</th>
+                    <th className="py-2 pr-3 font-semibold">{INSTALL_APK_TITLE}</th>
+                    <th className="py-2 font-semibold">{INSTALL_PWA_TITLE}</th>
+                  </tr>
+                </thead>
+                <tbody className="text-brand-text-muted">
+                  <tr className="border-b border-brand-border/70">
+                    <td className="py-2 pr-3">Updates</td>
+                    <td className="py-2 pr-3">Manual reinstall</td>
+                    <td className="py-2">Automatic</td>
+                  </tr>
+                  <tr className="border-b border-brand-border/70">
+                    <td className="py-2 pr-3">Push alerts</td>
+                    <td className="py-2 pr-3">Strongest (FCM)</td>
+                    <td className="py-2">Web push</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-3">Best for</td>
+                    <td className="py-2 pr-3">Guards in the field</td>
+                    <td className="py-2">Quick access, clients, staff</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         {error ? (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
@@ -271,9 +294,11 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
           </div>
         ) : null}
 
-        <a href={SITE_URL} className="inline-flex text-sm text-brand-primary font-medium">
-          Open Guardr in browser
-        </a>
+        {!isNativeView ? (
+          <a href={SITE_URL} className="inline-flex text-sm text-brand-primary font-medium">
+            Open Guardr in browser
+          </a>
+        ) : null}
       </main>
 
       <AnimatePresence>

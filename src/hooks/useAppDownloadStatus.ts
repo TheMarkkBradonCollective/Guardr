@@ -9,8 +9,9 @@ import {
 import { getInstalledAppVersion } from '../lib/platform/apkUpdate';
 import { isAndroidWebView, readInstallState, type InstallState } from '../lib/platform/installRegistry';
 import { isNativeShell, isStandaloneDisplay } from '../lib/platform/device';
+import type { DownloadLiveContext } from '../lib/installSurfaceCopy';
 
-export type DownloadLiveContext = 'apk' | 'pwa' | 'browser';
+export type { DownloadLiveContext };
 
 export interface AppDownloadStatus {
   loading: boolean;

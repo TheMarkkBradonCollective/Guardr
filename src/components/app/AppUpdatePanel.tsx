@@ -5,6 +5,7 @@ import { useDevice } from '../../lib/platform';
 import { appVersionLabel } from '../../lib/appVersion';
 import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUpdate';
 import { showAppAlert } from '../ui/AppConfirm';
+import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 
 interface AppUpdatePanelProps {
   onOpenDownload?: () => void;
@@ -50,7 +51,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
       void showAppAlert({
         title: 'Update failed',
         message,
-          tone: 'warning',
+        tone: 'warning',
       });
     } finally {
       setInstalling(false);
@@ -66,6 +67,8 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
             <p className="text-sm text-brand-text-muted">
               {appVersionLabel()}
               {installedVersion ? ` · Installed v${installedVersion}` : ''}
+              {' · '}
+              {INSTALL_APK_TITLE}
             </p>
 
             {checking ? (
@@ -76,10 +79,9 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
             ) : updateAvailable && latestVersion ? (
               <div className="space-y-3">
                 <p className="text-sm text-brand-text">
-                  A newer APK is available
-                  {' '}
-                  <span className="font-semibold">v{latestVersion}</span>.
-                  Tap install and confirm when Android prompts you.
+                  A newer version is available:{' '}
+                  <span className="font-semibold">v{latestVersion}</span>. Tap install and confirm when
+                  Android prompts you.
                 </p>
                 <button
                   type="button"
@@ -97,33 +99,53 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
               </div>
             ) : (
               <p className="text-sm text-brand-text-muted">
-                You are on the latest APK
+                You are on the latest version
                 {latestVersion ? ` (v${latestVersion})` : ''}.
               </p>
             )}
 
             {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void refreshStatus()}
+              disabled={checking || installing}
+              className="app-button-outline app-btn-sm inline-flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden />
+              Check again
+            </button>
+          </div>
+        </AppSettingsSection>
+      </>
+    );
+  }
+
+  if (shellKind === 'pwa') {
+    return (
+      <>
+        <AppSettingsHead>{INSTALL_APK_TITLE}</AppSettingsHead>
+        <AppSettingsSection>
+          <div className="space-y-3">
+            <p className="text-sm text-brand-text-muted">
+              {appVersionLabel()}
+              {' · '}
+              {INSTALL_PWA_TITLE} (auto-updates)
+            </p>
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              You are on the lite home-screen version. Upgrade to {INSTALL_APK_TITLE} for stronger
+              notifications, GPS, and camera permissions.
+            </p>
+            {onOpenDownload ? (
               <button
                 type="button"
-                onClick={() => void refreshStatus()}
-                disabled={checking || installing}
-                className="app-button-outline app-btn-sm inline-flex items-center gap-1.5"
+                onClick={onOpenDownload}
+                className="app-button-primary app-btn-md w-full sm:w-auto inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-500"
               >
-                <RefreshCw className="w-3.5 h-3.5" aria-hidden />
-                Check again
+                <Download className="w-4 h-4" aria-hidden />
+                Get {INSTALL_APK_TITLE}
               </button>
-              {onOpenDownload ? (
-                <button
-                  type="button"
-                  onClick={onOpenDownload}
-                  className="app-button-outline app-btn-sm text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
-                >
-                  Install options
-                </button>
-              ) : null}
-            </div>
+            ) : null}
           </div>
         </AppSettingsSection>
       </>
@@ -132,18 +154,17 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
 
   return (
     <>
-      <AppSettingsHead>App install</AppSettingsHead>
+      <AppSettingsHead>Install Guardr</AppSettingsHead>
       <AppSettingsSection>
         <div className="space-y-3">
           <p className="text-sm text-brand-text-muted">
             {appVersionLabel()}
             {' · '}
-            {shellKind === 'pwa' ? 'Installed web app (auto-updates)' : 'Web browser'}
+            Web browser
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            {shellKind === 'pwa'
-              ? 'Your home-screen shortcut updates automatically when guardr.co updates. Open Install options to compare with the Android APK.'
-              : 'Install Guardr as an Android APK or add it to your home screen from Install options.'}
+            Install {INSTALL_PWA_TITLE} for quick access, or {INSTALL_APK_TITLE} for guards in the
+            field.
           </p>
           {onOpenDownload ? (
             <button
