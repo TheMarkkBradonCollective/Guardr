@@ -1,13 +1,71 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Monday, July 20, 2026  
+**Last updated:** Tuesday, July 21, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.85**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.86**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, July 21, 2026 — /updateit → v1.0.86
+
+**Auth paths**
+- Role picker includes **Staff** for log in / sign up; staff sign-up creates pending Support awaiting Director
+- Removed Sign in / Sign up segmented toggle — mode comes from the role picker
+- Sign-in enforces path matching (guard ≠ staff ≠ client) with clear redirect copy
+- Role choice screen shows **Back to Home** on installed app
+
+**Staff product**
+- Cities / markets page renamed **Service Areas** (Operations nav group kept)
+- New **Locations** tab for shared job-site QC — reusable across jobs/clients when the address matches
+- Solid brand black/white surfaces on staff list pages (no grey tab/search/inbox washes)
+- Welcome splash: Sign in / Sign up spacing; Uber Direct restyle earlier in the day
+
+**Staff roles / permissions**
+- New **Support** role under Moderator
+- Permissions role tabs use Ops-style segmented control; **Job posting** under **Clients**
+
+**PR cleanup**
+- No open PRs remaining (merged #766–#777 in this cycle)
+
+**Release:** **v1.0.86** (build **186**) — web + PWA cache bust (`guardr-cache-v1-0-86`) + CI FCM APK
+
+**Test coverage:** 455 unit tests, lint and production build clean.
+
+**Supabase:** run if missing on production:
+
+```sql
+CREATE TABLE IF NOT EXISTS job_locations (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'archived')),
+  site_instructions TEXT,
+  parking_instructions TEXT,
+  access_instructions TEXT,
+  place_key TEXT NOT NULL,
+  created_by_client_id TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_job_locations_place_key ON job_locations(place_key);
+CREATE INDEX IF NOT EXISTS idx_job_locations_status ON job_locations(status);
+ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS shared_location_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS job_location_id TEXT;
+```
+
+Also already reflected in `supabase/complete_schema_setup.sql`. Realtime publication includes `job_locations`.
 
 ---
 

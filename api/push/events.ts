@@ -1216,7 +1216,7 @@ async function buildEventDispatchPayloads(db, event) {
 }
 
 // api/_push/eventAuth.ts
-var STAFF_ROLES = /* @__PURE__ */ new Set(["moderator", "administrator", "director", "owner", "staff", "auditor"]);
+var STAFF_ROLES = /* @__PURE__ */ new Set(["support", "moderator", "administrator", "manager", "director", "owner", "staff", "auditor"]);
 function isStaffSession(session) {
   return STAFF_ROLES.has(session.platformRole) || STAFF_ROLES.has(session.role);
 }
@@ -1424,6 +1424,7 @@ var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
   "manager",
   "administrator",
   "moderator",
+  "support",
   "staff",
   "auditor"
 ]);
@@ -1442,6 +1443,8 @@ function resolvePlatformRole(input) {
         return "administrator";
       case "Moderator":
         return "moderator";
+      case "Support":
+        return "support";
     }
   }
   if (input.legacyRole === "auditor") return "moderator";

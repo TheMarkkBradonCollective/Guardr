@@ -33,6 +33,7 @@ var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
   "manager",
   "administrator",
   "moderator",
+  "support",
   "staff",
   "auditor"
 ]);
@@ -51,6 +52,8 @@ function resolvePlatformRole(input) {
         return "administrator";
       case "Moderator":
         return "moderator";
+      case "Support":
+        return "support";
     }
   }
   if (input.legacyRole === "auditor") return "moderator";
