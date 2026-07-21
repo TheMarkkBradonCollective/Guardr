@@ -6,12 +6,14 @@ import {
   buildStaffApprovalsFeed,
   CREDENTIAL_PENDING_UPLOAD_LABEL,
   isCredentialFeedItemAwaitingStaffReview,
+  type ApprovalFeedItem,
 } from './staffApprovalsFeed';
 import {
   isCredentialFeedItemOpen,
   isCredentialFeedItemPendingUpload,
   isCredentialFeedItemVerified,
   matchesApplicationKindFilter,
+  matchesApplicationStatusFilter,
   matchesClientRosterFilter,
   matchesCredentialStatusFilter,
   matchesGuardRosterFilter,
@@ -96,6 +98,24 @@ describe('staffListFilters', () => {
     assert.equal(matchesApplicationKindFilter('guard', 'all'), true);
     assert.equal(matchesApplicationKindFilter('guard', 'guard'), true);
     assert.equal(matchesApplicationKindFilter('guard', 'client'), false);
+  });
+
+  it('filters application status all / pending / approved / denied', () => {
+    const pending = { id: 'a-1', status: 'pending' } as ApprovalFeedItem;
+    const approved = { id: 'a-2', status: 'approved' } as ApprovalFeedItem;
+    const denied = { id: 'a-3', status: 'denied' } as ApprovalFeedItem;
+    const emptyGuards: SecurityGuard[] = [];
+    const emptyClients: Client[] = [];
+
+    assert.equal(matchesApplicationStatusFilter(pending, 'all', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(approved, 'all', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(denied, 'all', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(pending, 'pending', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(approved, 'pending', emptyGuards, emptyClients), false);
+    assert.equal(matchesApplicationStatusFilter(approved, 'approved', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(pending, 'approved', emptyGuards, emptyClients), false);
+    assert.equal(matchesApplicationStatusFilter(denied, 'denied', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(approved, 'denied', emptyGuards, emptyClients), false);
   });
 
   it('filters guard roster tabs', () => {

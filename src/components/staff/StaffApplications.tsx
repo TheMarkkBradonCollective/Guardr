@@ -189,8 +189,8 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('pending');
-  const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
+  const [kindFilter, setKindFilter] = useState<'guard' | 'client'>('guard');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
     if (initialGuardId) return `guard:${initialGuardId}`;
@@ -248,8 +248,10 @@ export function StaffApplications({
     (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
 
   const visibleEntries = useMemo(() => {
+    // "All" shows every application. Pending / Approved also respect Guard vs Client.
+    const kindScope: ApplicationKindFilter = statusFilter === 'all' ? 'all' : kindFilter;
     return applicationEntries
-      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
+      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindScope))
       .filter((entry) =>
         matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
       )
@@ -398,16 +400,21 @@ export function StaffApplications({
           tabs={[
             { id: 'all', label: 'All' },
             { id: 'pending', label: 'Pending' },
+            { id: 'approved', label: 'Approved' },
+            { id: 'denied', label: 'Denied' },
           ]}
         />
         <StaffListFilterTabs
           aria-label="Application type"
-          activeId={kindFilter}
-          onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+          activeId={statusFilter === 'all' ? '__all__' : kindFilter}
+          onChange={(id) => {
+            if (id === '__all__') return;
+            setKindFilter(id as 'guard' | 'client');
+            if (statusFilter === 'all') setStatusFilter('pending');
+          }}
           tabs={[
-            { id: 'all', label: 'All types' },
-            { id: 'guard', label: 'Guards' },
-            { id: 'client', label: 'Clients' },
+            { id: 'guard', label: 'Guard' },
+            { id: 'client', label: 'Client' },
           ]}
         />
       </div>
@@ -422,7 +429,11 @@ export function StaffApplications({
             ? 'No applications match your search.'
             : statusFilter === 'pending'
               ? 'No account applications waiting for review.'
-              : 'No account applications on file yet.'}
+              : statusFilter === 'approved'
+                ? 'No approved applications in this view.'
+                : statusFilter === 'denied'
+                  ? 'No denied applications in this view.'
+                  : 'No account applications on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout

@@ -178,7 +178,13 @@ function accountSignupApplicationItems(
 }
 
 function belongsInApplicationFeed(item: ApprovalFeedItem): boolean {
-  return item.status === 'pending' || item.status === 'in_review' || item.status === 'approved';
+  return (
+    item.status === 'pending' ||
+    item.status === 'in_review' ||
+    item.status === 'approved' ||
+    item.status === 'denied' ||
+    item.status === 'rejected'
+  );
 }
 
 /** Applications section — account intake from pending sign-up through approved (pre-marketplace). */
