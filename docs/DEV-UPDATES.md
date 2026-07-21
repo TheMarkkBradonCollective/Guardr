@@ -571,7 +571,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - **Stats** tab (desktop sidebar) — guard performance breakdown, tier % progress bars, compare up to four guards, violations rollup
 
 **Permissions & agreements (#594, #596)**
-- **Permissions** sidebar page (Director+) — job approval rules and per-role staff permission toggles
+- **Permissions** sidebar page (Manager+) — per-role staff permission toggles; job posting approval rules live under **Clients → Job posting**
 - Marketplace agreement checkboxes enlarged for better tap targets
 
 **Multi-surface views (#597)**

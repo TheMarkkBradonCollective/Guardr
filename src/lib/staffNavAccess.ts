@@ -40,7 +40,7 @@ export function getStaffNavAccessNotice(
     return {
       title: 'Manager access required',
       message:
-        'Permissions and approval rules are limited to Manager roles and above. Ask your Director if you need access.',
+        'Staff role permissions are limited to Manager roles and above. Ask your Director if you need access.',
     };
   }
   if (CITIES_SECTIONS.has(section) && !flags.showCities) {
