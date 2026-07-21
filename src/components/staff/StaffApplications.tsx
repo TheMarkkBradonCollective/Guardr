@@ -447,7 +447,9 @@ export function StaffApplications({
           activeId={kindFilter === 'all' ? '__none__' : kindFilter}
           onChange={(id) => {
             if (id === '__none__') return;
-            setKindFilter(id as ApplicationKindFilter);
+            setKindFilter((current) =>
+              current === id ? 'all' : (id as ApplicationKindFilter)
+            );
           }}
           tabs={[
             { id: 'client', label: 'Client' },
@@ -456,19 +458,13 @@ export function StaffApplications({
           ]}
         />
         <StaffListFilterTabs
-          aria-label="Show all application statuses"
-          activeId={statusFilter === 'all' ? 'all' : '__none__'}
-          onChange={(id) => {
-            if (id === 'all') setStatusFilter('all');
-          }}
-          tabs={[{ id: 'all', label: 'All' }]}
-        />
-        <StaffListFilterTabs
           aria-label="Application status"
           activeId={statusFilter === 'all' ? '__none__' : statusFilter}
           onChange={(id) => {
             if (id === '__none__') return;
-            setStatusFilter(id as ApplicationStatusFilter);
+            setStatusFilter((current) =>
+              current === id ? 'all' : (id as ApplicationStatusFilter)
+            );
           }}
           tabs={[
             { id: 'pending', label: 'Pending' },
