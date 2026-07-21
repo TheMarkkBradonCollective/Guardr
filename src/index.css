@@ -20588,6 +20588,55 @@ body[data-form-factor="tablet"] .uber-app-shell {
   min-width: 0;
 }
 
+/* Account control color coding — green / yellow / red */
+.uber-app-shell .staff-detail-actions .staff-action-btn--ok,
+.staff-detail-actions .staff-action-btn--ok {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--ok:hover:not(:disabled),
+.staff-detail-actions .staff-action-btn--ok:hover:not(:disabled) {
+  background-color: #166534 !important;
+  border-color: #166534 !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--warn,
+.staff-detail-actions .staff-action-btn--warn {
+  background-color: #ca8a04 !important;
+  border-color: #ca8a04 !important;
+  color: #ffffff !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--warn:hover:not(:disabled),
+.staff-detail-actions .staff-action-btn--warn:hover:not(:disabled) {
+  background-color: #a16207 !important;
+  border-color: #a16207 !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--danger,
+.staff-detail-actions .staff-action-btn--danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--danger:hover:not(:disabled),
+.staff-detail-actions .staff-action-btn--danger:hover:not(:disabled) {
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+.uber-app-shell .staff-detail-actions .staff-action-btn--ok:disabled,
+.uber-app-shell .staff-detail-actions .staff-action-btn--warn:disabled,
+.uber-app-shell .staff-detail-actions .staff-action-btn--danger:disabled,
+.staff-detail-actions .staff-action-btn--ok:disabled,
+.staff-detail-actions .staff-action-btn--warn:disabled,
+.staff-detail-actions .staff-action-btn--danger:disabled {
+  opacity: 0.45 !important;
+}
+
 .uber-app-shell .app-form-section,
 .uber-app-shell .staff-credentials-panel .app-form-section {
   border: none !important;
@@ -20629,6 +20678,7 @@ body[data-form-factor="tablet"] .uber-app-shell {
 
 .uber-app-shell .staff-detail-toolbar {
   padding-inline: 0 !important;
+  border-bottom: none !important;
 }
 
 .uber-app-shell .staff-guard-performance-toolbar {

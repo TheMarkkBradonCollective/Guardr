@@ -637,6 +637,7 @@ export function StaffGuardDetailPanel({
                 <AppButton
                   variant="primary"
                   size="sm"
+                  className="staff-action-btn--ok"
                   onClick={() => {
                     if (onOpenGuardApplication) {
                       onOpenGuardApplication(guard.id);
@@ -661,6 +662,7 @@ export function StaffGuardDetailPanel({
                   <AppButton
                     variant="danger"
                     size="sm"
+                    className="staff-action-btn--danger"
                     onClick={() => void handleRevokeApplication()}
                     disabled={revoking}
                   >
@@ -671,6 +673,7 @@ export function StaffGuardDetailPanel({
                 <AppButton
                   variant="danger"
                   size="sm"
+                  className="staff-action-btn--danger"
                   onClick={() => void handleDeleteGuard()}
                   disabled={deleting}
                 >
@@ -678,27 +681,52 @@ export function StaffGuardDetailPanel({
                 </AppButton>
               )}
               {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
-                <AppButton variant="outline" size="sm" onClick={() => void handleUpdateUserStatus('suspended')}>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  className="staff-action-btn--warn"
+                  onClick={() => void handleUpdateUserStatus('suspended')}
+                >
                   Suspend
                 </AppButton>
               )}
               {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
-                <AppButton variant="danger" size="sm" onClick={() => void handleUpdateUserStatus('blocked')}>
+                <AppButton
+                  variant="danger"
+                  size="sm"
+                  className="staff-action-btn--danger"
+                  onClick={() => void handleUpdateUserStatus('blocked')}
+                >
                   Flag / Block
                 </AppButton>
               )}
               {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
-                <AppButton variant="primary" size="sm" onClick={() => void handleUpdateUserStatus('active')}>
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  className="staff-action-btn--ok"
+                  onClick={() => void handleUpdateUserStatus('active')}
+                >
                   Restore account
                 </AppButton>
               )}
               {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <AppButton variant="outline" size="sm" onClick={() => void handleResetAuditFailures()}>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  className="staff-action-btn--warn"
+                  onClick={() => void handleResetAuditFailures()}
+                >
                   Clear violations ({guard.failedAudits}/3)
                 </AppButton>
               )}
               {onUpdateBackgroundChecked && (
-                <AppButton variant="outline" size="sm" onClick={() => void handleBackgroundCheckToggle()}>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  className={guard.backgroundChecked ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
+                  onClick={() => void handleBackgroundCheckToggle()}
+                >
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </AppButton>
               )}
@@ -706,8 +734,8 @@ export function StaffGuardDetailPanel({
                 <AppButton
                   variant="outline"
                   size="sm"
+                  className={guard.trusted ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
                   onClick={() => void handleToggleTrusted()}
-                  className={guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}
                   title={
                     guard.trusted
                       ? 'Remove trusted status — guard will require Guardr applicant review'
@@ -721,6 +749,7 @@ export function StaffGuardDetailPanel({
                 <AppButton
                   variant="outline"
                   size="sm"
+                  className="staff-action-btn--ok"
                   disabled
                   title="Guard must be approved and active before they can be marked as trusted."
                 >
@@ -731,6 +760,7 @@ export function StaffGuardDetailPanel({
                 <AppButton
                   variant="outline"
                   size="sm"
+                  className="staff-action-btn--ok"
                   onClick={() => void handleMakeCrewLead()}
                   title={
                     guard.trusted
