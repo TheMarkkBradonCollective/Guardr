@@ -60,12 +60,41 @@ export function buildAutoExpiryUpdateRequestReason(
 export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
   'Your guard application was not approved. Contact Guardr support if you have questions.';
 
+export const GUARD_APPLICATION_REVISION_DEFAULT_REASON =
+  'Staff needs updates to your application before it can stay approved. Please review the note and resubmit.';
+
+export const CLIENT_APPLICATION_REVISION_DEFAULT_REASON =
+  'Staff needs updates to your client application before it can stay approved. Please review and resubmit.';
+
 /** Full application rejection — blocks the guard account. Returns null if cancelled. */
 export async function promptRejectGuardApplicationNote(): Promise<string | null> {
   return promptRevokeGuardApplicationNote();
 }
 
-/** Revoke or deny a guard application — blocks the guard account. Returns null if cancelled. */
+/** Deny a pending guard application — blocks the account. Returns null if cancelled. */
+export async function promptDenyGuardApplicationNote(): Promise<string | null> {
+  const confirmed = await showAppConfirm({
+    title: 'Deny guard application?',
+    message:
+      'They will be blocked from the platform and cannot resubmit credentials or get their profile approved.',
+    confirmLabel: 'Deny application',
+    cancelLabel: 'Keep reviewing',
+    tone: 'danger',
+  });
+  if (!confirmed) return null;
+
+  const reason = await showAppPrompt({
+    title: 'Denial reason',
+    message: 'This message is shown to the guard on their profile.',
+    defaultValue: GUARD_APPLICATION_REJECT_DEFAULT_REASON,
+    multiline: true,
+    confirmLabel: 'Save reason',
+  });
+  if (reason === null) return null;
+  return reason.trim();
+}
+
+/** Revoke an approved/active guard application — blocks the guard account. Returns null if cancelled. */
 export async function promptRevokeGuardApplicationNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
     title: 'Revoke guard application?',
@@ -83,6 +112,52 @@ export async function promptRevokeGuardApplicationNote(): Promise<string | null>
     defaultValue: GUARD_APPLICATION_REJECT_DEFAULT_REASON,
     multiline: true,
     confirmLabel: 'Save reason',
+  });
+  if (reason === null) return null;
+  return reason.trim();
+}
+
+/** Soft reopen — send an approved/active application back to pending for edits. Returns null if cancelled. */
+export async function promptRequestGuardApplicationRevisionNote(): Promise<string | null> {
+  const confirmed = await showAppConfirm({
+    title: 'Request application revision?',
+    message:
+      'Their approval will be withdrawn and the application returns to Pending so they can fix issues and staff can re-review.',
+    confirmLabel: 'Request revision',
+    cancelLabel: 'Keep approved',
+    tone: 'danger',
+  });
+  if (!confirmed) return null;
+
+  const reason = await showAppPrompt({
+    title: 'What needs revision?',
+    message: 'This note is shown to the guard with the revision request.',
+    defaultValue: GUARD_APPLICATION_REVISION_DEFAULT_REASON,
+    multiline: true,
+    confirmLabel: 'Send request',
+  });
+  if (reason === null) return null;
+  return reason.trim();
+}
+
+/** Soft reopen — send an approved client application back to pending. Returns null if cancelled. */
+export async function promptRequestClientApplicationRevisionNote(): Promise<string | null> {
+  const confirmed = await showAppConfirm({
+    title: 'Request client application revision?',
+    message:
+      'Their approval will be withdrawn and the application returns to Pending so they can fix issues and staff can re-review.',
+    confirmLabel: 'Request revision',
+    cancelLabel: 'Keep approved',
+    tone: 'danger',
+  });
+  if (!confirmed) return null;
+
+  const reason = await showAppPrompt({
+    title: 'What needs revision?',
+    message: 'This note is shown to the client with the revision request.',
+    defaultValue: CLIENT_APPLICATION_REVISION_DEFAULT_REASON,
+    multiline: true,
+    confirmLabel: 'Send request',
   });
   if (reason === null) return null;
   return reason.trim();

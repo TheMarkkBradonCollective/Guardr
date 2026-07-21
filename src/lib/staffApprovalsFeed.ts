@@ -46,6 +46,13 @@ export interface ApprovalFeedItem {
   reviewedAt?: string;
   reviewedByName?: string;
   reviewedByEmail?: string;
+  /** Account application approval (profile), distinct from marketplace activation. */
+  approvedAt?: string;
+  approvedByName?: string;
+  approvedByEmail?: string;
+  activatedAt?: string;
+  activatedByName?: string;
+  activatedByEmail?: string;
   sortKey: number;
 }
 
@@ -192,12 +199,13 @@ function belongsInApplicationFeed(item: ApprovalFeedItem): boolean {
     item.status === 'pending' ||
     item.status === 'in_review' ||
     item.status === 'approved' ||
+    item.status === 'active' ||
     item.status === 'denied' ||
     item.status === 'rejected'
   );
 }
 
-/** Applications section — account intake from pending sign-up through approved (pre-marketplace). */
+/** Applications section — account intake plus approved / marketplace-active for staff audit. */
 export function buildApplicationFeed(
   guards: SecurityGuard[],
   clients: Client[],
@@ -394,7 +402,14 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
       const active = userStatus === 'active';
       const pending = userStatus === 'pending';
       const activationAudit = latestAudit(auditLog, guard.id, ['guard_activated']);
-      const profileAudit = latestAudit(auditLog, guard.id, ['guard_approved']);
+      const profileAudit = latestAudit(auditLog, guard.id, [
+        'guard_approved',
+        'guard_application_revision_requested',
+        'guard_application_revoked',
+      ]);
+      const approvalAudit = latestAudit(auditLog, guard.id, ['guard_approved']);
+      const activationActor = actorLabel(activationAudit);
+      const approvalActor = actorLabel(approvalAudit);
       const actor = actorLabel(active ? activationAudit ?? profileAudit : profileAudit);
 
       let status: ApprovalFeedStatus = 'pending';
@@ -428,12 +443,18 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
         submittedAt: guard.idVerificationSubmittedAt,
         reviewedAt:
           active
-            ? activationAudit?.createdAt ?? guard.idVerificationReviewedAt
+            ? activationAudit?.createdAt ?? approvalAudit?.createdAt ?? guard.idVerificationReviewedAt
             : approvedProfile
-              ? profileAudit?.createdAt ?? guard.idVerificationReviewedAt
-              : guard.idVerificationReviewedAt,
+              ? approvalAudit?.createdAt ?? guard.idVerificationReviewedAt
+              : profileAudit?.createdAt ?? guard.idVerificationReviewedAt,
         reviewedByName: actor.name,
         reviewedByEmail: actor.email,
+        approvedAt: approvalActor.at,
+        approvedByName: approvalActor.name,
+        approvedByEmail: approvalActor.email,
+        activatedAt: activationActor.at,
+        activatedByName: activationActor.name,
+        activatedByEmail: activationActor.email,
         sortKey: new Date(
           actor.at ?? guard.idVerificationReviewedAt ?? guard.idVerificationSubmittedAt ?? 0
         ).getTime() || Date.now(),
@@ -488,8 +509,14 @@ function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): Appro
     .filter(belongsInClientApplicationFeed)
     .map((client) => {
       const accountStatus = getClientAccountStatus(client);
-      const audit = latestAudit(auditLog, client.id, ['client_approved']);
+      const audit = latestAudit(auditLog, client.id, [
+        'client_approved',
+        'client_application_revision_requested',
+        'client_application_revoked',
+      ]);
+      const approvalAudit = latestAudit(auditLog, client.id, ['client_approved']);
       const actor = actorLabel(audit);
+      const approvalActor = actorLabel(approvalAudit);
       const status: ApprovalFeedStatus =
         accountStatus === 'pending'
           ? 'pending'
@@ -513,6 +540,9 @@ function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): Appro
         reviewedAt: actor.at,
         reviewedByName: actor.name,
         reviewedByEmail: actor.email,
+        approvedAt: approvalActor.at,
+        approvedByName: approvalActor.name,
+        approvedByEmail: approvalActor.email,
         sortKey: new Date(actor.at ?? client.createdAt ?? 0).getTime() || Date.now(),
       };
     });

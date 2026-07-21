@@ -48,6 +48,8 @@ interface StaffApplicationsProps {
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
+  onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
+  onRequestClientApplicationRevision?: (clientId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
@@ -139,10 +141,12 @@ function ApplicationFeedRow({
 function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
   if (!item) return null;
 
-  const reviewer = item.reviewedByName || item.reviewedByEmail;
   const pending = item.status === 'pending' || item.status === 'in_review';
   const approved = item.status === 'approved' || item.status === 'active';
-  const denied = item.status === 'denied';
+  const denied = item.status === 'denied' || item.status === 'rejected';
+  const approvedBy = item.approvedByEmail || item.approvedByName;
+  const activatedBy = item.activatedByEmail || item.activatedByName;
+  const fallbackReviewer = item.reviewedByEmail || item.reviewedByName;
 
   return (
     <div className="app-list-subrow text-xs space-y-2 !pt-0">
@@ -156,24 +160,48 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
           <span className="text-sm">{formatApprovalTimestamp(item.submittedAt)}</span>
         </p>
       )}
-      {item.reviewedAt && !pending && (
+      {(item.approvedAt || (approved && item.reviewedAt && !item.activatedAt)) && (
         <p>
-          <span className="detail-field-label !mb-0">
-            {item.status === 'active' ? 'Activated' : approved ? 'Approved' : denied ? 'Reviewed' : 'Reviewed'}
+          <span className="detail-field-label !mb-0">Approved</span>
+          <span className="text-sm">
+            {formatApprovalTimestamp(item.approvedAt ?? item.reviewedAt!)}
           </span>
+        </p>
+      )}
+      {(approvedBy || (approved && fallbackReviewer && !activatedBy)) && (
+        <p>
+          <span className="detail-field-label !mb-0">Approved by</span>
+          <span className="text-sm">{approvedBy || fallbackReviewer}</span>
+        </p>
+      )}
+      {item.activatedAt && (
+        <p>
+          <span className="detail-field-label !mb-0">Activated</span>
+          <span className="text-sm">{formatApprovalTimestamp(item.activatedAt)}</span>
+        </p>
+      )}
+      {activatedBy && (
+        <p>
+          <span className="detail-field-label !mb-0">Activated by</span>
+          <span className="text-sm">{activatedBy}</span>
+        </p>
+      )}
+      {item.reviewedAt && denied && (
+        <p>
+          <span className="detail-field-label !mb-0">Reviewed</span>
           <span className="text-sm">{formatApprovalTimestamp(item.reviewedAt)}</span>
         </p>
       )}
-      {reviewer && !pending && (
+      {fallbackReviewer && denied && (
         <p>
-          <span className="detail-field-label !mb-0">
-            {item.status === 'active' ? 'Activated by' : approved ? 'Approved by' : 'Reviewed by'}
-          </span>
-          <span className="text-sm">{item.reviewedByEmail || reviewer}</span>
+          <span className="detail-field-label !mb-0">Reviewed by</span>
+          <span className="text-sm">{fallbackReviewer}</span>
         </p>
       )}
-      {!reviewer && !pending && approved && (
-        <p className="text-sm text-brand-text-muted">Approver details are not on file for this application.</p>
+      {!approvedBy && !activatedBy && !fallbackReviewer && !pending && approved && (
+        <p className="text-sm text-brand-text-muted">
+          Approver details are not on file for this application.
+        </p>
       )}
     </div>
   );
@@ -189,6 +217,8 @@ export function StaffApplications({
   onApproveClient,
   onRejectClient,
   onRejectGuardApplication,
+  onRequestGuardApplicationRevision,
+  onRequestClientApplicationRevision,
   onOpenGuardProfile,
   onOpenClientProfile,
   onAddGuard,
@@ -326,6 +356,11 @@ export function StaffApplications({
             canReview={canApproveGuardAccounts || canManageGuardAccounts}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
             onRejectGuardApplication={onRejectGuardApplication}
+            onRequestGuardApplicationRevision={
+              canApproveGuardAccounts || canManageGuardAccounts
+                ? onRequestGuardApplicationRevision
+                : undefined
+            }
             onOpenGuardProfile={onOpenGuardProfile}
           />
         </div>
@@ -361,6 +396,9 @@ export function StaffApplications({
           canReview={canManageClientAccounts}
           onApproveClient={onApproveClient}
           onRejectClient={onRejectClient}
+          onRequestClientApplicationRevision={
+            canManageClientAccounts ? onRequestClientApplicationRevision : undefined
+          }
           onOpenClientProfile={onOpenClientProfile}
         />
       </div>

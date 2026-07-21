@@ -117,6 +117,15 @@ describe('staffListFilters', () => {
     assert.equal(matchesApplicationStatusFilter(approved, 'pending', emptyGuards, emptyClients), false);
     assert.equal(matchesApplicationStatusFilter(approved, 'approved', emptyGuards, emptyClients), true);
     assert.equal(matchesApplicationStatusFilter(pending, 'approved', emptyGuards, emptyClients), false);
+    assert.equal(
+      matchesApplicationStatusFilter(
+        { ...approved, status: 'active' },
+        'approved',
+        emptyGuards,
+        emptyClients
+      ),
+      true
+    );
     assert.equal(matchesApplicationStatusFilter(denied, 'denied', emptyGuards, emptyClients), true);
     assert.equal(matchesApplicationStatusFilter(approved, 'denied', emptyGuards, emptyClients), false);
   });
