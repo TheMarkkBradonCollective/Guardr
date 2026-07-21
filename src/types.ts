@@ -577,6 +577,31 @@ export interface ShiftAuditViolation {
   dispute?: ShiftAuditViolationDispute;
 }
 
+export type ApplicationCredentialSnapshotKey = 'gov-id' | 'coi' | 'guard-card' | 'pta-uof' | '32-hour';
+
+export type ApplicationCredentialSnapshotStatus = 'submitted' | 'verified';
+
+export interface ApplicationCredentialSnapshotEntry {
+  capturedAt: string;
+  label: string;
+  status: ApplicationCredentialSnapshotStatus;
+  summary?: string;
+  documentUrl?: string;
+  /** Structured fields for Applications read-only preview. */
+  payload: Record<string, unknown>;
+}
+
+/**
+ * Frozen copy of credentials submitted with the application.
+ * Later live uploads (activation / updates) do not rewrite sealed slots.
+ */
+export interface GuardApplicationSubmissionSnapshot {
+  version: 1;
+  /** Set when staff approves — later live credential uploads must not overwrite slots. */
+  sealedAt?: string;
+  credentials: Partial<Record<ApplicationCredentialSnapshotKey, ApplicationCredentialSnapshotEntry>>;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -657,6 +682,11 @@ export interface SecurityGuard {
   /** Staff asked the guard to update locked application intake details. */
   applicationRevisionRequestedAt?: string;
   applicationRevisionNote?: string;
+  /**
+   * Frozen copy of credentials submitted with the application.
+   * Later live uploads (activation / updates) do not rewrite sealed slots.
+   */
+  applicationSubmissionSnapshot?: GuardApplicationSubmissionSnapshot;
   /** Who submitted government ID for approvals filtering */
   idSubmittedBy?: 'guard' | 'staff';
   /** State ID or driver's license — controls labels and driving eligibility. */

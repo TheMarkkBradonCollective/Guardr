@@ -73,6 +73,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_submission_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_expiry_restricted BOOLEAN NOT NULL DEFAULT FALSE;
 

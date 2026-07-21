@@ -493,6 +493,14 @@ import {
 } from './lib/legalAcceptance';
 import { buildJobServiceAgreement, parseJobServiceAgreement } from './lib/jobServiceAgreement';
 import {
+  captureCertApplicationSnapshot,
+  captureCoiApplicationSnapshot,
+  captureGovIdApplicationSnapshot,
+  parseApplicationSubmissionSnapshot,
+  sealApplicationSubmissionSnapshot,
+  unsealApplicationSubmissionSnapshot,
+} from './lib/applicationSubmissionSnapshot';
+import {
   insurancePolicyFromRow,
   insurancePolicyToDbRow,
   isUserSubmittedPendingInsurance,
@@ -2140,6 +2148,9 @@ export default function App() {
         idUpdateRequestNote: g.id_update_request_note ?? undefined,
         applicationRevisionRequestedAt: g.application_revision_requested_at ?? undefined,
         applicationRevisionNote: g.application_revision_note ?? undefined,
+        applicationSubmissionSnapshot: parseApplicationSubmissionSnapshot(
+          g.application_submission_snapshot
+        ),
         idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
         idDocumentType:
           g.id_document_type === 'drivers_license' || g.id_document_type === 'state_id'
@@ -3539,14 +3550,32 @@ export default function App() {
         : policy.updateRequestNote ?? existing?.updateRequestNote,
       revisionHistory,
     };
+    const snapshot =
+      !staffBypass && targetGuard
+        ? captureCoiApplicationSnapshot({ ...targetGuard, insurancePolicy: nextPolicy }, nextPolicy)
+        : null;
     if (isDbConnected) {
       const { error } = await supabase
         .from('guard_insurance_policies')
         .upsert(insurancePolicyToDbRow(nextPolicy), { onConflict: 'guard_id' });
       if (error) throw error;
+      if (snapshot) {
+        await supabase
+          .from('guards')
+          .update({ application_submission_snapshot: snapshot })
+          .eq('id', policy.guardId);
+      }
     }
     setGuards((prev) =>
-      prev.map((g) => (g.id === policy.guardId ? { ...g, insurancePolicy: nextPolicy } : g))
+      prev.map((g) =>
+        g.id === policy.guardId
+          ? {
+              ...g,
+              insurancePolicy: nextPolicy,
+              ...(snapshot ? { applicationSubmissionSnapshot: snapshot } : {}),
+            }
+          : g
+      )
     );
     const guard = guards.find((g) => g.id === policy.guardId);
     if (currentUser && guard && isUserSubmittedPendingInsurance({ ...guard, insurancePolicy: nextPolicy })) {
@@ -4197,10 +4226,15 @@ export default function App() {
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;
-        return syncGuardCredentialGraceState({
+        const withCert = syncGuardCredentialGraceState({
           ...g,
           certifications: [...g.certifications, certWithId],
         });
+        const snapshot =
+          submittedByRole === 'guard' ? captureCertApplicationSnapshot(withCert, certWithId) : null;
+        return snapshot
+          ? { ...withCert, applicationSubmissionSnapshot: snapshot }
+          : withCert;
       })
     );
     if (isDbConnected) {
@@ -4225,6 +4259,20 @@ export default function App() {
             )
           );
           return insertResult;
+        }
+        const guardAfter = guards.find((g) => g.id === guardId);
+        if (guardAfter && submittedByRole === 'guard') {
+          const withCert = {
+            ...guardAfter,
+            certifications: [...guardAfter.certifications, certWithId],
+          };
+          const snapshot = captureCertApplicationSnapshot(withCert, certWithId);
+          if (snapshot) {
+            await supabase
+              .from('guards')
+              .update({ application_submission_snapshot: snapshot })
+              .eq('id', guardId);
+          }
         }
       } catch (e) {
         setGuards(prev =>
@@ -4295,25 +4343,25 @@ export default function App() {
     if (!valid.ok) return valid;
 
     const requeueForReview = cert.status === 'rejected';
+    const nextCert: Certification = {
+      ...cert,
+      imageUrl,
+      status: requeueForReview ? ('pending' as const) : cert.status,
+      rejectionReason: requeueForReview ? undefined : cert.rejectionReason,
+    };
 
     setGuards((prev) =>
-      prev.map((g) =>
-        g.id === guardId
-          ? {
-              ...g,
-              certifications: g.certifications.map((c) =>
-                c.id === certId
-                  ? {
-                      ...c,
-                      imageUrl,
-                      status: requeueForReview ? ('pending' as const) : c.status,
-                      rejectionReason: requeueForReview ? undefined : c.rejectionReason,
-                    }
-                  : c
-              ),
-            }
-          : g
-      )
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        const withCert: SecurityGuard = {
+          ...g,
+          certifications: g.certifications.map((c) => (c.id === certId ? nextCert : c)),
+        };
+        const snapshot = captureCertApplicationSnapshot(withCert, nextCert);
+        return snapshot
+          ? { ...withCert, applicationSubmissionSnapshot: snapshot }
+          : withCert;
+      })
     );
 
     if (isDbConnected) {
@@ -4337,6 +4385,19 @@ export default function App() {
             )
           );
           return updateResult;
+        }
+        if (guard) {
+          const withCert = {
+            ...guard,
+            certifications: guard.certifications.map((c) => (c.id === certId ? nextCert : c)),
+          };
+          const snapshot = captureCertApplicationSnapshot(withCert, nextCert);
+          if (snapshot) {
+            await supabase
+              .from('guards')
+              .update({ application_submission_snapshot: snapshot })
+              .eq('id', guardId);
+          }
         }
       } catch (e) {
         setGuards((prev) =>
@@ -5731,6 +5792,8 @@ export default function App() {
       throw new Error(`Cannot approve profile yet:\n• ${blockers.join('\n• ')}`);
     }
 
+    const sealedAt = new Date().toISOString();
+    const sealedSnapshot = sealApplicationSubmissionSnapshot(guard, sealedAt);
     const approvedGuard: SecurityGuard = {
       ...guard,
       userStatus: 'approved',
@@ -5739,6 +5802,7 @@ export default function App() {
       credentialGraceMissing: undefined,
       applicationRevisionRequestedAt: undefined,
       applicationRevisionNote: undefined,
+      applicationSubmissionSnapshot: sealedSnapshot,
     };
 
     setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
@@ -5755,6 +5819,7 @@ export default function App() {
           credential_grace_hours: null,
           application_revision_requested_at: null,
           application_revision_note: null,
+          application_submission_snapshot: sealedSnapshot,
         },
         'approve'
       );
@@ -5801,6 +5866,7 @@ export default function App() {
     const demote = status === 'approved' || status === 'active';
 
     const previous = guard;
+    const openedSnapshot = unsealApplicationSubmissionSnapshot(guard.applicationSubmissionSnapshot);
     const revisedGuard: SecurityGuard = {
       ...guard,
       ...(demote
@@ -5812,6 +5878,7 @@ export default function App() {
         : {}),
       applicationRevisionRequestedAt: requestedAt,
       applicationRevisionNote: note,
+      applicationSubmissionSnapshot: openedSnapshot,
     };
 
     setGuards((prev) => prev.map((g) => (g.id === guardId ? revisedGuard : g)));
@@ -5830,6 +5897,7 @@ export default function App() {
             : {}),
           application_revision_requested_at: requestedAt,
           application_revision_note: note,
+          application_submission_snapshot: openedSnapshot,
         },
         'revision'
       );
@@ -6342,30 +6410,30 @@ export default function App() {
         snapshotGovIdRevision(guard, 'superseded')
       );
     }
-    setGuards((prev) =>
-      prev.map((g) =>
-        g.id === guardId
-          ? {
-              ...g,
-              idState,
-              idNumber,
-              idExpiryDate,
-              idDocumentType,
-              idLicenseClass,
-              idFrontUrl: front,
-              idBackUrl: back,
-              idSelfieUrl: selfie,
-              idVerificationStatus: 'pending' as const,
-              idVerificationSubmittedAt: submittedAt,
-              idVerificationRejectionReason: undefined,
-              idUpdateRequestedAt: undefined,
-              idUpdateRequestNote: undefined,
-              idSubmittedBy: 'guard' as const,
-              idRevisionHistory,
-            }
-          : g
-      )
-    );
+    const nextGuardBase: SecurityGuard = {
+      ...guard,
+      idState,
+      idNumber,
+      idExpiryDate,
+      idDocumentType,
+      idLicenseClass,
+      idFrontUrl: front,
+      idBackUrl: back,
+      idSelfieUrl: selfie,
+      idVerificationStatus: 'pending' as const,
+      idVerificationSubmittedAt: submittedAt,
+      idVerificationRejectionReason: undefined,
+      idUpdateRequestedAt: undefined,
+      idUpdateRequestNote: undefined,
+      idSubmittedBy: 'guard' as const,
+      idRevisionHistory,
+    };
+    const snapshot = !staffBypass ? captureGovIdApplicationSnapshot(nextGuardBase, submittedAt) : null;
+    const nextGuard: SecurityGuard = snapshot
+      ? { ...nextGuardBase, applicationSubmissionSnapshot: snapshot }
+      : nextGuardBase;
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? nextGuard : g)));
 
     if (isDbConnected) {
       beginLocalMutation();
@@ -6387,6 +6455,7 @@ export default function App() {
           id_update_request_note: null,
           id_submitted_by: 'guard',
           id_revision_history: idRevisionHistory ?? [],
+          ...(snapshot ? { application_submission_snapshot: snapshot } : {}),
         })
         .eq('id', guardId);
       if (error) {
