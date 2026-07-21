@@ -9,6 +9,8 @@ import {
   canApproveStaffAccounts,
   canProposeStaffAccounts,
   getAssignableStaffRoles,
+  getDefaultStaffRolePermissions,
+  staffRoleRank,
 } from './permissions';
 import { getPendingStaffAccountReviews } from './staffAccounts';
 
@@ -29,7 +31,19 @@ test('administrator can propose staff but not approve', () => {
   const admin = { role: 'administrator' as const };
   assert.equal(canProposeStaffAccounts(admin), true);
   assert.equal(canApproveStaffAccounts(admin), false);
-  assert.deepEqual(getAssignableStaffRoles('administrator'), ['Moderator']);
+  assert.deepEqual(getAssignableStaffRoles('administrator'), ['Support', 'Moderator']);
+});
+
+test('moderator can assign Support only', () => {
+  assert.deepEqual(getAssignableStaffRoles('moderator'), ['Support']);
+});
+
+test('Support ranks below Moderator with monitoring defaults', () => {
+  assert.ok(staffRoleRank('Support') < staffRoleRank('Moderator'));
+  assert.deepEqual(getDefaultStaffRolePermissions('Support'), [
+    'moderator.review_reports',
+    'moderator.monitor_activity',
+  ]);
 });
 
 test('director can propose and approve staff', () => {

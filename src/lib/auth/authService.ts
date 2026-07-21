@@ -116,8 +116,10 @@ function guardFromRow(row: Record<string, unknown>, isStaff = false): SecurityGu
   const staffRole =
     row.staff_role === 'Founder' ||
     row.staff_role === 'Director' ||
+    row.staff_role === 'Manager' ||
     row.staff_role === 'Administrator' ||
-    row.staff_role === 'Moderator'
+    row.staff_role === 'Moderator' ||
+    row.staff_role === 'Support'
       ? (row.staff_role as StaffRole)
       : undefined;
   return {

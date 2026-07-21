@@ -756,6 +756,28 @@ Payouts depend on:
 
 ---
 
+## Support guide
+
+Support is the help-desk tier under Moderator. You handle **support messages**, review **incident reports**, and monitor activity — you do **not** approve applications or verify credentials.
+
+### What you can do
+
+| Action | Where |
+|--------|-------|
+| Reply to support tickets and reports | **Messages** / Support inbox |
+| Review field reports | **Incidents** |
+| Monitor live jobs and map | **Map**, **Overview** |
+| Message clients, guards, staff | **Messages** |
+
+### What you cannot do
+
+- Approve guard or client applications (Moderator+)
+- Verify credentials, government ID, or insurance (Administrator+)
+- Approve job listings, handle disputes, or suspend users
+- Access **Payments**, fees, or staff permissions
+
+---
+
 ## Moderator guide
 
 Moderators are the front line for account intake and field monitoring. You **approve applications** — you do **not** verify credential documents or activate accounts.
@@ -880,6 +902,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 ### Governance principles
 
+- **Support** handles help-desk messages and incident review — they do not approve applications.
 - **Moderators** approve applications — they do not verify documents or activate accounts.
 - **Administrators** verify credentials and review jobs — they do not manage Directors.
 - **Directors** run operations and finances — they do not manage other Directors.
@@ -887,30 +910,30 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 ### Staff page map (all roles)
 
-| Page | Moderator | Administrator | Director | Founder |
-|------|-----------|---------------|----------|---------|
-| **Overview** | ✓ | ✓ | ✓ | ✓ |
-| **Map** / **Jobs** | ✓ | ✓ | ✓ | ✓ |
-| **Applications** / **Credentials** | Approve applications | + Verify credentials | ✓ | ✓ |
-| **Guards** / **Clients** | ✓ | + Suspend | + Trusted | ✓ |
-| **Messages** / **Incidents** | ✓ | ✓ | ✓ | ✓ |
-| **Stats** (desktop) | ✓ | ✓ | ✓ | ✓ |
-| **Disputes** | — | ✓ | ✓ | ✓ |
-| **Analytics** | — | ✓ | + Financials | ✓ |
-| **Payments** | — | — | ✓ | ✓ |
-| **Staff** | — | — | ✓ | + Directors |
-| **Payment settings** | — | — | ✓ | + Payment methods |
-| **Marketplace agreements** | — | — | ✓ | ✓ |
-| **Audit log** | — | — | ✓ | ✓ |
-| **Permissions** | — | — | ✓ | ✓ |
-| **Settings** | — | ✓ | ✓ | ✓ |
-| **Dev notes** | — | — | ✓ | ✓ |
+| Page | Support | Moderator | Administrator | Director | Founder |
+|------|---------|-----------|---------------|----------|---------|
+| **Overview** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Map** / **Jobs** | View | ✓ | ✓ | ✓ | ✓ |
+| **Applications** / **Credentials** | — | Approve applications | + Verify credentials | ✓ | ✓ |
+| **Guards** / **Clients** | View | ✓ | + Suspend | + Trusted | ✓ |
+| **Messages** / **Incidents** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Stats** (desktop) | — | ✓ | ✓ | ✓ | ✓ |
+| **Disputes** | — | — | ✓ | ✓ | ✓ |
+| **Analytics** | — | — | ✓ | + Financials | ✓ |
+| **Payments** | — | — | — | ✓ | ✓ |
+| **Staff** | — | — | — | ✓ | + Directors |
+| **Payment settings** | — | — | — | ✓ | + Payment methods |
+| **Marketplace agreements** | — | — | — | ✓ | ✓ |
+| **Audit log** | — | — | — | ✓ | ✓ |
+| **Permissions** | — | — | — | ✓ | ✓ |
+| **Settings** | — | — | ✓ | ✓ | ✓ |
+| **Dev notes** | — | — | — | ✓ | ✓ |
 
 ---
 
 ## Staff role permissions
 
-Guardr staff roles form a hierarchy: **Moderator → Administrator → Director → Founder**. Each tier inherits the capabilities of the roles below it unless a restriction is noted.
+Guardr staff roles form a hierarchy: **Support → Moderator → Administrator → Manager → Director → Founder**. Each tier inherits the capabilities of the roles below it unless a restriction is noted.
 
 Use this reference when onboarding staff, answering “can I do X?” questions, or routing an escalation to the right tier.
 

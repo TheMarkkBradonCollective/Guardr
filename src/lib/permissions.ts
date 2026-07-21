@@ -26,11 +26,12 @@ export type Permission =
   | 'guard.view_earnings'
   | 'guard.receive_payouts'
   | 'guard.rate_clients'
+  // Support — help desk, reports, activity monitoring
+  | 'moderator.review_reports'
+  | 'moderator.monitor_activity'
   // Moderator — field support, account approvals
   | 'moderator.approve_guards'
   | 'moderator.approve_clients'
-  | 'moderator.review_reports'
-  | 'moderator.monitor_activity'
   // Administrator (+ moderator) — credential verification, ops
   | 'moderator.review_certifications'
   | 'moderator.review_job_requests'
@@ -86,12 +87,16 @@ const GUARD_PERMISSIONS: Permission[] = [
   'guard.rate_clients',
 ];
 
-const MODERATOR_PERMISSIONS: Permission[] = [
-  ...GUARD_PERMISSIONS,
-  'moderator.approve_guards',
-  'moderator.approve_clients',
+const SUPPORT_PERMISSIONS: Permission[] = [
   'moderator.review_reports',
   'moderator.monitor_activity',
+];
+
+const MODERATOR_PERMISSIONS: Permission[] = [
+  ...GUARD_PERMISSIONS,
+  ...SUPPORT_PERMISSIONS,
+  'moderator.approve_guards',
+  'moderator.approve_clients',
 ];
 
 const ADMINISTRATOR_PERMISSIONS: Permission[] = [
@@ -137,6 +142,7 @@ const OWNER_PERMISSIONS: Permission[] = [
 export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
   client: CLIENT_PERMISSIONS,
   guard: GUARD_PERMISSIONS,
+  support: SUPPORT_PERMISSIONS,
   moderator: MODERATOR_PERMISSIONS,
   administrator: ADMINISTRATOR_PERMISSIONS,
   manager: MANAGER_PERMISSIONS,
@@ -147,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
 export const ROLE_LABELS: Record<PlatformRole, string> = {
   client: 'Client',
   guard: 'Guard',
+  support: 'Support',
   moderator: 'Moderator',
   administrator: 'Administrator',
   manager: 'Manager',
@@ -157,6 +164,7 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   client: 'Individuals or businesses seeking security services.',
   guard: 'Independent licensed security professionals.',
+  support: 'Handles support messages, reviews incident reports, and monitors platform activity.',
   moderator: 'Approves guard and client applications, monitors activity, and escalates issues.',
   administrator: 'Verifies credentials, reviews jobs and disputes, and manages daily operations.',
   manager: 'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
@@ -165,6 +173,7 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
 };
 
 export const STAFF_ROLES_ORDERED: StaffRole[] = [
+  'Support',
   'Moderator',
   'Administrator',
   'Manager',
@@ -224,11 +233,12 @@ export function getConfiguredStaffRolePermissions(
 }
 
 const STAFF_ROLE_RANK: Record<StaffRole, number> = {
-  Moderator: 1,
-  Administrator: 2,
-  Manager: 3,
-  Director: 4,
-  Founder: 5,
+  Support: 1,
+  Moderator: 2,
+  Administrator: 3,
+  Manager: 4,
+  Director: 5,
+  Founder: 6,
 };
 
 /** Legacy DB rows may still store Owner — normalize to Founder. */
@@ -239,6 +249,7 @@ export function normalizeStaffRole(staffRole?: string | null): StaffRole | undef
   if (staffRole === 'Manager') return 'Manager';
   if (staffRole === 'Administrator') return 'Administrator';
   if (staffRole === 'Moderator') return 'Moderator';
+  if (staffRole === 'Support') return 'Support';
   return undefined;
 }
 
@@ -251,8 +262,15 @@ export function platformStaffRank(role: PlatformRole): number | null {
   return staffRole ? staffRoleRank(staffRole) : null;
 }
 
-export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'manager' | 'director' | 'owner' {
+export function isStaffRole(role: PlatformRole): role is
+  | 'support'
+  | 'moderator'
+  | 'administrator'
+  | 'manager'
+  | 'director'
+  | 'owner' {
   return (
+    role === 'support' ||
     role === 'moderator' ||
     role === 'administrator' ||
     role === 'manager' ||
@@ -550,6 +568,8 @@ export function staffRoleToPlatformRole(staffRole: StaffRole): PlatformRole {
       return 'administrator';
     case 'Moderator':
       return 'moderator';
+    case 'Support':
+      return 'support';
   }
 }
 
@@ -565,6 +585,8 @@ export function platformRoleToStaffRole(role: PlatformRole): StaffRole | null {
       return 'Administrator';
     case 'moderator':
       return 'Moderator';
+    case 'support':
+      return 'Support';
     default:
       return null;
   }

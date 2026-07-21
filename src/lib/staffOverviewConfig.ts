@@ -73,10 +73,30 @@ const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
   'messages',
 ];
 
+const SUPPORT_METRICS = ['Active jobs', 'On site now', 'Active guards'];
+
 const STAFF_OVERVIEW_CONFIG: Record<
-  Extract<PlatformRole, 'moderator' | 'administrator' | 'manager' | 'director' | 'owner'>,
+  Extract<PlatformRole, 'support' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner'>,
   StaffOverviewConfig
 > = {
+  support: {
+    roleLabel: ROLE_LABELS.support,
+    workspaceKicker: 'Support workspace',
+    focusLine: 'Support inbox, incident reports, and live coverage monitoring.',
+    layout: 'compact',
+    metricLabels: [...SUPPORT_METRICS],
+    showPaymentsInQueue: false,
+    showDirectorFinancials: false,
+    showOperationsSnapshot: false,
+    showPlatformPulse: true,
+    pulseFullDetail: false,
+    showPipelineInsight: false,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'No open support follow-ups. Check Messages or Incidents if something needs attention.',
+    quickLinkSections: ['messages', 'incidents', 'map', 'guards'],
+  },
   moderator: {
     roleLabel: ROLE_LABELS.moderator,
     workspaceKicker: 'Moderator workspace',
@@ -155,6 +175,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
 
 export function getStaffOverviewConfig(role: PlatformRole): StaffOverviewConfig {
   if (
+    role === 'support' ||
     role === 'moderator' ||
     role === 'administrator' ||
     role === 'manager' ||

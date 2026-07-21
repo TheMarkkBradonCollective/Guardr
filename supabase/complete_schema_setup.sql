@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS guards (
   jobs_completed INTEGER NOT NULL DEFAULT 0,
   hourly_rate_requirement INTEGER,
   is_staff BOOLEAN NOT NULL DEFAULT FALSE,
-  staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator')),
+  staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
   user_status TEXT NOT NULL DEFAULT 'pending' CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   failed_audits INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
@@ -101,7 +101,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_description TEXT DEFAU
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
 ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check
-  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator'));
+  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support'));
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_theme_preference_check;
 ALTER TABLE guards ADD CONSTRAINT guards_theme_preference_check
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS staff (
   phone TEXT NOT NULL DEFAULT '',
   bio TEXT NOT NULL DEFAULT '',
   staff_role TEXT NOT NULL
-    CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator')),
+    CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
   user_status TEXT NOT NULL DEFAULT 'active'
     CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   password TEXT,
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS staff (
 
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_staff_role_check;
 ALTER TABLE staff ADD CONSTRAINT staff_staff_role_check
-  CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator'));
+  CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support'));
 
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_user_status_check;
 ALTER TABLE staff ADD CONSTRAINT staff_user_status_check

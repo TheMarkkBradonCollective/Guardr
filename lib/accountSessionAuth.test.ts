@@ -7,6 +7,18 @@ import {
 } from './accountSessionAuth';
 
 describe('accountSessionAuth', () => {
+  it('maps Support staff role to support platform role', () => {
+    assert.equal(
+      resolvePlatformRole({ isStaff: true, staffRole: 'Support', legacyRole: 'staff' }),
+      'support'
+    );
+  });
+
+  it('treats support as staff without finance access', () => {
+    assert.equal(isStaffPlatformRole('support'), true);
+    assert.equal(hasFinancePlatformAccess('support'), false);
+  });
+
   it('maps Manager staff role to manager platform role', () => {
     assert.equal(
       resolvePlatformRole({ isStaff: true, staffRole: 'Manager', legacyRole: 'staff' }),

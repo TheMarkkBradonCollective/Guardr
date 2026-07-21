@@ -44,7 +44,15 @@ export type PushNotificationType =
   | 'crew_lead_request'
   | 'test';
 
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+export type PlatformRole =
+  | 'client'
+  | 'guard'
+  | 'support'
+  | 'moderator'
+  | 'administrator'
+  | 'manager'
+  | 'director'
+  | 'owner';
 
 export interface PushSubscriptionKeys {
   p256dh: string;
