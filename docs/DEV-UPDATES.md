@@ -3,11 +3,24 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, July 21, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.87**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.88**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, July 21, 2026 (night) — APK parity with PWA → v1.0.88
+
+**Why**
+- PWA was ahead of the sideloaded APK after portrait lock, full-page auth, and update-screen fixes landed on `main`
+- Capacitor APK embeds a static web build, so it needs a new binary (not just `version.json`) to match
+
+**Shipped**
+- **v1.0.88** (build **188**) — web + PWA cache (`guardr-cache-v1-0-88`) + FCM APK with current `main` (portrait lock, PWA/APK detection, full-page sign-in)
+
+**Supabase:** no new SQL.
 
 ---
 
