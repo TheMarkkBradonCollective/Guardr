@@ -20791,7 +20791,10 @@ button.staff-action-btn--ok:hover:not(:disabled) {
 }
 
 .uber-app-shell [data-baseweb="segmented-control"] [aria-selected="true"],
-.uber-app-shell [data-baseweb="segmented-control"] [data-baseweb="tab"][aria-selected="true"] {
+.uber-app-shell [data-baseweb="segmented-control"] [data-baseweb="tab"][aria-selected="true"],
+.uber-app-shell [data-baseweb="segmented-control"] [aria-selected="true"] *,
+.uber-app-shell [data-baseweb="segmented-list"] [aria-selected="true"],
+.uber-app-shell [data-baseweb="segmented-list"] [aria-selected="true"] * {
   color: var(--brand-accent-text, #ffffff) !important;
 }
 

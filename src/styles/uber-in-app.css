@@ -2004,6 +2004,15 @@ html.theme-dark .staff-filter-pill[data-active="true"] {
   background: var(--brand-text, #000000) !important;
 }
 
+[data-baseweb="segmented-control"] [aria-selected="true"],
+[data-baseweb="segmented-control"] [aria-selected="true"] *,
+[data-baseweb="segmented-list"] [aria-selected="true"],
+[data-baseweb="segmented-list"] [aria-selected="true"] *,
+[data-baseweb="segment"][aria-selected="true"],
+[data-baseweb="segment"][aria-selected="true"] * {
+  color: var(--brand-accent-text, #ffffff) !important;
+}
+
 .segmented-control {
   box-sizing: border-box;
   max-width: 100%;
