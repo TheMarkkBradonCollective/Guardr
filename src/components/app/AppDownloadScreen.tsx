@@ -93,6 +93,18 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
         ? `Download update (v${manifest?.apkVersion ?? ''})`
         : `Get ${INSTALL_APK_TITLE} (v${manifest?.apkVersion ?? ''})`;
 
+  const apkStatusLabel = isNativeView
+    ? apkInstalled
+      ? apkNeedsUpdate
+        ? 'Update available'
+        : 'Up to date'
+      : 'Not detected'
+    : apkInstalled
+      ? apkNeedsUpdate
+        ? 'Update available'
+        : 'Installed'
+      : 'Not installed';
+
   return (
     <div className="page-shell min-h-screen bg-brand-bg text-brand-text">
       <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-bg/95 backdrop-blur-xl">
@@ -143,7 +155,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
             </div>
             {!loading && (
               <StatusBadge kind={apkInstalled ? (apkNeedsUpdate ? 'warn' : 'ok') : 'muted'}>
-                {apkInstalled ? (apkNeedsUpdate ? 'Update available' : 'Up to date') : 'Not installed'}
+                {apkStatusLabel}
               </StatusBadge>
             )}
           </div>
@@ -210,7 +222,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
           ) : null}
         </section>
 
-        {isBrowserView ? (
+        {isBrowserView || isPwaView ? (
           <section className="wf-list-card p-5 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -218,32 +230,34 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                 <p className="text-xs text-brand-text-muted mt-1">Home-screen shortcut · auto-updates</p>
               </div>
               {!loading && (
-                <StatusBadge kind={pwaActive ? 'ok' : 'muted'}>
-                  {pwaActive ? 'Installed' : 'Not installed'}
+                <StatusBadge kind={pwaActive || isPwaView ? 'ok' : 'muted'}>
+                  {pwaActive || isPwaView ? 'Installed' : 'Not installed'}
                 </StatusBadge>
               )}
             </div>
 
             <p className="text-sm text-brand-text-muted leading-relaxed">
-              {pwaActive
-                ? 'Your lite home-screen version updates automatically when guardr.co updates.'
+              {isPwaView || pwaActive
+                ? 'Your home-screen PWA updates automatically when guardr.co updates — often ahead of a manually installed APK.'
                 : 'Open guardr.co in Chrome, then use Add to Home screen / Install app for quick lite access.'}
             </p>
 
-            <button
-              type="button"
-              onClick={() => void promptInstall()}
-              className="app-button-outline app-btn-md w-full inline-flex items-center justify-center gap-2"
-            >
-              <Smartphone className="w-4 h-4" aria-hidden />
-              <span>
-                {hasDeferredPrompt
-                  ? `Install ${INSTALL_PWA_TITLE}`
-                  : isIOS
-                    ? 'Show iOS install guide'
-                    : `Install ${INSTALL_PWA_TITLE}`}
-              </span>
-            </button>
+            {isBrowserView ? (
+              <button
+                type="button"
+                onClick={() => void promptInstall()}
+                className="app-button-outline app-btn-md w-full inline-flex items-center justify-center gap-2"
+              >
+                <Smartphone className="w-4 h-4" aria-hidden />
+                <span>
+                  {hasDeferredPrompt
+                    ? `Install ${INSTALL_PWA_TITLE}`
+                    : isIOS
+                      ? 'Show iOS install guide'
+                      : `Install ${INSTALL_PWA_TITLE}`}
+                </span>
+              </button>
+            ) : null}
           </section>
         ) : null}
 

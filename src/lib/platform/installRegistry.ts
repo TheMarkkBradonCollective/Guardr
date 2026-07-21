@@ -35,6 +35,9 @@ export function writeInstallSurface(surface: 'apk' | 'pwa', record: InstallRecor
   state[surface] = record;
   if (surface === 'apk') {
     delete state.pwa;
+  } else {
+    // Active PWA session — drop a stale APK record so update UI does not claim Android.
+    delete state.apk;
   }
   writeInstallState(state);
 }
