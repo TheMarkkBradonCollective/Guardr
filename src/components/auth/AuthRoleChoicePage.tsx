@@ -1,11 +1,12 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
-import { ArrowRight, Briefcase, ChevronLeft, Shield, User } from 'lucide-react';
+import { ArrowRight, Briefcase, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
 import type { AuthViewRole } from '../../lib/appNavigation';
 import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
+import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 
 const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
@@ -110,12 +111,7 @@ export function AuthRoleChoicePage({
     >
       <UberDirectTopHeader onBrandClick={onBack} />
       {onBack ? (
-        <div className="app-subscreen-header app-subscreen-header--back-only">
-          <button type="button" className="app-subscreen-back" onClick={onBack}>
-            <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden />
-            Back to Home
-          </button>
-        </div>
+        <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel="Home" />
       ) : null}
 
       <Block as="main" className="auth-role-choice-main">
