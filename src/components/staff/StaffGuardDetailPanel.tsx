@@ -732,7 +732,7 @@ export function StaffGuardDetailPanel({
               )}
               {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
                 <AppButton
-                  variant="outline"
+                  variant={guard.trusted ? 'outline' : 'primary'}
                   size="sm"
                   className={guard.trusted ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
                   onClick={() => void handleToggleTrusted()}
@@ -747,7 +747,7 @@ export function StaffGuardDetailPanel({
               )}
               {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
                 <AppButton
-                  variant="outline"
+                  variant="primary"
                   size="sm"
                   className="staff-action-btn--ok"
                   disabled
@@ -758,7 +758,7 @@ export function StaffGuardDetailPanel({
               )}
               {onMakeCrewLead && (
                 <AppButton
-                  variant="outline"
+                  variant="primary"
                   size="sm"
                   className="staff-action-btn--ok"
                   onClick={() => void handleMakeCrewLead()}

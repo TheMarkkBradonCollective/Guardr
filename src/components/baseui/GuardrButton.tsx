@@ -18,6 +18,27 @@ export type GuardrButtonProps = Omit<ButtonProps, 'kind' | 'size'> & {
   className?: string;
 };
 
+type BaseButtonOverride = NonNullable<NonNullable<ButtonProps['overrides']>['BaseButton']>;
+
+function mergeButtonClassName(
+  className: string | undefined,
+  overrideProps: Record<string, unknown> | undefined
+): string | undefined {
+  const fromOverride =
+    typeof overrideProps?.className === 'string' ? overrideProps.className.trim() : '';
+  const merged = [className?.trim(), fromOverride].filter(Boolean).join(' ');
+  return merged || undefined;
+}
+
+function plainStyleObject(
+  style: BaseButtonOverride extends { style?: infer S } ? S : unknown
+): Record<string, unknown> {
+  if (style && typeof style === 'object' && !Array.isArray(style) && typeof style !== 'function') {
+    return style as Record<string, unknown>;
+  }
+  return {};
+}
+
 /**
  * Guardr button — real Uber app style.
  * Primary: solid black (#000) → full-width rounded rectangle, 48px min.
@@ -94,13 +115,32 @@ export function GuardrButton({
     kind === 'danger'    ? dangerStyle   :
     tertiarySyle;
 
+  const { BaseButton: baseButtonOverride, ...restOverrides } = overrides ?? {};
+  const overrideProps =
+    baseButtonOverride &&
+    typeof baseButtonOverride === 'object' &&
+    'props' in baseButtonOverride &&
+    baseButtonOverride.props &&
+    typeof baseButtonOverride.props === 'object'
+      ? (baseButtonOverride.props as Record<string, unknown>)
+      : undefined;
+  const overrideStyle =
+    baseButtonOverride && typeof baseButtonOverride === 'object' && 'style' in baseButtonOverride
+      ? baseButtonOverride.style
+      : undefined;
+
   return (
     <BaseButton
       kind={KIND[isDanger ? 'secondary' : KIND_MAP[kind]]}
       size={sizeMap[size]}
       overrides={{
+        ...restOverrides,
         BaseButton: {
-          props: { className },
+          ...baseButtonOverride,
+          props: {
+            ...overrideProps,
+            className: mergeButtonClassName(className, overrideProps),
+          },
           style: {
             minHeight: '48px',
             letterSpacing: '-0.01em',
@@ -110,11 +150,9 @@ export function GuardrButton({
             ':active': {
               transform: 'scale(0.97)',
             },
-            ...(typeof overrides?.BaseButton?.style === 'object' ? overrides.BaseButton.style : {}),
+            ...plainStyleObject(overrideStyle),
           },
-          ...overrides?.BaseButton,
         },
-        ...overrides,
       }}
       {...rest}
     >

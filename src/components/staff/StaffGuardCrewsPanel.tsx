@@ -351,6 +351,7 @@ export function StaffGuardCrewsPanel({
                             <AppButton
                               variant="primary"
                               size="sm"
+                              className="staff-action-btn--ok"
                               disabled={resolvingRequestId === request.id}
                               onClick={async () => {
                                 setResolvingRequestId(request.id);

@@ -20588,18 +20588,27 @@ body[data-form-factor="tablet"] .uber-app-shell {
   min-width: 0;
 }
 
-/* Account control color coding — green / yellow / red */
+/* Account control color coding — green / yellow / red (beats Base Web Styletron) */
+.uber-app-shell .staff-detail-actions button.staff-action-btn--ok,
+.staff-detail-actions button.staff-action-btn--ok,
 .uber-app-shell .staff-detail-actions .staff-action-btn--ok,
-.staff-detail-actions .staff-action-btn--ok {
+.staff-detail-actions .staff-action-btn--ok,
+button.staff-action-btn--ok {
   background-color: #15803d !important;
+  background-image: none !important;
   border-color: #15803d !important;
+  border-style: solid !important;
   color: #ffffff !important;
 }
 
+.uber-app-shell .staff-detail-actions button.staff-action-btn--ok:hover:not(:disabled),
+.staff-detail-actions button.staff-action-btn--ok:hover:not(:disabled),
 .uber-app-shell .staff-detail-actions .staff-action-btn--ok:hover:not(:disabled),
-.staff-detail-actions .staff-action-btn--ok:hover:not(:disabled) {
+.staff-detail-actions .staff-action-btn--ok:hover:not(:disabled),
+button.staff-action-btn--ok:hover:not(:disabled) {
   background-color: #166534 !important;
   border-color: #166534 !important;
+  color: #ffffff !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--warn,

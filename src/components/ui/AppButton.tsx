@@ -44,7 +44,17 @@ export function AppButton({
         ...overrides,
         BaseButton: {
           ...overrides?.BaseButton,
-          props: { title, ...(overrides?.BaseButton?.props as object | undefined) },
+          props: {
+            ...(overrides?.BaseButton &&
+            typeof overrides.BaseButton === 'object' &&
+            'props' in overrides.BaseButton &&
+            overrides.BaseButton.props &&
+            typeof overrides.BaseButton.props === 'object'
+              ? (overrides.BaseButton.props as object)
+              : {}),
+            title,
+            ...(className ? { className } : {}),
+          },
         },
       }
     : overrides;
