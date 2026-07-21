@@ -21013,19 +21013,25 @@ html.theme-dark .app-form-sheet-panel {
   );
 }
 
-/* Kill BaseUI DrawerBody side/bottom gutters that floated form sheets as cards */
-[data-baseweb="drawer"] [data-baseweb="drawer-container"] > div {
+/* Kill BaseUI DrawerBody gutters on form sheets so they fill the screen width */
+[data-baseweb="drawer"] [data-baseweb="drawer-container"].app-form-sheet-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+[data-baseweb="drawer"] [data-baseweb="drawer-container"].app-form-sheet-panel > div {
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-}
-
-[data-baseweb="drawer"] [data-baseweb="drawer-container"].app-form-sheet-panel,
-[data-baseweb="drawer"] [data-baseweb="drawer-container"] {
-  width: 100% !important;
-  max-width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
 }
 
 .app-section {
