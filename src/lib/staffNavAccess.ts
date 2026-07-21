@@ -138,6 +138,11 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     message:
       'Service Areas controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
   },
+  locations: {
+    title: 'Locations',
+    message:
+      'Location quality control is limited to staff who can review job postings. Ask your Administrator if you need access.',
+  },
   applications: {
     title: 'No access',
     message: 'Your role cannot review account applications.',

@@ -53,7 +53,8 @@ export function ClientLocationsPanel({ client, locations, onSave }: ClientLocati
       <div>
         <h3 className="text-lg font-bold tracking-tight">My Locations</h3>
         <p className="text-sm text-brand-text-muted mt-1">
-          Save sites for faster job posting.{trusted ? ' As a trusted client you set risk level directly.' : ' New sites need staff approval.'}
+          Save sites for faster job posting. Matching addresses are shared across clients so staff can reuse one quality-controlled location.
+          {trusted ? ' As a trusted client you set risk level directly.' : ' New sites need staff approval.'}
         </p>
       </div>
 

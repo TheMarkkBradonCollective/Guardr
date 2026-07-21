@@ -472,6 +472,33 @@ export type LocationRiskLevel = 'low' | 'medium' | 'high';
 
 export type ClientLocationStatus = 'pending' | 'active' | 'rejected';
 
+/** Shared platform job site — reusable across clients and jobs for staff QC. */
+export type JobLocationStatus = 'pending' | 'active' | 'rejected' | 'archived';
+
+export interface JobLocation {
+  id: string;
+  name: string;
+  address: string;
+  /** California work city (same convention as jobs / client locations). */
+  state?: string;
+  latitude?: number;
+  longitude?: number;
+  riskLevel: LocationRiskLevel;
+  status: JobLocationStatus;
+  siteInstructions?: string;
+  parkingInstructions?: string;
+  accessInstructions?: string;
+  /** Normalized address key used to reuse the same physical place across clients. */
+  placeKey: string;
+  createdByClientId?: string;
+  /** Staff QC notes */
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
 export interface ClientLocation {
   id: string;
   clientId: string;
@@ -483,6 +510,8 @@ export interface ClientLocation {
   riskLevel: LocationRiskLevel;
   status: ClientLocationStatus;
   siteInstructions?: string;
+  /** Link to the shared platform JobLocation when this site is reused. */
+  sharedLocationId?: string;
   createdAt?: string;
   reviewedAt?: string;
   reviewedBy?: string;
@@ -1036,6 +1065,8 @@ export interface SecurityRequest {
   minYearsExperience?: number;
   /** Saved client location used for this job */
   clientLocationId?: string;
+  /** Shared platform location used for this job (reuse across clients) */
+  jobLocationId?: string;
   /** Location risk snapshot at post time */
   locationRiskLevel?: LocationRiskLevel;
   /** Tiered guard pay by armed status — overrides single guardPay when set */

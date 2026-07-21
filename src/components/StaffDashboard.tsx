@@ -99,6 +99,7 @@ import { StaffPermissionsPanel } from './staff/StaffPermissionsPanel';
 import type { StaffPermissionsPatch } from './staff/StaffPermissionsPanel';
 import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
+import { StaffLocationsPanel } from './staff/StaffLocationsPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
@@ -216,6 +217,9 @@ interface StaffDashboardProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
   platformCities?: PlatformCity[];
+  jobLocations?: import('../types').JobLocation[];
+  clientLocations?: import('../types').ClientLocation[];
+  onSaveJobLocation?: (location: import('../types').JobLocation) => void | Promise<void>;
   onUpdatePlatformCity?: (
     cityId: string,
     patch: {
@@ -413,6 +417,9 @@ export function StaffDashboard({
   currentUser,
   platformSettings,
   platformCities = [],
+  jobLocations = [],
+  clientLocations = [],
+  onSaveJobLocation,
   onUpdatePlatformCity,
   onUpdateStaffCityAccess,
   onUpdatePlatformSettings,
@@ -627,6 +634,7 @@ export function StaffDashboard({
       guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
       clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
+      locations: jobLocations.filter((l) => l.status === 'pending').length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       violations: shiftViolations.filter((v) => v.needsReview).length,
       disputes: disputes.filter((d) => d.status === 'open').length,
@@ -635,7 +643,7 @@ export function StaffDashboard({
       payments: openPayoutInvoices,
       crews: countStaffCrewsNeedingReview(requests) + countPendingCrewLeadRequests(crewJoinRequests),
     }),
-    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests]
+    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests, jobLocations]
   );
 
   const renderSection = () => {
@@ -1107,6 +1115,23 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES.cities!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.cities!.message}
             placeholders={['Open cities', 'Wait list', 'Recommendations']}
+          />
+        );
+      case 'locations':
+        return onSaveJobLocation ? (
+          <StaffLocationsPanel
+            currentUser={currentUser}
+            locations={jobLocations}
+            jobs={requests}
+            clients={clients}
+            clientLocations={clientLocations}
+            onSave={onSaveJobLocation}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.locations!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.locations!.message}
+            placeholders={['Pending sites', 'Active locations', 'Shared places']}
           />
         );
       case 'permissions':

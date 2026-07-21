@@ -1495,7 +1495,7 @@ BEGIN
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
     'guard_vehicle_profiles', 'team_chat_threads', 'team_chat_messages', 'job_guard_slots',
     'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
-    'platform_settings', 'platform_cities', 'client_locations', 'company_public_documents',
+    'platform_settings', 'platform_cities', 'client_locations', 'job_locations', 'company_public_documents',
     'client_invoices', 'message_reactions', 'guard_availability', 'guard_availability_date_overrides'
   ]
   LOOP
@@ -1684,6 +1684,7 @@ CREATE TABLE IF NOT EXISTS client_locations (
   risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected')),
   site_instructions TEXT,
+  shared_location_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   reviewed_at TIMESTAMPTZ,
   reviewed_by TEXT
@@ -1691,6 +1692,36 @@ CREATE TABLE IF NOT EXISTS client_locations (
 
 CREATE INDEX IF NOT EXISTS idx_client_locations_client ON client_locations(client_id);
 CREATE INDEX IF NOT EXISTS idx_client_locations_status ON client_locations(status);
+ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS shared_location_id TEXT;
+
+-- Shared job sites for staff QC and reuse across clients/jobs
+CREATE TABLE IF NOT EXISTS job_locations (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'archived')),
+  site_instructions TEXT,
+  parking_instructions TEXT,
+  access_instructions TEXT,
+  place_key TEXT NOT NULL,
+  created_by_client_id TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_locations_place_key ON job_locations(place_key);
+CREATE INDEX IF NOT EXISTS idx_job_locations_status ON job_locations(status);
+CREATE INDEX IF NOT EXISTS idx_job_locations_updated ON job_locations(updated_at DESC);
+
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS job_location_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_security_requests_job_location ON security_requests(job_location_id);
 
 CREATE TABLE IF NOT EXISTS recurring_shift_templates (
   id TEXT PRIMARY KEY,

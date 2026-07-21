@@ -257,6 +257,7 @@ export function RequestSecurityFlow({
       assignmentMode,
       minYearsExperience: minYearsExperience > 0 ? minYearsExperience : undefined,
       clientLocationId: selectedLocationId ?? undefined,
+      jobLocationId: selectedLocation?.sharedLocationId,
       locationRiskLevel: selectedLocation?.riskLevel,
       tierPayRates: useTierPay ? tierPayRates : undefined,
       durationHours,
