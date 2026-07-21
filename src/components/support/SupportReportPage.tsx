@@ -55,7 +55,7 @@ export function SupportReportPage({
   return (
     <AppPageTransition motionKey="support-report" className="h-full min-h-0">
       <ResponsivePage screenClassName="client-form-shell">
-        <AppSubScreenHeader title="File a report" onBack={onBack} />
+        <AppSubScreenHeader title="File a report" onBack={onBack} backLabel="Support" />
         <ResponsiveFormPage title="File a report" subtitle="Staff will review and follow up in Messages">
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>

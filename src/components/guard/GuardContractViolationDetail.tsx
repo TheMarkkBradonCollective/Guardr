@@ -41,7 +41,7 @@ export function GuardContractViolationDetail({
 
   return (
     <div className="guard-contract-violations-screen">
-      <AppSubScreenHeader title={violation.title} onBack={onBack} />
+      <AppSubScreenHeader title={violation.title} onBack={onBack} backLabel="Violations" />
       <div className="guard-contract-violations-scroll">
         <section className="guard-contract-violations-intro">
           <p>
@@ -160,7 +160,7 @@ export function GuardContractViolationDisputeStatus({
 
   return (
     <div className="guard-contract-violations-screen">
-      <AppSubScreenHeader title="Dispute status" onBack={onBack} />
+      <AppSubScreenHeader title="Dispute status" onBack={onBack} backLabel="Performance" />
       <div className="guard-contract-violations-scroll guard-contract-violation-dispute-status">
         <div className="guard-contract-violation-dispute-illustration" aria-hidden>
           <AlertTriangle className="guard-contract-violation-dispute-illustration-icon" />

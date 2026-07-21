@@ -30,7 +30,7 @@ export function GuardPerformanceRewards({
 
   return (
     <div className="guard-performance-rewards-screen">
-      <AppSubScreenHeader title="My rewards" onBack={onBack} />
+      <AppSubScreenHeader title="My rewards" onBack={onBack} backLabel="Performance" />
       <div className="guard-performance-rewards-scroll">
         <section className="guard-performance-rewards-hero">
           <p className="guard-performance-rewards-eyebrow">Current level</p>

@@ -513,11 +513,11 @@ export function StaffGuardDetailPanel({
   return (
     <div className={`staff-detail-pane ${compact ? '' : 'min-w-0'}`}>
       {(onBack || (canEdit && !guard.isStaff)) && (
-        <div className="staff-detail-toolbar">
+        <div className="app-subscreen-header app-subscreen-header--back-only" style={{ justifyContent: 'space-between', width: '100%' }}>
           {onBack ? (
             <button type="button" onClick={onBack} className="app-subscreen-back">
-              <ArrowLeft className="w-4 h-4" />
-              Back to list
+              <ArrowLeft className="w-4 h-4" aria-hidden />
+              Back to Guards
             </button>
           ) : (
             <span />

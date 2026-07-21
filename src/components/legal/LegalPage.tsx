@@ -26,8 +26,8 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
             onClick={onBack}
             className="app-subscreen-back"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Home
           </button>
           <div className="flex items-center gap-3">
             {headerRight}

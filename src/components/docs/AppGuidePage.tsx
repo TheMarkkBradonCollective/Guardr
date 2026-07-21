@@ -237,7 +237,7 @@ function SectionDetail({
 
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
-      <AppSubScreenHeader title={section.title} onBack={onBack} />
+      <AppSubScreenHeader title={section.title} onBack={onBack} backLabel="Guide" />
       {body}
     </AppScreen>
   );
@@ -483,7 +483,7 @@ function GuideHub({
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
       {onBack ? (
-        <AppSubScreenHeader title="Guide" onBack={onBack} />
+        <AppSubScreenHeader title="Guide" onBack={onBack} backLabel="Home" />
       ) : (
         <AppScreenTitle>Guide</AppScreenTitle>
       )}

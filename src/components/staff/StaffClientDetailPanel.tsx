@@ -111,10 +111,10 @@ export function StaffClientDetailPanel({
   return (
     <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
       {onBack && (
-        <div className="px-1 pb-4">
+        <div className="app-subscreen-header app-subscreen-header--back-only">
           <button type="button" onClick={onBack} className="app-subscreen-back">
-            <ArrowLeft className="w-4 h-4" />
-            Back to list
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Clients
           </button>
         </div>
       )}

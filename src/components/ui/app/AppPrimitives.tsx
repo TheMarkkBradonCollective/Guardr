@@ -103,28 +103,41 @@ export function AppPageLead({
   );
 }
 
+export function formatBackToLabel(destinationOrLabel: string): string {
+  const trimmed = destinationOrLabel.trim();
+  if (!trimmed) return 'Back to previous';
+  if (/^back to\s+/i.test(trimmed)) {
+    const dest = trimmed.replace(/^back to\s+/i, '').trim();
+    return dest ? `Back to ${dest}` : 'Back to previous';
+  }
+  if (/^back$/i.test(trimmed)) return 'Back to previous';
+  return `Back to ${trimmed}`;
+}
+
 export function AppSubScreenHeader({
   title,
   onBack,
-  backLabel = 'Back',
+  backLabel = 'previous',
   wrapTitle = true,
   hideTitle = false,
 }: {
   title: string;
   onBack: () => void;
+  /** Destination name ("Guards") or full phrase ("Back to Guards"). */
   backLabel?: string;
   /** When true (default), title wraps to full width — never ellipsizes with "...". */
   wrapTitle?: boolean;
   /** Back control only — title lives in the scrolling page body. */
   hideTitle?: boolean;
 }) {
+  const label = formatBackToLabel(backLabel);
   return (
     <div
       className={`app-subscreen-header app-subscreen-header--shrink${wrapTitle && !hideTitle ? ' app-subscreen-header--wrap' : ''}${hideTitle ? ' app-subscreen-header--back-only' : ''}`}
     >
       <button type="button" onClick={onBack} className="app-subscreen-back">
-        <ArrowLeft className="w-4 h-4" />
-        {backLabel}
+        <ArrowLeft className="w-4 h-4" aria-hidden />
+        {label}
       </button>
       {!hideTitle ? <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1> : null}
     </div>
@@ -516,6 +529,7 @@ export function AppChatHeader({
   title,
   subtitle,
   onBack,
+  backLabel = 'Messages',
   trailing,
   hideBackOnDesktop = false,
   avatar,
@@ -523,21 +537,23 @@ export function AppChatHeader({
   title: string;
   subtitle?: string;
   onBack?: () => void;
+  /** Destination for the back pill — becomes "Back to …". */
+  backLabel?: string;
   trailing?: React.ReactNode;
   hideBackOnDesktop?: boolean;
   /** Optional leading avatar element displayed between back button and title */
   avatar?: React.ReactNode;
 }) {
   return (
-    <div className="app-chat-header">
+    <div className="app-chat-header app-chat-header--with-back-label">
       {onBack ? (
         <button
           type="button"
           onClick={onBack}
-          className={`app-chat-header-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
-          aria-label="Back"
+          className={`app-subscreen-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
         >
-          <ArrowLeft className="w-4.5 h-4.5" />
+          <ArrowLeft className="w-4 h-4" aria-hidden />
+          {formatBackToLabel(backLabel)}
         </button>
       ) : (
         <span className="w-0 shrink-0" aria-hidden />

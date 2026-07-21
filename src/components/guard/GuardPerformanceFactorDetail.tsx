@@ -139,7 +139,7 @@ export function GuardPerformanceFactorDetail({
 
   return (
     <div className="guard-factor-detail-screen">
-      <AppSubScreenHeader title={factor.label} onBack={onBack} backLabel="" />
+      <AppSubScreenHeader title={factor.label} onBack={onBack} backLabel="Performance" />
 
       <div className="guard-factor-detail-scroll">
         <section className="guard-factor-detail-hero">

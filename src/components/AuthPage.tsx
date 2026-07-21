@@ -1497,7 +1497,7 @@ export function AuthPage({
             trailing={
               <button type="button" onClick={onBackToHome} className="dsk-auth-back">
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                Back to Home
               </button>
             }
           />
@@ -1543,7 +1543,7 @@ export function AuthPage({
               className="auth-mobile-page-back"
             >
               <ArrowLeft className="w-4 h-4" aria-hidden />
-              Back
+              Back to Home
             </button>
             <div className="auth-mobile-page-topbar-actions">
               {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
@@ -1580,7 +1580,7 @@ export function AuthPage({
             className="flex items-center gap-1.5 text-white/75 hover:text-white transition-colors text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            Back to Home
           </button>
           <div className="flex items-center gap-2 text-white">
             <Logo size={26} className="text-white" />

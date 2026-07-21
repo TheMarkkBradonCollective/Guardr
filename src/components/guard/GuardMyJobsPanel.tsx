@@ -301,7 +301,7 @@ export function GuardMyJobsPanel({
   if (selectedJob) {
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} />
+        <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} backLabel="My jobs" />
         <GuardJobDetailView
           job={selectedJob}
           guard={guard}

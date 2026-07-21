@@ -205,23 +205,26 @@ export function DirectGuardRequestFlow({
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
     <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
-      <div className="shrink-0 px-4 pt-4 space-y-4">
-        <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
-          <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
-          <div className="flex items-center gap-3">
-            <ProfileAvatar src={guard.avatar} name={guard.name} size="md" rounded="xl" />
-            <div className="min-w-0">
-              <p className="font-semibold">{guard.name}</p>
-              <p className="text-sm text-brand-text-muted">{getGuardDisplayHeadline(guard)}</p>
+      <div className="shrink-0 space-y-4">
+        <div className="px-4 pt-4">
+          <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
+            <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
+            <div className="flex items-center gap-3">
+              <ProfileAvatar src={guard.avatar} name={guard.name} size="md" rounded="xl" />
+              <div className="min-w-0">
+                <p className="font-semibold">{guard.name}</p>
+                <p className="text-sm text-brand-text-muted">{getGuardDisplayHeadline(guard)}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={goBack} className="app-chat-header-back" aria-label="Back">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="app-subscreen-header app-subscreen-header--wrap">
+          <button type="button" onClick={goBack} className="app-subscreen-back">
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            {step === 1 ? 'Back to Guards' : `Back to ${STEP_LABELS[step - 2]}`}
           </button>
-          <div className="flex-1">
+          <div className="w-full min-w-0">
             <p className="text-sm text-brand-text-muted">
               Step {step} of 8 · {STEP_LABELS[step - 1]}
             </p>

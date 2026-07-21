@@ -140,8 +140,8 @@ export function AccountMenu({
             onClick={backToMainMenu}
             className="app-subscreen-back"
           >
-            <ChevronLeft className="w-4 h-4 shrink-0" strokeWidth={2} />
-            Back
+            <ChevronLeft className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden />
+            Back to Account
           </button>
         ) : (
           <>

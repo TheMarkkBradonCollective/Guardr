@@ -36,7 +36,7 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
   return (
     <AppPageTransition motionKey="support-compose" className="h-full min-h-0">
       <ResponsivePage screenClassName="client-form-shell">
-        <AppSubScreenHeader title="Contact support" onBack={onBack} />
+        <AppSubScreenHeader title="Contact support" onBack={onBack} backLabel="Support" />
         <ResponsiveFormPage title="Contact support" subtitle="Guardr staff will respond in Messages">
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>

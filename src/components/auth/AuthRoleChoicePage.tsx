@@ -105,21 +105,15 @@ export function AuthRoleChoicePage({
       flexDirection="column"
       overflow="hidden"
     >
-      <UberDirectTopHeader
-        onBrandClick={onBack}
-        trailing={
-          onBack ? (
-            <button
-              type="button"
-              className="app-subscreen-back"
-              onClick={onBack}
-            >
-              <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden />
-              Back
-            </button>
-          ) : undefined
-        }
-      />
+      <UberDirectTopHeader onBrandClick={onBack} />
+      {onBack ? (
+        <div className="app-subscreen-header app-subscreen-header--back-only">
+          <button type="button" className="app-subscreen-back" onClick={onBack}>
+            <ChevronLeft className="w-4 h-4" strokeWidth={2} aria-hidden />
+            Back to Home
+          </button>
+        </div>
+      ) : null}
 
       <Block as="main" className="auth-role-choice-main">
         {/* Hero band — pale gray with headline + illustration */}
