@@ -186,4 +186,45 @@ describe('buildApplicationFeed', () => {
     assert.equal(feed.length, 1);
     assert.equal(feed[0]?.statusLabel, 'Pending review');
   });
+
+  it('flags government IDs with photos but not_submitted status for pending review', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'not_submitted',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      idState: 'CA',
+      idNumber: 'ID-9',
+      idExpiryDate: '2099-12-31',
+    });
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials' && item.id === govIdApprovalItemId('g-staff')
+    );
+
+    assert.equal(feed.length, 1);
+    assert.equal(feed[0]?.statusLabel, 'Pending review');
+    assert.equal(feed[0]?.subtitle, 'Select Government ID or driver’s license');
+    assert.equal(countPendingCredentialReviews([guard]), 1);
+  });
+
+  it('prompts staff to select ID vs license when type is missing on a pending ID', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'pending',
+      idState: 'CA',
+      idNumber: 'ID-1',
+      idExpiryDate: '2099-12-31',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      idVerificationSubmittedAt: '2026-01-01T00:00:00.000Z',
+    });
+    const govId = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).find(
+      (item) => item.id === govIdApprovalItemId('g-staff')
+    );
+    assert.equal(govId?.subtitle, 'Select Government ID or driver’s license');
+  });
 });

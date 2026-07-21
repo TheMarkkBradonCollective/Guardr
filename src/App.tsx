@@ -6176,6 +6176,8 @@ export default function App() {
   const handleStaffUpdateGuardIdImages = async (
     guardId: string,
     payload: {
+      idDocumentType?: import('./types').GovernmentIdDocumentType;
+      idLicenseClass?: string;
       idState: string;
       idNumber: string;
       idExpiryDate: string;
@@ -6194,10 +6196,23 @@ export default function App() {
     const idState = payload.idState?.trim().toUpperCase() || guard.idState?.trim().toUpperCase() || '';
     const idNumber = payload.idNumber?.trim() || guard.idNumber?.trim() || '';
     const idExpiryDate = payload.idExpiryDate?.trim() || guard.idExpiryDate?.trim() || '';
+    const idDocumentType = payload.idDocumentType ?? guard.idDocumentType;
+    const idLicenseClass =
+      idDocumentType === 'drivers_license'
+        ? payload.idLicenseClass?.trim() || guard.idLicenseClass?.trim() || undefined
+        : undefined;
     const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
     const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
     const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
-    if (!front && !back && !selfie && !idState && !idNumber && !idExpiryDate) {
+    if (
+      !front &&
+      !back &&
+      !selfie &&
+      !idState &&
+      !idNumber &&
+      !idExpiryDate &&
+      !payload.idDocumentType
+    ) {
       return { ok: false, error: 'Enter ID details or upload at least one ID photo to save.' };
     }
 
@@ -6206,6 +6221,8 @@ export default function App() {
       idState !== (guard.idState ?? '').trim().toUpperCase() ||
       idNumber !== (guard.idNumber ?? '').trim() ||
       idExpiryDate !== (guard.idExpiryDate ?? '').trim() ||
+      idDocumentType !== guard.idDocumentType ||
+      (idLicenseClass ?? '') !== (guard.idLicenseClass ?? '').trim() ||
       front !== (guard.idFrontUrl ?? '').trim() ||
       back !== (guard.idBackUrl ?? '').trim() ||
       selfie !== (guard.idSelfieUrl ?? '').trim();
@@ -6218,6 +6235,7 @@ export default function App() {
     if (guard.idVerificationStatus === 'verified') {
       nextStatus = 'verified';
     } else if (complete) {
+      // Photos + details on file → pending staff review (type can still be set before approve).
       nextStatus = 'pending';
     } else {
       nextStatus = 'not_submitted';
@@ -6231,6 +6249,8 @@ export default function App() {
               idState: idState || undefined,
               idNumber: idNumber || undefined,
               idExpiryDate: idExpiryDate || undefined,
+              idDocumentType,
+              idLicenseClass,
               idFrontUrl: front || undefined,
               idBackUrl: back || undefined,
               idSelfieUrl: selfie || undefined,
@@ -6256,6 +6276,8 @@ export default function App() {
           id_state: idState || null,
           id_number: idNumber || null,
           id_expiry_date: idExpiryDate || null,
+          id_document_type: idDocumentType ?? null,
+          id_license_class: idLicenseClass ?? null,
           id_front_url: front || null,
           id_back_url: back || null,
           id_selfie_url: selfie || null,

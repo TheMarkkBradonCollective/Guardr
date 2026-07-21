@@ -82,6 +82,10 @@ interface StaffCredentialsProps {
     guardId: string,
     cert: Partial<Certification>
   ) => Promise<AddCertificationResult>;
+  onUpdateGuardIdImages?: (
+    guardId: string,
+    payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
 }
 
 function CredentialFeedRow({
@@ -166,8 +170,9 @@ export function StaffCredentials({
   onAddCredentialForGuard,
   onEditGuardProfile,
   onAddCertification,
+  onUpdateGuardIdImages,
 }: StaffCredentialsProps) {
-  const [filter, setFilter] = useState<CredentialStatusFilter>('pending_review');
+  const [filter, setFilter] = useState<CredentialStatusFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -410,6 +415,11 @@ export function StaffCredentials({
       onApprove={onApproveIdentityVerification}
       onReject={onRejectIdentityVerification}
       onRequestResubmit={onRequestIdentityResubmit}
+      onUpdateImages={
+        onUpdateGuardIdImages
+          ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+          : undefined
+      }
     />
   );
 
@@ -600,9 +610,19 @@ export function StaffCredentials({
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">
       {filteredFeed.length === 0 ? (
-        <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title="All clear">
+        <AppEmptyState dashed icon={<ShieldCheck className="w-5 h-5" />} title={
+          search.trim()
+            ? 'No credentials match your search'
+            : filter === 'pending_upload'
+              ? 'No pending uploads'
+              : filter === 'pending_review'
+                ? 'All clear'
+                : filter === 'verified'
+                  ? 'No verified credentials'
+                  : 'No credentials yet'
+        }>
           {search.trim()
-            ? 'No credentials match your search.'
+            ? 'Try adjusting your search term.'
             : filter === 'pending_upload'
               ? 'No credentials waiting for guard upload.'
               : filter === 'pending_review'

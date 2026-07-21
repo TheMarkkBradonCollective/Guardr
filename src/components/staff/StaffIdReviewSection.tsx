@@ -4,6 +4,9 @@ import { Check, RefreshCw, X } from 'lucide-react';
 import { DRIVER_LICENSE_CLASSES, SecurityGuard, type GovernmentIdDocumentType } from '../../types';
 import {
   getGuardIdVerificationStatus,
+  guardGovIdNeedsDocumentTypeSelection,
+  guardHasGovernmentIdOnFile,
+  guardIdVerificationPhotosComplete,
   guardIdVerificationResubmitPending,
   ID_VERIFICATION_SLOT_LABELS,
   staffApproveIdVerificationBlocker,
@@ -59,12 +62,17 @@ export function StaffIdReviewSection({
   }, [guard.id, guard.idDocumentType, guard.idLicenseClass]);
 
   if (!canManage) return null;
-  if (status === 'not_submitted') return null;
+  // Photos on file with status still not_submitted still need staff classification / review.
+  if (
+    status === 'not_submitted' &&
+    !guardIdVerificationPhotosComplete(guard) &&
+    !guardHasGovernmentIdOnFile(guard)
+  ) {
+    return null;
+  }
 
   const needsDocumentType =
-    Boolean(applicationVerifyBlocker) &&
-    (!guard.idDocumentType ||
-      (guard.idDocumentType === 'drivers_license' && !guard.idLicenseClass?.trim()));
+    guardGovIdNeedsDocumentTypeSelection(guard) && status !== 'verified';
 
   const saveDocumentType = async () => {
     if (!onUpdateImages) return;

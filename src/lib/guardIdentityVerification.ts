@@ -100,6 +100,31 @@ export function guardIdVerificationPhotosComplete(
   return Boolean(guard.idFrontUrl?.trim() && guard.idBackUrl?.trim() && guard.idSelfieUrl?.trim());
 }
 
+/** True when staff still needs to choose Government ID vs driver’s license (and class). */
+export function guardGovIdNeedsDocumentTypeSelection(
+  guard: Pick<SecurityGuard, 'idDocumentType' | 'idLicenseClass'>
+): boolean {
+  if (!guard.idDocumentType) return true;
+  if (guard.idDocumentType === 'drivers_license' && !guard.idLicenseClass?.trim()) return true;
+  return false;
+}
+
+/**
+ * Government ID belongs in the Credentials feed when verification has started,
+ * or when photos are already on file but status never flipped out of not_submitted
+ * (so staff can classify ID vs license and review).
+ */
+export function guardGovIdBelongsInCredentialFeed(
+  guard: Pick<
+    SecurityGuard,
+    'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+  >
+): boolean {
+  const status = getGuardIdVerificationStatus(guard);
+  if (status !== 'not_submitted') return true;
+  return guardIdVerificationPhotosComplete(guard);
+}
+
 export function guardHasGovernmentIdOnFile(
   guard: Pick<
     SecurityGuard,

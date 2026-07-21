@@ -740,6 +740,7 @@ export function StaffDashboard({
             }
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onItemIdChange={setSelectedCredentialItemId}
+            onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
           />
         );
       case 'jobs':
