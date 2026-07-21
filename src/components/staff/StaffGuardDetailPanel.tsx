@@ -861,6 +861,11 @@ export function StaffGuardDetailPanel({
                           ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
                           : undefined
                       }
+                      onUpdateImages={
+                        onUpdateGuardIdImages
+                          ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                          : undefined
+                      }
                     />
                   ) : undefined
                 }
