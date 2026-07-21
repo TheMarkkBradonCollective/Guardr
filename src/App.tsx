@@ -3852,6 +3852,23 @@ export default function App() {
 
     const emailLower = assertEmailAvailable(profile.email);
 
+    if (role === 'staff') {
+      const staffProfile = profile as SecurityGuard;
+      if (!staffProfile.isStaff || !staffProfile.staffRole) {
+        throw new Error('Staff sign-up requires a staff application profile.');
+      }
+    } else if (role === 'guard') {
+      const guardProfile = profile as SecurityGuard;
+      if (guardProfile.isStaff) {
+        throw new Error('Staff accounts must use the staff sign-up path.');
+      }
+    } else if (role === 'client') {
+      const maybeGuard = profile as SecurityGuard;
+      if (maybeGuard.isStaff) {
+        throw new Error('Staff accounts must use the staff sign-up path.');
+      }
+    }
+
     if (role === 'client') {
       const client = profile as Client;
       const accountStatus = client.accountStatus ?? 'pending';

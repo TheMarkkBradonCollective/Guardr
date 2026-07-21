@@ -33,7 +33,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader, AuthModeToggle } from './auth/AuthFormChrome';
+import { AuthFormHeader } from './auth/AuthFormChrome';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -411,6 +411,10 @@ export function AuthPage({
     }
 
     if (isSignUp) {
+      if (role !== 'guard' && role !== 'client' && role !== 'staff') {
+        setErrorMsg('Choose Guard, Client, or Staff from the previous screen to continue.');
+        return;
+      }
       if (!acceptedTerms) {
         setErrorMsg('Please accept the Terms of Service and Privacy Policy to create an account.');
         return;
@@ -656,6 +660,10 @@ export function AuthPage({
     const bootstrapOwner = OWNER_BOOTSTRAP_ACCOUNTS[emailLower];
 
     if (bootstrapOwner) {
+      if (role !== 'staff') {
+        setErrorMsg('This is a staff account. Use Log in as staff.');
+        return;
+      }
       if (password !== bootstrapOwner.password) {
         setErrorMsg('Invalid password for Founder account.');
         return;
@@ -681,7 +689,7 @@ export function AuthPage({
         staffRole: 'Founder',
         userStatus: 'active',
       };
-      if (!matchedGuard) await onSignUp(ownerProfile, 'guard', bootstrapOwner.password);
+      if (!matchedGuard) await onSignUp(ownerProfile, 'staff', bootstrapOwner.password);
       onSignIn(
         {
           id: matchedGuard?.id ?? bootstrapOwner.id,
@@ -703,6 +711,10 @@ export function AuthPage({
     const bootstrapDirector = DIRECTOR_BOOTSTRAP_ACCOUNTS[emailLower];
 
     if (bootstrapDirector) {
+      if (role !== 'staff') {
+        setErrorMsg('This is a staff account. Use Log in as staff.');
+        return;
+      }
       if (password !== bootstrapDirector.password) {
         setErrorMsg('Invalid password for Director account.');
         return;
@@ -728,7 +740,7 @@ export function AuthPage({
         staffRole: 'Director',
         userStatus: 'active',
       };
-      if (!matchedGuard) await onSignUp(directorProfile, 'guard', bootstrapDirector.password);
+      if (!matchedGuard) await onSignUp(directorProfile, 'staff', bootstrapDirector.password);
       onSignIn(
         {
           id: matchedGuard?.id ?? bootstrapDirector.id,
@@ -747,7 +759,7 @@ export function AuthPage({
       return;
     }
 
-    const signInAttempt = await signInWithCredentials(email, password, guardsList, clientsList);
+    const signInAttempt = await signInWithCredentials(email, password, guardsList, clientsList, role);
     if (signInAttempt.status === 'ok') {
       onSignIn(signInAttempt.result.sessionUser, {
         passwordChangeRecommended: signInAttempt.result.passwordChangeRecommended,
@@ -764,6 +776,16 @@ export function AuthPage({
     }
     if (signInAttempt.status === 'pending_approval') {
       setErrorMsg('Your staff account is awaiting Director approval.');
+      return;
+    }
+    if (signInAttempt.status === 'role_mismatch') {
+      if (signInAttempt.actualPath === 'staff') {
+        setErrorMsg('This is a staff account. Use Log in as staff.');
+      } else if (signInAttempt.actualPath === 'guard') {
+        setErrorMsg('This is a guard account. Use Log in as guard.');
+      } else {
+        setErrorMsg('This is a client account. Use Log in as client.');
+      }
       return;
     }
     if (!isDbConnected && isAppLoading) {
@@ -784,7 +806,6 @@ export function AuthPage({
   const isMobilePageAuth = !isSheet && !isDesktopAuth;
   const useMobileLogoLayout = isMobilePageAuth && formFactor === 'mobile';
   const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
-  const showAuthChromeControls = !isDesktopAuth && !isMobilePageAuth && isSheet && isSignUp;
 
   const authFormBody = (
     <>
@@ -797,24 +818,6 @@ export function AuthPage({
           center={isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp)}
           variant={useFocusedAuthHeader ? 'page' : 'sheet'}
         />
-
-        {showAuthChromeControls ? (
-          <div className="auth-sheet-controls">
-            <div className="auth-sheet-segmented">
-              <AuthModeToggle
-                isSignUp={isSignUp}
-                onSignIn={() => {
-                  setIsSignUp(false);
-                  onAuthModeChange?.('sign-in');
-                }}
-                onSignUp={() => {
-                  setIsSignUp(true);
-                  onAuthModeChange?.('sign-up');
-                }}
-              />
-            </div>
-          </div>
-        ) : null}
 
         <div className={!isDesktopAuth ? 'auth-sheet-fields' : 'space-y-5'}>
           {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
