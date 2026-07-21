@@ -20,6 +20,7 @@ import { AppButton } from '../ui/AppButton';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffCreateCrewForm } from './StaffCreateCrewForm';
 import { Briefcase, MessageCircle, Shield, Users } from 'lucide-react';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 type CrewFilter = 'all' | StaffCrewPhase;
 
@@ -253,6 +254,8 @@ export function StaffGuardCrewsPanel({
     );
   }
 
+  const needsReviewCount = listings.filter((c) => c.phase === 'needs_review').length;
+
   const toolbar = (
     <>
       {view === 'standing' && !showStandingDetailOnly ? (
@@ -260,34 +263,18 @@ export function StaffGuardCrewsPanel({
           {createForm}
         </div>
       ) : null}
-      <div className="flex gap-2 flex-wrap">
-        <button
-          type="button"
-          onClick={() => { setView('standing'); setSearch(''); }}
-          className={`app-chip ${view === 'standing' ? 'app-chip-active' : ''}`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          Standing crews
-          {standingCrewLeads.length > 0 && (
-            <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-brand-primary/15 text-[10px] font-bold text-brand-primary">
-              {standingCrewLeads.length}
-            </span>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setView('job'); setSearch(''); }}
-          className={`app-chip ${view === 'job' ? 'app-chip-active' : ''}`}
-        >
-          <Shield className="w-3.5 h-3.5" />
-          Job crews
-          {listings.some((c) => c.phase === 'needs_review') && (
-            <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-400">
-              {listings.filter((c) => c.phase === 'needs_review').length}
-            </span>
-          )}
-        </button>
-      </div>
+      <StaffListFilterTabs
+        aria-label="Crew view"
+        activeId={view}
+        onChange={(id) => {
+          setView(id as CrewView);
+          setSearch('');
+        }}
+        tabs={[
+          { id: 'standing', label: 'Standing crews', count: standingCrewLeads.length },
+          { id: 'job', label: 'Job crews', count: needsReviewCount > 0 ? needsReviewCount : undefined },
+        ]}
+      />
       {view === 'standing' && !showStandingDetailOnly ? (
         <WfSearchBar
           value={search}
@@ -304,23 +291,16 @@ export function StaffGuardCrewsPanel({
             placeholder="Search crews, coordinators, clients, jobs..."
             className="max-w-md"
           />
-          <div className="flex flex-wrap gap-2">
-            {FILTER_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setFilter(opt.id)}
-                className={`app-chip ${filter === opt.id ? 'app-chip-active' : ''}`}
-              >
-                {opt.label}
-                {opt.id === 'needs_review' && listings.some((c) => c.phase === 'needs_review') && (
-                  <span className="ml-1.5 inline-flex min-w-[1.125rem] h-[1.125rem] items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-400">
-                    {listings.filter((c) => c.phase === 'needs_review').length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          <StaffListFilterTabs
+            aria-label="Job crew status"
+            activeId={filter}
+            onChange={(id) => setFilter(id as CrewFilter)}
+            tabs={FILTER_OPTIONS.map((opt) => ({
+              id: opt.id,
+              label: opt.label,
+              count: opt.id === 'needs_review' ? needsReviewCount : undefined,
+            }))}
+          />
         </>
       ) : null}
     </>

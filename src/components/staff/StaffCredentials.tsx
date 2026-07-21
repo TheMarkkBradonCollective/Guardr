@@ -588,10 +588,10 @@ export function StaffCredentials({
         activeId={filter}
         onChange={(id) => setFilter(id as CredentialStatusFilter)}
         tabs={[
-          { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
-          { id: 'verified', label: 'Verified' },
-          { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
           { id: 'all', label: 'All' },
+          { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
+          { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+          { id: 'verified', label: 'Verified' },
         ]}
       />
     </>

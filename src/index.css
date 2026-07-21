@@ -6423,19 +6423,6 @@ html.theme-light .app-messages-empty-detail {
   line-height: 1;
 }
 
-.app-inbox-tabs.staff-operations-section-tabs .app-inbox-tab {
-  flex: 0 0 auto;
-  min-width: 5.5rem;
-  padding-inline: 0.85rem;
-}
-
-@media (min-width: 900px) {
-  .app-inbox-tabs.staff-operations-section-tabs .app-inbox-tab {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-}
-
 .app-inbox-tab-empty {
   display: flex;
   flex-direction: column;
@@ -20355,8 +20342,13 @@ textarea.uber-input {
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-inline: 2px;
-  margin-inline: -2px;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+.staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+  margin-inline: -0.25rem;
+  border-bottom-width: 1px;
 }
 
 .staff-shell .staff-list-filter-tabs::-webkit-scrollbar {

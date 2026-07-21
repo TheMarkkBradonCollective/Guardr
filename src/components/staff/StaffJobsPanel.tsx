@@ -21,13 +21,14 @@ import { StaffJobDetailPanel } from './StaffJobDetailPanel';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
-type JobsFilter = 'all' | 'open' | 'active' | 'complete';
+type JobsFilter = 'all' | 'open' | 'active' | 'complete' | 'cancelled';
 
 const FILTER_OPTIONS: { id: JobsFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'open', label: 'Open' },
   { id: 'active', label: 'Active' },
   { id: 'complete', label: 'Complete' },
+  { id: 'cancelled', label: 'Cancelled' },
 ];
 
 interface StaffJobsPanelProps {
@@ -57,6 +58,8 @@ function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
       return req.status === 'accepted' || req.status === 'in-progress';
     case 'complete':
       return req.status === 'completed' || req.status === 'closed';
+    case 'cancelled':
+      return req.status === 'cancelled';
     default:
       return true;
   }
@@ -118,6 +121,7 @@ export function StaffJobsPanel({
       all: requests.length,
       open: requests.filter((r) => matchesFilter(r, 'open')).length,
       active: requests.filter((r) => matchesFilter(r, 'active')).length,
+      cancelled: requests.filter((r) => matchesFilter(r, 'cancelled')).length,
       complete: requests.filter((r) => matchesFilter(r, 'complete')).length,
     }),
     [requests],

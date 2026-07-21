@@ -1,4 +1,5 @@
 import React from 'react';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 
 export interface StaffListFilterTab {
   id: string;
@@ -19,7 +20,7 @@ interface StaffListFilterTabsProps {
   'aria-label'?: string;
 }
 
-/** Consistent status / sort tabs across staff roster and queue panels. */
+/** Status / sort tabs — same underline inbox style as Messages / Support. */
 export function StaffListFilterTabs({
   tabs,
   activeId,
@@ -28,25 +29,17 @@ export function StaffListFilterTabs({
   'aria-label': ariaLabel = 'Filter list',
 }: StaffListFilterTabsProps) {
   return (
-    <div
-      className={`flex flex-nowrap gap-1.5 staff-list-filter-tabs overflow-x-auto scrollbar-none ${className}`.trim()}
-      role="tablist"
-      aria-label={ariaLabel}
-      style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' } as React.CSSProperties}
-    >
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          role="tab"
-          aria-selected={activeId === tab.id}
-          onClick={() => onChange(tab.id)}
-          className="staff-filter-pill shrink-0 whitespace-nowrap"
-          data-active={activeId === tab.id ? 'true' : undefined}
-        >
-          {formatStaffListFilterTabLabel(tab)}
-        </button>
-      ))}
+    <div aria-label={ariaLabel}>
+      <MessagesInboxTabs
+        className={`staff-list-filter-tabs${className ? ` ${className}` : ''}`}
+        activeTab={activeId}
+        onTabChange={onChange}
+        tabs={tabs.map((tab) => ({
+          id: tab.id,
+          label: tab.label,
+          badge: tab.count,
+        }))}
+      />
     </div>
   );
 }

@@ -124,10 +124,10 @@ export function StaffTeamPanel({
         activeId={statusFilter}
         onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
         tabs={[
-          { id: 'pending', label: 'Pending review' },
+          { id: 'all', label: 'All' },
+          { id: 'pending', label: 'Pending' },
           { id: 'active', label: 'Active' },
           { id: 'suspended', label: 'Suspended' },
-          { id: 'all', label: 'All' },
         ]}
       />
     </>
