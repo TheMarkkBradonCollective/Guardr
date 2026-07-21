@@ -6,11 +6,11 @@ import { supabase } from '../supabase';
 import { verifyAccountPassword } from '../accountPasswords';
 import { hashPassword, isPasswordHash, verifyPasswordHash } from './passwordHash';
 import type { Client, PlatformRole, SecurityGuard, SessionUser, StaffRole } from '../../types';
-import { resolvePlatformRole } from '../permissions';
+import { resolvePlatformRole, isStaffRole } from '../permissions';
 import { resolvePersonNameParts } from '../personName';
 import { getGuardUserStatus } from '../accountStatus';
 
-export type AuthRole = 'guard' | 'client';
+export type AuthRole = 'guard' | 'client' | 'staff';
 
 export interface AuthProfile {
   table: 'guards' | 'clients' | 'staff';
@@ -37,7 +37,8 @@ export type SignInAttemptResult =
   | { status: 'not_found' }
   | { status: 'invalid_password' }
   | { status: 'blocked' }
-  | { status: 'pending_approval' };
+  | { status: 'pending_approval' }
+  | { status: 'role_mismatch'; expectedPath: AuthRole; actualPath: AuthRole };
 
 async function verifyStoredPassword(
   stored: string | null | undefined,
@@ -261,11 +262,28 @@ export async function migratePasswordToHash(
   return passwordHash;
 }
 
+export function authPathForProfile(profile: AuthProfile): AuthRole {
+  if (profile.table === 'clients' || profile.role === 'client') return 'client';
+  if (
+    profile.table === 'staff' ||
+    profile.guard?.isStaff === true ||
+    isStaffRole(profile.role)
+  ) {
+    return 'staff';
+  }
+  return 'guard';
+}
+
+export function profileMatchesAuthPath(profile: AuthProfile, expectedPath: AuthRole): boolean {
+  return authPathForProfile(profile) === expectedPath;
+}
+
 export async function signInWithCredentials(
   email: string,
   password: string,
   guards: SecurityGuard[],
-  clients: Client[]
+  clients: Client[],
+  expectedPath?: AuthRole
 ): Promise<SignInAttemptResult> {
   const emailLower = email.trim().toLowerCase();
   if (!emailLower) return { status: 'not_found' };
@@ -283,6 +301,14 @@ export async function signInWithCredentials(
 
   const passwordOk = await verifyStoredPassword(profile.password, profile.passwordHash ?? undefined, password);
   if (!passwordOk) return { status: 'invalid_password' };
+
+  if (expectedPath && !profileMatchesAuthPath(profile, expectedPath)) {
+    return {
+      status: 'role_mismatch',
+      expectedPath,
+      actualPath: authPathForProfile(profile),
+    };
+  }
 
   if (profile.authUserId) {
     const ok = await trySupabaseSignIn(emailLower, password);

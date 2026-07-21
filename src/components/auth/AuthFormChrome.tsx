@@ -3,7 +3,6 @@ import { Block } from 'baseui/block';
 import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { LandingBadge } from '../landing/LandingUberPrimitives';
 
 export function AuthFormHeader({
@@ -104,31 +103,6 @@ export function AuthFormHeader({
       <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
         {subtitle}
       </ParagraphMedium>
-    </Block>
-  );
-}
-
-export function AuthModeToggle({
-  isSignUp,
-  onSignIn,
-  onSignUp,
-  className = '',
-}: {
-  isSignUp: boolean;
-  onSignIn: () => void;
-  onSignUp: () => void;
-  className?: string;
-}) {
-  return (
-    <Block marginBottom="0" className={className}>
-      <AppSegmentedControl
-        options={[
-          { id: 'sign-in' as const, label: 'Sign in' },
-          { id: 'sign-up' as const, label: 'Sign up' },
-        ]}
-        value={isSignUp ? 'sign-up' : 'sign-in'}
-        onChange={(id) => (id === 'sign-up' ? onSignUp() : onSignIn())}
-      />
     </Block>
   );
 }
