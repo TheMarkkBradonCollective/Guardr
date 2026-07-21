@@ -412,6 +412,7 @@ export function StaffCredentials({
     <StaffIdReviewSection
       guard={guard}
       canManage={canVerifyCredentials}
+      documentTypeEdit="inline"
       onApprove={onApproveIdentityVerification}
       onReject={onRejectIdentityVerification}
       onRequestResubmit={onRequestIdentityResubmit}

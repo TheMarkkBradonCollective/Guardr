@@ -847,6 +847,7 @@ export function StaffGuardDetailPanel({
                     <StaffIdReviewSection
                       guard={guard}
                       canManage={canManage}
+                      documentTypeEdit="credentials-flag"
                       onApprove={
                         onOpenGuardCredential
                           ? (guardId) => onOpenGuardCredential(guardId, govIdApprovalItemId(guardId))
@@ -854,16 +855,11 @@ export function StaffGuardDetailPanel({
                             ? () => onApproveIdentityVerification(guard.id)
                             : undefined
                       }
-                      approveActionLabel={onOpenGuardCredential ? 'Review ID' : undefined}
+                      approveActionLabel={onOpenGuardCredential ? 'Review in Credentials' : undefined}
                       onReject={onRejectIdentityVerification}
                       onRequestResubmit={
                         onRequestIdentityResubmit
                           ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                          : undefined
-                      }
-                      onUpdateImages={
-                        onUpdateGuardIdImages
-                          ? (payload) => onUpdateGuardIdImages(guard.id, payload)
                           : undefined
                       }
                     />
