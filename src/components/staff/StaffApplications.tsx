@@ -259,7 +259,9 @@ export function StaffApplications({
     return applicationEntries
       .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
       .filter((entry) =>
-        matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
+        kindFilter === 'all'
+          ? true
+          : matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
       )
       .filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
   }, [applicationEntries, kindFilter, statusFilter, guards, clients, search]);
@@ -435,26 +437,38 @@ export function StaffApplications({
       />
       <div className="space-y-2">
         <StaffListFilterTabs
+          aria-label="Show all applications"
+          activeId={kindFilter === 'all' ? 'all' : '__none__'}
+          onChange={(id) => {
+            if (id === 'all') setKindFilter('all');
+          }}
+          tabs={[{ id: 'all', label: 'All' }]}
+        />
+        <StaffListFilterTabs
           aria-label="Application type"
-          activeId={kindFilter}
-          onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+          activeId={kindFilter === 'all' ? '__none__' : kindFilter}
+          onChange={(id) => {
+            if (id === '__none__') return;
+            setKindFilter(id as ApplicationKindFilter);
+          }}
           tabs={[
-            { id: 'all', label: 'All' },
             { id: 'client', label: 'Client' },
             { id: 'guard', label: 'Guard' },
             { id: 'staff', label: 'Staff' },
           ]}
         />
-        <StaffListFilterTabs
-          aria-label="Application status"
-          activeId={statusFilter}
-          onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
-          tabs={[
-            { id: 'pending', label: 'Pending' },
-            { id: 'approved', label: 'Approved' },
-            { id: 'denied', label: 'Denied' },
-          ]}
-        />
+        {kindFilter !== 'all' ? (
+          <StaffListFilterTabs
+            aria-label="Application status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
+            tabs={[
+              { id: 'pending', label: 'Pending' },
+              { id: 'approved', label: 'Approved' },
+              { id: 'denied', label: 'Denied' },
+            ]}
+          />
+        ) : null}
       </div>
     </>
   ) : null;
@@ -465,13 +479,15 @@ export function StaffApplications({
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No applications match your search.'
-            : kindFilter === 'staff'
-              ? 'Staff application review is coming soon.'
-              : statusFilter === 'pending'
-                ? 'No account applications waiting for review.'
-                : statusFilter === 'approved'
-                  ? 'No approved applications in this view.'
-                  : 'No denied applications in this view.'}
+            : kindFilter === 'all'
+              ? 'No account applications on file yet.'
+              : kindFilter === 'staff'
+                ? 'Staff application review is coming soon.'
+                : statusFilter === 'pending'
+                  ? 'No account applications waiting for review.'
+                  : statusFilter === 'approved'
+                    ? 'No approved applications in this view.'
+                    : 'No denied applications in this view.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
