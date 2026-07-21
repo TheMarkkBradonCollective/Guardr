@@ -86,7 +86,7 @@ body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet
 body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-main--tablet {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
-  gap: 1.5rem;
+  gap: 2rem;
   align-items: center;
   padding: 0 1.75rem 1.25rem;
 }
@@ -96,35 +96,23 @@ body[data-form-factor="tablet"] .app-welcome-hero--tablet {
   padding-top: 1rem;
 }
 
+body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-brand {
+  font-size: clamp(3.5rem, 7vw, 5rem);
+}
+
 body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-headline {
-  font-size: clamp(1.75rem, 3.2vw, 2.35rem);
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
 }
 
 body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-dock {
   margin: 0;
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-  border: 1px solid var(--brand-border);
-  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
-  box-shadow: var(--shadow-md);
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
-body[data-form-factor="tablet"] .app-welcome-shell-badge {
-  font-size: 0.5625rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid var(--brand-border);
-}
-
-body[data-form-factor="tablet"] .app-welcome-shell-badge--pwa {
-  color: var(--brand-primary);
-  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-}
-
-body[data-form-factor="tablet"] .app-welcome-shell-badge--native {
-  color: var(--brand-accent-text);
-  background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+body[data-form-factor="tablet"] .app-welcome-shell-status {
+  font-size: 0.75rem;
 }

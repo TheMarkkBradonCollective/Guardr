@@ -22,9 +22,10 @@ body.shell-pwa .app-welcome {
 
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
-  background: var(--uber-surface, #f6f6f6);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
-  backdrop-filter: blur(16px);
+  background: transparent;
+  border-top: none;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 body[data-shell="pwa"] .uber-bottom-nav,
@@ -61,26 +62,24 @@ body.shell-pwa .uber-app-shell.mobility-shell aside {
 
 body[data-shell="pwa"] .app-welcome-shell-badge--pwa,
 body.shell-pwa .app-welcome-shell-badge--pwa {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--uber-accent, #000000) 25%, transparent);
+  box-shadow: none;
 }
 
-body[data-view-surface="pwa-mobile"] .auth-sheet--pwa-mobile .auth-sheet-scroll,
-body[data-view-surface="pwa-tablet"] .auth-sheet--pwa-tablet .auth-sheet-scroll {
-  padding-bottom: max(1.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
-}
-
-/* PWA tablet — softer card chrome */
+/* PWA tablet — flush dock */
 body[data-view-surface="pwa-tablet"] .app-welcome--tablet .app-welcome-dock {
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
-    var(--shadow-md);
+  box-shadow: none;
 }
 
 body[data-shell="pwa"][data-pwa-mode="lite"] .app-welcome-dock,
 body[data-experience-tier="pwa-lite"] .app-welcome-dock {
   backdrop-filter: none;
-  background: var(--uber-bg, #ffffff);
-  border-top: 1px solid var(--uber-border, #e2e2e2);
+  background: transparent;
+  border-top: none;
+}
+
+body[data-view-surface="pwa-mobile"] .auth-sheet--pwa-mobile .auth-sheet-scroll,
+body[data-view-surface="pwa-tablet"] .auth-sheet--pwa-tablet .auth-sheet-scroll {
+  padding-bottom: max(1.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 body[data-shell="pwa"][data-pwa-mode="lite"] .uber-bottom-nav,
