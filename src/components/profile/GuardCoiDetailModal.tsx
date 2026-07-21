@@ -4,7 +4,7 @@ import { AppButton } from '../ui/AppButton';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { CERT_CATEGORY_LABELS } from '../../lib/certCatalog';
 import { coiViewSectionLabel } from '../../lib/guardCredentialSections';
-import { resolveInsuranceStatus } from '../../lib/guardInsurance';
+import { resolveInsuranceStatus, guardCoiCanGuardEdit } from '../../lib/guardInsurance';
 import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { CertPhotoRow } from '../credentials/CertPhotoRow';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
@@ -43,6 +43,7 @@ export function GuardCoiDetailModal({
 }: GuardCoiDetailModalProps) {
   const policy = guard.insurancePolicy;
   const status = policy ? resolveInsuranceStatus(policy) : 'not_submitted';
+  const documentLocked = !staffMode && !guardCoiCanGuardEdit(guard);
   const [editing, setEditing] = useState(initialEditMode && canEdit && !!onSave && !onEditFullPage);
   const [carrier, setCarrier] = useState(policy?.carrier ?? '');
   const [policyNumber, setPolicyNumber] = useState(policy?.policyNumber ?? '');
@@ -239,7 +240,7 @@ export function GuardCoiDetailModal({
                 <CertPhotoRow
                   label="Certificate of Insurance"
                   currentUrl={documentUrl || undefined}
-                  locked={false}
+                  locked={documentLocked}
                   onSelect={setDocumentUrl}
                 />
               </div>

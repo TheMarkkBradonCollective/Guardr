@@ -40,7 +40,7 @@ interface AccountPendingScreenProps {
 
 function guardActivationSubtitle(approved: boolean, percent: number): string {
   if (!approved) {
-    return 'Your application is with Guardr staff. Application details stay locked after submission. Upload the five required credentials below — they are added to your application for review.';
+    return 'Your application is with Guardr staff. Application details and submitted credentials stay locked after you submit them. Upload any remaining credentials below — once submitted, they lock until staff requests an update.';
   }
   if (percent >= 100) {
     return 'All requirements are in — Guardr staff will manually activate your account when ready.';
