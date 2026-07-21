@@ -396,8 +396,8 @@ export function StaffApplications({
           activeId={statusFilter}
           onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
           tabs={[
-            { id: 'pending', label: 'Pending review' },
             { id: 'all', label: 'All' },
+            { id: 'pending', label: 'Pending' },
           ]}
         />
         <StaffListFilterTabs

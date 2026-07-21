@@ -259,10 +259,10 @@ export function StaffGuardsPanel({
         activeId={statusFilter}
         onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
         tabs={[
-          { id: 'pending', label: 'Pending review' },
+          { id: 'all', label: 'All' },
+          { id: 'pending', label: 'Pending' },
           { id: 'activated', label: 'Activated' },
           { id: 'active', label: 'Active' },
-          { id: 'all', label: 'All' },
         ]}
       />
     </>
