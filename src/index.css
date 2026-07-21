@@ -20516,6 +20516,98 @@ body[data-form-factor="tablet"] .uber-app-shell {
   overflow: visible;
 }
 
+/* Staff detail panes — flat sections, no nested white cards. */
+.uber-app-shell .staff-detail-pane,
+.uber-app-shell .staff-detail-panel,
+.uber-app-shell .staff-ops-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.uber-app-shell .staff-detail-header {
+  padding-inline: 0 !important;
+  padding-top: 0 !important;
+  background: transparent !important;
+}
+
+.uber-app-shell .staff-detail-section {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 1rem 0 !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .staff-detail-section:last-child {
+  border-bottom: none !important;
+}
+
+.uber-app-shell .staff-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.uber-app-shell .staff-detail-actions > button,
+.uber-app-shell .staff-detail-actions > .app-button-primary,
+.uber-app-shell .staff-detail-actions > .app-button-outline,
+.uber-app-shell .staff-detail-actions > .app-button-danger {
+  width: 100%;
+  min-width: 0;
+}
+
+.uber-app-shell .app-form-section,
+.uber-app-shell .staff-credentials-panel .app-form-section {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 0 1rem !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .app-form-section:last-child,
+.uber-app-shell .staff-credentials-panel .app-form-section:last-child {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+.uber-app-shell .app-cert-item,
+.uber-app-shell .app-cert-item-stack .app-cert-item,
+.uber-app-shell .split-detail-pane .app-cert-item {
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .app-cert-item-stack {
+  gap: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.uber-app-shell .staff-guard-detail-tabs,
+.uber-app-shell .staff-detail-toolbar,
+.uber-app-shell .staff-guard-performance-toolbar {
+  padding-inline: 0 !important;
+}
+
+.uber-app-shell .staff-credentials-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .staff-shell .staff-main-content--bleed {
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
