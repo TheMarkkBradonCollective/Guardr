@@ -94,7 +94,7 @@ export function AppWelcomeSignInDock({
   onOpenLegal,
   viewSurface,
 }: {
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
+  onNavigateToAuth: (role?: 'guard' | 'client' | 'staff', mode?: 'sign-in' | 'sign-up') => void;
   onOpenLegal: (page: LegalPageId) => void;
   viewSurface: ViewSurface;
 }) {

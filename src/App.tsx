@@ -601,7 +601,7 @@ export default function App() {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
   const [isAuthView, setIsAuthView]       = useState(() => !!readAppRouteFromWindow()?.authView);
-  const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>(
+  const [initialAuthRole, setInitialAuthRole] = useState<AuthViewRole>(
     () => readAppRouteFromWindow()?.authRole ?? 'client'
   );
   const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
@@ -3843,7 +3843,7 @@ export default function App() {
    */
   const handleSignUp = async (
     profile: SecurityGuard | Client,
-    role: 'guard' | 'client',
+    role: 'guard' | 'client' | 'staff',
     password: string
   ): Promise<void> => {
     if (!isDbConnected) {
@@ -3929,7 +3929,8 @@ export default function App() {
     const guard = profile as SecurityGuard;
     const userStatus = guard.userStatus || 'pending';
 
-    if (guard.isStaff && guard.staffRole) {
+    if (role === 'staff' || (guard.isStaff && guard.staffRole)) {
+      const staffRole = guard.staffRole ?? 'Support';
       try {
         await supabase.from('staff').insert({
           id: guard.id,
@@ -3942,13 +3943,15 @@ export default function App() {
           avatar: guard.avatar,
           phone: guard.phone,
           bio: guard.bio,
-          staff_role: guard.staffRole,
-          user_status:
-            userStatus === 'suspended' || userStatus === 'blocked' ? userStatus : 'active',
+          staff_role: staffRole,
+          user_status: userStatus,
           password,
           must_change_password: false,
         });
-        setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+        if (userStatus === 'active') {
+          setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+        }
+        await recordLegalAcceptances('staff', guard.id, requiredLegalDocumentsForRole('staff'));
         await loadFromSupabase();
       } catch (e) {
         console.error('Staff DB insert error:', e);

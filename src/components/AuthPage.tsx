@@ -14,6 +14,7 @@ import {
   Eye,
   EyeOff,
   BookOpen,
+  Briefcase,
   Building2,
   Phone,
   Globe,
@@ -158,7 +159,7 @@ interface AuthHeroContent {
 
 /** Fills the sign-in hero panel with role-specific content on tablet/desktop —
  * see .auth-hero-content in index.css for the responsive layout. */
-const AUTH_HERO_CONTENT: Record<'client' | 'guard', AuthHeroContent> = {
+const AUTH_HERO_CONTENT: Record<'client' | 'guard' | 'staff', AuthHeroContent> = {
   client: {
     icon: Building2,
     headline: 'Coverage for your site, on your terms.',
@@ -181,6 +182,17 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard', AuthHeroContent> = {
     ],
     trustLine: 'Independent contractor marketplace — you choose your assignments and your rate.',
   },
+  staff: {
+    icon: Briefcase,
+    headline: 'Run the platform. Keep operations moving.',
+    sub: 'Review applications, monitor jobs, and support clients and guards from one staff workspace.',
+    features: [
+      { icon: BadgeCheck, text: 'Approve applications and follow up on reports' },
+      { icon: MapPin, text: 'Watch live coverage across open markets' },
+      { icon: Clock, text: 'Handle support and day-to-day ops' },
+    ],
+    trustLine: 'Staff seats start as Support and are activated after Director review.',
+  },
 };
 
 interface AuthTestimonial {
@@ -190,7 +202,7 @@ interface AuthTestimonial {
 }
 
 /** Split-screen editorial testimonial (left panel) — role-specific. */
-const AUTH_TESTIMONIAL: Record<'client' | 'guard', AuthTestimonial> = {
+const AUTH_TESTIMONIAL: Record<'client' | 'guard' | 'staff', AuthTestimonial> = {
   client: {
     quote:
       'We staffed three sites in a single week and tracked every shift live. Guardr made coverage something we finally stopped worrying about.',
@@ -202,6 +214,12 @@ const AUTH_TESTIMONIAL: Record<'client' | 'guard', AuthTestimonial> = {
       'Guardr lets me pick up the shifts that fit my schedule and get paid directly — no runaround, no middleman.',
     author: 'Marcus T.',
     role: 'Licensed Security Guard',
+  },
+  staff: {
+    quote:
+      'Having applications, incidents, and live coverage in one place means we resolve issues before they become outages.',
+    author: 'Jordan P.',
+    role: 'Platform Support',
   },
 };
 
@@ -233,7 +251,7 @@ interface AuthPageProps {
   onSignIn: (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => void;
   onSignUp: (
     profile: SecurityGuard | Client,
-    role: 'guard' | 'client',
+    role: 'guard' | 'client' | 'staff',
     password: string
   ) => void | Promise<void>;
   guardsList: SecurityGuard[];
@@ -242,8 +260,8 @@ interface AuthPageProps {
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenGuide?: () => void;
   onAuthModeChange?: (mode: 'sign-in' | 'sign-up') => void;
-  onAuthRoleChange?: (role: 'guard' | 'client') => void;
-  initialRole?: 'guard' | 'client';
+  onAuthRoleChange?: (role: 'guard' | 'client' | 'staff') => void;
+  initialRole?: 'guard' | 'client' | 'staff';
   initialMode?: 'sign-in' | 'sign-up';
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
@@ -296,7 +314,9 @@ export function AuthPage({
   const { formFactor, shellKind, viewSurface } = useDevice();
   const isDesktopAuth = !isSheet && formFactor === 'desktop';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
-  const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
+  const [role, setRole] = useState<'guard' | 'client' | 'staff'>(
+    initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client'
+  );
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -350,7 +370,7 @@ export function AuthPage({
   const referralRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setRole(initialRole === 'guard' ? 'guard' : 'client');
+    setRole(initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client');
     setIsSignUp(initialMode === 'sign-up');
     setErrorMsg('');
   }, [initialRole, initialMode]);
@@ -406,6 +426,53 @@ export function AuthPage({
         guardsList.some((g) => g.email.toLowerCase() === emailLower)
       ) {
         setErrorMsg('An account with this email already exists. Sign in instead.');
+        return;
+      }
+
+      if (role === 'staff') {
+        if (!phone.trim()) {
+          setErrorMsg('Phone number is required for staff applications.');
+          return;
+        }
+        const normalized = personNameFromPayload({
+          firstName: firstName.trim(),
+          middleName: middleName.trim(),
+          lastName: lastName.trim(),
+        });
+        const staffId = `staff-${Date.now()}`;
+        const staffProfile: SecurityGuard = {
+          id: staffId,
+          name: normalized.name,
+          firstName: normalized.firstName,
+          middleName: normalized.middleName,
+          lastName: normalized.lastName,
+          email: emailLower,
+          badgeNumber: `STF-${Math.floor(10000 + Math.random() * 90000)}`,
+          avatar: '',
+          phone: phone.trim(),
+          bio: 'Support — Platform operations.',
+          isArmed: false,
+          backgroundChecked: false,
+          verified: false,
+          rating: 0,
+          jobsCompleted: 0,
+          certifications: [],
+          experience: [],
+          hourlyRateRequirement: 0,
+          isStaff: true,
+          staffRole: 'Support',
+          userStatus: 'pending',
+        };
+        try {
+          await onSignUp(staffProfile, 'staff', password);
+        } catch (err) {
+          setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+          return;
+        }
+        setIsSignUp(false);
+        onAuthModeChange?.('sign-in');
+        setPassword('');
+        setErrorMsg('Staff application submitted. A Director will review your account before you can sign in.');
         return;
       }
 
@@ -802,6 +869,29 @@ export function AuthPage({
                   </button>
                 </div>
               </div>
+
+              {isSignUp && role === 'staff' && (
+                <div className="space-y-5 pt-4 border-t border-brand-border">
+                  <p className="uber-label">Staff application</p>
+                  <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
+                    New staff start as Support. A Director reviews your application before you can sign in.
+                  </p>
+                  <div>
+                    <label className="uber-label block mb-2">Phone</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+1 (555) 000-0000"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="uber-input pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {isSignUp && role === 'guard' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">

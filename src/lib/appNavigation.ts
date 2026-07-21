@@ -11,7 +11,7 @@ import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab,
 export type AppRole = 'staff' | 'guard' | 'client';
 
 export type AuthViewMode = 'sign-in' | 'sign-up';
-export type AuthViewRole = 'guard' | 'client';
+export type AuthViewRole = 'guard' | 'client' | 'staff';
 
 export type StaffGuardDetailTab = 'profile' | 'performance';
 
@@ -248,7 +248,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
   if (clientInvoiceRequestId) nested.clientInvoiceRequestId = clientInvoiceRequestId;
   if (authView === 'sign-in' || authView === 'sign-up') nested.authView = authView;
-  if (authRole === 'guard' || authRole === 'client') nested.authRole = authRole;
+  if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
 
   return nested;
 }

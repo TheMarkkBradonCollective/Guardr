@@ -21,7 +21,7 @@ import {
 } from './app/AppWelcomeChrome';
 
 interface AppHomeScreenProps {
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
+  onNavigateToAuth: (role?: 'guard' | 'client' | 'staff', mode?: 'sign-in' | 'sign-up') => void;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onOpenLegal: (page: LegalPageId) => void;
