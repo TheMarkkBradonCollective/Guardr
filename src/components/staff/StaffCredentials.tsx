@@ -38,10 +38,8 @@ import { AppButton } from '../ui/AppButton';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
-import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
-import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -78,10 +76,6 @@ interface StaffCredentialsProps {
   onOpenGuardProfile?: (guardId: string) => void;
   onAddCredentialForGuard?: (guardId: string) => void;
   onEditGuardProfile?: (guardId: string) => void;
-  onAddCertification?: (
-    guardId: string,
-    cert: Partial<Certification>
-  ) => Promise<AddCertificationResult>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -169,14 +163,12 @@ export function StaffCredentials({
   onOpenGuardProfile,
   onAddCredentialForGuard,
   onEditGuardProfile,
-  onAddCertification,
   onUpdateGuardIdImages,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
-  const [pendingFocusGuardId, setPendingFocusGuardId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,15 +197,6 @@ export function StaffCredentials({
     setActiveItemId(itemId);
     onItemIdChange?.(itemId);
   };
-
-  useEffect(() => {
-    if (!pendingFocusGuardId) return;
-    const focused = resolveApprovalFocusItemId(credentialFeed, 'credentials', pendingFocusGuardId, guards);
-    if (focused) {
-      openItem(focused);
-      setPendingFocusGuardId(null);
-    }
-  }, [pendingFocusGuardId, credentialFeed, guards]);
 
   useEffect(() => {
     if (initialItemId) {
@@ -579,18 +562,6 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        {onAddCertification && (
-          <StaffCredentialAddForGuardForm
-            guards={guards}
-            onAddCertification={onAddCertification}
-            onCredentialAdded={(guardId) => {
-              setFilter('pending_upload');
-              setPendingFocusGuardId(guardId);
-            }}
-          />
-        )}
-      </div>
       <WfSearchBar
         value={search}
         onChange={setSearch}

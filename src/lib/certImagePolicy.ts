@@ -107,8 +107,11 @@ export function certPhotoIsLockedForEditor(
   cert: Pick<Certification, 'imageUrl' | 'status' | 'updateRequestedAt' | 'pendingUpdate'>,
   staffMode = false
 ): boolean {
-  if (staffMode) return false;
   if (certUpdateSubmissionAllowed(cert)) return false;
+  if (staffMode) {
+    // Staff may replace photos only while the credential is still open, or after Request update.
+    return cert.status === 'verified' || cert.status === 'rejected';
+  }
   if (cert.status === 'rejected') return false;
   return certImageIsLocked(cert);
 }

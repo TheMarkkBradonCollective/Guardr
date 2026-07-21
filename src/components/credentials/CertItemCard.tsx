@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
-import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
+import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
@@ -53,7 +53,7 @@ export function CertItemCard({
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
-  const canEditCert = canEdit || staffMode || guardCertificationCanEdit(cert);
+  const canEditCert = Boolean(canEdit);
   const useModalEdit = Boolean(onUpdate);
   const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;

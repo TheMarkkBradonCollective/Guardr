@@ -5,6 +5,7 @@ import {
   guardIdVerificationCanEdit,
   ID_VERIFICATION_POLICY_HINT,
 } from '../../lib/guardIdentityVerification';
+import { staffCanEditGuardGovernmentId } from '../../lib/staffCredentialRules';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { GuardIdItemCard } from './GuardIdItemCard';
 
@@ -27,7 +28,7 @@ interface GuardIdentityVerificationPanelProps {
   guard: SecurityGuard;
   onSubmit: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
   compact?: boolean;
-  /** Staff can upload or replace ID photos regardless of guard lock state. */
+  /** Staff may edit existing pending ID details; never submit a new ID for the guard. */
   staffMode?: boolean;
   /** Render without outer section chrome — for use inside staff review. */
   embedded?: boolean;
@@ -41,7 +42,11 @@ export function GuardIdentityVerificationPanel({
   embedded = false,
 }: GuardIdentityVerificationPanelProps) {
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
-  const canEdit = staffMode ? !applicationBlocked : guardIdVerificationCanEdit(guard);
+  const canEdit = applicationBlocked
+    ? false
+    : staffMode
+      ? staffCanEditGuardGovernmentId(guard)
+      : guardIdVerificationCanEdit(guard);
 
   const body = (
     <>

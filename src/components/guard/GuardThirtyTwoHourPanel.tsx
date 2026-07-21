@@ -25,6 +25,7 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { certOverlayProps, type CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
+import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -202,7 +203,7 @@ export function GuardThirtyTwoHourPanel({
     onAttachImage: onAttachCertificationImage
       ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
       : undefined,
-    canEdit: staffMode || guardCertificationCanEdit(cert),
+    canEdit: staffMode ? staffCanEditCertification(guard, cert) : guardCertificationCanEdit(cert),
     staffMode,
     onUpdate: onUpdateCertification
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)

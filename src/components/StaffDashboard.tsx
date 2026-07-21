@@ -758,7 +758,6 @@ export function StaffDashboard({
                   }
                 : undefined
             }
-            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
           />
@@ -800,7 +799,6 @@ export function StaffDashboard({
             onRejectCert={onRejectCert}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             onUpdateProfile={canManageGuardAccounts ? onUpdateGuardProfile : undefined}
-            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
             onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
@@ -813,7 +811,6 @@ export function StaffDashboard({
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onMakeCrewLead={canManageGuardAccounts ? onMakeGuardCrewLead : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
-            onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
             onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}

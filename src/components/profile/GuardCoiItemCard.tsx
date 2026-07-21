@@ -9,6 +9,7 @@ import {
   guardCoiOnFile,
   resolveInsuranceStatus,
 } from '../../lib/guardInsurance';
+import { staffCanEditGuardCoi } from '../../lib/staffCredentialRules';
 import {
   CredentialRowAction,
   CredentialRowHeader,
@@ -43,8 +44,8 @@ export function GuardCoiItemCard({
   const hasOnFile = guardCoiOnFile(guard);
   const uploadStatus = getCoiUploadStatus(guard);
   const sectionStatus = getCoiSectionStatus(guard, staffMode);
-  const coiEditable = guardCoiCanGuardEdit(guard);
-  const canEdit = editing && !staffMode && !!onSave && coiEditable;
+  const coiEditable = staffMode ? staffCanEditGuardCoi(guard) : guardCoiCanGuardEdit(guard);
+  const canEdit = editing && !!onSave && coiEditable;
   const policy = guard.insurancePolicy;
   const docUrl = policy?.documentUrl?.trim();
   const title = policy?.carrier?.trim() || 'Certificate of Insurance (COI)';
@@ -111,7 +112,7 @@ export function GuardCoiItemCard({
       <GuardCoiDetailModal
         guard={guard}
         guardName={guard.name}
-        canEdit={canEdit || staffMode}
+        canEdit={canEdit}
         staffMode={staffMode}
         onSave={onSave}
         onReview={onReview}
@@ -145,12 +146,12 @@ export function GuardCoiItemCard({
         }
         subtitle={undefined}
         action={
-          canEdit || staffMode ? (
+          canEdit ? (
             <CredentialRowAction
               staffMode={staffMode}
               uploadStatus={uploadStatus}
               sectionStatus={sectionStatus}
-              canUpload={canEdit}
+              canUpload={canEdit && !staffMode}
               onAdd={openAdd}
             />
           ) : undefined

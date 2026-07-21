@@ -15,6 +15,7 @@ import { getCourseUploadStatus } from '../../lib/certStatus';
 import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
+import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -132,7 +133,7 @@ export function GuardCardPanel({
     onAttachImage: onAttachCertificationImage
       ? (url: string) => onAttachCertificationImage(cert.id, url)
       : undefined,
-    canEdit: staffMode || guardCertificationCanEdit(cert),
+    canEdit: staffMode ? staffCanEditCertification(guard, cert) : guardCertificationCanEdit(cert),
     staffMode,
     onUpdate: onUpdateCertification
       ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
