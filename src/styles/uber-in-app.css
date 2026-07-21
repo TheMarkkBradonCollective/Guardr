@@ -1959,3 +1959,25 @@ html.theme-dark .staff-filter-pill[data-active="true"] {
   border-color: var(--uber-text, #000);
   color: var(--uber-text, #000);
 }
+
+/* Segmented controls — keep active state inside the track (no clipped edge borders) */
+[data-baseweb="segmented-control"] {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+[data-baseweb="segment-highlight"] {
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.segmented-control {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.segmented-control-btn {
+  min-width: 0;
+}

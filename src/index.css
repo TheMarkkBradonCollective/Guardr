@@ -8636,7 +8636,7 @@ html.theme-dark .wf-badge-success {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -8644,7 +8644,7 @@ html.theme-dark .wf-badge-success {
 }
 
 .app-screen.guard-tiered-screen {
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
@@ -20623,10 +20623,30 @@ body[data-form-factor="tablet"] .uber-app-shell {
   overflow: visible !important;
 }
 
-.uber-app-shell .staff-guard-detail-tabs,
-.uber-app-shell .staff-detail-toolbar,
-.uber-app-shell .staff-guard-performance-toolbar {
+.uber-app-shell .staff-guard-detail-tabs {
+  padding: 0 0 0.75rem !important;
+}
+
+.uber-app-shell .staff-detail-toolbar {
   padding-inline: 0 !important;
+}
+
+.uber-app-shell .staff-guard-performance-toolbar {
+  padding: 0.75rem 0 0 !important;
+  gap: 0.625rem;
+}
+
+/* Segmented controls — never let active highlight / labels clip at edges */
+.uber-app-shell [data-baseweb="segmented-control"],
+.uber-app-shell [data-baseweb="segment-highlight"] {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.uber-app-shell [data-baseweb="segment-highlight"] {
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 999px !important;
 }
 
 .uber-app-shell .staff-credentials-panel {
