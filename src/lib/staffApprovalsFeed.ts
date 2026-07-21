@@ -210,7 +210,7 @@ export function isApplicationFeedItemOpen(
   _guards: SecurityGuard[],
   _clients: Client[]
 ): boolean {
-  return belongsInApplicationFeed(item);
+  return item.status === 'pending' || item.status === 'in_review' || item.status === 'approved';
 }
 
 export function countPendingAccountSignupApplications(
