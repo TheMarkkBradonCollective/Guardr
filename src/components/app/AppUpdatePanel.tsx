@@ -133,8 +133,9 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
               {INSTALL_PWA_TITLE} (auto-updates)
             </p>
             <p className="text-sm text-brand-text-muted leading-relaxed">
-              You are on the lite home-screen version. Upgrade to {INSTALL_APK_TITLE} for stronger
-              notifications, GPS, and camera permissions.
+              You are on the home-screen PWA, which auto-updates with guardr.co. {INSTALL_APK_TITLE} is
+              optional for stronger notifications, GPS, and camera permissions — and may lag until you
+              install a new build.
             </p>
             {onOpenDownload ? (
               <button

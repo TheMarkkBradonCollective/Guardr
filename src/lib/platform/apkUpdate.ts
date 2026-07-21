@@ -5,6 +5,7 @@ import {
   fetchDownloadVersionManifest,
   type DownloadVersionManifest,
 } from '../downloadVersion';
+import { resolveDownloadLiveContext } from '../resolveDownloadLiveContext';
 import { GuardrApkInstaller } from './guardrApkInstaller';
 
 export interface InstalledAppVersion {
@@ -39,7 +40,8 @@ export async function getInstalledAppVersion(): Promise<InstalledAppVersion | nu
 export async function fetchAppUpdateStatus(): Promise<AppUpdateStatus> {
   const manifest = await fetchDownloadVersionManifest();
   const installed = await getInstalledAppVersion();
-  const shell = Capacitor.isNativePlatform() ? 'native' : 'browser';
+  const live = resolveDownloadLiveContext();
+  const shell = live === 'apk' ? 'native' : live;
 
   return {
     manifest,
