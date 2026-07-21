@@ -1487,9 +1487,9 @@ h1, h2, h3, h4 {
 }
 
 .segmented-control-btn-active {
-  background: var(--brand-surface);
-  color: var(--brand-text);
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--brand-text) 8%, transparent);
+  background: var(--brand-text);
+  color: var(--brand-accent-text);
+  box-shadow: none;
 }
 
 .segmented-control-full {
@@ -4574,9 +4574,9 @@ html.theme-light .staff-sidebar-brand .text-brand-text-muted {
 }
 
 .segmented-control-btn-active {
-  background: var(--brand-primary);
+  background: var(--brand-text);
   color: var(--brand-accent-text);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+  box-shadow: none;
 }
 
 @keyframes shift-phase-pulse {0%, 100% {
@@ -4593,7 +4593,12 @@ html.theme-light .staff-sidebar-brand .text-brand-text-muted {
 }
 
 html.theme-light .segmented-control-btn-active {
-  background: var(--brand-primary);
+  background: var(--brand-text);
+  color: var(--brand-accent-text);
+}
+
+html.theme-dark .segmented-control-btn-active {
+  background: var(--brand-text);
   color: var(--brand-accent-text);
 }
 
@@ -18989,9 +18994,9 @@ html.theme-dark .role-side-nav-item-active {
 }
 
 .segmented-control-btn-active {
-  background: var(--brand-surface) !important;
-  color: var(--brand-text) !important;
-  box-shadow: var(--shadow-sm) !important;
+  background: var(--brand-text) !important;
+  color: var(--brand-accent-text) !important;
+  box-shadow: none !important;
   font-weight: 700 !important;
 }
 
@@ -19635,9 +19640,9 @@ textarea.uber-input {
 }
 
 .segmented-control-btn-active {
-  background: var(--brand-primary) !important;
+  background: var(--brand-text) !important;
   color: var(--brand-accent-text) !important;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 30%, transparent) !important;
+  box-shadow: none !important;
   font-weight: 700 !important;
 }
 
@@ -20766,9 +20771,14 @@ button.staff-action-btn--ok:hover:not(:disabled) {
   border: none !important;
   border-width: 0 !important;
   border-style: none !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
   border-radius: 999px !important;
-  background: var(--uber-bg, #ffffff) !important;
+  background: var(--brand-text, #000000) !important;
+}
+
+.uber-app-shell [data-baseweb="segmented-control"] [aria-selected="true"],
+.uber-app-shell [data-baseweb="segmented-control"] [data-baseweb="tab"][aria-selected="true"] {
+  color: var(--brand-accent-text, #ffffff) !important;
 }
 
 .uber-app-shell .staff-credentials-panel {
@@ -21321,9 +21331,9 @@ html.theme-light .uber-select {
 
 .segmented-control-btn-active,
 .segmented-control-btn-current {
-  background: var(--brand-surface);
-  color: var(--brand-text);
-  box-shadow: var(--shadow-sm);
+  background: var(--brand-text);
+  color: var(--brand-accent-text);
+  box-shadow: none;
 }
 
 .app-chip {

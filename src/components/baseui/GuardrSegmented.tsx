@@ -2,8 +2,8 @@
  * GuardrSegmented — Base Web SegmentedControl wrapper.
  * https://baseweb.design/components/segmented-control/
  *
- * Uber pattern: pill-style, white active on gray track.
- * Active highlight uses no hard border so edge segments are never clipped.
+ * Active segment: black fill + white label in light mode; inverted in dark mode.
+ * Soft highlight (no hard border) so edge segments are never clipped.
  */
 
 import React from 'react';
@@ -57,13 +57,13 @@ export function GuardrSegmented<T extends string = string>({
         },
         Active: {
           style: {
-            // Soft fill only — BaseUI's default primary border gets clipped on edge segments.
             borderWidth: 0,
             borderStyle: 'none',
             borderColor: 'transparent',
             borderRadius: '999px',
-            backgroundColor: theme.colors.backgroundPrimary,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            // Light: black pill; dark: white pill (contentPrimary flips with theme).
+            backgroundColor: theme.colors.contentPrimary,
+            boxShadow: 'none',
           },
         },
       }}
@@ -79,7 +79,9 @@ export function GuardrSegmented<T extends string = string>({
                 borderRadius: '999px',
                 fontWeight: $active ? 700 : 500,
                 fontSize: '14px',
-                color: $active ? theme.colors.contentPrimary : theme.colors.contentSecondary,
+                color: $active
+                  ? theme.colors.contentInversePrimary
+                  : theme.colors.contentSecondary,
                 backgroundColor: 'transparent',
                 boxShadow: 'none',
                 border: 'none',
