@@ -415,11 +415,11 @@ export function GuardCredentialsPanel({
   };
 
   return (
-    <section className="app-form-section space-y-4">
+    <section className={`${staffMode ? 'staff-credentials-panel' : 'app-form-section'} space-y-4`}>
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-brand-primary">
-            {editing ? 'Credentials' : 'Credentials'}
+            Credentials
           </p>
           {editing && staffMode && (
             <p className="text-xs text-brand-text-muted leading-relaxed">

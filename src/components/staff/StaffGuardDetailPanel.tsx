@@ -853,14 +853,14 @@ export function StaffGuardDetailPanel({
             <section className="staff-detail-section space-y-3">
               <WfSectionHeader title="Standing crew" className="!px-0 !mb-0" />
               {guard.standingCrewName ? (
-                <div className="rounded-lg border border-brand-border bg-brand-surface overflow-hidden">
-                  <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec">
+                <div className="space-y-3">
+                  <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-bold text-sm text-brand-text">{guard.standingCrewName}</p>
                       <WfBadge tone="primary">Trusted lead</WfBadge>
                     </div>
                     {guard.standingCrewDescription && (
-                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                      <p className="text-xs text-brand-text-muted leading-relaxed">
                         {guard.standingCrewDescription}
                       </p>
                     )}
@@ -870,17 +870,15 @@ export function StaffGuardDetailPanel({
                     const pendingMembers = getPendingStandingCrewOutgoing(standingCrewMembers, guard.id);
                     const allMembers = [...activeMembers, ...pendingMembers];
                     return allMembers.length === 0 ? (
-                      <div className="px-4 py-3">
-                        <p className="text-xs text-brand-text-muted">No crew members yet.</p>
-                      </div>
+                      <p className="text-xs text-brand-text-muted">No crew members yet.</p>
                     ) : (
-                      <div className="divide-y divide-brand-border">
+                      <div className="divide-y divide-brand-border border-t border-brand-border">
                         {allMembers.map((m) => {
                           // memberGuardId refers to a guard in the platform; we only have
                           // this guard's own data here, so show ID if not resolvable
                           const displayName = m.memberGuardId;
                           return (
-                            <div key={m.id} className="flex items-center gap-3 px-4 py-2.5">
+                            <div key={m.id} className="flex items-center gap-3 py-2.5">
                               <div className="w-7 h-7 rounded-full bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0">
                                 <User className="w-3.5 h-3.5 text-brand-text-muted" />
                               </div>
