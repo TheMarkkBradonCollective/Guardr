@@ -58,7 +58,9 @@ export function GuardrSegmented<T extends string = string>({
         Active: {
           style: {
             // Soft fill only — BaseUI's default primary border gets clipped on edge segments.
-            border: 'none',
+            borderWidth: 0,
+            borderStyle: 'none',
+            borderColor: 'transparent',
             borderRadius: '999px',
             backgroundColor: theme.colors.backgroundPrimary,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',

@@ -12,7 +12,7 @@ import {
 } from '../../lib/guardPerformanceFactorDetail';
 import { GuardRatingSection } from '../guard/GuardRatingSection';
 import { GuardPerformanceFactorDetail } from '../guard/GuardPerformanceFactorDetail';
-import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
+import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 
 type SpecialtySortKey = 'name' | 'rating' | 'count';
 type FactorSortKey = 'name' | 'rate' | 'points';
@@ -79,39 +79,47 @@ export function StaffGuardPerformancePanel({
 
   if (performanceFactorId && selectedFactor && isPerformanceFactorId(performanceFactorId)) {
     return (
-      <GuardPerformanceFactorDetail
-        factor={selectedFactor}
-        factorId={performanceFactorId}
-        guardId={guard.id}
-        requests={requests}
-        onBack={() => onPerformanceFactorChange?.(null)}
-        onOpenHistoryItem={onOpenJob}
-        showHistory
-      />
+      <div className="staff-guard-performance-panel pb-8">
+        <GuardPerformanceFactorDetail
+          factor={selectedFactor}
+          factorId={performanceFactorId}
+          guardId={guard.id}
+          requests={requests}
+          onBack={() => onPerformanceFactorChange?.(null)}
+          onOpenHistoryItem={onOpenJob}
+          showHistory
+        />
+      </div>
     );
   }
 
   return (
-    <AppScreen className="guard-tiered-screen h-full min-h-0 staff-guard-performance-panel">
-      <div className="staff-guard-performance-toolbar">
-        <AppSegmentedControl<SpecialtySortKey>
-          value={specialtySort}
-          onChange={setSpecialtySort}
-          options={[
-            { id: 'count', label: 'By volume' },
-            { id: 'rating', label: 'By rating' },
-            { id: 'name', label: 'A–Z' },
-          ]}
-        />
-        <AppSegmentedControl<FactorSortKey>
-          value={factorSort}
-          onChange={setFactorSort}
-          options={[
-            { id: 'points', label: 'Factor points' },
-            { id: 'rate', label: 'Factor rate' },
-            { id: 'name', label: 'A–Z' },
-          ]}
-        />
+    <div className="staff-guard-performance-panel space-y-4 pb-8">
+      <div className="staff-guard-performance-toolbar space-y-3">
+        <div className="space-y-1.5">
+          <p className="uber-label text-xs">Sort factors</p>
+          <AppSegmentedControl<FactorSortKey>
+            value={factorSort}
+            onChange={setFactorSort}
+            options={[
+              { id: 'points', label: 'Points' },
+              { id: 'rate', label: 'Rate' },
+              { id: 'name', label: 'A–Z' },
+            ]}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <p className="uber-label text-xs">Sort specialties</p>
+          <AppSegmentedControl<SpecialtySortKey>
+            value={specialtySort}
+            onChange={setSpecialtySort}
+            options={[
+              { id: 'count', label: 'Volume' },
+              { id: 'rating', label: 'Rating' },
+              { id: 'name', label: 'A–Z' },
+            ]}
+          />
+        </div>
       </div>
 
       <GuardRatingSection
@@ -120,7 +128,6 @@ export function StaffGuardPerformancePanel({
         performance={performance}
         skillRatings={sortedSkills}
         variant="full"
-        pinnedLayout
         includeAllJobTypes
         showSpecialtyRatings
         factorOrder={sortedFactors.map((f) => f.id)}
@@ -129,8 +136,8 @@ export function StaffGuardPerformancePanel({
             onPerformanceFactorChange?.(factor.id);
           }
         }}
-        className="guard-performance-screen-card"
+        className="staff-guard-performance-rating"
       />
-    </AppScreen>
+    </div>
   );
 }
