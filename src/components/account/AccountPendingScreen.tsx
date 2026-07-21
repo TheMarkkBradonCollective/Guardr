@@ -17,11 +17,17 @@ import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 interface AccountPendingScreenProps {
   role: 'guard' | 'client';
   guard?: SecurityGuard | null;
+  client?: Pick<
+    import('../../types').Client,
+    'applicationRevisionRequestedAt' | 'applicationRevisionNote' | 'accountStatus' | 'approved'
+  > | null;
   onOpenProfile: () => void;
+  onOpenApplicationProfile?: () => void;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
@@ -34,7 +40,7 @@ interface AccountPendingScreenProps {
 
 function guardActivationSubtitle(approved: boolean, percent: number): string {
   if (!approved) {
-    return 'Your application is with Guardr staff. Upload the five required credentials below now — they are added to your application for review.';
+    return 'Your application is with Guardr staff. Application details stay locked after submission. Upload the five required credentials below — they are added to your application for review.';
   }
   if (percent >= 100) {
     return 'All requirements are in — Guardr staff will manually activate your account when ready.';
@@ -45,7 +51,9 @@ function guardActivationSubtitle(approved: boolean, percent: number): string {
 export function AccountPendingScreen({
   role,
   guard,
+  client,
   onOpenProfile,
+  onOpenApplicationProfile,
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
@@ -60,20 +68,32 @@ export function AccountPendingScreen({
     isGuard && guard ? isGuardAccountPreActive(guard) && !isGuardCredentialExpiryRestricted(guard) : false;
   const restricted = isGuard && guard ? isGuardCredentialExpiryRestricted(guard) : false;
   const applicationProgress = isGuard && guard ? getGuardApplicationProgress(guard) : null;
+  const revisionOpen = Boolean(
+    guard?.applicationRevisionRequestedAt || client?.applicationRevisionRequestedAt
+  );
+  const revisionNote =
+    guard?.applicationRevisionNote?.trim() || client?.applicationRevisionNote?.trim();
 
   const title = isGuard
     ? restricted
       ? 'Account restricted'
-      : approved
-        ? 'Upload activation credentials'
-        : 'Application under review'
-    : 'Account pending approval';
+      : revisionOpen
+        ? 'Update your application'
+        : approved
+          ? 'Upload activation credentials'
+          : 'Application under review'
+    : revisionOpen
+      ? 'Update your application'
+      : 'Account pending approval';
 
   const subtitle = isGuard && restricted
     ? guardCredentialRestrictedDetail(guard!)
+    : revisionOpen
+    ? revisionNote ||
+      'Staff requested updates to your application. Open Profile to edit the locked application details, then save.'
     : isGuard && applicationProgress
     ? guardActivationSubtitle(approved, applicationProgress.percent)
-    : 'Your account is pending staff approval.';
+    : 'Your account is pending staff approval. Application details stay locked after submission unless staff requests an update.';
 
   return (
     <ResponsivePage screenClassName="flex flex-col min-h-full overflow-y-auto overscroll-contain" className="adm-pending-page">
@@ -82,7 +102,7 @@ export function AccountPendingScreen({
           <span className="w-14 h-14 rounded-full border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mx-auto mb-5">
             <AlertTriangle className="w-7 h-7 text-red-500" />
           </span>
-        ) : isGuard && approved ? (
+        ) : isGuard && approved && !revisionOpen ? (
           <span className="w-14 h-14 rounded-full bg-brand-primary flex items-center justify-center mx-auto mb-5 shadow-[0_4px_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
             <Check className="w-7 h-7 text-white" strokeWidth={2.5} />
           </span>
@@ -92,12 +112,33 @@ export function AccountPendingScreen({
           </span>
         )}
         <p className="text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
-          {restricted ? 'Credential expired' : 'Marketplace eligibility'}
+          {restricted ? 'Credential expired' : revisionOpen ? 'Revision requested' : 'Marketplace eligibility'}
         </p>
         <h1 className="text-2xl font-black tracking-tight text-brand-text">{title}</h1>
         <p className="text-sm text-brand-text-muted mt-2 leading-relaxed text-left font-medium">{subtitle}</p>
 
-        {applicationProgress && (
+        {revisionOpen && (
+          <div className="mt-4 text-left space-y-3">
+            <AppNoticeChip
+              tone="warning"
+              label="Application unlocked for updates"
+              title="Revision requested"
+              message="Staff asked you to update your application. Open Profile, edit the application details, and save. Details lock again after you save."
+            />
+            {onOpenApplicationProfile && (
+              <button
+                type="button"
+                onClick={onOpenApplicationProfile}
+                className="app-button-primary !w-full !h-11 gap-2"
+              >
+                <User className="w-4 h-4" />
+                Edit application details
+              </button>
+            )}
+          </div>
+        )}
+
+        {applicationProgress && !revisionOpen && (
           <div className="mt-5 text-left">
             <div className="flex items-center justify-between gap-3 mb-2">
               <span className="text-xs font-semibold text-brand-text-muted">
@@ -148,10 +189,18 @@ export function AccountPendingScreen({
       )}
 
       {!isGuard && (
-        <div className="px-5 py-6">
+        <div className="px-5 py-6 space-y-3">
+          {revisionOpen && (
+            <AppNoticeChip
+              tone="warning"
+              label="Application unlocked for updates"
+              title="Revision requested"
+              message="Staff asked you to update your application. Edit your profile details and save. Details lock again after you save."
+            />
+          )}
           <button type="button" onClick={onOpenProfile} className="app-button-primary !w-full !h-11 gap-2">
             <User className="w-4 h-4" />
-            View profile
+            {revisionOpen ? 'Edit application details' : 'View profile'}
           </button>
         </div>
       )}

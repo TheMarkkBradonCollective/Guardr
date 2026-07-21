@@ -117,14 +117,14 @@ export async function promptRevokeGuardApplicationNote(): Promise<string | null>
   return reason.trim();
 }
 
-/** Soft reopen — send an approved/active application back to pending for edits. Returns null if cancelled. */
+/** Soft reopen — unlock submitted application details for applicant edits. Returns null if cancelled. */
 export async function promptRequestGuardApplicationRevisionNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
     title: 'Request application revision?',
     message:
-      'Their approval will be withdrawn and the application returns to Pending so they can fix issues and staff can re-review.',
+      'Application details unlock so the applicant can fix issues. Approved or active applications return to Pending for re-review.',
     confirmLabel: 'Request revision',
-    cancelLabel: 'Keep approved',
+    cancelLabel: 'Keep reviewing',
     tone: 'danger',
   });
   if (!confirmed) return null;
@@ -140,14 +140,14 @@ export async function promptRequestGuardApplicationRevisionNote(): Promise<strin
   return reason.trim();
 }
 
-/** Soft reopen — send an approved client application back to pending. Returns null if cancelled. */
+/** Soft reopen — unlock submitted client application contact details. Returns null if cancelled. */
 export async function promptRequestClientApplicationRevisionNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
     title: 'Request client application revision?',
     message:
-      'Their approval will be withdrawn and the application returns to Pending so they can fix issues and staff can re-review.',
+      'Application details unlock so the client can fix issues. Approved applications return to Pending for re-review.',
     confirmLabel: 'Request revision',
-    cancelLabel: 'Keep approved',
+    cancelLabel: 'Keep reviewing',
     tone: 'danger',
   });
   if (!confirmed) return null;

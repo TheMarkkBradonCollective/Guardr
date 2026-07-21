@@ -300,6 +300,12 @@ import {
 } from './lib/accountStatus';
 import { isGuardAccountActive } from './lib/guardAccountActivation';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
+import {
+  assertClientApplicationContactEditable,
+  assertGuardApplicationIntakeEditable,
+  guardApplicationIntakeChanges,
+  clientApplicationContactChanges,
+} from './lib/applicationIntakeLock';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { writeAuditLog } from './lib/auditLog';
 import { signOutAuth } from './lib/auth/authService';
@@ -2128,6 +2134,8 @@ export default function App() {
         idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
         idUpdateRequestedAt: g.id_update_requested_at ?? undefined,
         idUpdateRequestNote: g.id_update_request_note ?? undefined,
+        applicationRevisionRequestedAt: g.application_revision_requested_at ?? undefined,
+        applicationRevisionNote: g.application_revision_note ?? undefined,
         idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
         idDocumentType:
           g.id_document_type === 'drivers_license' || g.id_document_type === 'state_id'
@@ -2198,6 +2206,8 @@ export default function App() {
         totalRequests: c.total_requests || 0,
         approved: c.account_status === 'active' || (c.approved ?? false),
         accountStatus: c.account_status || (c.approved === false ? 'suspended' : 'active'),
+        applicationRevisionRequestedAt: c.application_revision_requested_at ?? undefined,
+        applicationRevisionNote: c.application_revision_note ?? undefined,
         rating: c.rating != null ? Number(c.rating) : undefined,
         themePreference: normalizeThemeMode(c.theme_preference) ?? undefined,
         password: c.password ?? undefined,
@@ -4948,6 +4958,30 @@ export default function App() {
       throw new Error('Guard profile not found.');
     }
 
+    const staffBypass = Boolean(
+      currentUser && currentUser.id !== guardId && isStaffRole(currentUser.role)
+    );
+    const intakePatch = {
+      name: payload.name,
+      firstName: payload.firstName,
+      middleName: payload.middleName,
+      lastName: payload.lastName,
+      phone: payload.phone,
+      bio: payload.bio ?? payload.summary,
+      summary: payload.summary,
+      serviceAreas: payload.serviceAreas,
+      specialties: payload.specialties,
+      yearsExperience: payload.yearsExperience,
+      availabilityNotes: payload.availabilityNotes,
+      hourlyRateRequirement: payload.hourlyRateRequirement,
+      listedWeaponGear: payload.listedWeaponGear,
+      isArmed: payload.listedWeaponGear?.includes('firearm'),
+    };
+    assertGuardApplicationIntakeEditable(previous, intakePatch, { staffBypass });
+    const intakeChanged = guardApplicationIntakeChanges(previous, intakePatch).length > 0;
+    const clearRevision =
+      !staffBypass && intakeChanged && Boolean(previous.applicationRevisionRequestedAt);
+
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
@@ -4973,6 +5007,9 @@ export default function App() {
               isArmed: payload.listedWeaponGear?.includes('firearm') ?? g.isArmed,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
               badgeNumber: payload.badgeNumber ?? g.badgeNumber,
+              ...(clearRevision
+                ? { applicationRevisionRequestedAt: undefined, applicationRevisionNote: undefined }
+                : {}),
             }
           : g
       )
@@ -4989,6 +5026,10 @@ export default function App() {
       };
       if (payload.avatar !== undefined) profileUpdate.avatar = payload.avatar;
       if (payload.badgeNumber !== undefined) profileUpdate.badge_number = payload.badgeNumber;
+      if (clearRevision) {
+        profileUpdate.application_revision_requested_at = null;
+        profileUpdate.application_revision_note = null;
+      }
 
       const table = previous.isStaff ? 'staff' : 'guards';
       if (!previous.isStaff) {
@@ -5032,6 +5073,26 @@ export default function App() {
 
   const handleUpdateClientProfile = async (clientId: string, payload: ProfileSavePayload) => {
     const previous = clients.find((c) => c.id === clientId);
+    if (!previous) {
+      throw new Error('Client profile not found.');
+    }
+
+    const staffBypass = Boolean(
+      currentUser && currentUser.id !== clientId && isStaffRole(currentUser.role)
+    );
+    const contactPatch = {
+      name: payload.name,
+      firstName: payload.firstName,
+      middleName: payload.middleName,
+      lastName: payload.lastName,
+      phone: payload.phone,
+      companyName: payload.companyName,
+    };
+    assertClientApplicationContactEditable(previous, contactPatch, { staffBypass });
+    const contactChanged = clientApplicationContactChanges(previous, contactPatch).length > 0;
+    const clearRevision =
+      !staffBypass && contactChanged && Boolean(previous.applicationRevisionRequestedAt);
+
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId
@@ -5044,6 +5105,9 @@ export default function App() {
               phone: payload.phone,
               companyName: payload.companyName ?? c.companyName,
               avatar: payload.avatar !== undefined ? payload.avatar : c.avatar,
+              ...(clearRevision
+                ? { applicationRevisionRequestedAt: undefined, applicationRevisionNote: undefined }
+                : {}),
             }
           : c
       )
@@ -5058,14 +5122,20 @@ export default function App() {
         company_name: payload.companyName ?? '',
       };
       if (payload.avatar !== undefined) clientUpdate.avatar = payload.avatar;
+      if (clearRevision) {
+        clientUpdate.application_revision_requested_at = null;
+        clientUpdate.application_revision_note = null;
+      }
       beginLocalMutation();
       const { error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId);
       if (error) {
-        if (previous) {
-          setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
-        }
+        setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
         console.error('Client profile update error:', error);
-        throw new Error('Could not save profile photo. Please try again.');
+        throw new Error(
+          error.message?.includes('locked')
+            ? error.message
+            : 'Could not save profile. Please try again.'
+        );
       }
     }
     if (currentUser?.id === clientId) {
@@ -5566,13 +5636,26 @@ export default function App() {
     }
     setClients((prev) =>
       prev.map((c) =>
-        c.id === clientId ? { ...c, approved: true, accountStatus: 'active' as const } : c
+        c.id === clientId
+          ? {
+              ...c,
+              approved: true,
+              accountStatus: 'active' as const,
+              applicationRevisionRequestedAt: undefined,
+              applicationRevisionNote: undefined,
+            }
+          : c
       )
     );
     if (isDbConnected) {
       const { error: approveError } = await supabase
         .from('clients')
-        .update({ approved: true, account_status: 'active' })
+        .update({
+          approved: true,
+          account_status: 'active',
+          application_revision_requested_at: null,
+          application_revision_note: null,
+        })
         .eq('id', clientId);
       if (approveError) {
         console.error('Client approval update error:', approveError);
@@ -5634,6 +5717,8 @@ export default function App() {
       verified: true,
       credentialGraceDeadline: undefined,
       credentialGraceMissing: undefined,
+      applicationRevisionRequestedAt: undefined,
+      applicationRevisionNote: undefined,
     };
 
     setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
@@ -5648,6 +5733,8 @@ export default function App() {
           credential_grace_deadline: null,
           credential_grace_missing: null,
           credential_grace_hours: null,
+          application_revision_requested_at: null,
+          application_revision_note: null,
         },
         'approve'
       );
@@ -5674,8 +5761,8 @@ export default function App() {
     if (!guard || guard.isStaff) throw new Error('Guard not found.');
 
     const status = getGuardUserStatus(guard);
-    if (status !== 'approved' && status !== 'active') {
-      throw new Error('Only approved or active applications can be sent back for revision.');
+    if (status !== 'pending' && status !== 'approved' && status !== 'active') {
+      throw new Error('Only pending, approved, or active applications can be sent back for revision.');
     }
 
     const activeJob = requests.find(
@@ -5690,13 +5777,21 @@ export default function App() {
     const note =
       reason?.trim() ||
       'Staff needs updates to your application before it can stay approved. Please review the note and resubmit.';
+    const requestedAt = new Date().toISOString();
+    const demote = status === 'approved' || status === 'active';
 
     const previous = guard;
     const revisedGuard: SecurityGuard = {
       ...guard,
-      userStatus: 'pending',
-      verified: false,
-      trusted: false,
+      ...(demote
+        ? {
+            userStatus: 'pending' as const,
+            verified: false,
+            trusted: false,
+          }
+        : {}),
+      applicationRevisionRequestedAt: requestedAt,
+      applicationRevisionNote: note,
     };
 
     setGuards((prev) => prev.map((g) => (g.id === guardId ? revisedGuard : g)));
@@ -5706,9 +5801,15 @@ export default function App() {
         supabase,
         guardId,
         {
-          user_status: 'pending',
-          verified: false,
-          trusted: false,
+          ...(demote
+            ? {
+                user_status: 'pending',
+                verified: false,
+                trusted: false,
+              }
+            : {}),
+          application_revision_requested_at: requestedAt,
+          application_revision_note: note,
         },
         'revision'
       );
@@ -5733,8 +5834,9 @@ export default function App() {
     }
     const client = clients.find((c) => c.id === clientId);
     if (!client) throw new Error('Client not found.');
-    if (getClientAccountStatus(client) !== 'active') {
-      throw new Error('Only approved client applications can be sent back for revision.');
+    const status = getClientAccountStatus(client);
+    if (status !== 'pending' && status !== 'active') {
+      throw new Error('Only pending or approved client applications can be sent back for revision.');
     }
 
     const activeJob = requests.find(
@@ -5751,17 +5853,30 @@ export default function App() {
     const note =
       reason?.trim() ||
       'Staff needs updates to your client application before it can stay approved. Please review and resubmit.';
+    const requestedAt = new Date().toISOString();
+    const demote = status === 'active';
     const previous = client;
 
     setClients((prev) =>
       prev.map((c) =>
-        c.id === clientId ? { ...c, approved: false, accountStatus: 'pending' as const } : c
+        c.id === clientId
+          ? {
+              ...c,
+              ...(demote ? { approved: false, accountStatus: 'pending' as const } : {}),
+              applicationRevisionRequestedAt: requestedAt,
+              applicationRevisionNote: note,
+            }
+          : c
       )
     );
     if (isDbConnected) {
       const { error } = await supabase
         .from('clients')
-        .update({ approved: false, account_status: 'pending' })
+        .update({
+          ...(demote ? { approved: false, account_status: 'pending' } : {}),
+          application_revision_requested_at: requestedAt,
+          application_revision_note: note,
+        })
         .eq('id', clientId);
       if (error) {
         setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
@@ -5771,6 +5886,7 @@ export default function App() {
 
     void writeAuditLog(currentUser, 'client_application_revision_requested', 'client', clientId, {
       reason: note,
+      previousStatus: status,
     });
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',

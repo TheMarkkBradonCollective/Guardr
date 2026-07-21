@@ -221,6 +221,9 @@ export interface Client {
   approved?: boolean;
   /** Account lifecycle — pending sign-ups need staff approval before posting jobs */
   accountStatus?: 'pending' | 'active' | 'suspended';
+  /** Staff asked the client to update locked application contact details. */
+  applicationRevisionRequestedAt?: string;
+  applicationRevisionNote?: string;
   rating?: number;
   createdAt?: string;
   themePreference?: 'dark' | 'light';
@@ -651,6 +654,9 @@ export interface SecurityGuard {
   /** Automatic or staff update request while verified government ID stays on file. */
   idUpdateRequestedAt?: string;
   idUpdateRequestNote?: string;
+  /** Staff asked the guard to update locked application intake details. */
+  applicationRevisionRequestedAt?: string;
+  applicationRevisionNote?: string;
   /** Who submitted government ID for approvals filtering */
   idSubmittedBy?: 'guard' | 'staff';
   /** State ID or driver's license — controls labels and driving eligibility. */

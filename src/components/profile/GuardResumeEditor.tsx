@@ -66,6 +66,8 @@ interface GuardResumeEditorProps {
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
   credentialsEditing?: boolean;
+  /** Application intake fields (summary, service areas, specialties, etc.). */
+  applicationIntakeEditing?: boolean;
   /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
   staffMode?: boolean;
   onEditCredentialFullPage?: () => void;
@@ -87,10 +89,12 @@ export function GuardResumeEditor({
   onSaveVehicleInsurance,
   onReviewInsurance,
   credentialsEditing,
+  applicationIntakeEditing,
   staffMode = false,
   onEditCredentialFullPage,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
+  const intakeEditing = applicationIntakeEditing ?? editing;
   const selectableGuardCities = getSelectableCityNamesForGuards();
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
@@ -172,7 +176,7 @@ export function GuardResumeEditor({
         <ResumeField
           label="Summary"
           value={payload.summary}
-          editing={editing}
+          editing={intakeEditing}
           onChange={(v) => onChange({ summary: v })}
           placeholder="One or two sentences clients see in search results"
           multiline
@@ -190,7 +194,7 @@ export function GuardResumeEditor({
         <ResumeField
           label="Years of experience"
           value={payload.yearsExperience != null ? String(payload.yearsExperience) : ''}
-          editing={editing}
+          editing={intakeEditing}
           onChange={(v) => {
             const parsed = v ? parseInt(v, 10) : NaN;
             onChange({ yearsExperience: Number.isFinite(parsed) ? Math.max(0, parsed) : undefined });
@@ -215,7 +219,7 @@ export function GuardResumeEditor({
         <ResumeField
           label="Availability"
           value={payload.availabilityNotes}
-          editing={editing}
+          editing={intakeEditing}
           onChange={(v) => onChange({ availabilityNotes: v })}
           placeholder="Nights, weekends, 24hr notice for travel…"
           multiline
@@ -232,9 +236,9 @@ export function GuardResumeEditor({
               <button
                 key={opt}
                 type="button"
-                disabled={!editing}
+                disabled={!intakeEditing}
                 onClick={() => toggleSpecialty(opt)}
-                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!editing ? 'opacity-80' : ''}`}
+                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!intakeEditing ? 'opacity-80' : ''}`}
               >
                 {opt}
               </button>
@@ -254,9 +258,9 @@ export function GuardResumeEditor({
               <button
                 key={city}
                 type="button"
-                disabled={!editing}
+                disabled={!intakeEditing}
                 onClick={() => toggleServiceArea(city)}
-                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!editing ? 'opacity-80' : ''}`}
+                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!intakeEditing ? 'opacity-80' : ''}`}
               >
                 {city}
               </button>
@@ -324,7 +328,7 @@ export function GuardResumeEditor({
 
       <GuardWeaponGearPanel
         guard={guard}
-        editing={editing}
+        editing={intakeEditing}
         selected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
         onChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
       />

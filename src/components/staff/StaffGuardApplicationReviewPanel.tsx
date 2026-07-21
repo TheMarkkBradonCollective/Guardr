@@ -170,7 +170,7 @@ export function StaffGuardApplicationReviewPanel({
                 Deny application
               </button>
             )}
-            {isApprovedOrActive && onRequestGuardApplicationRevision && (
+            {(isPending || isApprovedOrActive) && onRequestGuardApplicationRevision && (
               <button
                 type="button"
                 onClick={() => void handleRequestRevision()}

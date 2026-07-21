@@ -3,6 +3,14 @@ import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuar
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
+import {
+  GUARD_APPLICATION_INTAKE_LOCKED_MESSAGE,
+  CLIENT_APPLICATION_INTAKE_LOCKED_MESSAGE,
+  isClientApplicationContactLocked,
+  isGuardApplicationIntakeLocked,
+  isGuardApplicationRevisionOpen,
+  isClientApplicationRevisionOpen,
+} from '../../lib/applicationIntakeLock';
 import { Camera, Save, User, X } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
 import { ProfileHero } from './ProfileHero';
@@ -19,6 +27,7 @@ import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
+import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -220,6 +229,15 @@ export function UserProfileScreen({
 
   const canBuildResume = isGuardAccount && !!guard && !guard.isStaff;
   const credentialsEditing = editing || !!(guard && isGuardAccountPreActive(guard));
+  const guardIntakeLocked = Boolean(guard && !guard.isStaff && isGuardApplicationIntakeLocked(guard));
+  const clientContactLocked = Boolean(client && isClientApplicationContactLocked(client));
+  const applicationFieldsEditable =
+    editing &&
+    ((isGuardAccount && !guardIntakeLocked) || (isClient && !clientContactLocked) || isStaffAccount);
+  const revisionOpen = Boolean(
+    (guard && isGuardApplicationRevisionOpen(guard)) ||
+      (client && isClientApplicationRevisionOpen(client))
+  );
   const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
   const heroTitle = isStaffAccount && !displayName.trim() ? staffBadgeId || '—' : displayName;
 
@@ -283,6 +301,30 @@ export function UserProfileScreen({
 
   const profileBody = (
     <>
+      {(guardIntakeLocked || clientContactLocked) && (
+        <AppNoticeChip
+          className="mb-4"
+          tone="warning"
+          label="Application details locked"
+          title="Application locked"
+          message={
+            isClient ? CLIENT_APPLICATION_INTAKE_LOCKED_MESSAGE : GUARD_APPLICATION_INTAKE_LOCKED_MESSAGE
+          }
+        />
+      )}
+      {revisionOpen && (
+        <AppNoticeChip
+          className="mb-4"
+          tone="warning"
+          label="Staff requested application updates"
+          title="Revision requested"
+          message={
+            guard?.applicationRevisionNote?.trim() ||
+            client?.applicationRevisionNote?.trim() ||
+            'Update the application details below and save. They lock again after you save.'
+          }
+        />
+      )}
       <AppDashboardZone title="Contact & account">
         <PersonNameFields
           firstName={firstName}
@@ -291,15 +333,26 @@ export function UserProfileScreen({
           onFirstNameChange={setFirstName}
           onMiddleNameChange={setMiddleName}
           onLastNameChange={setLastName}
-          editing={editing}
+          editing={applicationFieldsEditable}
         />
         {isClient && (
-          <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
+          <Field
+            label="Company"
+            value={companyName}
+            onChange={setCompanyName}
+            editing={applicationFieldsEditable}
+          />
         )}
         {isStaffAccount && (
           <Field label="Staff ID" value={staffBadgeId} editing={false} readOnly />
         )}
-        <Field label="Phone" value={phone} onChange={setPhone} editing={editing} type="tel" />
+        <Field
+          label="Phone"
+          value={phone}
+          onChange={setPhone}
+          editing={applicationFieldsEditable}
+          type="tel"
+        />
         {isStaffAccount && (
           <BioField label="Bio / notes" value={bio} onChange={setBio} editing={editing} />
         )}
@@ -308,7 +361,7 @@ export function UserProfileScreen({
             label="Minimum hourly rate ($)"
             value={hourlyRate}
             onChange={setHourlyRate}
-            editing={editing}
+            editing={applicationFieldsEditable}
             type="number"
             min={0}
           />
@@ -327,6 +380,7 @@ export function UserProfileScreen({
           guard={guard}
           editing={editing}
           credentialsEditing={credentialsEditing}
+          applicationIntakeEditing={applicationFieldsEditable}
           payload={resume}
           onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? Math.max(0, parseInt(hourlyRate, 10) || 0) : r.hourlyRateRequirement }))}
           onAddCertification={onAddCertification}
