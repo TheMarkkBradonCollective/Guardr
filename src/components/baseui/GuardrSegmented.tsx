@@ -3,6 +3,7 @@
  * https://baseweb.design/components/segmented-control/
  *
  * Uber pattern: pill-style, white active on gray track.
+ * Active highlight uses no hard border so edge segments are never clipped.
  */
 
 import React from 'react';
@@ -39,9 +40,28 @@ export function GuardrSegmented<T extends string = string>({
           style: {
             backgroundColor: theme.colors.backgroundSecondary,
             borderRadius: '999px',
-            padding: '3px',
+            padding: '4px',
             width: fill ? '100%' : undefined,
+            maxWidth: '100%',
+            boxSizing: 'border-box',
             gap: '0',
+            overflow: 'hidden',
+          },
+        },
+        SegmentList: {
+          style: {
+            overflow: 'hidden',
+            minWidth: 0,
+            width: '100%',
+          },
+        },
+        Active: {
+          style: {
+            // Soft fill only — BaseUI's default primary border gets clipped on edge segments.
+            border: 'none',
+            borderRadius: '999px',
+            backgroundColor: theme.colors.backgroundPrimary,
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           },
         },
       }}
@@ -58,17 +78,19 @@ export function GuardrSegmented<T extends string = string>({
                 fontWeight: $active ? 700 : 500,
                 fontSize: '14px',
                 color: $active ? theme.colors.contentPrimary : theme.colors.contentSecondary,
-                backgroundColor: $active ? theme.colors.backgroundPrimary : 'transparent',
-                boxShadow: $active ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
                 border: 'none',
                 outline: 'none',
+                outlineOffset: '0',
                 paddingTop: '10px',
                 paddingBottom: '10px',
-                paddingLeft: '16px',
-                paddingRight: '16px',
+                paddingLeft: '12px',
+                paddingRight: '12px',
                 flex: fill ? 1 : undefined,
+                minWidth: 0,
                 justifyContent: fill ? 'center' : 'flex-start',
-                transition: 'background-color 120ms ease, color 120ms ease',
+                transition: 'color 120ms ease',
                 minHeight: '40px',
               }),
             },
