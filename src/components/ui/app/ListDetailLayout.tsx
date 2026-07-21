@@ -94,9 +94,16 @@ export function ListDetailLayout<T>({
   }
 
   if (splitView) {
+    // Tablet panes fill the ops shell; drop caller max-height caps that fight flex scroll.
+    const tabletListScrollClassName = listScrollClassName
+      .split(/\s+/)
+      .filter((token) => token && !token.startsWith('max-h-'))
+      .concat('min-h-0')
+      .join(' ');
+
     return (
       <div className="tablet-split-panel">
-        <div className={`split-list-pane ${listScrollClassName}`}>
+        <div className={`split-list-pane ${tabletListScrollClassName}`}>
           <AppItemCardStack>
             {items.map((item) => {
               const id = getItemId(item);

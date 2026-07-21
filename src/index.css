@@ -20403,6 +20403,57 @@ textarea.uber-input {
   overflow-y: auto;
 }
 
+/* Live shell (GuardrDrawerShell) — same viewport-fit chain as the legacy .staff-shell rules above. */
+.uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell),
+.uber-app-shell .mobility-content-inner:has(.app-full-page-detail) {
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell) > .app-page-transition,
+.uber-app-shell .mobility-content-inner:has(.app-full-page-detail) > .app-page-transition {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.uber-app-shell .staff-ops-mobile-shell {
+  flex: 1;
+  min-height: 0;
+}
+
+.uber-app-shell .staff-ops-mobile-body:has(> .app-full-page-detail),
+.uber-app-shell .staff-ops-mobile-body:has(> .tablet-split-panel) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.uber-app-shell .staff-ops-mobile-body > .app-full-page-detail {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.uber-app-shell .staff-ops-mobile-body > .tablet-split-panel {
+  flex: 1;
+  min-height: 0 !important;
+  height: 100%;
+  align-items: stretch;
+}
+
+.uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-list-pane,
+.uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-detail-pane {
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .staff-shell .staff-main-content--bleed {
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
