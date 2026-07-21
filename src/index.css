@@ -20368,10 +20368,107 @@ textarea.uber-input {
 .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
   margin-inline: -0.25rem;
   border-bottom-width: 1px;
+  background: transparent !important;
+  border-bottom-color: var(--brand-border) !important;
+}
+
+html.theme-dark .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+  background: transparent !important;
+  border-bottom-color: color-mix(in srgb, #ffffff 18%, transparent) !important;
+}
+
+html.theme-light .staff-shell .staff-list-filter-tabs.app-inbox-tabs {
+  background: transparent !important;
+  border-bottom-color: color-mix(in srgb, #000000 12%, transparent) !important;
+}
+
+.staff-shell .staff-list-filter-tabs .app-inbox-tab {
+  color: var(--brand-text) !important;
+  opacity: 0.45;
+  background: transparent !important;
+}
+
+.staff-shell .staff-list-filter-tabs .app-inbox-tab:hover {
+  background: transparent !important;
+  opacity: 0.75;
+}
+
+.staff-shell .staff-list-filter-tabs .app-inbox-tab-active,
+.staff-shell .staff-list-filter-tabs .app-inbox-tab.app-inbox-tab-active {
+  color: var(--brand-text) !important;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.staff-shell .staff-list-filter-tabs .app-inbox-tab-active::after {
+  background: var(--brand-text) !important;
+}
+
+.staff-shell .staff-list-filter-tabs .app-inbox-tab-badge {
+  background: transparent !important;
+  border: 1px solid currentColor !important;
+  color: inherit !important;
 }
 
 .staff-shell .staff-list-filter-tabs::-webkit-scrollbar {
   display: none;
+}
+
+/* Crews — high-contrast black/white, no grey wash */
+.staff-shell .staff-crews-panel .app-search-bar {
+  background: transparent !important;
+  border-color: var(--brand-text) !important;
+  color: var(--brand-text) !important;
+  box-shadow: none !important;
+}
+
+.staff-shell .staff-crews-panel .app-search-bar input,
+.staff-shell .staff-crews-panel .app-search-bar svg {
+  color: var(--brand-text) !important;
+}
+
+.staff-shell .staff-crews-panel .app-search-bar input::placeholder {
+  color: var(--brand-text) !important;
+  opacity: 0.45;
+}
+
+.staff-shell .staff-crews-panel .app-empty-state-icon {
+  background: transparent !important;
+  border-color: var(--brand-text) !important;
+  color: var(--brand-text) !important;
+  opacity: 0.85;
+}
+
+.staff-shell .staff-crews-panel .app-empty-state-title {
+  color: var(--brand-text) !important;
+}
+
+.staff-shell .staff-crews-panel .app-empty-state-body {
+  color: var(--brand-text) !important;
+  opacity: 0.7;
+}
+
+.staff-shell .staff-crews-panel .staff-ops-mobile-toolbar,
+.staff-shell .staff-crews-panel .uber-ops-toolbar {
+  background: transparent !important;
+}
+
+.staff-shell .staff-crews-panel .rounded-xl.border,
+.staff-shell .staff-crews-panel .rounded-lg.border {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--brand-text) 18%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.staff-shell .staff-crews-panel .text-brand-text-muted {
+  color: var(--brand-text) !important;
+  opacity: 0.65;
+}
+
+.staff-shell .staff-crews-panel .bg-brand-surface,
+.staff-shell .staff-crews-panel .bg-brand-surface\/40,
+.staff-shell .staff-crews-panel [class*="bg-brand-surface"] {
+  background-color: transparent !important;
 }
 
 .staff-shell .app-full-page-detail > :not(.app-subscreen-header) {
@@ -20794,7 +20891,9 @@ button.staff-action-btn--ok:hover:not(:disabled) {
 .uber-app-shell [data-baseweb="segmented-control"] [data-baseweb="tab"][aria-selected="true"],
 .uber-app-shell [data-baseweb="segmented-control"] [aria-selected="true"] *,
 .uber-app-shell [data-baseweb="segmented-list"] [aria-selected="true"],
-.uber-app-shell [data-baseweb="segmented-list"] [aria-selected="true"] * {
+.uber-app-shell [data-baseweb="segmented-list"] [aria-selected="true"] *,
+.uber-app-shell [data-baseweb="segment"][aria-selected="true"],
+.uber-app-shell [data-baseweb="segment"][aria-selected="true"] * {
   color: var(--brand-accent-text, #ffffff) !important;
 }
 
