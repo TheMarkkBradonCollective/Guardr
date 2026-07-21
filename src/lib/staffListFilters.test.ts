@@ -104,13 +104,15 @@ describe('staffListFilters', () => {
     assert.equal(matchesApplicationKindFilter('client', 'staff'), false);
   });
 
-  it('filters application status pending / approved / denied', () => {
+  it('filters application status all / pending / approved / denied', () => {
     const pending = { id: 'a-1', status: 'pending' } as ApprovalFeedItem;
     const approved = { id: 'a-2', status: 'approved' } as ApprovalFeedItem;
     const denied = { id: 'a-3', status: 'denied' } as ApprovalFeedItem;
     const emptyGuards: SecurityGuard[] = [];
     const emptyClients: Client[] = [];
 
+    assert.equal(matchesApplicationStatusFilter(pending, 'all', emptyGuards, emptyClients), true);
+    assert.equal(matchesApplicationStatusFilter(denied, 'all', emptyGuards, emptyClients), true);
     assert.equal(matchesApplicationStatusFilter(pending, 'pending', emptyGuards, emptyClients), true);
     assert.equal(matchesApplicationStatusFilter(approved, 'pending', emptyGuards, emptyClients), false);
     assert.equal(matchesApplicationStatusFilter(approved, 'approved', emptyGuards, emptyClients), true);

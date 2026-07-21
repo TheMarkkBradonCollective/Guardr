@@ -197,7 +197,7 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('pending');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
   const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
@@ -435,7 +435,7 @@ export function StaffApplications({
       />
       <div className="space-y-2">
         <StaffListFilterTabs
-          aria-label="Show all applications"
+          aria-label="Show all application types"
           activeId={kindFilter === 'all' ? 'all' : '__none__'}
           onChange={(id) => {
             if (id === 'all') setKindFilter('all');
@@ -456,9 +456,20 @@ export function StaffApplications({
           ]}
         />
         <StaffListFilterTabs
+          aria-label="Show all application statuses"
+          activeId={statusFilter === 'all' ? 'all' : '__none__'}
+          onChange={(id) => {
+            if (id === 'all') setStatusFilter('all');
+          }}
+          tabs={[{ id: 'all', label: 'All' }]}
+        />
+        <StaffListFilterTabs
           aria-label="Application status"
-          activeId={statusFilter}
-          onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
+          activeId={statusFilter === 'all' ? '__none__' : statusFilter}
+          onChange={(id) => {
+            if (id === '__none__') return;
+            setStatusFilter(id as ApplicationStatusFilter);
+          }}
           tabs={[
             { id: 'pending', label: 'Pending' },
             { id: 'approved', label: 'Approved' },
@@ -475,13 +486,15 @@ export function StaffApplications({
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No applications match your search.'
-            : kindFilter === 'staff' && statusFilter === 'pending'
+            : kindFilter === 'staff' && (statusFilter === 'all' || statusFilter === 'pending')
               ? 'Staff application review is coming soon.'
-              : statusFilter === 'pending'
-                ? 'No account applications waiting for review.'
-                : statusFilter === 'approved'
-                  ? 'No approved applications in this view.'
-                  : 'No denied applications in this view.'}
+              : statusFilter === 'all'
+                ? 'No account applications in this view.'
+                : statusFilter === 'pending'
+                  ? 'No account applications waiting for review.'
+                  : statusFilter === 'approved'
+                    ? 'No approved applications in this view.'
+                    : 'No denied applications in this view.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
