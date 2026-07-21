@@ -176,12 +176,12 @@ export function StaffGuardCrewsPanel({
           </button>
         )}
 
-        <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-4 py-4 space-y-3">
+        <div className="rounded-xl border border-brand-border px-4 py-4 space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
               <h2 className="text-lg font-bold text-brand-text">{crew.crewName}</h2>
               {crew.crewDescription && (
-                <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-brand-text/70 leading-relaxed whitespace-pre-wrap">
                   {crew.crewDescription}
                 </p>
               )}
@@ -189,7 +189,7 @@ export function StaffGuardCrewsPanel({
             <WfBadge tone={PHASE_TONE[crew.phase]}>{PHASE_LABEL[crew.phase]}</WfBadge>
           </div>
 
-          <div className="text-sm space-y-1.5 text-brand-text-muted">
+          <div className="text-sm space-y-1.5 text-brand-text/70">
             <p className="font-semibold text-brand-text">{crew.jobTitle}</p>
             <p>{formatShiftRange(job.startDate, job.endDate)}</p>
             <p>{crew.location}</p>
@@ -204,7 +204,7 @@ export function StaffGuardCrewsPanel({
               <ProfileAvatar src={coordinator.avatar} name={coordinator.name} size="sm" />
               <div>
                 <p className="text-sm font-semibold text-brand-text">{coordinator.name}</p>
-                <p className="text-xs text-brand-text-muted">Crew coordinator</p>
+                <p className="text-xs text-brand-text/65">Crew coordinator</p>
               </div>
             </div>
           )}
@@ -426,7 +426,7 @@ export function StaffGuardCrewsPanel({
                     subtitle={guard.name + (guard.badgeNumber ? ` · ${guard.badgeNumber}` : '')}
                     meta={
                       <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-xs text-brand-text-muted">
+                        <span className="text-xs text-brand-text/65">
                           {activeMembers.length} member{activeMembers.length !== 1 ? 's' : ''}
                           {pendingMembers.length > 0 ? ` · ${pendingMembers.length} pending` : ''}
                         </span>
@@ -450,7 +450,7 @@ export function StaffGuardCrewsPanel({
                     )}
 
                     {/* Lead profile */}
-                    <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-4 py-4 space-y-3">
+                    <div className="rounded-xl border border-brand-border px-4 py-4 space-y-3">
                       <div className="flex items-center gap-3">
                         <ProfileAvatar src={lead.avatar} name={lead.name} size="md" />
                         <div className="min-w-0">
@@ -458,23 +458,23 @@ export function StaffGuardCrewsPanel({
                             <h2 className="text-base font-bold text-brand-text">{lead.name}</h2>
                             <WfBadge tone="primary">Crew lead · Trusted</WfBadge>
                           </div>
-                          <p className="text-sm text-brand-text-muted">
+                          <p className="text-sm text-brand-text/70">
                             {lead.badgeNumber ? `Badge ${lead.badgeNumber}` : 'Guard'}
                           </p>
                         </div>
                       </div>
 
                       <div className="border-t border-brand-border pt-3">
-                        <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted mb-1">Team name</p>
+                        <p className="text-xs font-bold uppercase tracking-wide text-brand-text/65 mb-1">Team name</p>
                         <p className="text-sm font-semibold text-brand-text">
-                          {lead.standingCrewName || <span className="text-brand-text-muted italic">Not set</span>}
+                          {lead.standingCrewName || <span className="text-brand-text/55 italic">Not set</span>}
                         </p>
                       </div>
 
                       {lead.standingCrewDescription && (
                         <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted mb-1">Description</p>
-                          <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs font-bold uppercase tracking-wide text-brand-text/65 mb-1">Description</p>
+                          <p className="text-sm text-brand-text/70 leading-relaxed whitespace-pre-wrap">
                             {lead.standingCrewDescription}
                           </p>
                         </div>
@@ -490,7 +490,7 @@ export function StaffGuardCrewsPanel({
 
                       {allCrewMembers.length === 0 ? (
                         <div className="app-empty-state app-empty-state--dashed py-6">
-                          <p className="text-sm text-brand-text-muted">
+                          <p className="text-sm text-brand-text/70">
                             No crew members yet. This guard can invite others from their Crew hub.
                           </p>
                         </div>
@@ -500,11 +500,11 @@ export function StaffGuardCrewsPanel({
                             const memberGuard = guards.find((g) => g.id === member.memberGuardId);
                             if (!memberGuard) return null;
                             return (
-                              <div key={member.id} className="flex items-center gap-3 px-4 py-3 bg-brand-surface">
+                              <div key={member.id} className="flex items-center gap-3 px-4 py-3">
                                 <ProfileAvatar src={memberGuard.avatar} name={memberGuard.name} size="sm" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-semibold text-brand-text truncate">{memberGuard.name}</p>
-                                  <p className="text-xs text-brand-text-muted">
+                                  <p className="text-xs text-brand-text/65">
                                     {memberGuard.badgeNumber ? `Badge ${memberGuard.badgeNumber}` : 'Guard'}
                                   </p>
                                 </div>

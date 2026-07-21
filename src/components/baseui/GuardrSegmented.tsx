@@ -74,7 +74,7 @@ export function GuardrSegmented<T extends string = string>({
           label={opt.label}
           description={opt.description}
           overrides={{
-            Tab: {
+            Segment: {
               style: ({ $isActive }: { $isActive?: boolean }) => ({
                 borderRadius: '999px',
                 fontWeight: $isActive ? 700 : 500,
