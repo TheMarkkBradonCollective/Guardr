@@ -5595,6 +5595,8 @@ export default function App() {
       appToast('You do not have permission to reject client accounts.', 'error');
       return;
     }
+    const client = clients.find((c) => c.id === clientId);
+    const previousStatus = client ? getClientAccountStatus(client) : undefined;
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId ? { ...c, approved: false, accountStatus: 'suspended' as const } : c
@@ -5603,10 +5605,13 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('clients').update({ approved: false, account_status: 'suspended' }).eq('id', clientId);
     }
+    void writeAuditLog(currentUser, 'client_application_revoked', 'client', clientId, {
+      previousStatus,
+    });
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',
       recipientUserId: clientId,
-      title: 'Account not approved',
+      title: previousStatus === 'active' ? 'Application revoked' : 'Account not approved',
       body: 'Your client account request was not approved. Contact Guardr support if you have questions.',
     });
   };
@@ -5658,6 +5663,121 @@ export default function App() {
       'Application approved',
       'Your guard application is approved. Open Guardr to upload your activation credentials.'
     );
+  };
+
+  const handleRequestGuardApplicationRevision = async (guardId: string, reason?: string) => {
+    if (!currentUser || !(canApproveGuards(currentUser) || canManageGuards(currentUser))) {
+      appToast('You do not have permission to request application revisions.', 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard || guard.isStaff) throw new Error('Guard not found.');
+
+    const status = getGuardUserStatus(guard);
+    if (status !== 'approved' && status !== 'active') {
+      throw new Error('Only approved or active applications can be sent back for revision.');
+    }
+
+    const activeJob = requests.find(
+      (r) => r.assignedGuardId === guardId && ['accepted', 'in-progress'].includes(r.status)
+    );
+    if (activeJob) {
+      throw new Error(
+        'This guard has an active job. Complete or reassign the shift before requesting revision.'
+      );
+    }
+
+    const note =
+      reason?.trim() ||
+      'Staff needs updates to your application before it can stay approved. Please review the note and resubmit.';
+
+    const previous = guard;
+    const revisedGuard: SecurityGuard = {
+      ...guard,
+      userStatus: 'pending',
+      verified: false,
+      trusted: false,
+    };
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? revisedGuard : g)));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
+          user_status: 'pending',
+          verified: false,
+          trusted: false,
+        },
+        'revision'
+      );
+      if (result.ok === false) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        throw new Error(result.error);
+      }
+    }
+
+    void writeAuditLog(currentUser, 'guard_application_revision_requested', 'guard', guardId, {
+      email: guard.email,
+      reason: note,
+      previousStatus: status,
+    });
+    notifyAccountUpdate(currentUser, guardId, 'Application revision requested', note);
+  };
+
+  const handleRequestClientApplicationRevision = async (clientId: string, reason?: string) => {
+    if (!currentUser || !canManageClients(currentUser)) {
+      appToast('You do not have permission to request client application revisions.', 'error');
+      return;
+    }
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) throw new Error('Client not found.');
+    if (getClientAccountStatus(client) !== 'active') {
+      throw new Error('Only approved client applications can be sent back for revision.');
+    }
+
+    const activeJob = requests.find(
+      (r) =>
+        r.clientId === clientId &&
+        ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
+    );
+    if (activeJob) {
+      throw new Error(
+        'This client has active job postings or shifts. Close those before requesting revision.'
+      );
+    }
+
+    const note =
+      reason?.trim() ||
+      'Staff needs updates to your client application before it can stay approved. Please review and resubmit.';
+    const previous = client;
+
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId ? { ...c, approved: false, accountStatus: 'pending' as const } : c
+      )
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('clients')
+        .update({ approved: false, account_status: 'pending' })
+        .eq('id', clientId);
+      if (error) {
+        setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
+        throw new Error('Could not request client application revision.');
+      }
+    }
+
+    void writeAuditLog(currentUser, 'client_application_revision_requested', 'client', clientId, {
+      reason: note,
+    });
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: clientId,
+      title: 'Application revision requested',
+      body: note,
+    });
   };
 
   const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
@@ -6219,6 +6339,18 @@ export default function App() {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard || guard.isStaff) return;
 
+    const previousStatus = getGuardUserStatus(guard);
+    if (previousStatus === 'active' || previousStatus === 'approved') {
+      const activeJob = requests.find(
+        (r) => r.assignedGuardId === guardId && ['accepted', 'in-progress'].includes(r.status)
+      );
+      if (activeJob) {
+        throw new Error(
+          'This guard has an active job. Complete or reassign the shift before revoking the application.'
+        );
+      }
+    }
+
     const reviewedAt = new Date().toISOString();
     const rejectionReason = reason?.trim() || GUARD_APPLICATION_REJECT_DEFAULT_REASON;
     setGuards((prev) =>
@@ -6227,6 +6359,8 @@ export default function App() {
           ? {
               ...g,
               userStatus: 'blocked' as const,
+              verified: false,
+              trusted: false,
               idVerificationStatus: 'rejected' as const,
               idVerificationReviewedAt: reviewedAt,
               idVerificationRejectionReason: rejectionReason,
@@ -6240,6 +6374,8 @@ export default function App() {
         .from('guards')
         .update({
           user_status: 'blocked',
+          verified: false,
+          trusted: false,
           id_verification_status: 'rejected',
           id_verification_reviewed_at: reviewedAt,
           id_verification_rejection_reason: rejectionReason,
@@ -6247,12 +6383,18 @@ export default function App() {
         .eq('id', guardId);
     }
     if (currentUser) {
-      notifyAccountUpdate(
-        currentUser,
-        guardId,
-        'ID verification rejected',
-        rejectionReason
-      );
+      void writeAuditLog(currentUser, 'guard_application_revoked', 'guard', guardId, {
+        email: guard.email,
+        reason: rejectionReason,
+        previousStatus,
+      });
+      const title =
+        previousStatus === 'approved' || previousStatus === 'active'
+          ? 'Application revoked'
+          : previousStatus === 'pending'
+            ? 'Application denied'
+            : 'ID verification rejected';
+      notifyAccountUpdate(currentUser, guardId, title, rejectionReason);
     }
   };
 
@@ -13304,6 +13446,8 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
+          onRequestGuardApplicationRevision={handleRequestGuardApplicationRevision}
+          onRequestClientApplicationRevision={handleRequestClientApplicationRevision}
           onSetGuardTrusted={handleSetGuardTrusted}
           onSetClientTrusted={handleSetClientTrusted}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}

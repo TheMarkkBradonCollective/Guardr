@@ -100,12 +100,49 @@ describe('buildApplicationFeed', () => {
     assert.equal(countPendingAccountSignupApplications([approvedWithPendingCert], []), 0);
   });
 
-  it('excludes active marketplace guards from the applications feed', () => {
+  it('keeps active marketplace guards in the applications feed for audit', () => {
     const feed = buildApplicationFeed(
       [staffProvisionedGuard({ userStatus: 'active', verified: true })],
       []
     );
-    assert.equal(feed.find((item) => item.id === 'g-staff'), undefined);
+    const item = feed.find((entry) => entry.id === 'g-staff');
+    assert.ok(item);
+    assert.equal(item?.status, 'active');
+    assert.equal(isApplicationFeedItemOpen(item!, [staffProvisionedGuard({ userStatus: 'active', verified: true })], []), false);
+  });
+
+  it('surfaces approval and activation actors from the audit log', () => {
+    const feed = buildApplicationFeed(
+      [staffProvisionedGuard({ userStatus: 'active', verified: true })],
+      [],
+      [
+        {
+          id: 'a1',
+          actorId: 'staff-1',
+          actorEmail: 'director@guardr.test',
+          actorRole: 'Director',
+          action: 'guard_approved',
+          entityType: 'guard',
+          entityId: 'g-staff',
+          createdAt: '2026-01-02T12:00:00.000Z',
+        },
+        {
+          id: 'a2',
+          actorId: 'staff-2',
+          actorEmail: 'manager@guardr.test',
+          actorRole: 'Manager',
+          action: 'guard_activated',
+          entityType: 'guard',
+          entityId: 'g-staff',
+          createdAt: '2026-01-03T15:30:00.000Z',
+        },
+      ]
+    );
+    const item = feed.find((entry) => entry.id === 'g-staff');
+    assert.equal(item?.approvedByEmail, 'director@guardr.test');
+    assert.equal(item?.approvedAt, '2026-01-02T12:00:00.000Z');
+    assert.equal(item?.activatedByEmail, 'manager@guardr.test');
+    assert.equal(item?.activatedAt, '2026-01-03T15:30:00.000Z');
   });
 
   it('includes approved client accounts in the applications feed', () => {

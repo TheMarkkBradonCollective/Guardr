@@ -145,6 +145,8 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
+  onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => Promise<void>;
+  onRequestClientApplicationRevision?: (clientId: string, reason?: string) => Promise<void>;
   onSetGuardTrusted?: (guardId: string, trusted: boolean) => Promise<void>;
   onSetClientTrusted?: (clientId: string, trusted: boolean) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
@@ -369,6 +371,8 @@ export function StaffDashboard({
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
+  onRequestGuardApplicationRevision,
+  onRequestClientApplicationRevision,
   onSetGuardTrusted,
   onSetClientTrusted,
   onDeleteGuardAccount,
@@ -695,6 +699,14 @@ export function StaffDashboard({
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onRejectGuardApplication={onRejectGuardIdentityVerification}
+            onRequestGuardApplicationRevision={
+              canApproveGuardAccounts || canManageGuardAccounts
+                ? onRequestGuardApplicationRevision
+                : undefined
+            }
+            onRequestClientApplicationRevision={
+              canManageClientAccounts ? onRequestClientApplicationRevision : undefined
+            }
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}

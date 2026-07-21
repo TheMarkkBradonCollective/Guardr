@@ -8,7 +8,11 @@ import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
 import { confirmApproveGuardProfile } from '../../lib/importantActionConfirm';
-import { promptRejectGuardApplicationNote } from '../../lib/staffDocumentReview';
+import {
+  promptDenyGuardApplicationNote,
+  promptRequestGuardApplicationRevisionNote,
+  promptRevokeGuardApplicationNote,
+} from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
   guardCanStaffApproveProfile,
@@ -21,6 +25,7 @@ interface StaffGuardApplicationReviewPanelProps {
   canReview: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
+  onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
 }
 
@@ -29,12 +34,16 @@ export function StaffGuardApplicationReviewPanel({
   canReview,
   onApproveGuardAccount,
   onRejectGuardApplication,
+  onRequestGuardApplicationRevision,
   onOpenGuardProfile,
 }: StaffGuardApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
   const [viewingCredentialItemId, setViewingCredentialItemId] = useState<string | null>(null);
   const guardAccountStatus = getGuardUserStatus(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
+  const isPending = guardAccountStatus === 'pending';
+  const isApprovedOrActive =
+    guardAccountStatus === 'approved' || guardAccountStatus === 'active';
 
   const handleApproveProfile = async () => {
     if (!onApproveGuardAccount || !guardCanStaffApproveProfile(guard)) return;
@@ -48,13 +57,42 @@ export function StaffGuardApplicationReviewPanel({
 
   const handleDenyApplication = async () => {
     if (!onRejectGuardApplication) return;
-    const reason = await promptRejectGuardApplicationNote();
+    const reason = await promptDenyGuardApplicationNote();
     if (reason === null) return;
     setActionPending(true);
     try {
       await onRejectGuardApplication(guard.id, reason);
     } catch (err) {
       showAppToast(err instanceof Error ? err.message : 'Could not deny application.', { tone: 'error' });
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleRequestRevision = async () => {
+    if (!onRequestGuardApplicationRevision) return;
+    const reason = await promptRequestGuardApplicationRevisionNote();
+    if (reason === null) return;
+    setActionPending(true);
+    try {
+      await onRequestGuardApplicationRevision(guard.id, reason);
+      showAppToast('Revision requested — application returned to Pending.');
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not request revision.', { tone: 'error' });
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleRevokeApplication = async () => {
+    if (!onRejectGuardApplication) return;
+    const reason = await promptRevokeGuardApplicationNote();
+    if (reason === null) return;
+    setActionPending(true);
+    try {
+      await onRejectGuardApplication(guard.id, reason);
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not revoke application.', { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -103,11 +141,11 @@ export function StaffGuardApplicationReviewPanel({
         />
       )}
 
-      {canReview && (
+      {canReview && (isPending || isApprovedOrActive) && (
         <section className="staff-detail-section space-y-3">
           <WfSectionHeader title="Review actions" className="!px-0 !mb-0" />
           <div className="staff-detail-actions">
-            {guardAccountStatus === 'pending' && onApproveGuardAccount && (
+            {isPending && onApproveGuardAccount && (
               <button
                 type="button"
                 onClick={() => void handleApproveProfile()}
@@ -122,11 +160,30 @@ export function StaffGuardApplicationReviewPanel({
                 Approve application
               </button>
             )}
-            {(guardAccountStatus === 'pending' || guardAccountStatus === 'approved') &&
-              onRejectGuardApplication && (
+            {isPending && onRejectGuardApplication && (
               <button
                 type="button"
                 onClick={() => void handleDenyApplication()}
+                disabled={actionPending}
+                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
+              >
+                Deny application
+              </button>
+            )}
+            {isApprovedOrActive && onRequestGuardApplicationRevision && (
+              <button
+                type="button"
+                onClick={() => void handleRequestRevision()}
+                disabled={actionPending}
+                className="app-button-outline app-btn-sm disabled:opacity-50"
+              >
+                Request revision
+              </button>
+            )}
+            {isApprovedOrActive && onRejectGuardApplication && (
+              <button
+                type="button"
+                onClick={() => void handleRevokeApplication()}
                 disabled={actionPending}
                 className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
               >

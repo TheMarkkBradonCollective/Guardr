@@ -98,7 +98,7 @@ export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
 
 export function guardAccountDatabaseErrorMessage(
   error: { code?: string; message?: string },
-  action: 'approve' | 'activate'
+  action: 'approve' | 'activate' | 'revision'
 ): string {
   const msg = error.message ?? '';
   if (msg.includes('user_status') || msg.includes('guards_user_status_check')) {
@@ -109,11 +109,11 @@ export function guardAccountDatabaseErrorMessage(
   }
   const detail = msg.trim();
   if (detail) {
-    return action === 'approve'
-      ? `Could not approve guard profile: ${detail}`
-      : `Could not activate guard account: ${detail}`;
+    if (action === 'approve') return `Could not approve guard profile: ${detail}`;
+    if (action === 'revision') return `Could not request application revision: ${detail}`;
+    return `Could not activate guard account: ${detail}`;
   }
-  return action === 'approve'
-    ? 'Could not approve guard profile. Please try again.'
-    : 'Could not activate guard account. Please try again.';
+  if (action === 'approve') return 'Could not approve guard profile. Please try again.';
+  if (action === 'revision') return 'Could not request application revision. Please try again.';
+  return 'Could not activate guard account. Please try again.';
 }
