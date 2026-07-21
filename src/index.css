@@ -20403,55 +20403,117 @@ textarea.uber-input {
   overflow-y: auto;
 }
 
-/* Live shell (GuardrDrawerShell) — same viewport-fit chain as the legacy .staff-shell rules above. */
+/* Live shell (GuardrDrawerShell) — flat full-bleed list rows + full-page scroll on ops. */
+.uber-app-shell .app-item-card-stack {
+  gap: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.uber-app-shell .app-item-card-stack .app-item-card,
+.uber-app-shell .app-item-card-stack .wf-list-card,
+.uber-app-shell .staff-ops-mobile-body .app-item-card,
+.uber-app-shell .staff-ops-mobile-body .wf-list-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding-block: 0.875rem !important;
+  padding-inline: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .app-item-card-stack .app-item-card:first-child,
+.uber-app-shell .app-item-card-stack .wf-list-card:first-child {
+  border-top: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .app-item-card-stack .app-item-card:last-child,
+.uber-app-shell .app-item-card-stack .wf-list-card:last-child {
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell button.app-item-card:hover,
+.uber-app-shell a.app-item-card:hover,
+.uber-app-shell .wf-list-card-interactive:hover {
+  background: var(--uber-surface, #f6f6f6) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.uber-app-shell .app-item-card-selected,
+.uber-app-shell .app-item-card.ring-2 {
+  background: var(--uber-surface, #f6f6f6) !important;
+  box-shadow: none !important;
+  border-color: var(--uber-border, var(--brand-border)) !important;
+  border-left: 3px solid var(--uber-text, #000) !important;
+  padding-left: 0.5rem !important;
+}
+
+/* Bleed roster lists to the content edges so rows fit the screen width. */
+.uber-app-shell .staff-ops-mobile-body .app-item-card-stack,
+.uber-app-shell .staff-roster-panel .app-item-card-stack,
+.uber-app-shell .staff-ops-mobile-body .split-list-pane > .app-item-card-stack {
+  margin-inline: calc(-1 * var(--ops-list-bleed, 1rem));
+  width: calc(100% + (2 * var(--ops-list-bleed, 1rem)));
+}
+
+.uber-app-shell .staff-ops-mobile-body .app-item-card-stack .app-item-card,
+.uber-app-shell .staff-ops-mobile-body .app-item-card-stack .wf-list-card,
+.uber-app-shell .staff-roster-panel .app-item-card-stack .app-item-card,
+.uber-app-shell .staff-roster-panel .app-item-card-stack .wf-list-card {
+  padding-inline: var(--ops-list-bleed, 1rem) !important;
+}
+
+body[data-form-factor="mobile"] .uber-app-shell {
+  --ops-list-bleed: 1rem; /* matches BaseUI scale500 content padding */
+}
+
+body[data-form-factor="tablet"] .uber-app-shell {
+  --ops-list-bleed: 1.25rem; /* matches BaseUI scale600 content padding */
+}
+
+/* Ops pages scroll as one document (toolbar + list together). */
 .uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell),
 .uber-app-shell .mobility-content-inner:has(.app-full-page-detail) {
-  overflow: hidden !important;
-  display: flex;
-  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell) > .app-page-transition,
 .uber-app-shell .mobility-content-inner:has(.app-full-page-detail) > .app-page-transition {
-  flex: 1;
+  height: auto !important;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 }
 
 .uber-app-shell .staff-ops-mobile-shell {
-  flex: 1;
-  min-height: 0;
-}
-
-.uber-app-shell .staff-ops-mobile-body:has(> .app-full-page-detail),
-.uber-app-shell .staff-ops-mobile-body:has(> .tablet-split-panel) {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.uber-app-shell .staff-ops-mobile-body > .app-full-page-detail {
-  flex: 1;
-  min-height: 0;
   height: auto;
+  min-height: 0;
+}
+
+.uber-app-shell .staff-ops-mobile-body {
+  overflow: visible;
 }
 
 .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel {
-  flex: 1;
-  min-height: 0 !important;
-  height: 100%;
-  align-items: stretch;
+  height: auto;
+  min-height: 0;
+  align-items: start;
 }
 
 .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-list-pane,
 .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-detail-pane {
   max-height: none !important;
   min-height: 0 !important;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 }
 
 .staff-shell .staff-main-content--bleed {

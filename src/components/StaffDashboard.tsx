@@ -1183,7 +1183,7 @@ export function StaffDashboard({
       canAddCredential={canManageGuardAccounts}
       canCreateCrew={canManageGuardAccounts}
     >
-      <AppPageTransition motionKey={section} className="h-full min-h-0">
+      <AppPageTransition motionKey={section} className="min-h-0">
         {renderSection()}
       </AppPageTransition>
     </StaffOpsLayout>

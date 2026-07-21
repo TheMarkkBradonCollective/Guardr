@@ -67,7 +67,7 @@ export function AppPageTransition({ motionKey, children, className = '' }: AppPa
         variants={lite ? litePageVariants : pageVariants}
         transition={transition}
         className={`app-page-transition ${className}`.trim()}
-        style={{ height: '100%' }}
+        style={{ minHeight: '100%' }}
       >
         {children}
       </motion.div>

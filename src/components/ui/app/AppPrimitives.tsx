@@ -4,7 +4,6 @@ import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } f
 import { ParagraphMedium, LabelSmall, HeadingSmall } from 'baseui/typography';
 import { FormControl, Input, Notification, Textarea } from '../../baseui/baseuiShims';
 import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../baseui/dashboard';
-import { GuardrCard } from '../../baseui/GuardrCard';
 import { GuardrSegmented } from '../../baseui/GuardrSegmented';
 import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
 import { AppButton } from '../AppButton';
@@ -339,14 +338,12 @@ export function AppItemCard({
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={`${cardClassName} w-full text-left`}>
-        <GuardrCard interactive noBorder overrides={{ Root: { style: { width: '100%' } } }}>
-          {children}
-        </GuardrCard>
+        {children}
       </button>
     );
   }
 
-  return <GuardrCard className={cardClassName}>{children}</GuardrCard>;
+  return <div className={cardClassName}>{children}</div>;
 }
 
 /** Flat row for read-only lists. Use AppItemCard for clickable entities. */

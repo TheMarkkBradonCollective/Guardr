@@ -109,8 +109,8 @@ export function StaffIncidentsPanel({
 
   if (selectedIncident && selectedDetail) {
     return (
-      <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in">
-        <div className="app-full-page-detail flex-1 min-h-0 min-w-0 max-w-full">
+      <div className="staff-ops-mobile-shell flex flex-col animate-fade-in min-w-0">
+        <div className="app-full-page-detail min-w-0 max-w-full">
           <AppSubScreenHeader
             title={selectedIncident.location}
             onBack={() => setSelectedId(null)}
@@ -134,8 +134,8 @@ export function StaffIncidentsPanel({
   }
 
   return (
-    <div className="staff-ops-mobile-shell h-full min-h-0 flex flex-col animate-fade-in">
-      <div className="staff-ops-mobile-body flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-4 sm:-mx-5">
+    <div className="staff-ops-mobile-shell flex flex-col animate-fade-in min-w-0">
+      <div className="staff-ops-mobile-body min-w-0 -mx-4 sm:-mx-5">
       {incidents.length === 0 ? (
         <div className="app-empty-state">
           <div className="app-empty-state-icon">
