@@ -541,14 +541,14 @@ export function StaffCredentials({
 
     if (options?.onBack) {
       return (
-        <div className="app-full-page-detail app-full-page-detail--scroll animate-fade-in min-w-0 max-w-full">
+        <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
           <AppSubScreenHeader
             title={feedItem.title ?? 'Credential review'}
             onBack={options.onBack}
             backLabel="Credentials"
             hideTitle
           />
-          <div className="app-full-page-detail-scroll">{detailBody}</div>
+          <div className="pb-8 min-w-0">{detailBody}</div>
         </div>
       );
     }
