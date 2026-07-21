@@ -24,6 +24,10 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Building2, ChevronRight, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
+import { StaffAddGuardForm } from './StaffAddGuardForm';
+import type { StaffAddGuardInput } from './StaffAddGuardForm';
+import { StaffAddClientForm } from './StaffAddClientForm';
+import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
@@ -46,6 +50,8 @@ interface StaffApplicationsProps {
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
+  onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
+  onAddClient?: (input: StaffAddClientInput) => Promise<string>;
   initialGuardId?: string | null;
   initialClientId?: string | null;
   onSelectionChange?: (selection: { guardId?: string | null; clientId?: string | null }) => void;
@@ -177,6 +183,8 @@ export function StaffApplications({
   onRejectGuardApplication,
   onOpenGuardProfile,
   onOpenClientProfile,
+  onAddGuard,
+  onAddClient,
   initialGuardId = null,
   initialClientId = null,
   onSelectionChange,
@@ -352,6 +360,32 @@ export function StaffApplications({
 
   const toolbar = !showDetailOnly ? (
     <>
+      <div className="staff-ops-cta-stack">
+        {canManageGuardAccounts && onAddGuard && (
+          <StaffAddGuardForm
+            onAdd={onAddGuard}
+            onCreated={(guardId) => {
+              setSearch('');
+              setStatusFilter('pending');
+              setKindFilter('guard');
+              setActiveItemKey(`guard:${guardId}`);
+              onSelectionChange?.({ guardId, clientId: null });
+            }}
+          />
+        )}
+        {canManageClientAccounts && onAddClient && (
+          <StaffAddClientForm
+            onAdd={onAddClient}
+            onCreated={(clientId) => {
+              setSearch('');
+              setStatusFilter('pending');
+              setKindFilter('client');
+              setActiveItemKey(`client:${clientId}`);
+              onSelectionChange?.({ guardId: null, clientId });
+            }}
+          />
+        )}
+      </div>
       <WfSearchBar
         value={search}
         onChange={setSearch}
