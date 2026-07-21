@@ -174,7 +174,12 @@ function accountSignupApplicationItems(
     .filter((item) => belongsInApplicationFeed(item))
     .map((item) => ({ ...item, queue: 'applications' as const }));
 
-  return [...guardItems, ...clientItems];
+  // Staff application review UI comes later; list pending/reviewed staff intake here.
+  const staffItems = staffAccountItems(guards, auditLog)
+    .filter((item) => belongsInApplicationFeed(item))
+    .map((item) => ({ ...item, queue: 'applications' as const }));
+
+  return [...clientItems, ...guardItems, ...staffItems];
 }
 
 function belongsInApplicationFeed(item: ApprovalFeedItem): boolean {

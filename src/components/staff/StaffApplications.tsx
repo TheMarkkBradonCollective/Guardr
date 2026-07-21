@@ -31,7 +31,7 @@ import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
-type ApplicationKind = 'guard' | 'client';
+type ApplicationKind = 'client' | 'guard' | 'staff';
 
 interface ApplicationListEntry {
   kind: ApplicationKind;
@@ -62,7 +62,9 @@ function resolveApplicationKind(
   guards: SecurityGuard[],
   clients: Client[]
 ): ApplicationKind {
-  if (guards.some((g) => g.id === item.id)) return 'guard';
+  const guard = guards.find((g) => g.id === item.id);
+  if (guard?.isStaff) return 'staff';
+  if (guard) return 'guard';
   if (clients.some((c) => c.id === item.id)) return 'client';
   return 'guard';
 }
@@ -97,12 +99,18 @@ function ApplicationFeedRow({
             pending ? 'staff-overview-action-icon-urgent' : ''
           }`}
         >
-          {kind === 'guard' ? <Shield className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+          {kind === 'guard' ? (
+            <Shield className="w-4 h-4" />
+          ) : kind === 'staff' ? (
+            <UserCheck className="w-4 h-4" />
+          ) : (
+            <Building2 className="w-4 h-4" />
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <WfBadge tone={kind === 'guard' ? 'primary' : 'default'}>
-              {kind === 'guard' ? 'Guard' : 'Client'}
+            <WfBadge tone={kind === 'guard' ? 'primary' : kind === 'staff' ? 'warning' : 'default'}>
+              {kind === 'guard' ? 'Guard' : kind === 'staff' ? 'Staff' : 'Client'}
             </WfBadge>
             <p className="uber-feed-row-title">{item.title}</p>
           </div>
@@ -189,8 +197,8 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
-  const [kindFilter, setKindFilter] = useState<'guard' | 'client'>('guard');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('pending');
+  const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
     if (initialGuardId) return `guard:${initialGuardId}`;
@@ -248,10 +256,8 @@ export function StaffApplications({
     (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
 
   const visibleEntries = useMemo(() => {
-    // "All" shows every application. Pending / Approved also respect Guard vs Client.
-    const kindScope: ApplicationKindFilter = statusFilter === 'all' ? 'all' : kindFilter;
     return applicationEntries
-      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindScope))
+      .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
       .filter((entry) =>
         matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
       )
@@ -272,6 +278,41 @@ export function StaffApplications({
   const renderApplicationDetail = (entry: ApplicationListEntry, options?: { onBack?: () => void }) => {
     const feedItem = entry.item;
     const { kind } = entry;
+
+    if (kind === 'staff') {
+      const member = guards.find((g) => g.id === entry.item.id && g.isStaff);
+      const title = member?.badgeNumber || member?.name || feedItem.title;
+      const detailBody = (
+        <div className="staff-detail-pane space-y-4">
+          <ApplicationReviewMeta item={feedItem} />
+          <AppEmptyState
+            dashed
+            icon={<UserCheck className="w-5 h-5" />}
+            title="Staff application review coming soon"
+          >
+            Full staff application review will live here. Use Staff for roster actions for now.
+          </AppEmptyState>
+        </div>
+      );
+
+      if (options?.onBack) {
+        return (
+          <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
+            <AppSubScreenHeader title={title} onBack={options.onBack} backLabel="Applications" />
+            {detailBody}
+          </div>
+        );
+      }
+
+      return (
+        <div className="animate-fade-in">
+          <div className="app-dashboard-zone-head !px-0 !mb-3">
+            <h2 className="app-dashboard-zone-title break-words">{title}</h2>
+          </div>
+          {detailBody}
+        </div>
+      );
+    }
 
     if (kind === 'guard') {
       const guard = guards.find((g) => g.id === entry.item.id);
@@ -394,27 +435,24 @@ export function StaffApplications({
       />
       <div className="space-y-2">
         <StaffListFilterTabs
+          aria-label="Application type"
+          activeId={kindFilter}
+          onChange={(id) => setKindFilter(id as ApplicationKindFilter)}
+          tabs={[
+            { id: 'all', label: 'All' },
+            { id: 'client', label: 'Client' },
+            { id: 'guard', label: 'Guard' },
+            { id: 'staff', label: 'Staff' },
+          ]}
+        />
+        <StaffListFilterTabs
           aria-label="Application status"
           activeId={statusFilter}
           onChange={(id) => setStatusFilter(id as ApplicationStatusFilter)}
           tabs={[
-            { id: 'all', label: 'All' },
             { id: 'pending', label: 'Pending' },
             { id: 'approved', label: 'Approved' },
             { id: 'denied', label: 'Denied' },
-          ]}
-        />
-        <StaffListFilterTabs
-          aria-label="Application type"
-          activeId={statusFilter === 'all' ? '__all__' : kindFilter}
-          onChange={(id) => {
-            if (id === '__all__') return;
-            setKindFilter(id as 'guard' | 'client');
-            if (statusFilter === 'all') setStatusFilter('pending');
-          }}
-          tabs={[
-            { id: 'guard', label: 'Guard' },
-            { id: 'client', label: 'Client' },
           ]}
         />
       </div>
@@ -427,13 +465,13 @@ export function StaffApplications({
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No applications match your search.'
-            : statusFilter === 'pending'
-              ? 'No account applications waiting for review.'
-              : statusFilter === 'approved'
-                ? 'No approved applications in this view.'
-                : statusFilter === 'denied'
-                  ? 'No denied applications in this view.'
-                  : 'No account applications on file yet.'}
+            : kindFilter === 'staff'
+              ? 'Staff application review is coming soon.'
+              : statusFilter === 'pending'
+                ? 'No account applications waiting for review.'
+                : statusFilter === 'approved'
+                  ? 'No approved applications in this view.'
+                  : 'No denied applications in this view.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout
