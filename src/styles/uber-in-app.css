@@ -1133,23 +1133,47 @@ html.theme-dark .app-subscreen-header { background: var(--uber-bg, #000); }
   padding-bottom: 0.75rem;
 }
 
-.app-subscreen-back {
-  display: flex;
+.app-subscreen-back,
+.app-chat-header-back,
+.app-back-pill {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  background: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
   border: none;
+  background: var(--uber-text, #000);
+  color: var(--uber-bg, #fff);
   font-size: 14px;
   font-weight: 600;
-  color: var(--uber-text, #000);
   cursor: pointer;
-  padding: 8px 0;
   font-family: inherit;
   flex-shrink: 0;
+  box-shadow: none;
+  transition: opacity 120ms ease, transform 120ms ease;
 }
 
-html.theme-dark .app-subscreen-back { color: #fff; }
-.app-subscreen-back:hover { opacity: 0.65; }
+.app-chat-header-back {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+html.theme-dark .app-subscreen-back,
+html.theme-dark .app-chat-header-back,
+html.theme-dark .app-back-pill {
+  background: var(--uber-text, #fff);
+  color: var(--uber-bg, #000);
+}
+
+.app-subscreen-back:hover,
+.app-chat-header-back:hover,
+.app-back-pill:hover {
+  opacity: 0.88;
+}
 
 .app-subscreen-title {
   font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;

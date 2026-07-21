@@ -19,7 +19,7 @@ import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffCreateCrewForm } from './StaffCreateCrewForm';
-import { Briefcase, MessageCircle, Shield, Users } from 'lucide-react';
+import { Briefcase, MessageCircle, Shield, Users, ArrowLeft } from 'lucide-react';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 type CrewFilter = 'all' | StaffCrewPhase;
@@ -170,9 +170,10 @@ export function StaffGuardCrewsPanel({
     return (
       <div className="space-y-4">
         {options?.onBack && (
-          <AppButton variant="outline" size="sm" className="lg:hidden" onClick={options.onBack}>
+          <button type="button" className="app-subscreen-back lg:hidden" onClick={options.onBack}>
+            <ArrowLeft className="w-4 h-4" />
             Back to crews
-          </AppButton>
+          </button>
         )}
 
         <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-4 py-4 space-y-3">
@@ -442,9 +443,10 @@ export function StaffGuardCrewsPanel({
                 return (
                   <div className="space-y-4">
                     {options?.onBack && (
-                      <AppButton variant="outline" size="sm" className="lg:hidden" onClick={options.onBack}>
+                      <button type="button" className="app-subscreen-back lg:hidden" onClick={options.onBack}>
+                        <ArrowLeft className="w-4 h-4" />
                         Back to crews
-                      </AppButton>
+                      </button>
                     )}
 
                     {/* Lead profile */}

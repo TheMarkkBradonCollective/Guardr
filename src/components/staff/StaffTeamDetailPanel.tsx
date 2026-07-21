@@ -164,7 +164,7 @@ export function StaffTeamDetailPanel({
     <div className="staff-detail-pane h-full overflow-y-auto space-y-0">
       {onBack && (
         <div className="px-1 pb-4">
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+          <button type="button" onClick={onBack} className="app-subscreen-back">
             <ArrowLeft className="w-4 h-4" />
             Back to staff list
           </button>

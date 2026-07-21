@@ -493,19 +493,44 @@ html.theme-dark .uber-app-shell .adm-card--welcome {
   border-bottom: 1px solid var(--uber-border, #e2e2e2);
 }
 
-.uber-app-shell .app-subscreen-back {
+.uber-app-shell .app-subscreen-back,
+.uber-app-shell .app-chat-header-back,
+.uber-app-shell .app-back-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  min-height: 44px;
-  padding: 0 0.65rem;
-  border-radius: 10px;
-  border: 1px solid var(--uber-border, #e2e2e2);
-  background: var(--uber-bg, #fff);
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--uber-text, #000000);
+  color: var(--uber-bg, #ffffff);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--uber-text, #000);
   cursor: pointer;
+  box-shadow: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.uber-app-shell .app-chat-header-back {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  margin-left: 0;
+}
+
+.uber-app-shell .app-subscreen-back:hover,
+.uber-app-shell .app-chat-header-back:hover,
+.uber-app-shell .app-back-pill:hover {
+  opacity: 0.88;
+}
+
+.uber-app-shell .app-subscreen-back:active,
+.uber-app-shell .app-chat-header-back:active,
+.uber-app-shell .app-back-pill:active {
+  transform: scale(0.97);
 }
 
 .uber-app-shell .app-subscreen-title {

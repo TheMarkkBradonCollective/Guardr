@@ -40,7 +40,7 @@ function ComplianceDetail({ row, onBack }: { row: LegalComplianceUserRow; onBack
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-brand-primary"
+          className="app-subscreen-back"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to agreements

@@ -218,7 +218,7 @@ export function DirectGuardRequestFlow({
         </div>
 
         <div className="flex items-center gap-3">
-          <button type="button" onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface" aria-label="Back">
+          <button type="button" onClick={goBack} className="app-chat-header-back" aria-label="Back">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
