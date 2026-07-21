@@ -26,8 +26,8 @@ interface StaffPaymentSettingsPanelProps {
 function FeePreviewTable({ config }: { config: PlatformFeeConfig }) {
   const rates = feePreviewRates();
   return (
-    <div className="adm-table-wrap rounded-lg border border-brand-border overflow-hidden">
-      <table className="adm-table w-full text-sm">
+    <div className="adm-table-wrap staff-payment-settings-table rounded-lg border border-brand-border overflow-x-auto">
+      <table className="adm-table w-full text-sm min-w-[18rem]">
         <thead>
           <tr>
             <th>Client rate</th>
@@ -41,7 +41,7 @@ function FeePreviewTable({ config }: { config: PlatformFeeConfig }) {
             return (
               <tr key={rate}>
                 <td>${rate}/hr</td>
-                <td className="text-brand-primary font-medium">${fee}/hr</td>
+                <td className="font-medium text-brand-text">${fee}/hr</td>
                 <td>${Math.max(0, rate - fee)}/hr</td>
               </tr>
             );
@@ -66,6 +66,31 @@ function DesktopSettingsCard({
       <h3 className="adm-card-title adm-payment-settings-card-title">{title}</h3>
       {children}
     </section>
+  );
+}
+
+function MobileSaveButton({
+  label,
+  busyLabel,
+  busy,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  busyLabel: string;
+  busy: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="staff-payment-settings-save"
+      disabled={disabled || busy}
+      onClick={onClick}
+    >
+      {busy ? busyLabel : label}
+    </button>
   );
 }
 
@@ -139,14 +164,14 @@ export function StaffPaymentSettingsPanel({
   };
 
   const platformFeesBody = (
-    <div className="space-y-4">
-      <p className="text-sm text-brand-text-muted">
+    <div className="space-y-4 min-w-0">
+      <p className="text-sm text-brand-text/70 leading-relaxed">
         Platform fees are based on the client charge — either a flat dollar amount per hour or a percentage
         of the hourly rate. Open-contract jobs can override these defaults per agreement.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
+      <div className="grid grid-cols-1 gap-4 min-w-0">
+        <div className="min-w-0">
           <label className="uber-label block mb-1">Fee type</label>
           <select
             className="uber-input w-full"
@@ -157,11 +182,11 @@ export function StaffPaymentSettingsPanel({
             <option value="flat">Flat rate ($/hr)</option>
             <option value="percent">Percentage of client charge</option>
           </select>
-          <p className="text-xs text-brand-text-muted mt-1">{platformFeeModelLabel(feeDraft.model)}</p>
+          <p className="text-xs text-brand-text/60 mt-1">{platformFeeModelLabel(feeDraft.model)}</p>
         </div>
 
         {feeDraft.model === 'flat' && (
-          <div>
+          <div className="min-w-0">
             <label className="uber-label block mb-1">Fee per hour ($)</label>
             <input
               type="number"
@@ -181,7 +206,7 @@ export function StaffPaymentSettingsPanel({
         )}
 
         {feeDraft.model === 'percent' && (
-          <div>
+          <div className="min-w-0">
             <label className="uber-label block mb-1">Platform take (%)</label>
             <input
               type="number"
@@ -202,15 +227,15 @@ export function StaffPaymentSettingsPanel({
         )}
       </div>
 
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text/65 mb-2">
           Preview at common client rates
         </p>
         <FeePreviewTable config={feeDraft} />
       </div>
 
       {canEditFees ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="staff-payment-settings-actions">
           {formFactor === 'desktop' ? (
             <>
               <GuardrButton
@@ -233,18 +258,17 @@ export function StaffPaymentSettingsPanel({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                className="app-button-primary !w-auto !h-10 !px-5"
-                disabled={!feeDirty || savingFees}
+              <MobileSaveButton
+                label="Save fee settings"
+                busyLabel="Saving…"
+                busy={savingFees}
+                disabled={!feeDirty}
                 onClick={() => void persistFeeConfig()}
-              >
-                {savingFees ? 'Saving…' : 'Save fee settings'}
-              </button>
+              />
               {feeDirty && (
                 <button
                   type="button"
-                  className="app-button-outline !w-auto !h-10 !px-5"
+                  className="staff-payment-settings-discard"
                   onClick={() => setFeeDraft(platformSettings.feeConfig)}
                 >
                   Discard changes
@@ -254,19 +278,19 @@ export function StaffPaymentSettingsPanel({
           )}
         </div>
       ) : (
-        <p className="text-xs text-brand-text-muted">Only Directors and Founders can edit platform fees.</p>
+        <p className="text-xs text-brand-text/60">Only Directors and Founders can edit platform fees.</p>
       )}
     </div>
   );
 
   const crewPayBumpBody = (
-    <div className="space-y-4">
-      <p className="text-sm text-brand-text-muted">
+    <div className="space-y-4 min-w-0">
+      <p className="text-sm text-brand-text/70 leading-relaxed">
         Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour.
         Independent applicants and guards on other jobs do not receive it.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
-        <label className="block space-y-1">
+      <div className="grid grid-cols-1 gap-4 max-w-lg min-w-0">
+        <label className="block space-y-1 min-w-0">
           <span className="uber-label">Extra pay per crew guard / hour</span>
           <input
             type="number"
@@ -290,17 +314,18 @@ export function StaffPaymentSettingsPanel({
             {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
           </GuardrButton>
         ) : (
-          <button
-            type="button"
-            className="app-button-primary !w-auto !h-10 !px-5"
-            disabled={!crewPayBumpDirty || savingCrewPayBump}
-            onClick={() => void persistCrewPayBumpSettings()}
-          >
-            {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
-          </button>
+          <div className="staff-payment-settings-actions">
+            <MobileSaveButton
+              label="Save crew pay bump"
+              busyLabel="Saving…"
+              busy={savingCrewPayBump}
+              disabled={!crewPayBumpDirty}
+              onClick={() => void persistCrewPayBumpSettings()}
+            />
+          </div>
         )
       ) : (
-        <p className="text-xs text-brand-text-muted">Only Directors and Founders can edit crew pay settings.</p>
+        <p className="text-xs text-brand-text/60">Only Directors and Founders can edit crew pay settings.</p>
       )}
     </div>
   );
@@ -327,9 +352,11 @@ export function StaffPaymentSettingsPanel({
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
-      <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
-    </div>
+    <StaffOpsPageShell className="staff-payment-settings-panel">
+      <div className="staff-payment-settings-scroll min-w-0">
+        <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
+        <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
+      </div>
+    </StaffOpsPageShell>
   );
 }
