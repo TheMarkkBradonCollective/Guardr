@@ -273,6 +273,7 @@ interface GuardDashboardProps {
   tab?: GuardTab;
   onTabChange?: (tab: GuardTab) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
+  onOpenDownload?: () => void;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
@@ -418,6 +419,7 @@ export function GuardDashboard({
   tab: controlledTab,
   onTabChange,
   onOpenLegal,
+  onOpenDownload,
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
@@ -1372,6 +1374,7 @@ export function GuardDashboard({
     avatarUrl: guard.avatar,
     onOpenProfile: () => setTab('profile'),
     onOpenSettings: () => setTab('settings'),
+    onOpenDownload,
     onSignOut,
     themeMode: themeMode as 'dark' | 'light',
     onChangeTheme: (mode: 'dark' | 'light') => onChangeTheme(mode),
@@ -1789,6 +1792,7 @@ export function GuardDashboard({
               <UserSettingsScreen
                 currentUser={currentUser}
                 onOpenLegal={onOpenLegal}
+                onOpenDownload={onOpenDownload}
                 isDbConnected={isDbConnected}
               />
             </div>

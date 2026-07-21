@@ -332,6 +332,7 @@ interface StaffDashboardProps {
   onSelectedTeamChatRequestIdChange?: (id: string | null) => void;
   initialStaffMessagesTab?: 'team' | 'jobs' | null;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
+  onOpenDownload?: () => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
   companyPublicDocuments?: import('../lib/companyPlacard').CompanyPublicDocument[];
   onSaveCompanyPublicDocument?: (
@@ -485,6 +486,7 @@ export function StaffDashboard({
   onSelectedTeamChatRequestIdChange,
   initialStaffMessagesTab = null,
   onOpenLegal,
+  onOpenDownload,
   legalAcceptances = [],
   companyPublicDocuments = [],
   onSaveCompanyPublicDocument,
@@ -1193,6 +1195,7 @@ export function StaffDashboard({
             currentUser={currentUser}
             isDbConnected={isDbConnected}
             onOpenLegal={onOpenLegal}
+            onOpenDownload={onOpenDownload}
           />
         );
       default:
@@ -1214,6 +1217,7 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
+      onOpenDownload={onOpenDownload}
       accountNotifications={accountNotifications}
       headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}

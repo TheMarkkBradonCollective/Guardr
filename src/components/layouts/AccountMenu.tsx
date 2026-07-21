@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
+import { ChevronDown, Download, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
 import type { UserNotification } from '../../types';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -29,6 +29,7 @@ export interface AccountMenuProps {
   avatarUrl?: string;
   onOpenProfile: () => void;
   onOpenSettings: () => void;
+  onOpenDownload?: () => void;
   onSignOut: () => void;
   /** Hide profile link (e.g. guard activation screen handles uploads inline). */
   hideProfile?: boolean;
@@ -51,6 +52,7 @@ export function AccountMenu({
   avatarUrl,
   onOpenProfile,
   onOpenSettings,
+  onOpenDownload,
   onSignOut,
   hideProfile = false,
   active = false,
@@ -120,6 +122,11 @@ export function AccountMenu({
     close();
   };
 
+  const handleDownload = () => {
+    onOpenDownload?.();
+    close();
+  };
+
   const handleSignOut = () => {
     close();
     onSignOut();
@@ -149,6 +156,16 @@ export function AccountMenu({
             {userSubtitle && (
               <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>
             )}
+            {themeMode && onChangeTheme ? (
+              <div className="mt-3">
+                <ThemeToggle
+                  value={themeMode}
+                  onChange={onChangeTheme}
+                  size="sm"
+                  className="w-full justify-center"
+                />
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -226,19 +243,18 @@ export function AccountMenu({
             </div>
           )}
 
-          {themeMode && onChangeTheme ? (
-            <div className="px-3 py-3 border-b border-brand-border space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Appearance</p>
-              <ThemeToggle
-                value={themeMode}
-                onChange={onChangeTheme}
-                size="sm"
-                className="w-full justify-center"
-              />
-            </div>
-          ) : null}
-
           <div className="p-2">
+            {onOpenDownload ? (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleDownload}
+                className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+              >
+                <Download className="w-4 h-4 shrink-0 text-emerald-600" strokeWidth={1.75} />
+                Download
+              </button>
+            ) : null}
             <button
               type="button"
               role="menuitem"

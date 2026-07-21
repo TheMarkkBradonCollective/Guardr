@@ -480,6 +480,7 @@ import {
 import type { LegalPageId } from './lib/legalContent';
 import { CURRENT_LEGAL_VERSIONS, requiredLegalDocumentsForRole } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
+import { AppDownloadScreen } from './components/app/AppDownloadScreen';
 import { LegalAcceptanceModal } from './components/legal/LegalAcceptanceModal';
 import {
   indexLegalAcceptances,
@@ -626,6 +627,7 @@ export default function App() {
   );
   const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(null);
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
+  const [downloadPageOpen, setDownloadPageOpen] = useState(false);
   const [publicGuideOpen, setPublicGuideOpen] = useState(
     () => !isAppExperience() && readGuideFromWindow()
   );
@@ -1460,9 +1462,20 @@ export default function App() {
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
     setLegalPageState(page);
+    setDownloadPageOpen(false);
     setPublicGuideOpen(false);
     setIsAuthView(false);
     syncLegalPage(page);
+  };
+
+  const openDownloadPage = () => {
+    setDownloadPageOpen(true);
+    setLegalPageState(null);
+    setPublicGuideOpen(false);
+  };
+
+  const closeDownloadPage = () => {
+    setDownloadPageOpen(false);
   };
 
   const openPublicGuide = () => {
@@ -10033,6 +10046,13 @@ export default function App() {
       }
     : {};
 
+  const accountMenuExtras = {
+    onOpenDownload: openDownloadPage,
+    themeMode,
+    onChangeTheme: changeThemeMode,
+    ...accountNotificationMenuProps,
+  };
+
   const handleClientApproveFullTeam = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
@@ -12961,6 +12981,31 @@ export default function App() {
     return <LoadingScreen />;
   }
 
+  if (downloadPageOpen) {
+    return (
+      <>
+        <AppDownloadScreen
+          onBack={closeDownloadPage}
+          headerRight={
+            currentUser ? (
+              <AccountMenu
+                userName={currentUser.name}
+                userSubtitle={currentUser.email}
+                avatarUrl={currentUser.avatar}
+                onOpenProfile={() => undefined}
+                onOpenSettings={() => undefined}
+                onSignOut={handleSignOut}
+                hideProfile
+                {...accountMenuExtras}
+              />
+            ) : undefined
+          }
+        />
+        <InstallPrompt />
+      </>
+    );
+  }
+
   if (legalPage) {
     return (
       <>
@@ -12978,9 +13023,7 @@ export default function App() {
                 onOpenSettings={() => undefined}
                 onSignOut={handleSignOut}
                 hideProfile
-                themeMode={themeMode}
-                onChangeTheme={changeThemeMode}
-                {...accountNotificationMenuProps}
+                {...accountMenuExtras}
               />
             ) : undefined
           }
@@ -13124,9 +13167,7 @@ export default function App() {
               onOpenSettings={() => setGuardTab('settings')}
               onSignOut={handleSignOut}
               hideProfile
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              {...accountNotificationMenuProps}
+              {...accountMenuExtras}
             />
           </header>
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
@@ -13155,9 +13196,7 @@ export default function App() {
                 onOpenSettings={() => setGuardTab('settings')}
                 onSignOut={handleSignOut}
                 hideProfile
-                themeMode={themeMode}
-                onChangeTheme={changeThemeMode}
-                {...accountNotificationMenuProps}
+                {...accountMenuExtras}
               />
             </header>
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
@@ -13315,6 +13354,7 @@ export default function App() {
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
           onOpenLegal={openLegalPage}
+          onOpenDownload={openDownloadPage}
           isDbConnected={isDbConnected}
           {...tutorialSettingsProps}
         />
@@ -13389,9 +13429,7 @@ export default function App() {
             onOpenSettings={() => handleClientNavigate('settings')}
             onSignOut={handleSignOut}
             active={false}
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            {...accountNotificationMenuProps}
+            {...accountMenuExtras}
           />
         </div>
       ) : null;
@@ -13409,6 +13447,7 @@ export default function App() {
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
+          onOpenDownload={openDownloadPage}
           messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
           supportBadge={clientSupportBadge(supportTickets, currentUser)}
           invoicesBadge={clientInvoicesBadge}
@@ -13429,6 +13468,7 @@ export default function App() {
               currentUser={currentUser}
               isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
+              onOpenDownload={openDownloadPage}
             />
           ) : clientView === 'support-compose' ? (
             <SupportComposePage
@@ -13689,6 +13729,7 @@ export default function App() {
           onSendJobChat={handleSendJobChatMessage}
           onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
+          onOpenDownload={openDownloadPage}
           legalAcceptances={legalAcceptanceRecords}
           companyPublicDocuments={companyPublicDocuments}
           onSaveCompanyPublicDocument={handleSaveCompanyPublicDocument}
@@ -13713,9 +13754,7 @@ export default function App() {
           onOpenSettings={() => undefined}
           onSignOut={handleSignOut}
           hideProfile
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-          {...accountNotificationMenuProps}
+          {...accountMenuExtras}
         />
       </header>
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">

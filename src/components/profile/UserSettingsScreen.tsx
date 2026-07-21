@@ -9,20 +9,21 @@ import { ResponsiveFormPage, ResponsivePage } from '../layouts/desktop/DesktopPa
 import { LegalInfoCards } from '../legal/LegalInfoCards';
 import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
-import { appVersionLabel } from '../../lib/appVersion';
 import { useDevice } from '../../lib/platform';
-import { SITE_URL } from '../../lib/siteConfig';
+import { AppUpdatePanel } from '../app/AppUpdatePanel';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  onOpenDownload?: () => void;
 }
 
 export function UserSettingsScreen({
   currentUser,
   isDbConnected = false,
   onOpenLegal,
+  onOpenDownload,
 }: UserSettingsScreenProps) {
   const { shellKind } = useDevice();
   const surfaceLabel =
@@ -45,6 +46,8 @@ export function UserSettingsScreen({
 
       <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
 
+      <AppUpdatePanel onOpenDownload={onOpenDownload} />
+
       {onOpenLegal && (
         <>
           <AppSettingsHead>Legal</AppSettingsHead>
@@ -58,19 +61,8 @@ export function UserSettingsScreen({
       <AppSettingsHead>About</AppSettingsHead>
       <AppSettingsSection>
         <p className="text-sm text-brand-text-muted">
-          {appVersionLabel()}
-          {' · '}
-          {surfaceLabel}
+          Running on {surfaceLabel}
         </p>
-        {shellKind === 'native' && (
-          <p className="text-xs text-brand-text-muted mt-2 leading-relaxed">
-            Updates ship with new APK builds. Compare with the live site at{' '}
-            <a href={`${SITE_URL}/download/`} className="text-brand-primary font-semibold underline break-all">
-              {SITE_URL}/download/
-            </a>
-            .
-          </p>
-        )}
       </AppSettingsSection>
     </>
   );
@@ -79,7 +71,7 @@ export function UserSettingsScreen({
     <ResponsivePage screenClassName="guard-settings-screen">
       <ResponsiveFormPage
         title="Settings"
-        subtitle="Notifications and legal"
+        subtitle="Notifications, updates, and legal"
         className="guard-settings-screen"
       >
         {formContent}
