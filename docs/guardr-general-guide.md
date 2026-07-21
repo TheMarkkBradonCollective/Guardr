@@ -811,7 +811,7 @@ Administrators handle credential verification and day-to-day operations. You inh
 | Handle disputes | **Disputes** |
 | Suspend or restore users | **Guards** / **Clients** detail panels |
 | View analytics | **Analytics** |
-| Partial platform settings | **Settings** (approval rules, integrations — no payment controls) |
+| Partial platform settings | **Settings** (integrations — no payment controls); job posting rules under **Clients** |
 
 ### Credential verification workflow
 
@@ -955,7 +955,7 @@ Everything Moderators can do, plus:
 - Verify government ID, guard card, COI, and training credentials
 - Approve or decline job offers
 - Handle disputes and suspend or restore users
-- View analytics and manage general **Settings** (approval rules, integrations, homepage messages)
+- View analytics and manage general **Settings** (integrations, homepage messages); job posting approval under **Clients → Job posting**
 - **Cannot:** access **Payments**, **Payment settings**, **Marketplace agreements**, **Audit log**, or change payment methods
 
 ### Director permissions
