@@ -22409,6 +22409,523 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
   margin-top: 1rem;
 }
 
+/* ── In-app install / update screen ───────────────────────────── */
+.install-screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: color-mix(in srgb, var(--brand-bg) 92%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.install-screen-header-inner {
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 0.75rem 1rem;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.install-screen-header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.install-screen-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  white-space: nowrap;
+}
+
+.install-screen-main {
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 1.25rem 1rem 2.5rem;
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+}
+
+.install-screen-hero {
+  margin-bottom: 1.25rem;
+}
+
+.install-screen-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.install-screen-title {
+  margin: 0;
+  font-size: clamp(1.625rem, 5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--brand-text);
+}
+
+.install-screen-lead {
+  margin: 0.625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+  max-width: 34ch;
+}
+
+.install-screen-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+}
+
+.install-screen-context-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.install-screen-context-value {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.install-screen-versions {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.install-screen-versions-dot {
+  margin-inline: 0.35rem;
+  opacity: 0.5;
+}
+
+.install-screen-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.install-product-card {
+  border-radius: 1.125rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface, var(--brand-bg-sec));
+  padding: 1rem;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+
+.install-product-card--highlight {
+  border-color: color-mix(in srgb, #10b981 35%, var(--brand-border));
+  background:
+    radial-gradient(ellipse 90% 70% at 100% 0%, color-mix(in srgb, #10b981 12%, transparent), transparent 55%),
+    var(--brand-surface, var(--brand-bg-sec));
+}
+
+.install-product-card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.install-product-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+}
+
+.install-product-card--full .install-product-card-icon {
+  background: color-mix(in srgb, #10b981 16%, var(--brand-bg-sec));
+  color: #34d399;
+}
+
+.install-product-card-head {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-product-card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+}
+
+.install-product-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--brand-text);
+}
+
+.install-product-card-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+.install-product-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.install-product-status--installed,
+.install-product-status--current {
+  background: color-mix(in srgb, #10b981 18%, transparent);
+  color: #34d399;
+}
+
+.install-product-status--update {
+  background: color-mix(in srgb, #f59e0b 18%, transparent);
+  color: #fbbf24;
+}
+
+.install-product-status--available,
+.install-product-status--checking {
+  background: color-mix(in srgb, var(--brand-border) 55%, transparent);
+  color: var(--brand-text-muted);
+}
+
+.install-product-card-copy {
+  margin: 0.875rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+}
+
+.install-product-features {
+  margin: 0.875rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.install-product-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--brand-text);
+}
+
+.install-product-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+}
+
+.install-product-card-actions {
+  margin-top: 1rem;
+}
+
+.install-product-card-footer {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.install-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid transparent;
+  text-align: left;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.install-cta:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.install-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.install-cta--primary {
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  border-color: color-mix(in srgb, #22c55e 60%, #000);
+  color: #fff;
+  box-shadow: 0 8px 24px color-mix(in srgb, #16a34a 28%, transparent);
+}
+
+.install-cta--primary .install-cta-icon {
+  background: color-mix(in srgb, #fff 18%, transparent);
+  color: #fff;
+}
+
+.install-cta--secondary {
+  background: var(--brand-bg);
+  border-color: var(--brand-border);
+  color: var(--brand-text);
+}
+
+.install-cta--secondary .install-cta-icon {
+  background: var(--brand-bg-sec);
+  color: var(--brand-text);
+}
+
+.install-cta--ghost {
+  justify-content: center;
+  min-height: 2.5rem;
+  background: transparent;
+  border-color: var(--brand-border);
+  color: var(--brand-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  gap: 0.5rem;
+}
+
+.install-cta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  flex-shrink: 0;
+}
+
+.install-cta-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.install-cta-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.install-cta-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.88;
+}
+
+.install-qr-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  border-radius: 0.875rem;
+  border: 1px dashed color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: color-mix(in srgb, var(--brand-bg-sec) 70%, transparent);
+}
+
+.install-qr-image {
+  width: 8.5rem;
+  height: 8.5rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.5rem;
+}
+
+.install-qr-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.install-lite-note {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg-sec);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--brand-text-muted);
+}
+
+.install-lite-note strong {
+  color: var(--brand-text);
+  font-weight: 700;
+}
+
+.install-compare {
+  border-radius: 1rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg-sec);
+  padding: 1rem;
+}
+
+.install-compare-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--brand-text);
+}
+
+.install-compare-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.install-compare-head {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--brand-border);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.install-compare-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.install-compare-label {
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.install-compare-values {
+  display: contents;
+}
+
+.install-compare-value {
+  color: var(--brand-text-muted);
+}
+
+.install-compare-value--full {
+  color: color-mix(in srgb, #34d399 75%, var(--brand-text-muted));
+}
+
+.install-screen-error {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, #ef4444 35%, transparent);
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  font-size: 0.875rem;
+  color: #fca5a5;
+}
+
+.install-screen-error-retry {
+  margin-left: 0.5rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.install-screen-browser-link {
+  display: inline-flex;
+  margin-top: 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.install-screen-browser-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.install-screen-guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, #000 55%, transparent);
+}
+
+@media (min-width: 640px) {
+  .install-screen-guide-backdrop {
+    align-items: center;
+  }
+}
+
+body[data-form-factor="desktop"] .install-screen-main,
+body[data-form-factor="tablet"] .install-screen-main {
+  max-width: 36rem;
+  padding-top: 1.75rem;
+}
+
+body[data-form-factor="desktop"] .install-screen-header-inner,
+body[data-form-factor="tablet"] .install-screen-header-inner {
+  max-width: 36rem;
+}
+
 body[data-form-factor="tablet"] .landing-app-downloads--tablet .landing-app-downloads-actions,
 body[data-form-factor="desktop"] .landing-app-downloads--desktop .landing-app-downloads-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
