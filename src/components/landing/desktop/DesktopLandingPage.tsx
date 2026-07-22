@@ -31,7 +31,7 @@ import {
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
-import { LEGAL_ENTITY_NAME } from '../../../lib/siteConfig';
+import { LegalEntityName } from '../../SignatureSecurityBrand';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import type { LegalPageId } from '../../../lib/legalContent';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
@@ -461,7 +461,7 @@ function DesktopFooter({ onOpenLegal }: { onOpenLegal: (page: LegalPageId) => vo
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
         </div>
         <p className="dsk-footer-copy">
-          © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
+          © {new Date().getFullYear()} <LegalEntityName />
         </p>
       </div>
     </footer>

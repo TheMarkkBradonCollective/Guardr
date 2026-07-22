@@ -21,3 +21,7 @@ export const LEGAL_ENTITY_NAME = 'Signature Security Specialist, LLC';
 export const SIGNATURE_SECURITY_SPECIALIST_URL = 'https://www.signaturesecurityspecialist.com';
 /** Parent brand name — technology company, not a licensed PPO on its own */
 export const SIGNATURE_SECURITY_SPECIALIST_NAME = 'Signature Security Specialist';
+
+/** Sage green — reserved for Signature Security Specialist mentions only. */
+export const SIGNATURE_SECURITY_SAGE = '#5E7B61';
+export const SIGNATURE_SECURITY_SAGE_DARK = '#7AAE7F';

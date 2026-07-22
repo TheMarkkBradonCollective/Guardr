@@ -3,11 +3,10 @@ import { BadgeCheck, FileText, Shield, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   companyDocumentTypeById,
-  companyPlacardHeadline,
   formatPlacardDate,
   type CompanyPublicDocument,
 } from '../../lib/companyPlacard';
-import { LEGAL_ENTITY_NAME } from '../../lib/siteConfig';
+import { LegalEntityName } from '../SignatureSecurityBrand';
 
 interface CompanyPublicPlacardProps {
   documents: CompanyPublicDocument[];
@@ -66,9 +65,11 @@ export function CompanyPublicPlacard({ documents }: CompanyPublicPlacardProps) {
           >
             <div className="company-placard-header">
               <p className="experience-badge">Public credentials</p>
-              <h2 className="company-placard-headline">{companyPlacardHeadline()}</h2>
+              <h2 className="company-placard-headline">
+                <LegalEntityName /> — Registered & insured
+              </h2>
               <p className="company-placard-lead">
-                {LEGAL_ENTITY_NAME} operates the Guardr technology platform. Independent guards on
+                <LegalEntityName /> operates the Guardr technology platform. Independent guards on
                 the marketplace hold their own licenses — these company credentials are posted for
                 public reference, like a placard at our place of business.
               </p>

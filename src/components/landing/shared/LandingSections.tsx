@@ -25,7 +25,7 @@ import {
 import type { ThemeMode } from '../../../lib/platform/theme';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../../lib/legalContent';
-import { LEGAL_ENTITY_NAME } from '../../../lib/siteConfig';
+import { LegalEntityName } from '../../SignatureSecurityBrand';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
 import {
@@ -560,7 +560,7 @@ export function LandingFooter({
           ) : null}
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
           <ParagraphMedium margin={0} color="contentSecondary" $style={{ fontSize: '12px', maxWidth: '280px', textAlign: isMobile ? 'left' : 'right' }}>
-            © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}. Independent contractor marketplace. State licensing rules apply.
+            © {new Date().getFullYear()} <LegalEntityName />. Independent contractor marketplace. State licensing rules apply.
           </ParagraphMedium>
         </Block>
       </Block>

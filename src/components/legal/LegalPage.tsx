@@ -2,7 +2,11 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from '../Logo';
 import { LEGAL_DOCUMENTS, LEGAL_PAGE_SIBLINGS, type LegalPageId } from '../../lib/legalContent';
-import { LEGAL_ENTITY_NAME, SITE_NAME } from '../../lib/siteConfig';
+import { SITE_NAME } from '../../lib/siteConfig';
+import {
+  LegalEntityName,
+  highlightSignatureSecurityBrand,
+} from '../SignatureSecurityBrand';
 
 interface LegalPageProps {
   page: LegalPageId;
@@ -41,19 +45,21 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
 
       <main className="max-w-3xl mx-auto px-5 py-10 pb-16">
         <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted mb-2">
-          {LEGAL_ENTITY_NAME}
+          <LegalEntityName />
         </p>
         <h1 className="text-3xl font-bold tracking-tight">{doc.title}</h1>
         <p className="text-sm text-brand-text-muted mt-2">Last updated {doc.updated}</p>
 
         <div className="mt-6 border border-brand-primary/25 bg-brand-primary/5 px-4 py-4 text-sm leading-relaxed text-brand-text">
           <strong className="font-semibold">Marketplace notice.</strong> {SITE_NAME} is a technology
-          platform operated by {LEGAL_ENTITY_NAME}. We connect clients with independent licensed
+          platform operated by <LegalEntityName />. We connect clients with independent licensed
           security professionals. We do not provide security services, employ guards, or act as a
           private patrol operator.
         </div>
 
-        <p className="mt-8 text-sm sm:text-base leading-relaxed text-brand-text-muted">{doc.intro}</p>
+        <p className="mt-8 text-sm sm:text-base leading-relaxed text-brand-text-muted">
+          {highlightSignatureSecurityBrand(doc.intro)}
+        </p>
 
         <div className="mt-10 space-y-8">
           {doc.sections.map((section) => (
@@ -61,12 +67,12 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
               <h2 className="text-lg font-semibold text-brand-text">{section.title}</h2>
               <div className="mt-3 space-y-3 text-sm leading-relaxed text-brand-text-muted">
                 {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
+                  <p key={paragraph}>{highlightSignatureSecurityBrand(paragraph)}</p>
                 ))}
                 {section.bullets && (
                   <ul className="list-disc pl-5 space-y-2">
                     {section.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
+                      <li key={bullet}>{highlightSignatureSecurityBrand(bullet)}</li>
                     ))}
                   </ul>
                 )}
