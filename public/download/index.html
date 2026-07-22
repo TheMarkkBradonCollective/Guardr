@@ -3,78 +3,157 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#5E7B61" />
-    <meta name="description" content="Download the Guardr Android app or compare with the Save to Home Screen version." />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Download the Guardr Android app or install the lite home-screen version. Same account either way." />
     <link rel="manifest" href="/manifest.json" />
     <title>Install Guardr — APK or Home Screen</title>
-    <link rel="icon" type="image/png" sizes="64x64" href="/logo-64.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-dark.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
       :root {
-        color-scheme: dark;
-        --sage: #5e7b61;
-        --sage-bright: #84a279;
-        --bg: #0a0a0a;
-        --card: #141414;
-        --text: #f5f5f5;
-        --muted: #a3a3a3;
-        --ok: #86efac;
-        --warn: #fbbf24;
-        --line: rgba(132, 162, 121, 0.22);
+        color-scheme: light;
+        --bg: #ffffff;
+        --surface: #f6f6f6;
+        --text: #000000;
+        --muted: #767676;
+        --border: #eeeeee;
+        --ok: #048848;
+        --warn: #ed6e33;
+        --ok-bg: rgba(4, 136, 72, 0.1);
+        --warn-bg: rgba(237, 110, 51, 0.12);
+        --muted-bg: #f0f0f0;
+        --font: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        background: radial-gradient(ellipse at top, #1a2419 0%, var(--bg) 55%);
+        font-family: var(--font);
+        background: var(--bg);
         color: var(--text);
-        padding: 24px 16px 40px;
+        -webkit-font-smoothing: antialiased;
       }
-      .wrap { max-width: 560px; margin: 0 auto; }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 22px 20px;
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 20px;
+        background: #000000;
+        color: #ffffff;
+      }
+      .nav-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #ffffff;
+      }
+      .nav-brand img {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: #000;
+      }
+      .nav-wordmark {
+        font-weight: 800;
+        font-size: 1.15rem;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .nav-link {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        opacity: 0.88;
+      }
+      .nav-link:hover { opacity: 1; }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 28px 20px 48px;
+      }
+      .hero {
+        margin-bottom: 28px;
+      }
+      .hero h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+      }
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.55;
+        max-width: 42ch;
+      }
+      .context {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+      .panel {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
         margin-bottom: 16px;
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
       }
-      .logo {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
-        margin-bottom: 12px;
+      .panel h2 {
+        margin: 0 0 14px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
       }
-      h1 { margin: 0 0 6px; font-size: 1.6rem; letter-spacing: -0.02em; }
-      h2 { margin: 0 0 12px; font-size: 1.05rem; color: var(--sage-bright); }
-      p { margin: 0 0 12px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+      .panel > p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 0.95rem;
+      }
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 100%;
-        padding: 15px 18px;
+        padding: 14px 18px;
         border: none;
-        border-radius: 14px;
-        background: linear-gradient(180deg, var(--sage-bright), var(--sage));
-        color: #fff;
+        border-radius: 8px;
+        background: #000000;
+        color: #ffffff;
+        font-family: inherit;
         font-size: 1rem;
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
       }
+      .btn:hover { background: #1a1a1a; }
       .btn.secondary {
-        background: transparent;
-        border: 1px solid var(--line);
+        background: #ffffff;
+        border: 1px solid var(--border);
         color: var(--text);
         margin-top: 10px;
       }
+      .btn.secondary:hover { background: var(--surface); }
       .status-grid { display: grid; gap: 12px; }
       .status {
-        border: 1px solid var(--line);
-        border-radius: 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
         padding: 14px;
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--surface);
       }
       .status-head {
         display: flex;
@@ -83,9 +162,9 @@
         gap: 8px;
         margin-bottom: 8px;
       }
-      .status-title { font-weight: 600; font-size: 0.98rem; }
+      .status-title { font-weight: 600; font-size: 0.95rem; }
       .badge {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -93,31 +172,36 @@
         border-radius: 999px;
         white-space: nowrap;
       }
-      .badge.ok { background: rgba(134, 239, 172, 0.15); color: var(--ok); }
-      .badge.warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
-      .badge.muted { background: rgba(163, 163, 163, 0.12); color: var(--muted); }
-      .status p { margin: 0; font-size: 0.88rem; }
+      .badge.ok { background: var(--ok-bg); color: var(--ok); }
+      .badge.warn { background: var(--warn-bg); color: var(--warn); }
+      .badge.muted { background: var(--muted-bg); color: var(--muted); }
+      .status p { margin: 0; font-size: 0.88rem; color: var(--muted); line-height: 1.45; }
       .compare {
         width: 100%;
         border-collapse: collapse;
         font-size: 0.86rem;
       }
       .compare th, .compare td {
-        border-bottom: 1px solid var(--line);
-        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 8px;
         text-align: left;
         vertical-align: top;
       }
-      .compare th { color: var(--sage-bright); font-weight: 600; }
-      .compare tr:last-child th, .compare tr:last-child td { border-bottom: none; }
-      .context {
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: rgba(94, 123, 97, 0.14);
-        color: #d4e0d3;
-        font-size: 0.88rem;
-        margin-bottom: 14px;
+      .compare thead th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
+      .compare tbody th {
+        color: var(--text);
+        font-weight: 600;
+        width: 28%;
+      }
+      .compare td { color: var(--muted); }
+      .compare tr:last-child th,
+      .compare tr:last-child td { border-bottom: none; }
       ol {
         margin: 14px 0 0;
         padding-left: 20px;
@@ -128,36 +212,40 @@
       .back {
         display: inline-block;
         margin-top: 8px;
-        color: var(--sage-bright);
+        color: var(--text);
         text-decoration: none;
         font-size: 0.92rem;
+        font-weight: 600;
       }
+      .back:hover { text-decoration: underline; }
       .hidden { display: none; }
       .qr-block {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 12px;
-        margin: 16px 0 4px;
-        padding: 16px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.03);
+        margin: 0 0 16px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
       }
       .qr-block img {
         width: 180px;
         height: 180px;
-        border-radius: 12px;
+        border-radius: 8px;
         background: #fff;
-        padding: 8px;
+        padding: 10px;
+        border: 1px solid var(--border);
       }
       .qr-link {
         width: 100%;
         word-break: break-all;
         text-align: center;
         font-size: 0.82rem;
-        color: var(--sage-bright);
-        text-decoration: none;
+        color: var(--text);
+        text-decoration: underline;
+        text-underline-offset: 3px;
       }
       .qr-caption {
         margin: 0;
@@ -166,18 +254,53 @@
         text-align: center;
         line-height: 1.45;
       }
+      #latest-version {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #000000;
+          --surface: #121212;
+          --text: #ffffff;
+          --muted: #a3a3a3;
+          --border: #2a2a2a;
+          --muted-bg: #1c1c1c;
+        }
+        .btn {
+          background: #ffffff;
+          color: #000000;
+        }
+        .btn:hover { background: #e8e8e8; }
+        .btn.secondary {
+          background: transparent;
+          border-color: var(--border);
+          color: var(--text);
+        }
+        .btn.secondary:hover { background: var(--surface); }
+        .qr-block img { border-color: #ddd; }
+      }
     </style>
   </head>
   <body>
+    <header class="nav">
+      <a class="nav-brand" href="https://guardr.co">
+        <img src="/icons/icon-dark-192.png" width="28" height="28" alt="" />
+        <span class="nav-wordmark">Guardr</span>
+      </a>
+      <a class="nav-link" href="https://guardr.co">Log in</a>
+    </header>
+
     <div class="wrap">
-      <div class="card">
-        <img class="logo" src="/icon-192.png" width="64" height="64" alt="Guardr" />
+      <div class="hero">
         <h1>Install Guardr</h1>
         <p id="page-intro">Choose the lite web app or the full Android app. Both use the same Guardr account.</p>
         <div id="live-context" class="context">Checking your device…</div>
       </div>
 
-      <div class="card" id="install-status-card">
+      <div class="panel" id="install-status-card">
         <h2>Your installs</h2>
         <div class="status-grid">
           <div class="status" id="apk-status">
@@ -197,7 +320,7 @@
         </div>
       </div>
 
-      <div class="card" id="apk-download-card">
+      <div class="panel" id="apk-download-card">
         <h2 id="apk-download-title">APK (Full Version)</h2>
         <p id="apk-download-copy">Latest APK for guards who want the native app icon, permissions, and more reliable notifications.</p>
         <div class="qr-block">
@@ -206,7 +329,7 @@
           <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr.apk">https://www.guardr.co/download/guardr.apk</a>
         </div>
         <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
-        <p id="latest-version" style="margin-top:10px;font-size:0.85rem;"></p>
+        <p id="latest-version"></p>
         <ol id="apk-steps">
           <li>Tap <strong>Download APK</strong>.</li>
           <li>Open the file and tap <strong>Install</strong> (enable unknown apps if prompted).</li>
@@ -214,7 +337,7 @@
         </ol>
       </div>
 
-      <div class="card hidden" id="compare-card">
+      <div class="panel hidden" id="compare-card">
         <h2>PWA (Lite Version) vs APK (Full Version)</h2>
         <p>Both use the same Guardr account and data. Pick what fits your workflow — you can switch anytime.</p>
         <table class="compare">

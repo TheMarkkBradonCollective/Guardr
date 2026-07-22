@@ -22537,10 +22537,8 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
 }
 
 .install-product-card--highlight {
-  border-color: color-mix(in srgb, #10b981 35%, var(--brand-border));
-  background:
-    radial-gradient(ellipse 90% 70% at 100% 0%, color-mix(in srgb, #10b981 12%, transparent), transparent 55%),
-    var(--brand-surface, var(--brand-bg-sec));
+  border-color: var(--brand-border);
+  background: var(--brand-surface, var(--brand-bg-sec));
 }
 
 .install-product-card-top {
@@ -22562,8 +22560,8 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
 }
 
 .install-product-card--full .install-product-card-icon {
-  background: color-mix(in srgb, #10b981 16%, var(--brand-bg-sec));
-  color: #34d399;
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg-sec));
+  color: var(--brand-primary);
 }
 
 .install-product-card-head {
@@ -22608,8 +22606,8 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
 
 .install-product-status--installed,
 .install-product-status--current {
-  background: color-mix(in srgb, #10b981 18%, transparent);
-  color: #34d399;
+  background: color-mix(in srgb, var(--uber-positive, #048848) 14%, transparent);
+  color: var(--uber-positive, #048848);
 }
 
 .install-product-status--update {
@@ -22697,15 +22695,26 @@ body[data-form-factor="desktop"] .staff-overview-insights .staff-overview-feed-c
 }
 
 .install-cta--primary {
-  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
-  border-color: color-mix(in srgb, #22c55e 60%, #000);
-  color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, #16a34a 28%, transparent);
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .install-cta--primary .install-cta-icon {
-  background: color-mix(in srgb, #fff 18%, transparent);
-  color: #fff;
+  background: color-mix(in srgb, #fff 14%, transparent);
+  color: #ffffff;
+}
+
+html.theme-dark .install-cta--primary {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+
+html.theme-dark .install-cta--primary .install-cta-icon {
+  background: color-mix(in srgb, #000 10%, transparent);
+  color: #000000;
 }
 
 .install-cta--secondary {
