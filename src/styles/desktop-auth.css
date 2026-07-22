@@ -54,9 +54,7 @@ body[data-form-factor="desktop"] .dsk-auth-brand {
   gap: 0.6rem;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-logo {
-  color: #ffffff !important;
-}
+/* dsk-auth-logo inversion is handled by .guardr-logo rules in uber-global.css */
 
 body[data-form-factor="desktop"] .dsk-auth-wordmark {
   font-family: var(--uber-font-display, "Uber Move", sans-serif);

@@ -57,7 +57,7 @@
   white-space: nowrap;
 }
 
-.dsk-landing-logo-svg { filter: brightness(0) invert(1); }
+/* Logo on black nav — white in all themes (see uber-global.css .dsk-landing-logo-svg) */
 
 .dsk-landing-nav-links {
   display: flex;

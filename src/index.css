@@ -12997,8 +12997,7 @@ html.theme-dark .guardr-bottom-sheet-uber {
 }
 
 .guardr-loading-logo {
-  color: var(--brand-primary);
-  filter: drop-shadow(0 4px 24px color-mix(in srgb, var(--brand-primary) 45%, transparent));
+  display: block;
 }
 
 @supports (scrollbar-width: none) {.app-pane-body,
