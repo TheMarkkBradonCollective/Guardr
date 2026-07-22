@@ -7,7 +7,10 @@ const PUBLIC = path.join(ROOT, 'public');
 const ICONS_DIR = path.join(PUBLIC, 'icons');
 const ASSETS = path.join(ROOT, 'assets', 'logos');
 
-const BRAND_SAGE = '#5E7B61';
+/** Install / launcher chrome — black field with white shield. */
+const INSTALL_ICON_BACKGROUND = '#000000';
+/** Red Lite ribbon — PWA install icons only (APK stays clean). */
+const LITE_TAG_RED = '#E10600';
 
 const THEME_ICON_BACKGROUNDS = {
   light: '#FFFFFF',
@@ -108,41 +111,75 @@ async function writeWordmarkPng(master, height, dest) {
   await master.clone().resize({ height }).png().toFile(dest);
 }
 
-/** Colored shield centered on a solid theme background (PWA / favicon). */
-async function renderIconOnBackground(iconMaster, size, background) {
-  const markSize = Math.round(size * 0.85);
+/** Red "Lite" pill for PWA home-screen icons only. */
+async function renderLiteTag(size) {
+  const tagW = Math.max(28, Math.round(size * 0.4));
+  const tagH = Math.max(12, Math.round(size * 0.15));
+  const radius = Math.round(tagH / 2);
+  const fontSize = Math.max(8, Math.round(size * 0.085));
+  const svg = `
+<svg width="${tagW}" height="${tagH}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${tagW}" height="${tagH}" rx="${radius}" ry="${radius}" fill="${LITE_TAG_RED}"/>
+  <text
+    x="50%"
+    y="54%"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Arial Black, Arial, Helvetica, sans-serif"
+    font-weight="800"
+    font-size="${fontSize}"
+    fill="#FFFFFF"
+    letter-spacing="0.06em"
+  >Lite</text>
+</svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/**
+ * White shield on solid background. Optional red Lite tag (PWA install assets only).
+ */
+async function renderIconOnBackground(iconMaster, size, background, { liteTag = false, markRatio = 0.72 } = {}) {
+  const markSize = Math.round(size * markRatio);
   const offset = Math.round((size - markSize) / 2);
-  const mark = await iconMaster.clone().resize(markSize, markSize).png().toBuffer();
+  const mark = await (await whiteMarkFromIcon(iconMaster, markSize)).toBuffer();
+  const layers = [{ input: mark, left: offset, top: offset }];
+
+  if (liteTag) {
+    const tag = await renderLiteTag(size);
+    const tagMeta = await sharp(tag).metadata();
+    const margin = Math.max(4, Math.round(size * 0.05));
+    layers.push({
+      input: tag,
+      left: size - (tagMeta.width || 0) - margin,
+      top: size - (tagMeta.height || 0) - margin,
+    });
+  }
+
   return sharp({
     create: { width: size, height: size, channels: 4, background },
   })
-    .composite([{ input: mark, left: offset, top: offset }])
+    .composite(layers)
     .png()
     .toBuffer();
 }
 
-/** Maskable safe-zone icon on theme background. */
-async function renderMaskableOnBackground(iconMaster, size, background) {
-  const markSize = Math.round(size * 0.68);
-  const offset = Math.round((size - markSize) / 2);
-  const mark = await iconMaster.clone().resize(markSize, markSize).png().toBuffer();
-  return sharp({
-    create: { width: size, height: size, channels: 4, background },
-  })
-    .composite([{ input: mark, left: offset, top: offset }])
-    .png()
-    .toBuffer();
+/** Maskable safe-zone icon — white mark, optional Lite tag. */
+async function renderMaskableOnBackground(iconMaster, size, background, { liteTag = false } = {}) {
+  return renderIconOnBackground(iconMaster, size, background, { liteTag, markRatio: 0.58 });
 }
 
 async function writeThemeIcons(iconMaster) {
   await mkdir(ICONS_DIR, { recursive: true });
 
   for (const [theme, background] of Object.entries(THEME_ICON_BACKGROUNDS)) {
-    const icon192 = await renderIconOnBackground(iconMaster, 192, background);
-    const icon512 = await renderIconOnBackground(iconMaster, 512, background);
-    const appleTouch = await renderIconOnBackground(iconMaster, 180, background);
-    const favicon = await renderIconOnBackground(iconMaster, 64, background);
-    const maskable = await renderMaskableOnBackground(iconMaster, 512, background);
+    // Dark / grey: white mark on dark field. Light favicon: white mark on black so
+    // browser chrome still matches the install icon (black + white).
+    const field = theme === 'light' ? INSTALL_ICON_BACKGROUND : background;
+    const icon192 = await renderIconOnBackground(iconMaster, 192, field);
+    const icon512 = await renderIconOnBackground(iconMaster, 512, field);
+    const appleTouch = await renderIconOnBackground(iconMaster, 180, field);
+    const favicon = await renderIconOnBackground(iconMaster, 64, field);
+    const maskable = await renderMaskableOnBackground(iconMaster, 512, field);
 
     await sharp(icon192).toFile(path.join(ICONS_DIR, `icon-${theme}-192.png`));
     await sharp(icon512).toFile(path.join(ICONS_DIR, `icon-${theme}-512.png`));
@@ -151,19 +188,19 @@ async function writeThemeIcons(iconMaster) {
     await sharp(maskable).toFile(path.join(ICONS_DIR, `maskable-${theme}-512.png`));
   }
 
-  // Default install assets use the light (white) theme.
-  await sharp(await renderIconOnBackground(iconMaster, 192, THEME_ICON_BACKGROUNDS.light)).toFile(
-    path.join(PUBLIC, 'icon-192.png')
-  );
-  await sharp(await renderIconOnBackground(iconMaster, 512, THEME_ICON_BACKGROUNDS.light)).toFile(
-    path.join(PUBLIC, 'icon-512.png')
-  );
-  await sharp(await renderIconOnBackground(iconMaster, 180, THEME_ICON_BACKGROUNDS.light)).toFile(
-    path.join(PUBLIC, 'apple-touch-icon.png')
-  );
-  await sharp(await renderMaskableOnBackground(iconMaster, 512, THEME_ICON_BACKGROUNDS.light)).toFile(
-    path.join(PUBLIC, 'icon-maskable-512.png')
-  );
+  // Default PWA install assets: black + white shield + red Lite tag.
+  await sharp(
+    await renderIconOnBackground(iconMaster, 192, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+  ).toFile(path.join(PUBLIC, 'icon-192.png'));
+  await sharp(
+    await renderIconOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+  ).toFile(path.join(PUBLIC, 'icon-512.png'));
+  await sharp(
+    await renderIconOnBackground(iconMaster, 180, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+  ).toFile(path.join(PUBLIC, 'apple-touch-icon.png'));
+  await sharp(
+    await renderMaskableOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+  ).toFile(path.join(PUBLIC, 'icon-maskable-512.png'));
 }
 
 async function main() {
@@ -172,7 +209,7 @@ async function main() {
   const iconMaster = await prepareIconMaster();
   const wordmarkMaster = await prepareWordmarkMaster();
 
-  // Transparent PNG — primary mark for UI overlays (dark/light/grey themes)
+  // Transparent PNG — primary mark for UI overlays (keep brand sage for in-app Logo)
   await writeIconPng(iconMaster, 512, path.join(PUBLIC, 'logo.png'));
   for (const size of [64, 128, 256]) {
     await writeIconPng(iconMaster, size, path.join(PUBLIC, `logo-${size}.png`));
@@ -207,7 +244,9 @@ async function main() {
   console.log('Generated public logo assets from real transparent uploads');
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
-  console.log(`Theme icon backgrounds: light=#FFFFFF (default), dark=#000000, grey=#101417`);
+  console.log(
+    `PWA install icons: black (#000000) + white shield + red Lite tag (${LITE_TAG_RED})`,
+  );
 }
 
 main().catch((err) => {

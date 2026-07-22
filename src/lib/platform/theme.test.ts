@@ -56,7 +56,7 @@ describe('themeBranding', () => {
   it('maps theme modes to icon asset paths', () => {
     assert.equal(themeIconAssetPath('light', 'favicon'), '/icons/favicon-light.png');
     assert.equal(themeIconAssetPath('dark', 'apple-touch-icon'), '/icons/apple-touch-icon-dark.png');
-    assert.equal(THEME_ICON_BACKGROUNDS.light, '#FFFFFF');
+    assert.equal(THEME_ICON_BACKGROUNDS.light, '#000000');
     assert.equal(THEME_ICON_BACKGROUNDS.dark, '#000000');
   });
 });
