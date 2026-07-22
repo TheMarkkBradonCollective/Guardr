@@ -3,11 +3,24 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, July 21, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.88**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.89**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — /updateit → v1.0.89
+
+**Install / update UX**
+- Redesigned in-app install screen with product cards, feature rows, and two-line CTAs
+- Surface-specific copy: browser shows lite + full; PWA focuses on APK upgrade; native is update-only
+- Shorter context pill and fixed truncated download button text
+
+**Release:** **v1.0.89** (build **189**) — web + PWA cache (`guardr-cache-v1-0-89`) + CI FCM APK
+
+**Supabase:** no new SQL.
 
 ---
 
