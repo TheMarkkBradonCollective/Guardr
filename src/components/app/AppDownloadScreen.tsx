@@ -31,6 +31,7 @@ import {
   downloadScreenIntro,
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
+import { formatAppVersion } from '../../lib/appVersion';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -200,8 +201,8 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
     : !apkInstalled
       ? 'Best for guards in the field — native notifications, GPS, and camera permissions.'
       : apkNeedsUpdate
-        ? `Installed v${installedApkVersion}. Latest is v${manifest?.apkVersion}.`
-        : `Up to date on v${installedApkVersion}.`;
+        ? `Installed ${formatAppVersion(installedApkVersion!)}. Latest is ${formatAppVersion(manifest!.apkVersion)}.`
+        : `Up to date on ${formatAppVersion(installedApkVersion!)}.`;
 
   const apkActionLabel = installing
     ? 'Preparing…'
@@ -213,7 +214,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
         ? 'Download update'
         : 'Get full app';
 
-  const apkActionHint = manifest?.apkVersion ? `Version ${manifest.apkVersion}` : undefined;
+  const apkActionHint = manifest?.apkVersion ? formatAppVersion(manifest.apkVersion) : undefined;
 
   const pwaDescription = pwaActive
     ? 'Your lite shortcut updates automatically whenever guardr.co updates.'
@@ -255,11 +256,11 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
 
           {manifest ? (
             <p className="install-screen-versions">
-              Latest full app v{manifest.apkVersion}
+              Latest full app {formatAppVersion(manifest.apkVersion)}
               <span className="install-screen-versions-dot" aria-hidden>
                 ·
               </span>
-              Lite web v{manifest.webVersion}
+              Lite web {formatAppVersion(manifest.webVersion)}
             </p>
           ) : null}
         </section>
