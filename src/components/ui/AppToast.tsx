@@ -36,7 +36,13 @@ export function showAppToast(
         <Block>
           <ParagraphMedium $style={{ fontWeight: 600, margin: 0, lineHeight: '20px' }}>{title}</ParagraphMedium>
           {options?.body ? (
-            <LabelSmall $style={{ marginTop: '4px', color: 'contentSecondary', display: 'block' }}>
+            <LabelSmall
+              $style={{
+                marginTop: '4px',
+                color: 'var(--uber-text-muted, #6b6b6b)',
+                display: 'block',
+              }}
+            >
               {options.body}
             </LabelSmall>
           ) : null}

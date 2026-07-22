@@ -31,9 +31,9 @@ export function getStaffNavAccessNotice(
 ): StaffNavAccessNotice | null {
   if (FINANCE_SECTIONS.has(section) && !flags.showFinance) {
     return {
-      title: 'Executive access required',
+      title: 'Finance access required',
       message:
-        'Financial controls, payment settings, agreements, audit log, and dev notes are limited to Manager, Director, and Founder roles. Ask your Director if you need access.',
+        'Financial controls, payment settings, agreements, audit log, and dev notes require finance permissions. Ask your Director if you need access.',
     };
   }
   if (PERMISSIONS_SECTIONS.has(section) && !flags.showPermissions) {
@@ -86,47 +86,42 @@ export function isStaffNavItemVisible(
 }
 
 export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNavAccessNotice>> = {
-  messages: {
-    title: 'Messages unavailable',
-    message:
-      'Messaging is not available for your account right now. Contact your Director if you need access.',
-  },
   payments: {
     title: 'Payments',
     message:
-      'Financial controls are limited to Manager, Director, and Founder roles. If money is owed on jobs, ask your Director to review the Payments section.',
+      'Financial controls require Manage payouts, Manage fees, View all financial data, or Access audit log. Ask your Director if you need access.',
   },
   disputes: {
     title: 'Disputes',
     message:
-      'Dispute resolution is limited to Administrator roles and above. Escalate open disputes to your Administrator or Director.',
+      'Dispute resolution is limited to staff with the Handle disputes permission. Escalate open disputes to your Administrator or Director.',
   },
   'dev-updates': {
     title: 'Dev notes',
-    message: 'Dev notes are available to Manager, Director, and Founder accounts.',
+    message: 'Dev notes require finance permissions (Manager defaults and above).',
   },
   'payment-settings': {
     title: 'Payment settings',
     message:
-      'Platform fee and crew pay settings are limited to Manager, Director, and Founder roles. Ask your Director to review or update these controls.',
+      'Platform fee and crew pay settings require finance permissions. Ask your Director to review or update these controls.',
   },
   agreements: {
     title: 'Agreements',
-    message: 'Agreement compliance is limited to Manager, Director, and Founder roles.',
+    message: 'Agreement compliance requires finance permissions (Manager defaults and above).',
   },
   'audit-log': {
     title: 'Audit log',
-    message: 'The platform audit log is limited to Manager, Director, and Founder roles.',
+    message: 'The platform audit log requires the Access audit log permission.',
   },
   settings: {
     title: 'Public Information',
     message:
-      'Public information is viewable by all staff. Manager roles and above can update the company placard and other platform content.',
+      'Public information is viewable by all staff. Roles with Manage public information can update the company placard and other platform content.',
   },
   integrations: {
     title: 'Integrations',
     message:
-      'Integrations are viewable by all staff. Manager roles and above can change payment, SMS, and verification settings.',
+      'Integrations are viewable by all staff. Roles with Manage integrations can change payment, SMS, and verification settings.',
   },
   permissions: {
     title: 'Permissions',
@@ -136,12 +131,17 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   cities: {
     title: 'Service Areas',
     message:
-      'Service Areas controls are limited to Manager roles and above. Directors assign which cities managers may manage.',
+      'Service Areas controls require View Service Areas & recommend cities. Directors assign which cities managers may manage.',
   },
   locations: {
     title: 'Locations',
     message:
-      'Location quality control is limited to staff who can review job postings. Ask your Administrator if you need access.',
+      'Location quality control requires Manage shared locations or Review job postings. Ask your Administrator if you need access.',
+  },
+  messages: {
+    title: 'Messages unavailable',
+    message:
+      'Messaging requires Access job & staff messages (or Handle support messages for the support inbox). Contact your Director if you need access.',
   },
   applications: {
     title: 'No access',
