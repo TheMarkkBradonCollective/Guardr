@@ -16,7 +16,7 @@ import {
 import { MarkdownDoc } from './MarkdownDoc';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
-import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
 import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
@@ -441,22 +441,12 @@ function GuideHub({
 
   const filterTabs = (
     <div className={isDesktop ? 'adm-guide-filter-tabs' : 'px-4 pb-3 border-b border-brand-border'}>
-      {tabs.length > 3 ? (
-        <StaffListFilterTabs
-          aria-label="Guide audience"
-          activeId={audience}
-          onChange={(id) => setAudience(id as AudienceFilter)}
-          tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
-        />
-      ) : (
-        <div className="app-guide-tabs -mx-0">
-          <AppSegmentedControl<AudienceFilter>
-            options={tabs}
-            value={audience}
-            onChange={setAudience}
-          />
-        </div>
-      )}
+      <StaffListFilterTabs
+        aria-label="Guide audience"
+        activeId={audience}
+        onChange={(id) => setAudience(id as AudienceFilter)}
+        tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
+      />
     </div>
   );
 

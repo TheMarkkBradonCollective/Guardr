@@ -13,8 +13,8 @@ import {
   type StaffRolePermissionOverrides,
 } from '../../lib/permissions';
 import { StaffMgmtSection } from './StaffMgmtSection';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
@@ -27,22 +27,6 @@ interface StaffPermissionsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
   onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
-}
-
-function DesktopCard({
-  title,
-  children,
-  className = '',
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <StaffMgmtSection title={title} className={className}>
-      {children}
-    </StaffMgmtSection>
-  );
 }
 
 function groupCatalogBySection() {
@@ -156,16 +140,15 @@ export function StaffPermissionsPanel({
   const [activeRole, setActiveRole] = useState<StaffRole>('Moderator');
 
   const roleTabs = (
-    <div className="staff-stats-tabbar mb-4">
-      <AppSegmentedControl<StaffRole>
-        value={activeRole}
-        onChange={setActiveRole}
-        options={STAFF_ROLES_ORDERED.map((role) => ({
-          id: role,
-          label: ROLE_LABELS[staffRoleToPlatformRole(role)],
-        }))}
-      />
-    </div>
+    <StaffListFilterTabs
+      aria-label="Staff role"
+      activeId={activeRole}
+      onChange={(id) => setActiveRole(id as StaffRole)}
+      tabs={STAFF_ROLES_ORDERED.map((role) => ({
+        id: role,
+        label: ROLE_LABELS[staffRoleToPlatformRole(role)],
+      }))}
+    />
   );
 
   const roleEditor = (
@@ -189,7 +172,7 @@ export function StaffPermissionsPanel({
         }
       >
         <div className="space-y-3">
-          <DesktopCard title="Staff role permissions">
+          <StaffMgmtSection title="Staff role permissions">
             {!canEdit ? (
               <p className="text-xs text-brand-text-muted mb-3">
                 View-only — Manager access or above is required to change role permissions.
@@ -197,7 +180,7 @@ export function StaffPermissionsPanel({
             ) : null}
             {roleTabs}
             {roleEditor}
-          </DesktopCard>
+          </StaffMgmtSection>
         </div>
       </StaffOpsPageShell>
     );

@@ -281,3 +281,101 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
     grid-column: 1 / -1;
   }
 }
+
+/* Stats + SLA metric cards — flat on management canvas (no grey surface boxes) */
+.uber-app-shell .staff-mgmt-panel .staff-stats-metric-card,
+.uber-app-shell .staff-mgmt-panel .staff-stats-bucket-card,
+.uber-app-shell .staff-mgmt-panel .staff-stats-leaderboard,
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  padding-inline: 0 !important;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-stats-metric-grid {
+  gap: 0;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-stats-metric-card {
+  padding: 0.95rem 0 !important;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-stats-two-col {
+  gap: 0;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-stats-bucket-card,
+.uber-app-shell .staff-mgmt-panel .staff-stats-leaderboard {
+  padding: 1rem 0 !important;
+  margin-bottom: 0;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-stats-guard-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+@media (min-width: 900px) {
+  body[data-form-factor="desktop"] .uber-app-shell .staff-mgmt-panel .staff-sla-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body[data-form-factor="desktop"] .uber-app-shell .staff-mgmt-panel .staff-stats-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card {
+  padding: 0.95rem 0 !important;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-text-muted);
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card-value {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-sla-metric-card-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+}
+
+.uber-app-shell .staff-mgmt-panel .staff-analytics-chart,
+.uber-app-shell .staff-mgmt-panel .staff-analytics-panel .adm-week-chart {
+  background: transparent !important;
+}

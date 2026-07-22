@@ -91,8 +91,7 @@ import type { PlatformSettings } from '../lib/platformSettings';
 import { clientPaymentGates } from '../lib/platformSettings';
 import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
-import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
-import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
+import { StaffAnalyticsInsightsPanel } from './staff/StaffAnalyticsInsightsPanel';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { StaffPermissionsPanel } from './staff/StaffPermissionsPanel';
@@ -1041,15 +1040,12 @@ export function StaffDashboard({
         );
       case 'analytics':
         return (
-          <div className="space-y-8">
-            <StaffSlaDashboard requests={requests} guards={guards} clients={clients} />
-            <StaffAnalyticsPanel
-              guards={guards}
-              clients={clients}
-              requests={requests}
-              showFinancials={showFinance}
-            />
-          </div>
+          <StaffAnalyticsInsightsPanel
+            guards={guards}
+            clients={clients}
+            requests={requests}
+            showFinancials={showFinance}
+          />
         );
       case 'guide':
         return (

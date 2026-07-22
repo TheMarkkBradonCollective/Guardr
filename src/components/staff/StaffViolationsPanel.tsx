@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { OpsShiftViolation } from '../../lib/staffOps';
 import { WfBadge } from '../ui/wireframe';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
   WorkbenchSplit,
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
@@ -70,6 +71,17 @@ export function StaffViolationsPanel({
     });
   }, [violations, statusMap, tab]);
 
+  const tabCounts = useMemo(() => {
+    let open = 0;
+    let resolved = 0;
+    for (const violation of violations) {
+      const status = statusMap[violation.id] ?? violation.status;
+      if (OPEN_STATUSES.has(status)) open += 1;
+      else resolved += 1;
+    }
+    return { all: violations.length, open, resolved };
+  }, [violations, statusMap]);
+
   useEffect(() => {
     if (formFactor === 'desktop' && filtered.length > 0 && !selectedId) {
       setSelectedId(filtered[0].id);
@@ -100,7 +112,7 @@ export function StaffViolationsPanel({
           <WfBadge tone={statusTone(status)}>{statusLabel(status)}</WfBadge>
         </div>
 
-        <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-2.5 space-y-1.5 text-xs text-brand-text-muted">
+        <div className="staff-mgmt-detail-row px-0 py-2.5 space-y-1.5 text-xs text-brand-text-muted">
           <p>
             <span className="text-brand-text">Guard:</span> {v.guardName}
           </p>
@@ -200,18 +212,16 @@ export function StaffViolationsPanel({
   };
 
   const tabBar = (
-    <div className="flex gap-2 mb-4">
-      {(['open', 'all', 'resolved'] as ViolationTab[]).map((key) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => setTab(key)}
-          className={`app-button-outline app-btn-sm capitalize ${tab === key ? '!border-brand-primary !text-brand-primary' : ''}`}
-        >
-          {key}
-        </button>
-      ))}
-    </div>
+    <StaffListFilterTabs
+      aria-label="Violation status"
+      activeId={tab}
+      onChange={(id) => setTab(id as ViolationTab)}
+      tabs={[
+        { id: 'open', label: 'Open', count: tabCounts.open },
+        { id: 'all', label: 'All', count: tabCounts.all },
+        { id: 'resolved', label: 'Resolved', count: tabCounts.resolved },
+      ]}
+    />
   );
 
   const emptyMessage = tab === 'open' ? 'No open violations' : 'No violations on file';
@@ -239,21 +249,25 @@ export function StaffViolationsPanel({
   if (filtered.length === 0) {
     if (formFactor === 'desktop') {
       return (
-        <WorkbenchPage>
-          <WorkbenchToolbar
-            eyebrow="Accountability"
-            subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
-          />
+        <StaffOpsPageShell
+          className="staff-mgmt-panel staff-roster-panel"
+          toolbar={
+            <WorkbenchToolbar
+              eyebrow="Accountability"
+              subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
+            />
+          }
+        >
           {tabBar}
           {emptyState}
-        </WorkbenchPage>
+        </StaffOpsPageShell>
       );
     }
     return (
-      <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
         {tabBar}
         {emptyState}
-      </div>
+      </StaffOpsPageShell>
     );
   }
 
@@ -261,11 +275,15 @@ export function StaffViolationsPanel({
     const selected = filtered.find((v) => v.id === selectedId) ?? filtered[0];
 
     return (
-      <WorkbenchPage>
-        <WorkbenchToolbar
-          eyebrow="Accountability"
-          subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
-        />
+      <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel"
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Accountability"
+            subtitle="Shift checkpoint skips, briefing readiness, and client verification flags."
+          />
+        }
+      >
         {tabBar}
         <WorkbenchSplit
           list={
@@ -306,18 +324,18 @@ export function StaffViolationsPanel({
             )
           }
         />
-      </WorkbenchPage>
+      </StaffOpsPageShell>
     );
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+    <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}
       <div className="border-t border-brand-border">
         {filtered.map((v) => (
           <React.Fragment key={v.id}>{renderViolationCard(v)}</React.Fragment>
         ))}
       </div>
-    </div>
+    </StaffOpsPageShell>
   );
 }

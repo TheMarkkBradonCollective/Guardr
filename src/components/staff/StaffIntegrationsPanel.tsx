@@ -24,7 +24,6 @@ import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
-import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrTag } from '../baseui/GuardrTag';
 import { showAppToast } from '../ui/AppToast';
 import { StaffMgmtSection } from './StaffMgmtSection';
