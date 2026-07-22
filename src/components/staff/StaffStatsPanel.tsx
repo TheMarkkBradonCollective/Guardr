@@ -10,7 +10,7 @@ import {
   compareStaffGuardStatRows,
   formatStaffStatPercent,
   sortStaffGuardStatRows,
-  staffGuardStatSortLabel,
+  staffGuardStatSortTabLabel,
   type StaffGuardStatRow,
   type StaffGuardStatSortKey,
 } from '../../lib/staffStats';
@@ -19,9 +19,10 @@ import {
   staffGuardEligibilityKindLabel,
   type StaffGuardEligibilityRecommendation,
 } from '../../lib/staffGuardEligibility';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
-import { WorkbenchPage, WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
+import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
 
 type StatsTab = 'overview' | 'guards' | 'compare' | 'violations';
@@ -369,14 +370,15 @@ export function StaffStatsPanel({
   };
 
   const tabBar = (
-    <AppSegmentedControl<StatsTab>
-      value={tab}
-      onChange={setTab}
-      options={[
+    <StaffListFilterTabs
+      aria-label="Stats views"
+      activeId={tab}
+      onChange={(id) => setTab(id as StatsTab)}
+      tabs={[
         { id: 'overview', label: 'Overview' },
         { id: 'guards', label: 'Guards' },
         { id: 'compare', label: 'Compare' },
-        { id: 'violations', label: 'Violations' },
+        { id: 'violations', label: 'Violations', count: summary.totalOpenViolations },
       ]}
     />
   );
@@ -440,20 +442,15 @@ export function StaffStatsPanel({
   const guardsView = (
     <div className="staff-stats-panel-body">
       <div className="staff-stats-toolbar">
-        <label className="staff-stats-sort">
-          <span>Sort by</span>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as StaffGuardStatSortKey)}
-            className="uber-input"
-          >
-            {STAFF_GUARD_STAT_SORT_OPTIONS.map((key) => (
-              <option key={key} value={key}>
-                {staffGuardStatSortLabel(key)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <StaffListFilterTabs
+          aria-label="Sort guards"
+          activeId={sortKey}
+          onChange={(id) => setSortKey(id as StaffGuardStatSortKey)}
+          tabs={STAFF_GUARD_STAT_SORT_OPTIONS.map((key) => ({
+            id: key,
+            label: staffGuardStatSortTabLabel(key),
+          }))}
+        />
         <p className="staff-stats-toolbar-hint">
           {selectedIds.size > 0
             ? `${selectedIds.size} selected for compare`
@@ -543,19 +540,23 @@ export function StaffStatsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-stats-workbench">
-        <WorkbenchToolbar
-          eyebrow="Accountability"
-          subtitle="Performance, violations, and guard comparisons across the platform."
-        />
-        <div className="staff-stats-tabbar">{tabBar}</div>
+      <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel staff-stats-workbench"
+        toolbar={
+          <WorkbenchToolbar
+            eyebrow="Accountability"
+            subtitle="Performance, violations, and guard comparisons across the platform."
+          />
+        }
+      >
+        {tabBar}
         {content}
-      </WorkbenchPage>
+      </StaffOpsPageShell>
     );
   }
 
   return (
-    <div className="staff-stats-mobile animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+    <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-stats-mobile">
       <div className="staff-stats-mobile-head">
         <div className="staff-stats-mobile-title-row">
           <BarChart3 className="w-5 h-5 text-brand-primary" aria-hidden />
@@ -565,8 +566,8 @@ export function StaffStatsPanel({
           </div>
         </div>
       </div>
-      <div className="staff-stats-tabbar">{tabBar}</div>
+      {tabBar}
       {content}
-    </div>
+    </StaffOpsPageShell>
   );
 }

@@ -19,14 +19,14 @@ import type { CardPaymentProcessor, PaymentProcessorHealth } from '../../lib/pay
 import { CARD_PROCESSOR_LABELS, processorEnvHint } from '../../lib/paymentProcessors';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
-import { HeadingXSmall, LabelSmall, LabelXSmall, ParagraphSmall } from 'baseui/typography';
+import { LabelSmall, LabelXSmall, ParagraphSmall } from 'baseui/typography';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
-import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrTag } from '../baseui/GuardrTag';
 import { showAppToast } from '../ui/AppToast';
+import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffIntegrationsPanelProps {
@@ -54,14 +54,7 @@ function DesktopSettingsCard({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <GuardrCard>
-      <HeadingXSmall marginTop={0} marginBottom="scale500" $style={{ fontWeight: 700 }}>
-        {title}
-      </HeadingXSmall>
-      {children}
-    </GuardrCard>
-  );
+  return <StaffMgmtSection title={title}>{children}</StaffMgmtSection>;
 }
 
 function ConnectionBadge({ connected }: { connected: boolean }) {
@@ -128,15 +121,16 @@ function IntegrationToggleCard({
   const highlighted = primary && enabled;
   return (
     <Block
+      className={`staff-mgmt-toggle-row${highlighted ? ' staff-mgmt-toggle-row--active' : ''}`}
       display="flex"
       alignItems="flex-start"
       justifyContent="space-between"
       gridGap="scale500"
       padding="scale500"
-      backgroundColor={highlighted ? 'accent50' : undefined}
+      backgroundColor="transparent"
       $style={{
-        borderRadius: '12px',
-        border: `1px solid ${highlighted ? theme.colors.accent : theme.colors.borderOpaque}`,
+        borderRadius: 0,
+        border: 'none',
       }}
     >
       <Block flex="1" minWidth={0}>
@@ -430,7 +424,7 @@ export function StaffIntegrationsPanel({
   if (isDesktop) {
     return (
       <StaffOpsPageShell
-        className="adm-platform-page adm-integrations-page"
+        className="staff-mgmt-panel staff-roster-panel adm-platform-page adm-integrations-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
@@ -438,7 +432,7 @@ export function StaffIntegrationsPanel({
           />
         }
       >
-        <div className="adm-platform-settings-grid">
+        <div className="adm-platform-settings-grid adm-platform-settings-grid--split">
           <DesktopSettingsCard title="Payment methods">{paymentMethodsBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="SMS notifications">{smsBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Background check">{backgroundCheckBody}</DesktopSettingsCard>

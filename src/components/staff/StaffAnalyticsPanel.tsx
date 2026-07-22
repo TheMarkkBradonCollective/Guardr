@@ -8,16 +8,10 @@ import {
 import { computeAnalytics, computePlatformStats, computeWeeklyCompletedJobs } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { StaffMgmtSection } from './StaffMgmtSection';
 import { useDevice } from '../../lib/platform';
-import { GuardrCard } from '../baseui/GuardrCard';
 import { MetricCell } from '../baseui/dashboard';
-import {
-  WorkbenchCardTitle,
-  WorkbenchGrid,
-  WorkbenchGridCell,
-  WorkbenchPage,
-  WorkbenchToolbar,
-} from '../baseui/layout/WorkbenchLayout';
+import { WorkbenchGrid, WorkbenchGridCell } from '../baseui/layout/WorkbenchLayout';
 
 interface StaffAnalyticsPanelProps {
   guards: SecurityGuard[];
@@ -59,8 +53,7 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage>
-        <WorkbenchToolbar eyebrow="Insights" subtitle="Platform analytics" />
+      <div className="staff-analytics-panel">
         {showFinancials && (
           <WorkbenchGrid>
             {buildDirectorFinancialCells(financials).map(({ label, value, sub }) => (
@@ -77,23 +70,18 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
             </WorkbenchGridCell>
           ))}
         </WorkbenchGrid>
-        <WorkbenchGrid className="mt-4">
-          <WorkbenchGridCell span={12}>
-            <GuardrCard>
-              <WorkbenchCardTitle>Completed jobs trend</WorkbenchCardTitle>
-              {hasWeeklyData ? (
-                <div className="adm-week-chart">
-                  {weeklyTrend.map((h, i) => (
-                    <div key={i} className="adm-week-chart-bar" style={{ height: `${Math.min(100, h)}%` }} />
-                  ))}
-                </div>
-              ) : (
-                <p className="uber-workbench-subtitle">No completed jobs this week yet.</p>
-              )}
-            </GuardrCard>
-          </WorkbenchGridCell>
-        </WorkbenchGrid>
-      </WorkbenchPage>
+        <StaffMgmtSection title="Completed jobs trend" className="mt-4">
+          {hasWeeklyData ? (
+            <div className="adm-week-chart">
+              {weeklyTrend.map((h, i) => (
+                <div key={i} className="adm-week-chart-bar" style={{ height: `${Math.min(100, h)}%` }} />
+              ))}
+            </div>
+          ) : (
+            <p className="uber-workbench-subtitle">No completed jobs this week yet.</p>
+          )}
+        </StaffMgmtSection>
+      </div>
     );
   }
 

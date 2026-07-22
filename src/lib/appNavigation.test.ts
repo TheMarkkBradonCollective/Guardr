@@ -3,10 +3,26 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   normalizeGuardTabForAccount,
+  parseAppRoute,
+  readAuthChoiceFromUrl,
   routeHasNestedSelection,
   routeWithoutNestedSelection,
   type AppRoute,
 } from './appNavigation';
+
+describe('auth role choice URLs', () => {
+  it('reads role picker URLs separately from sign-in form URLs', () => {
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-in&pick=role'), 'sign-in');
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-up&pick=role'), 'sign-up');
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-in&ar=guard'), null);
+    assert.equal(parseAppRoute('/?auth=sign-in&pick=role'), null);
+    assert.deepEqual(parseAppRoute('/?auth=sign-in&ar=guard'), {
+      role: 'client',
+      authView: 'sign-in',
+      authRole: 'guard',
+    });
+  });
+});
 
 describe('routeHasNestedSelection', () => {
   it('detects nested route params', () => {

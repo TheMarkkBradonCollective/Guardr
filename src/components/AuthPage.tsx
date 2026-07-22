@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { AppErrorBanner } from './ui/app/AppPrimitives';
+import { AppErrorBanner, AppSubScreenHeader } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
@@ -257,6 +257,8 @@ interface AuthPageProps {
   guardsList: SecurityGuard[];
   clientsList: Client[];
   onBackToHome: () => void;
+  /** Returns to guard / client / staff role picker (preferred over home when set). */
+  onBackToRoleChoice?: () => void;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenGuide?: () => void;
   onAuthModeChange?: (mode: 'sign-in' | 'sign-up') => void;
@@ -297,6 +299,7 @@ export function AuthPage({
   guardsList,
   clientsList,
   onBackToHome,
+  onBackToRoleChoice,
   onOpenLegal,
   onOpenGuide,
   onAuthModeChange,
@@ -801,24 +804,48 @@ export function AuthPage({
 
   const [, theme] = useStyletron();
 
-  const heroContent = AUTH_HERO_CONTENT[role];
   const testimonial = AUTH_TESTIMONIAL[role];
   const isMobilePageAuth = !isSheet && !isDesktopAuth;
-  const useMobileLogoLayout = isMobilePageAuth && formFactor === 'mobile';
+  const useRoleChoiceAuthLayout = isMobilePageAuth;
   const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
+  const handleAuthBack = onBackToRoleChoice ?? onBackToHome;
+  const authBackLabel = onBackToRoleChoice ? 'role selection' : 'Home';
 
-  const authFormBody = (
+  const authTopbarActions = (
     <>
-      <div className={!isDesktopAuth ? 'auth-sheet-form' : undefined}>
-        <AuthFormHeader
-          role={role}
-          isSignUp={isSignUp}
-          compact={isSheet || isMobilePageAuth}
-          hideBadge={useFocusedAuthHeader}
-          center={isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp)}
-          variant={useFocusedAuthHeader ? 'page' : 'sheet'}
-        />
+      {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
+      {onOpenGuide ? (
+        <button
+          type="button"
+          onClick={onOpenGuide}
+          className="auth-form-page-guide"
+          aria-label="Open guide"
+        >
+          <BookOpen className="w-4 h-4" />
+        </button>
+      ) : null}
+    </>
+  );
 
+  const authFormHeader = (
+    <AuthFormHeader
+      role={role}
+      isSignUp={isSignUp}
+      compact={isSheet || isMobilePageAuth}
+      hideBadge={useFocusedAuthHeader || useRoleChoiceAuthLayout}
+      center={
+        useRoleChoiceAuthLayout
+          ? false
+          : isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp)
+      }
+      variant={
+        useRoleChoiceAuthLayout ? 'role-choice' : useFocusedAuthHeader ? 'page' : 'sheet'
+      }
+    />
+  );
+
+  const authFormFields = (
+    <>
         <div className={!isDesktopAuth ? 'auth-sheet-fields' : 'space-y-5'}>
           {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
 
@@ -1544,6 +1571,14 @@ export function AuthPage({
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </div>
         )}
+    </>
+  );
+
+  const authFormBody = (
+    <>
+      <div className={!isDesktopAuth ? 'auth-sheet-form' : undefined}>
+        {!useRoleChoiceAuthLayout ? authFormHeader : null}
+        {authFormFields}
       </div>
     </>
   );
@@ -1552,7 +1587,7 @@ export function AuthPage({
     return (
       <GuardrSheet
         open={open}
-        onClose={onBackToHome}
+        onClose={handleAuthBack}
         panelClassName={`auth-sheet-panel auth-sheet-panel--${shellKind} max-h-[92dvh]`}
         className={`auth-sheet-root auth-sheet--${viewSurface}`}
         ariaLabel={isSignUp ? 'Create account' : 'Sign in'}
@@ -1564,7 +1599,7 @@ export function AuthPage({
         <div className="auth-sheet-topbar">
           <button
             type="button"
-            onClick={onBackToHome}
+            onClick={handleAuthBack}
             className="auth-sheet-close"
             aria-label="Close"
           >
@@ -1580,7 +1615,7 @@ export function AuthPage({
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}${useMobileLogoLayout ? ' auth-experience--mobile-page' : ''}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}${useRoleChoiceAuthLayout ? ' auth-experience--role-choice' : ''}`}
       id="guardr-auth-root"
     >
       {isDesktopAuth ? (
@@ -1588,9 +1623,9 @@ export function AuthPage({
           <UberDirectTopHeader
             onBrandClick={onBackToHome}
             trailing={
-              <button type="button" onClick={onBackToHome} className="dsk-auth-back">
+              <button type="button" onClick={handleAuthBack} className="dsk-auth-back">
                 <ArrowLeft className="w-4 h-4" />
-                Back to Home
+                {onBackToRoleChoice ? 'Back to role selection' : 'Back to Home'}
               </button>
             }
           />
@@ -1627,109 +1662,27 @@ export function AuthPage({
           </section>
         </div>
         </>
-      ) : useMobileLogoLayout ? (
-        <div className="auth-mobile-page">
-          <header className="auth-mobile-page-topbar">
-            <button
-              type="button"
-              onClick={onBackToHome}
-              className="auth-mobile-page-back"
-            >
-              <ArrowLeft className="w-4 h-4" aria-hidden />
-              Back to Home
-            </button>
-            <div className="auth-mobile-page-topbar-actions">
-              {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
-              {onOpenGuide ? (
-                <button
-                  type="button"
-                  onClick={onOpenGuide}
-                  className="auth-mobile-page-guide"
-                  aria-label="Open guide"
-                >
-                  <BookOpen className="w-4 h-4" />
-                </button>
-              ) : null}
-            </div>
-          </header>
-
-          <div className="auth-mobile-page-scroll">
-            <div className="auth-mobile-page-logo-wrap" aria-hidden>
-              <Logo variant="wordmark" size={88} className="auth-mobile-page-logo" />
-            </div>
-            <div className="auth-mobile-page-form w-full max-w-md mx-auto animate-fade-in">
-              {authFormBody}
-            </div>
-          </div>
-        </div>
       ) : (
-        <>
-      <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
-        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
-        <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="flex items-center gap-1.5 text-white/75 hover:text-white transition-colors text-sm font-semibold"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </button>
-          <div className="flex items-center gap-2 text-white">
-            <Logo size={26} className="text-white" />
-            <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
-          </div>
-          <div className="w-14 flex justify-end items-center gap-1">
-            {onChangeTheme && (
-              <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-            )}
-            {onOpenGuide && (
-              <button
-                type="button"
-                onClick={onOpenGuide}
-                className="inline-flex items-center gap-1 text-white/75 hover:text-white transition-colors text-xs font-semibold"
-                aria-label="Open guide"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </header>
-        <div className="absolute inset-0 pointer-events-none opacity-40">
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: `radial-gradient(circle, color-mix(in srgb, ${theme.colors.accent} 45%, transparent) 0%, transparent 70%)` }}
+        <div className="auth-role-choice-page auth-form-page">
+          <UberDirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
+          <AppSubScreenHeader
+            title=""
+            hideTitle
+            onBack={handleAuthBack}
+            backLabel={authBackLabel}
           />
+          <main className="auth-role-choice-main">
+            <section
+              className="auth-role-choice-hero auth-form-page-hero"
+              aria-label={isSignUp ? 'Create account' : 'Sign in'}
+            >
+              <div className="auth-form-page-hero-inner">{authFormHeader}</div>
+            </section>
+            <section className="auth-role-choice-options auth-form-page-options">
+              <div className="auth-form-page-form w-full animate-fade-in">{authFormFields}</div>
+            </section>
+          </main>
         </div>
-        <heroContent.icon className="auth-hero-watermark" strokeWidth={1} aria-hidden="true" />
-        <div className="auth-hero-content">
-          <span className="auth-hero-icon-badge shrink-0">
-            <heroContent.icon className="w-6 h-6" strokeWidth={1.75} />
-          </span>
-          <div className="auth-hero-headline-block">
-            <h2 className="auth-hero-headline">{heroContent.headline}</h2>
-            <p className="auth-hero-sub">{heroContent.sub}</p>
-          </div>
-          <ul className="auth-hero-feature-list" role="list">
-            {heroContent.features.map(({ icon: Icon, text }) => (
-              <li key={text} className="auth-hero-feature">
-                <span className="auth-hero-feature-icon">
-                  <Icon className="w-4 h-4" strokeWidth={1.75} />
-                </span>
-                <span className="auth-hero-feature-text">{text}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="auth-hero-trust-line">{heroContent.trustLine}</p>
-        </div>
-      </div>
-
-      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
-        <div className="auth-form-surface-flat w-full max-w-md animate-fade-in">
-          {authFormBody}
-        </div>
-      </div>
-        </>
       )}
     </div>
   );

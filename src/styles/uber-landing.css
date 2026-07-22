@@ -87,7 +87,7 @@ html.theme-dark .uber-landing-nav { background: #000 !important; }
 .uber-landing-mobile-menu-item:last-child { border-bottom: none; }
 .uber-landing-mobile-menu-item:hover { opacity: 0.75; }
 
-.uber-landing-logo { filter: brightness(0) invert(1); }
+/* Logo on black nav — white in all themes (see uber-global.css .uber-landing-logo) */
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 

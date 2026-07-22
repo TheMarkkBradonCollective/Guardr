@@ -26,8 +26,8 @@ body[data-form-factor="desktop"] {
 }
 
 html.theme-dark body[data-form-factor="desktop"] {
-  --adm-bg: var(--uber-bg, #141414);
-  --adm-card: var(--uber-surface, #1f1f1f);
+  --adm-bg: var(--uber-bg, #000000);
+  --adm-card: var(--uber-bg, #000000);
   --adm-text: var(--uber-text, #ffffff);
   --adm-muted: var(--uber-text-muted, #a6a6a6);
   --adm-border: var(--uber-border, #333333);
@@ -47,9 +47,7 @@ body[data-form-factor="desktop"] .adm-accent-text {
   color: var(--adm-sand-dark);
 }
 
-body[data-form-factor="desktop"] .adm-logo {
-  color: var(--adm-sand-dark) !important;
-}
+/* adm-logo color is handled by .guardr-logo theme rules in uber-global.css */
 
 /* ─── Left sidebar ──────────────────────────────────────────────────────── */
 
@@ -2650,10 +2648,7 @@ body[data-form-factor="desktop"] .adm-card-body--tight {
   max-width: none;
 }
 
-/* ─── Desktop sidebar logo — inverted for black header ───────────────────── */
-body[data-form-factor="desktop"] .dsk-sidebar-logo {
-  filter: brightness(0) invert(1);
-}
+/* Desktop sidebar logo on dark header — see uber-global.css .dsk-sidebar-logo */
 
 /* ─── Desktop sidebar nav items — clean on white ─────────────────────────── */
 body[data-form-factor="desktop"] .uber-app-shell[data-mobility-layout="desktop"] aside {
