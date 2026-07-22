@@ -190,7 +190,8 @@ export function GuardrDrawerShell({
               ? {
                   position: 'relative',
                   height: '100%',
-                  paddingTop: 'max(0px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
+                  // Shell owns the top inset for flow rails so brand + main header share one band.
+                  paddingTop: 0,
                   paddingBottom: 'max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
                 }
               : {
@@ -219,10 +220,8 @@ export function GuardrDrawerShell({
         display="flex"
         alignItems="center"
         gridGap="scale400"
-        paddingTop={chrome.layout === 'desktop' ? 'scale600' : 'scale600'}
-        paddingBottom={chrome.layout === 'desktop' ? 'scale500' : 'scale500'}
-        paddingLeft="scale600"
-        paddingRight="scale600"
+        paddingLeft="scale500"
+        paddingRight="scale500"
         backgroundColor="backgroundPrimary"
         overrides={{
           Block: {
@@ -232,12 +231,19 @@ export function GuardrDrawerShell({
                 : `1px solid ${theme.colors.borderOpaque}`,
               minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
               flexShrink: 0,
+              // Match main mobility-header chrome height exactly.
+              boxSizing: 'border-box',
+              height: 'var(--mobility-header-h, 56px)',
+              minHeight: 'var(--mobility-header-h, 56px)',
+              maxHeight: 'var(--mobility-header-h, 56px)',
+              paddingTop: 0,
+              paddingBottom: 0,
             },
           },
         }}
       >
         <Logo
-          size={chrome.layout === 'mobile' ? 26 : 24}
+          size={chrome.layout === 'mobile' ? 32 : 30}
           className="shrink-0"
         />
         <Block flex="1" minWidth="0">
@@ -248,7 +254,8 @@ export function GuardrDrawerShell({
               fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
               fontWeight: 800,
               letterSpacing: '-0.04em',
-              lineHeight: 1.1,
+              lineHeight: 1.05,
+              fontSize: '18px',
               color: theme.colors.contentPrimary,
             }}
           >
@@ -261,7 +268,8 @@ export function GuardrDrawerShell({
                 color: theme.colors.contentSecondary,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                fontSize: '10px',
+                fontSize: '9px',
+                lineHeight: 1.2,
               }}
             >
               {workspaceLabel}
@@ -343,7 +351,6 @@ export function GuardrDrawerShell({
           alignItems="center"
           justifyContent="space-between"
           gridGap="scale400"
-          paddingBottom="scale400"
           paddingLeft="scale500"
           paddingRight="scale500"
           backgroundColor="backgroundPrimary"
@@ -353,8 +360,13 @@ export function GuardrDrawerShell({
               style: {
                 borderBottom: `1px solid ${theme.colors.borderOpaque}`,
                 flexShrink: 0,
-                paddingTop: 'max(10px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
+                boxSizing: 'border-box',
+                // Same chrome band as .mobility-drawer-brand (safe-area lives on the shell / drawer).
+                height: 'var(--mobility-header-h, 56px)',
                 minHeight: 'var(--mobility-header-h, 56px)',
+                maxHeight: 'var(--mobility-header-h, 56px)',
+                paddingTop: 0,
+                paddingBottom: 0,
               },
             },
           }}

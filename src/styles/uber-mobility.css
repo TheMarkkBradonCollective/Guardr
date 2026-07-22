@@ -64,7 +64,7 @@ html.theme-dark .uber-app-shell.mobility-shell .mobility-header--glass {
 /* ─── Mobile (browser | pwa | native) — thumb-first drawer app ──────────── */
 
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell {
-  --mobility-header-h: 52px;
+  --mobility-header-h: 56px;
 }
 
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-icon-btn {
@@ -88,7 +88,7 @@ body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell {
 /* ─── Tablet — touch merge (persistent rail sidebar, not scaled desktop) ── */
 
 body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell {
-  --mobility-header-h: 58px;
+  --mobility-header-h: 56px;
 }
 
 body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .uber-shell-content > div {

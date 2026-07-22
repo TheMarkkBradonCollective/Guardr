@@ -212,7 +212,12 @@ body[data-apk-mode="full"][data-view-surface^="native-"] {
   /* Status bar safe area */
   .uber-app-shell { padding-top: var(--gr-safe-area-top, env(safe-area-inset-top, 0px)); }
   .uber-app-shell .mobility-header {
-    padding-top: max(12px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)));
+    /* Keep chrome band locked to --mobility-header-h (shell owns the notch inset). */
+    padding-top: 0;
+    height: var(--mobility-header-h, 56px);
+    min-height: var(--mobility-header-h, 56px);
+    max-height: var(--mobility-header-h, 56px);
+    box-sizing: border-box;
   }
 
   /* Bottom nav — native height + safe area */
