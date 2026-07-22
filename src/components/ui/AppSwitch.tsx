@@ -3,6 +3,7 @@
  * https://baseweb.design/components/checkbox/
  *
  * Uber pattern: black track when on, accessible, 44px touch target.
+ * `ariaLabel` is for screen readers only — pass `label` for visible text.
  */
 
 import React from 'react';
@@ -13,6 +14,7 @@ interface AppSwitchProps {
   disabled?: boolean;
   onChange: (checked: boolean) => void;
   ariaLabel: string;
+  /** Optional visible label next to the toggle. Prefer ariaLabel alone when the UI already names the control. */
   label?: string;
   size?: 'sm' | 'md';
 }
@@ -30,7 +32,8 @@ export function AppSwitch({
       checked={checked}
       onChange={onChange}
       disabled={disabled}
-      label={label ?? ariaLabel}
+      label={label}
+      ariaLabel={ariaLabel}
       size={size}
     />
   );

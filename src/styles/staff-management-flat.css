@@ -408,13 +408,12 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
   background: transparent !important;
 }
 
-/* Layout-only surface panels (not semantic alerts) */
+/* Layout panels — kill grey fills, keep card radius when bordered */
 .uber-app-shell .role-main .rounded-2xl.border.border-brand-border,
 .uber-app-shell .role-main .rounded-xl.border.border-brand-border,
 .uber-app-shell .uber-shell-content .rounded-2xl.border.border-brand-border,
 .uber-app-shell .uber-shell-content .rounded-xl.border.border-brand-border {
-  background: transparent !important;
-  border-radius: 0 !important;
+  background: var(--uber-bg, var(--brand-bg, #fff)) !important;
   box-shadow: none !important;
 }
 
@@ -440,14 +439,19 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
   font-weight: 700;
 }
 
-/* Guard Availability — flat day rows (no grey card / sticky hover) */
+/* Guard Availability — consistent day cards (no sticky grey hover) */
 .uber-app-shell .availability-day-card.guard-factor-card,
 .uber-app-shell .availability-day-card.guard-factor-card:hover,
 .uber-app-shell .availability-day-card.guard-factor-card:focus,
-.uber-app-shell .availability-day-card.guard-factor-card:active {
-  background: transparent !important;
+.uber-app-shell .availability-day-card.guard-factor-card:active,
+.uber-app-shell .availability-off-day-card.guard-factor-card,
+.uber-app-shell .availability-off-day-card.guard-factor-card:hover,
+.uber-app-shell .availability-off-day-card.guard-factor-card:focus,
+.uber-app-shell .availability-off-day-card.guard-factor-card:active {
+  background: var(--uber-bg, var(--brand-bg, #fff)) !important;
+  border: 1px solid var(--uber-border, var(--brand-border)) !important;
+  border-radius: var(--radius-app-lg, 12px) !important;
   box-shadow: none !important;
-  border-radius: 0 !important;
 }
 
 .uber-app-shell .availability-day-circle {
@@ -466,4 +470,18 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
   background: transparent !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+}
+
+/* Clickable list cards — white canvas, clear borders (guard + client) */
+.uber-app-shell .guard-factor-card,
+.uber-app-shell .guard-pref-type-card,
+.uber-app-shell .guard-jobtype-metric-card,
+.uber-app-shell .guard-contract-violations-row {
+  background: var(--uber-bg, var(--brand-bg, #fff)) !important;
+}
+
+.uber-app-shell .guard-factors-grid {
+  gap: 0.75rem;
+  border-top: none;
+  padding-inline: 1rem;
 }

@@ -3674,10 +3674,10 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   gap: 0.875rem;
   width: 100%;
   padding: 0.875rem 1rem;
-  background: var(--brand-surface);
+  background: var(--uber-bg, var(--brand-bg, #fff));
   border: 1px solid var(--brand-border);
   border-radius: var(--radius-app-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   text-align: left;
   font-family: inherit;
   color: var(--brand-text);
@@ -9426,8 +9426,11 @@ html.theme-dark .wf-badge-success {
 .guard-contract-violations-list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--brand-border);
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: none;
 }
 
 .guard-contract-violations-row {
@@ -9435,12 +9438,26 @@ html.theme-dark .wf-badge-success {
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 1rem 0;
-  border: 0;
-  border-bottom: 1px solid var(--brand-border);
-  background: transparent;
+  padding: 1rem 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-lg, 12px);
+  background: var(--uber-bg, var(--brand-bg, #fff));
   text-align: left;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guard-contract-violations-row:hover,
+.guard-contract-violations-row:focus-visible {
+  border-color: color-mix(in srgb, var(--brand-text) 28%, var(--brand-border));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+@media (hover: none) {
+  .guard-contract-violations-row:hover {
+    box-shadow: none;
+    border-color: var(--brand-border);
+  }
 }
 
 .guard-contract-violations-row-main {
@@ -9837,7 +9854,7 @@ html.theme-dark .wf-badge-success {
 .guard-jobtype-metric-card {
   position: relative;
   overflow: hidden;
-  background: var(--brand-surface);
+  background: var(--uber-bg, var(--brand-bg, #fff));
   border: 1px solid var(--brand-border);
   border-radius: var(--radius-app-lg);
   padding: 0.875rem 0.75rem 0.75rem;
@@ -10007,28 +10024,28 @@ html.theme-dark .guard-factors-heading { color: #fff; }
   color: var(--uber-text-muted, #767676);
 }
 
-/* Single-column flat list — no 2-col card grid */
+/* Single-column card list for rating factors */
 .guard-factors-grid {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border-top: 1px solid var(--uber-border, #eeeeee);
+  gap: 0.75rem;
+  border-top: none;
+  padding: 0 1rem;
 }
 
-/* ─── Factor cards → flat Uber list rows ─────────────────────────────────── */
+/* Clickable factor cards — consistent bordered tiles (no sticky grey hover) */
 .guard-factor-card {
   position: relative;
   overflow: hidden;
-  background: var(--uber-bg, #fff);
-  border: none;
-  border-bottom: 1px solid var(--uber-border, #eeeeee);
-  border-radius: 0;
-  padding: 14px 20px;
+  background: var(--uber-bg, var(--brand-bg, #fff));
+  border: 1px solid var(--uber-border, var(--brand-border));
+  border-radius: var(--radius-app-lg, 12px);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   box-shadow: none;
-  transition: background 0.1s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .guard-factor-card::before { display: none; }
@@ -10041,8 +10058,16 @@ html.theme-dark .guard-factors-heading { color: #fff; }
 
 .guard-factor-card:hover {
   transform: none;
-  box-shadow: none;
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, var(--brand-bg, #fff));
+  border-color: color-mix(in srgb, var(--uber-text, #000) 28%, var(--uber-border, #e2e2e2));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+@media (hover: none) {
+  .guard-factor-card:hover {
+    box-shadow: none;
+    border-color: var(--uber-border, var(--brand-border));
+  }
 }
 
 .guard-factor-card-label {
@@ -16460,7 +16485,7 @@ html.theme-dark .landing-wordmark {
 .availability-day-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0;
+  gap: 0.75rem;
   padding: 0 1rem 0.75rem;
 }
 
@@ -16468,22 +16493,31 @@ html.theme-dark .landing-wordmark {
   gap: 0.55rem;
 }
 
-/* Flat canvas — no grey hover boxes (sticky :hover on mobile was painting a day grey). */
+/* Dedicated day editor cards — same chrome on every day (no sticky grey hover). */
 .availability-day-card.guard-factor-card,
 .availability-day-card.guard-factor-card:hover,
 .availability-day-card.guard-factor-card:focus,
-.availability-day-card.guard-factor-card:active {
-  background: transparent !important;
+.availability-day-card.guard-factor-card:active,
+.availability-off-day-card.guard-factor-card,
+.availability-off-day-card.guard-factor-card:hover,
+.availability-off-day-card.guard-factor-card:focus,
+.availability-off-day-card.guard-factor-card:active {
+  background: var(--uber-bg, var(--brand-bg, #fff)) !important;
+  border: 1px solid var(--uber-border, var(--brand-border)) !important;
+  border-radius: var(--radius-app-lg, 12px) !important;
   box-shadow: none !important;
-  border-radius: 0 !important;
   transform: none !important;
 }
 
 html.theme-dark .availability-day-card.guard-factor-card,
 html.theme-dark .availability-day-card.guard-factor-card:hover,
 html.theme-dark .availability-day-card.guard-factor-card:focus,
-html.theme-dark .availability-day-card.guard-factor-card:active {
-  background: transparent !important;
+html.theme-dark .availability-day-card.guard-factor-card:active,
+html.theme-dark .availability-off-day-card.guard-factor-card,
+html.theme-dark .availability-off-day-card.guard-factor-card:hover,
+html.theme-dark .availability-off-day-card.guard-factor-card:focus,
+html.theme-dark .availability-off-day-card.guard-factor-card:active {
+  background: var(--uber-bg, var(--brand-bg, #000)) !important;
 }
 
 .availability-day-card-head {
@@ -16921,8 +16955,9 @@ html.theme-dark .availability-day-card.guard-factor-card:active {
 }
 
 .guard-pref-body-saturation {
-  filter: grayscale(calc(100% - var(--pref-active-pct, 0) * 1%));
-  transition: filter 0.35s ease;
+  /* Keep alert list full-color — grayscale made the page look washed / broken. */
+  filter: none;
+  transition: none;
 }
 
 .guard-pref-intro {
@@ -16989,9 +17024,9 @@ html.theme-dark .availability-day-card.guard-factor-card:active {
   margin: 1rem 1rem 0;
   padding: 0.95rem 1rem;
   border-radius: var(--radius-app-lg);
-  border: 1px solid color-mix(in srgb, var(--status-warning) 28%, var(--brand-border));
-  background: var(--brand-surface);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--brand-border);
+  background: var(--uber-bg, var(--brand-bg, #fff));
+  box-shadow: none;
 }
 
 .guard-pref-empty-banner-icon-wrap {
@@ -17046,50 +17081,56 @@ html.theme-dark .availability-day-card.guard-factor-card:active {
   overflow: hidden;
   border-radius: var(--radius-app-lg);
   border: 1px solid var(--brand-border);
-  background: var(--brand-surface);
+  background: var(--uber-bg, var(--brand-bg, #fff));
   padding: 0.95rem 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .guard-pref-type-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--brand-border);
+  display: none;
 }
 
 .guard-pref-type-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
-  border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--brand-border));
+  transform: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border-color: color-mix(in srgb, var(--brand-text) 28%, var(--brand-border));
+}
+
+@media (hover: none) {
+  .guard-pref-type-card:hover {
+    box-shadow: none;
+    border-color: var(--brand-border);
+  }
 }
 
 .guard-pref-type-card-active::before {
-  background: var(--status-success);
+  display: none;
 }
 
 .guard-pref-type-card-active {
-  border-color: color-mix(in srgb, var(--status-success) 28%, var(--brand-border));
-  background: color-mix(in srgb, var(--status-success) 4%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--status-success) 40%, var(--brand-border));
+  background: var(--uber-bg, var(--brand-bg, #fff));
 }
 
 .guard-pref-type-card-setup::before {
-  background: var(--status-warning, #f59e0b);
+  display: none;
 }
 
 .guard-pref-type-card-setup {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--status-warning, #f59e0b) 24%, var(--brand-border));
+  border-color: color-mix(in srgb, var(--status-warning, #f59e0b) 36%, var(--brand-border));
 }
 
 .guard-pref-type-card-top {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+}
+
+.guard-pref-type-card-top > :last-child {
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .guard-pref-type-icon-wrap {
@@ -17099,14 +17140,14 @@ html.theme-dark .availability-day-card.guard-factor-card:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, var(--brand-border));
+  background: transparent;
+  border: 1px solid var(--brand-border);
   flex-shrink: 0;
 }
 
 .guard-pref-type-card-active .guard-pref-type-icon-wrap {
-  background: color-mix(in srgb, var(--status-success) 10%, var(--brand-surface));
-  border-color: color-mix(in srgb, var(--status-success) 24%, var(--brand-border));
+  background: transparent;
+  border-color: color-mix(in srgb, var(--status-success) 40%, var(--brand-border));
 }
 
 .guard-pref-type-icon {
@@ -17143,6 +17184,9 @@ html.theme-dark .availability-day-card.guard-factor-card:active {
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--brand-text-muted);
+  overflow-wrap: break-word;
+  word-break: normal;
+  max-width: 100%;
 }
 
 .guard-pref-type-vehicle-note {
