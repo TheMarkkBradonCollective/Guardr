@@ -5,10 +5,11 @@ import { computeOvertimeAmount } from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
   WorkbenchSplit,
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
@@ -52,6 +53,15 @@ export function StaffDisputesPanel({
   const [adjustHoursById, setAdjustHoursById] = useState<Record<string, string>>({});
   const [resolutionNoteById, setResolutionNoteById] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const openPool = useMemo(
+    () =>
+      disputes.filter((d) => {
+        const status = statusMap[d.id] ?? d.status;
+        return status === 'open' && d.type !== 'audit-violation';
+      }),
+    [disputes, statusMap]
+  );
 
   const openDisputes = useMemo(
     () =>
@@ -294,36 +304,40 @@ export function StaffDisputesPanel({
     );
 
   const tabBar = (
-    <div className="flex gap-2 mb-4">
-      {(['all', 'overtime'] as DisputeTab[]).map((key) => (
-        <AppButton
-          key={key}
-          variant={tab === key ? 'primary' : 'outline'}
-          size="sm"
-          onClick={() => setTab(key)}
-          className="capitalize"
-        >
-          {key}
-        </AppButton>
-      ))}
-    </div>
+    <StaffListFilterTabs
+      aria-label="Dispute type"
+      activeId={tab}
+      onChange={(id) => setTab(id as DisputeTab)}
+      tabs={[
+        { id: 'all', label: 'All', count: openPool.length },
+        {
+          id: 'overtime',
+          label: 'Overtime',
+          count: openPool.filter((d) => d.type === 'overtime').length,
+        },
+      ]}
+    />
   );
 
   if (openDisputes.length === 0) {
     if (formFactor === 'desktop') {
       return (
-        <WorkbenchPage>
-          <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
+        <StaffOpsPageShell
+          className="staff-mgmt-panel staff-roster-panel"
+          toolbar={
+            <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
+          }
+        >
           {tabBar}
           {emptyState}
-        </WorkbenchPage>
+        </StaffOpsPageShell>
       );
     }
     return (
-      <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
         {tabBar}
         {emptyState}
-      </div>
+      </StaffOpsPageShell>
     );
   }
 
@@ -331,8 +345,12 @@ export function StaffDisputesPanel({
     const selected = openDisputes.find((d) => d.id === selectedId) ?? openDisputes[0];
 
     return (
-      <WorkbenchPage>
-        <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
+      <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel"
+        toolbar={
+          <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
+        }
+      >
         {tabBar}
         <WorkbenchSplit
           list={
@@ -372,18 +390,18 @@ export function StaffDisputesPanel({
             )
           }
         />
-      </WorkbenchPage>
+      </StaffOpsPageShell>
     );
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+    <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => (
           <React.Fragment key={d.id}>{renderDisputeCard(d)}</React.Fragment>
         ))}
       </div>
-    </div>
+    </StaffOpsPageShell>
   );
 }

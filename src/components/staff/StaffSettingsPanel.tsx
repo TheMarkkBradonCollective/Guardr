@@ -5,6 +5,7 @@ import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
+import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import type { CompanyPublicDocument } from '../../lib/companyPlacard';
 
@@ -26,16 +27,17 @@ function DesktopSettingsCard({
   title,
   children,
   className = '',
+  fullWidth = false,
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
+  fullWidth?: boolean;
 }) {
   return (
-    <section className={`adm-card adm-platform-settings-card ${className}`.trim()}>
-      <h3 className="adm-card-title adm-platform-settings-card-title">{title}</h3>
+    <StaffMgmtSection title={title} className={className} fullWidth={fullWidth}>
       {children}
-    </section>
+    </StaffMgmtSection>
   );
 }
 
@@ -109,7 +111,7 @@ export function StaffSettingsPanel({
   if (isDesktop) {
     return (
       <StaffOpsPageShell
-        className="adm-platform-page adm-platform-settings-page"
+        className="staff-mgmt-panel staff-roster-panel adm-platform-page adm-platform-settings-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
@@ -117,10 +119,10 @@ export function StaffSettingsPanel({
           />
         }
       >
-        <div className="adm-platform-settings-grid">
+        <div className="adm-platform-settings-grid adm-platform-settings-grid--split">
           <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
           {companyPlacardBody && (
-            <DesktopSettingsCard title="Company public placard" className="adm-platform-settings-card--full">
+            <DesktopSettingsCard title="Company public placard" fullWidth>
               {companyPlacardBody}
             </DesktopSettingsCard>
           )}

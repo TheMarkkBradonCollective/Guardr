@@ -27,6 +27,7 @@ import './styles/uber-global.css';
 import './styles/uber-workbench.css';
 import './styles/auth-mobile-sheet.css';
 import './styles/staff-credential-review.css';
+import './styles/staff-management-flat.css';
 import './styles/uber-mobile-overview.css';
 import './styles/platform-optimizations.css';
 import './styles/uber-in-app.css';

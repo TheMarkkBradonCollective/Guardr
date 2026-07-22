@@ -133,7 +133,7 @@ export function StaffAuditLogPanel() {
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-finance-page adm-finance-audit"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-finance-audit"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Audit trail"

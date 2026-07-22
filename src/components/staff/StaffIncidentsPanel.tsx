@@ -5,11 +5,11 @@ import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { WfBadge } from '../ui/wireframe';
 import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AlertTriangle } from 'lucide-react';
+import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
   WorkbenchSplit,
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
@@ -47,8 +47,12 @@ export function StaffIncidentsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage>
-        <WorkbenchToolbar eyebrow="Risk & compliance" subtitle="Incident reports from active shifts." />
+      <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel"
+        toolbar={
+          <WorkbenchToolbar eyebrow="Risk & compliance" subtitle="Incident reports from active shifts." />
+        }
+      >
         <WorkbenchSplit
           list={
             incidents.length === 0 ? (
@@ -103,7 +107,7 @@ export function StaffIncidentsPanel({
             )
           }
         />
-      </WorkbenchPage>
+      </StaffOpsPageShell>
     );
   }
 
