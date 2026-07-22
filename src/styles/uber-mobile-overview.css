@@ -485,6 +485,12 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility
   position: sticky;
   top: 0;
   z-index: 2;
+  box-sizing: border-box;
+  height: var(--mobility-header-h, 56px);
+  min-height: var(--mobility-header-h, 56px);
+  max-height: var(--mobility-header-h, 56px);
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Drawer body: brand stays put; only nav list scrolls (staff / guard / client) */
@@ -521,6 +527,12 @@ body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-he
 body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-header {
   background: var(--uber-bg, #ffffff) !important;
   border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
+  box-sizing: border-box;
+  height: var(--mobility-header-h, 56px);
+  min-height: var(--mobility-header-h, 56px);
+  max-height: var(--mobility-header-h, 56px);
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Drawer footer clearance when bottom tab bar is present */
