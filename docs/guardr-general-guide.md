@@ -1324,7 +1324,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.93**, build **193**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.94**, build **194**).
 
 | Surface | How to install |
 |---------|----------------|

@@ -3,11 +3,29 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, July 22, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.93**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.94**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — /mergeit + /updateit → v1.0.94
+
+**PR cleanup**
+- Merged #813 (client & guard staff look/feel parity)
+
+**What this release packages**
+- Client + guard Jobs/Crew/Performance/Support use staff-style underline filter tabs
+- Flat canvas (no grey boxed empty states / surface panels) under `.uber-app-shell`
+- Refresh stays on the same jobs tab/selection via URL (`jt`/`cj`, `bt`/`gj`)
+- System + in-app back parity for client/guard detail stacks (matches staff)
+- Flattened invoice, locations, and directory detail chrome
+
+**Release:** **v1.0.94** (build **194**) — web + PWA cache (`guardr-cache-v1-0-94-beta`) + CI FCM APK
+
+**Supabase:** no new SQL.
 
 ---
 
