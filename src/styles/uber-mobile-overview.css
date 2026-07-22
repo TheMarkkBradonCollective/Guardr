@@ -481,6 +481,36 @@ body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-draw
 body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer-brand,
 body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer-brand {
   background: var(--uber-bg, #ffffff);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Drawer body: brand stays put; only nav list scrolls (staff / guard / client) */
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-scroll,
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-scroll,
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer-scroll,
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer-scroll,
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer-scroll,
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-header,
