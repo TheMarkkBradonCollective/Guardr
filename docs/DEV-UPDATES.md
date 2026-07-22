@@ -3,11 +3,28 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, July 22, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.94**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.95**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — Guard UI cards harden → v1.0.95
+
+**Why**
+- Preferences toggle still overlapped titles / crushed descriptions (Base UI label)
+- App screens used grey `#f6f6f6` canvas; Availability/Performance still looked flat or inconsistently boxed
+- `uber-in-app.css` (loads last) was flattening clickable lists back to divider rows
+
+**Shipped**
+- White canvas for app screens; clickable lists as bordered white cards (factors, prefs, availability days, jobs, item stacks)
+- Icon-only switch for preference cards (no duplicate aria label text)
+- Preference description full-width under the title row
+- **v1.0.95** (build **195**) web + PWA + APK
+
+**Supabase:** no new SQL.
 
 ---
 

@@ -2,7 +2,8 @@
  * GuardrSwitch — Base Web Switch (toggle) wrapper.
  * https://baseweb.design/components/checkbox/ (STYLE_TYPE.toggle_round)
  *
- * Uber pattern: black track when on, gray when off.
+ * When `label` is omitted, renders a compact icon-only toggle (no Base UI label
+ * text). Prefer this for cards that already show their own title.
  */
 
 import React from 'react';
@@ -33,7 +34,55 @@ export function GuardrSwitch({
   const [, theme] = useStyletron();
   const scale = size === 'sm' ? 0.8 : 1;
   const hasVisibleLabel = Boolean(label && label.trim());
-  const accessibleName = ariaLabel || label || undefined;
+  const accessibleName = ariaLabel || label || 'Toggle';
+
+  if (!hasVisibleLabel) {
+    const trackW = 46 * scale;
+    const trackH = 26 * scale;
+    const knob = 20 * scale;
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={accessibleName}
+        disabled={disabled}
+        className="guardr-switch-icon-only"
+        onClick={() => {
+          if (!disabled) onChange(!checked);
+        }}
+        style={{
+          width: trackW,
+          height: trackH,
+          borderRadius: 999,
+          border: 'none',
+          padding: 0,
+          flexShrink: 0,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          background: checked ? theme.colors.contentPrimary : theme.colors.borderOpaque,
+          position: 'relative',
+          transition: 'background-color 150ms ease',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: (trackH - knob) / 2,
+            left: checked ? trackW - knob - 2 : 2,
+            width: knob,
+            height: knob,
+            borderRadius: '50%',
+            background: '#fff',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+            transition: 'left 150ms ease',
+          }}
+        />
+      </button>
+    );
+  }
 
   return (
     <Checkbox
@@ -64,39 +113,25 @@ export function GuardrSwitch({
         },
         Label: {
           style: {
-            display: hasVisibleLabel ? 'block' : 'none',
             fontSize: size === 'sm' ? '13px' : '15px',
             fontWeight: 500,
             color: disabled ? theme.colors.contentSecondary : theme.colors.contentPrimary,
-            paddingLeft: hasVisibleLabel && labelRight ? theme.sizing.scale300 : 0,
-            paddingRight: hasVisibleLabel && !labelRight ? theme.sizing.scale300 : 0,
+            paddingLeft: labelRight ? theme.sizing.scale300 : 0,
+            paddingRight: !labelRight ? theme.sizing.scale300 : 0,
             cursor: disabled ? 'not-allowed' : 'pointer',
           },
         },
         Root: {
-          props: accessibleName
-            ? {
-                'aria-label': accessibleName,
-              }
-            : undefined,
           style: {
             alignItems: 'center',
             flexShrink: 0,
-            maxWidth: hasVisibleLabel ? '100%' : `${50 * scale}px`,
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.5 : 1,
           },
         },
-        Input: {
-          props: accessibleName
-            ? {
-                'aria-label': accessibleName,
-              }
-            : undefined,
-        },
       }}
     >
-      {hasVisibleLabel ? label : null}
+      {label}
     </Checkbox>
   );
 }
