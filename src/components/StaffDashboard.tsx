@@ -23,6 +23,8 @@ import {
 import {
   canAccessFinancialControls,
   canAccessStaffPermissions,
+  canAccessStaffMessages,
+  canAccessSupportInbox,
   canEditJobListingDetails,
   canHandleDisputes,
   canManageClients,
@@ -38,7 +40,12 @@ import {
   canStaffManageJobs,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
+  canViewAnalytics,
   canViewCityMarkets,
+  canViewIncidents,
+  canViewStats,
+  canViewViolations,
+  canManageCrews as roleCanManageCrews,
   isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -598,7 +605,7 @@ export function StaffDashboard({
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
-  const canManageCrews = canManageGuardAccounts || canReviewJobs;
+  const canManageCrews = roleCanManageCrews(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
@@ -606,6 +613,12 @@ export function StaffDashboard({
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
   const showCities = canViewCityMarkets(currentUser);
+  const showAnalytics = canViewAnalytics(currentUser);
+  const showStats = canViewStats(currentUser);
+  const showIncidents = canViewIncidents(currentUser);
+  const showViolations = canViewViolations(currentUser);
+  const showMessages = canAccessStaffMessages(currentUser);
+  const showSupportInbox = canAccessSupportInbox(currentUser);
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
@@ -906,11 +919,19 @@ export function StaffDashboard({
           />
         );
       case 'incidents':
-        return <StaffIncidentsPanel incidents={incidents} incidentDetails={incidentDetails} onOpenJob={openJob} />;
+        return showIncidents ? (
+          <StaffIncidentsPanel incidents={incidents} incidentDetails={incidentDetails} onOpenJob={openJob} />
+        ) : (
+          <AppBlockedAccessScreen
+            title="Incidents"
+            message="Incident review is limited to staff with the Review incident reports permission."
+            placeholders={['Open incidents', 'Resolved incidents']}
+          />
+        );
       case 'messages':
       case 'team-chat':
       case 'job-chats':
-        return onSendStaffMessage && onSendJobChat && onSendTeamChatMessage ? (
+        return showMessages && onSendStaffMessage && onSendJobChat && onSendTeamChatMessage ? (
           <div data-tour="staff-messages" className="app-messages-hub h-full min-h-0">
             <StaffMessagesPanel
               requests={requests}
@@ -950,7 +971,7 @@ export function StaffDashboard({
           />
         );
       case 'support':
-        return onSendSupportMessage && onUpdateSupportStatus ? (
+        return showSupportInbox && onSendSupportMessage && onUpdateSupportStatus ? (
           <div data-tour="staff-support" className="app-messages-hub h-full min-h-0">
             <StaffSupportPanel
               tickets={supportTickets}
@@ -1003,15 +1024,21 @@ export function StaffDashboard({
           />
         );
       case 'violations':
-        return (
+        return showViolations ? (
           <StaffViolationsPanel
             violations={shiftViolations}
             onResolveAuditViolation={showDisputes ? onResolveAuditViolation : undefined}
             onOpenJob={openJob}
           />
+        ) : (
+          <AppBlockedAccessScreen
+            title="Violations"
+            message="Shift violations are limited to staff with the View shift violations permission."
+            placeholders={['Open violations', 'Resolved violations']}
+          />
         );
       case 'stats':
-        return (
+        return showStats ? (
           <StaffStatsPanel
             guards={guards}
             requests={requests}
@@ -1022,6 +1049,12 @@ export function StaffDashboard({
               navigateSection('guards', { guardId });
             }}
             onOpenViolations={() => navigateSection('violations')}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title="Stats"
+            message="Performance stats are limited to staff with the View performance stats permission."
+            placeholders={['Guard performance', 'Job volume']}
           />
         );
       case 'disputes':
@@ -1040,7 +1073,7 @@ export function StaffDashboard({
           />
         );
       case 'analytics':
-        return (
+        return showAnalytics ? (
           <div className="space-y-8">
             <StaffSlaDashboard requests={requests} guards={guards} clients={clients} />
             <StaffAnalyticsPanel
@@ -1050,6 +1083,12 @@ export function StaffDashboard({
               showFinancials={showFinance}
             />
           </div>
+        ) : (
+          <AppBlockedAccessScreen
+            title="Analytics"
+            message="Analytics are limited to staff with the View analytics permission."
+            placeholders={['SLA dashboard', 'Platform analytics']}
+          />
         );
       case 'guide':
         return (

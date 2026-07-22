@@ -26,9 +26,12 @@ export type Permission =
   | 'guard.view_earnings'
   | 'guard.receive_payouts'
   | 'guard.rate_clients'
-  // Support — help desk, reports, activity monitoring
+  // Support — help desk, reports, activity monitoring, messaging
   | 'moderator.review_reports'
   | 'moderator.monitor_activity'
+  | 'moderator.access_support_inbox'
+  | 'moderator.access_messages'
+  | 'moderator.view_violations'
   // Moderator — field support, account approvals
   | 'moderator.approve_guards'
   | 'moderator.approve_clients'
@@ -45,6 +48,11 @@ export type Permission =
   | 'admin.view_analytics'
   | 'admin.manage_content'
   | 'admin.manage_platform_config'
+  | 'admin.view_stats'
+  | 'admin.manage_integrations'
+  | 'admin.manage_locations'
+  | 'admin.manage_crews'
+  | 'admin.view_staff_roster'
   // Director (+ all administrator)
   | 'director.manage_administrators'
   | 'director.manage_moderators'
@@ -90,6 +98,9 @@ const GUARD_PERMISSIONS: Permission[] = [
 const SUPPORT_PERMISSIONS: Permission[] = [
   'moderator.review_reports',
   'moderator.monitor_activity',
+  'moderator.access_support_inbox',
+  'moderator.access_messages',
+  'moderator.view_violations',
 ];
 
 const MODERATOR_PERMISSIONS: Permission[] = [
@@ -97,6 +108,7 @@ const MODERATOR_PERMISSIONS: Permission[] = [
   ...SUPPORT_PERMISSIONS,
   'moderator.approve_guards',
   'moderator.approve_clients',
+  'admin.view_stats',
 ];
 
 const ADMINISTRATOR_PERMISSIONS: Permission[] = [
@@ -111,6 +123,10 @@ const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   'admin.view_analytics',
   'admin.manage_content',
   'admin.manage_platform_config',
+  'admin.manage_integrations',
+  'admin.manage_locations',
+  'admin.manage_crews',
+  'admin.view_staff_roster',
 ];
 
 const MANAGER_PERMISSIONS: Permission[] = [
@@ -189,18 +205,26 @@ export const STAFF_PERMISSION_CATALOG: {
 }[] = [
   { permission: 'moderator.approve_guards', label: 'Approve guard applications', group: 'Applications' },
   { permission: 'moderator.approve_clients', label: 'Approve client applications', group: 'Applications' },
+  { permission: 'moderator.access_support_inbox', label: 'Handle support messages', group: 'Communications' },
+  { permission: 'moderator.access_messages', label: 'Access job & staff messages', group: 'Communications' },
   { permission: 'moderator.review_reports', label: 'Review incident reports', group: 'Monitoring' },
   { permission: 'moderator.monitor_activity', label: 'Monitor platform activity', group: 'Monitoring' },
+  { permission: 'moderator.view_violations', label: 'View shift violations', group: 'Monitoring' },
   { permission: 'moderator.review_certifications', label: 'Verify credentials', group: 'Credentials' },
   { permission: 'moderator.review_job_requests', label: 'Review job postings', group: 'Jobs' },
+  { permission: 'admin.manage_locations', label: 'Manage shared locations', group: 'Jobs' },
+  { permission: 'admin.manage_crews', label: 'Manage crews', group: 'Jobs' },
   { permission: 'moderator.handle_disputes', label: 'Handle disputes', group: 'Support' },
   { permission: 'moderator.suspend_users', label: 'Suspend users', group: 'User management' },
   { permission: 'moderator.issue_warnings', label: 'Issue warnings', group: 'User management' },
   { permission: 'admin.manage_users', label: 'Manage user accounts', group: 'User management' },
+  { permission: 'admin.view_staff_roster', label: 'View staff roster', group: 'User management' },
   { permission: 'admin.manage_settings', label: 'Manage public information', group: 'Platform' },
   { permission: 'admin.manage_platform_config', label: 'Manage platform configuration', group: 'Platform' },
   { permission: 'admin.view_analytics', label: 'View analytics', group: 'Platform' },
+  { permission: 'admin.view_stats', label: 'View performance stats', group: 'Platform' },
   { permission: 'admin.manage_content', label: 'Manage content', group: 'Platform' },
+  { permission: 'admin.manage_integrations', label: 'Manage integrations', group: 'Platform' },
   { permission: 'admin.manage_payouts', label: 'Manage payouts', group: 'Finance' },
   { permission: 'admin.manage_fees', label: 'Manage fees', group: 'Finance' },
   { permission: 'director.view_all_financial_data', label: 'View all financial data', group: 'Finance' },
@@ -299,9 +323,9 @@ export function isFounder(user: Pick<SessionUser, 'role'>): boolean {
 /** @deprecated Use isFounder */
 export const isOwner = isFounder;
 
-/** Founder-only platform configuration (payment modes, etc.) */
+/** Founder-only payment method / platform configuration (or explicit platform_config grant). */
 export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): boolean {
-  return isFounder(user);
+  return isFounder(user) || hasPermission(user, 'owner.platform_governance');
 }
 
 /** Manager, Director, and Founder share executive payment and ops controls */
@@ -347,9 +371,14 @@ export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: P
   return permissions.some((p) => hasPermission(user, p));
 }
 
-/** Payouts, fees, cash handling, and financial analytics — Manager, Director, and Founder */
+/** Payouts, fees, cash handling, and financial analytics — driven by finance catalog permissions. */
 export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boolean {
-  return hasExecutivePaymentControls(user);
+  return hasAnyPermission(user, [
+    'admin.manage_payouts',
+    'admin.manage_fees',
+    'director.view_all_financial_data',
+    'director.access_audit_logs',
+  ]);
 }
 
 export function canAccessStaffSettings(user: Pick<SessionUser, 'role'>): boolean {
@@ -363,8 +392,52 @@ export function canAccessStaffPermissions(user: Pick<SessionUser, 'role'>): bool
 
 export const canManageStaffPermissions = canAccessStaffPermissions;
 
-/** Manager+ may edit public information and integrations (all staff may view). */
-export const canManageStaffPlatformContent = canAccessStaffPermissions;
+/** Edit public information and integrations when catalog grants allow it. */
+export function canManageStaffPlatformContent(user: Pick<SessionUser, 'role'>): boolean {
+  return (
+    hasAnyPermission(user, [
+      'admin.manage_settings',
+      'admin.manage_content',
+      'admin.manage_integrations',
+    ]) || canAccessStaffPermissions(user)
+  );
+}
+
+export function canAccessSupportInbox(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.access_support_inbox');
+}
+
+export function canAccessStaffMessages(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.access_messages');
+}
+
+export function canViewIncidents(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.review_reports');
+}
+
+export function canViewViolations(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.view_violations');
+}
+
+export function canViewAnalytics(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.view_analytics');
+}
+
+export function canViewStats(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.view_stats');
+}
+
+export function canManageLocations(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.manage_locations') || canReviewJobRequests(user);
+}
+
+export function canManageCrews(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.manage_crews') || canManageGuards(user);
+}
+
+export function canViewStaffRoster(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.view_staff_roster') || canManageStaffAccounts(user);
+}
 
 /** Directors manage moderators and administrators; Founders manage all staff tiers */
 export function canManageStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {
