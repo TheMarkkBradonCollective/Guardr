@@ -61,6 +61,7 @@ interface StaffOpsLayoutProps {
   canAddStaff?: boolean;
   canAddCredential?: boolean;
   canCreateCrew?: boolean;
+  canAddLocation?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -120,6 +121,7 @@ export function StaffOpsLayout({
   canAddStaff = false,
   canAddCredential = false,
   canCreateCrew = false,
+  canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
@@ -196,6 +198,7 @@ export function StaffOpsLayout({
         canAddStaff={canAddStaff}
         canAddCredential={canAddCredential}
         canCreateCrew={canCreateCrew}
+        canAddLocation={canAddLocation}
       >
         {children}
       </StaffOpsLayoutInner>
@@ -244,6 +247,7 @@ function StaffOpsLayoutInner({
   canAddStaff = false,
   canAddCredential = false,
   canCreateCrew = false,
+  canAddLocation = false,
 }: StaffOpsLayoutInnerProps) {
   const sidebarPrimaryActions = useStaffSidebarPrimaryActions(navHighlight, {
     canCreateJob: navHighlight === 'jobs' && canCreateJob,
@@ -252,6 +256,7 @@ function StaffOpsLayoutInner({
     canAddStaff: navHighlight === 'team' && canAddStaff,
     canAddCredential: navHighlight === 'credentials' && canAddCredential,
     canCreateCrew: navHighlight === 'crews' && canCreateCrew,
+    canAddLocation: navHighlight === 'locations' && canAddLocation,
   });
 
   return (
