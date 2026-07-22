@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
 const RES = path.join(ROOT, 'android/app/src/main/res');
 
-/** APK home-screen icon — black background with brand sage shield (PWA stays white). */
+/** APK home-screen icon — black background with white shield (no Lite tag; PWA owns Lite). */
 const ICON_BACKGROUND = '#000000';
 const SPLASH_BACKGROUND = '#000000';
 
@@ -78,15 +78,35 @@ async function prepareIconMaster() {
   return sharp(await squared.png().toBuffer());
 }
 
-async function coloredMarkPng(iconMaster, size) {
-  return iconMaster.clone().resize(size, size).png().toBuffer();
+/** Solid white mark preserving alpha. */
+async function whiteMarkPng(iconMaster, size) {
+  const { data, info } = await iconMaster
+    .clone()
+    .resize(size, size)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+    }
+  }
+
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .png()
+    .toBuffer();
 }
 
-/** White background + centered sage shield (launcher icon). */
+/** Black background + centered white shield (launcher icon). */
 async function renderLauncherIcon(iconMaster, size) {
   const logoSize = Math.round(size * 0.7);
   const offset = Math.round((size - logoSize) / 2);
-  const logo = await coloredMarkPng(iconMaster, logoSize);
+  const logo = await whiteMarkPng(iconMaster, logoSize);
   return sharp({
     create: { width: size, height: size, channels: 4, background: ICON_BACKGROUND },
   })
@@ -95,11 +115,11 @@ async function renderLauncherIcon(iconMaster, size) {
     .toBuffer();
 }
 
-/** Transparent layer with colored shield for adaptive icon foreground. */
+/** Transparent layer with white shield for adaptive icon foreground. */
 async function renderForegroundIcon(iconMaster, size) {
   const logoSize = Math.round(size * 0.58);
   const offset = Math.round((size - logoSize) / 2);
-  const logo = await coloredMarkPng(iconMaster, logoSize);
+  const logo = await whiteMarkPng(iconMaster, logoSize);
   return sharp({
     create: {
       width: size,
@@ -113,12 +133,12 @@ async function renderForegroundIcon(iconMaster, size) {
     .toBuffer();
 }
 
-/** APK splash — black fill with centered brand sage shield. */
+/** APK splash — black fill with centered white shield. */
 async function renderSplash(iconMaster, width, height) {
   const logoSize = Math.round(Math.min(width, height) * 0.34);
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
-  const logo = await coloredMarkPng(iconMaster, logoSize);
+  const logo = await whiteMarkPng(iconMaster, logoSize);
   return sharp({
     create: { width, height, channels: 4, background: SPLASH_BACKGROUND },
   })
@@ -156,7 +176,9 @@ async function main() {
   await writePng('drawable', 'splash.png', defaultSplash);
 
   console.log('Generated Guardr-branded Android icons and splash screens');
-  console.log(`Launcher icon background: ${ICON_BACKGROUND}, splash: ${SPLASH_BACKGROUND}, shield: brand sage mark`);
+  console.log(
+    `Launcher icon: black (${ICON_BACKGROUND}) + white shield (no Lite tag); splash: ${SPLASH_BACKGROUND}`,
+  );
 }
 
 main().catch((err) => {

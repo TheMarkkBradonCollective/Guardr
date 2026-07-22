@@ -131,8 +131,8 @@ if (await fileExists(bundledConfigPath)) {
 const bundledIndex = 'android/app/src/main/assets/public/index.html';
 if (await fileExists(bundledIndex)) {
   const html = await readText(bundledIndex);
-  if (!html.includes('/icons/apple-touch-icon-light.png')) {
-    warn('Bundled index.html missing theme icon paths — rebuild APK');
+  if (!html.includes('/apple-touch-icon.png') && !html.includes('/icons/apple-touch-icon-')) {
+    warn('Bundled index.html missing apple-touch-icon path — rebuild APK');
   }
   if (!html.includes('viewport-fit=cover')) {
     warn('Bundled index.html missing viewport-fit=cover');
