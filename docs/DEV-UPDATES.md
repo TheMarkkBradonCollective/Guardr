@@ -3,11 +3,24 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, July 22, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.91**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.92**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — Ship APK with locations workflow → v1.0.92
+
+**Why**
+- Locations tabs/workflow (All / Active / Rejected / Archived + private listing) shipped on web/PWA first
+- Capacitor APK embeds a static web build, so it needed a new binary to match
+
+**Shipped**
+- **v1.0.92** (build **192**) — web + PWA cache (`guardr-cache-v1-0-92-beta`) + FCM APK with locations QC parity
+
+**Supabase:** `listed` column on `job_locations` / `client_locations` (from #809 schema). Run `complete_schema_setup.sql` if missing.
 
 ---
 
