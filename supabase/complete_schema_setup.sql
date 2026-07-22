@@ -1698,6 +1698,7 @@ CREATE TABLE IF NOT EXISTS client_locations (
 CREATE INDEX IF NOT EXISTS idx_client_locations_client ON client_locations(client_id);
 CREATE INDEX IF NOT EXISTS idx_client_locations_status ON client_locations(status);
 ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS shared_location_id TEXT;
+ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS listed BOOLEAN NOT NULL DEFAULT true;
 
 -- Shared job sites for staff QC and reuse across clients/jobs
 CREATE TABLE IF NOT EXISTS job_locations (
@@ -1708,7 +1709,8 @@ CREATE TABLE IF NOT EXISTS job_locations (
   latitude DOUBLE PRECISION,
   longitude DOUBLE PRECISION,
   risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'archived')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('pending', 'active', 'rejected', 'archived')),
+  listed BOOLEAN NOT NULL DEFAULT true,
   site_instructions TEXT,
   parking_instructions TEXT,
   access_instructions TEXT,
@@ -1724,6 +1726,7 @@ CREATE TABLE IF NOT EXISTS job_locations (
 CREATE INDEX IF NOT EXISTS idx_job_locations_place_key ON job_locations(place_key);
 CREATE INDEX IF NOT EXISTS idx_job_locations_status ON job_locations(status);
 CREATE INDEX IF NOT EXISTS idx_job_locations_updated ON job_locations(updated_at DESC);
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS listed BOOLEAN NOT NULL DEFAULT true;
 
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS job_location_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_security_requests_job_location ON security_requests(job_location_id);

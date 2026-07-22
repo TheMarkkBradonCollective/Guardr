@@ -16,7 +16,8 @@ import {
 import { clientServiceGroups } from '../../lib/clientServiceGroups';
 import { ASSIGNMENT_MODE_OPTIONS } from '../../lib/assignmentMode';
 import { activeClientLocations } from '../../lib/clientLocations';
-import type { AssignmentMode, ClientLocation, DifferentialPayRates } from '../../types';
+import { browsableSharedLocations } from '../../lib/jobLocations';
+import type { AssignmentMode, ClientLocation, DifferentialPayRates, JobLocation } from '../../types';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
@@ -57,6 +58,7 @@ interface RequestSecurityFlowProps {
   guards?: SecurityGuard[];
   favoriteGuardIds?: string[];
   clientLocations?: ClientLocation[];
+  jobLocations?: JobLocation[];
   clientId?: string;
   defaultAssignmentMode?: AssignmentMode;
 }
@@ -71,6 +73,7 @@ export function RequestSecurityFlow({
   guards = [],
   favoriteGuardIds = [],
   clientLocations = [],
+  jobLocations = [],
   clientId,
   defaultAssignmentMode = 'client-approve',
 }: RequestSecurityFlowProps) {
@@ -110,6 +113,7 @@ export function RequestSecurityFlow({
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>(defaultAssignmentMode);
   const [minYearsExperience, setMinYearsExperience] = useState(0);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [selectedFamiliarId, setSelectedFamiliarId] = useState<string | null>(null);
   const [pricingMode, setPricingMode] = useState<PricingMode>('standard');
   const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
   const [openingMessage, setOpeningMessage] = useState('');
@@ -172,7 +176,15 @@ export function RequestSecurityFlow({
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
   const title = resolveJobTitle(jobTitle, serviceId);
   const savedLocations = clientId ? activeClientLocations(clientLocations, clientId) : [];
+  const familiarLocations = useMemo(
+    () =>
+      browsableSharedLocations(jobLocations, clientId).filter(
+        (loc) => !savedLocations.some((s) => s.sharedLocationId === loc.id)
+      ),
+    [jobLocations, clientId, savedLocations]
+  );
   const selectedLocation = savedLocations.find((l) => l.id === selectedLocationId);
+  const selectedFamiliar = familiarLocations.find((l) => l.id === selectedFamiliarId);
 
   const selectService = (id: ClientServiceId) => {
     setServiceSkipped(false);
@@ -257,8 +269,8 @@ export function RequestSecurityFlow({
       assignmentMode,
       minYearsExperience: minYearsExperience > 0 ? minYearsExperience : undefined,
       clientLocationId: selectedLocationId ?? undefined,
-      jobLocationId: selectedLocation?.sharedLocationId,
-      locationRiskLevel: selectedLocation?.riskLevel,
+      jobLocationId: selectedLocation?.sharedLocationId ?? selectedFamiliarId ?? undefined,
+      locationRiskLevel: selectedLocation?.riskLevel ?? selectedFamiliar?.riskLevel,
       tierPayRates: useTierPay ? tierPayRates : undefined,
       durationHours,
       hourlyRate: effectiveRate,
@@ -423,30 +435,63 @@ export function RequestSecurityFlow({
                 className="uber-input rounded-xl"
               />
             </div>
-            {savedLocations.length > 0 && (
-              <div>
-                <label className="uber-label block mb-1.5">My Locations (optional)</label>
-                <select
-                  className="uber-select w-full rounded-xl"
-                  value={selectedLocationId ?? ''}
-                  onChange={(e) => {
-                    const id = e.target.value || null;
-                    setSelectedLocationId(id);
-                    const loc = savedLocations.find((l) => l.id === id);
-                    if (loc) {
-                      setAddress(loc.address);
-                      if (loc.state) setJobState(loc.state);
-                      if (!siteName.trim()) setSiteName(loc.name);
-                    }
-                  }}
-                >
-                  <option value="">Enter a new address</option>
-                  {savedLocations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name} — {loc.riskLevel} risk
-                    </option>
-                  ))}
-                </select>
+            {(savedLocations.length > 0 || familiarLocations.length > 0) && (
+              <div className="space-y-3">
+                {savedLocations.length > 0 && (
+                  <div>
+                    <label className="uber-label block mb-1.5">Your locations (optional)</label>
+                    <select
+                      className="uber-select w-full rounded-xl"
+                      value={selectedLocationId ?? ''}
+                      onChange={(e) => {
+                        const id = e.target.value || null;
+                        setSelectedLocationId(id);
+                        setSelectedFamiliarId(null);
+                        const loc = savedLocations.find((l) => l.id === id);
+                        if (loc) {
+                          setAddress(loc.address);
+                          if (loc.state) setJobState(loc.state);
+                          if (!siteName.trim()) setSiteName(loc.name);
+                        }
+                      }}
+                    >
+                      <option value="">Enter a new address</option>
+                      {savedLocations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.name} — {loc.riskLevel} risk
+                          {loc.listed === false ? ' (private)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {familiarLocations.length > 0 && (
+                  <div>
+                    <label className="uber-label block mb-1.5">Familiar locations</label>
+                    <select
+                      className="uber-select w-full rounded-xl"
+                      value={selectedFamiliarId ?? ''}
+                      onChange={(e) => {
+                        const id = e.target.value || null;
+                        setSelectedFamiliarId(id);
+                        setSelectedLocationId(null);
+                        const loc = familiarLocations.find((l) => l.id === id);
+                        if (loc) {
+                          setAddress(loc.address);
+                          if (loc.state) setJobState(loc.state);
+                          if (!siteName.trim()) setSiteName(loc.name);
+                        }
+                      }}
+                    >
+                      <option value="">Enter a new address</option>
+                      {familiarLocations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.name} — {loc.address}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
             <JobLocationCoordsFields

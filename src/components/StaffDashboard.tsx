@@ -652,7 +652,7 @@ export function StaffDashboard({
       guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
       clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
-      locations: jobLocations.filter((l) => l.status === 'pending').length,
+      locations: 0,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       violations: shiftViolations.filter((v) => v.needsReview).length,
       disputes: disputes.filter((d) => d.status === 'open').length,

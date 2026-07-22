@@ -111,6 +111,7 @@ interface ClientDashboardProps {
   favoriteGuardIds?: string[];
   onToggleFavoriteGuard?: (guardId: string) => void | Promise<void>;
   clientLocations?: import('../types').ClientLocation[];
+  jobLocations?: import('../types').JobLocation[];
   onSaveClientLocation?: (location: import('../types').ClientLocation) => void | Promise<void>;
   clientRecord?: Client;
   paymentGates: ClientPaymentGates;
@@ -196,6 +197,7 @@ export function ClientDashboard({
   favoriteGuardIds = [],
   onToggleFavoriteGuard,
   clientLocations = [],
+  jobLocations = [],
   onSaveClientLocation,
   clientRecord,
   paymentGates,
@@ -439,6 +441,7 @@ export function ClientDashboard({
         guards={guards}
         favoriteGuardIds={favoriteGuardIds}
         clientLocations={clientLocations}
+        jobLocations={jobLocations}
         clientId={clientId}
         defaultAssignmentMode={clientRecord?.defaultAssignmentMode}
         onBack={() => navigate('home')}
@@ -457,6 +460,7 @@ export function ClientDashboard({
         <ClientLocationsPanel
           client={clientRecord}
           locations={clientLocations}
+          sharedLocations={jobLocations}
           onSave={onSaveClientLocation}
         />
       </ResponsivePage>
