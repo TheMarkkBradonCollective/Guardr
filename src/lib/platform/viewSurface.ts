@@ -31,3 +31,12 @@ export function isTabletMergeSurface(surface: ViewSurface): boolean {
 export function isAdvancedDesktopSurface(surface: ViewSurface): boolean {
   return surface === 'browser-desktop';
 }
+
+/**
+ * Slide-up cards, bottom sheets, and swipe-to-confirm.
+ * Keep on mobile/tablet browser, all PWA, and all APK — not the website desktop workbench.
+ */
+export function prefersMobileGestureUi(surface: ViewSurface): boolean {
+  return !isAdvancedDesktopSurface(surface);
+}
+

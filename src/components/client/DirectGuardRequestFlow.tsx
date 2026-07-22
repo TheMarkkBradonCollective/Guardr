@@ -484,17 +484,7 @@ export function DirectGuardRequestFlow({
       </div>
 
       <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
-        {formFactor === 'desktop' ? (
-          step < 8 ? (
-            <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()}>
-              Continue <ArrowRight className="w-4 h-4" />
-            </GuardrButton>
-          ) : (
-            <GuardrButton kind="primary" onClick={handleSubmit}>
-              Send request to {guard.name.split(' ')[0]}
-            </GuardrButton>
-          )
-        ) : step < 8 ? (
+        {step < 8 ? (
           <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()} endEnhancer={<ArrowRight className="w-4 h-4" />}>
             Continue
           </GuardrButton>

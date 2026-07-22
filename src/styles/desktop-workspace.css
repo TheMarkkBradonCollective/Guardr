@@ -492,7 +492,7 @@ body[data-form-factor="desktop"] .guard-map-layout:has(.desktop-map-inspector, .
   right: 28rem !important;
 }
 
-body[data-form-factor="desktop"] .client-map-layout:has(.map-selection-layer) .guardr-map-root {
+body[data-view-surface="browser-desktop"] .client-map-layout:has(.map-selection-layer--desktop, .desktop-map-inspector) .guardr-map-root {
   right: 28rem !important;
 }
 

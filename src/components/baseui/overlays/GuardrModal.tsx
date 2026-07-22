@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, Drawer } from '../baseuiShims';
 import { modalOverrides, sheetOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
+import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
 
 export interface GuardrModalProps {
   open: boolean;
@@ -28,10 +29,15 @@ export function GuardrModal({
   ariaLabelledBy,
   dismissable = true,
 }: GuardrModalProps) {
+  const { viewSurface } = useDevice();
+  const gestureUi = prefersMobileGestureUi(viewSurface);
   const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
-  if (align === 'bottom') {
+  // Website desktop: never use slide-up drawers — center the dialog instead.
+  const useBottomSheet = align === 'bottom' && gestureUi;
+
+  if (useBottomSheet) {
     return (
       <Drawer
         isOpen={open}

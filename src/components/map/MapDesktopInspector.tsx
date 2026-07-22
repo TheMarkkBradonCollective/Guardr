@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDevice } from '../../lib/platform';
+import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
 
 interface MapDesktopInspectorProps {
   label: string;
@@ -7,11 +7,11 @@ interface MapDesktopInspectorProps {
   className?: string;
 }
 
-/** Map overlay shell: side inspector on desktop, bottom sheet on mobile. */
+/** Map overlay shell: side inspector on website desktop; bottom sheet on mobile / PWA / APK. */
 export function MapDesktopInspector({ label, children, className = '' }: MapDesktopInspectorProps) {
-  const { formFactor } = useDevice();
+  const { viewSurface } = useDevice();
 
-  if (formFactor === 'desktop') {
+  if (!prefersMobileGestureUi(viewSurface)) {
     return (
       <aside
         className={`dsk-map-inspector desktop-map-inspector ${className}`.trim()}
@@ -38,8 +38,9 @@ export function MapMobileBottomSheet({
   /** `trip` = Uber-style full-bleed active job from en route through complete. */
   mode?: 'sheet' | 'trip';
 }) {
-  const { formFactor } = useDevice();
-  if (formFactor === 'desktop') return <>{children}</>;
+  const { viewSurface } = useDevice();
+  // Website desktop: content is hosted in MapDesktopInspector side panel — no slide-up chrome.
+  if (!prefersMobileGestureUi(viewSurface)) return <>{children}</>;
   return (
     <div
       className={[

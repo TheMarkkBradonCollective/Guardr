@@ -4,7 +4,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
-import { useDevice } from '../../lib/platform';
+import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -49,16 +49,17 @@ export function MapSelectionExperience({
   detailActions,
   staffActions,
 }: MapSelectionExperienceProps) {
-  const { formFactor } = useDevice();
-  const isDesktop = formFactor === 'desktop';
-  const [expanded, setExpanded] = useState(isDesktop);
-  const cardInsetRef = useMapBottomOverlayInset(!isDesktop);
+  const { viewSurface } = useDevice();
+  // Side inspector only on website desktop — PWA/APK keep slide-up offer cards.
+  const websiteDesktop = !prefersMobileGestureUi(viewSurface);
+  const [expanded, setExpanded] = useState(websiteDesktop);
+  const cardInsetRef = useMapBottomOverlayInset(!websiteDesktop);
   const selected = useMemo(() => job, [job?.id]);
   const guardBody = guardFullBody ?? detailActions;
 
   React.useEffect(() => {
-    setExpanded(isDesktop);
-  }, [selected?.id, isDesktop]);
+    setExpanded(websiteDesktop);
+  }, [selected?.id, websiteDesktop]);
 
   if (!selected) return null;
 
@@ -101,7 +102,7 @@ export function MapSelectionExperience({
     </div>
   );
 
-  if (isDesktop) {
+  if (websiteDesktop) {
     return (
       <aside className="desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop" aria-label="Job details">
         <div className="desktop-map-inspector-header">

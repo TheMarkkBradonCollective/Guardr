@@ -1,7 +1,8 @@
 import React from 'react';
-import { Drawer } from '../baseuiShims';
-import { sheetOverrides } from './overlayStyles';
+import { Drawer, Modal } from '../baseuiShims';
+import { modalOverrides, sheetOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
+import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
 
 export interface GuardrSheetProps {
   open: boolean;
@@ -14,7 +15,11 @@ export interface GuardrSheetProps {
   dismissable?: boolean;
 }
 
-/** Bottom sheet overlay — More menu, mobile drawers */
+/**
+ * Bottom sheet overlay — More menu, mobile drawers.
+ * Website desktop (`browser-desktop`) uses a centered modal instead of a slide-up sheet.
+ * Mobile browser, PWA, and APK keep the bottom Drawer.
+ */
 export function GuardrSheet({
   open,
   onClose,
@@ -25,8 +30,31 @@ export function GuardrSheet({
   ariaLabel,
   dismissable = true,
 }: GuardrSheetProps) {
+  const { viewSurface } = useDevice();
+  const gestureUi = prefersMobileGestureUi(viewSurface);
   const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
+
+  if (!gestureUi) {
+    return (
+      <Modal
+        isOpen={open}
+        onClose={dismissable ? () => gatedClose() : () => {}}
+        closeable={false}
+        animate
+        autoFocus
+        focusLock
+        returnFocus
+        role="dialog"
+        aria-label={ariaLabel}
+        overrides={modalOverrides({ zIndex, panelClassName, centered: true })}
+      >
+        <div className={`guardr-sheet-root${className ? ` ${className}` : ''}`} aria-label={ariaLabel}>
+          {children}
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Drawer

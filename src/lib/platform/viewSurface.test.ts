@@ -4,6 +4,7 @@ import {
   isAdvancedDesktopSurface,
   isInstalledAppSurface,
   isTabletMergeSurface,
+  prefersMobileGestureUi,
   resolveViewSurface,
 } from './viewSurface.ts';
 
@@ -31,5 +32,15 @@ describe('viewSurface', () => {
     assert.equal(isAdvancedDesktopSurface('browser-desktop'), true);
     assert.equal(isAdvancedDesktopSurface('pwa-desktop'), false);
     assert.equal(isAdvancedDesktopSurface('browser-tablet'), false);
+  });
+
+  it('keeps gesture UI off website desktop only', () => {
+    assert.equal(prefersMobileGestureUi('browser-desktop'), false);
+    assert.equal(prefersMobileGestureUi('browser-mobile'), true);
+    assert.equal(prefersMobileGestureUi('browser-tablet'), true);
+    assert.equal(prefersMobileGestureUi('pwa-desktop'), true);
+    assert.equal(prefersMobileGestureUi('pwa-mobile'), true);
+    assert.equal(prefersMobileGestureUi('native-desktop'), true);
+    assert.equal(prefersMobileGestureUi('native-mobile'), true);
   });
 });

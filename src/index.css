@@ -3283,13 +3283,12 @@ body[data-form-factor="desktop"] .role-app-shell .app-screen {
   margin-inline: 0;
 }
 
-body[data-form-factor="tablet"] .client-map-layout:has(.map-selection-layer) .guardr-map-root,
-body[data-form-factor="desktop"] .client-map-layout:has(.map-selection-layer) .guardr-map-root {
+/* Side inspector only — PWA/APK desktop keep bottom sheets over the full map. */
+body[data-view-surface="browser-desktop"] .client-map-layout:has(.map-selection-layer--desktop, .desktop-map-inspector) .guardr-map-root {
   right: min(400px, 38vw);
 }
 
-body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset,
-body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset {
+body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset {
   top: 0;
   bottom: 0;
   left: auto;
@@ -3302,8 +3301,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
   padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
 
-body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card,
-body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card {
+body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card {
   margin: 0;
   max-height: min(72dvh, 640px);
 }
