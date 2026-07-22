@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   Client,
   ClientLocation,
@@ -35,6 +35,7 @@ import {
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { useStaffShellCreateRegistration } from './StaffShellCreateContext';
 import { AppButton } from '../ui/AppButton';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { MapPin, Plus } from 'lucide-react';
@@ -89,6 +90,7 @@ export function StaffLocationsPanel({
 }: StaffLocationsPanelProps) {
   const { formFactor } = useDevice();
   const canManage = canReviewJobRequests(currentUser);
+  const hideTrigger = formFactor === 'desktop';
   const selectableCities = getSelectableCityNamesForClients();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobLocationStatusFilter>('all');
@@ -98,6 +100,16 @@ export function StaffLocationsPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+
+  const startCreate = useCallback(() => {
+    setCreating(true);
+    setSelectedId(null);
+    setDraft(emptyDraft());
+    setError('');
+    setMsg('');
+  }, []);
+
+  useStaffShellCreateRegistration(canManage ? 'location' : null, startCreate);
 
   const pendingCount = pendingJobLocations(locations).length;
   const filtered = useMemo(
@@ -554,34 +566,19 @@ export function StaffLocationsPanel({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-finance-page"
+        className="staff-roster-panel adm-finance-page"
+        data-tour="staff-locations"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Quality control"
             subtitle="Manage reusable job sites. Matching addresses are shared when another client uses the same place."
             actions={
-              <div className="flex flex-wrap items-center gap-2">
-                <WfSearchBar
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Search locations…"
-                  className="min-w-[12rem]"
-                />
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    setCreating(true);
-                    setSelectedId(null);
-                    setDraft(emptyDraft());
-                    setError('');
-                    setMsg('');
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add location
-                </AppButton>
-              </div>
+              <WfSearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search locations…"
+                className="min-w-[12rem]"
+              />
             }
           />
         }
@@ -593,7 +590,7 @@ export function StaffLocationsPanel({
         )}
         <div className="mb-4">{filterTabs}</div>
         {locations.length === 0 && !creating ? (
-          <WorkbenchEmpty message="No saved locations yet. Add a site or wait for clients to submit locations for review." />
+          <WorkbenchEmpty message="No saved locations yet. Use + Add location in the sidebar, or wait for clients to submit locations for review." />
         ) : (
           <WorkbenchSplit
             list={list}
@@ -627,31 +624,34 @@ export function StaffLocationsPanel({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight">Locations</h2>
-          <p className="text-sm text-brand-text-muted mt-0.5">
-            Reusable job sites for quality control
-          </p>
-        </div>
-        <AppButton
-          variant="primary"
-          size="sm"
-          onClick={() => {
-            setCreating(true);
-            setDraft(emptyDraft());
-            setError('');
-            setMsg('');
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          Add
-        </AppButton>
-      </div>
-      <WfSearchBar value={search} onChange={setSearch} placeholder="Search locations…" />
-      {filterTabs}
+    <StaffOpsPageShell
+      className="staff-roster-panel"
+      data-tour="staff-locations"
+      toolbar={
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            {!hideTrigger ? (
+              <button
+                type="button"
+                onClick={startCreate}
+                className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add location
+              </button>
+            ) : null}
+          </div>
+          <WfSearchBar value={search} onChange={setSearch} placeholder="Search locations…" className="max-w-md" />
+          {filterTabs}
+        </>
+      }
+    >
+      {pendingCount > 0 && (
+        <p className="text-sm text-brand-text-muted mb-3">
+          {pendingCount} location{pendingCount === 1 ? '' : 's'} awaiting staff approval.
+        </p>
+      )}
       {list}
-    </div>
+    </StaffOpsPageShell>
   );
 }

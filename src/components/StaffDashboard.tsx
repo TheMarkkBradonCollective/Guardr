@@ -1259,6 +1259,7 @@ export function StaffDashboard({
       canAddStaff={canProposeStaff}
       canAddCredential={canManageGuardAccounts}
       canCreateCrew={canManageGuardAccounts}
+      canAddLocation={canReviewJobs}
     >
       <AppPageTransition motionKey={section} className="min-h-0">
         {renderSection()}
