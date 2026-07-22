@@ -199,7 +199,7 @@ body.shell-native .app-welcome-dock {
 
 body[data-shell="native"] .mobility-nav-item:active,
 body.shell-native .mobility-nav-item:active {
-  background: var(--uber-accent-50, color-mix(in srgb, #4A6B4E 12%, transparent));
+  background: var(--uber-accent-50, color-mix(in srgb, #000000 12%, transparent));
 }
 
 body[data-form-factor="tablet"] .uber-app-shell.mobility-shell {

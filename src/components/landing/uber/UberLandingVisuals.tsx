@@ -21,8 +21,8 @@ export function UberLandingHeroVisual() {
             borderRadius: '16px',
             overflow: 'hidden',
             background: isDark
-              ? 'linear-gradient(160deg, #1a2a1a 0%, #0d1a0d 100%)'
-              : 'linear-gradient(160deg, #e8f0e8 0%, #c8dcc8 40%, #a8c4a8 100%)',
+              ? 'linear-gradient(160deg, #1a1a1a 0%, #000000 100%)'
+              : 'linear-gradient(160deg, #f5f5f5 0%, #e8e8e8 40%, #d4d4d4 100%)',
             aspectRatio: '9/16',
             maxHeight: '520px',
           },

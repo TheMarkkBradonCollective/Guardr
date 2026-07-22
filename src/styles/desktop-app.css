@@ -33,7 +33,7 @@ html.theme-dark body[data-form-factor="desktop"] {
   --adm-border: var(--uber-border, #333333);
   --adm-accent-light: var(--uber-accent-50, #1a2a42);
   --adm-sand-light: var(--uber-accent-50, #1a2a42);
-  --adm-sand-band: var(--uber-accent, #7AAE7F);
+  --adm-sand-band: var(--uber-accent, #FFFFFF);
 }
 
 body[data-form-factor="desktop"] .adm-app {

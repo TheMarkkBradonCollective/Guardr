@@ -19,10 +19,10 @@ export function mapUserLocationColors(theme: ThemeMode): {
 } {
   switch (theme) {
     case 'dark':
-      return { ring: '#6B8F6E', fill: '#6B8F6E', fillOpacity: 0.1 };
+      return { ring: '#FFFFFF', fill: '#FFFFFF', fillOpacity: 0.1 };
     case 'light':
     default:
-      return { ring: '#5E7B61', fill: '#5E7B61', fillOpacity: 0.12 };
+      return { ring: '#000000', fill: '#000000', fillOpacity: 0.12 };
   }
 }
 
@@ -30,11 +30,11 @@ export function mapRoutePathOptions(theme: ThemeMode): {
   main: PathOptions;
   dash: PathOptions;
 } {
-  const sage = theme === 'dark' ? '#84a279' : '#5E7B61';
-  const dashColor = '#ffffff';
+  const routeColor = theme === 'dark' ? '#FFFFFF' : '#000000';
+  const dashColor = theme === 'dark' ? '#000000' : '#FFFFFF';
   return {
     main: {
-      color: sage,
+      color: routeColor,
       weight: 5,
       opacity: theme === 'dark' ? 0.92 : 0.88,
       lineCap: 'round',
