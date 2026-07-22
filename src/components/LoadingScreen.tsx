@@ -7,7 +7,7 @@
 
 import React, { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { APP_VERSION } from '../lib/appVersion';
+import { formatAppVersion } from '../lib/appVersion';
 import { Logo } from './Logo';
 
 export function LoadingScreen() {
@@ -72,7 +72,7 @@ export function LoadingScreen() {
           margin: 0,
         }}
       >
-        v{APP_VERSION}
+        v{formatAppVersion()}
       </p>
 
       <style>{`

@@ -11,7 +11,8 @@ const ROOT = process.cwd();
 const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
 const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const version = pkg.version || '1.0.0';
-const parts = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
+const numericVersion = version.split('-')[0];
+const parts = numericVersion.split('.').map((part) => Number.parseInt(part, 10) || 0);
 const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
 const apkCacheQuery = `?v=${versionCode}`;
 

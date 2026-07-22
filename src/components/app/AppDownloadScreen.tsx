@@ -31,6 +31,7 @@ import {
   downloadScreenIntro,
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
+import { formatAppVersion } from '../../lib/appVersion';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -255,11 +256,11 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
 
           {manifest ? (
             <p className="install-screen-versions">
-              Latest full app v{manifest.apkVersion}
+              Latest full app v{formatAppVersion(manifest.apkVersion)}
               <span className="install-screen-versions-dot" aria-hidden>
                 ·
               </span>
-              Lite web v{manifest.webVersion}
+              Lite web v{formatAppVersion(manifest.webVersion)}
             </p>
           ) : null}
         </section>

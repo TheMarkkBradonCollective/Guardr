@@ -11,7 +11,8 @@ export interface DownloadVersionManifest {
 }
 
 export function parseVersionParts(version: string): number[] {
-  return String(version || '0')
+  const base = String(version || '0').split('-')[0];
+  return base
     .split('.')
     .map((part) => {
       const value = Number.parseInt(part, 10);

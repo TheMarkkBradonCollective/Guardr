@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Download, Loader2, RefreshCw } from 'lucide-react';
 import { AppSettingsHead, AppSettingsSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
-import { appVersionLabel } from '../../lib/appVersion';
+import { appVersionLabel, formatAppVersion } from '../../lib/appVersion';
 import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUpdate';
 import { showAppAlert } from '../ui/AppConfirm';
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
@@ -66,7 +66,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
           <div className="space-y-3">
             <p className="text-sm text-brand-text-muted">
               {appVersionLabel()}
-              {installedVersion ? ` · Installed v${installedVersion}` : ''}
+              {installedVersion ? ` · Installed v${formatAppVersion(installedVersion)}` : ''}
               {' · '}
               {INSTALL_APK_TITLE}
             </p>
@@ -80,7 +80,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
               <div className="space-y-3">
                 <p className="text-sm text-brand-text">
                   A newer version is available:{' '}
-                  <span className="font-semibold">v{latestVersion}</span>. Tap install and confirm when
+                  <span className="font-semibold">v{formatAppVersion(latestVersion)}</span>. Tap install and confirm when
                   Android prompts you.
                 </p>
                 <button
@@ -94,13 +94,13 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
                   ) : (
                     <Download className="w-4 h-4" aria-hidden />
                   )}
-                  <span>{installing ? 'Preparing update…' : `Install update (v${latestVersion})`}</span>
+                  <span>{installing ? 'Preparing update…' : `Install update (v${formatAppVersion(latestVersion)})`}</span>
                 </button>
               </div>
             ) : (
               <p className="text-sm text-brand-text-muted">
                 You are on the latest version
-                {latestVersion ? ` (v${latestVersion})` : ''}.
+                {latestVersion ? ` (v${formatAppVersion(latestVersion)})` : ''}.
               </p>
             )}
 

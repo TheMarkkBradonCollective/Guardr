@@ -228,7 +228,7 @@
           <tbody>
             <tr>
               <th>Updates</th>
-              <td><strong>Manual</strong> — download &amp; reinstall from this page when we release a new APK</td>
+              <td><strong>Manual</strong> — download &amp; reinstall from this page when we ship a new beta APK</td>
               <td><strong>Automatic</strong> — refreshes with guardr.co (no reinstall)</td>
             </tr>
             <tr>
@@ -492,7 +492,7 @@
           }
 
           if (live === 'apk') {
-            liveContext.textContent = 'You are on the full Android app. Install updates below when a new version is released.';
+            liveContext.textContent = 'You are on the full Android app. Install updates below when a new beta build is available.';
           } else if (live === 'pwa') {
             liveContext.textContent = 'You are on the PWA (home-screen). It stays current automatically — APK installs below are optional.';
           } else {
@@ -523,7 +523,7 @@
           } else {
             setBadge(apkBadge, 'Up to date', 'ok');
             apkDetail.textContent =
-              'Installed APK v' + apkRecord.version + ' matches the latest release. ' +
+              'Installed APK v' + apkRecord.version + ' matches the latest beta. ' +
               'Re-download only if you reinstall on a new phone.';
             downloadBtn.textContent = live === 'apk'
               ? 'Reinstall (v' + latest.apkVersion + ')'
