@@ -180,7 +180,7 @@ export function GuardrDrawerShell({
           style: {
             flexShrink: 0,
             borderRight: sidebarVisible ? `1px solid ${theme.colors.borderOpaque}` : 'none',
-            overflow: isMobileDrawer ? 'hidden' : 'hidden',
+            overflow: 'hidden',
             transition: reducedMotion
               ? 'none'
               : isFlowSidebar
@@ -205,10 +205,8 @@ export function GuardrDrawerShell({
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
                   paddingTop: 'max(0px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
                   paddingBottom: 'max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  overscrollBehavior: 'contain',
-                  WebkitOverflowScrolling: 'touch',
+                  // Keep brand header fixed — only the nav list scrolls.
+                  overflow: 'hidden',
                 }),
           },
         },
@@ -292,13 +290,21 @@ export function GuardrDrawerShell({
 
       <Block
         className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : 'mobility-drawer-scroll'}
-        flex={isMobileDrawer ? undefined : '1'}
-        minHeight={isMobileDrawer ? undefined : 0}
-        overflow={isMobileDrawer ? 'visible' : 'auto'}
+        flex="1"
+        minHeight={0}
+        overflow="auto"
         paddingTop="scale300"
         paddingBottom="scale300"
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
         backgroundColor="backgroundPrimary"
+        overrides={{
+          Block: {
+            style: {
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch',
+            },
+          },
+        }}
       >
         <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
       </Block>
@@ -310,6 +316,13 @@ export function GuardrDrawerShell({
           paddingRight="scale500"
           paddingBottom="scale400"
           minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
+          overrides={{
+            Block: {
+              style: {
+                flexShrink: 0,
+              },
+            },
+          }}
         >
           {sidebarFooter}
         </Block>
