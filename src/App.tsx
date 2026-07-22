@@ -1474,6 +1474,10 @@ export default function App() {
     }
   };
 
+  const backToAuthRoleChoice = () => {
+    openAuthChoice(initialAuthMode);
+  };
+
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
     setLegalPageState(page);
@@ -13179,6 +13183,7 @@ export default function App() {
             isDbConnected={isDbConnected}
             isAppLoading={loading}
             onBackToHome={closeAuthView}
+            onBackToRoleChoice={backToAuthRoleChoice}
             onOpenLegal={openLegalPage}
             onOpenGuide={openPublicGuide}
             onAuthModeChange={setAuthViewMode}
@@ -13222,6 +13227,7 @@ export default function App() {
               isDbConnected={isDbConnected}
               isAppLoading={loading}
               onBackToHome={closeAuthView}
+              onBackToRoleChoice={backToAuthRoleChoice}
               onOpenLegal={openLegalPage}
               onOpenGuide={openPublicGuide}
               onAuthModeChange={setAuthViewMode}
