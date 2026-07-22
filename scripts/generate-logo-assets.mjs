@@ -93,6 +93,28 @@ async function whiteMarkFromIcon(iconMaster, size) {
   }).png();
 }
 
+/** Render the mark as solid black, preserving alpha from the source. */
+async function blackMarkFromIcon(iconMaster, size) {
+  const { data, info } = await iconMaster
+    .clone()
+    .resize(size, size)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+    }
+  }
+
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  }).png();
+}
+
 async function prepareIconMaster() {
   const squared = await trimAndSquare(await removeBlackBackground(ICON_SOURCE));
   return sharp(await squared.png().toBuffer());
@@ -104,11 +126,30 @@ async function prepareWordmarkMaster() {
 }
 
 async function writeIconPng(master, size, dest) {
-  await master.clone().resize(size, size).png().toFile(dest);
+  await (await blackMarkFromIcon(master, size)).toFile(dest);
 }
 
 async function writeWordmarkPng(master, height, dest) {
-  await master.clone().resize({ height }).png().toFile(dest);
+  const { data, info } = await master
+    .clone()
+    .resize({ height })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+    }
+  }
+
+  await sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .png()
+    .toFile(dest);
 }
 
 /** Red "Lite" pill for PWA home-screen icons only. */
@@ -209,7 +250,7 @@ async function main() {
   const iconMaster = await prepareIconMaster();
   const wordmarkMaster = await prepareWordmarkMaster();
 
-  // Transparent PNG — primary mark for UI overlays (keep brand sage for in-app Logo)
+  // Transparent PNG — black mark for in-app UI (theme CSS inverts to white in dark mode)
   await writeIconPng(iconMaster, 512, path.join(PUBLIC, 'logo.png'));
   for (const size of [64, 128, 256]) {
     await writeIconPng(iconMaster, size, path.join(PUBLIC, `logo-${size}.png`));
