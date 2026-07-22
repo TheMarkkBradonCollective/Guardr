@@ -16,6 +16,7 @@ import {
   WorkbenchSplit,
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffLegalCompliancePanelProps {
@@ -115,23 +116,21 @@ export function StaffLegalCompliancePanel({
 
   const selectedRow = filtered.find((row) => row.userId === selectedId) ?? null;
 
-  const filterButtons = (
-    <div className="flex flex-wrap items-center gap-2">
-      {(['all', 'missing', 'complete'] as const).map((value) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => setFilter(value)}
-          className={`rounded-full px-3 py-1 text-xs font-semibold border transition-colors ${
-            filter === value
-              ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-              : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-          }`}
-        >
-          {value === 'all' ? `All (${report.length})` : value === 'missing' ? `Missing (${missingCount})` : 'Complete'}
-        </button>
-      ))}
-    </div>
+  const completeCount = report.length - missingCount;
+
+  const filterTabs = [
+    { id: 'all', label: 'All', count: report.length },
+    { id: 'missing', label: 'Missing', count: missingCount },
+    { id: 'complete', label: 'Complete', count: completeCount },
+  ];
+
+  const filterTabsControl = (
+    <StaffListFilterTabs
+      aria-label="Agreement status"
+      activeId={filter}
+      onChange={(id) => setFilter(id as 'all' | 'missing' | 'complete')}
+      tabs={filterTabs}
+    />
   );
 
   if (formFactor === 'desktop') {
@@ -142,10 +141,10 @@ export function StaffLegalCompliancePanel({
           <WorkbenchToolbar
             eyebrow="Compliance"
             subtitle="Agreements accepted by guards and clients."
-            actions={filterButtons}
           />
         }
       >
+        {filterTabsControl}
         {filtered.length === 0 ? (
           <WorkbenchEmpty message="No users match this filter." />
         ) : (
@@ -204,7 +203,7 @@ export function StaffLegalCompliancePanel({
   return (
     <AppFormSection title="Agreements">
       <div className="space-y-4">
-        {filterButtons}
+        {filterTabsControl}
         {filtered.length === 0 ? (
           <AppEmptyState title="No users match this filter." />
         ) : (

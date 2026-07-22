@@ -42,6 +42,61 @@ body[data-form-factor="desktop"] .adm-payment-settings-page .uber-ops-page-body 
   padding-right: 0.25rem;
 }
 
+/* Inbox-style filter tabs inside live staff shell (mirror .staff-shell rules). */
+.uber-app-shell .staff-list-filter-tabs {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-inline: 0;
+  margin-inline: 0;
+  margin-bottom: 0.75rem;
+}
+
+.uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
+  margin-inline: -0.25rem;
+  border-bottom-width: 1px;
+  background: transparent !important;
+  border-bottom-color: var(--brand-border) !important;
+}
+
+html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
+  background: transparent !important;
+  border-bottom-color: color-mix(in srgb, #ffffff 18%, transparent) !important;
+}
+
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab {
+  color: var(--brand-text) !important;
+  opacity: 0.45;
+  background: transparent !important;
+}
+
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab:hover {
+  background: transparent !important;
+  opacity: 0.75;
+}
+
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab-active,
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab.app-inbox-tab-active {
+  color: var(--brand-text) !important;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab-active::after {
+  background: var(--brand-text) !important;
+}
+
+.uber-app-shell .staff-list-filter-tabs .app-inbox-tab-badge {
+  background: transparent !important;
+  border: 1px solid currentColor !important;
+  color: inherit !important;
+}
+
+.uber-app-shell .staff-list-filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 /* Flat section blocks (management + platform settings) */
 .uber-app-shell .staff-mgmt-section {
   padding: 0 0 1.5rem;
