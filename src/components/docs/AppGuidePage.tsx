@@ -562,7 +562,7 @@ export function AppGuidePage({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-platform-page adm-guide-page"
+        className="staff-mgmt-panel staff-roster-panel adm-platform-page adm-guide-page"
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>

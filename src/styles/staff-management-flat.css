@@ -1,0 +1,228 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF MANAGEMENT / PLATFORM — flat ops-style (matches Operations pages)
+   Removes grey card boxes in dark mode; solid brand canvas + border dividers.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uber-app-shell {
+  --adm-bg: var(--uber-bg, var(--brand-bg, #ffffff));
+  --adm-card: var(--uber-bg, var(--brand-bg, #ffffff));
+}
+
+html.theme-dark .uber-app-shell {
+  --adm-bg: var(--uber-bg, #000000);
+  --adm-card: var(--uber-bg, #000000);
+}
+
+html.theme-dark body[data-form-factor="desktop"] {
+  --adm-bg: var(--uber-bg, #000000);
+  --adm-card: var(--uber-bg, #000000);
+}
+
+/* Alias ops page body class (TSX uses uber-*, legacy CSS used adm-*) */
+body[data-form-factor="desktop"] .uber-ops-page {
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-form-factor="desktop"] .uber-ops-page-body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0.75rem;
+}
+
+body[data-form-factor="desktop"] .adm-platform-page .uber-ops-page-body,
+body[data-form-factor="desktop"] .adm-platform-settings-page .uber-ops-page-body,
+body[data-form-factor="desktop"] .adm-integrations-page .uber-ops-page-body,
+body[data-form-factor="desktop"] .adm-dev-notes-page .uber-ops-page-body,
+body[data-form-factor="desktop"] .adm-guide-page .uber-ops-page-body,
+body[data-form-factor="desktop"] .adm-payment-settings-page .uber-ops-page-body {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* Flat section blocks (management + platform settings) */
+.uber-app-shell .staff-mgmt-section {
+  padding: 0 0 1.5rem;
+  margin: 0 0 1.5rem;
+  border: none;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.uber-app-shell .staff-mgmt-section:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.uber-app-shell .staff-mgmt-section-title {
+  margin: 0 0 1rem;
+  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--uber-text, var(--brand-text));
+}
+
+.uber-app-shell .staff-mgmt-section-body {
+  min-width: 0;
+}
+
+/* Legacy adm-card on management pages — flatten to match ops */
+.uber-app-shell .staff-mgmt-panel .adm-card,
+.uber-app-shell .adm-finance-page .adm-card,
+.uber-app-shell .adm-platform-page .adm-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 0 1.5rem !important;
+  margin: 0 0 1.5rem !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .staff-mgmt-panel .adm-card:last-child,
+.uber-app-shell .adm-platform-settings-grid > .adm-card:last-child,
+.uber-app-shell .adm-payment-settings-grid > .adm-card:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+/* Finance / audit list container */
+.uber-app-shell .adm-finance-audit-list {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-top: 1px solid var(--uber-border, var(--brand-border)) !important;
+}
+
+/* Payments pipeline sections */
+.uber-app-shell .adm-payments-pipeline section,
+.uber-app-shell .staff-payments-pipeline section {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  padding-inline: 0 !important;
+}
+
+.uber-app-shell .adm-payments-pipeline section:last-child,
+.uber-app-shell .staff-payments-pipeline section:last-child {
+  border-bottom: none !important;
+}
+
+/* Table wraps + placard stats */
+.uber-app-shell .adm-payment-settings-page .adm-table-wrap,
+.uber-app-shell .staff-payment-settings-table {
+  background: transparent !important;
+  border-color: var(--uber-border, var(--brand-border)) !important;
+}
+
+.uber-app-shell .adm-platform-placard-stats {
+  background: transparent !important;
+  border-color: var(--uber-border, var(--brand-border)) !important;
+}
+
+/* Dev notes side panels */
+.uber-app-shell .adm-dev-notes-activity,
+.uber-app-shell .adm-dev-notes-summary {
+  background: transparent !important;
+  border-color: var(--uber-border, var(--brand-border)) !important;
+  border-radius: 0 !important;
+}
+
+/* Workbench detail pane — same canvas as list (no grey inset) */
+.uber-app-shell .uber-workbench-detail {
+  background: var(--uber-bg, var(--brand-bg)) !important;
+}
+
+.uber-app-shell .uber-workbench-table-row:hover td {
+  background: transparent !important;
+}
+
+/* Compliance / agreement detail rows */
+.uber-app-shell .staff-mgmt-detail-row {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  padding-inline: 0 !important;
+}
+
+.uber-app-shell .staff-mgmt-detail-row:last-child {
+  border-bottom: none !important;
+}
+
+/* Integration toggle rows */
+.uber-app-shell .staff-mgmt-toggle-row {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  padding-inline: 0 !important;
+}
+
+.uber-app-shell .staff-mgmt-toggle-row:last-child {
+  border-bottom: none !important;
+}
+
+.uber-app-shell .staff-mgmt-toggle-row--active {
+  border-left: 3px solid var(--uber-text, var(--brand-text)) !important;
+  padding-left: 0.75rem !important;
+}
+
+/* Company placard checklist rows */
+.uber-app-shell .staff-mgmt-placard-row {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  overflow: visible !important;
+}
+
+.uber-app-shell .staff-mgmt-placard-row button:hover {
+  background: transparent !important;
+}
+
+/* Settings grids — single column flow on narrow desktop */
+.uber-app-shell .adm-platform-settings-grid,
+.uber-app-shell .adm-payment-settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.uber-app-shell .staff-mgmt-section--full {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1100px) {
+  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+  }
+
+  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split .staff-mgmt-section,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split .adm-card,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-card--full,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section--full,
+  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+}

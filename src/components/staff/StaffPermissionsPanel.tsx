@@ -12,6 +12,7 @@ import {
   type Permission,
   type StaffRolePermissionOverrides,
 } from '../../lib/permissions';
+import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
@@ -38,10 +39,9 @@ function DesktopCard({
   className?: string;
 }) {
   return (
-    <section className={`adm-card adm-platform-settings-card ${className}`.trim()}>
-      <h3 className="adm-card-title adm-platform-settings-card-title">{title}</h3>
+    <StaffMgmtSection title={title} className={className}>
       {children}
-    </section>
+    </StaffMgmtSection>
   );
 }
 
@@ -180,6 +180,7 @@ export function StaffPermissionsPanel({
   if (isDesktop) {
     return (
       <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel adm-platform-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
@@ -203,7 +204,7 @@ export function StaffPermissionsPanel({
   }
 
   return (
-    <StaffOpsPageShell>
+    <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       <div className="space-y-6">
         <section>
           <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Staff role permissions</h3>

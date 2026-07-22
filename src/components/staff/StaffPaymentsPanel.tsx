@@ -363,7 +363,7 @@ export function StaffPaymentsPanel({
 
     return (
       <StaffOpsPageShell
-        className="adm-finance-page adm-payments-workbench"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"

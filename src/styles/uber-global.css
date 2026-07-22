@@ -104,6 +104,11 @@ html.theme-dark .adm-card {
   border-color: var(--uber-border, #2b2b2b);
 }
 
+html.theme-dark .uber-app-shell .adm-card {
+  background: var(--uber-bg, #000000);
+  border-color: var(--uber-border, #2b2b2b);
+}
+
 /* Ride/job selection cards — Uber style with selected outline */
 .uber-service-card {
   background: var(--uber-bg, #fff);

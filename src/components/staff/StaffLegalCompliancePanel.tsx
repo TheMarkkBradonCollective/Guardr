@@ -64,7 +64,7 @@ function ComplianceDetail({ row, onBack }: { row: LegalComplianceUserRow; onBack
           return (
             <li
               key={documentId}
-              className="rounded-lg border border-brand-border bg-brand-surface/40 px-3 py-2.5"
+              className="staff-mgmt-detail-row px-0 py-2.5"
             >
               <p className="font-semibold">{legalDocumentLabel(documentId)}</p>
               {acceptance ? (
@@ -137,7 +137,7 @@ export function StaffLegalCompliancePanel({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-finance-page"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Compliance"

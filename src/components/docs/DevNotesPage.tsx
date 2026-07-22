@@ -44,7 +44,7 @@ function DevActivityGrid({ grid, variant = 'mobile' }: { grid: number[][]; varia
       className={
         isDesktop
           ? 'adm-dev-notes-activity'
-          : 'mb-8 rounded-xl border border-brand-border bg-brand-surface-elevated p-4'
+          : 'staff-mgmt-section mb-8 p-0 border-0'
       }
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
@@ -116,7 +116,7 @@ export function DevNotesPage() {
   if (isDesktop) {
     return (
       <StaffOpsPageShell
-        className="adm-platform-page adm-dev-notes-page"
+        className="staff-mgmt-panel staff-roster-panel adm-platform-page adm-dev-notes-page"
         toolbar={
           <div>
             <p className="adm-card-eyebrow">Platform</p>
