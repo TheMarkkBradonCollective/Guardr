@@ -344,9 +344,21 @@
           return state;
         }
 
-        function mergeCookieInstall(state) {
+        function mergeCookieInstall(state, liveHint) {
           var apkCookie = readInstallCookie('guardr_apk');
           var pwaCookie = readInstallCookie('guardr_pwa');
+          // Prefer live PWA over a stale APK cookie from a previous install.
+          if (liveHint === 'pwa') {
+            if (pwaCookie && pwaCookie.version) {
+              state.pwa = {
+                version: pwaCookie.version,
+                registeredAt: Date.now(),
+              };
+            }
+            delete state.apk;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            return state;
+          }
           if (apkCookie && apkCookie.version) {
             state.apk = {
               version: apkCookie.version,
@@ -415,6 +427,8 @@
           };
           if (surface === 'apk') {
             delete state.pwa;
+          } else if (surface === 'pwa') {
+            delete state.apk;
           }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           return state;
@@ -439,8 +453,8 @@
           }
 
           if (live === 'pwa') {
-            if (intro) intro.textContent = 'You are on PWA (Lite Version). Upgrade to APK (Full Version) below.';
-            if (pwaStatus) pwaStatus.classList.add('hidden');
+            if (intro) intro.textContent = 'You are on the home-screen PWA, which auto-updates with guardr.co. The Android APK below is optional and may need a manual install for new builds.';
+            if (pwaStatus) pwaStatus.classList.remove('hidden');
             if (compareCard) compareCard.classList.add('hidden');
             if (apkTitle) apkTitle.textContent = 'APK (Full Version)';
             return;
@@ -478,14 +492,15 @@
           }
 
           if (live === 'apk') {
-            liveContext.textContent = 'You are on APK (Full Version). Install updates below when a new version is released.';
+            liveContext.textContent = 'You are on the full Android app. Install updates below when a new version is released.';
           } else if (live === 'pwa') {
-            liveContext.textContent = 'You are on PWA (Lite Version). Upgrade to APK (Full Version) below.';
+            liveContext.textContent = 'You are on the PWA (home-screen). It stays current automatically — APK installs below are optional.';
           } else {
             liveContext.textContent = 'Install PWA (Lite Version) for quick access, or APK (Full Version) for guards in the field.';
           }
 
-          var apkRecord = state.apk;
+          // Live PWA session: never treat a stale APK cookie/localStorage as the current shell.
+          var apkRecord = live === 'pwa' ? null : state.apk;
           var apkInstalled = !!apkRecord;
           var apkNeedsUpdate = apkInstalled && compareVersions(apkRecord.version, latest.apkVersion) < 0;
 
@@ -516,12 +531,12 @@
           }
 
           var pwaRecord = state.pwa;
-          var pwaActive = !apkInstalled && (live === 'pwa' || !!pwaRecord);
+          var pwaActive = live === 'pwa' || (!apkInstalled && !!pwaRecord);
           if (pwaActive) {
             setBadge(pwaBadge, 'Installed', 'ok');
             var pwaVersion = pwaRecord ? pwaRecord.version : latest.webVersion;
             pwaDetail.textContent =
-              'PWA (Lite Version) detected (v' + pwaVersion + '). It auto-updates when guardr.co updates.';
+              'PWA detected (v' + pwaVersion + '). It auto-updates when guardr.co updates — often ahead of a manually installed APK.';
           } else {
             setBadge(pwaBadge, 'Not installed', 'muted');
             pwaDetail.textContent =
@@ -534,24 +549,27 @@
           .then(function (latest) {
             return nativeAppInfo().then(function (nativeInfo) {
               var apkDetailPending = null;
-              var state = clearStalePwaRecord(mergeCookieInstall(readState()));
-              state = applyQueryRegistration(state);
               var live = 'browser';
-
               if (nativeInfo && nativeInfo.version) {
                 live = 'apk';
-                var code = parseInt(nativeInfo.build, 10);
-                state = persistSurface('apk', nativeInfo.version, isNaN(code) ? undefined : code);
               } else if (isLikelyNativeApk()) {
                 live = 'apk';
-                if (state.apk) {
-                  // Already registered via cookie / prior app launch.
-                } else {
+              } else if (isLikelyPwaContext()) {
+                live = 'pwa';
+              }
+
+              var state = clearStalePwaRecord(mergeCookieInstall(readState(), live));
+              state = applyQueryRegistration(state);
+
+              if (nativeInfo && nativeInfo.version) {
+                var code = parseInt(nativeInfo.build, 10);
+                state = persistSurface('apk', nativeInfo.version, isNaN(code) ? undefined : code);
+              } else if (live === 'apk') {
+                if (!state.apk) {
                   apkDetailPending =
                     'Guardr Android app detected. Open the app once while online so we can read your APK version, or re-download below.';
                 }
-              } else if (isLikelyPwaContext()) {
-                live = 'pwa';
+              } else if (live === 'pwa') {
                 state = persistSurface('pwa', latest.webVersion);
               }
 

@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
+import { AppErrorBanner } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
@@ -1657,9 +1657,9 @@ export function AuthPage({
             <div className="auth-mobile-page-logo-wrap" aria-hidden>
               <Logo variant="wordmark" size={88} className="auth-mobile-page-logo" />
             </div>
-            <AppFlowSurface className="auth-mobile-page-form w-full max-w-md mx-auto animate-fade-in">
+            <div className="auth-mobile-page-form w-full max-w-md mx-auto animate-fade-in">
               {authFormBody}
-            </AppFlowSurface>
+            </div>
           </div>
         </div>
       ) : (
@@ -1725,9 +1725,9 @@ export function AuthPage({
       </div>
 
       <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
-        <AppFlowSurface className="w-full max-w-md animate-fade-in">
+        <div className="auth-form-surface-flat w-full max-w-md animate-fade-in">
           {authFormBody}
-        </AppFlowSurface>
+        </div>
       </div>
         </>
       )}

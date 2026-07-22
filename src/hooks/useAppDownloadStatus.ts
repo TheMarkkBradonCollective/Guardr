@@ -7,8 +7,8 @@ import {
   type DownloadVersionManifest,
 } from '../lib/downloadVersion';
 import { getInstalledAppVersion } from '../lib/platform/apkUpdate';
-import { isAndroidWebView, readInstallState, type InstallState } from '../lib/platform/installRegistry';
-import { isNativeShell, isStandaloneDisplay } from '../lib/platform/device';
+import { readInstallState, type InstallState, writeInstallState } from '../lib/platform/installRegistry';
+import { resolveDownloadLiveContext } from '../lib/resolveDownloadLiveContext';
 import type { DownloadLiveContext } from '../lib/installSurfaceCopy';
 
 export type { DownloadLiveContext };
@@ -26,16 +26,6 @@ export interface AppDownloadStatus {
   refresh: () => Promise<void>;
 }
 
-function resolveLiveContext(): DownloadLiveContext {
-  if (isNativeShell() || isAndroidWebView()) {
-    return 'apk';
-  }
-  if (isStandaloneDisplay()) {
-    return 'pwa';
-  }
-  return 'browser';
-}
-
 export function useAppDownloadStatus(): AppDownloadStatus {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,25 +39,43 @@ export function useAppDownloadStatus(): AppDownloadStatus {
     setError(null);
 
     try {
+      const live = resolveDownloadLiveContext();
       const [latest, nativeInfo] = await Promise.all([
         fetchDownloadVersionManifest(),
         getInstalledAppVersion(),
       ]);
 
-      const state = readInstallState();
-      if (nativeInfo?.version) {
-        state.apk = {
-          version: nativeInfo.version,
-          versionCode: nativeInfo.versionCode,
-          registeredAt: Date.now(),
+      let state = readInstallState();
+
+      if (live === 'pwa') {
+        // Stale APK cookie/localStorage from a previous install must not label this session as APK.
+        if (state.apk) {
+          delete state.apk;
+          writeInstallState(state);
+        }
+      }
+
+      if (nativeInfo?.version && live === 'apk') {
+        state = {
+          ...state,
+          apk: {
+            version: nativeInfo.version,
+            versionCode: nativeInfo.versionCode,
+            registeredAt: Date.now(),
+          },
         };
         delete state.pwa;
+        writeInstallState(state);
       }
 
       setManifest(latest);
       setInstallState(state);
-      setInstalledApkVersion(nativeInfo?.version ?? state.apk?.version ?? null);
-      setInstalledApkVersionCode(nativeInfo?.versionCode ?? state.apk?.versionCode);
+      setInstalledApkVersion(
+        live === 'apk' ? nativeInfo?.version ?? state.apk?.version ?? null : null
+      );
+      setInstalledApkVersionCode(
+        live === 'apk' ? nativeInfo?.versionCode ?? state.apk?.versionCode : undefined
+      );
     } catch (refreshError) {
       setError(refreshError instanceof Error ? refreshError.message : 'Could not check app version.');
     } finally {
@@ -79,16 +87,17 @@ export function useAppDownloadStatus(): AppDownloadStatus {
     void refresh();
   }, [refresh]);
 
-  const liveContext = resolveLiveContext();
-  const apkRecord = installState.apk;
-  const apkInstalled = Boolean(apkRecord?.version || installedApkVersion);
-  const effectiveApkVersion = installedApkVersion ?? apkRecord?.version ?? null;
+  const liveContext = resolveDownloadLiveContext();
+  const apkRecord = liveContext === 'apk' ? installState.apk : undefined;
+  const effectiveApkVersion =
+    liveContext === 'apk' ? installedApkVersion ?? apkRecord?.version ?? null : null;
+  const apkInstalled = Boolean(effectiveApkVersion);
   const apkNeedsUpdate =
     Boolean(manifest && effectiveApkVersion) &&
     compareVersions(effectiveApkVersion!, manifest!.apkVersion) < 0;
   const pwaActive =
-    !apkInstalled &&
-    (liveContext === 'pwa' || Boolean(installState.pwa?.version || isStandaloneDisplay()));
+    liveContext === 'pwa' ||
+    (liveContext === 'browser' && Boolean(installState.pwa?.version));
 
   return {
     loading,

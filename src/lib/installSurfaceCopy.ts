@@ -20,7 +20,7 @@ export function downloadScreenIntro(context: DownloadLiveContext): string {
     return 'Install the latest build when an update is available. Your account and data stay synced.';
   }
   if (context === 'pwa') {
-    return 'You are on the lite home-screen app. The full Android APK unlocks stronger alerts, GPS, and camera.';
+    return 'You are on the lite home-screen app. It auto-updates with guardr.co — upgrade below for stronger native alerts, GPS, and camera.';
   }
   return 'Pick how Guardr lives on your phone — lite web shortcut or full Android app.';
 }
