@@ -172,7 +172,9 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
 
 function parsePath(url: string): { pathname: string; searchParams: URLSearchParams } {
   try {
-    const parsed = new URL(url, window.location.origin);
+    const base =
+      typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(url, base);
     return {
       pathname: parsed.pathname.replace(/\/$/, '') || '/',
       searchParams: parsed.searchParams,
@@ -247,7 +249,8 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   }
   if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
   if (clientInvoiceRequestId) nested.clientInvoiceRequestId = clientInvoiceRequestId;
-  if (authView === 'sign-in' || authView === 'sign-up') nested.authView = authView;
+  const isRoleChoice = searchParams.get('pick') === 'role';
+  if (!isRoleChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
 
   return nested;
@@ -433,6 +436,54 @@ export function buildAppPath(route: AppRoute): string {
 
 export function readAppRouteFromWindow(): AppRoute | null {
   return parseAppRoute(stripEphemeralQueryParams(window.location.pathname + window.location.search));
+}
+
+/** Role picker at `/?auth=sign-in&pick=role` (distinct from the sign-in form URL). */
+export function readAuthChoiceFromUrl(url: string): AuthViewMode | null {
+  const { searchParams } = parsePath(url);
+  if (searchParams.get('pick') !== 'role') return null;
+  const auth = searchParams.get('auth');
+  if (auth === 'sign-in' || auth === 'sign-up') return auth;
+  return null;
+}
+
+export function readAuthChoiceFromWindow(): AuthViewMode | null {
+  if (typeof window === 'undefined') return null;
+  return readAuthChoiceFromUrl(window.location.pathname + window.location.search);
+}
+
+export function buildAuthChoicePath(mode: AuthViewMode): string {
+  return `/?auth=${mode}&pick=role`;
+}
+
+export function syncAuthChoiceRoute(mode: AuthViewMode, replace = false): void {
+  const nextPath = buildAuthChoicePath(mode);
+  const state = { authChoice: mode };
+  const pathMatches = currentBrowserPath() === nextPath;
+  const existingChoice = (window.history.state as { authChoice?: AuthViewMode } | null)?.authChoice;
+  const stateMatches = existingChoice === mode;
+
+  if (pathMatches && stateMatches) return;
+
+  if (replace || pathMatches) {
+    window.history.replaceState(state, '', nextPath);
+    return;
+  }
+
+  window.history.pushState(state, '', nextPath);
+}
+
+/** Pop one history entry when possible; otherwise run the fallback navigation. */
+export function navigateHistoryBack(fallback: () => void): void {
+  if (typeof window === 'undefined') {
+    fallback();
+    return;
+  }
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  fallback();
 }
 
 const LAST_ROUTE_STORAGE_KEY = 'guardr_last_app_route';

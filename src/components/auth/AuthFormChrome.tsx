@@ -18,7 +18,7 @@ export function AuthFormHeader({
   compact?: boolean;
   hideBadge?: boolean;
   center?: boolean;
-  variant?: 'page' | 'sheet' | 'desktop';
+  variant?: 'page' | 'sheet' | 'desktop' | 'role-choice';
 }) {
   const sheetTitle = isSignUp ? 'Create account' : 'Sign in';
   const pageTitle = isSignUp
@@ -75,6 +75,15 @@ export function AuthFormHeader({
         ) : null}
         <h2 className="auth-sheet-title">{title}</h2>
         <p className="auth-sheet-subtitle">{subtitle}</p>
+      </header>
+    );
+  }
+
+  if (variant === 'role-choice') {
+    return (
+      <header className="auth-form-page-header">
+        <h1 className="auth-form-page-title">{title}</h1>
+        <p className="auth-form-page-subtitle">{subtitle}</p>
       </header>
     );
   }

@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { isNativeShell } from './platform/device';
-import { readAppRouteFromWindow, syncAppRoute } from './appNavigation';
+import {
+  readAppRouteFromWindow,
+  readAuthChoiceFromWindow,
+  syncAppRoute,
+  syncAuthChoiceRoute,
+} from './appNavigation';
 import { attachCapacitorBackButtonListener } from './systemBackButton';
 
 /**
@@ -10,7 +15,13 @@ import { attachCapacitorBackButtonListener } from './systemBackButton';
  */
 export function useSystemBackButtonBootstrap(enabled: boolean): void {
   useEffect(() => {
-    if (!enabled || !isNativeShell()) return;
+    if (!isNativeShell()) return;
+
+    const authChoice = readAuthChoiceFromWindow();
+    if (authChoice) {
+      syncAuthChoiceRoute(authChoice, true);
+      return;
+    }
 
     const route = readAppRouteFromWindow();
     if (!route) return;
