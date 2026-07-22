@@ -43,6 +43,9 @@ test('Support ranks below Moderator with monitoring defaults', () => {
   assert.deepEqual(getDefaultStaffRolePermissions('Support'), [
     'moderator.review_reports',
     'moderator.monitor_activity',
+    'moderator.access_support_inbox',
+    'moderator.access_messages',
+    'moderator.view_violations',
   ]);
 });
 
