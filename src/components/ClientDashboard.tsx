@@ -137,6 +137,7 @@ interface ClientDashboardProps {
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
   requestsSelectedId?: string | null;
   requestsJobTab?: 'open' | 'scheduled' | 'completed' | 'missed';
+  onRequestsJobTabChange?: (tab: 'open' | 'scheduled' | 'completed' | 'missed') => void;
   clientInvoices?: ClientInvoice[];
   onInvoiceRequestIdChange?: (requestId: string | null) => void;
   invoiceRequestId?: string | null;
@@ -223,6 +224,7 @@ export function ClientDashboard({
   onRequestsSelectedIdChange,
   requestsSelectedId = null,
   requestsJobTab = 'open',
+  onRequestsJobTabChange,
   clientInvoices = [],
   onInvoiceRequestIdChange,
   invoiceRequestId = null,
@@ -743,6 +745,7 @@ export function ClientDashboard({
         onSelectedJobIdChange={onRequestsSelectedIdChange}
         initialSelectedId={requestsSelectedId}
         initialJobTab={requestsJobTab}
+        onJobTabChange={onRequestsJobTabChange}
       />
       </>,
       'client-request'

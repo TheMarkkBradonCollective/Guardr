@@ -138,11 +138,12 @@ export function ClientInvoiceScreen({
       <AppScreen className="app-full-page-detail pb-8">
         <AppSubScreenHeader
           title="Invoice"
+          hideTitle
           onBack={() => onSelectRequestId?.(null)}
           backLabel="Invoices"
         />
         <div className="px-5 space-y-5">
-          <div className="rounded-2xl border border-brand-border bg-brand-surface/40 p-4 space-y-3">
+          <div className="staff-mgmt-detail-row space-y-3 py-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-brand-text-muted">Invoice</p>
@@ -175,11 +176,11 @@ export function ClientInvoiceScreen({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-brand-border overflow-hidden">
+          <div className="border-t border-brand-border">
             {selectedInvoice.lineItems.map((line) => (
               <div
                 key={`${line.description}-${line.amount}`}
-                className="flex items-start justify-between gap-3 px-4 py-3 border-b border-brand-border last:border-b-0"
+                className="flex items-start justify-between gap-3 py-3 border-b border-brand-border last:border-b-0"
               >
                 <div className="min-w-0">
                   <p className="text-sm text-brand-text">{line.description}</p>
@@ -192,7 +193,7 @@ export function ClientInvoiceScreen({
                 </p>
               </div>
             ))}
-            <div className="px-4 py-3 space-y-1 bg-brand-surface/30">
+            <div className="py-3 space-y-1">
               <div className="flex justify-between text-sm text-brand-text-muted">
                 <span>Subtotal</span>
                 <span>{formatInvoiceCurrency(selectedInvoice.subtotal)}</span>

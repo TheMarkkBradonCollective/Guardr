@@ -16,9 +16,9 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { GuardMyJobsDesktop } from './GuardMyJobsDesktop';
@@ -301,7 +301,12 @@ export function GuardMyJobsPanel({
   if (selectedJob) {
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} backLabel="My jobs" />
+        <AppSubScreenHeader
+          title={selectedJob.title}
+          hideTitle
+          onBack={() => updateSelectedId(null)}
+          backLabel="My jobs"
+        />
         <GuardJobDetailView
           job={selectedJob}
           guard={guard}
@@ -344,25 +349,17 @@ export function GuardMyJobsPanel({
 
   return (
     <AppScreen className="uber-jobs-screen h-full min-h-0">
-      {/* Uber-style: scrollable tab strip pinned at top */}
-      <div className="uber-jobs-tab-bar">
-        <div
-          className="flex gap-1.5 overflow-x-auto px-4 py-3"
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-        >
-          {tabOptions.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className="staff-filter-pill shrink-0 whitespace-nowrap"
-              data-active={activeTab === tab.id ? 'true' : undefined}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-              {tallies[tab.id] > 0 ? ` ${tallies[tab.id]}` : ''}
-            </button>
-          ))}
-        </div>
+      <div className="uber-jobs-tab-bar px-4 pt-2">
+        <ListFilterTabs
+          aria-label="Job status"
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as GuardJobsBrowseTab)}
+          tabs={tabOptions.map((tab) => ({
+            id: tab.id,
+            label: tab.label,
+            count: tallies[tab.id],
+          }))}
+        />
       </div>
 
       {/* Job list — Uber ride-selection style */}

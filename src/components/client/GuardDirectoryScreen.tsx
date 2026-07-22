@@ -208,7 +208,7 @@ export function GuardDirectoryScreen({
             </p>
           )}
           {selectedTeamJob && (
-            <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-2 text-sm">
+            <div className="staff-mgmt-detail-row space-y-2 text-sm py-3">
               <p className="font-semibold text-brand-text">{selectedTeam.jobTitle}</p>
               <p className="text-brand-text-muted">
                 {formatShiftRange(selectedTeamJob.startDate, selectedTeamJob.endDate)}
@@ -221,7 +221,7 @@ export function GuardDirectoryScreen({
             </div>
           )}
           {selectedTeam.kind === 'standing' && (
-            <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-1 text-sm">
+            <div className="staff-mgmt-detail-row space-y-1 text-sm py-3">
               <p className="font-semibold text-brand-text">Standing team</p>
               <p className="text-brand-text-muted">
                 {selectedTeam.memberCount} member{selectedTeam.memberCount !== 1 ? 's' : ''} including

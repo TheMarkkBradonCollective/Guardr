@@ -27,7 +27,8 @@ import {
 } from './GuardContractViolationDetail';
 import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { GuardPerformanceRewards } from './GuardPerformanceRewards';
-import { AppScreen, AppSegmentedControl } from '../ui/app/AppPrimitives';
+import { AppScreen } from '../ui/app/AppPrimitives';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { useDevice } from '../../lib/platform';
 import { WorkbenchEmpty, WorkbenchFlatSplit } from '../baseui/layout/WorkbenchLayout';
 
@@ -138,11 +139,12 @@ export function GuardPerformanceScreen({
   };
 
   const performanceTabs = (
-    <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-performance-toolbar">
-      <AppSegmentedControl<PerformanceViewTab>
-        options={performanceTabOptions}
-        value={activeTab}
-        onChange={handleTabChange}
+    <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-performance-toolbar px-1">
+      <ListFilterTabs
+        aria-label="Performance view"
+        activeId={activeTab}
+        onChange={(id) => handleTabChange(id as PerformanceViewTab)}
+        tabs={performanceTabOptions.map((tab) => ({ id: tab.id, label: tab.label }))}
       />
     </div>
   );

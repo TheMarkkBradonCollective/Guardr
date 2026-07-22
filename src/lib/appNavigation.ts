@@ -3,10 +3,26 @@ import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
 import { isGuardUserStatusActive } from './accountStatus';
 import { isGuardAccountActive } from './guardAccountActivation';
+import type { GuardJobsBrowseTab } from './guardJobsBrowse';
 import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
 import { isPerformanceFactorId } from './guardPerformanceFactorDetail';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
+
+export type ClientJobsTab = 'open' | 'scheduled' | 'completed' | 'missed';
+
+const CLIENT_JOBS_TABS = new Set<ClientJobsTab>(['open', 'scheduled', 'completed', 'missed']);
+const GUARD_JOBS_TABS = new Set<GuardJobsBrowseTab>(['available', 'scheduled', 'completed', 'missed']);
+
+function parseClientJobsTab(value: string | null): ClientJobsTab | undefined {
+  if (value && CLIENT_JOBS_TABS.has(value as ClientJobsTab)) return value as ClientJobsTab;
+  return undefined;
+}
+
+function parseGuardJobsTab(value: string | null): GuardJobsBrowseTab | undefined {
+  if (value && GUARD_JOBS_TABS.has(value as GuardJobsBrowseTab)) return value as GuardJobsBrowseTab;
+  return undefined;
+}
 
 export type AppRole = 'staff' | 'guard' | 'client';
 
@@ -59,6 +75,14 @@ export interface AppRoute {
   openJobChat?: boolean;
   /** Client invoices — selected job invoice */
   clientInvoiceRequestId?: string;
+  /** Client jobs list — filter tab */
+  clientJobsTab?: ClientJobsTab;
+  /** Client jobs list — selected request detail */
+  clientJobId?: string;
+  /** Guard jobs list / map browse — filter tab */
+  guardJobsTab?: GuardJobsBrowseTab;
+  /** Guard jobs list — selected job detail */
+  guardJobId?: string;
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
@@ -205,6 +229,10 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const staffApprovalQueue = searchParams.get('aq');
   const openJobChat = searchParams.get('chat');
   const clientInvoiceRequestId = searchParams.get('inv');
+  const clientJobsTab = parseClientJobsTab(searchParams.get('jt'));
+  const clientJobId = searchParams.get('cj');
+  const guardJobsTab = parseGuardJobsTab(searchParams.get('bt'));
+  const guardJobId = searchParams.get('gj');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
 
@@ -249,6 +277,10 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   }
   if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
   if (clientInvoiceRequestId) nested.clientInvoiceRequestId = clientInvoiceRequestId;
+  if (clientJobsTab) nested.clientJobsTab = clientJobsTab;
+  if (clientJobId) nested.clientJobId = clientJobId;
+  if (guardJobsTab) nested.guardJobsTab = guardJobsTab;
+  if (guardJobId) nested.guardJobId = guardJobId;
   const isRoleChoice = searchParams.get('pick') === 'role';
   if (!isRoleChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
@@ -277,6 +309,10 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffApprovalQueue) params.set('aq', route.staffApprovalQueue);
   if (route.openJobChat) params.set('chat', '1');
   if (route.clientInvoiceRequestId) params.set('inv', route.clientInvoiceRequestId);
+  if (route.clientJobsTab) params.set('jt', route.clientJobsTab);
+  if (route.clientJobId) params.set('cj', route.clientJobId);
+  if (route.guardJobsTab) params.set('bt', route.guardJobsTab);
+  if (route.guardJobId) params.set('gj', route.guardJobId);
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
   return params;
@@ -629,6 +665,8 @@ export function routeHasNestedSelection(route: AppRoute): boolean {
       route.performanceFactorId ||
       route.clientGuardId ||
       route.clientDirectGuardId ||
+      route.clientJobId ||
+      route.guardJobId ||
       route.jobChatRequestId ||
       route.teamChatRequestId ||
       route.supportTicketId ||
@@ -653,6 +691,8 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     performanceFactorId: undefined,
     clientGuardId: undefined,
     clientDirectGuardId: undefined,
+    clientJobId: undefined,
+    guardJobId: undefined,
     jobChatRequestId: undefined,
     teamChatRequestId: undefined,
     supportTicketId: undefined,
