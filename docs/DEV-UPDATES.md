@@ -3,11 +3,33 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, July 21, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.89**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.90**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — /mergeit + /updateit → v1.0.90
+
+**Auth navigation**
+- Sign-in/sign-up **Back** returns to role picker (not home)
+- Android/browser system back follows auth trail: home → role picker → sign-in form
+- Refresh keeps the same auth screen via URL state
+- Sign-in/sign-up forms match Uber-style role picker layout
+
+**Staff management / insights**
+- Management, platform, and insight pages use flat ops canvas (no grey card boxes in dark mode)
+- Inbox underline tabs (`StaffListFilterTabs`) on Stats, Violations, Disputes, Permissions, Clients, Payments, Agreements, Analytics, Guide, and related panels
+- Stats Guards sort uses scrollable tabs; Analytics unified under SLA vs Platform tabs
+
+**PR cleanup**
+- Merged #794 (auth back + role picker styling) and #795 (management flat ops + tabs)
+
+**Release:** **v1.0.90** (build **190**) — web + PWA cache (`guardr-cache-v1-0-90-beta`) + CI FCM APK
+
+**Supabase:** no new SQL.
 
 ---
 
