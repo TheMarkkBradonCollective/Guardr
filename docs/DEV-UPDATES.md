@@ -3,11 +3,30 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, July 22, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.92**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.93**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — /mergeit + /updateit → v1.0.93
+
+**PR cleanup**
+- No open PRs at start of this release; #807–#811 already on `main`
+
+**What this release packages**
+- Website desktop: no slide-up sheets / swipe confirms (kept on mobile, PWA, APK)
+- Locations ops Add CTA matches Jobs/Guards sidebar pattern
+- Locations tabs: **All / Active / Rejected / Archived** (Pending queue removed)
+- Locations enter catalog on staff job approval; reject blocks address reuse; private/unlist for clients
+- Black + white app icons (red **Lite** tag on PWA only; APK clean)
+- APK Full Version binary rebuilt to match web/PWA
+
+**Release:** **v1.0.93** (build **193**) — web + PWA cache (`guardr-cache-v1-0-93-beta`) + CI FCM APK
+
+**Supabase:** ensure `listed BOOLEAN NOT NULL DEFAULT true` on `job_locations` and `client_locations` (from #809). Run `complete_schema_setup.sql` / `ALTER … ADD COLUMN IF NOT EXISTS` if missing.
 
 ---
 
