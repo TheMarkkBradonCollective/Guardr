@@ -1,13 +1,34 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Tuesday, July 21, 2026  
+**Last updated:** Wednesday, July 22, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.90**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.91**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Wednesday, July 22, 2026 — /mergeit + /updateit → v1.0.91
+
+**Downloads page (brand match)**
+- Restyled [guardr.co/download](https://www.guardr.co/download) from sage-on-black cards to Uber-style black/white Guardr chrome (sticky black nav, flat panels, black CTAs)
+- In-app install screen CTAs/highlights no longer use emerald leftovers — black primary to match landing
+
+**Icons / permissions / chrome (already on main, CI fixed)**
+- Black + white app icons; red Lite tag on PWA only
+- Sidebar brand height matched to main header
+- Opaque toasts + expanded staff permissions catalog
+- CI Support defaults unit test fixed (#805)
+
+**PR cleanup**
+- No open PRs at start of this release; #805 already merged
+
+**Release:** **v1.0.91** (build **191**) — web + PWA cache (`guardr-cache-v1-0-91-beta`) + CI FCM APK
+
+**Supabase:** no new SQL.
 
 ---
 
