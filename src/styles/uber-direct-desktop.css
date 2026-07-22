@@ -169,16 +169,17 @@ html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-di
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
   background: transparent !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   color: var(--uber-text-muted, #6b6b6b) !important;
   min-height: auto !important;
-  padding-top: 18px !important;
-  padding-bottom: 6px !important;
+  padding-top: 14px !important;
+  padding-bottom: 4px !important;
   pointer-events: none;
   cursor: default;
+  opacity: 1 !important;
 }
 
 /* ─── Main content pane ───────────────────────────────────────────────────── */

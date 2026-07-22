@@ -580,6 +580,40 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility
   transition: background-color 120ms ease, color 120ms ease;
 }
 
+/* Section titles (DASHBOARD / OPERATIONS) — small labels, not page tabs */
+body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"] {
+  background: transparent !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  line-height: 14px !important;
+  color: var(--uber-text-muted, #6b6b6b) !important;
+  min-height: auto !important;
+  height: auto !important;
+  padding-top: 14px !important;
+  padding-bottom: 4px !important;
+  margin: 4px 0 0 !important;
+  border-radius: 0 !important;
+  pointer-events: none;
+  cursor: default;
+  opacity: 1 !important;
+}
+
+html.theme-dark body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+html.theme-dark body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+html.theme-dark body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+html.theme-dark body[data-view-surface$="-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+html.theme-dark body[data-view-surface="pwa-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"],
+html.theme-dark body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a[aria-disabled="true"] {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
 body[data-view-surface$="-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a > *,
 body[data-view-surface="pwa-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a > *,
 body[data-view-surface="native-mobile"] .uber-app-shell.mobility-shell .mobility-drawer [data-baseweb="side-nav"] a > *,

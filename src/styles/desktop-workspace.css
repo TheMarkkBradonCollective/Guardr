@@ -93,10 +93,10 @@ body[data-form-factor="desktop"] .desktop-nav-rail-section {
 }
 
 body[data-form-factor="desktop"] .desktop-nav-rail-section-label {
-  margin: 0.85rem 0.5rem 0.4rem;
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  margin: 0.85rem 0.5rem 0.35rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--brand-text-muted);
   opacity: 0.55;
