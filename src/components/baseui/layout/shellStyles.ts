@@ -47,8 +47,35 @@ export const shellNavOverrides = {
     },
   },
   NavItem: {
-    style: ({ $active, $theme }: { $active: boolean; $theme: Theme }) => {
+    style: ({
+      $active,
+      $disabled,
+      $theme,
+    }: {
+      $active: boolean;
+      $disabled?: boolean;
+      $theme: Theme;
+    }) => {
       const dark = isDarkShellTheme($theme);
+      if ($disabled) {
+        return {
+          borderRadius: 0,
+          marginLeft: '0',
+          marginRight: '0',
+          marginBottom: '0',
+          paddingLeft: '0',
+          paddingRight: '0',
+          backgroundColor: 'transparent',
+          backgroundImage: 'none',
+          border: 'none',
+          borderLeftWidth: 0,
+          borderLeftStyle: 'none',
+          borderLeftColor: 'transparent',
+          ':hover': {
+            backgroundColor: 'transparent',
+          },
+        };
+      }
       return {
         borderRadius: '8px',
         marginLeft: '0',
@@ -72,8 +99,38 @@ export const shellNavOverrides = {
     },
   },
   NavLink: {
-    style: ({ $active, $theme }: { $active: boolean; $theme: Theme }) => {
+    style: ({
+      $active,
+      $disabled,
+      $theme,
+    }: {
+      $active: boolean;
+      $disabled?: boolean;
+      $theme: Theme;
+    }) => {
       const dark = isDarkShellTheme($theme);
+      if ($disabled) {
+        return {
+          fontWeight: 700,
+          fontSize: '10px',
+          lineHeight: '14px',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase' as const,
+          paddingTop: '14px',
+          paddingBottom: '4px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+          minHeight: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          borderRadius: 0,
+          backgroundColor: 'transparent',
+          color: dark ? 'rgba(255,255,255,0.45)' : '#6b6b6b',
+          pointerEvents: 'none' as const,
+          cursor: 'default',
+          opacity: 1,
+        };
+      }
       return {
         fontWeight: $active ? 700 : 500,
         fontSize: '14px',
