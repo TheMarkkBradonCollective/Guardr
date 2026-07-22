@@ -263,8 +263,16 @@
       (function () {
         var STORAGE_KEY = 'guardr_install_v1';
 
+        function formatVersionLabel(version) {
+          var raw = String(version || '');
+          var base = raw.replace(/-beta$/i, '');
+          if (/-beta$/i.test(raw)) return 'beta v' + base;
+          return 'v' + base;
+        }
+
         function parseParts(version) {
-          return String(version || '0').split('.').map(function (n) {
+          var base = String(version || '0').split('-')[0];
+          return base.split('.').map(function (n) {
             var x = parseInt(n, 10);
             return isNaN(x) ? 0 : x;
           });
@@ -477,7 +485,7 @@
           var downloadCopy = document.getElementById('apk-download-copy');
 
           latestVersion.textContent =
-            'Latest APK (Full Version): v' + latest.apkVersion + ' (build ' + latest.apkVersionCode + ') · PWA (Lite Version): v' + latest.webVersion;
+            'Latest APK (Full Version): ' + formatVersionLabel(latest.apkVersion) + ' (build ' + latest.apkVersionCode + ') · PWA (Lite Version): ' + formatVersionLabel(latest.webVersion);
 
           if (latest.apkDirectUrl) {
             var directLink = document.getElementById('apk-direct-link');
@@ -514,20 +522,20 @@
           } else if (apkNeedsUpdate) {
             setBadge(apkBadge, 'Update available', 'warn');
             apkDetail.textContent =
-              'Installed APK v' + apkRecord.version + ' · Latest v' + latest.apkVersion +
+              'Installed APK ' + formatVersionLabel(apkRecord.version) + ' · Latest ' + formatVersionLabel(latest.apkVersion) +
               '. Download and install again to update (your data stays in your account).';
             downloadCopy.textContent = 'A newer APK is available. Download and reinstall to get the latest app shell, icons, and permissions.';
             downloadBtn.textContent = live === 'apk'
-              ? 'Install update (v' + latest.apkVersion + ')'
-              : 'Download update (v' + latest.apkVersion + ')';
+              ? 'Install update (' + formatVersionLabel(latest.apkVersion) + ')'
+              : 'Download update (' + formatVersionLabel(latest.apkVersion) + ')';
           } else {
             setBadge(apkBadge, 'Up to date', 'ok');
             apkDetail.textContent =
-              'Installed APK v' + apkRecord.version + ' matches the latest beta. ' +
+              'Installed APK ' + formatVersionLabel(apkRecord.version) + ' matches the latest beta. ' +
               'Re-download only if you reinstall on a new phone.';
             downloadBtn.textContent = live === 'apk'
-              ? 'Reinstall (v' + latest.apkVersion + ')'
-              : 'Re-download APK (v' + latest.apkVersion + ')';
+              ? 'Reinstall (' + formatVersionLabel(latest.apkVersion) + ')'
+              : 'Re-download APK (' + formatVersionLabel(latest.apkVersion) + ')';
           }
 
           var pwaRecord = state.pwa;
@@ -536,7 +544,7 @@
             setBadge(pwaBadge, 'Installed', 'ok');
             var pwaVersion = pwaRecord ? pwaRecord.version : latest.webVersion;
             pwaDetail.textContent =
-              'PWA detected (v' + pwaVersion + '). It auto-updates when guardr.co updates — often ahead of a manually installed APK.';
+              'PWA detected (' + formatVersionLabel(pwaVersion) + '). It auto-updates when guardr.co updates — often ahead of a manually installed APK.';
           } else {
             setBadge(pwaBadge, 'Not installed', 'muted');
             pwaDetail.textContent =

@@ -72,7 +72,7 @@ export function LoadingScreen() {
           margin: 0,
         }}
       >
-        v{formatAppVersion()}
+        {formatAppVersion()}
       </p>
 
       <style>{`
