@@ -17128,6 +17128,15 @@ html.theme-dark .availability-off-day-card.guard-factor-card:active {
   align-items: flex-start;
 }
 
+.guard-pref-type-switch {
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 2.9rem;
+}
+
 .guard-pref-type-card-top > :last-child {
   flex-shrink: 0;
   align-self: flex-start;

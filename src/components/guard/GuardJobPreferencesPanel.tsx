@@ -244,20 +244,22 @@ export function GuardJobPreferencesPanel({
                             <p className="guard-pref-type-title">{option.label}</p>
                             <JobTypeStatusBadge active={active} onboarded={onboarded} />
                           </div>
-                          <p className="guard-pref-type-desc">{option.description}</p>
-                          {vehicleBlocked ? (
-                            <p className="guard-pref-type-vehicle-note">
-                              {guardVehicleRequiredBlockMessage(guard, type)}
-                            </p>
-                          ) : null}
                         </div>
-                        <AppSwitch
-                          checked={active}
-                          disabled={saving || onboardingBusy || vehicleBlocked}
-                          onChange={() => handleToggle(type)}
-                          ariaLabel={`${option.label} job alerts`}
-                        />
+                        <div className="guard-pref-type-switch">
+                          <AppSwitch
+                            checked={active}
+                            disabled={saving || onboardingBusy || vehicleBlocked}
+                            onChange={() => handleToggle(type)}
+                            ariaLabel={`${option.label} job alerts`}
+                          />
+                        </div>
                       </div>
+                      <p className="guard-pref-type-desc">{option.description}</p>
+                      {vehicleBlocked ? (
+                        <p className="guard-pref-type-vehicle-note">
+                          {guardVehicleRequiredBlockMessage(guard, type)}
+                        </p>
+                      ) : null}
                       {!onboarded && (
                         <button
                           type="button"

@@ -13,7 +13,7 @@
   overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, #ffffff);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -136,7 +136,7 @@ button.app-list-row, a.app-list-row { cursor: pointer; }
 button.app-list-row:hover, a.app-list-row:hover { background: var(--uber-surface, #f6f6f6); }
 button.app-list-row:active, a.app-list-row:active { background: var(--uber-border, #eeeeee); }
 
-/* ─── Item cards — Uber row item (no rounded card) ───────────────────────── */
+/* ─── Item cards — bordered interactive tiles ────────────────────────────── */
 
 .app-item-card,
 .wf-list-card {
@@ -144,18 +144,16 @@ button.app-list-row:active, a.app-list-row:active { background: var(--uber-borde
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 16px 20px;
+  padding: 16px;
   background: var(--uber-bg, #fff);
-  border: none;
-  border-bottom: 1px solid var(--uber-border, #eeeeee);
-  border-radius: 0;
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
   box-shadow: none;
   text-align: left;
   font-family: inherit;
   color: var(--uber-text, #000);
 }
 
-/* First item in a stack: top border */
 .app-item-card:first-child,
 .wf-list-card:first-child {
   border-top: 1px solid var(--uber-border, #eeeeee);
@@ -167,57 +165,64 @@ button.app-item-card,
 a.app-item-card,
 .wf-list-card-interactive {
   cursor: pointer;
-  transition: background-color 100ms ease;
+  transition: border-color 100ms ease, box-shadow 100ms ease;
 }
 
 button.app-item-card:hover,
 a.app-item-card:hover,
 .wf-list-card-interactive:hover {
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, #fff);
+  border-color: color-mix(in srgb, var(--uber-text, #000) 28%, var(--uber-border, #eeeeee));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 button.app-item-card:active,
 a.app-item-card:active,
 .wf-list-card-interactive:active {
-  background: var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #fff);
 }
 
-/* Selected: left black bar + light bg — Uber's selected ride card */
+@media (hover: none) {
+  button.app-item-card:hover,
+  a.app-item-card:hover,
+  .wf-list-card-interactive:hover {
+    box-shadow: none;
+    border-color: var(--uber-border, #eeeeee);
+  }
+}
+
 .app-item-card-selected,
 .app-item-card.ring-2 {
-  border-left: 3px solid var(--uber-text, #000);
-  background: var(--uber-surface, #f6f6f6);
+  border: 1px solid var(--uber-text, #000);
+  background: var(--uber-bg, #fff);
   box-shadow: none;
 }
 
-/* Stack — stacked list with a single outer border */
 .app-item-card-stack {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  background: var(--uber-bg, #fff);
+  gap: 0.75rem;
+  background: transparent;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   border: none;
-  border-top: 1px solid var(--uber-border, #eeeeee);
+  padding: 0 1rem;
 }
 
 .app-item-card-stack .app-item-card,
 .app-item-card-stack .wf-list-card {
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  border-radius: 12px;
+  border: 1px solid var(--uber-border, #eeeeee);
 }
 
 .app-item-card-stack .app-item-card:first-child,
 .app-item-card-stack .wf-list-card:first-child {
-  border-top: none;
+  border-top: 1px solid var(--uber-border, #eeeeee);
 }
 
 .app-item-card-stack .app-item-card:last-child,
 .app-item-card-stack .wf-list-card:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
 }
 
 /* ─── Search bar — Uber booking/search style ─────────────────────────────── */
@@ -2049,4 +2054,125 @@ html.theme-dark .staff-filter-pill[data-active="true"] {
 
 .segmented-control-btn {
   min-width: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HARDEN — professional white canvas + clickable cards (wins over earlier rules)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-screen,
+.guard-tiered-screen,
+.guard-pref-body,
+.availability-body,
+.uber-jobs-screen,
+.uber-jobs-list {
+  background: var(--uber-bg, #ffffff) !important;
+}
+
+html.theme-dark .app-screen,
+html.theme-dark .guard-tiered-screen,
+html.theme-dark .guard-pref-body,
+html.theme-dark .availability-body,
+html.theme-dark .uber-jobs-screen,
+html.theme-dark .uber-jobs-list {
+  background: var(--uber-bg, #000000) !important;
+}
+
+.guard-factors-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  border-top: none !important;
+  padding: 0 1rem !important;
+}
+
+.guard-factor-card,
+button.guard-factor-card {
+  background: var(--uber-bg, #fff) !important;
+  border: 1px solid var(--uber-border, #eeeeee) !important;
+  border-radius: 12px !important;
+  border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
+  box-shadow: none !important;
+  padding: 14px 16px !important;
+}
+
+.guard-factor-card:hover,
+button.guard-factor-card:hover,
+.guard-factor-card:active,
+button.guard-factor-card:active {
+  background: var(--uber-bg, #fff) !important;
+  border-color: color-mix(in srgb, var(--uber-text, #000) 28%, var(--uber-border, #eeeeee)) !important;
+}
+
+.availability-day-cards {
+  gap: 0.75rem !important;
+}
+
+.availability-day-card.guard-factor-card,
+.availability-off-day-card.guard-factor-card,
+.availability-day-card.guard-factor-card:hover,
+.availability-off-day-card.guard-factor-card:hover,
+.availability-day-card.guard-factor-card:active,
+.availability-off-day-card.guard-factor-card:active {
+  background: var(--uber-bg, #fff) !important;
+  border: 1px solid var(--uber-border, #eeeeee) !important;
+  border-radius: 12px !important;
+}
+
+.availability-day-circle {
+  background: transparent !important;
+  border-color: var(--uber-border, #e2e2e2) !important;
+  color: var(--uber-text-muted, #6b6b6b) !important;
+}
+
+.availability-day-circle-on {
+  background: var(--uber-text, #000) !important;
+  border-color: var(--uber-text, #000) !important;
+  color: var(--uber-bg, #fff) !important;
+}
+
+.guard-pref-type-card {
+  background: var(--uber-bg, #fff) !important;
+  border: 1px solid var(--uber-border, #eeeeee) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.guard-pref-type-desc {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 0.55rem !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  white-space: normal !important;
+}
+
+.guard-contract-violations-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  padding: 0 1rem !important;
+  border-top: none !important;
+}
+
+.guard-contract-violations-row {
+  border: 1px solid var(--uber-border, #eeeeee) !important;
+  border-radius: 12px !important;
+  background: var(--uber-bg, #fff) !important;
+  padding: 1rem !important;
+}
+
+html.theme-dark .guard-factor-card,
+html.theme-dark button.guard-factor-card,
+html.theme-dark .availability-day-card.guard-factor-card,
+html.theme-dark .guard-pref-type-card,
+html.theme-dark .guard-contract-violations-row {
+  background: var(--uber-bg, #000) !important;
+  border-color: #2a2a2a !important;
+}
+
+html.theme-dark .guard-factor-card:hover,
+html.theme-dark button.guard-factor-card:hover {
+  background: var(--uber-bg, #000) !important;
 }
