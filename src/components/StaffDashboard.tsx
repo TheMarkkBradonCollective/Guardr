@@ -1177,7 +1177,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.locations!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.locations!.message}
-            placeholders={['Pending sites', 'Active locations', 'Shared places']}
+            placeholders={['Active locations', 'Rejected sites', 'Archived places']}
           />
         );
       case 'permissions':
