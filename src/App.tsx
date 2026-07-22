@@ -469,6 +469,8 @@ import {
   persistAppRoute,
   readAppRouteFromPopState,
   readAppRouteFromWindow,
+  readAuthChoiceFromUrl,
+  readAuthChoiceFromWindow,
   readLegalPageFromUrl,
   readLegalPageFromWindow,
   readGuideFromUrl,
@@ -476,6 +478,8 @@ import {
   resolveAppRouteForUser,
   stripEphemeralQueryParams,
   syncAppRoute,
+  syncAuthChoiceRoute,
+  navigateHistoryBack,
   syncGuidePage,
   syncLegalPage,
   type AppRole,
@@ -633,14 +637,19 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
-  const [isAuthView, setIsAuthView]       = useState(() => !!readAppRouteFromWindow()?.authView);
+  const [isAuthView, setIsAuthView]       = useState(() => {
+    if (readAuthChoiceFromWindow()) return false;
+    return !!readAppRouteFromWindow()?.authView;
+  });
   const [initialAuthRole, setInitialAuthRole] = useState<AuthViewRole>(
     () => readAppRouteFromWindow()?.authRole ?? 'client'
   );
   const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
-    () => readAppRouteFromWindow()?.authView ?? 'sign-in'
+    () => readAuthChoiceFromWindow() ?? readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
-  const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(null);
+  const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(
+    () => readAuthChoiceFromWindow()
+  );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [downloadPageOpen, setDownloadPageOpen] = useState(false);
   const [publicGuideOpen, setPublicGuideOpen] = useState(
@@ -1445,16 +1454,19 @@ export default function App() {
   const openAuthChoice = (mode: 'sign-in' | 'sign-up') => {
     setAuthChoiceMode(mode);
     setIsAuthView(false);
+    setInitialAuthMode(mode);
     if (typeof window !== 'undefined') {
-      window.history.pushState({ authChoice: mode }, '', `/?auth=${mode}&pick=role`);
+      syncAuthChoiceRoute(mode);
     }
   };
 
   const closeAuthChoice = () => {
-    setAuthChoiceMode(null);
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({ home: true }, '', '/');
-    }
+    navigateHistoryBack(() => {
+      setAuthChoiceMode(null);
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({ home: true }, '', '/');
+      }
+    });
   };
 
   const navigateToAuth = (role?: AuthViewRole, mode?: AuthViewMode) => {
@@ -1475,7 +1487,11 @@ export default function App() {
   };
 
   const backToAuthRoleChoice = () => {
-    openAuthChoice(initialAuthMode);
+    navigateHistoryBack(() => {
+      syncAuthChoiceRoute(initialAuthMode, true);
+      setAuthChoiceMode(initialAuthMode);
+      setIsAuthView(false);
+    });
   };
 
   const openLegalPage = (page: LegalPageId) => {
@@ -1598,20 +1614,23 @@ export default function App() {
     const authChoiceFromState =
       options.source === 'popstate'
         ? (options.event?.state?.authChoice as 'sign-in' | 'sign-up' | undefined)
-        : undefined;
-    const authChoiceQuery = strippedUrl.includes('?') ? strippedUrl.split('?')[1] : '';
-    const authChoiceParams = new URLSearchParams(authChoiceQuery);
-    const authChoiceFromUrl =
-      authChoiceParams.get('pick') === 'role' &&
-      (authChoiceParams.get('auth') === 'sign-up' || authChoiceParams.get('auth') === 'sign-in')
-        ? (authChoiceParams.get('auth') as 'sign-in' | 'sign-up')
-        : null;
-    const authChoice = authChoiceFromState ?? authChoiceFromUrl;
+        : (typeof window !== 'undefined'
+            ? (window.history.state as { authChoice?: 'sign-in' | 'sign-up' } | null)?.authChoice
+            : undefined);
+    const authChoice = authChoiceFromState ?? readAuthChoiceFromUrl(strippedUrl);
 
     if (authChoice && !user) {
       setAuthChoiceMode(authChoice);
       setIsAuthView(false);
+      setInitialAuthMode(authChoice);
+      if (options.source !== 'popstate') {
+        syncAuthChoiceRoute(authChoice, true);
+      }
       return;
+    }
+
+    if (!user) {
+      setAuthChoiceMode(null);
     }
 
     const routeFromUrl = parseAppRoute(strippedUrl);
@@ -3398,8 +3417,13 @@ export default function App() {
         return true;
       }
 
-      if (isAuthView && isAppExperience()) {
-        closeAuthView();
+      if (!currentUser && isAuthView) {
+        backToAuthRoleChoice();
+        return true;
+      }
+
+      if (!currentUser && authChoiceMode) {
+        closeAuthChoice();
         return true;
       }
 
@@ -3413,6 +3437,8 @@ export default function App() {
     clientMessagesDetailOpen,
     clientTeamDetailOpen,
     isAuthView,
+    authChoiceMode,
+    initialAuthMode,
   ]);
 
   const handleChangeAccountPassword = async (newPassword: string) => {

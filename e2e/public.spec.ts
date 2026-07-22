@@ -20,6 +20,15 @@ test.describe('Guardr public pages', () => {
     await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
   });
 
+  test('role picker deep link survives refresh', async ({ page }) => {
+    await page.goto('/?auth=sign-in&pick=role');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
+    await page.reload();
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
+  });
+
   test('legal terms page is reachable', async ({ page }) => {
     await page.goto('/legal/terms');
     await waitForAppReady(page);
