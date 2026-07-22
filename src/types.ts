@@ -488,6 +488,11 @@ export interface JobLocation {
   longitude?: number;
   riskLevel: LocationRiskLevel;
   status: JobLocationStatus;
+  /**
+   * When false, the site is private: staff can manage it, but other clients
+   * cannot browse or reuse it. Owner client can still select it.
+   */
+  listed?: boolean;
   siteInstructions?: string;
   parkingInstructions?: string;
   accessInstructions?: string;
@@ -512,6 +517,8 @@ export interface ClientLocation {
   longitude?: number;
   riskLevel: LocationRiskLevel;
   status: ClientLocationStatus;
+  /** When false, keep this site private (not shared to other clients). */
+  listed?: boolean;
   siteInstructions?: string;
   /** Link to the shared platform JobLocation when this site is reused. */
   sharedLocationId?: string;

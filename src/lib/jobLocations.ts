@@ -7,16 +7,18 @@ import type {
   SecurityRequest,
   SessionUser,
 } from '../types';
-import { LOCATION_RISK_OPTIONS, canClientSetLocationRisk } from './clientLocations';
+import { LOCATION_RISK_OPTIONS } from './clientLocations';
 
 export { LOCATION_RISK_OPTIONS };
 
 export const JOB_LOCATION_STATUS_LABELS: Record<JobLocationStatus, string> = {
-  pending: 'Pending review',
+  pending: 'Pending',
   active: 'Active',
   rejected: 'Rejected',
   archived: 'Archived',
 };
+
+const PAST_JOB_STATUSES = new Set(['completed', 'closed', 'cancelled']);
 
 /** Normalize address+city into a stable reuse key across clients. */
 export function normalizePlaceKey(address: string, state?: string | null): string {
@@ -35,24 +37,63 @@ export function normalizePlaceKey(address: string, state?: string | null): strin
   return `${street}|${city}`;
 }
 
-export function findMatchingJobLocation(
+export function isLocationListed(location: Pick<JobLocation, 'listed'> | Pick<ClientLocation, 'listed'>): boolean {
+  return location.listed !== false;
+}
+
+/** Rejected addresses stay blocked — never reuse for other clients. */
+export function findRejectedJobLocation(
   locations: JobLocation[],
   address: string,
   state?: string | null,
   excludeId?: string
 ): JobLocation | undefined {
   const key = normalizePlaceKey(address, state);
+  const addressLower = address.trim().toLowerCase();
+  const cityLower = (state ?? '').trim().toLowerCase();
+  return locations.find((loc) => {
+    if (excludeId && loc.id === excludeId) return false;
+    if (loc.status !== 'rejected') return false;
+    if (loc.placeKey === key && key.length > 2 && !key.startsWith('|')) return true;
+    const sameAddress = loc.address.trim().toLowerCase() === addressLower;
+    const sameCity =
+      !cityLower || !loc.state || loc.state.trim().toLowerCase() === cityLower;
+    return sameAddress && sameCity;
+  });
+}
+
+/**
+ * Find a reusable shared place.
+ * Skips rejected (blocked), archived, and private sites owned by someone else.
+ */
+export function findMatchingJobLocation(
+  locations: JobLocation[],
+  address: string,
+  state?: string | null,
+  excludeId?: string,
+  opts?: { forClientId?: string }
+): JobLocation | undefined {
+  const key = normalizePlaceKey(address, state);
+  const canUse = (loc: JobLocation) => {
+    if (excludeId && loc.id === excludeId) return false;
+    if (loc.status === 'rejected' || loc.status === 'archived' || loc.status === 'pending') {
+      return false;
+    }
+    if (loc.status !== 'active') return false;
+    if (!isLocationListed(loc)) {
+      return opts?.forClientId != null && loc.createdByClientId === opts.forClientId;
+    }
+    return true;
+  };
+
   if (!key.startsWith('|') && key.length > 2) {
-    const byKey = locations.find(
-      (loc) => loc.id !== excludeId && loc.placeKey === key && loc.status !== 'rejected'
-    );
+    const byKey = locations.find((loc) => loc.placeKey === key && canUse(loc));
     if (byKey) return byKey;
   }
   const addressLower = address.trim().toLowerCase();
   const cityLower = (state ?? '').trim().toLowerCase();
   return locations.find((loc) => {
-    if (excludeId && loc.id === excludeId) return false;
-    if (loc.status === 'rejected') return false;
+    if (!canUse(loc)) return false;
     const sameAddress = loc.address.trim().toLowerCase() === addressLower;
     const sameCity =
       !cityLower ||
@@ -74,6 +115,7 @@ export function newJobLocationDraft(input: {
   accessInstructions?: string;
   createdByClientId?: string;
   status?: JobLocationStatus;
+  listed?: boolean;
   notes?: string;
 }): JobLocation {
   const now = new Date().toISOString();
@@ -87,7 +129,8 @@ export function newJobLocationDraft(input: {
     latitude: input.latitude,
     longitude: input.longitude,
     riskLevel: input.riskLevel ?? 'medium',
-    status: input.status ?? 'pending',
+    status: input.status ?? 'active',
+    listed: input.listed !== false,
     siteInstructions: input.siteInstructions?.trim() || undefined,
     parkingInstructions: input.parkingInstructions?.trim() || undefined,
     accessInstructions: input.accessInstructions?.trim() || undefined,
@@ -139,13 +182,62 @@ export function activeJobLocations(locations: JobLocation[]): JobLocation[] {
   return locations.filter((l) => l.status === 'active');
 }
 
+/** @deprecated Pending location queue removed — kept for legacy data reads. */
 export function pendingJobLocations(locations: JobLocation[]): JobLocation[] {
   return locations.filter((l) => l.status === 'pending');
+}
+
+export function locationHasUpcomingJobs(jobs: SecurityRequest[], locationId: string): boolean {
+  return jobs.some(
+    (job) => job.jobLocationId === locationId && !PAST_JOB_STATUSES.has(job.status)
+  );
+}
+
+/**
+ * Staff list bucket — Active = in catalog / in use;
+ * Archived = historically used with no upcoming jobs (or manually archived).
+ */
+export type JobLocationBrowseBucket = 'active' | 'rejected' | 'archived';
+
+export function jobLocationBrowseBucket(
+  location: JobLocation,
+  jobs: SecurityRequest[]
+): JobLocationBrowseBucket | null {
+  if (location.status === 'rejected') return 'rejected';
+  if (location.status === 'archived') return 'archived';
+  if (location.status === 'pending') return null;
+  if (location.status !== 'active') return null;
+
+  const used = countJobsUsingLocation(jobs, location.id) > 0;
+  const upcoming = locationHasUpcomingJobs(jobs, location.id);
+  if (used && !upcoming) return 'archived';
+  return 'active';
+}
+
+/** Shared sites clients can scroll / pick (active + listed, or own private). */
+export function browsableSharedLocations(
+  locations: JobLocation[],
+  clientId?: string
+): JobLocation[] {
+  return locations
+    .filter((loc) => {
+      if (loc.status !== 'active') return false;
+      if (!isLocationListed(loc)) {
+        return clientId != null && loc.createdByClientId === clientId;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const aTime = a.updatedAt ?? a.createdAt ?? '';
+      const bTime = b.updatedAt ?? b.createdAt ?? '';
+      return bTime.localeCompare(aTime);
+    });
 }
 
 /**
  * Upsert a shared location from a job or client site.
  * Reuses an existing place when the address matches so multiple clients share one record.
+ * Rejected addresses are blocked permanently for other clients.
  */
 export function ensureSharedJobLocation(
   locations: JobLocation[],
@@ -161,6 +253,7 @@ export function ensureSharedJobLocation(
     accessInstructions?: string;
     createdByClientId?: string;
     preferredStatus?: JobLocationStatus;
+    listed?: boolean;
   }
 ): { location: JobLocation; created: boolean; locations: JobLocation[] } {
   const address = input.address.trim();
@@ -168,7 +261,16 @@ export function ensureSharedJobLocation(
     throw new Error('Enter a valid address to save a location.');
   }
 
-  const existing = findMatchingJobLocation(locations, address, input.state);
+  const blocked = findRejectedJobLocation(locations, address, input.state);
+  if (blocked) {
+    throw new Error(
+      'This address was rejected by staff and cannot be used for new jobs or shared with other clients.'
+    );
+  }
+
+  const existing = findMatchingJobLocation(locations, address, input.state, undefined, {
+    forClientId: input.createdByClientId,
+  });
   if (existing) {
     const now = new Date().toISOString();
     const merged: JobLocation = {
@@ -184,6 +286,16 @@ export function ensureSharedJobLocation(
       accessInstructions: input.accessInstructions?.trim() || existing.accessInstructions,
       placeKey: normalizePlaceKey(address, input.state?.trim() || existing.state),
       createdByClientId: existing.createdByClientId ?? input.createdByClientId,
+      listed:
+        input.listed === false
+          ? false
+          : input.listed === true
+            ? existing.listed !== false
+            : existing.listed !== false,
+      status:
+        input.preferredStatus === 'active' && existing.status === 'pending'
+          ? 'active'
+          : existing.status,
       updatedAt: now,
     };
     return {
@@ -195,7 +307,8 @@ export function ensureSharedJobLocation(
 
   const draft = newJobLocationDraft({
     ...input,
-    status: input.preferredStatus ?? 'pending',
+    status: input.preferredStatus ?? 'active',
+    listed: input.listed !== false,
   });
   return { location: draft, created: true, locations: [draft, ...locations] };
 }
@@ -203,9 +316,8 @@ export function ensureSharedJobLocation(
 export function ensureSharedLocationFromClientLocation(
   locations: JobLocation[],
   clientLocation: ClientLocation,
-  client?: Pick<Client, 'trusted'> | null
+  _client?: Pick<Client, 'trusted'> | null
 ): { location: JobLocation; created: boolean; locations: JobLocation[] } {
-  const trusted = canClientSetLocationRisk(client ?? {});
   return ensureSharedJobLocation(locations, {
     name: clientLocation.name,
     address: clientLocation.address,
@@ -215,25 +327,26 @@ export function ensureSharedLocationFromClientLocation(
     riskLevel: clientLocation.riskLevel,
     siteInstructions: clientLocation.siteInstructions,
     createdByClientId: clientLocation.clientId,
-    preferredStatus:
-      clientLocation.status === 'active' || trusted
-        ? 'active'
-        : clientLocation.status === 'rejected'
-          ? 'rejected'
-          : 'pending',
+    preferredStatus: clientLocation.status === 'rejected' ? 'rejected' : 'active',
+    listed: clientLocation.listed !== false,
   });
 }
 
-export type JobLocationStatusFilter = 'all' | JobLocationStatus;
+/** Staff filter tabs — Pending queue removed. */
+export type JobLocationStatusFilter = 'all' | 'active' | 'rejected' | 'archived';
 
 export function filterJobLocations(
   locations: JobLocation[],
-  opts: { search?: string; status?: JobLocationStatusFilter }
+  opts: { search?: string; status?: JobLocationStatusFilter; jobs?: SecurityRequest[] }
 ): JobLocation[] {
   const q = opts.search?.trim().toLowerCase() ?? '';
+  const jobs = opts.jobs ?? [];
   return locations
     .filter((loc) => {
-      if (opts.status && opts.status !== 'all' && loc.status !== opts.status) return false;
+      if (opts.status && opts.status !== 'all') {
+        const bucket = jobLocationBrowseBucket(loc, jobs);
+        if (bucket !== opts.status) return false;
+      }
       if (!q) return true;
       return (
         loc.name.toLowerCase().includes(q) ||
@@ -277,7 +390,10 @@ export function jobLocationRowToRecord(row: Record<string, unknown>): JobLocatio
     longitude: row.longitude != null ? Number(row.longitude) : undefined,
     riskLevel: risk === 'high' || risk === 'low' ? risk : 'medium',
     status:
-      status === 'active' || status === 'rejected' || status === 'archived' ? status : 'pending',
+      status === 'active' || status === 'rejected' || status === 'archived' || status === 'pending'
+        ? status
+        : 'active',
+    listed: row.listed === false || row.listed === 'false' ? false : true,
     siteInstructions: row.site_instructions != null ? String(row.site_instructions) : undefined,
     parkingInstructions:
       row.parking_instructions != null ? String(row.parking_instructions) : undefined,
@@ -303,7 +419,8 @@ export function jobLocationToDbRow(location: JobLocation) {
     latitude: location.latitude ?? null,
     longitude: location.longitude ?? null,
     risk_level: location.riskLevel,
-    status: location.status,
+    status: location.status === 'pending' ? 'active' : location.status,
+    listed: location.listed !== false,
     site_instructions: location.siteInstructions ?? null,
     parking_instructions: location.parkingInstructions ?? null,
     access_instructions: location.accessInstructions ?? null,

@@ -24,6 +24,8 @@ export function newClientLocationDraft(
     longitude?: number;
     riskLevel?: LocationRiskLevel;
     siteInstructions?: string;
+    /** When false, staff can manage but other clients cannot reuse. */
+    listed?: boolean;
   },
   client?: Pick<Client, 'trusted'> | null
 ): ClientLocation {
@@ -38,7 +40,8 @@ export function newClientLocationDraft(
     latitude: input.latitude,
     longitude: input.longitude,
     riskLevel: input.riskLevel ?? 'medium',
-    status: trusted ? 'active' : 'pending',
+    status: 'active',
+    listed: input.listed !== false,
     siteInstructions: input.siteInstructions?.trim() || undefined,
     createdAt: now,
     reviewedAt: trusted ? now : undefined,
@@ -80,7 +83,7 @@ export function pendingClientLocations(locations: ClientLocation[]): ClientLocat
 export function locationStatusLabel(status: ClientLocationStatus): string {
   switch (status) {
     case 'pending':
-      return 'Pending staff approval';
+      return 'Saved';
     case 'active':
       return 'Active';
     case 'rejected':

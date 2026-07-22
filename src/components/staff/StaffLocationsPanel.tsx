@@ -18,8 +18,9 @@ import {
   countJobsUsingLocation,
   filterJobLocations,
   findMatchingJobLocation,
+  isLocationListed,
+  jobLocationBrowseBucket,
   newJobLocationDraft,
-  pendingJobLocations,
   rejectJobLocation,
   type JobLocationStatusFilter,
 } from '../../lib/jobLocations';
@@ -65,6 +66,7 @@ function emptyDraft(): {
   parkingInstructions: string;
   accessInstructions: string;
   notes: string;
+  listed: boolean;
   latitude?: number;
   longitude?: number;
 } {
@@ -77,6 +79,7 @@ function emptyDraft(): {
     parkingInstructions: '',
     accessInstructions: '',
     notes: '',
+    listed: true,
   };
 }
 
@@ -111,11 +114,19 @@ export function StaffLocationsPanel({
 
   useStaffShellCreateRegistration(canManage ? 'location' : null, startCreate);
 
-  const pendingCount = pendingJobLocations(locations).length;
   const filtered = useMemo(
-    () => filterJobLocations(locations, { search, status: statusFilter }),
-    [locations, search, statusFilter]
+    () => filterJobLocations(locations, { search, status: statusFilter, jobs }),
+    [locations, search, statusFilter, jobs]
   );
+
+  const tabCounts = useMemo(() => {
+    const counts = { all: locations.length, active: 0, rejected: 0, archived: 0 };
+    for (const loc of locations) {
+      const bucket = jobLocationBrowseBucket(loc, jobs);
+      if (bucket) counts[bucket] += 1;
+    }
+    return counts;
+  }, [locations, jobs]);
 
   const selected = creating
     ? null
@@ -139,6 +150,7 @@ export function StaffLocationsPanel({
       parkingInstructions: selected.parkingInstructions ?? '',
       accessInstructions: selected.accessInstructions ?? '',
       notes: selected.notes ?? '',
+      listed: isLocationListed(selected),
       latitude: selected.latitude,
       longitude: selected.longitude,
     });
@@ -204,6 +216,7 @@ export function StaffLocationsPanel({
       parkingInstructions: draft.parkingInstructions,
       accessInstructions: draft.accessInstructions,
       notes: draft.notes,
+      listed: draft.listed,
       status: 'active',
     });
     await runSave(location, 'Location saved for reuse across jobs and clients.');
@@ -223,6 +236,7 @@ export function StaffLocationsPanel({
       latitude: draft.latitude,
       longitude: draft.longitude,
       riskLevel: draft.riskLevel,
+      listed: draft.listed,
       siteInstructions: draft.siteInstructions.trim() || undefined,
       parkingInstructions: draft.parkingInstructions.trim() || undefined,
       accessInstructions: draft.accessInstructions.trim() || undefined,
@@ -242,6 +256,7 @@ export function StaffLocationsPanel({
       parkingInstructions: next.parkingInstructions,
       accessInstructions: next.accessInstructions,
       notes: next.notes,
+      listed: next.listed,
       status: next.status,
       createdByClientId: next.createdByClientId,
     });
@@ -304,27 +319,10 @@ export function StaffLocationsPanel({
       activeId={statusFilter}
       onChange={(id) => setStatusFilter(id as JobLocationStatusFilter)}
       tabs={[
-        { id: 'all', label: 'All', count: locations.length },
-        {
-          id: 'pending',
-          label: 'Pending',
-          count: locations.filter((l) => l.status === 'pending').length,
-        },
-        {
-          id: 'active',
-          label: 'Active',
-          count: locations.filter((l) => l.status === 'active').length,
-        },
-        {
-          id: 'rejected',
-          label: 'Rejected',
-          count: locations.filter((l) => l.status === 'rejected').length,
-        },
-        {
-          id: 'archived',
-          label: 'Archived',
-          count: locations.filter((l) => l.status === 'archived').length,
-        },
+        { id: 'all', label: 'All', count: tabCounts.all },
+        { id: 'active', label: 'Active', count: tabCounts.active },
+        { id: 'rejected', label: 'Rejected', count: tabCounts.rejected },
+        { id: 'archived', label: 'Archived', count: tabCounts.archived },
       ]}
     />
   );
@@ -333,9 +331,20 @@ export function StaffLocationsPanel({
     <div className="space-y-4">
       {!creating && selected && (
         <div className="flex flex-wrap items-center gap-2">
-          <WfBadge tone={STATUS_TONES[selected.status]}>
-            {JOB_LOCATION_STATUS_LABELS[selected.status]}
+          <WfBadge
+            tone={
+              STATUS_TONES[
+                jobLocationBrowseBucket(selected, jobs) === 'archived' && selected.status === 'active'
+                  ? 'archived'
+                  : selected.status
+              ]
+            }
+          >
+            {jobLocationBrowseBucket(selected, jobs) === 'archived' && selected.status === 'active'
+              ? 'Archived'
+              : JOB_LOCATION_STATUS_LABELS[selected.status]}
           </WfBadge>
+          {!isLocationListed(selected) && <WfBadge tone="muted">Private</WfBadge>}
           <span className="text-xs text-brand-text-muted">
             {jobCount} job{jobCount === 1 ? '' : 's'} · {clientCount} client
             {clientCount === 1 ? '' : 's'}
@@ -408,6 +417,22 @@ export function StaffLocationsPanel({
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <span className="uber-label">Listing</span>
+        <label className="flex items-start gap-2 text-sm text-brand-text">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={!draft.listed}
+            onChange={(e) => setDraft((prev) => ({ ...prev, listed: !e.target.checked }))}
+          />
+          <span>
+            Private location — staff can manage it, but other clients cannot browse or reuse this
+            address.
+          </span>
+        </label>
+      </div>
+
       <JobLocationCoordsFields
         latitude={draft.latitude}
         longitude={draft.longitude}
@@ -475,19 +500,19 @@ export function StaffLocationsPanel({
             <AppButton variant="primary" size="sm" disabled={busy || !selected} onClick={() => void handleUpdate()}>
               {busy ? 'Saving…' : 'Save changes'}
             </AppButton>
-            {selected?.status === 'pending' && (
-              <>
-                <AppButton variant="outline" size="sm" disabled={busy} onClick={() => void handleApprove()}>
-                  Approve
-                </AppButton>
-                <AppButton variant="outline" size="sm" disabled={busy} onClick={() => void handleReject()}>
-                  Reject
-                </AppButton>
-              </>
+            {selected && selected.status !== 'rejected' && (
+              <AppButton variant="outline" size="sm" disabled={busy} onClick={() => void handleReject()}>
+                Reject address
+              </AppButton>
             )}
-            {selected?.status === 'active' && (
+            {(selected?.status === 'active' || selected?.status === 'pending') && (
               <AppButton variant="outline" size="sm" disabled={busy} onClick={() => void handleArchive()}>
                 Archive
+              </AppButton>
+            )}
+            {selected?.status === 'pending' && (
+              <AppButton variant="outline" size="sm" disabled={busy} onClick={() => void handleApprove()}>
+                Activate
               </AppButton>
             )}
             {(selected?.status === 'archived' || selected?.status === 'rejected') && (
@@ -545,9 +570,20 @@ export function StaffLocationsPanel({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-sm truncate">{loc.name}</p>
-                    <WfBadge tone={STATUS_TONES[loc.status]}>
-                      {JOB_LOCATION_STATUS_LABELS[loc.status]}
+                    <WfBadge
+                      tone={
+                        STATUS_TONES[
+                          jobLocationBrowseBucket(loc, jobs) === 'archived' && loc.status === 'active'
+                            ? 'archived'
+                            : loc.status
+                        ]
+                      }
+                    >
+                      {jobLocationBrowseBucket(loc, jobs) === 'archived' && loc.status === 'active'
+                        ? 'Archived'
+                        : JOB_LOCATION_STATUS_LABELS[loc.status]}
                     </WfBadge>
+                    {!isLocationListed(loc) ? <WfBadge tone="muted">Private</WfBadge> : null}
                   </div>
                   <p className="text-xs text-brand-text-muted mt-0.5 truncate">{loc.address}</p>
                   <p className="text-xs text-brand-text-muted mt-1">
@@ -571,7 +607,7 @@ export function StaffLocationsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Quality control"
-            subtitle="Manage reusable job sites. Matching addresses are shared when another client uses the same place."
+            subtitle="Sites are added when staff approve client jobs. Reject blocks the address for other clients; archived means used before with no upcoming jobs; private stays staff-only."
             actions={
               <WfSearchBar
                 value={search}
@@ -583,14 +619,9 @@ export function StaffLocationsPanel({
           />
         }
       >
-        {pendingCount > 0 && (
-          <p className="text-sm text-brand-text-muted mb-3">
-            {pendingCount} location{pendingCount === 1 ? '' : 's'} awaiting staff approval.
-          </p>
-        )}
         <div className="mb-4">{filterTabs}</div>
         {locations.length === 0 && !creating ? (
-          <WorkbenchEmpty message="No saved locations yet. Use + Add location in the sidebar, or wait for clients to submit locations for review." />
+          <WorkbenchEmpty message="No saved locations yet. Approve a client job to add its site, or use + Add location." />
         ) : (
           <WorkbenchSplit
             list={list}
@@ -646,11 +677,6 @@ export function StaffLocationsPanel({
         </>
       }
     >
-      {pendingCount > 0 && (
-        <p className="text-sm text-brand-text-muted mb-3">
-          {pendingCount} location{pendingCount === 1 ? '' : 's'} awaiting staff approval.
-        </p>
-      )}
       {list}
     </StaffOpsPageShell>
   );

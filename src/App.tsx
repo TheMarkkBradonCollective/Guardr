@@ -2312,7 +2312,8 @@ export default function App() {
           latitude: row.latitude != null ? Number(row.latitude) : undefined,
           longitude: row.longitude != null ? Number(row.longitude) : undefined,
           riskLevel: row.risk_level === 'high' || row.risk_level === 'low' ? row.risk_level : 'medium',
-          status: row.status === 'active' || row.status === 'rejected' ? row.status : 'pending',
+          status: row.status === 'rejected' ? 'rejected' : 'active',
+          listed: row.listed === false || row.listed === 'false' ? false : true,
           siteInstructions: row.site_instructions ?? undefined,
           sharedLocationId: row.shared_location_id ?? undefined,
           createdAt: row.created_at ?? undefined,
@@ -6316,7 +6317,8 @@ export default function App() {
         latitude: linked.latitude ?? null,
         longitude: linked.longitude ?? null,
         risk_level: linked.riskLevel,
-        status: linked.status,
+        status: linked.status === 'pending' ? 'active' : linked.status,
+        listed: linked.listed !== false,
         site_instructions: linked.siteInstructions ?? null,
         shared_location_id: linked.sharedLocationId ?? null,
         created_at: linked.createdAt ?? new Date().toISOString(),
@@ -7023,8 +7025,12 @@ export default function App() {
     const openedAt = initialStatus === 'open' ? new Date().toISOString() : undefined;
 
     let linkedJobLocationId = newRequest.jobLocationId;
-    if (address.trim().length >= 4) {
+    // Shared catalog entries are added when the job is open (staff-approved or auto-published).
+    if (address.trim().length >= 4 && initialStatus === 'open') {
       try {
+        const selectedClientLoc = newRequest.clientLocationId
+          ? clientLocations.find((l) => l.id === newRequest.clientLocationId)
+          : undefined;
         const ensured = ensureSharedJobLocation(jobLocations, {
           name: siteName || address,
           address,
@@ -7036,8 +7042,8 @@ export default function App() {
           parkingInstructions: newRequest.parkingInstructions,
           accessInstructions: newRequest.accessInstructions,
           createdByClientId: currentUser?.id,
-          preferredStatus:
-            newRequest.locationRiskLevel && clientIsTrusted ? 'active' : 'pending',
+          preferredStatus: 'active',
+          listed: selectedClientLoc?.listed !== false,
         });
         setJobLocations(ensured.locations);
         linkedJobLocationId = ensured.location.id;
@@ -7050,7 +7056,9 @@ export default function App() {
           }
         }
       } catch (err) {
-        console.warn('Could not link shared job location:', err);
+        const message = err instanceof Error ? err.message : 'Could not link shared job location.';
+        appToast(message, 'error');
+        return;
       }
     }
 
@@ -7322,7 +7330,9 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.warn('Could not link shared job location on staff create:', err);
+      throw err instanceof Error
+        ? err
+        : new Error('Could not link shared job location on staff create.');
     }
 
     const freshJob: SecurityRequest = {
@@ -8819,11 +8829,49 @@ export default function App() {
       return;
     }
     const openedAt = new Date().toISOString();
+    let linkedJobLocationId = job.jobLocationId;
+    if ((job.address ?? '').trim().length >= 4) {
+      try {
+        const selectedClientLoc = job.clientLocationId
+          ? clientLocations.find((l) => l.id === job.clientLocationId)
+          : undefined;
+        const ensured = ensureSharedJobLocation(jobLocations, {
+          name: job.siteName || job.address,
+          address: job.address,
+          state: job.state,
+          latitude: mergedJob.latitude,
+          longitude: mergedJob.longitude,
+          riskLevel: job.locationRiskLevel,
+          siteInstructions: job.siteInstructions || job.description,
+          parkingInstructions: job.parkingInstructions,
+          accessInstructions: job.accessInstructions,
+          createdByClientId: job.clientId,
+          preferredStatus: 'active',
+          listed: selectedClientLoc?.listed !== false,
+        });
+        setJobLocations(ensured.locations);
+        linkedJobLocationId = ensured.location.id;
+        if (isDbConnected) {
+          const { error: locErr } = await supabase
+            .from('job_locations')
+            .upsert(jobLocationToDbRow(ensured.location));
+          if (locErr && locErr.code !== '42P01') {
+            console.warn('Job location upsert on approve:', locErr);
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not add job location.';
+        appToast(message, 'error');
+        return;
+      }
+    }
+
     const patch = {
       status: 'open' as const,
       openedAt,
       latitude: mergedJob.latitude,
       longitude: mergedJob.longitude,
+      jobLocationId: linkedJobLocationId,
     };
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...patch } : r));
     if (isDbConnected) {
@@ -8832,6 +8880,7 @@ export default function App() {
         opened_at: openedAt,
         latitude: mergedJob.latitude,
         longitude: mergedJob.longitude,
+        job_location_id: linkedJobLocationId ?? null,
       }).eq('id', requestId);
     }
     if (job) {
@@ -13677,6 +13726,7 @@ export default function App() {
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}
               clientLocations={clientLocations}
+              jobLocations={jobLocations}
               onSaveClientLocation={handleSaveClientLocation}
               clientRecord={clientRecord}
               paymentGates={clientPaymentGatesMemo}
