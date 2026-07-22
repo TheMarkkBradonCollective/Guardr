@@ -205,7 +205,7 @@ export function GuardrDrawerShell({
                   boxShadow: sidebarVisible ? '8px 0 32px rgba(0, 0, 0, 0.12)' : 'none',
                   paddingTop: 'max(0px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)))',
                   paddingBottom: 'max(0px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
-                  // Keep brand header fixed — only the nav list scrolls.
+                  // Keep brand header fixed — nav + footer scroll together.
                   overflow: 'hidden',
                 }),
           },
@@ -307,26 +307,20 @@ export function GuardrDrawerShell({
         }}
       >
         <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
+        {/* Footer scrolls with nav — only the brand header stays locked. */}
+        {sidebarFooter ? (
+          <Block
+            className={isDesktopWorkspace ? 'uber-direct-sidebar-footer' : 'mobility-drawer-footer'}
+            paddingLeft="scale500"
+            paddingRight="scale500"
+            paddingTop="scale500"
+            paddingBottom="scale400"
+            minWidth={isDesktopWorkspace ? chrome.sidebarWidth : undefined}
+          >
+            {sidebarFooter}
+          </Block>
+        ) : null}
       </Block>
-
-      {sidebarFooter ? (
-        <Block
-          className={isDesktopWorkspace ? 'uber-direct-sidebar-footer' : undefined}
-          paddingLeft="scale500"
-          paddingRight="scale500"
-          paddingBottom="scale400"
-          minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
-          overrides={{
-            Block: {
-              style: {
-                flexShrink: 0,
-              },
-            },
-          }}
-        >
-          {sidebarFooter}
-        </Block>
-      ) : null}
     </Block>
   );
 
