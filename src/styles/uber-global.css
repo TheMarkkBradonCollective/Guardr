@@ -47,6 +47,23 @@ body[data-form-factor="desktop"] .dsk-auth-logo {
   filter: none !important;
 }
 
+/* Sage green — Signature Security Specialist parent brand mentions only. */
+.signature-security-brand {
+  color: #5E7B61;
+}
+
+html.theme-dark .signature-security-brand {
+  color: #7AAE7F;
+}
+
+.signature-security-brand:hover {
+  color: color-mix(in srgb, #5E7B61 82%, #000000);
+}
+
+html.theme-dark .signature-security-brand:hover {
+  color: color-mix(in srgb, #7AAE7F 88%, #ffffff);
+}
+
 /* ─── Primary buttons — Uber solid black ─────────────────────────────────── */
 
 .uber-button-primary,

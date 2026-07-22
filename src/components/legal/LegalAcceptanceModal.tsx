@@ -12,7 +12,8 @@ import {
   missingLegalDocuments,
   type LegalUserRole,
 } from '../../lib/legalAcceptance';
-import { LEGAL_ENTITY_NAME, SITE_NAME } from '../../lib/siteConfig';
+import { SITE_NAME } from '../../lib/siteConfig';
+import { LegalEntityName } from '../SignatureSecurityBrand';
 import { GuardrModal } from '../baseui/overlays/GuardrModal';
 import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from './LegalFooterLinks';
@@ -66,14 +67,9 @@ export function LegalAcceptanceModal({
       className="w-full max-w-lg"
     >
       <Block padding="scale800">
-        <LabelSmall
-          marginTop={0}
-          marginBottom="scale200"
-          $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}
-          color="contentSecondary"
-        >
-          {LEGAL_ENTITY_NAME}
-        </LabelSmall>
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-muted mb-2">
+          <LegalEntityName />
+        </p>
         <HeadingMedium id="legal-acceptance-title" marginTop={0} marginBottom="scale400">
           Marketplace agreements required
         </HeadingMedium>

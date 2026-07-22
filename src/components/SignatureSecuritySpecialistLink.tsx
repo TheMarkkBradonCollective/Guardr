@@ -3,6 +3,7 @@ import {
   SIGNATURE_SECURITY_SPECIALIST_NAME,
   SIGNATURE_SECURITY_SPECIALIST_URL,
 } from '../lib/siteConfig';
+import { SIGNATURE_SECURITY_BRAND_CLASS } from './SignatureSecurityBrand';
 
 interface SignatureSecuritySpecialistLinkProps {
   className?: string;
@@ -10,7 +11,7 @@ interface SignatureSecuritySpecialistLinkProps {
 }
 
 export function SignatureSecuritySpecialistLink({
-  className = 'text-brand-primary hover:underline transition-colors',
+  className = `${SIGNATURE_SECURITY_BRAND_CLASS} hover:underline transition-colors`,
   children,
 }: SignatureSecuritySpecialistLinkProps) {
   return (

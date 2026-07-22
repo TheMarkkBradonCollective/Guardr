@@ -38,7 +38,8 @@ import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
 import type { LegalPageId } from '../lib/legalContent';
-import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
+import { SITE_NAME } from '../lib/siteConfig';
+import { LegalEntityName } from './SignatureSecurityBrand';
 import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalContent';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { UberDirectTopHeader } from './baseui/layout/UberDirectTopHeader';
@@ -1534,7 +1535,7 @@ export function AuthPage({
                     ) : (
                       'Terms of Service and Privacy Policy'
                     )}
-                    . I understand {SITE_NAME} is a technology platform operated by {LEGAL_ENTITY_NAME},
+                    . I understand {SITE_NAME} is a technology platform operated by <LegalEntityName />,
                     not a security services provider or employer of guards. I also accept the{' '}
                     {requiredLegalDocumentsForRole(role)
                       .filter((id) => id !== 'terms' && id !== 'privacy')

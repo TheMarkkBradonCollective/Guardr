@@ -5,7 +5,7 @@ import { useStyletron } from 'baseui';
 import { BadgeCheck, Lock, MapPin, Zap } from 'lucide-react';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { LegalPageId } from '../../../lib/legalContent';
-import { LEGAL_ENTITY_NAME } from '../../../lib/siteConfig';
+import { LegalEntityName } from '../../../components/SignatureSecurityBrand';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
@@ -156,7 +156,7 @@ export function UberStyleLandingPage({
           gridGap="scale500"
         >
           <ParagraphMedium margin={0} color="contentSecondary" $style={{ fontSize: '13px' }}>
-            © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
+            © {new Date().getFullYear()} <LegalEntityName />
           </ParagraphMedium>
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
         </Block>
