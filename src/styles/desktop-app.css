@@ -850,7 +850,7 @@ body[data-form-factor="desktop"] .adm-app .guard-map-layout:has(.desktop-map-ins
   right: 22rem !important;
 }
 
-body[data-form-factor="desktop"] .adm-app .client-map-layout:has(.map-selection-layer, .desktop-map-inspector) .guardr-map-root {
+body[data-view-surface="browser-desktop"] .adm-app .client-map-layout:has(.map-selection-layer--desktop, .desktop-map-inspector) .guardr-map-root {
   right: min(22rem, 32vw) !important;
 }
 

@@ -840,19 +840,7 @@ export function RequestSecurityFlow({
 
       <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
         <div className="client-form-shell mx-auto">
-          {formFactor === 'desktop' ? (
-            step < 9 ? (
-              <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()}>
-                Continue
-                <ArrowRight className="w-4 h-4" />
-              </GuardrButton>
-            ) : (
-              <GuardrButton kind="primary" onClick={handleSubmit}>
-                Post job offer
-                <Check className="w-4 h-4" />
-              </GuardrButton>
-            )
-          ) : step < 9 ? (
+          {step < 9 ? (
             <GuardrButton
               kind="primary"
               onClick={goNext}

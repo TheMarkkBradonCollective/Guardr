@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { AppOverlaySheet } from '../motion/AppMotion';
+import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
 
 interface AppFormSheetProps {
   open: boolean;
@@ -11,7 +12,7 @@ interface AppFormSheetProps {
   ariaLabel?: string;
 }
 
-/** Bottom sheet for forms — white slide-up card over a dimmed page. */
+/** Bottom sheet for forms — slide-up on mobile / PWA / APK; centered dialog on website desktop. */
 export function AppFormSheet({
   open,
   onClose,
@@ -20,6 +21,9 @@ export function AppFormSheet({
   children,
   ariaLabel,
 }: AppFormSheetProps) {
+  const { viewSurface } = useDevice();
+  const gestureUi = prefersMobileGestureUi(viewSurface);
+
   return (
     <AppOverlaySheet
       open={open}
@@ -28,7 +32,7 @@ export function AppFormSheet({
       panelClassName="app-form-sheet-panel"
     >
       <div className="app-form-sheet-shell">
-        <div className="app-form-sheet-handle" aria-hidden />
+        {gestureUi ? <div className="app-form-sheet-handle" aria-hidden /> : null}
 
         <header className="app-form-sheet-header">
           <div className="min-w-0 flex-1">

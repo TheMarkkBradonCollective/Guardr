@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronRight } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { hapticConfirm } from '../../lib/platform/nativeHaptics';
+import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
 
 export type SlideToConfirmTone = 'primary' | 'success' | 'amber';
 
@@ -27,6 +28,12 @@ const TONE_CLASS: Record<SlideToConfirmTone, string> = {
   amber: 'slide-to-confirm-track-amber',
 };
 
+const BUTTON_TONE_CLASS: Record<SlideToConfirmTone, string> = {
+  primary: 'bg-brand-primary text-white hover:opacity-95',
+  success: 'bg-emerald-600 text-white hover:opacity-95',
+  amber: 'bg-amber-500 text-white hover:opacity-95',
+};
+
 export function SlideToConfirm({
   label,
   confirmedLabel = 'Done',
@@ -37,6 +44,8 @@ export function SlideToConfirm({
   compact = false,
   className = '',
 }: SlideToConfirmProps) {
+  const { viewSurface } = useDevice();
+  const gestureUi = prefersMobileGestureUi(viewSurface);
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
@@ -50,6 +59,7 @@ export function SlideToConfirm({
   const chevronOpacity = useTransform(x, [0, maxDrag * 0.3], [0.55, 0]);
 
   useEffect(() => {
+    if (!gestureUi) return;
     const el = trackRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
@@ -57,11 +67,29 @@ export function SlideToConfirm({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [gestureUi]);
 
   const snapBack = useCallback(() => {
     animate(x, 0, { type: 'spring', stiffness: 520, damping: 36 });
   }, [x]);
+
+  const runConfirm = useCallback(async () => {
+    if (disabled || busy || confirmed) return;
+    setBusy(true);
+    try {
+      await onConfirm();
+      void hapticConfirm();
+      setConfirmed(true);
+      window.setTimeout(() => {
+        setConfirmed(false);
+        x.set(0);
+      }, 1400);
+    } catch {
+      snapBack();
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, confirmed, disabled, onConfirm, snapBack, x]);
 
   const tryConfirm = useCallback(async () => {
     if (disabled || busy || confirmed) return;
@@ -106,6 +134,27 @@ export function SlideToConfirm({
     dragging.current = false;
     void tryConfirm();
   };
+
+  // Website desktop: primary button — swipe stays on mobile / PWA / APK.
+  if (!gestureUi) {
+    const buttonLabel = label.replace(/^Slide to\s+/i, '').trim() || label;
+    return (
+      <div className={`slide-to-confirm-root ${className}`.trim()}>
+        <button
+          type="button"
+          className={`w-full rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed ${
+            compact ? 'h-10 text-sm px-4' : 'h-12 text-base px-5'
+          } ${BUTTON_TONE_CLASS[tone]}`}
+          disabled={disabled || busy || confirmed}
+          onClick={() => void runConfirm()}
+          aria-label={label}
+        >
+          {confirmed ? confirmedLabel : buttonLabel}
+        </button>
+        {disabled && disabledHint ? <p className="slide-to-confirm-hint">{disabledHint}</p> : null}
+      </div>
+    );
+  }
 
   return (
     <div className={`slide-to-confirm-root ${className}`.trim()}>
