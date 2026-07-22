@@ -131,8 +131,8 @@ export function ClientLocationsPanel({
         </div>
       )}
 
-      <div className="rounded-2xl border border-brand-border p-4 space-y-3">
-        <p className="uber-label flex items-center gap-2">
+      <div className="staff-mgmt-section space-y-3">
+        <p className="staff-mgmt-section-title flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add location
         </p>

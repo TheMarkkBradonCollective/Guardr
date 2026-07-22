@@ -10,9 +10,9 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { ClientRequestsDesktop } from './ClientRequestsDesktop';
@@ -72,6 +72,7 @@ interface ClientRequestsListProps {
   onSelectedJobIdChange?: (jobId: string | null) => void;
   initialSelectedId?: string | null;
   initialJobTab?: JobTab;
+  onJobTabChange?: (tab: JobTab) => void;
   feeConfig?: import('../../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
     requestId: string,
@@ -147,6 +148,7 @@ export function ClientRequestsList({
   onSelectedJobIdChange,
   initialSelectedId = null,
   initialJobTab = 'open',
+  onJobTabChange,
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
@@ -154,13 +156,22 @@ export function ClientRequestsList({
 }: ClientRequestsListProps) {
   const { formFactor } = useDevice();
   const billingSettings = crewSettings ?? teamLeadSettings;
-  const [activeTab, setActiveTab] = useState<JobTab>('open');
+  const [activeTab, setActiveTabState] = useState<JobTab>(initialJobTab);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
 
   useEffect(() => {
     setSelectedId(initialSelectedId);
   }, [initialSelectedId]);
+
+  useEffect(() => {
+    setActiveTabState(initialJobTab);
+  }, [initialJobTab]);
+
+  const setActiveTab = (tab: JobTab) => {
+    setActiveTabState(tab);
+    onJobTabChange?.(tab);
+  };
 
   const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
 
@@ -367,7 +378,12 @@ export function ClientRequestsList({
   if (selectedRequest) {
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedRequest.title} onBack={() => updateSelectedId(null)} backLabel="Requests" />
+        <AppSubScreenHeader
+          title={selectedRequest.title}
+          hideTitle
+          onBack={() => updateSelectedId(null)}
+          backLabel="Requests"
+        />
         <div className="px-5 pb-8">{renderSelectedRequestDetail(selectedRequest)}</div>
         <EditRequestSheet
           open={!!editingRequest}
@@ -390,16 +406,21 @@ export function ClientRequestsList({
           subtitle={jobsHeroSubtitle}
           segments={pieSegments}
           activeId={activeTab}
-          onSegmentSelect={(id) => setActiveTab(id)}
+          onSegmentSelect={(id) => setActiveTab(id as JobTab)}
           totalLabel="jobs"
         />
       </div>
 
-      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar">
-        <AppSegmentedControl<JobTab>
-          options={tabOptions}
-          value={activeTab}
-          onChange={setActiveTab}
+      <div className="guard-tiered-screen-toolbar crew-hub-sticky-head guard-jobs-toolbar px-1">
+        <ListFilterTabs
+          aria-label="Job status"
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as JobTab)}
+          tabs={tabOptions.map((tab) => ({
+            id: tab.id,
+            label: tab.label,
+            count: tallies[tab.id],
+          }))}
         />
       </div>
 

@@ -143,6 +143,7 @@ import {
   captureGuardSelfAuditOffline,
 } from '../lib/platform/guardOfflineCapture';
 import type { PerformanceFactorId } from '../lib/guardPerformanceFactorDetail';
+import { registerSystemBackHandler } from '../lib/systemBackButton';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
@@ -272,6 +273,11 @@ interface GuardDashboardProps {
   /** Controlled tab — when set, parent owns navigation state (URL sync). */
   tab?: GuardTab;
   onTabChange?: (tab: GuardTab) => void;
+  /** Controlled Jobs selection / browse tab (URL sync from App). */
+  selectedJobId?: string | null;
+  onSelectedJobIdChange?: (jobId: string | null) => void;
+  browseTab?: GuardJobsBrowseTab;
+  onBrowseTabChange?: (tab: GuardJobsBrowseTab) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   onOpenDownload?: () => void;
   tutorialAvailable?: boolean;
@@ -418,6 +424,10 @@ export function GuardDashboard({
   initialTab = 'map',
   tab: controlledTab,
   onTabChange,
+  selectedJobId: controlledSelectedJobId,
+  onSelectedJobIdChange,
+  browseTab: controlledBrowseTab,
+  onBrowseTabChange,
   onOpenLegal,
   onOpenDownload,
   tutorialAvailable,
@@ -455,7 +465,16 @@ export function GuardDashboard({
       setTab('activation');
     }
   }, [guard, tab, setTab]);
-  const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
+  const [guardSelectedJobIdInternal, setGuardSelectedJobIdInternal] = useState<string | null>(null);
+  const guardSelectedJobId =
+    controlledSelectedJobId !== undefined ? controlledSelectedJobId : guardSelectedJobIdInternal;
+  const setGuardSelectedJobId = useCallback(
+    (jobId: string | null) => {
+      if (controlledSelectedJobId === undefined) setGuardSelectedJobIdInternal(jobId);
+      onSelectedJobIdChange?.(jobId);
+    },
+    [controlledSelectedJobId, onSelectedJobIdChange]
+  );
   const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
   const [guardMessagesChrome, setGuardMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
   const [crewJobDetailOpen, setCrewJobDetailOpen] = useState(false);
@@ -465,7 +484,15 @@ export function GuardDashboard({
       setGuardMessagesChrome(EMPTY_MESSAGES_CHROME);
     }
   }, [tab]);
-  const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
+  const [guardBrowseTabInternal, setGuardBrowseTabInternal] = useState<GuardJobsBrowseTab>('available');
+  const guardBrowseTab = controlledBrowseTab ?? guardBrowseTabInternal;
+  const setGuardBrowseTab = useCallback(
+    (next: GuardJobsBrowseTab) => {
+      if (controlledBrowseTab === undefined) setGuardBrowseTabInternal(next);
+      onBrowseTabChange?.(next);
+    },
+    [controlledBrowseTab, onBrowseTabChange]
+  );
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
@@ -657,12 +684,12 @@ export function GuardDashboard({
     if (filter !== 'all') {
       setGuardBrowseTab(guardBrowseTabFromMapFilter(filter));
     }
-  }, []);
+  }, [setGuardBrowseTab]);
 
   const handleBrowseTabChange = useCallback((tab: GuardJobsBrowseTab) => {
     setGuardBrowseTab(tab);
     setMapStatusFilter(mapFilterFromBrowseTab(tab));
-  }, []);
+  }, [setGuardBrowseTab]);
 
   const handleGuardSelectedJobChange = useCallback(
     (jobId: string | null) => {
@@ -678,7 +705,7 @@ export function GuardDashboard({
       if (kind === 'available' || kind === 'direct') handleBrowseTabChange('available');
       else if (kind === 'scheduled') handleBrowseTabChange('scheduled');
     },
-    [browseJobLists.all, guard.id, handleBrowseTabChange]
+    [browseJobLists.all, guard.id, handleBrowseTabChange, setGuardSelectedJobId]
   );
 
   const userLocation = useUserLocation(activeTab === 'map');
@@ -754,6 +781,16 @@ export function GuardDashboard({
   }, [tab]);
 
   useEffect(() => {
+    return registerSystemBackHandler(() => {
+      if (guardMessagesDetailOpen) {
+        setGuardMessagesDetailOpen(false);
+        return true;
+      }
+      return false;
+    });
+  }, [guardMessagesDetailOpen]);
+
+  useEffect(() => {
     if (!guard.stripeConnectAccountId) return;
     getConnectAccountStatus(guard.stripeConnectAccountId)
       .then((s) => setConnectReady(s.payoutsEnabled && s.detailsSubmitted))
@@ -764,7 +801,7 @@ export function GuardDashboard({
     if (initialSelectedJobId && !openJobChat) {
       setGuardSelectedJobId(initialSelectedJobId);
     }
-  }, [initialSelectedJobId, openJobChat]);
+  }, [initialSelectedJobId, openJobChat, setGuardSelectedJobId]);
 
   useEffect(() => {
     if (tab === 'myJobs' && openJobChat && jobChatRequestId) {

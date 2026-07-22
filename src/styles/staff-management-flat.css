@@ -379,3 +379,63 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
 .uber-app-shell .staff-mgmt-panel .staff-analytics-panel .adm-week-chart {
   background: transparent !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLIENT / GUARD parity — flatten grey boxes to match staff ops canvas
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uber-app-shell .app-empty-state,
+.uber-app-shell .app-empty-state--dashed {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 1px dashed var(--uber-border, var(--brand-border)) !important;
+  box-shadow: none !important;
+}
+
+.uber-app-shell .app-hero-band {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  box-shadow: none !important;
+}
+
+.uber-app-shell .uber-jobs-empty,
+.uber-app-shell .uber-jobs-empty-icon {
+  background: transparent !important;
+}
+
+/* Layout-only surface panels (not semantic alerts) */
+.uber-app-shell .role-main .rounded-2xl.border.border-brand-border,
+.uber-app-shell .role-main .rounded-xl.border.border-brand-border,
+.uber-app-shell .uber-shell-content .rounded-2xl.border.border-brand-border,
+.uber-app-shell .uber-shell-content .rounded-xl.border.border-brand-border {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.uber-app-shell .role-main .bg-brand-surface\/40,
+.uber-app-shell .role-main .bg-brand-surface\/30,
+.uber-app-shell .role-main .bg-brand-surface\/60,
+.uber-app-shell .uber-shell-content .bg-brand-surface\/40,
+.uber-app-shell .uber-shell-content .bg-brand-surface\/30,
+.uber-app-shell .uber-shell-content .bg-brand-surface\/60 {
+  background: transparent !important;
+}
+
+.uber-app-shell .staff-filter-pill {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.uber-app-shell .staff-filter-pill[data-active="true"] {
+  border-bottom-color: var(--uber-text, var(--brand-text)) !important;
+  font-weight: 700;
+}

@@ -484,6 +484,7 @@ import {
   syncLegalPage,
   type AppRole,
   type AppRoute,
+  type ClientJobsTab,
   type StaffGuardDetailTab,
   type AuthViewMode,
   type AuthViewRole,
@@ -797,19 +798,31 @@ export default function App() {
     () => initialRoute?.clientDirectGuardId ?? null
   );
   const [clientRequestsSelectedId, setClientRequestsSelectedIdState] = useState<string | null>(() => {
-    if (
-      initialRoute?.jobChatRequestId &&
-      !initialRoute.openJobChat &&
-      initialRoute.role === 'client' &&
-      initialRoute.clientView === 'requests'
-    ) {
-      return initialRoute.jobChatRequestId;
+    if (initialRoute?.role === 'client' && initialRoute.clientView === 'requests') {
+      if (initialRoute.clientJobId) return initialRoute.clientJobId;
+      if (initialRoute.jobChatRequestId && !initialRoute.openJobChat) {
+        return initialRoute.jobChatRequestId;
+      }
     }
     return null;
   });
-  const [clientRequestsJobTab, setClientRequestsJobTab] = useState<
-    'open' | 'scheduled' | 'completed' | 'missed'
-  >('open');
+  const [clientRequestsJobTab, setClientRequestsJobTabState] = useState<ClientJobsTab>(
+    () =>
+      initialRoute?.role === 'client' && initialRoute.clientJobsTab
+        ? initialRoute.clientJobsTab
+        : 'open'
+  );
+  const [guardSelectedJobId, setGuardSelectedJobIdState] = useState<string | null>(
+    () =>
+      initialRoute?.role === 'guard' ? initialRoute.guardJobId ?? null : null
+  );
+  const [guardBrowseTab, setGuardBrowseTabState] = useState<
+    import('./lib/guardJobsBrowse').GuardJobsBrowseTab
+  >(() =>
+    initialRoute?.role === 'guard' && initialRoute.guardJobsTab
+      ? initialRoute.guardJobsTab
+      : 'available'
+  );
   const [clientInvoiceRequestId, setClientInvoiceRequestIdState] = useState<string | null>(
     () =>
       initialRoute?.role === 'client' && initialRoute.clientView === 'invoices'
@@ -879,6 +892,15 @@ export default function App() {
       supportMode: supportMode ?? undefined,
       openJobChat: openJobChat || undefined,
       clientInvoiceRequestId: clientInvoiceRequestId ?? undefined,
+      clientJobsTab: clientView === 'requests' ? clientRequestsJobTab : undefined,
+      clientJobId:
+        clientView === 'requests' ? clientRequestsSelectedId ?? undefined : undefined,
+      guardJobsTab:
+        guardTab === 'myJobs' || guardTab === 'map' ? guardBrowseTab : undefined,
+      guardJobId:
+        guardTab === 'myJobs' || guardTab === 'map'
+          ? guardSelectedJobId ?? undefined
+          : undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
     };
@@ -926,11 +948,24 @@ export default function App() {
     } else if (route.clientView !== 'invoices') {
       setClientInvoiceRequestIdState(null);
     }
-    if (route.jobChatRequestId && !route.openJobChat) {
-      if (route.role === 'client' && route.clientView === 'requests') {
-        setClientRequestsSelectedIdState(route.jobChatRequestId);
-      }
-    } else if (!route.jobChatRequestId) {
+    if (route.clientJobsTab) {
+      setClientRequestsJobTabState(route.clientJobsTab);
+    }
+    if (route.guardJobsTab) {
+      setGuardBrowseTabState(route.guardJobsTab);
+    }
+    if (route.role === 'guard') {
+      setGuardSelectedJobIdState(route.guardJobId ?? null);
+    } else if (route.guardTab && route.guardTab !== 'myJobs' && route.guardTab !== 'map') {
+      setGuardSelectedJobIdState(null);
+    }
+    if (route.clientView === 'requests') {
+      const selected =
+        route.clientJobId ??
+        (route.jobChatRequestId && !route.openJobChat ? route.jobChatRequestId : null) ??
+        null;
+      setClientRequestsSelectedIdState(selected);
+    } else if (route.clientView) {
       setClientRequestsSelectedIdState(null);
     }
     if (route.authView) {
@@ -987,6 +1022,9 @@ export default function App() {
         jobChatRequestId: nextJobChatId,
         openJobChat: resolvedView === 'messages' && openJobChat ? true : undefined,
         clientInvoiceRequestId: nextInvoiceRequestId,
+        clientJobsTab: resolvedView === 'requests' ? clientRequestsJobTab : undefined,
+        clientJobId:
+          resolvedView === 'requests' ? clientRequestsSelectedId ?? undefined : undefined,
         supportTicketId: nextSupportId,
         supportSection:
           resolvedView === 'messages' || resolvedView === 'support' ? supportSection : undefined,
@@ -1067,11 +1105,16 @@ export default function App() {
     const keepsMessages = normalizedTab === 'messages';
     const keepsSupport = normalizedTab === 'support';
     const keepsMyJobs = normalizedTab === 'myJobs';
+    const keepsMap = normalizedTab === 'map';
+    const keepsJobBrowse = keepsMyJobs || keepsMap;
     const keepsJobChat = keepsMyJobs || keepsMessages;
     const keepOpenChat = keepsJobChat && openJobChat ? true : undefined;
     if (!keepsJobChat) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
+    }
+    if (!keepsJobBrowse) {
+      setGuardSelectedJobIdState(null);
     }
     if (!keepsMessages && !keepsSupport) {
       setSupportTicketIdState(null);
@@ -1088,10 +1131,40 @@ export default function App() {
         guardTab: normalizedTab,
         jobChatRequestId: keepsJobChat ? jobChatRequestId ?? undefined : undefined,
         openJobChat: keepOpenChat,
+        guardJobsTab: keepsJobBrowse ? guardBrowseTab : undefined,
+        guardJobId: keepsJobBrowse ? guardSelectedJobId ?? undefined : undefined,
         supportTicketId: keepsMessages || keepsSupport ? supportTicketId ?? undefined : undefined,
         supportSection: keepsMessages || keepsSupport ? supportSection : undefined,
         supportMode: keepsSupport ? supportMode ?? undefined : keepsMessages ? supportMode ?? undefined : undefined,
         performanceFactorId: keepsPerformance ? performanceFactorId ?? undefined : undefined,
+      })
+    );
+  };
+
+  const setGuardSelectedJobId = (jobId: string | null) => {
+    setGuardSelectedJobIdState(jobId);
+    const targetTab = guardTab === 'map' ? 'map' : 'myJobs';
+    if (jobId && guardTab !== 'map' && guardTab !== 'myJobs') {
+      setGuardTabState('myJobs');
+    }
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: targetTab,
+        guardJobId: jobId ?? undefined,
+        guardJobsTab: guardBrowseTab,
+      })
+    );
+  };
+
+  const setGuardBrowseTab = (tab: import('./lib/guardJobsBrowse').GuardJobsBrowseTab) => {
+    setGuardBrowseTabState(tab);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: guardTab === 'map' ? 'map' : 'myJobs',
+        guardJobsTab: tab,
+        guardJobId: guardSelectedJobId ?? undefined,
       })
     );
   };
@@ -1215,15 +1288,16 @@ export default function App() {
     if (role === 'client') {
       const openChat = options?.openChat ?? false;
       if (openChat) setClientViewState('messages');
-      if (requestId && clientView === 'requests' && !openChat) {
-        setClientRequestsSelectedIdState(requestId);
-      }
       syncAppRoute(
         buildAppRoute({
           role: 'client',
           clientView: openChat ? 'messages' : clientView,
           jobChatRequestId: requestId ?? undefined,
           openJobChat: openChat,
+          clientJobId:
+            !openChat && clientView === 'requests'
+              ? clientRequestsSelectedId ?? undefined
+              : undefined,
         })
       );
     }
@@ -3403,11 +3477,6 @@ export default function App() {
         return true;
       }
 
-      if (clientRequestsSelectedId) {
-        setClientRequestsSelectedIdState(null);
-        return true;
-      }
-
       if (clientMessagesDetailOpen) {
         setClientMessagesDetailOpen(false);
         return true;
@@ -3434,7 +3503,6 @@ export default function App() {
     passwordChangePromptOpen,
     currentUser,
     tutorialState,
-    clientRequestsSelectedId,
     clientMessagesDetailOpen,
     clientTeamDetailOpen,
     isAuthView,
@@ -13427,6 +13495,10 @@ export default function App() {
           guard={activeGuard}
           tab={resolvedGuardTab}
           onTabChange={setGuardTab}
+          selectedJobId={guardSelectedJobId}
+          onSelectedJobIdChange={setGuardSelectedJobId}
+          browseTab={guardBrowseTab}
+          onBrowseTabChange={setGuardBrowseTab}
           accountNotifications={accountNotificationMenuProps}
           standingCrewMembers={standingCrewMembers}
           onInviteStandingCrew={handleInviteStandingCrew}
@@ -13604,6 +13676,32 @@ export default function App() {
       );
     };
 
+    const setClientRequestsSelectedId = (jobId: string | null) => {
+      setClientRequestsSelectedIdState(jobId);
+      syncAppRoute(
+        buildAppRoute({
+          role: 'client',
+          clientView: 'requests',
+          clientJobId: jobId ?? undefined,
+          clientJobsTab: clientRequestsJobTab,
+          jobChatRequestId: undefined,
+          openJobChat: undefined,
+        })
+      );
+    };
+
+    const setClientRequestsJobTab = (tab: ClientJobsTab) => {
+      setClientRequestsJobTabState(tab);
+      syncAppRoute(
+        buildAppRoute({
+          role: 'client',
+          clientView: 'requests',
+          clientJobsTab: tab,
+          clientJobId: clientRequestsSelectedId ?? undefined,
+        })
+      );
+    };
+
     const clientHideHeader =
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
@@ -13755,9 +13853,10 @@ export default function App() {
               onSupportTicketIdChange={setSupportTicketId}
               onOpenSupportCompose={openClientSupportCompose}
               onOpenSupportReport={openClientSupportReport}
-              onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
+              onRequestsSelectedIdChange={setClientRequestsSelectedId}
               requestsSelectedId={clientRequestsSelectedId}
               requestsJobTab={clientRequestsJobTab}
+              onRequestsJobTabChange={setClientRequestsJobTab}
               clientInvoices={clientInvoices}
               invoiceRequestId={clientInvoiceRequestId}
               onInvoiceRequestIdChange={setClientInvoiceRequestId}

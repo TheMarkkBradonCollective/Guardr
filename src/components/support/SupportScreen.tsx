@@ -18,8 +18,8 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
 } from '../ui/app/AppPrimitives';
+import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { AppPageTransition } from '../ui/motion/AppMotion';
 import { ChevronRight, FileText, LifeBuoy } from 'lucide-react';
@@ -151,13 +151,14 @@ export function SupportScreen({
     <AppPageTransition motionKey={`home-${section}`} className="h-full min-h-0">
       <AppScreen className="pb-8">
         <div className="px-5 pt-2 pb-4">
-          <AppSegmentedControl
-            options={[
-              { id: 'support', label: 'Support' },
-              { id: 'reports', label: 'Reports' },
+          <MessagesInboxTabs
+            className="staff-list-filter-tabs"
+            activeTab={section}
+            onTabChange={(tabId) => setSection(tabId as SupportSection)}
+            tabs={[
+              { id: 'support', label: 'Support', icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+              { id: 'reports', label: 'Reports', icon: <FileText className="w-3.5 h-3.5" strokeWidth={2} /> },
             ]}
-            value={section}
-            onChange={(id) => setSection(id as SupportSection)}
           />
         </div>
 

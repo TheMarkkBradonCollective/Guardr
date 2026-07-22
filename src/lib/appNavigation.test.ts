@@ -24,6 +24,47 @@ describe('auth role choice URLs', () => {
   });
 });
 
+describe('client and guard nested job routes', () => {
+  it('parses client jobs tab and selected job', () => {
+    assert.deepEqual(parseAppRoute('/client/requests?jt=scheduled&cj=req-1'), {
+      role: 'client',
+      clientView: 'requests',
+      clientJobsTab: 'scheduled',
+      clientJobId: 'req-1',
+    });
+  });
+
+  it('parses guard browse tab and selected job', () => {
+    assert.deepEqual(parseAppRoute('/guard/my-jobs?bt=completed&gj=job-9'), {
+      role: 'guard',
+      guardTab: 'myJobs',
+      guardJobsTab: 'completed',
+      guardJobId: 'job-9',
+    });
+  });
+
+  it('clears client and guard job selections via routeWithoutNestedSelection', () => {
+    const route: AppRoute = {
+      role: 'client',
+      clientView: 'requests',
+      clientJobId: 'req-1',
+      clientJobsTab: 'open',
+    };
+    assert.equal(routeHasNestedSelection(route), true);
+    assert.equal(routeWithoutNestedSelection(route).clientJobId, undefined);
+    assert.equal(routeWithoutNestedSelection(route).clientJobsTab, 'open');
+
+    const guardRoute: AppRoute = {
+      role: 'guard',
+      guardTab: 'myJobs',
+      guardJobId: 'job-9',
+      guardJobsTab: 'available',
+    };
+    assert.equal(routeHasNestedSelection(guardRoute), true);
+    assert.equal(routeWithoutNestedSelection(guardRoute).guardJobId, undefined);
+  });
+});
+
 describe('routeHasNestedSelection', () => {
   it('detects nested route params', () => {
     const route: AppRoute = { role: 'staff', staffSection: 'guards', staffGuardId: 'g1' };

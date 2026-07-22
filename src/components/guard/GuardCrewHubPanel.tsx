@@ -16,13 +16,14 @@ import {
   AppItemCard,
   AppItemCardStack,
   AppScreen,
-  AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import { formatTeamCodeDisplay } from '../../lib/teamCode';
 import { useDevice } from '../../lib/platform';
+import { registerSystemBackHandler } from '../../lib/systemBackButton';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -188,8 +189,9 @@ function CrewJobDetail({
 
   return (
     <AppScreen className="app-full-page-detail">
-      <AppSubScreenHeader title={title} onBack={onBack} backLabel="Crew" />
+      <AppSubScreenHeader title={title} hideTitle onBack={onBack} backLabel="Crew" />
       <div className="app-section-body px-4 pb-8">
+        <h1 className="text-xl font-bold text-brand-text mb-3">{title}</h1>
         <CrewJobDetailBody
           job={job}
           guard={guard}
@@ -261,6 +263,16 @@ export function GuardCrewHubPanel({
     onDetailOpenChange?.(selectedJobId != null);
   }, [selectedJobId, onDetailOpenChange]);
 
+  useEffect(() => {
+    return registerSystemBackHandler(() => {
+      if (selectedJobId != null) {
+        setSelectedJobId(null);
+        return true;
+      }
+      return false;
+    });
+  }, [selectedJobId]);
+
   const prevPendingCount = useRef(pendingInvites.length);
   useEffect(() => {
     if (pendingInvites.length > prevPendingCount.current && pendingInvites.length > 0) {
@@ -272,10 +284,11 @@ export function GuardCrewHubPanel({
   const selectedJob = coordinatingJobs.find((j) => j.id === selectedJobId) ?? null;
 
   const tabBar = (
-    <AppSegmentedControl<CrewHubTab>
-      options={tabOptions}
-      value={activeTab}
-      onChange={setActiveTab}
+    <ListFilterTabs
+      aria-label="Crew sections"
+      activeId={activeTab}
+      onChange={(id) => setActiveTab(id as CrewHubTab)}
+      tabs={tabOptions.map((tab) => ({ id: tab.id, label: tab.label }))}
     />
   );
 
