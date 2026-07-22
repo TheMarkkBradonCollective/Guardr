@@ -2714,7 +2714,7 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
 
 .guard-next-shift-card--flash {
   animation: map-row-flash 1.6s ease-in-out infinite;
-  border-color: color-mix(in srgb, var(--uber-text-accent, #7C9A7A) 55%, var(--brand-border, #e5e5e5));
+  border-color: color-mix(in srgb, var(--uber-text-accent, #000000) 55%, var(--brand-border, #e5e5e5));
 }
 
 .guard-next-shift-card:active {
@@ -2734,7 +2734,7 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--uber-text-accent, #7C9A7A);
+  color: var(--uber-text-accent, #000000);
 }
 
 .guard-next-shift-title {
@@ -2768,7 +2768,7 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   margin: 0.35rem 0 0;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--uber-text-accent, #7C9A7A);
+  color: var(--uber-text-accent, #000000);
 }
 
 html.theme-dark .guard-next-shift-card {
@@ -5499,15 +5499,15 @@ html.theme-dark .guardr-lightning-flash {
   animation-name: guardr-lightning-strike;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  /* Triple-layer halo in logo sage-green (#9CAF88 / #5E7B61) */
-  filter: drop-shadow(0 0 4px rgba(94, 123, 97, 1))
-          drop-shadow(0 0 10px rgba(130, 158, 110, 0.8))
-          drop-shadow(0 0 22px rgba(156, 175, 136, 0.5));
+  /* Triple-layer monochrome halo */
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 1))
+          drop-shadow(0 0 10px rgba(0, 0, 0, 0.8))
+          drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
 }
 
 .guardr-lightning-glow {
   fill: none;
-  stroke: rgba(156, 175, 136, 0.7);
+  stroke: rgba(255, 255, 255, 0.7);
   stroke-width: 8;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -5516,7 +5516,7 @@ html.theme-dark .guardr-lightning-flash {
 
 .guardr-lightning-core {
   fill: none;
-  stroke: rgba(74, 107, 78, 0.97);
+  stroke: rgba(0, 0, 0, 0.97);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -9750,7 +9750,7 @@ html.theme-dark .wf-badge-success {
   gap: 0;
   z-index: 1;
   border-radius: 0;
-  background: linear-gradient(160deg, #4a6b4e 0%, #3d5a41 55%, #2f4a33 100%);
+  background: linear-gradient(160deg, #000000 0%, #1a1a1a 55%, #000000 100%);
 }
 
 .guard-jobtype-hero-glow {
@@ -9852,7 +9852,7 @@ html.theme-dark .wf-badge-success {
 }
 
 .guard-jobtype-metric-card-interactive:hover {
-  border-color: rgba(74, 107, 78, 0.35);
+  border-color: rgba(0, 0, 0, 0.35);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -9882,7 +9882,7 @@ html.theme-dark .wf-badge-success {
   font-size: 2.75rem;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: #4a6b4e;
+  color: #000000;
 }
 
 .guard-jobtype-metric-detail-track-wrap {
@@ -9902,7 +9902,7 @@ html.theme-dark .wf-badge-success {
 .guard-jobtype-metric-detail-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #6d9b71 0%, #4a6b4e 100%);
+  background: linear-gradient(90deg, #666666 0%, #000000 100%);
 }
 
 .guard-jobtype-metric-detail-marker {
@@ -9961,8 +9961,8 @@ html.theme-dark .wf-badge-success {
 }
 
 .guard-jobtype-metric-check-ok {
-  background: rgba(74, 107, 78, 0.14);
-  color: #4a6b4e;
+  background: rgba(0, 0, 0, 0.14);
+  color: #000000;
 }
 
 .guard-jobtype-metric-check-muted {
@@ -14881,7 +14881,7 @@ html.theme-light .auth-experience .auth-hero {
   background: linear-gradient(
     168deg,
     color-mix(in srgb, var(--brand-primary) 88%, #ffffff) 0%,
-    color-mix(in srgb, var(--brand-primary) 35%, #f2f4f2) 50%,
+    color-mix(in srgb, var(--brand-primary) 35%, #f2f2f2) 50%,
     var(--brand-bg-sec) 100%
   );
 }
@@ -17568,7 +17568,7 @@ html.theme-dark .landing-preview-map {
   background:
     radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--brand-primary) 28%, transparent) 0%, transparent 45%),
     radial-gradient(circle at 70% 65%, color-mix(in srgb, var(--brand-primary) 16%, transparent) 0%, transparent 40%),
-    linear-gradient(180deg, #0d1a0d, #111111);
+    linear-gradient(180deg, #111111, #111111);
 }
 
 .landing-rules-pill {
@@ -19646,7 +19646,7 @@ textarea.uber-input {
     155deg,
     color-mix(in srgb, var(--brand-primary-hover) 92%, #000) 0%,
     var(--brand-primary) 48%,
-    color-mix(in srgb, var(--brand-primary) 55%, #0a0f0a) 100%
+    color-mix(in srgb, var(--brand-primary) 55%, #0a0a0a) 100%
   ) !important;
 }
 
@@ -23300,15 +23300,15 @@ body.capacitor-native .app-welcome .landing-path-grid {
 }
 
 /* /uberit — Base Web theme bridge (synced by UberThemeVars in BaseUIProvider) */
-.uber-text-accent { color: var(--uber-accent, #4A6B4E); }
+.uber-text-accent { color: var(--uber-accent, #000000); }
 .uber-text-muted { color: var(--uber-text-muted, #6B6B6B); }
 .uber-text { color: var(--uber-text, #000000); }
 .uber-bg { background-color: var(--uber-bg, #FFFFFF); }
 .uber-surface { background-color: var(--uber-surface, #F6F6F6); }
 .uber-border { border-color: var(--uber-border, #E2E2E2); }
-.uber-fill-accent { fill: var(--uber-accent, #4A6B4E); }
-.uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #4A6B4E) 12%, transparent); }
-.uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #4A6B4E) 20%, transparent); }
+.uber-fill-accent { fill: var(--uber-accent, #000000); }
+.uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #000000) 12%, transparent); }
+.uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #000000) 20%, transparent); }
 
 /* /uberit — unified drawer shell (all roles, all breakpoints) */
 .uber-app-shell {
@@ -23346,19 +23346,19 @@ body.capacitor-native .app-welcome .landing-path-grid {
 }
 
 .uber-app-shell .uber-shell-content .text-brand-primary {
-  color: var(--uber-accent, #4A6B4E) !important;
+  color: var(--uber-accent, #000000) !important;
 }
 
 .uber-app-shell .uber-shell-content .bg-brand-primary {
-  background-color: var(--uber-accent, #4A6B4E) !important;
+  background-color: var(--uber-accent, #000000) !important;
 }
 
 /* /uberit — public auth hero uses stock Uber accent */
 .auth-experience--uber .auth-hero {
   background: linear-gradient(
     168deg,
-    color-mix(in srgb, var(--uber-accent, #4A6B4E) 92%, #000000) 0%,
-    color-mix(in srgb, var(--uber-accent, #4A6B4E) 48%, #0a0a0a) 42%,
+    color-mix(in srgb, var(--uber-accent, #000000) 92%, #000000) 0%,
+    color-mix(in srgb, var(--uber-accent, #000000) 48%, #0a0a0a) 42%,
     #0a0a0a 100%
   );
 }
@@ -23366,8 +23366,8 @@ body.capacitor-native .app-welcome .landing-path-grid {
 html.theme-light .auth-experience--uber .auth-hero {
   background: linear-gradient(
     168deg,
-    color-mix(in srgb, var(--uber-accent, #4A6B4E) 88%, #ffffff) 0%,
-    color-mix(in srgb, var(--uber-accent, #4A6B4E) 35%, #f2f4f2) 50%,
+    color-mix(in srgb, var(--uber-accent, #000000) 88%, #ffffff) 0%,
+    color-mix(in srgb, var(--uber-accent, #000000) 35%, #f2f2f2) 50%,
     var(--uber-bg, #ffffff) 100%
   );
 }

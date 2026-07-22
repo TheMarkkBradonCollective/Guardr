@@ -251,10 +251,10 @@ export function preferencesActivePercent(active: number, total: number): number 
   return Math.min(100, Math.round((active / total) * 100));
 }
 
-/** Muted sage-toned anchors aligned with company green at 0% / 50% / 100%. */
+/** Monochrome anchors at 0% / 50% / 100% onboard (red → yellow → black). */
 const PREF_HERO_RED = { top: '#b58a8a', mid: '#966969', bottom: '#7a5252' };
 const PREF_HERO_YELLOW = { top: '#c9bc7a', mid: '#ada055', bottom: '#8f843f' };
-const PREF_HERO_GREEN = { top: '#9ab09c', mid: '#5e7b61', bottom: '#4a6b4e' };
+const PREF_HERO_COMPLETE = { top: '#b3b3b3', mid: '#4d4d4d', bottom: '#000000' };
 
 function lerpChannel(a: number, b: number, t: number): number {
   return Math.round(a + (b - a) * t);
@@ -290,7 +290,7 @@ export interface PreferencesHeroColorStops {
   tint: string;
 }
 
-/** Interpolate hero/page tint: red at 0%, yellow at 50%, company green at 100%. */
+/** Interpolate hero/page tint: red at 0%, yellow at 50%, black at 100%. */
 export function preferencesHeroColorStops(onboardPercent: number): PreferencesHeroColorStops {
   const pct = Math.min(100, Math.max(0, onboardPercent));
   if (pct <= 50) {
@@ -304,10 +304,10 @@ export function preferencesHeroColorStops(onboardPercent: number): PreferencesHe
   }
   const t = (pct - 50) / 50;
   return {
-    top: lerpHex(PREF_HERO_YELLOW.top, PREF_HERO_GREEN.top, t),
-    mid: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_GREEN.mid, t),
-    bottom: lerpHex(PREF_HERO_YELLOW.bottom, PREF_HERO_GREEN.bottom, t),
-    tint: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_GREEN.mid, t),
+    top: lerpHex(PREF_HERO_YELLOW.top, PREF_HERO_COMPLETE.top, t),
+    mid: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_COMPLETE.mid, t),
+    bottom: lerpHex(PREF_HERO_YELLOW.bottom, PREF_HERO_COMPLETE.bottom, t),
+    tint: lerpHex(PREF_HERO_YELLOW.mid, PREF_HERO_COMPLETE.mid, t),
   };
 }
 

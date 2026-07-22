@@ -200,6 +200,6 @@ html.theme-dark {
 /* ─── Selection ──────────────────────────────────────────────────────────── */
 
 ::selection {
-  background: color-mix(in srgb, var(--uber-accent, #4A6B4E) 22%, transparent);
+  background: color-mix(in srgb, var(--uber-accent, #000000) 22%, transparent);
   color: var(--uber-text, #000);
 }
