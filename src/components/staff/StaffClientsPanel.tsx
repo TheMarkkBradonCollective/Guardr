@@ -14,7 +14,6 @@ import {
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import { canManageStaffPermissions } from '../../lib/permissions';
 import type { StaffPermissionsPatch } from './StaffPermissionsPanel';
@@ -107,16 +106,15 @@ export function StaffClientsPanel({
   }
 
   const pageTabs = !showDetailOnly ? (
-    <div className="staff-stats-tabbar">
-      <AppSegmentedControl<ClientsPageTab>
-        value={pageTab}
-        onChange={setPageTab}
-        options={[
-          { id: 'roster', label: 'Roster' },
-          { id: 'job-posting', label: 'Job posting' },
-        ]}
-      />
-    </div>
+    <StaffListFilterTabs
+      aria-label="Clients section"
+      activeId={pageTab}
+      onChange={(id) => setPageTab(id as ClientsPageTab)}
+      tabs={[
+        { id: 'roster', label: 'Roster' },
+        { id: 'job-posting', label: 'Job posting' },
+      ]}
+    />
   ) : null;
 
   const rosterToolbar =

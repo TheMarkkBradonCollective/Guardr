@@ -120,7 +120,7 @@ html.theme-dark .uber-stat-chip--active {
 
 .uber-workbench-detail {
   overflow-y: auto;
-  background: var(--uber-surface, #f6f6f6);
+  background: var(--uber-bg, #fff);
   min-height: 0;
 }
 

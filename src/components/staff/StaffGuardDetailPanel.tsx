@@ -41,7 +41,7 @@ import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { ArrowLeft, Camera, Check, Save, User, Users, X } from 'lucide-react';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
 import { StaffGuardPerformancePanel } from './StaffGuardPerformancePanel';
@@ -545,10 +545,11 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && onStaffGuardTabChange && !performanceFactorId && (
         <div className="staff-guard-detail-tabs">
-          <AppSegmentedControl<StaffGuardDetailTab>
-            value={staffGuardTab}
-            onChange={onStaffGuardTabChange}
-            options={[
+          <StaffListFilterTabs
+            aria-label="Guard detail"
+            activeId={staffGuardTab}
+            onChange={(id) => onStaffGuardTabChange(id as StaffGuardDetailTab)}
+            tabs={[
               { id: 'profile', label: 'Profile' },
               { id: 'performance', label: 'Guard status' },
             ]}

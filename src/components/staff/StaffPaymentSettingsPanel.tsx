@@ -15,6 +15,7 @@ import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
+import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 interface StaffPaymentSettingsPanelProps {
@@ -56,16 +57,17 @@ function DesktopSettingsCard({
   title,
   children,
   className = '',
+  fullWidth = false,
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
+  fullWidth?: boolean;
 }) {
   return (
-    <section className={`adm-card adm-payment-settings-card ${className}`.trim()}>
-      <h3 className="adm-card-title adm-payment-settings-card-title">{title}</h3>
+    <StaffMgmtSection title={title} className={className} fullWidth={fullWidth}>
       {children}
-    </section>
+    </StaffMgmtSection>
   );
 }
 
@@ -333,7 +335,7 @@ export function StaffPaymentSettingsPanel({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-finance-page adm-payment-settings-page"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payment-settings-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
@@ -341,18 +343,20 @@ export function StaffPaymentSettingsPanel({
           />
         }
       >
-        <div className="adm-payment-settings-grid">
+        <div className="adm-payment-settings-grid adm-payment-settings-grid--split">
           <DesktopSettingsCard title="Platform fees">
             {platformFeesBody}
           </DesktopSettingsCard>
-          <DesktopSettingsCard title="Crew team pay bump">{crewPayBumpBody}</DesktopSettingsCard>
+          <DesktopSettingsCard title="Crew team pay bump" fullWidth>
+            {crewPayBumpBody}
+          </DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
     );
   }
 
   return (
-    <StaffOpsPageShell className="staff-payment-settings-panel">
+    <StaffOpsPageShell className="staff-payment-settings-panel staff-mgmt-panel staff-roster-panel">
       <div className="staff-payment-settings-scroll min-w-0">
         <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
         <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>

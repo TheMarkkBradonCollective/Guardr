@@ -335,7 +335,7 @@ export function StaffCitiesPanel({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
-        className="adm-finance-page adm-cities-page"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-cities-page"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"

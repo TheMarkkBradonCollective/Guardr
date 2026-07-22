@@ -59,11 +59,11 @@ function ChecklistRow({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-brand-border overflow-hidden">
+    <div className="staff-mgmt-placard-row overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start gap-3 p-4 text-left hover:bg-brand-surface-elevated/50 transition-colors"
+        className="w-full flex items-start gap-3 py-4 text-left transition-colors"
       >
         <span className="shrink-0 mt-0.5">
           {done ? (

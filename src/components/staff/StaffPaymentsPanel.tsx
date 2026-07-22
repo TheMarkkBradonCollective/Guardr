@@ -22,6 +22,7 @@ import {
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 import { JobPaymentRow } from './JobPaymentRow';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
 import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
@@ -360,10 +361,13 @@ export function StaffPaymentsPanel({
         count: pipelineStageRequests(summary, stage).length,
       })),
     ];
+    const visibleFilterTabs = filterTabs.filter(
+      (tab) => tab.id === 'all' || tab.id === 'action' || (tab.count ?? 0) > 0
+    );
 
     return (
       <StaffOpsPageShell
-        className="adm-finance-page adm-payments-workbench"
+        className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
@@ -378,21 +382,12 @@ export function StaffPaymentsPanel({
           <>
             <StaffPaymentSummary summary={summary} financials={financials} variant="desktop" />
 
-            <div className="adm-finance-filter-tabs staff-list-filter-tabs">
-              {filterTabs.map((tab) =>
-                tab.count === 0 && tab.id !== 'all' && tab.id !== 'action' ? null : (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    className={filter === tab.id ? 'is-active' : undefined}
-                    onClick={() => setFilter(tab.id)}
-                  >
-                    {tab.label}
-                    {tab.count != null ? ` (${tab.count})` : ''}
-                  </button>
-                )
-              )}
-            </div>
+            <StaffListFilterTabs
+              aria-label="Payment queue"
+              activeId={filter}
+              onChange={(id) => setFilter(id as PaymentsFilter)}
+              tabs={visibleFilterTabs}
+            />
 
             {filteredQueue.length === 0 ? (
               <WorkbenchEmpty message="No items in this queue." variant="detail" />

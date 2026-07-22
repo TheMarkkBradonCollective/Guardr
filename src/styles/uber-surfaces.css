@@ -22,6 +22,8 @@
 html.theme-dark .uber-app-shell {
   --adm-accent-light: color-mix(in srgb, var(--uber-accent, #FFFFFF) 18%, var(--uber-bg, #141414));
   --adm-sand-light: color-mix(in srgb, var(--uber-accent, #FFFFFF) 18%, var(--uber-bg, #141414));
+  --adm-bg: var(--uber-bg, #000000);
+  --adm-card: var(--uber-bg, #000000);
 }
 
 /* ─── Dashboard grid + cards (all form factors inside shell) ───────────── */

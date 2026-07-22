@@ -12,7 +12,7 @@ import {
 } from '../../lib/guardPerformanceFactorDetail';
 import { GuardRatingSection } from '../guard/GuardRatingSection';
 import { GuardPerformanceFactorDetail } from '../guard/GuardPerformanceFactorDetail';
-import { AppSegmentedControl } from '../ui/app/AppPrimitives';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
 
 type SpecialtySortKey = 'name' | 'rating' | 'count';
 type FactorSortKey = 'name' | 'rate' | 'points';
@@ -98,10 +98,11 @@ export function StaffGuardPerformancePanel({
       <div className="staff-guard-performance-toolbar space-y-3">
         <div className="space-y-1.5">
           <p className="uber-label text-xs">Sort factors</p>
-          <AppSegmentedControl<FactorSortKey>
-            value={factorSort}
-            onChange={setFactorSort}
-            options={[
+          <StaffListFilterTabs
+            aria-label="Sort performance factors"
+            activeId={factorSort}
+            onChange={(id) => setFactorSort(id as FactorSortKey)}
+            tabs={[
               { id: 'points', label: 'Points' },
               { id: 'rate', label: 'Rate' },
               { id: 'name', label: 'A–Z' },
@@ -110,10 +111,11 @@ export function StaffGuardPerformancePanel({
         </div>
         <div className="space-y-1.5">
           <p className="uber-label text-xs">Sort specialties</p>
-          <AppSegmentedControl<SpecialtySortKey>
-            value={specialtySort}
-            onChange={setSpecialtySort}
-            options={[
+          <StaffListFilterTabs
+            aria-label="Sort specialties"
+            activeId={specialtySort}
+            onChange={(id) => setSpecialtySort(id as SpecialtySortKey)}
+            tabs={[
               { id: 'count', label: 'Volume' },
               { id: 'rating', label: 'Rating' },
               { id: 'name', label: 'A–Z' },

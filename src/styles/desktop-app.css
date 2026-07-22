@@ -26,8 +26,8 @@ body[data-form-factor="desktop"] {
 }
 
 html.theme-dark body[data-form-factor="desktop"] {
-  --adm-bg: var(--uber-bg, #141414);
-  --adm-card: var(--uber-surface, #1f1f1f);
+  --adm-bg: var(--uber-bg, #000000);
+  --adm-card: var(--uber-bg, #000000);
   --adm-text: var(--uber-text, #ffffff);
   --adm-muted: var(--uber-text-muted, #a6a6a6);
   --adm-border: var(--uber-border, #333333);

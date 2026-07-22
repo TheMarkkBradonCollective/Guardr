@@ -306,6 +306,24 @@ export function compareStaffGuardStatRows(
     .filter((r): r is StaffGuardStatRow => !!r && idSet.has(r.guardId));
 }
 
+export function staffGuardStatSortTabLabel(sortKey: StaffGuardStatSortKey): string {
+  const labels: Record<StaffGuardStatSortKey, string> = {
+    'rating-desc': 'Rating',
+    'rating-asc': 'Rating (low)',
+    'violations-desc': 'Violations',
+    'violations-asc': 'Violations (few)',
+    'on-time-desc': 'On-time',
+    'on-time-asc': 'On-time (low)',
+    'jobs-desc': 'Jobs',
+    'jobs-asc': 'Jobs (few)',
+    'name-asc': 'Name A–Z',
+    'name-desc': 'Name Z–A',
+    'tier-desc': 'Tier',
+    'tier-asc': 'Tier (low)',
+  };
+  return labels[sortKey];
+}
+
 export function staffGuardStatSortLabel(sortKey: StaffGuardStatSortKey): string {
   const labels: Record<StaffGuardStatSortKey, string> = {
     'rating-desc': 'Rating (high → low)',

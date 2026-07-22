@@ -2,14 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Clock, Users, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import { computeSlaMetrics, formatSlaHours } from '../../lib/slaMetrics';
 import type { SecurityRequest, SecurityGuard, Client, SupportTicket } from '../../types';
-import { useDevice } from '../../lib/platform';
-import { MetricCell } from '../baseui/dashboard';
-import {
-  WorkbenchGrid,
-  WorkbenchGridCell,
-  WorkbenchPage,
-  WorkbenchToolbar,
-} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffSlaDashboardProps {
   requests: SecurityRequest[];
@@ -34,19 +26,18 @@ function MetricCard({
   const toneClass =
     tone === 'warning' ? 'text-amber-500' : tone === 'success' ? 'text-emerald-500' : 'uber-text-accent';
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-surface p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${toneClass}`} />
-        <span className="text-xs font-medium uber-text-muted uppercase tracking-wide">{label}</span>
+    <article className="staff-sla-metric-card">
+      <div className="staff-sla-metric-card-head">
+        <Icon className={`staff-sla-metric-card-icon ${toneClass}`} aria-hidden />
+        <p className="staff-sla-metric-card-label">{label}</p>
       </div>
-      <p className="text-2xl font-bold text-brand-text">{value}</p>
-      {sub && <p className="text-xs uber-text-muted mt-1">{sub}</p>}
-    </div>
+      <p className="staff-sla-metric-card-value">{value}</p>
+      {sub ? <p className="staff-sla-metric-card-sub">{sub}</p> : null}
+    </article>
   );
 }
 
 export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: StaffSlaDashboardProps) {
-  const { formFactor } = useDevice();
   const [metrics, setMetrics] = useState(() => computeSlaMetrics(requests, guards, clients, tickets));
 
   useEffect(() => {
@@ -100,39 +91,19 @@ export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: S
     { key: 'open', icon: TrendingUp, label: 'Open jobs', value: String(metrics.openJobsCount) },
   ];
 
-  const cards = metricItems.map((item) => (
-    <MetricCard
-      key={item.key}
-      icon={item.icon}
-      label={item.label}
-      value={item.value}
-      sub={item.sub}
-      tone={item.tone}
-    />
-  ));
-
-  if (formFactor === 'desktop') {
-    return (
-      <WorkbenchPage>
-        <WorkbenchToolbar eyebrow="Operations" subtitle="SLA & operations" />
-        <WorkbenchGrid>
-          {metricItems.map((item) => (
-            <WorkbenchGridCell key={item.key} span={3}>
-              <MetricCell label={item.label} value={item.value} sub={item.sub} accent={item.tone === 'warning'} />
-            </WorkbenchGridCell>
-          ))}
-        </WorkbenchGrid>
-      </WorkbenchPage>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-brand-text mb-1">SLA & Operations</h2>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {cards}
+    <div className="staff-sla-dashboard">
+      <div className="staff-sla-metric-grid">
+        {metricItems.map((item) => (
+          <MetricCard
+            key={item.key}
+            icon={item.icon}
+            label={item.label}
+            value={item.value}
+            sub={item.sub}
+            tone={item.tone}
+          />
+        ))}
       </div>
     </div>
   );
