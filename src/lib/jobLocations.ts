@@ -287,11 +287,11 @@ export function ensureSharedJobLocation(
       placeKey: normalizePlaceKey(address, input.state?.trim() || existing.state),
       createdByClientId: existing.createdByClientId ?? input.createdByClientId,
       listed:
-        input.listed === false
+        input.listed === false &&
+        (!existing.createdByClientId ||
+          existing.createdByClientId === input.createdByClientId)
           ? false
-          : input.listed === true
-            ? existing.listed !== false
-            : existing.listed !== false,
+          : existing.listed !== false,
       status:
         input.preferredStatus === 'active' && existing.status === 'pending'
           ? 'active'
