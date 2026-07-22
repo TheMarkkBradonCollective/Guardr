@@ -1504,22 +1504,42 @@ html.theme-dark .map-offer-card-close {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  padding: 16px;
+  margin: 0 1rem 0.75rem;
+  width: calc(100% - 2rem);
+  border: 1px solid var(--uber-border, #eeeeee);
+  border-radius: 12px;
   background: var(--uber-bg, #fff);
   cursor: pointer;
-  border: none;
-  width: 100%;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
-  transition: background 100ms ease;
+  transition: border-color 100ms ease, box-shadow 100ms ease;
+  box-sizing: border-box;
 }
 
-.uber-job-row:hover { background: var(--uber-surface, #f6f6f6); }
-.uber-job-row:active { background: var(--uber-border, #eeeeee); }
+.uber-job-row:hover {
+  background: var(--uber-bg, #fff);
+  border-color: color-mix(in srgb, var(--uber-text, #000) 28%, var(--uber-border, #eeeeee));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+.uber-job-row:active {
+  background: var(--uber-bg, #fff);
+}
 
-html.theme-dark .uber-job-row { background: #111; border-bottom-color: #222; }
-html.theme-dark .uber-job-row:hover { background: #1a1a1a; }
+@media (hover: none) {
+  .uber-job-row:hover {
+    box-shadow: none;
+    border-color: var(--uber-border, #eeeeee);
+  }
+}
+
+html.theme-dark .uber-job-row {
+  background: var(--uber-bg, #000);
+  border-color: #222;
+}
+html.theme-dark .uber-job-row:hover {
+  background: var(--uber-bg, #000);
+}
 
 /* Left icon — like Uber's car thumbnail */
 .uber-job-row-icon {

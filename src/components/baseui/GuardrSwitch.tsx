@@ -12,7 +12,10 @@ import { useStyletron } from 'baseui';
 interface GuardrSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /** Visible label beside the toggle. Omit for icon-only / already-labeled layouts. */
   label?: string;
+  /** Screen-reader name when there is no visible label. */
+  ariaLabel?: string;
   labelRight?: boolean;
   disabled?: boolean;
   size?: 'sm' | 'md';
@@ -22,12 +25,15 @@ export function GuardrSwitch({
   checked,
   onChange,
   label,
+  ariaLabel,
   labelRight = true,
   disabled = false,
   size = 'md',
 }: GuardrSwitchProps) {
   const [, theme] = useStyletron();
   const scale = size === 'sm' ? 0.8 : 1;
+  const hasVisibleLabel = Boolean(label && label.trim());
+  const accessibleName = ariaLabel || label || undefined;
 
   return (
     <Checkbox
@@ -58,24 +64,39 @@ export function GuardrSwitch({
         },
         Label: {
           style: {
+            display: hasVisibleLabel ? 'block' : 'none',
             fontSize: size === 'sm' ? '13px' : '15px',
             fontWeight: 500,
             color: disabled ? theme.colors.contentSecondary : theme.colors.contentPrimary,
-            paddingLeft: labelRight ? theme.sizing.scale300 : 0,
-            paddingRight: !labelRight ? theme.sizing.scale300 : 0,
+            paddingLeft: hasVisibleLabel && labelRight ? theme.sizing.scale300 : 0,
+            paddingRight: hasVisibleLabel && !labelRight ? theme.sizing.scale300 : 0,
             cursor: disabled ? 'not-allowed' : 'pointer',
           },
         },
         Root: {
+          props: accessibleName
+            ? {
+                'aria-label': accessibleName,
+              }
+            : undefined,
           style: {
             alignItems: 'center',
+            flexShrink: 0,
+            maxWidth: hasVisibleLabel ? '100%' : `${50 * scale}px`,
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.5 : 1,
           },
         },
+        Input: {
+          props: accessibleName
+            ? {
+                'aria-label': accessibleName,
+              }
+            : undefined,
+        },
       }}
     >
-      {label}
+      {hasVisibleLabel ? label : null}
     </Checkbox>
   );
 }
