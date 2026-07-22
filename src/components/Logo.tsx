@@ -13,6 +13,15 @@ interface LogoProps {
 
 export function Logo({ className = '', size = 20, variant = 'mark' }: LogoProps) {
   const numericSize = typeof size === 'number' ? size : parseInt(String(size), 10) || 20;
+  const logoClassName = [
+    'guardr-logo',
+    variant === 'opaque' ? 'guardr-logo--opaque' : '',
+    'object-contain shrink-0 select-none',
+    variant === 'wordmark' ? 'w-auto' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   if (variant === 'wordmark') {
     const src = '/logo-wordmark.png';
@@ -25,7 +34,7 @@ export function Logo({ className = '', size = 20, variant = 'mark' }: LogoProps)
         sizes={`${Math.round(numericSize * 1.1)}px`}
         alt="Guardr"
         height={numericSize}
-        className={`object-contain shrink-0 select-none w-auto ${className}`}
+        className={logoClassName}
         style={{ height: numericSize, width: 'auto' }}
         draggable={false}
       />
@@ -46,7 +55,7 @@ export function Logo({ className = '', size = 20, variant = 'mark' }: LogoProps)
       alt="Guardr"
       width={size}
       height={size}
-      className={`object-contain shrink-0 select-none ${className}`}
+      className={logoClassName}
       draggable={false}
     />
   );
