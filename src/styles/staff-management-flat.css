@@ -439,3 +439,31 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
   border-bottom-color: var(--uber-text, var(--brand-text)) !important;
   font-weight: 700;
 }
+
+/* Guard Availability — flat day rows (no grey card / sticky hover) */
+.uber-app-shell .availability-day-card.guard-factor-card,
+.uber-app-shell .availability-day-card.guard-factor-card:hover,
+.uber-app-shell .availability-day-card.guard-factor-card:focus,
+.uber-app-shell .availability-day-card.guard-factor-card:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.uber-app-shell .availability-day-circle {
+  background: transparent !important;
+}
+
+.uber-app-shell .availability-day-circle-on {
+  background: var(--uber-text, var(--brand-text)) !important;
+  border-color: var(--uber-text, var(--brand-text)) !important;
+  color: var(--uber-bg, var(--brand-bg)) !important;
+}
+
+.uber-app-shell .availability-off-note,
+.uber-app-shell .availability-time-panel,
+.uber-app-shell .availability-date-item {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
