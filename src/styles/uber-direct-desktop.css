@@ -81,9 +81,8 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
-  flex-shrink: 0;
-  margin-top: auto;
-  padding: 16px 20px 24px;
+  margin-top: 8px;
+  padding: 12px 20px 16px;
   border-top: 1px solid var(--uber-border, #eeeeee);
   font-size: 12px;
 }
@@ -335,7 +334,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 .uber-direct-sidebar-footer-links {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .uber-direct-sidebar-footer-link {
@@ -352,6 +351,26 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 .uber-direct-sidebar-footer-link:hover {
   color: var(--uber-text, #000000);
+}
+
+/* Compact legal link wrap inside drawer / sidebar footers */
+.mobility-drawer-footer .uber-direct-sidebar-footer-links,
+.mobility-drawer-footer .legal-footer-link,
+.uber-direct-sidebar-footer .uber-direct-sidebar-footer-links {
+  gap: 6px;
+}
+
+.mobility-drawer-footer .flex.flex-wrap,
+.uber-direct-sidebar-footer .flex.flex-wrap {
+  gap: 4px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.35;
+}
+
+.mobility-drawer-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--uber-border, #eeeeee);
 }
 
 /* Home hub cards */
