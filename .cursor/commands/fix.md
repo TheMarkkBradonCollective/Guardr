@@ -1,4 +1,4 @@
-# /fixit — UI/UX optimization (scope-aware)
+# /fix — UI/UX optimization (scope-aware)
 
 Optimize the **selected work** based on its scope. Do not expand beyond what was selected unless the scope is the entire project.
 
@@ -83,7 +83,7 @@ See `docs/CROSS_PLATFORM.md` for the full surface model.
 
 ## Branch & PR
 
-- Branch: `cursor/fixit-<descriptive-name>-e760`
+- Branch: `cursor/fix-<descriptive-name>-e760`
 - Update `docs/CROSS_PLATFORM.md` when surface behavior changes
 
 ## Report back

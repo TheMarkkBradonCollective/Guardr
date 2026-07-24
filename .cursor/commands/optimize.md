@@ -66,7 +66,7 @@ Independently optimize each form factor — **do not scale desktop down**:
 shellKind (browser | pwa | native)  ×  formFactor (mobile | tablet | desktop)  →  viewSurface
 ```
 
-See `docs/CROSS_PLATFORM.md`, `/fixit`, and `/speedit` for related surface work.
+See `docs/CROSS_PLATFORM.md`, `/fix`, and `/speed` for related surface work.
 
 ## Rules
 

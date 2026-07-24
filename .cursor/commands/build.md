@@ -1,4 +1,4 @@
-# /buildit — Build a feature, page, component, or system
+# /build — Build a feature, page, component, or system
 
 Build the requested feature, page, component, or system **completely** using the project's standards.
 
@@ -32,7 +32,7 @@ Build the requested feature, page, component, or system **completely** using the
 
 ## Branch & PR
 
-- Branch: `cursor/buildit-<descriptive-name>-e760`
+- Branch: `cursor/build-<descriptive-name>-e760`
 
 ## Report back
 

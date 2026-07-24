@@ -1,4 +1,4 @@
-# /documentit — Generate complete documentation
+# /document — Generate complete documentation
 
 Generate complete documentation for the selected scope, including workflows, APIs, database schema, permissions, features, and changelog.
 

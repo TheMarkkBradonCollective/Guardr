@@ -1,4 +1,4 @@
-# /readit — Complete project documentation
+# /read — Complete project documentation
 
 Produce complete, accurate project documentation that an AI or developer can use to understand Guardr end-to-end without spelunking the codebase.
 

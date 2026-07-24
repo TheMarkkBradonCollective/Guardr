@@ -1,6 +1,6 @@
-# /uberitplatforms — Platform-independent Base Web redesign
+# /uberplatforms — Platform-independent Base Web redesign
 
-Same mission as `/uberit` — complete presentation-layer redesign using Uber Base Web principles — with **mandatory independent design per platform**.
+Same mission as `/uber` — complete presentation-layer redesign using Uber Base Web principles — with **mandatory independent design per platform**.
 
 Use this command when the priority is ensuring each platform has its own optimized experience, not when doing a single-surface pass.
 
@@ -83,7 +83,7 @@ shellKind (browser | pwa | native)  ×  formFactor (mobile | tablet | desktop)  
 2. **Shared logic** — same business logic, API calls, auth, permissions across platforms
 3. **No scaling** — do not stretch desktop to tablet or mobile
 4. **Feature parity** — all platforms support the same features; presentation differs
-5. **Preserve functionality** — presentation layer only (see `/uberit`)
+5. **Preserve functionality** — presentation layer only (see `/uber`)
 
 ---
 
@@ -92,7 +92,7 @@ shellKind (browser | pwa | native)  ×  formFactor (mobile | tablet | desktop)  
 - https://github.com/uber/baseweb
 - https://github.com/uber/base-design-docs
 - https://github.com/adrianhajdin/uber
-- `docs/guardedesign.md`, `docs/uberit-patterns.md`, `docs/CROSS_PLATFORM.md`
+- `docs/guardedesign.md`, `docs/uber-patterns.md`, `docs/CROSS_PLATFORM.md`
 
 ---
 
@@ -135,7 +135,7 @@ src/styles/desktop-app.css, tablet-app.css, app-pwa.css, app-native.css
 
 ## Branch & PR
 
-- Branch: `cursor/uberitplatforms-<descriptive-name>-e760`
+- Branch: `cursor/uberplatforms-<descriptive-name>-e760`
 - Update `docs/CROSS_PLATFORM.md` when surface behavior changes
 
 ## Report back

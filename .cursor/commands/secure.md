@@ -1,4 +1,4 @@
-# /secureit — Security audit and repair
+# /secure — Security audit and repair
 
 Audit and repair authentication, authorization, permissions, API security, SQL, XSS, CSRF, and data protection.
 
@@ -38,7 +38,7 @@ Audit and repair authentication, authorization, permissions, API security, SQL, 
 
 ## Branch & PR
 
-- Branch: `cursor/secureit-<descriptive-name>-e760`
+- Branch: `cursor/secure-<descriptive-name>-e760`
 
 ## Report back
 

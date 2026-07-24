@@ -1,4 +1,4 @@
-# /testit — Comprehensive functionality test
+# /test — Comprehensive functionality test
 
 Run a comprehensive functionality test **without making design changes**.
 
@@ -22,7 +22,7 @@ Run a comprehensive functionality test **without making design changes**.
 
 ## Do not
 
-- Redesign UI or change styling (use `/fixit` or `/designit` for that)
+- Redesign UI or change styling (use `/fix` or `/design` for that)
 - Refactor unrelated code
 
 ## Do

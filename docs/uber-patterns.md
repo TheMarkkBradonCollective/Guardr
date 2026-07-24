@@ -1,6 +1,6 @@
-# /uberit — Reusable UI patterns
+# /uber — Reusable UI patterns
 
-Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/commands/uberit.md`.
+Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/commands/uber.md`.
 
 ## Theme
 

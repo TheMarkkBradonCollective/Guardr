@@ -4,7 +4,7 @@ Official visual and interaction specification for Guardr across **Website** (mob
 
 **Design system:** [Uber Base Web](https://github.com/uber/baseweb) + [Base Design Docs](https://github.com/uber/base-design-docs) — Guardr-branded themes (sage green accent `#4A6B4E` light / `#7AAE7F` dark) on top of `LightTheme` / `DarkTheme`, Uber Move typography, black primary CTAs.
 
-**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uberit-patterns.md`](./uberit-patterns.md) · [`.cursor/commands/uberit.md`](../.cursor/commands/uberit.md)
+**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uber-patterns.md`](./uber-patterns.md) · [`.cursor/commands/uber.md`](../.cursor/commands/uber.md)
 
 **Implementation:** Guardr Base Web custom themes (`src/theme/guardrBaseTheme.ts`) with sage-green accent applied across all production surfaces. Styletron CSS-in-JS engine syncs tokens to CSS custom properties via `UberThemeVars`.
 
@@ -499,7 +499,7 @@ Each persona shares the **same design language** but different widget sets and n
 
 ## 13. Implementation checklist
 
-When building or redesigning a screen (`/designit`, `/fixit`, `/themeit`):
+When building or redesigning a screen (`/design`, `/fix`, `/theme`):
 
 - [ ] Uses CSS variables only — no stray `#5E7B61` in TSX
 - [ ] Tested in **Light** and **Dark** (and **Shade** when implemented)
@@ -589,7 +589,7 @@ The styleguide has four top-level areas:
 | **Foundation** | Tokens, type, color, grid, radius, elevation, motion, content, inclusion | `index.css`, `theme.ts`, voice/copy rules |
 | **Components** | Specs for buttons, cards, nav, charts, sheets, tables, etc. | `src/components/`, layout shells |
 | **Patterns** | Cross-component flows: modality, maps, chat, rider flows | Job flows, map browse, messaging |
-| **Resources & tools** | Onboarding, Figma, playbooks, a11y articles | `/designit`, docs, E2E |
+| **Resources & tools** | Onboarding, Figma, playbooks, a11y articles | `/design`, docs, E2E |
 
 **Foundation pillars** (from Welcome): Design tokens · Color · Typography · Icons · Dimensions · Layout grids · Corner radius · Elevation · Motion · Content · Equity · Accessibility
 
@@ -879,7 +879,7 @@ Guardr relevance: guards, clients, and staff have different contexts (field, des
 
 Uber logos · Uber Move font · Uber blue · “Professional driver” product framing · Literal Base component pixel specs · Private SSO-only Base pages (Color 1.0 token values, some patterns).
 
-### A.15 Adoption order for Guardr `/designit`
+### A.15 Adoption order for Guardr `/design`
 
 1. Token discipline (`--brand-*` only)
 2. Card grid dashboard (§A.9) with 12/8/4 column grids (§A.5)

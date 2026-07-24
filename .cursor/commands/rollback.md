@@ -1,4 +1,4 @@
-# /rollbackit — Undo the last completed change
+# /rollback — Undo the last completed change
 
 Undo the last completed change while preserving project integrity.
 

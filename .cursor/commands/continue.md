@@ -1,4 +1,4 @@
-# /continueit — Continue where development stopped
+# /continue — Continue where development stopped
 
 Continue exactly where development last stopped.
 
@@ -15,7 +15,7 @@ Continue exactly where development last stopped.
 - If multiple threads are in progress, ask which to prioritize unless context is clear
 - Do not revert completed work on `main`
 - Run `npm run lint` and `npm test` when code changes
-- Merge to `main` when complete if `/automergeit` is active
+- Merge to `main` when complete if `/automerge` is active
 
 ## Report back
 
