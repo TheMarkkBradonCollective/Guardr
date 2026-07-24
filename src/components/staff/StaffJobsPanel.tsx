@@ -9,9 +9,7 @@ import {
   WorkbenchEmpty,
   WorkbenchPage,
   WorkbenchPanel,
-  WorkbenchSearchRow,
   WorkbenchSplit,
-  WorkbenchStatChips,
 } from '../baseui/layout/WorkbenchLayout';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -205,20 +203,45 @@ export function StaffJobsPanel({
     ));
   }
 
+  const toolbar = !showDetailOnly ? (
+    <>
+      <div className="staff-ops-cta-stack">{createForm}</div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search client, location, or title"
+        className="max-w-md"
+      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label="Show all jobs"
+          activeId={filter === 'all' ? 'all' : '__none__'}
+          onChange={(id) => {
+            if (id === 'all') setFilter('all');
+          }}
+          tabs={[{ id: 'all', label: 'All' }]}
+        />
+        <StaffListFilterTabs
+          aria-label="Job pipeline status"
+          activeId={filter === 'all' ? '__none__' : filter}
+          onChange={(id) => {
+            if (id === '__none__') return;
+            setFilter((current) => (current === id ? 'all' : (id as JobsFilter)));
+          }}
+          tabs={FILTER_OPTIONS.filter(({ id }) => id !== 'all').map(({ id, label }) => ({
+            id,
+            label,
+            count: tallies[id],
+          }))}
+        />
+      </div>
+    </>
+  ) : null;
+
   if (formFactor === 'desktop') {
     return (
       <WorkbenchPage data-tour="staff-jobs">
-        {createForm}
-        <WorkbenchSearchRow
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search client, location, or title"
-        />
-        <WorkbenchStatChips<JobsFilter>
-          items={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
-          activeId={filter}
-          onSelect={setFilter}
-        />
+        {toolbar}
         <WorkbenchPanel padding={false}>
           <WorkbenchSplit
             list={
@@ -254,26 +277,6 @@ export function StaffJobsPanel({
       </WorkbenchPage>
     );
   }
-
-  const toolbar = !showDetailOnly ? (
-    <>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        {createForm}
-      </div>
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search client, location, or title"
-        className="max-w-md"
-      />
-      <StaffListFilterTabs
-        aria-label="Job pipeline status"
-        activeId={filter}
-        onChange={(id) => setFilter(id as JobsFilter)}
-        tabs={FILTER_OPTIONS.map(({ id, label }) => ({ id, label, count: tallies[id] }))}
-      />
-    </>
-  ) : null;
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-jobs">
