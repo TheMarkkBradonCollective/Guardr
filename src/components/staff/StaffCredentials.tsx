@@ -568,17 +568,31 @@ export function StaffCredentials({
         placeholder="Search credentials..."
         className="max-w-md"
       />
-      <StaffListFilterTabs
-        aria-label="Credential status"
-        activeId={filter}
-        onChange={(id) => setFilter(id as CredentialStatusFilter)}
-        tabs={[
-          { id: 'all', label: 'All' },
-          { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
-          { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
-          { id: 'verified', label: 'Verified' },
-        ]}
-      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label="Show all credentials"
+          activeId={filter === 'all' ? 'all' : '__none__'}
+          onChange={(id) => {
+            if (id === 'all') setFilter('all');
+          }}
+          tabs={[{ id: 'all', label: 'All' }]}
+        />
+        <StaffListFilterTabs
+          aria-label="Credential status"
+          activeId={filter === 'all' ? '__none__' : filter}
+          onChange={(id) => {
+            if (id === '__none__') return;
+            setFilter((current) =>
+              current === id ? 'all' : (id as CredentialStatusFilter)
+            );
+          }}
+          tabs={[
+            { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
+            { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+            { id: 'verified', label: 'Verified' },
+          ]}
+        />
+      </div>
     </>
   ) : null;
 
