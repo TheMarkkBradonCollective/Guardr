@@ -294,29 +294,16 @@ export function StaffGuardCrewsPanel({
           ]}
         />
         {view === 'job' && !showJobDetailOnly ? (
-          <>
-            <StaffListFilterTabs
-              aria-label="Show all job crews"
-              activeId={filter === 'all' ? 'all' : '__none__'}
-              onChange={(id) => {
-                if (id === 'all') setFilter('all');
-              }}
-              tabs={[{ id: 'all', label: 'All' }]}
-            />
-            <StaffListFilterTabs
-              aria-label="Job crew status"
-              activeId={filter === 'all' ? '__none__' : filter}
-              onChange={(id) => {
-                if (id === '__none__') return;
-                setFilter((current) => (current === id ? 'all' : (id as CrewFilter)));
-              }}
-              tabs={FILTER_OPTIONS.filter(({ id }) => id !== 'all').map((opt) => ({
-                id: opt.id,
-                label: opt.label,
-                count: opt.id === 'needs_review' ? needsReviewCount : undefined,
-              }))}
-            />
-          </>
+          <StaffListFilterTabs
+            aria-label="Job crew status"
+            activeId={filter}
+            onChange={(id) => setFilter(id as CrewFilter)}
+            tabs={FILTER_OPTIONS.map((opt) => ({
+              id: opt.id,
+              label: opt.label,
+              count: opt.id === 'needs_review' ? needsReviewCount : undefined,
+            }))}
+          />
         ) : null}
       </div>
     </>
