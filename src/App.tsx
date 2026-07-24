@@ -146,10 +146,12 @@ import {
 import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import {
   CERTIFICATION_METADATA_COLUMNS,
-  fetchCertificationImagesForGuards,
-  mergeCertificationImagesIntoGuards,
-  certificationRowsNeedImageHydration,
+  certNeedsImageHydration,
+  collectCertIdsNeedingImageHydration,
+  fetchCertificationImagesByCertIds,
+  mergeCertificationImagesByCertId,
 } from './lib/certificationLoad';
+import { resolveCredentialFeedContext } from './lib/staffApprovalsFeed';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import { credentialRequiresExpiry, resolveCertCatalogId } from './lib/certCatalog';
@@ -3041,19 +3043,20 @@ export default function App() {
     void loadRef.current();
   }, isDbConnected);
 
-  const hydrateGuardCertificationImages = useCallback(async (guardIds: string[]) => {
-    if (!isDbConnected || guardIds.length === 0) return;
-    const pending = guardIds.filter((id) => !certImageHydrationRef.current.has(id));
+  const hydrateGuardCertificationImages = useCallback(async (certIds: string[]) => {
+    if (!isDbConnected || certIds.length === 0) return;
+    const pending = certIds.filter((id) => !certImageHydrationRef.current.has(id));
     if (pending.length === 0) return;
-    pending.forEach((id) => certImageHydrationRef.current.add(id));
 
-    const { imagesByGuardId, error } = await fetchCertificationImagesForGuards(supabase, pending);
+    const { imagesByCertId, error } = await fetchCertificationImagesByCertIds(supabase, pending);
     if (error) {
-      pending.forEach((id) => certImageHydrationRef.current.delete(id));
       console.warn('Certification image hydrate:', error);
       return;
     }
-    setGuards((prev) => mergeCertificationImagesIntoGuards(prev, imagesByGuardId));
+
+    pending.forEach((id) => certImageHydrationRef.current.add(id));
+    if (imagesByCertId.size === 0) return;
+    setGuards((prev) => mergeCertificationImagesByCertId(prev, imagesByCertId));
   }, [isDbConnected]);
 
   useEffect(() => {
@@ -3063,18 +3066,34 @@ export default function App() {
     if (currentUser.role === 'guard') {
       const guard = findGuardProfileForUser(currentUser, guardsRef.current);
       if (guard?.id) targetGuardIds.push(guard.id);
-    } else if (currentUser.role === 'staff') {
+    } else if (isStaffRole(currentUser.role)) {
+      if (staffGuardId) targetGuardIds.push(staffGuardId);
+      if (staffCredentialItemId) {
+        const context = resolveCredentialFeedContext(guardsRef.current, staffCredentialItemId);
+        if (context?.guard.id) targetGuardIds.push(context.guard.id);
+      }
       for (const guard of guardsRef.current) {
-        if (guard.certifications.some((cert) => cert.status === 'pending' && !cert.imageUrl?.trim())) {
+        if (guard.certifications.some((cert) => cert.status === 'pending' && certNeedsImageHydration(cert))) {
           targetGuardIds.push(guard.id);
         }
       }
     }
 
-    const needs = certificationRowsNeedImageHydration(guardsRef.current, targetGuardIds);
-    if (needs.length === 0) return;
-    void hydrateGuardCertificationImages(needs);
-  }, [currentUser?.id, currentUser?.role, guards, isDbConnected, hydrateGuardCertificationImages]);
+    const certIds = collectCertIdsNeedingImageHydration(
+      guardsRef.current,
+      [...new Set(targetGuardIds)]
+    );
+    if (certIds.length === 0) return;
+    void hydrateGuardCertificationImages(certIds);
+  }, [
+    currentUser?.id,
+    currentUser?.role,
+    guards,
+    isDbConnected,
+    staffGuardId,
+    staffCredentialItemId,
+    hydrateGuardCertificationImages,
+  ]);
 
   useUserNotificationsRealtime(
     currentUser?.id,

@@ -7,9 +7,25 @@ export const CERTIFICATION_METADATA_COLUMNS =
 
 export type CertificationImageRow = {
   id: string;
-  guard_id: string;
+  guard_id?: string;
   image_url: string | null;
 };
+
+const CERT_IMAGE_FETCH_CHUNK = 40;
+
+/** Best image URL available on the cert object without a follow-up fetch. */
+export function resolveCertImageUrl(cert: Pick<Certification, 'imageUrl' | 'pendingUpdate'>): string | undefined {
+  return cert.imageUrl?.trim() || cert.pendingUpdate?.imageUrl?.trim() || undefined;
+}
+
+/** Whether this cert may still have a document photo stored in `image_url`. */
+export function certNeedsImageHydration(
+  cert: Pick<Certification, 'id' | 'imageUrl' | 'pendingUpdate' | 'status'>
+): boolean {
+  if (resolveCertImageUrl(cert)) return false;
+  if (cert.status === 'rejected') return false;
+  return cert.status === 'pending' || cert.status === 'verified';
+}
 
 export function mergeCertificationImagesIntoGuards(
   guards: SecurityGuard[],
@@ -29,6 +45,24 @@ export function mergeCertificationImagesIntoGuards(
       return { ...cert, imageUrl };
     });
 
+    return changed ? { ...guard, certifications } : guard;
+  });
+}
+
+export function mergeCertificationImagesByCertId(
+  guards: SecurityGuard[],
+  imagesByCertId: Map<string, string>
+): SecurityGuard[] {
+  if (imagesByCertId.size === 0) return guards;
+
+  return guards.map((guard) => {
+    let changed = false;
+    const certifications = guard.certifications.map((cert) => {
+      const imageUrl = imagesByCertId.get(cert.id);
+      if (!imageUrl || cert.imageUrl === imageUrl) return cert;
+      changed = true;
+      return { ...cert, imageUrl };
+    });
     return changed ? { ...guard, certifications } : guard;
   });
 }
@@ -70,6 +104,41 @@ export async function fetchCertificationImagesForGuards(
   };
 }
 
+export async function fetchCertificationImagesByCertIds(
+  supabase: SupabaseClient,
+  certIds: string[]
+): Promise<{
+  imagesByCertId: Map<string, string>;
+  error: { message?: string } | null;
+}> {
+  const uniqueIds = [...new Set(certIds.filter(Boolean))];
+  if (uniqueIds.length === 0) {
+    return { imagesByCertId: new Map(), error: null };
+  }
+
+  const imagesByCertId = new Map<string, string>();
+
+  for (let offset = 0; offset < uniqueIds.length; offset += CERT_IMAGE_FETCH_CHUNK) {
+    const chunk = uniqueIds.slice(offset, offset + CERT_IMAGE_FETCH_CHUNK);
+    const { data, error } = await supabase
+      .from('certifications')
+      .select('id, image_url')
+      .in('id', chunk);
+
+    if (error) {
+      return { imagesByCertId, error };
+    }
+
+    for (const row of (data ?? []) as CertificationImageRow[]) {
+      const imageUrl = row.image_url?.trim();
+      if (!imageUrl) continue;
+      imagesByCertId.set(String(row.id), imageUrl);
+    }
+  }
+
+  return { imagesByCertId, error: null };
+}
+
 export async function fetchCertificationImagesForGuard(
   supabase: SupabaseClient,
   guardId: string
@@ -78,10 +147,31 @@ export async function fetchCertificationImagesForGuard(
   return { imagesByCertId: imagesByGuardId.get(guardId) ?? new Map(), error };
 }
 
-export function guardCertificationsMissingImages(guard: SecurityGuard): boolean {
-  return guard.certifications.some((cert) => !cert.imageUrl?.trim());
+export function collectCertIdsNeedingImageHydration(
+  guards: SecurityGuard[],
+  guardIds: string[]
+): string[] {
+  const targets = new Set(guardIds.filter(Boolean));
+  const certIds: string[] = [];
+
+  for (const guard of guards) {
+    if (!targets.has(guard.id)) continue;
+    for (const cert of guard.certifications) {
+      if (certNeedsImageHydration(cert)) {
+        certIds.push(cert.id);
+      }
+    }
+  }
+
+  return [...new Set(certIds)];
 }
 
+/** @deprecated Use collectCertIdsNeedingImageHydration instead. */
+export function guardCertificationsMissingImages(guard: SecurityGuard): boolean {
+  return guard.certifications.some((cert) => certNeedsImageHydration(cert));
+}
+
+/** @deprecated Use collectCertIdsNeedingImageHydration instead. */
 export function certificationRowsNeedImageHydration(
   guards: SecurityGuard[],
   guardIds: string[]
@@ -91,7 +181,7 @@ export function certificationRowsNeedImageHydration(
   for (const guard of guards) {
     if (!targets.has(guard.id)) continue;
     if (guard.certifications.length === 0) continue;
-    if (guardCertificationsMissingImages(guard)) {
+    if (guard.certifications.some((cert) => certNeedsImageHydration(cert))) {
       needsHydration.push(guard.id);
     }
   }
@@ -103,10 +193,10 @@ export function applyCertificationImagesToGuard(
   imagesByCertId: Map<string, string>
 ): SecurityGuard {
   if (imagesByCertId.size === 0) return guard;
-  const [merged] = mergeCertificationImagesIntoGuards([guard], new Map([[guard.id, imagesByCertId]]));
+  const [merged] = mergeCertificationImagesByCertId([guard], imagesByCertId);
   return merged;
 }
 
-export function certHasHydratedImage(cert: Pick<Certification, 'imageUrl'>): boolean {
-  return Boolean(cert.imageUrl?.trim());
+export function certHasHydratedImage(cert: Pick<Certification, 'imageUrl' | 'pendingUpdate'>): boolean {
+  return Boolean(resolveCertImageUrl(cert));
 }

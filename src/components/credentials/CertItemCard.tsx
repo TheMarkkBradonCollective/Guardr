@@ -3,6 +3,7 @@ import { Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
+import { resolveCertImageUrl } from '../../lib/certificationLoad';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
@@ -11,7 +12,7 @@ import { CertImageAttachButton } from './CertImageAttachButton';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 
 function certHasDetailsOnFile(cert: Certification): boolean {
-  return Boolean(cert.issuer?.trim() || cert.number?.trim() || cert.imageUrl?.trim());
+  return Boolean(cert.issuer?.trim() || cert.number?.trim() || resolveCertImageUrl(cert));
 }
 
 interface CertItemCardProps {
@@ -54,6 +55,7 @@ export function CertItemCard({
   const [showDetail, setShowDetail] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const title = certDisplayName(cert);
+  const displayImageUrl = resolveCertImageUrl(cert);
   const canEditCert = Boolean(canEdit);
   const useModalEdit = Boolean(onUpdate);
   const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
@@ -62,20 +64,20 @@ export function CertItemCard({
     editing &&
     onAttachImage &&
     guardCanAttachCertImage(cert) &&
-    (!useModalEdit || !cert.imageUrl?.trim() || cert.status === 'rejected');
+    (!useModalEdit || !displayImageUrl || cert.status === 'rejected');
   const thumbClass = compact
     ? 'w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
 
   React.useEffect(() => {
     setImageFailed(false);
-  }, [cert.id, cert.imageUrl]);
+  }, [cert.id, displayImageUrl]);
 
   const renderThumbnail = () => {
-    if (cert.imageUrl && !imageFailed) {
+    if (displayImageUrl && !imageFailed) {
       return (
         <img
-          src={cert.imageUrl}
+          src={displayImageUrl}
           alt={`${title} credential preview`}
           className={thumbClass}
           onError={() => setImageFailed(true)}
@@ -88,7 +90,7 @@ export function CertItemCard({
         aria-hidden
       >
         <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60 text-center px-1">
-          {cert.imageUrl && imageFailed ? 'Photo unavailable' : 'No photo'}
+          {displayImageUrl && imageFailed ? 'Photo unavailable' : 'No photo'}
         </span>
       </div>
     );
@@ -161,7 +163,7 @@ export function CertItemCard({
         )}
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
-          {cert.imageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
+          {displayImageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />
               Locked
