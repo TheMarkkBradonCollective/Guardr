@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, July 24, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.95**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.96**
 
 ---
 
@@ -11,18 +11,17 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 ---
 
-## Friday, July 24, 2026 — Slash command rename (`*it` → clean names)
+## Friday, July 24, 2026 — /merge + /update → v1.0.96
 
-**Why**
-- `/mergeit`, `/updateit`, `/fixit`, etc. were inconsistent with audit/setup commands (`/fullaudit`, `/websiteaudit`)
-- `/merge` vs `/update` boundaries were unclear (git pass vs full release)
+**PR cleanup**
+- Merged **#822** (slash command rename) via **#823**
+- Closed **#822** — landed on main
 
 **Shipped**
-- Renamed all `*it` slash commands — e.g. `/merge`, `/update`, `/fix`, `/theme`, `/uber`, `/uberplatforms`
-- Audited and rewrote `/merge` (PR integration only) and `/update` (phased full release)
-- Fine-tuned `/theme` for Light / Dark / Grey sage tokens across web, PWA, APK
-- Added `.cursor/commands/README.md` master command index
-- Renamed `docs/uberit-patterns.md` → `docs/uber-patterns.md`
+- All `*it` slash commands renamed (`/merge`, `/update`, `/fix`, `/theme`, etc.) + command index
+- Guard map test fixtures use future dates (no-show logic no longer flakes on calendar day)
+- **v1.0.96** (build **196**) web + PWA; APK CI rebuild on push to `main`
+- PWA service worker cache bust: `guardr-cache-v1-0-96-beta`
 
 **Supabase:** no new SQL.
 
