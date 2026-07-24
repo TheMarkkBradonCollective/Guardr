@@ -139,31 +139,17 @@ export function StaffClientsPanel({
           ]}
         />
         {pageTab === 'roster' && (
-          <>
-            <StaffListFilterTabs
-              aria-label="Show all clients"
-              activeId={statusFilter === 'all' ? 'all' : '__none__'}
-              onChange={(id) => {
-                if (id === 'all') setStatusFilter('all');
-              }}
-              tabs={[{ id: 'all', label: 'All' }]}
-            />
-            <StaffListFilterTabs
-              aria-label="Client roster status"
-              activeId={statusFilter === 'all' ? '__none__' : statusFilter}
-              onChange={(id) => {
-                if (id === '__none__') return;
-                setStatusFilter((current) =>
-                  current === id ? 'all' : (id as ClientRosterFilter)
-                );
-              }}
-              tabs={[
-                { id: 'pending', label: 'Pending' },
-                { id: 'active', label: 'Active' },
-                { id: 'suspended', label: 'Suspended' },
-              ]}
-            />
-          </>
+          <StaffListFilterTabs
+            aria-label="Client roster status"
+            activeId={statusFilter}
+            onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+            tabs={[
+              { id: 'all', label: 'All' },
+              { id: 'pending', label: 'Pending' },
+              { id: 'active', label: 'Active' },
+              { id: 'suspended', label: 'Suspended' },
+            ]}
+          />
         )}
       </div>
     </>

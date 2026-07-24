@@ -318,32 +318,18 @@ export function StaffCitiesPanel({
   }
 
   const filterTabs = (
-    <div className="space-y-2">
-      <StaffListFilterTabs
-        aria-label="Show all cities"
-        activeId={statusFilter === 'all' ? 'all' : '__none__'}
-        onChange={(id) => {
-          if (id === 'all') setStatusFilter('all');
-        }}
-        tabs={[{ id: 'all', label: 'All', count: filterCounts.all }]}
-      />
-      <StaffListFilterTabs
-        aria-label="Service area city status"
-        activeId={statusFilter === 'all' ? '__none__' : statusFilter}
-        onChange={(id) => {
-          if (id === '__none__') return;
-          setStatusFilter((current) =>
-            current === id ? 'all' : (id as CityMarketStatusFilter)
-          );
-        }}
-        tabs={[
-          { id: 'open', label: 'Open', count: filterCounts.open },
-          { id: 'closed', label: 'Closed', count: filterCounts.closed },
-          { id: 'waitlist', label: 'Wait list', count: filterCounts.waitlist },
-          { id: 'recommended', label: 'Recommended', count: filterCounts.recommended },
-        ]}
-      />
-    </div>
+    <StaffListFilterTabs
+      aria-label="Service area city status"
+      activeId={statusFilter}
+      onChange={(id) => setStatusFilter(id as CityMarketStatusFilter)}
+      tabs={[
+        { id: 'all', label: 'All', count: filterCounts.all },
+        { id: 'open', label: 'Open', count: filterCounts.open },
+        { id: 'closed', label: 'Closed', count: filterCounts.closed },
+        { id: 'waitlist', label: 'Wait list', count: filterCounts.waitlist },
+        { id: 'recommended', label: 'Recommended', count: filterCounts.recommended },
+      ]}
+    />
   );
 
   if (formFactor === 'desktop') {
