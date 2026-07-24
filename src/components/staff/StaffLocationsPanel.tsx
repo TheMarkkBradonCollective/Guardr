@@ -314,17 +314,31 @@ export function StaffLocationsPanel({
   }
 
   const filterTabs = (
-    <StaffListFilterTabs
-      aria-label="Location status"
-      activeId={statusFilter}
-      onChange={(id) => setStatusFilter(id as JobLocationStatusFilter)}
-      tabs={[
-        { id: 'all', label: 'All', count: tabCounts.all },
-        { id: 'active', label: 'Active', count: tabCounts.active },
-        { id: 'rejected', label: 'Rejected', count: tabCounts.rejected },
-        { id: 'archived', label: 'Archived', count: tabCounts.archived },
-      ]}
-    />
+    <div className="space-y-2">
+      <StaffListFilterTabs
+        aria-label="Show all locations"
+        activeId={statusFilter === 'all' ? 'all' : '__none__'}
+        onChange={(id) => {
+          if (id === 'all') setStatusFilter('all');
+        }}
+        tabs={[{ id: 'all', label: 'All', count: tabCounts.all }]}
+      />
+      <StaffListFilterTabs
+        aria-label="Location status"
+        activeId={statusFilter === 'all' ? '__none__' : statusFilter}
+        onChange={(id) => {
+          if (id === '__none__') return;
+          setStatusFilter((current) =>
+            current === id ? 'all' : (id as JobLocationStatusFilter)
+          );
+        }}
+        tabs={[
+          { id: 'active', label: 'Active', count: tabCounts.active },
+          { id: 'rejected', label: 'Rejected', count: tabCounts.rejected },
+          { id: 'archived', label: 'Archived', count: tabCounts.archived },
+        ]}
+      />
+    </div>
   );
 
   const editor = (
@@ -660,7 +674,7 @@ export function StaffLocationsPanel({
       data-tour="staff-locations"
       toolbar={
         <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="staff-ops-cta-stack">
             {!hideTrigger ? (
               <button
                 type="button"

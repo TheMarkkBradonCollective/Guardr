@@ -237,7 +237,7 @@ export function StaffGuardsPanel({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      <div className="staff-ops-cta-stack">
         {canManage && onAddGuard && (
           <StaffAddGuardForm
             onAdd={onAddGuard}
@@ -254,17 +254,31 @@ export function StaffGuardsPanel({
         placeholder="Search guards..."
         className="max-w-md"
       />
-      <StaffListFilterTabs
-        aria-label="Guard roster status"
-        activeId={statusFilter}
-        onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
-        tabs={[
-          { id: 'all', label: 'All' },
-          { id: 'pending', label: 'Pending' },
-          { id: 'activated', label: 'Approved' },
-          { id: 'active', label: 'Active' },
-        ]}
-      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label="Show all guards"
+          activeId={statusFilter === 'all' ? 'all' : '__none__'}
+          onChange={(id) => {
+            if (id === 'all') setStatusFilter('all');
+          }}
+          tabs={[{ id: 'all', label: 'All' }]}
+        />
+        <StaffListFilterTabs
+          aria-label="Guard roster status"
+          activeId={statusFilter === 'all' ? '__none__' : statusFilter}
+          onChange={(id) => {
+            if (id === '__none__') return;
+            setStatusFilter((current) =>
+              current === id ? 'all' : (id as GuardRosterFilter)
+            );
+          }}
+          tabs={[
+            { id: 'pending', label: 'Pending' },
+            { id: 'activated', label: 'Approved' },
+            { id: 'active', label: 'Active' },
+          ]}
+        />
+      </div>
     </>
   ) : null;
 

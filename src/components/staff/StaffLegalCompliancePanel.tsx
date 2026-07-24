@@ -118,19 +118,29 @@ export function StaffLegalCompliancePanel({
 
   const completeCount = report.length - missingCount;
 
-  const filterTabs = [
-    { id: 'all', label: 'All', count: report.length },
-    { id: 'missing', label: 'Missing', count: missingCount },
-    { id: 'complete', label: 'Complete', count: completeCount },
-  ];
-
   const filterTabsControl = (
-    <StaffListFilterTabs
-      aria-label="Agreement status"
-      activeId={filter}
-      onChange={(id) => setFilter(id as 'all' | 'missing' | 'complete')}
-      tabs={filterTabs}
-    />
+    <div className="space-y-2">
+      <StaffListFilterTabs
+        aria-label="Show all agreements"
+        activeId={filter === 'all' ? 'all' : '__none__'}
+        onChange={(id) => {
+          if (id === 'all') setFilter('all');
+        }}
+        tabs={[{ id: 'all', label: 'All', count: report.length }]}
+      />
+      <StaffListFilterTabs
+        aria-label="Agreement status"
+        activeId={filter === 'all' ? '__none__' : filter}
+        onChange={(id) => {
+          if (id === '__none__') return;
+          setFilter((current) => (current === id ? 'all' : (id as 'missing' | 'complete')));
+        }}
+        tabs={[
+          { id: 'missing', label: 'Missing', count: missingCount },
+          { id: 'complete', label: 'Complete', count: completeCount },
+        ]}
+      />
+    </div>
   );
 
   if (formFactor === 'desktop') {

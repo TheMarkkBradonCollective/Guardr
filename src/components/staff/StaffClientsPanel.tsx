@@ -105,59 +105,69 @@ export function StaffClientsPanel({
     );
   }
 
-  const pageTabs = !showDetailOnly ? (
-    <StaffListFilterTabs
-      aria-label="Clients section"
-      activeId={pageTab}
-      onChange={(id) => setPageTab(id as ClientsPageTab)}
-      tabs={[
-        { id: 'roster', label: 'Roster' },
-        { id: 'job-posting', label: 'Job posting' },
-      ]}
-    />
-  ) : null;
-
-  const rosterToolbar =
-    !showDetailOnly && pageTab === 'roster' ? (
-      <>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          {canManage && onAddClient && (
-            <StaffAddClientForm
-              onAdd={onAddClient}
-              onCreated={(clientId) => {
-                setSearch('');
-                setSelectedId(clientId);
-              }}
-            />
-          )}
-        </div>
-        <WfSearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search clients..."
-          className="max-w-md"
-        />
+  const toolbar = !showDetailOnly ? (
+    <>
+      {pageTab === 'roster' && (
+        <>
+          <div className="staff-ops-cta-stack">
+            {canManage && onAddClient && (
+              <StaffAddClientForm
+                onAdd={onAddClient}
+                onCreated={(clientId) => {
+                  setSearch('');
+                  setSelectedId(clientId);
+                }}
+              />
+            )}
+          </div>
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search clients..."
+            className="max-w-md"
+          />
+        </>
+      )}
+      <div className="space-y-2">
         <StaffListFilterTabs
-          aria-label="Client roster status"
-          activeId={statusFilter}
-          onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+          aria-label="Clients section"
+          activeId={pageTab}
+          onChange={(id) => setPageTab(id as ClientsPageTab)}
           tabs={[
-            { id: 'all', label: 'All' },
-            { id: 'pending', label: 'Pending' },
-            { id: 'active', label: 'Active' },
-            { id: 'suspended', label: 'Suspended' },
+            { id: 'roster', label: 'Roster' },
+            { id: 'job-posting', label: 'Job posting' },
           ]}
         />
-      </>
-    ) : null;
-
-  const toolbar =
-    pageTabs || rosterToolbar ? (
-      <>
-        {pageTabs}
-        {rosterToolbar}
-      </>
-    ) : null;
+        {pageTab === 'roster' && (
+          <>
+            <StaffListFilterTabs
+              aria-label="Show all clients"
+              activeId={statusFilter === 'all' ? 'all' : '__none__'}
+              onChange={(id) => {
+                if (id === 'all') setStatusFilter('all');
+              }}
+              tabs={[{ id: 'all', label: 'All' }]}
+            />
+            <StaffListFilterTabs
+              aria-label="Client roster status"
+              activeId={statusFilter === 'all' ? '__none__' : statusFilter}
+              onChange={(id) => {
+                if (id === '__none__') return;
+                setStatusFilter((current) =>
+                  current === id ? 'all' : (id as ClientRosterFilter)
+                );
+              }}
+              tabs={[
+                { id: 'pending', label: 'Pending' },
+                { id: 'active', label: 'Active' },
+                { id: 'suspended', label: 'Suspended' },
+              ]}
+            />
+          </>
+        )}
+      </div>
+    </>
+  ) : null;
 
   if (pageTab === 'job-posting' && !showDetailOnly) {
     return (
