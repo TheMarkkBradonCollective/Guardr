@@ -3,6 +3,7 @@ import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
 import { certHasPendingUpdate } from './certRevisionHistory';
+import { resolveCertImageUrl } from './certificationLoad';
 import {
   activationCredentialItemId,
   coiApprovalItemId,
@@ -667,7 +668,7 @@ export function resolveCredentialFeedContext(
 export function credentialFeedThumbnailUrl(guards: SecurityGuard[], itemId: string): string | undefined {
   const context = resolveCredentialFeedContext(guards, itemId);
   if (!context) return undefined;
-  if (context.kind === 'cert') return context.cert.imageUrl?.trim() || undefined;
+  if (context.kind === 'cert') return resolveCertImageUrl(context.cert);
   if (context.kind === 'coi') return context.guard.insurancePolicy?.documentUrl?.trim() || undefined;
   return context.guard.idFrontUrl?.trim() || context.guard.idSelfieUrl?.trim() || undefined;
 }
