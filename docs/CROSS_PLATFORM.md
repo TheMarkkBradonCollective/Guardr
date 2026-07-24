@@ -38,7 +38,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevice()` / `body[data-form-factor]`.
 Experience tiers (PWA Full/Lite, APK Full/Premium) are resolved in `src/lib/platform/experienceTier.ts` and exposed as `useDevice().experienceTier` / `body[data-experience-tier]`.
 
-### View surface model (`/fixit`)
+### View surface model (`/fix`)
 
 Guardr uses a **two-axis** layout model:
 
@@ -63,7 +63,7 @@ src/components/layouts/tablet/      — deprecated aliases → GuardrDrawerShell
 src/styles/tablet-app.css           — tablet merge styles (split panels, welcome, touch)
 src/styles/app-pwa.css              — PWA overrides
 src/styles/app-native.css           — APK overrides
-.cursor/commands/fixit.md           — slash command for UI/UX surface work
+.cursor/commands/fix.md           — slash command for UI/UX surface work
 ```
 
 `DeviceProvider` sets `body[data-shell]`, `body[data-view-surface]`, and `body[data-form-factor]` for CSS targeting.
@@ -96,7 +96,7 @@ src/components/baseui/layout/mobilityChrome.ts — tier-aware shell chrome
 src/styles/platform-optimizations.css — per-surface + per-tier CSS
 ```
 
-### Pre-auth surfaces (`/uberitplatforms` — Phase 1)
+### Pre-auth surfaces (`/uberplatforms` — Phase 1)
 
 | Surface | Component | Notes |
 |---------|-----------|-------|
@@ -122,7 +122,7 @@ src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 
 Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
-### Uber mobility platform (`/uberitplatforms` Phase 2)
+### Uber mobility platform (`/uberplatforms` Phase 2)
 
 | Surface | Shell behavior |
 |---------|----------------|
@@ -202,7 +202,7 @@ src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
 
-### Uber design system files (`/uberitplatforms` complete)
+### Uber design system files (`/uberplatforms` complete)
 
 ```
 src/styles/uber-tokens.css      — canonical --uber-* tokens + --brand-* bridge

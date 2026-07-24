@@ -1,4 +1,4 @@
-# /improveit — Senior architect improvements
+# /improve — Senior architect improvements
 
 Analyze the selected scope like a senior software architect and implement improvements for usability, maintainability, scalability, accessibility, performance, and user experience beyond the original requirements.
 
@@ -28,7 +28,7 @@ Analyze the selected scope like a senior software architect and implement improv
 
 ## Branch & PR
 
-- Branch: `cursor/improveit-<descriptive-name>-e760`
+- Branch: `cursor/improve-<descriptive-name>-e760`
 
 ## Report back
 

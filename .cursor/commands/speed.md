@@ -1,4 +1,4 @@
-# /speedit — Performance optimization
+# /speed — Performance optimization
 
 Optimize performance, loading times, rendering, bundle size, database queries, images, caching, and responsiveness.
 
@@ -34,7 +34,7 @@ Optimize performance, loading times, rendering, bundle size, database queries, i
 
 ## Branch & PR
 
-- Branch: `cursor/speedit-<descriptive-name>-e760`
+- Branch: `cursor/speed-<descriptive-name>-e760`
 
 ## Report back
 

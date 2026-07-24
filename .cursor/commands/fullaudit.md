@@ -221,7 +221,7 @@ Ensure the Website (Desktop, Tablet, Mobile), PWA (Full • Lite), and Android A
 
 | Command | When to use |
 |---------|-------------|
-| `/runit` | Scope-aware audit and repair (lighter pass) |
-| `/testit` | Functionality testing without design changes |
-| `/secureit` | Security-focused audit |
+| `/run` | Scope-aware audit and repair (lighter pass) |
+| `/test` | Functionality testing without design changes |
+| `/secure` | Security-focused audit |
 | `/websiteaudit`, `/pwaaudit`, `/apkaudit` | Single-platform audits |

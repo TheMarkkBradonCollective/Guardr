@@ -1,6 +1,14 @@
-# /deployit — Prepare for production deployment
+# /deploy — Prepare for production deployment
 
-Prepare for production deployment by validating builds, environment variables, assets, databases, and release configuration.
+Deploy when `main` already has the code you want in production. For merging open PRs or a full versioned release, use `/merge` or `/update` first.
+
+## When to use
+
+| Situation | Command |
+|-----------|---------|
+| `main` is ready; push to production | `/deploy` |
+| Open PRs need landing first | `/merge` then `/deploy` |
+| Version bump + APK + docs + deploy | `/update` |
 
 ## Pre-deploy checklist
 
@@ -24,8 +32,8 @@ Prepare for production deployment by validating builds, environment variables, a
 
 ## Related commands
 
-- `/updateit` — full platform release including merge of all open PRs
-- `/mergeit` — merge completed work to `main` before deploy
+- `/update` — full platform release including merge of all open PRs
+- `/merge` — merge completed work to `main` before deploy
 
 ## Report back
 

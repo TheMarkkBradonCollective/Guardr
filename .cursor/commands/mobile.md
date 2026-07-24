@@ -1,4 +1,4 @@
-# /mobileit — Mobile website, PWA, and APK optimization
+# /mobile — Mobile website, PWA, and APK optimization
 
 Optimize only the **Mobile Website**, **PWA**, and **APK** experience.
 
@@ -31,11 +31,11 @@ capacitor.config.ts
 public/sw.js, public/manifest.json
 ```
 
-See `docs/CROSS_PLATFORM.md` and `/fixit` for the full surface model.
+See `docs/CROSS_PLATFORM.md` and `/fix` for the full surface model.
 
 ## Branch & PR
 
-- Branch: `cursor/mobileit-<descriptive-name>-e760`
+- Branch: `cursor/mobile-<descriptive-name>-e760`
 
 ## Report back
 

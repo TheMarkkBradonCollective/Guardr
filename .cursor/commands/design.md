@@ -1,4 +1,4 @@
-# /designit — Redesign selected page(s)
+# /design — Redesign selected page(s)
 
 Completely redesign the selected page(s) while preserving functionality and matching the project's design language.
 
@@ -33,7 +33,7 @@ Completely redesign the selected page(s) while preserving functionality and matc
 
 ## Branch & PR
 
-- Branch: `cursor/designit-<descriptive-name>-e760`
+- Branch: `cursor/design-<descriptive-name>-e760`
 
 ## Report back
 

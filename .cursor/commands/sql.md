@@ -1,4 +1,4 @@
-# /sqlit — Database audit, build, and sync
+# /sql — Database audit, build, and sync
 
 Audit, build, optimize, and synchronize the complete database, migrations, relationships, triggers, and policies.
 

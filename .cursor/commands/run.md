@@ -1,4 +1,4 @@
-# /runit — Complete audit, validation, optimization, and repair
+# /run — Complete audit, validation, optimization, and repair
 
 Perform a complete audit, validation, optimization, and repair of the **selected scope**. Audit every part of the selected scope, automatically identify issues, repair them, optimize where needed, and verify fixes before marking complete.
 
@@ -140,7 +140,7 @@ Run `npm run lint` and `npm test` before finishing.
 
 ## Branch & PR
 
-- Branch: `cursor/runit-<descriptive-name>-e760`
+- Branch: `cursor/run-<descriptive-name>-e760`
 - Commit and push as you go
 
 ## Final report

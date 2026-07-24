@@ -1,4 +1,4 @@
-# /finishit — Finish everything in progress
+# /finish — Finish everything in progress
 
 Finish everything currently in progress. Remove placeholders, TODOs, mock data, and incomplete functionality.
 
@@ -29,7 +29,7 @@ Finish everything currently in progress. Remove placeholders, TODOs, mock data, 
 
 ## Branch & PR
 
-- Branch: `cursor/finishit-<descriptive-name>-e760`
+- Branch: `cursor/finish-<descriptive-name>-e760`
 
 ## Report back
 

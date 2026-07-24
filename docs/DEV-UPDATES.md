@@ -1,13 +1,30 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Wednesday, July 22, 2026  
+**Last updated:** Friday, July 24, 2026  
 **Commits so far:** 1,200+  
 **Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.95**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Friday, July 24, 2026 — Slash command rename (`*it` → clean names)
+
+**Why**
+- `/mergeit`, `/updateit`, `/fixit`, etc. were inconsistent with audit/setup commands (`/fullaudit`, `/websiteaudit`)
+- `/merge` vs `/update` boundaries were unclear (git pass vs full release)
+
+**Shipped**
+- Renamed all `*it` slash commands — e.g. `/merge`, `/update`, `/fix`, `/theme`, `/uber`, `/uberplatforms`
+- Audited and rewrote `/merge` (PR integration only) and `/update` (phased full release)
+- Fine-tuned `/theme` for Light / Dark / Grey sage tokens across web, PWA, APK
+- Added `.cursor/commands/README.md` master command index
+- Renamed `docs/uberit-patterns.md` → `docs/uber-patterns.md`
+
+**Supabase:** no new SQL.
 
 ---
 

@@ -1,4 +1,4 @@
-# /cleanit — Remove dead and redundant code
+# /clean — Remove dead and redundant code
 
 Remove dead code, duplicate files, unused assets, debug code, console logs, temporary files, and obsolete dependencies.
 
@@ -28,7 +28,7 @@ Remove dead code, duplicate files, unused assets, debug code, console logs, temp
 
 ## Branch & PR
 
-- Branch: `cursor/cleanit-<descriptive-name>-e760`
+- Branch: `cursor/clean-<descriptive-name>-e760`
 
 ## Report back
 

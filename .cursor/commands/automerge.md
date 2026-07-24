@@ -1,4 +1,4 @@
-# /automergeit — Enable automatic merging to main
+# /automerge — Enable automatic merging to main
 
 Enable automatic merging for this project. From this point forward, treat `main` as the continuously integrated source of truth.
 
@@ -17,7 +17,7 @@ Whenever a task, feature, page, component, bug fix, or improvement is **complete
 5. **Keep `main` up to date** after every completed task
 6. **Preserve version history and commit messages** — use clear, descriptive commits; do not squash away meaningful history unless required
 7. **Never leave completed work in open PRs** unless explicitly instructed otherwise
-8. **Continue this behavior** until `/automergeit` is disabled or overridden
+8. **Continue this behavior** until `/automerge` is disabled or overridden
 
 ## Per-task workflow
 
@@ -37,8 +37,8 @@ When finishing any completed unit of work:
 - Merge **only completed, verified work** — do not auto-merge broken or half-finished changes
 - If CI fails after merge, fix forward on a new branch and merge that too
 - If the integration cannot close a PR or delete a branch, list it in the report
-- `/mergeit` still applies for one-shot bulk merges of multiple open PRs
-- `/updateit` still applies when a full platform release (version bump, APK, migrations) is needed
+- `/merge` still applies for one-shot bulk merges of multiple open PRs
+- `/update` still applies when a full platform release (version bump, APK, migrations) is needed
 
 ## Disable or override
 

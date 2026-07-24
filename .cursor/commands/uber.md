@@ -1,4 +1,4 @@
-# /uberit — Complete platform UI/UX redesign (Uber Base Web)
+# /uber — Complete platform UI/UX redesign (Uber Base Web)
 
 Completely redesign every user-facing surface using **Uber Base Web** and the **Uber Base Design System** while preserving 100% of existing functionality.
 
@@ -13,8 +13,8 @@ Study before any work:
 - https://github.com/uber/baseweb
 - https://github.com/uber/base-design-docs
 - https://github.com/adrianhajdin/uber
-- Internal patterns: `docs/uberit-patterns.md`
-- `docs/guardedesign.md` · `.cursor/commands/uberitplatforms.md` (per-platform specs)
+- Internal patterns: `docs/uber-patterns.md`
+- `docs/guardedesign.md` · `.cursor/commands/uberplatforms.md` (per-platform specs)
 
 Implement design philosophy, component architecture, accessibility, layout, spacing, typography, motion, interaction patterns, and responsive guidelines from these resources.
 
@@ -208,7 +208,7 @@ Use Uber Base Web components wherever practical. Consistent language for buttons
 
 ## Branch & PR
 
-- Branch: `cursor/uberit-<descriptive-name>-9c4c`
+- Branch: `cursor/uber-<descriptive-name>-9c4c`
 - Base branch: `main`
 
 ---

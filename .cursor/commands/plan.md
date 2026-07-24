@@ -1,4 +1,4 @@
-# /planit — Development roadmap
+# /plan — Development roadmap
 
 Analyze the current project and generate the next recommended development roadmap ordered by priority.
 
@@ -17,7 +17,7 @@ Ordered list of recommended work:
 
 | Priority | Item | Why | Suggested command |
 |----------|------|-----|-------------------|
-| P0 | … | … | `/buildit`, `/runit`, etc. |
+| P0 | … | … | `/build`, `/run`, etc. |
 
 Group by: **bugs**, **incomplete features**, **UX gaps**, **performance**, **security**, **mobile/PWA/APK**, **docs**, **release prep**.
 
@@ -31,4 +31,4 @@ Group by: **bugs**, **incomplete features**, **UX gaps**, **performance**, **sec
 
 - Top 10 prioritized items
 - Quick wins vs large initiatives
-- Recommended first command to run (`/buildit`, `/fixit`, `/runit`, etc.)
+- Recommended first command to run (`/build`, `/fix`, `/run`, etc.)
