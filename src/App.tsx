@@ -144,6 +144,12 @@ import {
   staffCanEditGuardGovernmentId,
 } from './lib/staffCredentialRules';
 import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
+import {
+  CERTIFICATION_METADATA_COLUMNS,
+  fetchCertificationImagesForGuards,
+  mergeCertificationImagesIntoGuards,
+  certificationRowsNeedImageHydration,
+} from './lib/certificationLoad';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import { credentialRequiresExpiry, resolveCertCatalogId } from './lib/certCatalog';
@@ -716,6 +722,7 @@ export default function App() {
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
   const guardsRef = useRef(guards);
   guardsRef.current = guards;
+  const certImageHydrationRef = useRef(new Set<string>());
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -2040,12 +2047,15 @@ export default function App() {
   };
 
   const loadFromSupabase = async () => {
+    certImageHydrationRef.current.clear();
     try {
       const { data: dbGuards, error: guardsErr } = await supabase.from('guards').select('*');
       const { data: dbStaffRows, error: staffErr } = await supabase.from('staff').select('*');
       const staffTableAvailable = !staffErr;
       const { data: dbClients, error: clientsErr } = await supabase.from('clients').select('*');
-      const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
+      const { data: dbCerts, error: certsErr } = await supabase
+        .from('certifications')
+        .select(CERTIFICATION_METADATA_COLUMNS);
       const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
       const { data: dbEducation, error: eduErr } = await supabase.from('education').select('*');
       const { data: dbRequests, error: requestsErr } = await supabase.from('security_requests').select('*');
@@ -2185,7 +2195,13 @@ export default function App() {
       }
       if (guardsErr) console.warn('Guards table load:', guardsErr);
       if (clientsErr) console.warn('Clients table load:', clientsErr);
-      if (certsErr) console.warn('Certifications table load:', certsErr);
+      if (certsErr) {
+        console.warn('Certifications table load:', certsErr);
+        appToast(
+          'Some credential records could not load. Sign out and back in, or contact Guardr support if guard card uploads still fail.',
+          'error'
+        );
+      }
       if (expsErr) console.warn('Experience table load:', expsErr);
       if (requestsErr) console.warn('Security requests table load:', requestsErr);
       if (paymentsErr) console.warn('Payments table load:', paymentsErr);
@@ -3024,6 +3040,41 @@ export default function App() {
     if (isInactiveGuardSession(currentUserRef.current, guardsRef.current)) return;
     void loadRef.current();
   }, isDbConnected);
+
+  const hydrateGuardCertificationImages = useCallback(async (guardIds: string[]) => {
+    if (!isDbConnected || guardIds.length === 0) return;
+    const pending = guardIds.filter((id) => !certImageHydrationRef.current.has(id));
+    if (pending.length === 0) return;
+    pending.forEach((id) => certImageHydrationRef.current.add(id));
+
+    const { imagesByGuardId, error } = await fetchCertificationImagesForGuards(supabase, pending);
+    if (error) {
+      pending.forEach((id) => certImageHydrationRef.current.delete(id));
+      console.warn('Certification image hydrate:', error);
+      return;
+    }
+    setGuards((prev) => mergeCertificationImagesIntoGuards(prev, imagesByGuardId));
+  }, [isDbConnected]);
+
+  useEffect(() => {
+    if (!currentUser || !isDbConnected) return;
+
+    const targetGuardIds: string[] = [];
+    if (currentUser.role === 'guard') {
+      const guard = findGuardProfileForUser(currentUser, guardsRef.current);
+      if (guard?.id) targetGuardIds.push(guard.id);
+    } else if (currentUser.role === 'staff') {
+      for (const guard of guardsRef.current) {
+        if (guard.certifications.some((cert) => cert.status === 'pending' && !cert.imageUrl?.trim())) {
+          targetGuardIds.push(guard.id);
+        }
+      }
+    }
+
+    const needs = certificationRowsNeedImageHydration(guardsRef.current, targetGuardIds);
+    if (needs.length === 0) return;
+    void hydrateGuardCertificationImages(needs);
+  }, [currentUser?.id, currentUser?.role, guards, isDbConnected, hydrateGuardCertificationImages]);
 
   useUserNotificationsRealtime(
     currentUser?.id,

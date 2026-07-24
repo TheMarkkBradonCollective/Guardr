@@ -60,6 +60,9 @@ export async function processDocumentPhotoFile(file: File): Promise<string> {
   } catch {
     const dataUrl = await readFileAsDataUrl(file);
     if (!dataUrl.startsWith('data:image/')) {
+      if (/\.(heic|heif)$/i.test(file.name)) {
+        throw new Error('HEIC photos are not supported here. Change camera settings to JPEG, or email the photo to support.');
+      }
       throw new Error('Could not process image. Try JPEG or PNG.');
     }
     try {

@@ -52,6 +52,7 @@ export function CertItemCard({
   openDetailOnClick = true,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const title = certDisplayName(cert);
   const canEditCert = Boolean(canEdit);
   const useModalEdit = Boolean(onUpdate);
@@ -65,6 +66,33 @@ export function CertItemCard({
   const thumbClass = compact
     ? 'w-11 h-11 rounded-lg object-cover shrink-0 border border-brand-border bg-brand-bg-sec'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border bg-brand-bg-sec';
+
+  React.useEffect(() => {
+    setImageFailed(false);
+  }, [cert.id, cert.imageUrl]);
+
+  const renderThumbnail = () => {
+    if (cert.imageUrl && !imageFailed) {
+      return (
+        <img
+          src={cert.imageUrl}
+          alt={`${title} credential preview`}
+          className={thumbClass}
+          onError={() => setImageFailed(true)}
+        />
+      );
+    }
+    return (
+      <div
+        className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
+        aria-hidden
+      >
+        <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60 text-center px-1">
+          {cert.imageUrl && imageFailed ? 'Photo unavailable' : 'No photo'}
+        </span>
+      </div>
+    );
+  };
 
   const openDetail = () => {
     if (!openDetailOnClick) return;
@@ -84,16 +112,7 @@ export function CertItemCard({
           onClick={openDetail}
           className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3`}
         >
-          {cert.imageUrl ? (
-            <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />
-          ) : (
-            <div
-              className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
-              aria-hidden
-            >
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">No photo</span>
-            </div>
-          )}
+          {renderThumbnail()}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="font-semibold text-sm leading-snug break-words">{title}</p>
@@ -117,16 +136,7 @@ export function CertItemCard({
         </button>
         ) : (
         <div className="app-cert-item-body min-w-0 flex-1 text-left flex items-start gap-3">
-          {cert.imageUrl ? (
-            <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />
-          ) : (
-            <div
-              className={`${thumbClass} flex items-center justify-center text-brand-text-muted`}
-              aria-hidden
-            >
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">No photo</span>
-            </div>
-          )}
+          {renderThumbnail()}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="font-semibold text-sm leading-snug break-words">{title}</p>
