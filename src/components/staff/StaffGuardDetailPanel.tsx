@@ -626,7 +626,6 @@ export function StaffGuardDetailPanel({
                   <AppButton
                     variant="primary"
                     size="sm"
-                    className="staff-action-btn--ok"
                     onClick={() => (editing ? void handleSave() : setEditing(true))}
                     disabled={saving}
                     startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
@@ -637,7 +636,6 @@ export function StaffGuardDetailPanel({
                     <AppButton
                       variant="outline"
                       size="sm"
-                      className="staff-action-btn--warn"
                       onClick={handleCancelEdit}
                     >
                       Cancel
