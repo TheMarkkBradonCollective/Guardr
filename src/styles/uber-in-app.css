@@ -1114,22 +1114,29 @@ html.theme-dark .app-screen-header { background: var(--uber-bg, #000); }
   gap: 12px;
   padding: 14px max(1.25rem, env(safe-area-inset-right, 0px)) 14px
     max(1.25rem, env(safe-area-inset-left, 0px));
-  background: var(--uber-bg, #fff);
-  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  background: transparent;
+  border-bottom: none;
   min-height: 56px;
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  position: relative;
+  top: auto;
+  z-index: 1;
   box-sizing: border-box;
   max-width: 100%;
 }
 
-html.theme-dark .app-subscreen-header { background: var(--uber-bg, #000); }
+html.theme-dark .app-subscreen-header { background: transparent; }
 
+/* Opt-in: pin header while body scrolls inside the detail shell */
 .app-full-page-detail--scroll .app-subscreen-header {
-  position: relative;
-  top: auto;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+html.theme-dark .app-full-page-detail--scroll .app-subscreen-header {
+  background: var(--uber-bg, #000);
 }
 
 .app-subscreen-header--back-only {
