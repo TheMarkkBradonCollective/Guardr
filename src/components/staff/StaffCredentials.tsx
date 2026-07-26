@@ -43,6 +43,8 @@ import { showAppToast } from '../ui/AppToast';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -74,6 +76,7 @@ interface StaffCredentialsProps {
     payload: CertUpdatePayload
   ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onAddCredentialForGuard?: (guardId: string) => void;
   onEditGuardProfile?: (guardId: string) => void;
   onUpdateGuardIdImages?: (
@@ -161,6 +164,7 @@ export function StaffCredentials({
   onRequestCoiUpdate,
   onUpdateCertification,
   onOpenGuardProfile,
+  onAddCertification,
   onAddCredentialForGuard,
   onEditGuardProfile,
   onUpdateGuardIdImages,
@@ -562,6 +566,14 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
+      <div className="staff-ops-cta-stack">
+        {onAddCertification && (
+          <StaffCredentialAddForGuardForm
+            guards={guards}
+            onAddCertification={onAddCertification}
+          />
+        )}
+      </div>
       <WfSearchBar
         value={search}
         onChange={setSearch}

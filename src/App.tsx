@@ -4401,9 +4401,7 @@ export default function App() {
     newCert: Partial<Certification>,
     submittedByRole: 'guard' | 'staff' = 'guard'
   ): Promise<AddCertificationResult> => {
-    if (submittedByRole === 'staff' || newCert.submittedByRole === 'staff') {
-      return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
-    }
+    const staffSubmission = submittedByRole === 'staff' || newCert.submittedByRole === 'staff';
 
     const available = validateCertNumberAvailable(guards, {
       number: newCert.number ?? '',
@@ -4419,7 +4417,7 @@ export default function App() {
       name: newCert.name || 'BSIS Guard Card',
       issuer: newCert.issuer || 'BSIS',
       number: newCert.number!.trim(),
-      status: 'pending',
+      status: staffSubmission ? 'verified' : 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
       expiryDate: newCert.expiryDate,
       state: newCert.state?.toUpperCase(),
@@ -14066,6 +14064,7 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
+          onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
           onDeleteCertification={handleDeleteCertification}
           onAttachCertificationImage={handleAttachCertificationImage}
           onUpdateCertification={(guardId, certId, payload) =>
