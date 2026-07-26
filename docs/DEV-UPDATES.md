@@ -3,11 +3,26 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Sunday, July 26, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.97**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.98**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Sunday, July 26, 2026 — /update → v1.0.98
+
+**PR cleanup**
+- Merged **#831** (staff add credential on desktop and mobile)
+
+**Shipped**
+- Staff **Credentials** page: **Add credential** works on desktop (sidebar CTA) and mobile (inline toolbar button)
+- Staff wizard to add guard credentials on behalf of a guard (saved as verified)
+- **v1.0.98** (build **198**) web + PWA; APK CI rebuild on push to `main`
+- PWA service worker cache bust: `guardr-cache-v1-0-98-beta`
+
+**Supabase:** no new SQL.
 
 ---
 
