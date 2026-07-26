@@ -756,6 +756,9 @@ export function StaffDashboard({
             onRequestCoiUpdate={onRequestCoiUpdate}
             onUpdateCertification={onUpdateCertification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
+            onAddCertification={
+              canManageGuardAccounts && onAddCertification ? onAddCertification : undefined
+            }
             onAddCredentialForGuard={
               canManageGuardAccounts
                 ? (guardId) => {
