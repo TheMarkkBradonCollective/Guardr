@@ -1258,6 +1258,8 @@ On phone, the Applications roster fits the viewport — scroll inside the list, 
 
 Credential and COI verification queue — staff verify license photos, government ID, and training documents. Approve or reject each upload. Pending guards can also upload activation credentials from their application review screen.
 
+**Add credential** (Administrator+): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
+
 _Note: Guards apply directly to clients for marketplace jobs._
 
 #### Payments panel
