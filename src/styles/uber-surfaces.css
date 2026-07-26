@@ -492,8 +492,10 @@ html.theme-dark .uber-app-shell .adm-card--welcome {
   align-items: center;
   gap: 0.75rem;
   padding-bottom: 0.75rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid var(--uber-border, #e2e2e2);
+  margin-bottom: 0.25rem;
+  border-bottom: none;
+  position: relative;
+  top: auto;
 }
 
 .uber-app-shell .app-subscreen-back,

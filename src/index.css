@@ -3563,14 +3563,15 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
 .app-full-page-detail {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
+  overscroll-behavior: auto;
 }
 
-/* Split header + scroll body — professional mobile detail pages */
+/* Opt-in: pin header while body scrolls inside the detail shell */
 .app-full-page-detail--scroll {
   overflow: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-full-page-detail-scroll {
@@ -3583,17 +3584,20 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
 }
 
 .app-full-page-detail .app-subscreen-header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  position: relative;
+  top: auto;
+  z-index: 1;
   flex-shrink: 0;
-  background: var(--brand-bg);
-  border-bottom: 1px solid var(--brand-border);
+  background: transparent;
+  border-bottom: none;
 }
 
 .app-full-page-detail--scroll .app-subscreen-header {
-  position: relative;
-  top: auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
 }
 
 .app-screen-title {
@@ -4942,10 +4946,12 @@ html.theme-light .staff-ops-btn-primary:hover {
   gap: 0.75rem;
   padding: 0.75rem max(1.25rem, env(safe-area-inset-right, 0px)) 0.75rem
     max(1.25rem, env(safe-area-inset-left, 0px));
-  border-bottom: 1px solid var(--brand-border);
+  border-bottom: none;
   min-height: 3rem;
   box-sizing: border-box;
   max-width: 100%;
+  position: relative;
+  top: auto;
 }
 
 .app-subscreen-back,
