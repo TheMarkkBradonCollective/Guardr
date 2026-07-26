@@ -278,24 +278,6 @@ export function UserProfileScreen({
           {photoSaving && <p className="text-xs text-brand-text-muted mt-2">Saving photo…</p>}
         </>
       }
-      actions={
-        <>
-          <AppButton
-            type="button"
-            variant="primary"
-            onClick={() => (editing ? void handleSave() : setEditing(true))}
-            disabled={saving}
-          >
-            {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
-            {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-          </AppButton>
-          {editing && (
-            <AppButton type="button" variant="outline" onClick={() => setEditing(false)}>
-              Cancel
-            </AppButton>
-          )}
-        </>
-      }
     />
   );
 
@@ -326,6 +308,30 @@ export function UserProfileScreen({
         />
       )}
       <AppDashboardZone title="Contact & account">
+        <div className="staff-detail-actions mb-4">
+          <AppButton
+            type="button"
+            variant="primary"
+            size="sm"
+            className="staff-action-btn--ok"
+            onClick={() => (editing ? void handleSave() : setEditing(true))}
+            disabled={saving}
+            startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+          >
+            {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+          </AppButton>
+          {editing && (
+            <AppButton
+              type="button"
+              variant="outline"
+              size="sm"
+              className="staff-action-btn--warn"
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </AppButton>
+          )}
+        </div>
         <PersonNameFields
           firstName={firstName}
           middleName={middleName}

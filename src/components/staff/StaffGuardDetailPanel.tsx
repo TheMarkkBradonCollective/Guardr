@@ -512,34 +512,12 @@ export function StaffGuardDetailPanel({
 
   return (
     <div className={`staff-detail-pane ${compact ? '' : 'min-w-0'}`}>
-      {(onBack || (canEdit && !guard.isStaff)) && (
-        <div className="app-subscreen-header app-subscreen-header--back-only" style={{ justifyContent: 'space-between', width: '100%' }}>
-          {onBack ? (
-            <button type="button" onClick={onBack} className="app-subscreen-back">
-              <ArrowLeft className="w-4 h-4" aria-hidden />
-              Back to Guards
-            </button>
-          ) : (
-            <span />
-          )}
-          {canEdit && !guard.isStaff && staffGuardTab === 'profile' && (
-            <div className="app-action-row" style={{ width: 'auto', flex: '0 1 auto' }}>
-              <AppButton
-                variant="primary"
-                size="sm"
-                onClick={() => (editing ? void handleSave() : setEditing(true))}
-                disabled={saving}
-                startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-              >
-                {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-              </AppButton>
-              {editing && (
-                <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
-                  Cancel
-                </AppButton>
-              )}
-            </div>
-          )}
+      {onBack && (
+        <div className="app-subscreen-header app-subscreen-header--back-only">
+          <button type="button" onClick={onBack} className="app-subscreen-back">
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back to Guards
+          </button>
         </div>
       )}
 
@@ -643,6 +621,30 @@ export function StaffGuardDetailPanel({
           <section className="staff-detail-section space-y-3">
             <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
             <div className="staff-detail-actions">
+              {canEdit && !guard.isStaff && staffGuardTab === 'profile' && (
+                <>
+                  <AppButton
+                    variant="primary"
+                    size="sm"
+                    className="staff-action-btn--ok"
+                    onClick={() => (editing ? void handleSave() : setEditing(true))}
+                    disabled={saving}
+                    startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                  >
+                    {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+                  </AppButton>
+                  {editing && (
+                    <AppButton
+                      variant="outline"
+                      size="sm"
+                      className="staff-action-btn--warn"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </AppButton>
+                  )}
+                </>
+              )}
               {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
                 <AppButton
                   variant="primary"
