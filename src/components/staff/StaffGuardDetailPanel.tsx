@@ -46,7 +46,6 @@ import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
 import { StaffGuardPerformancePanel } from './StaffGuardPerformancePanel';
 import { GuardResumeEditor, GuardResumeSavePayload } from '../profile/GuardResumeEditor';
-import { GuardGearCarryPanel } from '../profile/GuardGearCarryPanel';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
@@ -576,8 +575,9 @@ export function StaffGuardDetailPanel({
               )}
             </div>
           )}
-          <GuardGearCarryPanel
+          <GuardCredentialsPanel
             guard={guard}
+            editing={editing && canEdit}
             weaponGearEditing={editing && canEdit}
             equipmentGearEditing={editing && canEdit}
             weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
@@ -588,10 +588,6 @@ export function StaffGuardDetailPanel({
             onEquipmentGearChange={(listedEquipmentGear) =>
               setResume((r) => ({ ...r, listedEquipmentGear }))
             }
-          />
-          <GuardCredentialsPanel
-            guard={guard}
-            editing={editing && canEdit}
             staffMode={canManage}
             onSubmitIdentityVerification={
               onUpdateGuardIdImages

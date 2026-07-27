@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
+import { Certification, GuardEquipmentGearId, GuardInsurancePolicy, GuardWeaponGearId, SecurityGuard } from '../../types';
 import {
   BSIS_REFRESHER_CATALOG_ID,
   CertCategory,
@@ -57,6 +57,8 @@ import {
   staffCanEditGuardGovernmentId,
 } from '../../lib/staffCredentialRules';
 import { WfSearchBar } from '../ui/wireframe';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { GuardGearCarryFields } from './GuardGearCarryPanel';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -67,7 +69,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'bsis-permit',
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Separate from training certificates — firearm, baton, and pepper spray permits expire and require staff verification.',
+    subtitle: 'Permits, training, and what you carry — firearm, baton, and OC spray permits expire and require staff verification.',
     icon: Shield,
   },
   {
@@ -119,6 +121,13 @@ interface GuardCredentialsPanelProps {
   ) => Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   certOverlayNav?: CertOverlayNavigation;
+  weaponGearEditing?: boolean;
+  equipmentGearEditing?: boolean;
+  weaponGearSelected?: GuardWeaponGearId[];
+  equipmentGearSelected?: GuardEquipmentGearId[];
+  onWeaponGearChange?: (next: GuardWeaponGearId[]) => void;
+  onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
+  showFullGearCatalog?: boolean;
 }
 
 export function GuardCredentialsPanel({
@@ -136,6 +145,13 @@ export function GuardCredentialsPanel({
   onSaveVehicleInsurance,
   onReviewInsurance,
   certOverlayNav,
+  weaponGearEditing = false,
+  equipmentGearEditing = false,
+  weaponGearSelected,
+  equipmentGearSelected,
+  onWeaponGearChange,
+  onEquipmentGearChange,
+  showFullGearCatalog = true,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -645,7 +661,9 @@ export function GuardCredentialsPanel({
           catalogOptions.map((opt) => opt.id),
           { search }
         );
-        if (!showSection(slots.length)) return null;
+        const isWeaponsSection = category === 'bsis-permit';
+        const showGear = isWeaponsSection && (weaponGearEditing || equipmentGearEditing || showFullGearCatalog);
+        if (!showSection(slots.length) && !showGear) return null;
 
         const sectionCard = (
           <section key={category} className="app-form-section space-y-3 pb-4 border-b border-brand-border">
@@ -655,6 +673,7 @@ export function GuardCredentialsPanel({
                 <p className="uber-label flex items-center gap-2 flex-wrap">
                   <Icon className="w-4 h-4 text-brand-primary shrink-0" />
                   {title}
+                  {isWeaponsSection && <GuardArmedStatusPill guard={guard} className="!text-xs" />}
                 </p>
               }
               subtitle={<p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{subtitle}</p>}
@@ -685,6 +704,19 @@ export function GuardCredentialsPanel({
                 renderCertRow={renderCertRow}
                 certCardProps={certCardProps}
               />
+              {isWeaponsSection && (
+                <GuardGearCarryFields
+                  guard={guard}
+                  embedded
+                  weaponGearEditing={weaponGearEditing}
+                  equipmentGearEditing={equipmentGearEditing}
+                  weaponGearSelected={weaponGearSelected}
+                  equipmentGearSelected={equipmentGearSelected}
+                  onWeaponGearChange={onWeaponGearChange}
+                  onEquipmentGearChange={onEquipmentGearChange}
+                  showFullCatalog={showFullGearCatalog}
+                />
+              )}
             </div>
           </section>
         );

@@ -18,7 +18,6 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
-import { GuardGearCarryClientSection } from '../profile/GuardGearCarryPanel';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {
@@ -254,7 +253,6 @@ export function GuardProfileScreen({
 
           {profileTab === 'certs' ? (
             <section className="space-y-6">
-              <GuardGearCarryClientSection guard={guard} />
               <CertBadgeRow guard={guard} clientMode />
               <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
             </section>

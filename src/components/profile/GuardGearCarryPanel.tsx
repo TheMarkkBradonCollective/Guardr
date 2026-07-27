@@ -23,21 +23,21 @@ import { guardHasGuardrVerifiedCredential } from '../../lib/guardQualification';
 import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { Check, Shield, X } from 'lucide-react';
 
-interface GuardGearCarryPanelProps {
+interface GuardGearCarryFieldsProps {
   guard: SecurityGuard;
-  /** Allow toggling weapon gear listing. */
   weaponGearEditing?: boolean;
-  /** Allow toggling equipment gear badges. */
   equipmentGearEditing?: boolean;
   weaponGearSelected?: GuardWeaponGearId[];
   equipmentGearSelected?: GuardEquipmentGearId[];
   onWeaponGearChange?: (next: GuardWeaponGearId[]) => void;
   onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
-  /** Show every catalog gear row (not only listed) when not editing. */
   showFullCatalog?: boolean;
+  /** Render inside a credentials section — omits standalone section header. */
+  embedded?: boolean;
 }
 
-export function GuardGearCarryPanel({
+/** Weapon gear rows and equipment badges — embeddable in the credentials panel. */
+export function GuardGearCarryFields({
   guard,
   weaponGearEditing = false,
   equipmentGearEditing = false,
@@ -46,7 +46,8 @@ export function GuardGearCarryPanel({
   onWeaponGearChange,
   onEquipmentGearChange,
   showFullCatalog = true,
-}: GuardGearCarryPanelProps) {
+  embedded = false,
+}: GuardGearCarryFieldsProps) {
   const selectedWeapon = weaponGearSelected ?? guard.listedWeaponGear ?? [];
   const selectedEquipment = equipmentGearSelected ?? guard.listedEquipmentGear ?? [];
   const eligibleWeapon = getEligibleWeaponGear(guard);
@@ -75,27 +76,40 @@ export function GuardGearCarryPanel({
   };
 
   return (
-    <section className="app-form-section space-y-4">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-brand-primary flex items-center gap-2">
-          <Shield className="w-4 h-4" />
-          Gear & carry status
-        </p>
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Armed status reflects what you list on your profile after Guardr verifies the required BSIS
-          credentials for each item.
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <GuardArmedStatusPill guard={guard} status={armedStatus} />
-          <span className="text-xs text-brand-text-muted">
-            {armedStatus === 'armed'
-              ? 'Firearm listed on profile'
-              : armedStatus === 'light-armed'
-                ? 'Less-lethal weapons listed on profile'
-                : 'No weapons listed on profile'}
-          </span>
+    <div className={embedded ? 'space-y-4' : 'app-form-section space-y-4'}>
+      {!embedded && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-brand-primary flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Gear & carry status
+          </p>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Armed status reflects what you list on your profile after Guardr verifies the required BSIS
+            credentials for each item.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <GuardArmedStatusPill guard={guard} status={armedStatus} />
+            <span className="text-xs text-brand-text-muted">
+              {armedStatus === 'armed'
+                ? 'Firearm listed on profile'
+                : armedStatus === 'light-armed'
+                  ? 'Less-lethal weapons listed on profile'
+                  : 'No weapons listed on profile'}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
+
+      {embedded && (
+        <div className="space-y-1 pt-2 border-t border-brand-border">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+            Weapons & gear carried
+          </p>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            List what you carry after Guardr verifies the required BSIS permits and training above.
+          </p>
+        </div>
+      )}
 
       {GUARD_WEAPON_GEAR_CATEGORY_ORDER.map((category) => {
         const rules = groupedWeaponRules[category];
@@ -192,8 +206,15 @@ export function GuardGearCarryPanel({
             <p className="text-xs text-brand-text-muted">No equipment badges listed yet.</p>
           )}
       </div>
-    </section>
+    </div>
   );
+}
+
+interface GuardGearCarryPanelProps extends GuardGearCarryFieldsProps {}
+
+/** Standalone gear panel — used in resume editor when not on the credentials tab. */
+export function GuardGearCarryPanel(props: GuardGearCarryPanelProps) {
+  return <GuardGearCarryFields {...props} />;
 }
 
 function WeaponGearRow({
@@ -308,9 +329,8 @@ interface GuardGearCarryClientSectionProps {
   guard: SecurityGuard;
 }
 
-/** Client-facing gear summary grouped by armed tier. */
-export function GuardGearCarryClientSection({ guard }: GuardGearCarryClientSectionProps) {
-  const armedStatus = computeGuardArmedStatus(guard);
+/** Client-facing gear summary — embeddable in the credentials weapons section. */
+export function GuardGearCarryClientFields({ guard }: { guard: SecurityGuard }) {
   const grouped = groupWeaponGearRulesByCategory();
   const eligibleIds = new Set(getEligibleWeaponGear(guard).map((rule) => rule.id));
   const listedIds = new Set(guard.listedWeaponGear ?? []);
@@ -326,14 +346,7 @@ export function GuardGearCarryClientSection({ guard }: GuardGearCarryClientSecti
   if (listedByCategory.length === 0 && equipment.length === 0) return null;
 
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-          Gear carried
-        </p>
-        <GuardArmedStatusPill guard={guard} status={armedStatus} />
-      </div>
-
+    <div className="space-y-3 pt-3 border-t border-brand-border">
       {listedByCategory.map(({ category, items }) => (
         <div key={category} className="space-y-2">
           <p className="text-xs font-semibold text-brand-text-muted">
@@ -367,6 +380,34 @@ export function GuardGearCarryClientSection({ guard }: GuardGearCarryClientSecti
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Standalone client gear section — prefer GuardGearCarryClientFields inside credentials. */
+export function GuardGearCarryClientSection({ guard }: GuardGearCarryClientSectionProps) {
+  const grouped = groupWeaponGearRulesByCategory();
+  const eligibleIds = new Set(getEligibleWeaponGear(guard).map((rule) => rule.id));
+  const listedIds = new Set(guard.listedWeaponGear ?? []);
+  const equipment = getClientVisibleListedEquipmentGear(guard);
+  const hasListedGear =
+    GUARD_WEAPON_GEAR_CATEGORY_ORDER.some((category) =>
+      grouped[category].some((rule) => listedIds.has(rule.id) && eligibleIds.has(rule.id))
+    ) || equipment.length > 0;
+
+  if (!hasListedGear) return null;
+
+  const armedStatus = computeGuardArmedStatus(guard);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+          Gear carried
+        </p>
+        <GuardArmedStatusPill guard={guard} status={armedStatus} />
+      </div>
+      <GuardGearCarryClientFields guard={guard} />
     </section>
   );
 }
