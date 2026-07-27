@@ -26,11 +26,13 @@ import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { buildCredentialCatalogSlots } from '../../lib/guardCredentialCatalog';
 import {
   certsForCatalogId,
   findRejectedCertForCatalog,
   guardHasRejectedCertForCatalog,
 } from '../../lib/certResubmit';
+import { CredentialCatalogSlotList } from '../credentials/CredentialCatalogSlotList';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 
 interface GuardThirtyTwoHourPanelProps {
@@ -78,6 +80,10 @@ export function GuardThirtyTwoHourPanel({
   const [formError, setFormError] = useState('');
 
   const listedCerts = useMemo(() => allContinuingEducationCerts(guard), [guard]);
+  const mandatorySlots = useMemo(
+    () => buildCredentialCatalogSlots(guard, [...MANDATORY_COURSE_IDS]),
+    [guard]
+  );
 
   const sectionStatus = getThirtyTwoHourSectionStatus(guard, staffMode);
   const sectionUploadStatus =
@@ -383,17 +389,20 @@ export function GuardThirtyTwoHourPanel({
         }
       />
 
-      {listedCerts.length === 0 ? (
-        <div className="border-t border-brand-border py-3">
-          <p className="text-xs text-brand-text-muted">
-            No Continuing Education courses on file yet. Upload all 4 BSIS mandatory course certificates.
-          </p>
-        </div>
-      ) : (
-        <div className="app-cert-item-stack border-t border-brand-border">
-          {listedCerts.map((cert) => renderCertRow(cert))}
-        </div>
-      )}
+      <div className="border-t border-brand-border pt-3">
+        <CredentialCatalogSlotList
+          guard={guard}
+          slots={mandatorySlots}
+          staffMode={staffMode}
+          canUpload={canUpload}
+          editing={editing}
+          compact
+          onAdd={startAdd}
+          onEditCert={openCertEdit}
+          renderCertRow={renderCertRow}
+          certCardProps={certCardProps}
+        />
+      </div>
 
       <AppFormSheet
         open={showAddPicker || Boolean(addingCatalogId)}

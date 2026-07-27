@@ -20,7 +20,7 @@ import {
 } from '../credentials/CredentialStatusLabels';
 import { CredentialGracePeriodStatusBar } from '../credentials/CredentialGracePeriodStatusBar';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { getCourseUploadStatus } from '../../lib/certStatus';
+import { getCourseUploadStatus, getPtaUofSecondPartUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -30,11 +30,13 @@ import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { buildCredentialCatalogSlots } from '../../lib/guardCredentialCatalog';
 import {
   certsForCatalogId,
   findRejectedCertForCatalog,
   guardHasRejectedCertForCatalog,
 } from '../../lib/certResubmit';
+import { CredentialCatalogSlotList } from '../credentials/CredentialCatalogSlotList';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 
 interface GuardPtaUofPanelProps {
@@ -90,6 +92,24 @@ export function GuardPtaUofPanel({
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
   const listedCerts = useMemo(() => allPtaUofCerts(guard), [guard]);
+  const ptaUofSlots = useMemo(() => {
+    const ptaSlot = buildCredentialCatalogSlots(guard, [LEGACY_PTA_ID])[0];
+    const uofSlot = buildCredentialCatalogSlots(guard, [LEGACY_UOF_ID])[0];
+    if (!ptaSlot || !uofSlot) return [];
+    return [
+      ptaSlot,
+      {
+        ...uofSlot,
+        certs: secondPartCerts,
+        uploadStatus: getPtaUofSecondPartUploadStatus(guard),
+        alternateUpload: {
+          catalogId: BSIS_WMD_AWARENESS_ID,
+          label: 'Upload WMD Awareness instead',
+          showWhen: canUpload && !staffMode && secondPartCerts.length === 0,
+        },
+      },
+    ];
+  }, [guard, canUpload, staffMode, secondPartCerts]);
 
   const sectionStatus = getPtaUofSectionStatus(guard, staffMode);
   const sectionUploadStatus = listedCerts.length > 0 ? 'on-file' : getCourseUploadStatus(guard, LEGACY_PTA_ID);
@@ -411,17 +431,20 @@ export function GuardPtaUofPanel({
         }
       />
 
-      {listedCerts.length === 0 ? (
-        <div className="border-t border-brand-border py-3">
-          <p className="text-xs text-brand-text-muted">
-            No PTA/UOF training on file yet. {PTA_UOF_UPLOAD_GUIDANCE}
-          </p>
-        </div>
-      ) : (
-        <div className="app-cert-item-stack border-t border-brand-border">
-          {listedCerts.map((cert) => renderCertRow(cert))}
-        </div>
-      )}
+      <div className="border-t border-brand-border pt-3">
+        <CredentialCatalogSlotList
+          guard={guard}
+          slots={ptaUofSlots}
+          staffMode={staffMode}
+          canUpload={canUpload}
+          editing={editing}
+          compact
+          onAdd={startAdd}
+          onEditCert={openCertEdit}
+          renderCertRow={renderCertRow}
+          certCardProps={certCardProps}
+        />
+      </div>
 
       <AppFormSheet
         open={showAddPicker || Boolean(addingCatalogId)}
