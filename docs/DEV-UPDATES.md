@@ -1,13 +1,31 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Sunday, July 26, 2026  
+**Last updated:** Monday, July 27, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.98**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.99**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Monday, July 27, 2026 — /updateit → v1.0.99
+
+**PR cleanup**
+- Merged **#834** (Rejected credentials tab, thumbnail fix, Edit/resubmit flow)
+- Merged **#833** (activation support chat for approved guards + backfill)
+
+**Shipped**
+- Staff **Credentials** page: new **Rejected** tab with count badge
+- Credential list thumbnails no longer show government ID photos on unrelated pending-upload rows
+- Guards resubmit clearer photos via **Edit** (not Add) when staff reject a credential — avoids duplicate-number errors
+- Approved guards on activation screen get **Contact support** and an **Activation help** support thread (auto-created on approval + backfill)
+- **v1.0.99** (build **199**) web + PWA; APK CI rebuild on push to `main`
+- PWA service worker cache bust: `guardr-cache-v1-0-99-beta`
+
+**Supabase:** no new SQL.
 
 ---
 
