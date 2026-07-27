@@ -16,9 +16,12 @@ import { ProfileAvatar } from './ProfileAvatar';
 import { ProfileHero } from './ProfileHero';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
+import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
+import type { GuardProfileTab } from '../../lib/appNavigation';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
@@ -87,6 +90,7 @@ export function UserProfileScreen({
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
+  const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
@@ -283,6 +287,36 @@ export function UserProfileScreen({
 
   const profileBody = (
     <>
+      {canBuildResume && guard && (
+        <div className="guard-profile-tabs mb-4">
+          <ListFilterTabs
+            aria-label="Guard profile"
+            activeId={profileTab}
+            onChange={(id) => setProfileTab(id as GuardProfileTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'certs', label: 'Certs' },
+            ]}
+          />
+        </div>
+      )}
+      {profileTab === 'certs' && canBuildResume && guard ? (
+        <section className="border-b border-brand-border">
+          <GuardCredentialsPanel
+            guard={guard}
+            editing={credentialsEditing}
+            onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
+            onUpdateCertification={onUpdateCertification}
+            onSubmitIdentityVerification={onSubmitIdentityVerification}
+            onSaveInsurance={onSaveInsurance}
+            onSaveVehicleInsurance={onSaveVehicleInsurance}
+            certOverlayNav={!editing ? { onEditFullPage: () => setEditing(true) } : undefined}
+          />
+        </section>
+      ) : (
+        <>
       {(guardIntakeLocked || clientContactLocked) && (
         <AppNoticeChip
           className="mb-4"
@@ -397,8 +431,11 @@ export function UserProfileScreen({
           onSaveInsurance={onSaveInsurance}
           onSaveVehicleInsurance={onSaveVehicleInsurance}
           onEditCredentialFullPage={!editing ? () => setEditing(true) : undefined}
+          hideCredentials
         />
         </section>
+      )}
+        </>
       )}
     </>
   );

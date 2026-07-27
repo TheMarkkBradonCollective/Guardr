@@ -529,6 +529,7 @@ export function StaffGuardDetailPanel({
             onChange={(id) => onStaffGuardTabChange(id as StaffGuardDetailTab)}
             tabs={[
               { id: 'profile', label: 'Profile' },
+              { id: 'certs', label: 'Certs' },
               { id: 'performance', label: 'Guard status' },
             ]}
           />
@@ -543,6 +544,83 @@ export function StaffGuardDetailPanel({
           onPerformanceFactorChange={onPerformanceFactorChange}
           onOpenJob={onOpenJob}
         />
+      ) : staffGuardTab === 'certs' && !guard.isStaff ? (
+        <section className="staff-detail-section space-y-3">
+          {canManage && (
+            <div className="staff-detail-actions">
+              {canEdit && (
+                <>
+                  <AppButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => (editing ? void handleSave() : setEditing(true))}
+                    disabled={saving}
+                    startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                  >
+                    {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit credentials'}
+                  </AppButton>
+                  {editing && (
+                    <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
+                      Cancel
+                    </AppButton>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          <GuardCredentialsPanel
+            guard={guard}
+            editing={editing && canEdit}
+            staffMode={canManage}
+            onSubmitIdentityVerification={
+              onUpdateGuardIdImages
+                ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                : undefined
+            }
+            onAddCertification={canManage ? onAddCertification : undefined}
+            onDeleteCertification={canManage ? onDeleteCertification : undefined}
+            onAttachCertificationImage={canManage ? onAttachCertificationImage : undefined}
+            onUpdateCertification={onUpdateCertification}
+            onReviewInsurance={
+              onReviewInsurance
+                ? (status, rejectionReason) => Promise.resolve(onReviewInsurance(status, rejectionReason))
+                : undefined
+            }
+            staffIdReview={
+              canManage ? (
+                <StaffIdReviewSection
+                  guard={guard}
+                  canManage={canManage}
+                  documentTypeEdit="credentials-flag"
+                  onApprove={
+                    onOpenGuardCredential
+                      ? (guardId) => onOpenGuardCredential(guardId, govIdApprovalItemId(guardId))
+                      : onApproveIdentityVerification
+                        ? () => onApproveIdentityVerification(guard.id)
+                        : undefined
+                  }
+                  approveActionLabel={onOpenGuardCredential ? 'Review in Credentials' : undefined}
+                  onReject={onRejectIdentityVerification}
+                  onRequestResubmit={
+                    onRequestIdentityResubmit
+                      ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                      : undefined
+                  }
+                />
+              ) : undefined
+            }
+            renderCertActions={renderStaffCertActions}
+            certOverlayNav={certOverlayNav}
+          />
+          {canManage ? (
+            <StaffVehicleReviewSection
+              guard={guard}
+              canManage={canManage}
+              onApprove={onApproveVehicle}
+              onReject={onRejectVehicle}
+            />
+          ) : null}
+        </section>
       ) : (
         <>
       <div className="staff-detail-header">
@@ -824,65 +902,8 @@ export function StaffGuardDetailPanel({
                       }
                     : undefined
                 }
+                hideCredentials
               />
-            </section>
-          )}
-
-          {!editing && (
-            <section className="staff-detail-section space-y-3">
-              <GuardCredentialsPanel
-                guard={guard}
-                editing={false}
-                staffMode={canManage}
-                onSubmitIdentityVerification={
-                  onUpdateGuardIdImages
-                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                    : undefined
-                }
-                onAddCertification={canManage ? onAddCertification : undefined}
-                onDeleteCertification={canManage ? onDeleteCertification : undefined}
-                onAttachCertificationImage={canManage ? onAttachCertificationImage : undefined}
-                onUpdateCertification={onUpdateCertification}
-                onReviewInsurance={
-                  onReviewInsurance
-                    ? (status, rejectionReason) =>
-                        Promise.resolve(onReviewInsurance(status, rejectionReason))
-                    : undefined
-                }
-                staffIdReview={
-                  canManage ? (
-                    <StaffIdReviewSection
-                      guard={guard}
-                      canManage={canManage}
-                      documentTypeEdit="credentials-flag"
-                      onApprove={
-                        onOpenGuardCredential
-                          ? (guardId) => onOpenGuardCredential(guardId, govIdApprovalItemId(guardId))
-                          : onApproveIdentityVerification
-                            ? () => onApproveIdentityVerification(guard.id)
-                            : undefined
-                      }
-                      approveActionLabel={onOpenGuardCredential ? 'Review in Credentials' : undefined}
-                      onReject={onRejectIdentityVerification}
-                      onRequestResubmit={
-                        onRequestIdentityResubmit
-                          ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                          : undefined
-                      }
-                    />
-                  ) : undefined
-                }
-                renderCertActions={renderStaffCertActions}
-                certOverlayNav={certOverlayNav}
-              />
-              {canManage ? (
-                <StaffVehicleReviewSection
-                  guard={guard}
-                  canManage={canManage}
-                  onApprove={onApproveVehicle}
-                  onReject={onRejectVehicle}
-                />
-              ) : null}
             </section>
           )}
 

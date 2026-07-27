@@ -30,7 +30,9 @@ export type AppRole = 'staff' | 'guard' | 'client';
 export type AuthViewMode = 'sign-in' | 'sign-up';
 export type AuthViewRole = 'guard' | 'client' | 'staff';
 
-export type StaffGuardDetailTab = 'profile' | 'performance';
+export type StaffGuardDetailTab = 'profile' | 'certs' | 'performance';
+
+export type GuardProfileTab = 'profile' | 'certs';
 
 export interface AppRoute {
   role: AppRole;
@@ -244,7 +246,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffCredentialItemId) nested.staffCredentialItemId = staffCredentialItemId;
   if (staffTeamId) nested.staffTeamId = staffTeamId;
   if (staffEdit === '1' || staffEdit === 'true') nested.staffEdit = true;
-  if (staffGuardTab === 'profile' || staffGuardTab === 'performance') {
+  if (staffGuardTab === 'profile' || staffGuardTab === 'certs' || staffGuardTab === 'performance') {
     nested.staffGuardTab = staffGuardTab;
   }
   if (performanceFactor && isPerformanceFactorId(performanceFactor)) {

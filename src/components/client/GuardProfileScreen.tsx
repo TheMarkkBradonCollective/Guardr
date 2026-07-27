@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import { getGuardHistoryWithClient, getGuardPlatformHistory } from '../../lib/guardDirectory';
 import {
@@ -38,6 +38,8 @@ import { useDevice } from '../../lib/platform';
 import { DashboardHero, MetricCell, MetricStrip } from '../baseui/dashboard';
 import { AppButton } from '../ui/AppButton';
 import { GuardrTag } from '../baseui/GuardrTag';
+import { ListFilterTabs } from '../ui/ListFilterTabs';
+import type { GuardProfileTab } from '../../lib/appNavigation';
 import { Block } from 'baseui/block';
 import { LabelXSmall, ParagraphSmall } from 'baseui/typography';
 import {
@@ -92,6 +94,7 @@ export function GuardProfileScreen({
   onToggleFavorite,
 }: GuardProfileScreenProps) {
   const { formFactor } = useDevice();
+  const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
     [guard.id, clientId, requests]
@@ -237,6 +240,25 @@ export function GuardProfileScreen({
           </div>
           )}
 
+          <div className="guard-profile-tabs">
+            <ListFilterTabs
+              aria-label="Guard profile"
+              activeId={profileTab}
+              onChange={(id) => setProfileTab(id as GuardProfileTab)}
+              tabs={[
+                { id: 'profile', label: 'Overview' },
+                { id: 'certs', label: 'Certs' },
+              ]}
+            />
+          </div>
+
+          {profileTab === 'certs' ? (
+            <section>
+              <CertBadgeRow guard={guard} clientMode />
+              <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
+            </section>
+          ) : (
+            <>
           <CertBadgeRow guard={guard} clientMode />
 
           <GuardRatingSection
@@ -285,10 +307,6 @@ export function GuardProfileScreen({
               </div>
             </section>
           )}
-
-          <section>
-            <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
-          </section>
 
           {guard.experience.length > 0 && (
             <section>
@@ -410,6 +428,8 @@ export function GuardProfileScreen({
               </div>
             )}
           </section>
+            </>
+          )}
         </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
