@@ -9,6 +9,7 @@ import {
   formatApprovalTimestamp,
   countPendingCredentialReviews,
   countPendingCredentialUploads,
+  countRejectedCredentials,
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
   credentialFeedThumbnailUrl,
@@ -110,6 +111,7 @@ function CredentialFeedRow({
       <div className="flex items-start gap-3 w-full text-left">
         {thumbnailUrl ? (
           <img
+            key={`${item.id}:${thumbnailUrl}`}
             src={thumbnailUrl}
             alt={item.title}
             className={`w-11 h-11 rounded-lg object-cover shrink-0 box-border bg-transparent ${
@@ -474,6 +476,10 @@ export function StaffCredentials({
     () => countPendingCredentialReviews(guards),
     [guards]
   );
+  const rejectedCount = useMemo(
+    () => countRejectedCredentials(guards),
+    [guards]
+  );
 
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
 
@@ -589,6 +595,7 @@ export function StaffCredentials({
           { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
           { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
           { id: 'verified', label: 'Verified' },
+          { id: 'rejected', label: 'Rejected', count: rejectedCount },
         ]}
       />
     </>
@@ -606,7 +613,9 @@ export function StaffCredentials({
                 ? 'All clear'
                 : filter === 'verified'
                   ? 'No verified credentials'
-                  : 'No credentials yet'
+                  : filter === 'rejected'
+                    ? 'No rejected credentials'
+                    : 'No credentials yet'
         }>
           {search.trim()
             ? 'Try adjusting your search term.'
@@ -616,7 +625,9 @@ export function StaffCredentials({
                 ? 'No credentials waiting for staff review.'
                 : filter === 'verified'
                   ? 'No verified credentials on file yet.'
-                  : 'No credential submissions on file yet.'}
+                  : filter === 'rejected'
+                    ? 'No rejected credentials on file.'
+                    : 'No credential submissions on file yet.'}
         </AppEmptyState>
       ) : (
         <ListDetailLayout

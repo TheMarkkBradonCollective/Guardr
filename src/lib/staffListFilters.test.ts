@@ -6,6 +6,7 @@ import {
   buildStaffApprovalsFeed,
   CREDENTIAL_PENDING_UPLOAD_LABEL,
   isCredentialFeedItemAwaitingStaffReview,
+  isCredentialFeedItemRejected,
   type ApprovalFeedItem,
 } from './staffApprovalsFeed';
 import {
@@ -92,6 +93,41 @@ describe('staffListFilters', () => {
 
     assert.equal(feed.filter((item) => matchesCredentialStatusFilter(item, 'verified')).length, 1);
     assert.ok(feed.every((item) => isCredentialFeedItemVerified(item)));
+  });
+
+  it('filters rejected credentials into the rejected tab', () => {
+    const guard = {
+      id: 'g-3',
+      name: 'Rejected Guard',
+      email: 'r@test.com',
+      userStatus: 'active',
+      verified: true,
+      mustChangePassword: false,
+      isStaff: false,
+      certifications: [
+        {
+          id: 'cert-rejected',
+          catalogId: 'bsis-guard-card',
+          name: 'BSIS Guard Card',
+          issuer: 'BSIS',
+          number: 'GC-1',
+          state: 'CA',
+          issueDate: '2024-01-01',
+          status: 'rejected',
+          imageUrl: 'rejected.jpg',
+          category: 'guard-card',
+          submittedByRole: 'guard',
+        },
+      ],
+    } as SecurityGuard;
+
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+
+    assert.equal(feed.filter((item) => matchesCredentialStatusFilter(item, 'rejected')).length, 1);
+    assert.ok(isCredentialFeedItemRejected(feed[0]!));
+    assert.equal(matchesCredentialStatusFilter(feed[0]!, 'verified'), false);
   });
 
   it('filters application kinds', () => {

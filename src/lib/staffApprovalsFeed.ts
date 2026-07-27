@@ -670,6 +670,7 @@ export function credentialFeedThumbnailUrl(guards: SecurityGuard[], itemId: stri
   if (!context) return undefined;
   if (context.kind === 'cert') return resolveCertImageUrl(context.cert);
   if (context.kind === 'coi') return context.guard.insurancePolicy?.documentUrl?.trim() || undefined;
+  if (context.kind === 'activation-pending') return undefined;
   return context.guard.idFrontUrl?.trim() || context.guard.idSelfieUrl?.trim() || undefined;
 }
 
@@ -710,6 +711,16 @@ export function countPendingCredentialUploads(guards: SecurityGuard[]): number {
 /** Credentials submitted and awaiting staff review — Credentials “Pending review” tab. */
 export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
   return credentialQueueFeed(guards).filter(isCredentialFeedItemAwaitingStaffReview).length;
+}
+
+/** Rejected credentials — Credentials “Rejected” tab. */
+export function countRejectedCredentials(guards: SecurityGuard[]): number {
+  return credentialQueueFeed(guards).filter(isCredentialFeedItemRejected).length;
+}
+
+export function isCredentialFeedItemRejected(item: ApprovalFeedItem): boolean {
+  if (item.queue !== 'credentials') return false;
+  return item.status === 'denied' || item.status === 'rejected';
 }
 
 /** Full open credential queue — pending upload plus pending review. */
