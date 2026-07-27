@@ -350,9 +350,12 @@ import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
   buildActivationSupportTicketForGuard,
+  buildMissingActivationSupportTickets,
   buildNewTicket,
   findActivationSupportChat,
-  ACTIVATION_SUPPORT_SUBJECT,
+  guardNeedsActivationSupportChat,
+  listGuardsNeedingActivationSupport,
+  GUARDR_SUPPORT_ACTOR,
   isDeletableResolvedSupportChat,
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
@@ -728,6 +731,7 @@ export default function App() {
   const guardsRef = useRef(guards);
   guardsRef.current = guards;
   const certImageHydrationRef = useRef(new Set<string>());
+  const activationSupportBackfillRunningRef = useRef(false);
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -1260,15 +1264,10 @@ export default function App() {
     if (existing) return existing.id;
 
     const staffActor = isStaffRole(currentUser.role) && currentUser.id !== guard.id;
-    const ticket = staffActor
-      ? buildActivationSupportTicketForGuard(guard, currentUser)
-      : buildNewTicket(currentUser, {
-          kind: 'chat',
-          subject: ACTIVATION_SUPPORT_SUBJECT,
-          category: 'account',
-          body: 'I need help completing activation.',
-          priority: 'normal',
-        });
+    const ticket = buildActivationSupportTicketForGuard(
+      guard,
+      staffActor ? currentUser : GUARDR_SUPPORT_ACTOR
+    );
 
     beginLocalMutation();
     setSupportTickets((prev) => {
@@ -1288,6 +1287,34 @@ export default function App() {
       });
     }
     return ticket.id;
+  };
+
+  const backfillActivationSupportTickets = async (
+    guardsToBackfill: SecurityGuard[],
+    staff: SessionUser
+  ) => {
+    if (guardsToBackfill.length === 0) return;
+    const newTickets = buildMissingActivationSupportTickets(guardsToBackfill, supportTickets, staff);
+    if (newTickets.length === 0) return;
+
+    beginLocalMutation();
+    setSupportTickets((prev) => {
+      const next = [...newTickets, ...prev];
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+
+    for (const ticket of newTickets) {
+      await persistSupportTicketToDb(ticket);
+      notifySupportTicketCreated(staff, ticket);
+      void reportPushEvent(staff, {
+        type: 'support_message',
+        recipientUserId: ticket.userId,
+        ticketId: ticket.id,
+        title: 'Activation support',
+        body: 'Guardr staff opened a support chat to help you complete activation.',
+      });
+    }
   };
 
   const openGuardActivationSupport = () => {
@@ -3544,6 +3571,25 @@ export default function App() {
   const activationSupportChat = sessionGuard
     ? findActivationSupportChat(supportTickets, { id: sessionGuard.id, email: sessionGuard.email })
     : null;
+
+  useEffect(() => {
+    if (loading || !currentUser || activationSupportBackfillRunningRef.current) return;
+
+    if (isStaffRole(currentUser.role)) {
+      const missing = listGuardsNeedingActivationSupport(verifiedGuards, supportTickets);
+      if (missing.length === 0) return;
+      activationSupportBackfillRunningRef.current = true;
+      void backfillActivationSupportTickets(missing, currentUser).finally(() => {
+        activationSupportBackfillRunningRef.current = false;
+      });
+      return;
+    }
+
+    if (currentUser.role !== 'guard') return;
+    const guard = findGuardProfileForUser(currentUser, verifiedGuards);
+    if (!guard || !guardNeedsActivationSupportChat(guard, supportTickets)) return;
+    void ensureActivationSupportTicket(guard);
+  }, [loading, currentUser?.id, currentUser?.role, verifiedGuards, supportTickets]);
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;

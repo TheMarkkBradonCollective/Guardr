@@ -9,6 +9,8 @@ import {
   SupportTicketCategory,
   SupportTicketStatus,
 } from '../types';
+import { isGuardAccountApproved } from './accountStatus';
+import { isGuardAccountActive } from './guardAccountActivation';
 import { isStaffRole } from './permissions';
 
 const STORAGE_KEY = 'guardr_support_tickets';
@@ -94,6 +96,51 @@ export function openTicketCount(tickets: SupportTicket[]): number {
 }
 
 export const ACTIVATION_SUPPORT_SUBJECT = 'Activation help';
+
+export const GUARDR_SUPPORT_ACTOR = {
+  id: 'guardr-support',
+  name: 'Guardr Support',
+  role: 'administrator' as const,
+};
+
+export function guardNeedsActivationSupportChat(
+  guard: Pick<SecurityGuard, 'id' | 'email' | 'isStaff' | 'userStatus' | 'certifications'>,
+  tickets: SupportTicket[]
+): boolean {
+  if (guard.isStaff) return false;
+  if (!isGuardAccountApproved(guard)) return false;
+  if (isGuardAccountActive(guard as SecurityGuard)) return false;
+  return !findActivationSupportChat(tickets, { id: guard.id, email: guard.email });
+}
+
+export function listGuardsNeedingActivationSupport(
+  guards: SecurityGuard[],
+  tickets: SupportTicket[]
+): SecurityGuard[] {
+  return guards.filter((guard) => guardNeedsActivationSupportChat(guard, tickets));
+}
+
+export function buildMissingActivationSupportTickets(
+  guards: SecurityGuard[],
+  tickets: SupportTicket[],
+  staff: Pick<SessionUser, 'id' | 'name' | 'role'> = GUARDR_SUPPORT_ACTOR
+): SupportTicket[] {
+  const baseTime = Date.now();
+  return listGuardsNeedingActivationSupport(guards, tickets).map((guard, index) => {
+    const ticket = buildActivationSupportTicketForGuard(guard, staff);
+    const ticketId = `support-${baseTime + index}`;
+    const messageId = `smsg-${baseTime + index}`;
+    return {
+      ...ticket,
+      id: ticketId,
+      messages: ticket.messages.map((message) => ({
+        ...message,
+        id: messageId,
+        ticketId,
+      })),
+    };
+  });
+}
 
 export function findOpenSupportChat(
   tickets: SupportTicket[],

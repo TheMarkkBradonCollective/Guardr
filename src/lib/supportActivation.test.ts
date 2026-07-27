@@ -4,7 +4,10 @@ import type { SecurityGuard, SupportTicket } from '../types';
 import {
   ACTIVATION_SUPPORT_SUBJECT,
   buildActivationSupportTicketForGuard,
+  buildMissingActivationSupportTickets,
   findActivationSupportChat,
+  guardNeedsActivationSupportChat,
+  listGuardsNeedingActivationSupport,
 } from './support.ts';
 
 function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -59,5 +62,49 @@ describe('activation support chat', () => {
 
     const found = findActivationSupportChat(tickets, { id: 'g1', email: 'alex@test.com' });
     assert.equal(found?.id, 'support-1');
+  });
+
+  it('lists approved guards awaiting activation without support chats', () => {
+    const approvedGuard = guard();
+    const activeGuard = guard({ id: 'g2', userStatus: 'active' });
+    const pendingGuard = guard({ id: 'g3', userStatus: 'pending' });
+    const tickets = [
+      {
+        id: 'support-1',
+        userId: 'g4',
+        userName: 'Other',
+        userEmail: 'other@test.com',
+        userRole: 'guard' as const,
+        kind: 'chat' as const,
+        subject: ACTIVATION_SUPPORT_SUBJECT,
+        category: 'account' as const,
+        priority: 'normal' as const,
+        status: 'open' as const,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        messages: [],
+      },
+    ];
+
+    assert.equal(guardNeedsActivationSupportChat(approvedGuard, tickets), true);
+    assert.equal(guardNeedsActivationSupportChat(activeGuard, tickets), false);
+    assert.equal(guardNeedsActivationSupportChat(pendingGuard, tickets), false);
+    assert.deepEqual(
+      listGuardsNeedingActivationSupport([approvedGuard, activeGuard, pendingGuard], tickets).map((g) => g.id),
+      ['g1']
+    );
+  });
+
+  it('builds missing activation support tickets in batch', () => {
+    const tickets = buildMissingActivationSupportTickets(
+      [guard(), guard({ id: 'g2', email: 'two@test.com', name: 'Blake' })],
+      [],
+      { id: 'staff-1', name: 'Staff Admin', role: 'administrator' }
+    );
+
+    assert.equal(tickets.length, 2);
+    assert.equal(tickets[0]?.userId, 'g1');
+    assert.equal(tickets[1]?.userId, 'g2');
+    assert.equal(tickets[0]?.messages[0]?.senderRole, 'administrator');
   });
 });
