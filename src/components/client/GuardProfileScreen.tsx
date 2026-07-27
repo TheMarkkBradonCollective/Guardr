@@ -254,7 +254,14 @@ export function GuardProfileScreen({
           {profileTab === 'certs' ? (
             <section className="space-y-6">
               <CertBadgeRow guard={guard} clientMode />
-              <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
+              <GuardCredentialsView
+                guard={guard}
+                guardName={guard.name}
+                hideEmpty
+                excludeRejected
+                verifiedOnly
+                showFullCatalog
+              />
             </section>
           ) : (
             <>

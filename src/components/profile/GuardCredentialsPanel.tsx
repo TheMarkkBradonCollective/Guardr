@@ -5,15 +5,8 @@ import {
   CertCategory,
   credentialRequiresExpiry,
   getCertCatalogEntry,
-  getCertsByCategory,
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
-import {
-  isCombinedPtaUofCatalogId,
-  isPtaUofCatalogId,
-  isThirtyTwoHourCatalogId,
-} from '../../lib/guardQualification';
-import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
@@ -31,11 +24,9 @@ import {
   getGuardIdVerificationStatus,
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
-import { Award, BookOpen, Plus, Shield } from 'lucide-react';
-import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
+import { Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { buildCredentialCatalogSlots } from '../../lib/guardCredentialCatalog';
-import { getCourseUploadStatus } from '../../lib/certStatus';
+import { catalogOptionsForCredentialSection } from '../../lib/guardCredentialCatalog';
 import {
   CERT_IMAGE_POLICY_HINT,
   guardCertificationCanEdit,
@@ -51,54 +42,25 @@ import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { GuardOptionalCredentialAddSheet } from '../guard/GuardOptionalCredentialAddSheet';
-import { CredentialCatalogSlotList } from '../credentials/CredentialCatalogSlotList';
 import {
   staffCanEditCertification,
   staffCanEditGuardGovernmentId,
 } from '../../lib/staffCredentialRules';
 import { WfSearchBar } from '../ui/wireframe';
-import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
-import { GuardGearCarryFields } from './GuardGearCarryPanel';
+import {
+  CATALOG_CREDENTIAL_SECTION_IDS,
+  getCredentialSectionMeta,
+  type CredentialViewSectionId,
+} from '../../lib/guardCredentialSections';
+import { GuardCredentialCatalogSectionBlock } from '../credentials/GuardCredentialCatalogSectionBlock';
 
-const CREDENTIAL_SECTIONS: {
-  category: CertCategory;
-  title: string;
-  subtitle: string;
-  icon: typeof Shield;
-}[] = [
-  {
-    category: 'bsis-permit',
-    title: 'BSIS Permits (Weapons)',
-    subtitle: 'Permits, training, and what you carry — firearm, baton, and OC spray permits expire and require staff verification.',
-    icon: Shield,
-  },
-  {
-    category: 'medical',
-    title: 'Medical & Emergency',
-    subtitle: 'CPR, AED, First Aid, Narcan, Stop the Bleed — highly recommended and often required by clients.',
-    icon: Award,
-  },
-  {
-    category: 'fema',
-    title: 'FEMA / Homeland Security',
-    subtitle: 'ICS and awareness courses for incident command and emergency coordination.',
-    icon: Award,
-  },
-  {
-    category: 'security-advanced',
-    title: 'Advanced Security',
-    subtitle: 'Executive protection, active shooter, de-escalation, defensive driving, and specialty training.',
-    icon: Award,
-  },
-  {
-    category: 'industry',
-    title: 'Industry & Professional',
-    subtitle: 'OSHA, CIT, mental health first aid, other licenses — or use Other to add anything not listed.',
-    icon: Award,
-  },
-];
+type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-other-training';
 
-type CredentialOpenSection = CertCategory | 'bsis-refresher';
+function credentialAddSectionKey(section: CredentialViewSectionId): CredentialOpenSection {
+  if (section === 'bsis-other-training') return 'bsis-other-training';
+  if (section === 'bsis-refresher') return 'bsis-refresher';
+  return section as CertCategory;
+}
 
 interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
@@ -261,53 +223,7 @@ export function GuardCredentialsPanel({
   );
 
   const refresherEntry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
-  const refresherItems = useMemo(
-    () =>
-      (grouped['bsis-training'] ?? []).filter(
-        (cert) => resolveCertCatalogId(cert) === BSIS_REFRESHER_CATALOG_ID
-      ),
-    [grouped]
-  );
-  const otherBsisItems = useMemo(
-    () =>
-      (grouped['bsis-training'] ?? []).filter((cert) => {
-        const id = resolveCertCatalogId(cert);
-        return (
-          !isThirtyTwoHourCatalogId(id) &&
-          !isPtaUofCatalogId(id) &&
-          !isCombinedPtaUofCatalogId(id) &&
-          id !== BSIS_REFRESHER_CATALOG_ID
-        );
-      }),
-    [grouped]
-  );
-  const otherBsisCatalogOptions = useMemo(
-    () =>
-      getCertsByCategory('bsis-training').filter(
-        (opt) =>
-          !isThirtyTwoHourCatalogId(opt.id) &&
-          !isPtaUofCatalogId(opt.id) &&
-          !isCombinedPtaUofCatalogId(opt.id) &&
-          opt.id !== BSIS_REFRESHER_CATALOG_ID
-      ),
-    []
-  );
-  const showSection = (slotCount: number) =>
-    search.trim() ? slotCount > 0 : editing || staffMode || slotCount > 0;
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
-  const refresherSlots = useMemo(
-    () => buildCredentialCatalogSlots(guard, [BSIS_REFRESHER_CATALOG_ID], { search }),
-    [guard, search]
-  );
-  const otherBsisSlots = useMemo(
-    () =>
-      buildCredentialCatalogSlots(
-        guard,
-        otherBsisCatalogOptions.map((opt) => opt.id),
-        { search }
-      ),
-    [guard, search, otherBsisCatalogOptions]
-  );
   const idStatus = getGuardIdVerificationStatus(guard);
   const canEditId = !guard.isStaff && (
     staffMode ? staffCanEditGuardGovernmentId(guard) : guardIdVerificationCanEdit(guard)
@@ -321,13 +237,13 @@ export function GuardCredentialsPanel({
         subtitle: refresherEntry?.description ?? 'Upload when applicable for guard card renewals.',
       };
     }
-    if (openSection === 'bsis-training') {
+    if (openSection === 'bsis-other-training') {
       return {
         title: 'Add BSIS training',
         subtitle: 'Supplemental BSIS courses beyond the 32-hour CE package — not required for activation.',
       };
     }
-    const sectionMeta = CREDENTIAL_SECTIONS.find((s) => s.category === openSection);
+    const sectionMeta = getCredentialSectionMeta(openSection as CredentialViewSectionId);
     return {
       title: sectionMeta ? `Add ${sectionMeta.title}` : 'Upload credential',
       subtitle: sectionMeta?.subtitle,
@@ -337,14 +253,14 @@ export function GuardCredentialsPanel({
   const renderCredentialAddForm = () => {
     if (!openSection) return null;
     const showCatalogSelect =
-      openSection === 'bsis-training' ||
-      (openSection !== 'bsis-refresher' && CREDENTIAL_SECTIONS.some((s) => s.category === openSection));
+      openSection === 'bsis-other-training' ||
+      (openSection !== 'bsis-refresher' && CATALOG_CREDENTIAL_SECTION_IDS.includes(openSection as CredentialViewSectionId));
 
     const catalogOptions =
-      openSection === 'bsis-training'
-        ? otherBsisCatalogOptions
+      openSection === 'bsis-other-training'
+        ? catalogOptionsForCredentialSection('bsis-other-training')
         : openSection !== 'bsis-refresher'
-          ? getCertsByCategory(openSection as CertCategory)
+          ? catalogOptionsForCredentialSection(openSection as CredentialViewSectionId)
           : [];
 
     const showPermitExpiry =
@@ -452,6 +368,10 @@ export function GuardCredentialsPanel({
           <p className="text-sm font-semibold text-brand-primary">
             Credentials
           </p>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Every required and optional credential slot in one place — upload, track status, and list weapons
+            you carry after Guardr verifies the matching BSIS permits.
+          </p>
           {editing && staffMode && (
             <p className="text-xs text-brand-text-muted leading-relaxed">
               Review and edit submitted credentials before approval or denial. After a decision,
@@ -510,7 +430,7 @@ export function GuardCredentialsPanel({
             onEditFullPage={certOverlayNav?.onEditFullPage}
           />
           {staffIdReview && <div className="-mt-2">{staffIdReview}</div>}
-          {!guard.isStaff && (onSaveInsurance || onReviewInsurance || guard.insurancePolicy) && (
+          {!guard.isStaff && (
             <GuardCoiItemCard
               guard={guard}
               editing={editing}
@@ -569,159 +489,29 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
         certOverlayNav={certOverlayNav}
       />
-      {showSection(refresherSlots.length) && (
-      <div className="mt-14 pt-8 border-t border-b border-brand-border pb-5">
-      <section className="app-form-section space-y-3 !pt-0 !border-t-0">
-        <CredentialRowHeader
-          rawTitle
-          title={
-            <p className="uber-label flex items-center gap-2 flex-wrap">
-              <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-              {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
-            </p>
-          }
-          subtitle={undefined}
-          action={
-            canUpload ? (
-              <CredentialRowAction
-                staffMode={staffMode}
-                uploadStatus={
-                  refresherItems.length > 0
-                    ? 'on-file'
-                    : getCourseUploadStatus(guard, BSIS_REFRESHER_CATALOG_ID)
-                }
-                canUpload={canUpload}
-                onAdd={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
-              />
-            ) : undefined
-          }
+      {CATALOG_CREDENTIAL_SECTION_IDS.map((sectionId) => (
+        <GuardCredentialCatalogSectionBlock
+          key={sectionId}
+          sectionId={sectionId}
+          guard={guard}
+          search={search}
+          staffMode={staffMode}
+          canUpload={canUpload}
+          editing={editing}
+          showFullCatalog
+          showFullGearCatalog={showFullGearCatalog}
+          weaponGearEditing={weaponGearEditing}
+          equipmentGearEditing={equipmentGearEditing}
+          weaponGearSelected={weaponGearSelected}
+          equipmentGearSelected={equipmentGearSelected}
+          onWeaponGearChange={onWeaponGearChange}
+          onEquipmentGearChange={onEquipmentGearChange}
+          groupedCerts={grouped}
+          onAdd={(catalogId, section) => openCredentialAddSheet(credentialAddSectionKey(section), catalogId)}
+          renderCertRow={renderCertRow}
+          certCardProps={certCardProps}
         />
-
-        <div className="border-t border-brand-border pt-3">
-          <CredentialCatalogSlotList
-            guard={guard}
-            slots={refresherSlots}
-            staffMode={staffMode}
-            canUpload={canUpload}
-            editing={editing}
-            onAdd={(catalogId) => openCredentialAddSheet('bsis-refresher', catalogId)}
-            renderCertRow={renderCertRow}
-            certCardProps={certCardProps}
-          />
-        </div>
-      </section>
-      </div>
-      )}
-      {showSection(otherBsisSlots.length) && (
-      <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
-        <CredentialRowHeader
-          rawTitle
-          title={
-            <p className="uber-label flex items-center gap-2 flex-wrap">
-              <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-              Other BSIS Training
-            </p>
-          }
-          subtitle={undefined}
-          action={
-            canUpload && otherBsisCatalogOptions.length > 0 ? (
-              <CredentialRowAction
-                staffMode={staffMode}
-                uploadStatus={
-                  otherBsisItems.length > 0
-                    ? 'on-file'
-                    : getCourseUploadStatus(guard, otherBsisCatalogOptions[0]?.id ?? '')
-                }
-                canUpload={canUpload}
-                onAdd={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
-              />
-            ) : undefined
-          }
-        />
-
-        <div className="border-t border-brand-border pt-3">
-          <CredentialCatalogSlotList
-            guard={guard}
-            slots={otherBsisSlots}
-            staffMode={staffMode}
-            canUpload={canUpload}
-            editing={editing}
-            onAdd={(catalogId) => openCredentialAddSheet('bsis-training', catalogId)}
-            renderCertRow={renderCertRow}
-            certCardProps={certCardProps}
-          />
-        </div>
-      </section>
-      )}
-
-      {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
-        const catalogOptions = getCertsByCategory(category);
-        const slots = buildCredentialCatalogSlots(
-          guard,
-          catalogOptions.map((opt) => opt.id),
-          { search }
-        );
-        const isWeaponsSection = category === 'bsis-permit';
-        const showGear = isWeaponsSection && (weaponGearEditing || equipmentGearEditing || showFullGearCatalog);
-        if (!showSection(slots.length) && !showGear) return null;
-
-        const sectionCard = (
-          <section key={category} className="app-form-section space-y-3 pb-4 border-b border-brand-border">
-            <CredentialRowHeader
-              rawTitle
-              title={
-                <p className="uber-label flex items-center gap-2 flex-wrap">
-                  <Icon className="w-4 h-4 text-brand-primary shrink-0" />
-                  {title}
-                  {isWeaponsSection && <GuardArmedStatusPill guard={guard} className="!text-xs" />}
-                </p>
-              }
-              subtitle={<p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{subtitle}</p>}
-              action={
-                canUpload && catalogOptions.length > 0 ? (
-                  <CredentialRowAction
-                    staffMode={staffMode}
-                    uploadStatus={
-                      (grouped[category] ?? []).length > 0
-                        ? 'on-file'
-                        : getCourseUploadStatus(guard, catalogOptions[0]?.id ?? '')
-                    }
-                    canUpload={canUpload}
-                    onAdd={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
-                  />
-                ) : undefined
-              }
-            />
-
-            <div className="border-t border-brand-border pt-3">
-              <CredentialCatalogSlotList
-                guard={guard}
-                slots={slots}
-                staffMode={staffMode}
-                canUpload={canUpload}
-                editing={editing}
-                onAdd={(catalogId) => openCredentialAddSheet(category, catalogId)}
-                renderCertRow={renderCertRow}
-                certCardProps={certCardProps}
-              />
-              {isWeaponsSection && (
-                <GuardGearCarryFields
-                  guard={guard}
-                  embedded
-                  weaponGearEditing={weaponGearEditing}
-                  equipmentGearEditing={equipmentGearEditing}
-                  weaponGearSelected={weaponGearSelected}
-                  equipmentGearSelected={equipmentGearSelected}
-                  onWeaponGearChange={onWeaponGearChange}
-                  onEquipmentGearChange={onEquipmentGearChange}
-                  showFullCatalog={showFullGearCatalog}
-                />
-              )}
-            </div>
-          </section>
-        );
-        return sectionCard;
-      })}
+      ))}
 
       <AppFormSheet
         open={Boolean(openSection && (editing || staffMode))}
