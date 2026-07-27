@@ -1,6 +1,6 @@
 import React from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
-import { isGuardAccountApproved, isGuardAccountPending, isGuardAccountPreActive } from '../../lib/accountStatus';
+import { isGuardAccountApproved, isGuardAccountPending, isGuardAccountPreActive, isGuardUserStatusActive } from '../../lib/accountStatus';
 import { getGuardApplicationProgress } from '../../lib/guardApplicationProgress';
 import {
   guardCredentialRestrictedDetail,
@@ -68,6 +68,7 @@ export function AccountPendingScreen({
   const isGuard = role === 'guard';
   const approved = isGuard && guard ? isGuardAccountApproved(guard) : false;
   const pending = isGuard && guard ? isGuardAccountPending(guard) : false;
+  const active = isGuard && guard ? isGuardUserStatusActive(guard) : false;
   const canUploadCredentials =
     isGuard && guard ? isGuardAccountPreActive(guard) && !isGuardCredentialExpiryRestricted(guard) : false;
   const restricted = isGuard && guard ? isGuardCredentialExpiryRestricted(guard) : false;
@@ -85,7 +86,9 @@ export function AccountPendingScreen({
         ? 'Update your application'
         : approved
           ? 'Upload activation credentials'
-          : 'Application under review'
+          : active
+            ? 'Complete activation credentials'
+            : 'Application under review'
     : revisionOpen
       ? 'Update your application'
       : 'Account pending approval';
@@ -95,6 +98,8 @@ export function AccountPendingScreen({
     : revisionOpen
     ? revisionNote ||
       'Staff requested updates to your application. Open Profile to edit the locked application details, then save.'
+    : isGuard && active
+    ? 'Your account is active — finish any missing credentials in Profile so marketplace access stays uninterrupted.'
     : isGuard && applicationProgress
     ? guardActivationSubtitle(approved, applicationProgress.percent)
     : 'Your account is pending staff approval. Application details stay locked after submission unless staff requests an update.';

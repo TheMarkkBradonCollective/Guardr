@@ -165,9 +165,10 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('support', guard), 'support');
   });
 
-  it('routes user_status active guards missing credentials to activation', () => {
+  it('allows user_status active guards to use the app even when credentials are still loading', () => {
     const guard = { userStatus: 'active' as const, isStaff: false };
-    assert.equal(normalizeGuardTabForAccount('map', guard), 'activation');
+    assert.equal(normalizeGuardTabForAccount('map', guard), 'map');
+    assert.equal(normalizeGuardTabForAccount('myJobs', guard), 'myJobs');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
   });
 

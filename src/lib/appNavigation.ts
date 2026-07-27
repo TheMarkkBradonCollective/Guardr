@@ -1,9 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
-import { isGuardUserStatusActive } from './accountStatus';
-import { isGuardAccountActive } from './guardAccountActivation';
-import { isGuardAccountApproved } from './accountStatus';
+import { isGuardAccountApproved, isGuardUserStatusActive } from './accountStatus';
 import type { GuardJobsBrowseTab } from './guardJobsBrowse';
 import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
 import { isPerformanceFactorId } from './guardPerformanceFactorDetail';
@@ -128,14 +126,12 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   vehicle: 'vehicle',
 };
 
-/** Guards need active status plus loaded credentials before non-activation tabs unlock. */
+/** Guards need active account status before non-activation tabs unlock. */
 function isGuardNavUnlocked(
   guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> & Partial<SecurityGuard>
 ): boolean {
   if (guard.isStaff) return true;
-  if (!isGuardUserStatusActive(guard)) return false;
-  if (!Array.isArray(guard.certifications)) return false;
-  return isGuardAccountActive(guard as SecurityGuard);
+  return isGuardUserStatusActive(guard);
 }
 
 /** Inactive guards may only use settings; all other tabs route to activation. */
