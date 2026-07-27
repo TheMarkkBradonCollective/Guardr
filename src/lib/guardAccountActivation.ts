@@ -44,7 +44,16 @@ import {
 
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
-/** Active for marketplace work — user_status active and all five credentials verified. */
+/**
+ * Already-active accounts keep marketplace access under the new Mandatory training / CE taxonomy.
+ * New activations (pending/approved → active) still require the full five credentials.
+ */
+export function guardHasActiveTrainingGrandfather(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return true;
+  return isGuardUserStatusActive(guard);
+}
+
+/** Active for marketplace work — user_status active and required credentials verified. */
 export function isGuardAccountActive(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return true;
   if (!isGuardUserStatusActive(guard)) return false;
@@ -197,10 +206,17 @@ function buildContinuingEducationVerificationBlockers(guard: SecurityGuard): str
 }
 
 function buildCredentialActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  return [
+  const identityBlockers = [
     ...buildIdVerificationBlockers(guard),
     ...buildInsuranceVerificationBlockers(guard),
     ...buildGuardCardVerificationBlockers(guard, state),
+  ];
+  // Already-active guards are grandfathered for Mandatory training + Continuing Education.
+  if (guardHasActiveTrainingGrandfather(guard)) {
+    return identityBlockers;
+  }
+  return [
+    ...identityBlockers,
     ...buildMandatoryTrainingVerificationBlockers(guard),
     ...buildContinuingEducationVerificationBlockers(guard),
   ];

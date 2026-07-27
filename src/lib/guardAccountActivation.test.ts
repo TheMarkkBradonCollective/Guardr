@@ -165,16 +165,29 @@ describe('guard account activation gates', () => {
     );
   });
 
-  it('treats active user_status without all five verified credentials as not active', () => {
+  it('grandfathers already-active guards missing new Mandatory training / CE course certs', () => {
     const guard = fullyVerifiedGuard({
       userStatus: 'active',
+      certifications: fullyVerifiedGuard().certifications.filter(
+        (cert) =>
+          cert.catalogId !== 'bsis-public-relations' && cert.catalogId !== 'bsis-pta-uof-8hr'
+      ),
+    });
+
+    assert.equal(isGuardAccountActive(guard), true);
+    assert.equal(getGuardActivationChecklist(guard).canActivate, true);
+  });
+
+  it('still blocks approved (not yet active) guards missing Continuing Education courses', () => {
+    const guard = fullyVerifiedGuard({
+      userStatus: 'approved',
       certifications: fullyVerifiedGuard().certifications.filter(
         (cert) => cert.catalogId !== 'bsis-public-relations'
       ),
     });
 
     assert.equal(isGuardAccountActive(guard), false);
-    assert.equal(getGuardActivationChecklist(guard).canActivate, false);
+    assert.equal(guardCanStaffActivateAccount(guard), false);
   });
 
   it('treats guards as active when user_status is active and all five are verified', () => {

@@ -22,6 +22,7 @@ import {
   guardVehicleRequiredBlockMessage,
   jobTypeRequiresVerifiedVehicle,
 } from './guardJobTypeVehicleRequirements';
+import { isGuardUserStatusActive } from './accountStatus';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -179,12 +180,14 @@ export function checkJobRequirements(
       label: 'Mandatory training (PTA/UOF)',
       met:
         guardMeetsMandatoryTraining(guard) ||
+        isGuardUserStatusActive(guard) ||
         guardGraceWaivesTrainingCredential(guard, 'mandatory-training', licenseState),
     },
     {
       label: 'Continuing Education (4 BSIS mandatory courses)',
       met:
         guardMeetsContinuingEducation(guard) ||
+        isGuardUserStatusActive(guard) ||
         guardGraceWaivesTrainingCredential(guard, 'ce', licenseState),
     }
   );

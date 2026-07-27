@@ -7,19 +7,24 @@ import {
   guardMeetsMandatoryTrainingVerified,
   isRequiredPathwayCredential,
 } from './guardQualification';
-import { guardHasVerifiedGuardCard } from './guardAccountActivation';
+import {
+  guardHasActiveTrainingGrandfather,
+  guardHasVerifiedGuardCard,
+} from './guardAccountActivation';
 
 /** Client-facing credential rows — Guardr-verified only. */
 export function guardHasClientVisibleActivationCredentials(
   guard: SecurityGuard,
   state = 'CA'
 ): boolean {
-  return (
+  const identityReady =
     guardHasVerifiedIdForWork(guard) &&
     guardHasValidInsurance(guard) &&
-    guardHasVerifiedGuardCard(guard, state) &&
-    guardMeetsMandatoryTrainingVerified(guard) &&
-    guardMeetsContinuingEducationVerified(guard)
+    guardHasVerifiedGuardCard(guard, state);
+  if (!identityReady) return false;
+  if (guardHasActiveTrainingGrandfather(guard)) return true;
+  return (
+    guardMeetsMandatoryTrainingVerified(guard) && guardMeetsContinuingEducationVerified(guard)
   );
 }
 
