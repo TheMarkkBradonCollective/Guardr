@@ -17,8 +17,7 @@ import {
 import { getSelectableCityNamesForGuards } from '../../lib/platformCities';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
-import { GuardWeaponGearPanel } from './GuardWeaponGearPanel';
-import { GuardEquipmentGearPanel } from './GuardEquipmentGearPanel';
+import { GuardGearCarryPanel } from './GuardGearCarryPanel';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface GuardResumeSavePayload {
@@ -329,18 +328,14 @@ export function GuardResumeEditor({
         />
       )}
 
-      <GuardWeaponGearPanel
+      <GuardGearCarryPanel
         guard={guard}
-        editing={intakeEditing}
-        selected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-        onChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
-      />
-
-      <GuardEquipmentGearPanel
-        guard={guard}
-        editing={editing}
-        selected={payload.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-        onChange={(listedEquipmentGear) => onChange({ listedEquipmentGear })}
+        weaponGearEditing={intakeEditing}
+        equipmentGearEditing={editing}
+        weaponGearSelected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+        equipmentGearSelected={payload.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+        onWeaponGearChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
+        onEquipmentGearChange={(listedEquipmentGear) => onChange({ listedEquipmentGear })}
       />
 
       <AppFormSheet

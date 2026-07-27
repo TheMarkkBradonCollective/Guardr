@@ -6,6 +6,24 @@ export type GuardWeaponGearId = 'flashlight' | 'oc-spray' | 'baton' | 'handcuffs
 
 export type GuardWeaponGearCategory = 'client-approved' | 'light-armed' | 'armed';
 
+export const GUARD_WEAPON_GEAR_CATEGORY_ORDER: GuardWeaponGearCategory[] = [
+  'client-approved',
+  'light-armed',
+  'armed',
+];
+
+export const GUARD_WEAPON_GEAR_CATEGORY_LABELS: Record<GuardWeaponGearCategory, string> = {
+  'client-approved': 'Unarmed',
+  'light-armed': 'Light armed',
+  armed: 'Armed',
+};
+
+export const GUARD_WEAPON_GEAR_CATEGORY_DESCRIPTIONS: Record<GuardWeaponGearCategory, string> = {
+  'client-approved': 'Standard duty gear — verified guard card only.',
+  'light-armed': 'Less-lethal weapons — verified BSIS permits and training required.',
+  armed: 'Firearm carry — verified exposed firearm permit and firearms training required.',
+};
+
 export interface GuardWeaponGearRule {
   id: GuardWeaponGearId;
   label: string;
@@ -119,4 +137,53 @@ export function sanitizeListedWeaponGear(
 
 export function guardListsFirearmOnProfile(guard: SecurityGuard, state = 'CA'): boolean {
   return getClientVisibleListedWeaponGear(guard, state).some((rule) => rule.id === 'firearm');
+}
+
+/** Catalog credentials still needed before a guard can list this gear (includes guard card). */
+export function getMissingWeaponGearCatalogIds(
+  guard: SecurityGuard,
+  weaponId: GuardWeaponGearId,
+  state = 'CA'
+): string[] {
+  const rule = RULE_BY_ID.get(weaponId);
+  if (!rule) return [];
+  const missing: string[] = [];
+  if (!guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', state)) {
+    missing.push('bsis-guard-card');
+  }
+  for (const catalogId of rule.requiredCatalogIds) {
+    if (!guardHasGuardrVerifiedCredential(guard, catalogId, state)) {
+      missing.push(catalogId);
+    }
+  }
+  return missing;
+}
+
+/** All catalog credentials required to list this gear (guard card + weapon-specific). */
+export function getWeaponGearRequiredCatalogIds(weaponId: GuardWeaponGearId): string[] {
+  const rule = RULE_BY_ID.get(weaponId);
+  if (!rule) return ['bsis-guard-card'];
+  return ['bsis-guard-card', ...rule.requiredCatalogIds];
+}
+
+/** Gear labels that require a verified catalog credential. */
+export function getWeaponGearUnlockLabels(catalogId: string): string[] {
+  return GUARD_WEAPON_GEAR_RULES
+    .filter((rule) => rule.requiredCatalogIds.includes(catalogId))
+    .map((rule) => rule.shortLabel);
+}
+
+export function groupWeaponGearRulesByCategory(): Record<
+  GuardWeaponGearCategory,
+  GuardWeaponGearRule[]
+> {
+  const grouped: Record<GuardWeaponGearCategory, GuardWeaponGearRule[]> = {
+    'client-approved': [],
+    'light-armed': [],
+    armed: [],
+  };
+  for (const rule of GUARD_WEAPON_GEAR_RULES) {
+    grouped[rule.category].push(rule);
+  }
+  return grouped;
 }

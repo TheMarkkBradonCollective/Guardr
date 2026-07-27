@@ -18,7 +18,7 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
-import { GuardWeaponGearClientSection } from '../profile/GuardWeaponGearPanel';
+import { GuardGearCarryClientSection } from '../profile/GuardGearCarryPanel';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {
@@ -270,7 +270,7 @@ export function GuardProfileScreen({
             showSpecialtyRatings
           />
 
-          <GuardWeaponGearClientSection guard={guard} />
+          <GuardGearCarryClientSection guard={guard} />
 
           {aboutText && (
             <section>
