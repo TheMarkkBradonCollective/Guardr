@@ -45,6 +45,7 @@ import { GuardCardPanel } from '../profile/GuardCardPanel';
 import { GuardPtaUofPanel } from './GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
+import { GuardBsisRequirementsReference } from './GuardBsisRequirementsReference';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
 type UploadKind = 'id' | 'coi' | 'guardCard' | 'mandatoryTraining' | 'ce' | 'optional';
@@ -170,7 +171,8 @@ export function GuardActivationUploadChecklist({
   return (
     <>
       <div className="app-checklist-panel">
-        <div className="app-checklist-steps">
+        <GuardBsisRequirementsReference />
+        <div className="app-checklist-steps mt-4">
           <StepRow
             done={idDone}
             label="1. Government ID — required to work"

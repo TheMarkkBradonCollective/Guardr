@@ -8,6 +8,7 @@ import {
 } from '../../lib/guardCredentialExpiryEnforcement';
 import { AlertTriangle, Clock, Check, LifeBuoy, User } from 'lucide-react';
 import { GuardActivationUploadChecklist } from '../guard/GuardActivationUploadChecklist';
+import { GuardBsisRequirementsReference } from '../guard/GuardBsisRequirementsReference';
 import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
@@ -143,27 +144,30 @@ export function AccountPendingScreen({
         )}
 
         {applicationProgress && !revisionOpen && (
-          <div className="mt-5 text-left">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <span className="text-xs font-semibold text-brand-text-muted">
-                {applicationProgress.requirementLabel}
-              </span>
-              <span className="text-xs font-bold text-brand-primary tabular-nums">
-                {applicationProgress.percent}%
-              </span>
-            </div>
-            <div
-              className="h-2 w-full rounded-full overflow-hidden bg-brand-border"
-              role="progressbar"
-              aria-valuenow={applicationProgress.percent}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Application progress"
-            >
+          <div className="mt-5 text-left space-y-4">
+            <GuardBsisRequirementsReference />
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <span className="text-xs font-semibold text-brand-text-muted">
+                  {applicationProgress.requirementLabel}
+                </span>
+                <span className="text-xs font-bold text-brand-primary tabular-nums">
+                  {applicationProgress.percent}%
+                </span>
+              </div>
               <div
-                className="h-full rounded-full bg-brand-primary transition-all duration-300"
-                style={{ width: `${applicationProgress.percent}%` }}
-              />
+                className="h-2 w-full rounded-full overflow-hidden bg-brand-border"
+                role="progressbar"
+                aria-valuenow={applicationProgress.percent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Application progress"
+              >
+                <div
+                  className="h-full rounded-full bg-brand-primary transition-all duration-300"
+                  style={{ width: `${applicationProgress.percent}%` }}
+                />
+              </div>
             </div>
           </div>
         )}

@@ -286,7 +286,7 @@ export function isCombinedPtaUofCatalogId(catalogId: string | undefined): boolea
   return (canonicalCatalogId(catalogId) ?? catalogId) === BSIS_PTA_UOF_COMBINED_ID;
 }
 
-/** Legacy CE rollup completion certs — must be removed; upload the 4 courses individually. */
+/** Legacy CE rollup completion certs — must be removed; upload all 9 CE package courses individually. */
 export function isLegacyTrainingRollupCatalogId(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
   const canonical = canonicalCatalogId(catalogId) ?? catalogId;

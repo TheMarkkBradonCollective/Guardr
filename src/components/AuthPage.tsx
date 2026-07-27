@@ -928,7 +928,9 @@ export function AuthPage({
                 <div className="space-y-5 pt-4 border-t border-brand-border">
                   <p className="uber-label">Guard application</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
-                    A short application so staff can review your fit before you upload credentials.
+                    A short application so staff can review your fit. After approval, upload five
+                    credentials (ID, COI, guard card, PTA/UOF, and the 32-hour BSIS CE package) on the
+                    activation screen — see the in-app BSIS requirements guide for the full list.
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">

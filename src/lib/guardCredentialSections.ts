@@ -120,7 +120,8 @@ const SECTION_META: Record<
   },
   'bsis-refresher': {
     title: getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID)?.name ?? '8-Hour BSIS Refresher Course',
-    subtitle: 'Annual refresher — staff may request this later. Not required for initial activation.',
+    subtitle:
+      'Annual 8-hour renewal — BSIS calls this Continuing Education for guard card renewals. Staff may request later; not required for initial activation.',
     category: 'bsis-training',
   },
   'bsis-other-training': {

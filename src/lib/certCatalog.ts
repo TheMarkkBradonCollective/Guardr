@@ -70,7 +70,8 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '8-Hour BSIS Refresher Course',
     shortLabel: '8-Hr Refresher',
     category: 'bsis-training',
-    description: '8-hour refresher — staff may request later for renewals. Not required for initial activation.',
+    description:
+      'Annual 8-hour renewal — BSIS labels this Continuing Education on their site. Staff may request later for renewals. Not required for initial activation.',
   },
 
   // ── PTA / UOF — separate certificates only (combined uploads are deleted) ──

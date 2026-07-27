@@ -38,6 +38,49 @@ Use it as the operating manual for the whole app:
 
 Guardr is a **California-aligned independent contractor technology marketplace**. The platform verifies that guards meet credential requirements; it does not dispatch, supervise, or employ guards on site.
 
+## California BSIS training — what guards need
+
+Official reference: [BSIS guard training regulation](https://www.bsis.ca.gov/industries/g_train.shtml)
+
+### Terminology (read this first)
+
+Training schools and BSIS use overlapping words. On the **official BSIS site**:
+
+- **Power to Arrest** (3 hours) and **Appropriate Use of Force** (5 hours) — initial 8-hour course; upload as **two separate certificates**.
+- **Mandatory Courses** — four 4-hour skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal).
+- **Elective Courses** — additional skills modules schools package with the mandatory block into a **32-hour first-year course**.
+- **Continuing Education** on BSIS — the **annual 8-hour refresher** (with at least 2 hours of use-of-force review).
+
+**On Guardr**, **Continuing Education** means the **full 32-hour first-year package** (all 9 course certificates below). The annual 8-hour BSIS refresher is separate — staff may request it later; it is **not** required to activate.
+
+Course completion certificates are **kept by your employer on file** — BSIS does not collect them. Upload each certificate to Guardr so staff can verify marketplace eligibility.
+
+### Five credentials Guardr verifies before activation
+
+| # | Credential | What to upload |
+|---|------------|----------------|
+| 1 | **Government ID** | Front, back, selfie, state, number, expiration |
+| 2 | **Certificate of Insurance (COI)** | General liability COI document |
+| 3 | **BSIS Guard Card** | Guard registration card document photo |
+| 4 | **Mandatory training (PTA / UOF)** | Power to Arrest + Appropriate Use of Force as **separate** certificates (combined 8-hour certs are not accepted) |
+| 5 | **Continuing Education** | All **9** certificates in the 32-hour BSIS CE package (after PTA/UOF) |
+
+**32-hour CE package courses (9 certificates, 32 hours total):**
+
+| Course | Hours |
+|--------|-------|
+| Communication and Its Significance | 4 |
+| Public Relations | 4 |
+| Observation and Documentation | 4 |
+| Liability / Legal Aspects | 4 |
+| Officer Safety | 4 |
+| Trespass | 4 |
+| Evacuation Procedures | 2 |
+| Monitoring Crowd Control | 2 |
+| Arrests, Search and Seizure | 4 |
+
+**Not required to activate:** annual 8-hour BSIS refresher, supplemental BSIS courses (Access Control, Driver Safety, Workplace Violence, etc.), weapons permits, medical certs, FEMA.
+
 ### What Guardr staff do (by role)
 
 | Staff role | Primary responsibilities |
@@ -559,8 +602,8 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
      - Certificate of Insurance (COI).
      - BSIS guard card.
      - Mandatory training (PTA/UOF).
-     - Continuing Education (4 BSIS mandatory courses).
-     - Optional extra credentials (firearms, medical, FEMA, etc.).
+     - Continuing Education — full **32-hour BSIS CE package** (all 9 course certificates).
+     - Optional extra credentials (annual 8-hour refresher, supplemental BSIS, firearms, medical, FEMA).
 4. **Administrators verify each credential** — nothing auto-verifies on upload.
 5. When all five required credentials are verified, an **Administrator+ manually activates** your account (`approved` → `active`).
 6. After activation, the full guard app opens — **Map**, **Jobs**, **Pay**, **Messages**, and **Profile**.
@@ -1070,7 +1113,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 |---------|------------|
 | **Title** | **Application under review** (pending) or **Complete your credentials** (approved) or **Awaiting account activation** (approved, all creds verified) |
 | **Subtitle** | Short explanation of what to do next or that staff are finishing activation |
-| **Progress bar** | % complete across five requirements: government ID, COI, guard card, mandatory training (PTA/UOF), Continuing Education (4 BSIS mandatory courses) |
+| **Progress bar** | % complete across five requirements: government ID, COI, guard card, mandatory training (PTA/UOF), Continuing Education (32-hour BSIS CE package — 9 courses) |
 | **Credential uploads** | Same upload UI as **Profile → Credentials** — tap each row to add or update documents |
 | **Contact support** | Opens the **Activation help** support thread with staff (approved guards only) |
 
@@ -1093,9 +1136,9 @@ Staff can also open credentials from **Guards → guard detail** and upload docu
 | **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo. **Staff verify** the card before eligibility is granted. |
 | **Certificate of Insurance (COI)** | General liability insurance — required to apply to jobs. Upload your COI. **Staff verify** before the guard can apply. |
 | **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | **Mandatory training** — required for activation. Upload Power to Arrest and Appropriate Use of Force as two separate certificates (combined uploads are not accepted). |
-| **Continuing Education** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required for activation. Upload each course certificate. |
-| **8-Hour BSIS Refresher** | Annual refresher — staff may request later. Not required for initial activation. |
-| **Elective & Other BSIS Training** | Optional electives (Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure, and more). Not required for activation. |
+| **Continuing Education** | Full **32-hour BSIS CE package** — all 9 course certificates (Communication, Public Relations, Observation, Liability/Legal, Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure). Required after PTA/UOF. Upload each certificate. |
+| **8-Hour BSIS Refresher** | Annual renewal course — on BSIS this is labeled **Continuing Education**. Staff may request later. Not required for initial activation. |
+| **Other BSIS Training** | Supplemental BSIS courses beyond the 32-hour CE package (Access Control, Driver Safety, Workplace Violence, etc.). Not required for activation. |
 | **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |
 | **Medical & safety** | CPR/AED, First Aid, and similar certifications. |
 | **FEMA / emergency mgmt** | FEMA ICS and related emergency management credentials. |
@@ -1116,7 +1159,7 @@ Staff must **verify** (not auto-approve) these before a guard becomes active:
 2. **BSIS Guard Card** — document photo on file, staff-verified.
 3. **Certificate of Insurance** — current COI on file, staff-verified.
 4. **Mandatory training** — PTA/UOF on file (or within 48h grace window).
-5. **Continuing Education** — the 4 BSIS mandatory courses on file (or within 48h grace window).
+5. **Continuing Education** — full 32-hour BSIS CE package on file (all 9 courses, or within 48h grace window).
 
 Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time.
 
