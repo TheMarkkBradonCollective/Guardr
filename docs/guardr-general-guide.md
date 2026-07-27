@@ -25,7 +25,7 @@ Use it as the operating manual for the whole app:
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
-| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Pay**, **Profile**, and **Guide** remain blocked until **active**. |
+| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Pay**, **Profile**, and **Guide** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
@@ -77,7 +77,7 @@ This section walks through Guardr from first sign-up to final payout — the sam
 ```
 1. Guard uploads credentials while pending →  credentials attached to application
 2. Moderator+ approves application     →  `pending` → `approved`
-3. Administrator+ verifies each cred   →  ID, COI, guard card, PTA/UOF, 32-hr
+3. Administrator+ verifies each cred   →  ID, COI, guard card, mandatory training, CE
 4. Account activates automatically     →  guard gets Map / Jobs / Pay
 ```
 
@@ -550,7 +550,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 
 1. Create a **Guard** account during sign-up.
 2. After sign-in you land on the **activation screen** with **Application under review**:
-   - Upload government ID, COI, guard card, PTA/UOF, and 32-hour training while staff reviews your application.
+   - Upload government ID, COI, guard card, mandatory training, and Continuing Education while staff reviews your application.
    - **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** are blocked.
 3. When a **Moderator+ approves your application** (`pending` → `approved`):
    - Staff can verify the credentials you already uploaded.
@@ -558,8 +558,8 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
      - Government ID (front, back, selfie, state, number, expiration).
      - Certificate of Insurance (COI).
      - BSIS guard card.
-     - Power to Arrest / Appropriate Use of Force (PTA/UOF).
-     - 32-hour BSIS course block (or individual course certs).
+     - Mandatory training (PTA/UOF + 4 mandatory BSIS courses).
+     - Continuing Education (8-hour BSIS refresher).
      - Optional extra credentials (firearms, medical, FEMA, etc.).
 4. **Administrators verify each credential** — nothing auto-verifies on upload.
 5. When all five required credentials are verified, an **Administrator+ manually activates** your account (`approved` → `active`).
@@ -567,7 +567,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 
 Grace period (optional training):
 
-- If PTA/UOF or the 32-hour block is not on file when staff activate your account, a **48-hour grace window** applies automatically.
+- If mandatory training or Continuing Education is not on file when staff activate your account, a **48-hour grace window** applies automatically.
 - Upload missing credentials before the grace expires, or marketplace access may be restricted until they are on file.
 
 ### 2. Set up pay
@@ -828,7 +828,7 @@ Administrators handle credential verification and day-to-day operations. You inh
 | Action | Where |
 |--------|-------|
 | Verify government ID | **Credentials** or **Guards** → ID review section |
-| Verify credentials (guard card, COI, PTA/UOF, 32-hr, permits) | **Credentials** or **Guards** |
+| Verify credentials (guard card, COI, mandatory training, CE, permits) | **Credentials** or **Guards** |
 | Approve or decline job offers | **Applications** (job offers queue) |
 | Handle disputes | **Disputes** |
 | Suspend or restore users | **Guards** / **Clients** detail panels |
@@ -1070,7 +1070,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 |---------|------------|
 | **Title** | **Application under review** (pending) or **Complete your credentials** (approved) or **Awaiting account activation** (approved, all creds verified) |
 | **Subtitle** | Short explanation of what to do next or that staff are finishing activation |
-| **Progress bar** | % complete across five requirements: government ID, COI, guard card, PTA/UOF, 32-hour block |
+| **Progress bar** | % complete across five requirements: government ID, COI, guard card, mandatory training (PTA/UOF + 4 mandatory courses), Continuing Education |
 | **Credential uploads** | Same upload UI as **Profile → Credentials** — tap each row to add or update documents |
 | **Contact support** | Opens the **Activation help** support thread with staff (approved guards only) |
 
@@ -1092,10 +1092,10 @@ Staff can also open credentials from **Guards → guard detail** and upload docu
 | **Government ID** | State-issued photo ID — required before marketplace eligibility. Upload front, back, live selfie, plus state, number, and expiration. **Staff verify** before the guard can work. |
 | **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo. **Staff verify** the card before eligibility is granted. |
 | **Certificate of Insurance (COI)** | General liability insurance — required to apply to jobs. Upload your COI. **Staff verify** before the guard can apply. |
-| **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | 8-hour required training — required to accept field jobs. Upload your PTA and UOF completion certificates. Some jurisdictions package them together. |
-| **32-Hour BSIS Course Block** | Required training block — required to accept field jobs. Upload all 9 individual course certificates, or a single 32-hour completion certificate if you have one. |
-| **8-Hour BSIS Refresher** | Separate from the 32-hour block — upload when applicable for guard card renewals. Not required for initial activation. |
-| **Other BSIS Training** | Supplemental BSIS courses — not part of the active pathway or 32-hour block. Upload any additional BSIS training not covered above. |
+| **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | Part of **mandatory training** — required with the 4 mandatory courses. Upload your PTA and UOF completion certificates (or the combined 8-hour cert). |
+| **Mandatory Courses** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required with PTA/UOF for activation. A legacy 32-hour completion certificate may cover these courses. |
+| **Continuing Education** | 8-hour BSIS refresher / CE — required for activation. |
+| **Elective & Other BSIS Training** | Optional electives (Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure, and more). Not required for activation. |
 | **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |
 | **Medical & safety** | CPR/AED, First Aid, and similar certifications. |
 | **FEMA / emergency mgmt** | FEMA ICS and related emergency management credentials. |
@@ -1115,14 +1115,14 @@ Staff must **verify** (not auto-approve) these before a guard becomes active:
 1. **Government ID** — fully on file with photos and details, staff-verified.
 2. **BSIS Guard Card** — document photo on file, staff-verified.
 3. **Certificate of Insurance** — current COI on file, staff-verified.
-4. **PTA/UOF training** — on file (or within 48h grace window).
-5. **32-hour BSIS course block** — on file (or within 48h grace window).
+4. **Mandatory training** — PTA/UOF + 4 mandatory courses on file (or within 48h grace window).
+5. **Continuing Education** — 8-hour BSIS refresher on file (or within 48h grace window).
 
 Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time.
 
 **Grace period (48 hours):**
 
-If PTA/UOF or the 32-hour block is not on file when the account would auto-activate, a **48-hour grace window** applies automatically. The guard can work during grace. If grace expires before credentials are uploaded, marketplace access may be restricted until they are on file.
+If mandatory training or Continuing Education is not on file when the account would auto-activate, a **48-hour grace window** applies automatically. The guard can work during grace. If grace expires before credentials are uploaded, marketplace access may be restricted until they are on file.
 
 ---
 

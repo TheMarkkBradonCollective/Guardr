@@ -8,8 +8,9 @@ import {
 } from '../../lib/certCatalog';
 import { getOptionalCredentialSections } from '../../lib/guardCredentialSections';
 import {
+  isElectiveCourseCatalogId,
+  isMandatoryCourseCatalogId,
   isPtaUofCatalogId,
-  isThirtyTwoHourCatalogId,
 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
@@ -26,6 +27,8 @@ interface GuardOptionalCredentialAddSheetProps {
   open: boolean;
   onClose: () => void;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  /** Skip section picker and open directly on a catalog section (e.g. CE upload). */
+  initialSection?: OptionalAddSection;
 }
 
 function catalogOptionsForSection(section: OptionalAddSection) {
@@ -36,9 +39,11 @@ function catalogOptionsForSection(section: OptionalAddSection) {
   if (section === 'bsis-other-training') {
     return getCertsByCategory('bsis-training').filter(
       (opt) =>
-        !isThirtyTwoHourCatalogId(opt.id) &&
+        !isMandatoryCourseCatalogId(opt.id) &&
         !isPtaUofCatalogId(opt.id) &&
-        opt.id !== BSIS_REFRESHER_CATALOG_ID
+        opt.id !== BSIS_REFRESHER_CATALOG_ID &&
+        opt.id !== 'bsis-32-hour-completed' &&
+        opt.id !== 'bsis-40-hour-completed'
     );
   }
   return getCertsByCategory(section as CertCategory);
@@ -48,9 +53,26 @@ export function GuardOptionalCredentialAddSheet({
   open,
   onClose,
   onAddCertification,
+  initialSection,
 }: GuardOptionalCredentialAddSheetProps) {
-  const sections = useMemo(() => getOptionalCredentialSections(), []);
-  const [selectedSection, setSelectedSection] = useState<OptionalAddSection | null>(null);
+  const sections = useMemo(() => {
+    const all = getOptionalCredentialSections();
+    if (initialSection === 'bsis-refresher') {
+      return [
+        {
+          id: 'bsis-refresher' as const,
+          title: 'Continuing Education',
+          subtitle: '8-hour BSIS continuing education / refresher — required for activation.',
+          category: 'bsis-training' as const,
+          certs: [],
+        },
+      ];
+    }
+    return all;
+  }, [initialSection]);
+  const [selectedSection, setSelectedSection] = useState<OptionalAddSection | null>(
+    initialSection ?? null
+  );
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');

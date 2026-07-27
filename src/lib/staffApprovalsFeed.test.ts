@@ -276,11 +276,11 @@ describe('buildApplicationFeed', () => {
       idFrontUrl: 'front.jpg',
       idSelfieUrl: 'selfie.jpg',
     });
-    const ptaItemId = activationCredentialItemId('g-staff', 'pta-uof');
-    const bsisItemId = activationCredentialItemId('g-staff', '32-hour');
+    const mandatoryItemId = activationCredentialItemId('g-staff', 'mandatory-training');
+    const ceItemId = activationCredentialItemId('g-staff', 'ce');
 
-    assert.equal(credentialFeedThumbnailUrl([guard], ptaItemId), undefined);
-    assert.equal(credentialFeedThumbnailUrl([guard], bsisItemId), undefined);
+    assert.equal(credentialFeedThumbnailUrl([guard], mandatoryItemId), undefined);
+    assert.equal(credentialFeedThumbnailUrl([guard], ceItemId), undefined);
     assert.equal(credentialFeedThumbnailUrl([guard], govIdApprovalItemId('g-staff')), 'front.jpg');
   });
 

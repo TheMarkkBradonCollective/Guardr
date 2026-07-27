@@ -26,8 +26,8 @@ import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
   getGuardQualificationLevel,
-  guardMeets32HourBlock,
-  guardMeetsPtaUofTraining,
+  guardMeetsContinuingEducation,
+  guardMeetsMandatoryTraining,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_PATHWAY_STATUS_LABELS,
 } from './guardQualification';
@@ -176,16 +176,16 @@ export function checkJobRequirements(
 
   checks.push(
     {
-      label: '8-hour PTA & UOF (combined cert or separate PTA + UOF)',
+      label: 'Mandatory training (PTA/UOF + 4 BSIS mandatory courses)',
       met:
-        guardMeetsPtaUofTraining(guard) ||
-        guardGraceWaivesTrainingCredential(guard, 'pta-uof', licenseState),
+        guardMeetsMandatoryTraining(guard) ||
+        guardGraceWaivesTrainingCredential(guard, 'mandatory-training', licenseState),
     },
     {
-      label: requirementLabel('bsis-32-hour-completed'),
+      label: 'Continuing Education (8-hour BSIS refresher)',
       met:
-        guardMeets32HourBlock(guard) ||
-        guardGraceWaivesTrainingCredential(guard, '32-hour', licenseState),
+        guardMeetsContinuingEducation(guard) ||
+        guardGraceWaivesTrainingCredential(guard, 'ce', licenseState),
     }
   );
 

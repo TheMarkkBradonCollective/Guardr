@@ -297,7 +297,7 @@ export function GuardCredentialsPanel({
     if (openSection === 'bsis-training') {
       return {
         title: 'Add BSIS training',
-        subtitle: 'Supplemental BSIS courses — not part of the Active pathway or 32-hour block.',
+        subtitle: 'Optional electives and supplemental BSIS courses — not required for activation.',
       };
     }
     const sectionMeta = CREDENTIAL_SECTIONS.find((s) => s.category === openSection);

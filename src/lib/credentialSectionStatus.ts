@@ -10,14 +10,18 @@ import {
 } from './guardIdentityVerification';
 import {
   computePtaUofProgress,
-  guardMeets32HourBlock,
-  guardMeets32HourBlockVerified,
+  guardMeetsContinuingEducation,
+  guardMeetsContinuingEducationVerified,
+  guardMeetsMandatoryCourses,
+  guardMeetsMandatoryCoursesVerified,
+  guardMeetsMandatoryTraining,
+  guardMeetsMandatoryTrainingVerified,
   guardMeetsPtaUofTrainingVerified,
 } from './guardQualification';
 import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
 import {
+  countMandatoryCourseSlotStatuses,
   countPtaUofSlotStatuses,
-  countThirtyTwoHourCourseSlotStatuses,
   formatCredentialSlotStatusSummary,
 } from './certStatus';
 
@@ -144,15 +148,41 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
 }
 
 export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
-  if (guardMeets32HourBlockVerified(guard)) {
+  void staffMode;
+  if (guardMeetsMandatoryCoursesVerified(guard)) {
     return { label: 'Verified — on file', tone: 'success' };
   }
-  const summary = formatCredentialSlotStatusSummary(countThirtyTwoHourCourseSlotStatuses(guard));
-  if (guardMeets32HourBlock(guard)) {
+  const summary = formatCredentialSlotStatusSummary(countMandatoryCourseSlotStatuses(guard));
+  if (guardMeetsMandatoryCourses(guard)) {
     return { label: 'On file — pending review', tone: 'warning' };
   }
   if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
     return notListedOrOnFileStatus();
   }
   return { label: summary, tone: 'warning' };
+}
+
+export function getContinuingEducationSectionStatus(guard: SecurityGuard): CredentialSectionStatus {
+  if (guardMeetsContinuingEducationVerified(guard)) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (guardMeetsContinuingEducation(guard)) {
+    return { label: 'On file — pending review', tone: 'warning' };
+  }
+  return notListedOrOnFileStatus();
+}
+
+export function getMandatoryTrainingSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
+  if (guardMeetsMandatoryTrainingVerified(guard)) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (guardMeetsMandatoryTraining(guard)) {
+    return { label: 'On file — pending review', tone: 'warning' };
+  }
+  const pta = getPtaUofSectionStatus(guard, staffMode);
+  const courses = getThirtyTwoHourSectionStatus(guard, staffMode);
+  if (pta.label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL && courses.label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
+    return notListedOrOnFileStatus();
+  }
+  return { label: 'Incomplete — PTA/UOF and mandatory courses required', tone: 'warning' };
 }

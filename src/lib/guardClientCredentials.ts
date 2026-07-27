@@ -3,8 +3,8 @@ import { resolveCertCatalogId } from './certCatalog';
 import { guardHasVerifiedIdForWork } from './guardQualification';
 import { guardHasValidInsurance } from './guardInsurance';
 import {
-  guardMeets32HourBlockVerified,
-  guardMeetsPtaUofTrainingVerified,
+  guardMeetsContinuingEducationVerified,
+  guardMeetsMandatoryTrainingVerified,
   isRequiredPathwayCredential,
 } from './guardQualification';
 import { guardHasVerifiedGuardCard } from './guardAccountActivation';
@@ -18,8 +18,8 @@ export function guardHasClientVisibleActivationCredentials(
     guardHasVerifiedIdForWork(guard) &&
     guardHasValidInsurance(guard) &&
     guardHasVerifiedGuardCard(guard, state) &&
-    guardMeetsPtaUofTrainingVerified(guard) &&
-    guardMeets32HourBlockVerified(guard)
+    guardMeetsMandatoryTrainingVerified(guard) &&
+    guardMeetsContinuingEducationVerified(guard)
   );
 }
 

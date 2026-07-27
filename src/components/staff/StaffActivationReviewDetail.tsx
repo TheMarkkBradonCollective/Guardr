@@ -2,11 +2,14 @@ import React from 'react';
 import type { SecurityGuard } from '../../types';
 import type { ActivationCredentialKey } from '../../lib/guardCredentialSections';
 import {
+  getContinuingEducationSectionStatus,
   getGuardCardSectionStatus,
+  getMandatoryTrainingSectionStatus,
   getPtaUofSectionStatus,
   getThirtyTwoHourSectionStatus,
 } from '../../lib/credentialSectionStatus';
 import { getCourseUploadStatus } from '../../lib/certStatus';
+import { BSIS_REFRESHER_CATALOG_ID } from '../../lib/certCatalog';
 import { LEGACY_PTA_ID } from '../../lib/guardQualification';
 import type { ApprovalFeedItem } from '../../lib/staffApprovalsFeed';
 import { StaffCredentialReviewDetail } from './StaffCredentialReviewDetail';
@@ -28,15 +31,27 @@ const ACTIVATION_SECTION_CONFIG: Record<
     sectionStatus: (guard) => getGuardCardSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, 'bsis-guard-card'),
   },
+  'mandatory-training': {
+    title: 'Mandatory training',
+    emptyMessage: 'No mandatory training on file (PTA/UOF + 4 mandatory courses).',
+    sectionStatus: (guard) => getMandatoryTrainingSectionStatus(guard, true),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
+  },
+  ce: {
+    title: 'Continuing Education',
+    emptyMessage: 'No Continuing Education on file.',
+    sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, BSIS_REFRESHER_CATALOG_ID),
+  },
   'pta-uof': {
-    title: 'Power to Arrest & Appropriate Use of Force',
+    title: 'Mandatory training',
     emptyMessage: 'No PTA/UOF training on file.',
     sectionStatus: (guard) => getPtaUofSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
   },
   '32-hour': {
-    title: '32-Hour BSIS Course Block',
-    emptyMessage: 'No 32-hour training on file.',
+    title: 'Mandatory Courses',
+    emptyMessage: 'No mandatory courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID),
   },

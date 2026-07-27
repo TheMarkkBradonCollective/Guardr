@@ -1,24 +1,24 @@
 import { SecurityGuard } from '../types';
 import { certHasDocumentProof } from './certImagePolicy';
-import { resolveCertCatalogId } from './certCatalog';
+import { resolveCertCatalogId, BSIS_REFRESHER_CATALOG_ID } from './certCatalog';
 import { getGuardActivationChecklist, getGuardCardCertifications } from './guardAccountActivation';
 import { coiApprovalItemId, govIdApprovalItemId } from './guardCredentialSections';
 import { guardHasInsuranceSubmitted } from './guardInsurance';
 import {
   guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
-  guardMeets32HourBlockVerified,
+  guardMeetsContinuingEducation,
+  guardMeetsContinuingEducationVerified,
   guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
-  guardMeetsPtaUofTrainingVerified,
-  isPtaUofCatalogId,
-  isThirtyTwoHourCatalogId,
+  guardMeetsMandatoryTraining,
+  guardMeetsMandatoryTrainingVerified,
+  isContinuingEducationCatalogId,
+  isMandatoryTrainingCatalogId,
 } from './guardQualification';
 
 export type GuardApplicationCredentialStepStatus = 'pending' | 'submitted' | 'verified';
 
 export interface GuardApplicationCredentialStep {
-  key: 'gov-id' | 'coi' | 'guard-card' | 'pta-uof' | '32-hour';
+  key: 'gov-id' | 'coi' | 'guard-card' | 'mandatory-training' | 'ce';
   label: string;
   status: GuardApplicationCredentialStepStatus;
   /** Credential queue item id when staff can open a read-only preview. */
@@ -65,15 +65,15 @@ function guardCardStatus(guard: SecurityGuard): GuardApplicationCredentialStepSt
   return 'pending';
 }
 
-function ptaUofStatus(guard: SecurityGuard): GuardApplicationCredentialStepStatus {
-  if (guardMeetsPtaUofTrainingVerified(guard)) return 'verified';
-  if (guardMeetsPtaUofTraining(guard)) return 'submitted';
+function mandatoryTrainingStatus(guard: SecurityGuard): GuardApplicationCredentialStepStatus {
+  if (guardMeetsMandatoryTrainingVerified(guard)) return 'verified';
+  if (guardMeetsMandatoryTraining(guard)) return 'submitted';
   return 'pending';
 }
 
-function thirtyTwoHourStatus(guard: SecurityGuard): GuardApplicationCredentialStepStatus {
-  if (guardMeets32HourBlockVerified(guard)) return 'verified';
-  if (guardMeets32HourBlock(guard)) return 'submitted';
+function continuingEducationStatus(guard: SecurityGuard): GuardApplicationCredentialStepStatus {
+  if (guardMeetsContinuingEducationVerified(guard)) return 'verified';
+  if (guardMeetsContinuingEducation(guard)) return 'submitted';
   return 'pending';
 }
 
@@ -81,8 +81,8 @@ export function getGuardApplicationCredentialSteps(guard: SecurityGuard): GuardA
   const govStatus = govIdStatus(guard);
   const insuranceStatus = coiStatus(guard);
   const cardStatus = guardCardStatus(guard);
-  const ptaStatus = ptaUofStatus(guard);
-  const blockStatus = thirtyTwoHourStatus(guard);
+  const mandatoryStatus = mandatoryTrainingStatus(guard);
+  const ceStatus = continuingEducationStatus(guard);
 
   return [
     {
@@ -111,16 +111,20 @@ export function getGuardApplicationCredentialSteps(guard: SecurityGuard): GuardA
             })(),
     },
     {
-      key: 'pta-uof',
-      label: 'PTA/UOF training',
-      status: ptaStatus,
-      credentialItemId: ptaStatus === 'pending' ? null : firstCertItemId(guard, isPtaUofCatalogId),
+      key: 'mandatory-training',
+      label: 'Mandatory training',
+      status: mandatoryStatus,
+      credentialItemId:
+        mandatoryStatus === 'pending' ? null : firstCertItemId(guard, isMandatoryTrainingCatalogId),
     },
     {
-      key: '32-hour',
-      label: '32-hour BSIS block',
-      status: blockStatus,
-      credentialItemId: blockStatus === 'pending' ? null : firstCertItemId(guard, isThirtyTwoHourCatalogId),
+      key: 'ce',
+      label: 'Continuing Education',
+      status: ceStatus,
+      credentialItemId:
+        ceStatus === 'pending'
+          ? null
+          : firstCertItemId(guard, (id) => id === BSIS_REFRESHER_CATALOG_ID || isContinuingEducationCatalogId(id)),
     },
   ];
 }

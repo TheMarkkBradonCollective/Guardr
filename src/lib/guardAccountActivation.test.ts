@@ -85,6 +85,17 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         imageUrl: '32hr',
         category: 'bsis-training',
       },
+      {
+        id: 'c4',
+        catalogId: 'bsis-8-hour-refresher',
+        name: '8-Hour BSIS Refresher',
+        issuer: 'BSIS',
+        number: 'CE-1',
+        issueDate: '2024-01-01',
+        status: 'verified',
+        imageUrl: 'ce',
+        category: 'bsis-training',
+      },
     ],
     ...overrides,
   });
@@ -126,7 +137,9 @@ describe('guard account activation gates', () => {
 
     assert.equal(guardCanStaffActivateAccount(guard), false);
     assert.ok(
-      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) => b.includes('32-hour'))
+      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) =>
+        /mandatory training/i.test(b)
+      )
     );
   });
 

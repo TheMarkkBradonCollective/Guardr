@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved, isGuardAccountPending } from '../../lib/accountStatus';
 import { getGuardActivationChecklist, getGuardCardCertifications } from '../../lib/guardAccountActivation';
-import { resolveCertCatalogId } from '../../lib/certCatalog';
+import { resolveCertCatalogId, BSIS_REFRESHER_CATALOG_ID } from '../../lib/certCatalog';
 import { findRejectedCertForCatalog } from '../../lib/certResubmit';
 import {
-  isThirtyTwoHourCatalogId,
+  isMandatoryTrainingCatalogId,
+  isContinuingEducationCatalogId,
   isPtaUofCatalogId,
 } from '../../lib/guardQualification';
 import { guardHasSubmittedItemsForStaffReview } from '../../lib/approvalSubmissions';
@@ -20,15 +21,16 @@ import {
 } from '../../lib/guardIdentityVerification';
 import {
   guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
+  guardMeetsContinuingEducation,
   guardMeetsLevel1,
+  guardMeetsMandatoryTraining,
   guardMeetsPtaUofTraining,
 } from '../../lib/guardQualification';
 import {
-  guardActivation32HourStepDetail,
+  guardActivationCeStepDetail,
   guardActivationGuardCardStepDetail,
   guardActivationIdStepDetail,
-  guardActivationPtaStepDetail,
+  guardActivationMandatoryTrainingStepDetail,
 } from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
 import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
@@ -47,7 +49,7 @@ import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
-type UploadKind = 'id' | 'coi' | 'guardCard' | 'pta' | 'thirtyTwoHour' | 'optional';
+type UploadKind = 'id' | 'coi' | 'guardCard' | 'mandatoryTraining' | 'ce' | 'optional';
 
 interface GuardActivationUploadChecklistProps {
   guard: SecurityGuard;
@@ -144,28 +146,32 @@ export function GuardActivationUploadChecklist({
   const coiCanUpload = !!onSaveInsurance && guardCoiCanGuardEdit(guard);
 
   const guardCardRejected = findRejectedCertForCatalog(guard, 'bsis-guard-card');
-  const ptaRejected = guard.certifications.some(
-    (cert) => cert.status === 'rejected' && isPtaUofCatalogId(resolveCertCatalogId(cert))
+  const mandatoryRejected = guard.certifications.some(
+    (cert) => cert.status === 'rejected' && isMandatoryTrainingCatalogId(resolveCertCatalogId(cert))
   );
-  const blockRejected = guard.certifications.some(
-    (cert) => cert.status === 'rejected' && isThirtyTwoHourCatalogId(resolveCertCatalogId(cert))
+  const ceRejected = guard.certifications.some(
+    (cert) =>
+      cert.status === 'rejected' &&
+      (resolveCertCatalogId(cert) === BSIS_REFRESHER_CATALOG_ID ||
+        isContinuingEducationCatalogId(resolveCertCatalogId(cert)))
   );
 
   const guardCardDone = guardMeetsLevel1(guard) || checklist.guardCardVerified;
   const guardCardCanUpload = !!onAddCertification && !guardMeetsLevel1(guard) && !guardCardAwaitingReview(guard);
 
-  const ptaDone = guardMeetsPtaUofTraining(guard);
-  const ptaCanUpload = !!onAddCertification && !ptaDone;
+  const mandatoryDone = guardMeetsMandatoryTraining(guard);
+  const mandatoryCanUpload = !!onAddCertification && !mandatoryDone;
+  const mandatoryOpensPta = !guardMeetsPtaUofTraining(guard);
 
-  const blockDone = guardMeets32HourBlock(guard);
-  const blockCanUpload = !!onAddCertification && !blockDone;
+  const ceDone = guardMeetsContinuingEducation(guard);
+  const ceCanUpload = !!onAddCertification && !ceDone;
 
   const optionalOnFile = getSupplementalCredentialsOnFile(guard);
   const optionalCanUpload = !!onAddCertification;
   const optionalDetail =
     optionalOnFile.length > 0
-      ? `${optionalOnFile.length} on file — add more anytime. Not required for activation.`
-      : 'Firearms, medical, FEMA, and more. Not required for activation.';
+      ? `${optionalOnFile.length} on file — electives and extras anytime. Not required for activation.`
+      : 'Electives, firearms, medical, FEMA, and more. Not required for activation.';
 
   return (
     <>
@@ -193,18 +199,30 @@ export function GuardActivationUploadChecklist({
             onAction={guardCardCanUpload ? () => setOpenUpload('guardCard') : undefined}
           />
           <StepRow
-            done={ptaDone}
-            label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
-            detail={guardActivationPtaStepDetail(guard)}
-            actionLabel={ptaCanUpload ? (ptaRejected ? 'Resubmit PTA/UOF' : 'Add PTA/UOF') : undefined}
-            onAction={ptaCanUpload ? () => setOpenUpload('pta') : undefined}
+            done={mandatoryDone}
+            label="4. Mandatory training — PTA/UOF + 4 mandatory courses"
+            detail={guardActivationMandatoryTrainingStepDetail(guard)}
+            actionLabel={
+              mandatoryCanUpload
+                ? mandatoryRejected
+                  ? 'Resubmit mandatory training'
+                  : mandatoryOpensPta
+                    ? 'Add PTA/UOF'
+                    : 'Add mandatory courses'
+                : undefined
+            }
+            onAction={
+              mandatoryCanUpload
+                ? () => setOpenUpload('mandatoryTraining')
+                : undefined
+            }
           />
           <StepRow
-            done={blockDone}
-            label="5. 32-hour BSIS course block — required to work"
-            detail={guardActivation32HourStepDetail(guard)}
-            actionLabel={blockCanUpload ? (blockRejected ? 'Resubmit 32-hour training' : 'Add 32-hour training') : undefined}
-            onAction={blockCanUpload ? () => setOpenUpload('thirtyTwoHour') : undefined}
+            done={ceDone}
+            label="5. Continuing Education — required to work"
+            detail={guardActivationCeStepDetail(guard)}
+            actionLabel={ceCanUpload ? (ceRejected ? 'Resubmit Continuing Education' : 'Add Continuing Education') : undefined}
+            onAction={ceCanUpload ? () => setOpenUpload('ce') : undefined}
           />
           <div className="flex items-start gap-3 pt-3">
             <span className="shrink-0 mt-0.5">
@@ -278,27 +296,36 @@ export function GuardActivationUploadChecklist({
         />
       )}
 
-      {openUpload === 'pta' && (
-        <GuardPtaUofPanel
-          guard={guard}
-          editing
-          onAddCertification={onAddCertification}
-          onDeleteCertification={onDeleteCertification}
-          onAttachCertificationImage={onAttachCertificationImage}
-          onUpdateCertification={onUpdateCertification}
-          activationFormOnly={{ open: true, onClose: closeUpload }}
-        />
-      )}
+      {openUpload === 'mandatoryTraining' &&
+        (mandatoryOpensPta ? (
+          <GuardPtaUofPanel
+            guard={guard}
+            editing
+            onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
+            onUpdateCertification={onUpdateCertification}
+            activationFormOnly={{ open: true, onClose: closeUpload }}
+          />
+        ) : (
+          <GuardThirtyTwoHourPanel
+            guard={guard}
+            editing
+            onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
+            onUpdateCertification={onUpdateCertification}
+            activationFormOnly={{ open: true, onClose: closeUpload }}
+          />
+        ))}
 
-      {openUpload === 'thirtyTwoHour' && (
-        <GuardThirtyTwoHourPanel
+      {openUpload === 'ce' && (
+        <GuardOptionalCredentialAddSheet
           guard={guard}
-          editing
+          open
+          onClose={closeUpload}
           onAddCertification={onAddCertification}
-          onDeleteCertification={onDeleteCertification}
-          onAttachCertificationImage={onAttachCertificationImage}
-          onUpdateCertification={onUpdateCertification}
-          activationFormOnly={{ open: true, onClose: closeUpload }}
+          initialSection="bsis-refresher"
         />
       )}
 

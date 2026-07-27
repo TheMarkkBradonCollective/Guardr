@@ -1,7 +1,7 @@
 import { SecurityGuard } from '../types';
 import {
-  GRACE_CREDENTIAL_32_HOUR_LABEL,
-  GRACE_CREDENTIAL_PTA_UOF_LABEL,
+  GRACE_CREDENTIAL_CE_LABEL,
+  GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL,
   getGuardMissingGraceCredentialLabels,
 } from './guardMissingCredentials';
 
@@ -77,10 +77,13 @@ export function guardGraceCredentialsStillMissing(guard: SecurityGuard, state = 
   return stored.filter((label) => current.includes(label));
 }
 
-export type GraceTrainingCredential = 'pta-uof' | '32-hour';
+export type GraceTrainingCredential = 'mandatory-training' | 'ce' | 'pta-uof' | '32-hour';
 
 function graceLabelFor(kind: GraceTrainingCredential): string {
-  return kind === 'pta-uof' ? GRACE_CREDENTIAL_PTA_UOF_LABEL : GRACE_CREDENTIAL_32_HOUR_LABEL;
+  if (kind === 'mandatory-training' || kind === 'pta-uof') {
+    return GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL;
+  }
+  return GRACE_CREDENTIAL_CE_LABEL;
 }
 
 /** During active grace, missing training covered by self-serve eligibility grace does not block work. */

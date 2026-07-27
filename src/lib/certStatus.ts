@@ -7,6 +7,7 @@ import {
   BSIS_WMD_AWARENESS_ID,
   LEGACY_PTA_ID,
   LEGACY_UOF_ID,
+  MANDATORY_COURSE_IDS,
   THIRTY_TWO_HOUR_COURSE_IDS,
   computePtaUofProgress,
   guardHasCredentialListed,
@@ -179,6 +180,12 @@ export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCo
   return segments.join(' · ');
 }
 
+export function countMandatoryCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
+  const statuses = MANDATORY_COURSE_IDS.map((catalogId) => getCourseUploadStatus(guard, catalogId));
+  return summarizeCredentialSlotStatuses(statuses);
+}
+
+/** @deprecated Prefer countMandatoryCourseSlotStatuses — electives are no longer required. */
 export function countThirtyTwoHourCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
   const statuses = THIRTY_TWO_HOUR_COURSE_IDS.map((catalogId) =>
     getCourseUploadStatus(guard, catalogId)

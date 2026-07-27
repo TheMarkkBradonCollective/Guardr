@@ -5,10 +5,10 @@ import { getThirtyTwoHourSectionStatus } from '../../lib/credentialSectionStatus
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  getThirtyTwoHourCourseCatalogEntries,
+  getMandatoryCourseCatalogEntries,
   getThirtyTwoHourRollupCatalogEntries,
-  isThirtyTwoHourCatalogId,
-  THIRTY_TWO_HOUR_COURSE_IDS,
+  isMandatoryCourseCatalogId,
+  MANDATORY_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, ChevronRight } from 'lucide-react';
@@ -59,8 +59,14 @@ function rollupCertsForGuard(guard: SecurityGuard): Certification[] {
   });
 }
 
-function allThirtyTwoHourCerts(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((cert) => isThirtyTwoHourCatalogId(resolveCertCatalogId(cert)));
+function allMandatoryCourseCerts(guard: SecurityGuard): Certification[] {
+  return guard.certifications.filter((cert) => {
+    const id = resolveCertCatalogId(cert);
+    return (
+      isMandatoryCourseCatalogId(id) ||
+      (id != null && (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(id))
+    );
+  });
 }
 
 function defaultThirtyTwoHourUploadPath(guard: SecurityGuard): CredentialUploadPath {
@@ -79,7 +85,7 @@ export function GuardThirtyTwoHourPanel({
   activationFormOnly,
   certOverlayNav,
 }: GuardThirtyTwoHourPanelProps) {
-  const courses = getThirtyTwoHourCourseCatalogEntries();
+  const courses = getMandatoryCourseCatalogEntries();
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
   const catalogOptions = useMemo(
     () => [...getThirtyTwoHourRollupCatalogEntries(), ...courses],
@@ -98,10 +104,10 @@ export function GuardThirtyTwoHourPanel({
   );
 
   const rollupCerts = useMemo(() => rollupCertsForGuard(guard), [guard.certifications]);
-  const listedCerts = useMemo(() => allThirtyTwoHourCerts(guard), [guard]);
+  const listedCerts = useMemo(() => allMandatoryCourseCerts(guard), [guard]);
 
   const hasIndividualCourseCerts = useMemo(
-    () => THIRTY_TWO_HOUR_COURSE_IDS.some((id) => certsForCatalogId(guard, id).length > 0),
+    () => MANDATORY_COURSE_IDS.some((id) => certsForCatalogId(guard, id).length > 0),
     [guard]
   );
   const hasAnyCerts = rollupCerts.length > 0 || hasIndividualCourseCerts;
@@ -345,7 +351,7 @@ export function GuardThirtyTwoHourPanel({
     </ul>
   );
 
-  const sheetTitle = editingCert ? 'Edit 32-hour training' : 'Add 32-hour training';
+  const sheetTitle = editingCert ? 'Edit mandatory courses' : 'Add mandatory courses';
 
   if (activationFormOnly) {
     return (
@@ -375,13 +381,13 @@ export function GuardThirtyTwoHourPanel({
                   className="app-button-primary !w-full !h-11 !text-sm"
                 >
                   {guardHasRejectedCertForCatalog(guard, ROLLUP_COMPLETION_CATALOG_ID)
-                    ? 'Edit 32-hour completion certificate'
-                    : 'Upload 32-hour completion certificate'}
+                    ? 'Edit completion certificate'
+                    : 'Upload completion certificate (covers mandatory courses)'}
                 </button>
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-brand-text-muted">
-                    Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} individual course certificates.
+                    Upload all {MANDATORY_COURSE_IDS.length} mandatory course certificates.
                   </p>
                   {courses.map((course) =>
                     renderCourseRow({
@@ -425,7 +431,7 @@ export function GuardThirtyTwoHourPanel({
         }
         subtitle={
           <div className="mt-2">
-            <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
+            <CredentialGracePeriodStatusBar guard={guard} kind="mandatory-training" />
           </div>
         }
         action={
@@ -442,7 +448,7 @@ export function GuardThirtyTwoHourPanel({
       {listedCerts.length === 0 ? (
         <div className="border-t border-brand-border py-3">
           <p className="text-xs text-brand-text-muted">
-            No 32-hour training on file yet.
+            No mandatory courses on file yet.
             {rollupEntry?.description ? ` ${rollupEntry.description}` : ''}
           </p>
         </div>

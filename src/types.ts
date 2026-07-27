@@ -584,7 +584,16 @@ export interface ShiftAuditViolation {
   dispute?: ShiftAuditViolationDispute;
 }
 
-export type ApplicationCredentialSnapshotKey = 'gov-id' | 'coi' | 'guard-card' | 'pta-uof' | '32-hour';
+export type ApplicationCredentialSnapshotKey =
+  | 'gov-id'
+  | 'coi'
+  | 'guard-card'
+  | 'mandatory-training'
+  | 'ce'
+  /** @deprecated Prefer mandatory-training */
+  | 'pta-uof'
+  /** @deprecated Prefer ce */
+  | '32-hour';
 
 export type ApplicationCredentialSnapshotStatus = 'submitted' | 'verified';
 

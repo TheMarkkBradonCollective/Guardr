@@ -4,8 +4,9 @@ import { guardInsuranceActivationDetail, guardInsuranceSubmitted } from './guard
 import {
   getQualificationProgress,
   guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
+  guardMeetsContinuingEducation,
   guardMeetsLevel1,
+  guardMeetsMandatoryTraining,
   guardMeetsPtaUofTraining,
 } from './guardQualification';
 
@@ -34,18 +35,26 @@ export function getGuardApplicationProgress(guard: SecurityGuard, state = 'CA'):
   const idDone = guardHasVerifiedIdForWork(guard);
   const coiDone = coi.done;
   const cardDone = guardMeetsLevel1(guard, state);
+  const mandatoryDone = guardMeetsMandatoryTraining(guard);
+  const ceDone = guardMeetsContinuingEducation(guard);
+
   const ptaDone = guardMeetsPtaUofTraining(guard);
-  const blockDone = guardMeets32HourBlock(guard);
+  const coursesPartial =
+    !mandatoryDone &&
+    (qual.uploadedMandatoryCount > 0 ||
+      qual.listedMandatoryCount > 0 ||
+      qual.thirtyTwoHourRollup ||
+      qual.ptaUofCombined ||
+      qual.legacyPta ||
+      qual.legacyUof);
 
-  const blockPartial =
-    !blockDone &&
-    (qual.uploaded32HourCount > 0 || qual.listed32HourCount > 0 || qual.thirtyTwoHourRollup);
-
-  let blockPoints = 0;
-  if (blockDone) {
-    blockPoints = stepWeight;
-  } else if (blockPartial) {
-    blockPoints = stepWeight * Math.max(0.25, qual.thirtyTwoHourProgressPercent / 100);
+  let mandatoryPoints = 0;
+  if (mandatoryDone) {
+    mandatoryPoints = stepWeight;
+  } else if (coursesPartial || ptaDone) {
+    const ptaShare = ptaDone ? 0.5 : Math.max(0, (qual.ptaUofProgressPercent ?? 0) / 200);
+    const courseShare = (qual.mandatoryCourseProgressPercent ?? 0) / 200;
+    mandatoryPoints = stepWeight * Math.min(0.95, Math.max(0.2, ptaShare + courseShare));
   }
 
   const percent = Math.round(
@@ -54,16 +63,14 @@ export function getGuardApplicationProgress(guard: SecurityGuard, state = 'CA'):
       requirementPoints(idDone, !idDone && checklist.idSubmitted, stepWeight) +
         requirementPoints(coiDone, !coiDone && guardInsuranceSubmitted(guard), stepWeight) +
         requirementPoints(cardDone, !cardDone && checklist.guardCardSubmitted, stepWeight) +
-        requirementPoints(
-          ptaDone,
-          !ptaDone && (qual.ptaUofCombined || qual.legacyPta || qual.legacyUof),
-          stepWeight
-        ) +
-        blockPoints
+        mandatoryPoints +
+        requirementPoints(ceDone, !ceDone && Boolean(qual.continuingEducation), stepWeight)
     )
   );
 
-  const completedRequirements = [idDone, coiDone, cardDone, ptaDone, blockDone].filter(Boolean).length;
+  const completedRequirements = [idDone, coiDone, cardDone, mandatoryDone, ceDone].filter(
+    Boolean
+  ).length;
 
   return {
     percent,

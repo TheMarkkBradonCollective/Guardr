@@ -45,16 +45,16 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
       verified: progress.guardCardVerified,
     },
     {
-      id: 'bsis-pta-uof',
-      label: 'PTA & UOF (8 hr)',
-      onFile: progress.ptaUofTraining,
-      verified: progress.ptaUofCombinedVerified,
+      id: 'mandatory-training',
+      label: 'Mandatory training',
+      onFile: progress.mandatoryTrainingComplete,
+      verified: progress.mandatoryTrainingVerified,
     },
     {
-      id: 'bsis-32-hour',
-      label: '32-Hr BSIS',
-      onFile: progress.thirtyTwoHourBlockComplete,
-      verified: progress.thirtyTwoHourBlockVerified,
+      id: 'ce',
+      label: 'Continuing Education',
+      onFile: progress.continuingEducation,
+      verified: progress.continuingEducationVerified,
     },
   ].filter((row) => !clientMode || row.verified);
 
@@ -103,12 +103,19 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
               </span>
             ))}
           </div>
-          {progress.level === 'pending' && progress.ptaUofTraining && !progress.thirtyTwoHourBlockComplete && (
+          {progress.level === 'pending' && progress.ptaUofTraining && !progress.mandatoryCoursesComplete && (
             <p className="text-[10px] text-brand-text-muted mt-2">
-              {formatThirtyTwoHourCourseProgressCounts(progress, {
-                scopeLabel: 'courses in the 32-hour block',
-              })}{' '}
-              · {progress.thirtyTwoHourProgressPercent}%
+              {formatThirtyTwoHourCourseProgressCounts(
+                {
+                  uploaded32HourCount: progress.uploadedMandatoryCount,
+                  listed32HourCount: progress.listedMandatoryCount,
+                  total32HourCourses: progress.totalMandatoryCourses,
+                },
+                {
+                  scopeLabel: 'mandatory courses',
+                }
+              )}{' '}
+              · {progress.mandatoryCourseProgressPercent}%
             </p>
           )}
         </div>
