@@ -188,7 +188,7 @@ export const THIRTY_TWO_HOUR_COURSE_IDS = [
   ...ELECTIVE_COURSE_IDS,
 ] as const;
 
-/** Legacy rollup certs — may satisfy the 4 mandatory skill courses, not PTA/UOF or CE. */
+/** Legacy rollup catalog IDs — not used for activation; kept only for old stored rows. */
 export const THIRTY_TWO_HOUR_ROLLUP_IDS = ['bsis-32-hour-completed', 'bsis-40-hour-completed'] as const;
 
 /** @deprecated Use MANDATORY_COURSE_IDS / THIRTY_TWO_HOUR_COURSE_IDS */
@@ -212,7 +212,6 @@ export function getRequiredPathwayCatalogIds(): readonly string[] {
     LEGACY_UOF_ID,
     BSIS_WMD_AWARENESS_ID,
     ...MANDATORY_COURSE_IDS,
-    ...THIRTY_TWO_HOUR_ROLLUP_IDS,
   ];
 }
 
@@ -251,11 +250,7 @@ export function isElectiveCourseCatalogId(catalogId: string | undefined): boolea
 }
 
 export function isContinuingEducationCatalogId(catalogId: string | undefined): boolean {
-  if (!catalogId) return false;
-  return (
-    isMandatoryCourseCatalogId(catalogId) ||
-    (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(catalogId)
-  );
+  return isMandatoryCourseCatalogId(catalogId);
 }
 
 /** @deprecated Prefer isPtaUofCatalogId — mandatory training is PTA/UOF only. */
@@ -496,11 +491,8 @@ export function guardMeets32HourBlockListed(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
-/** Four BSIS skill courses listed, or a legacy 32-hour rollup listed — activation Continuing Education. */
+/** Four BSIS skill courses listed — activation Continuing Education. */
 export function guardMeetsMandatoryCoursesListed(guard: SecurityGuard): boolean {
-  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialListed(guard, id))) {
-    return true;
-  }
   return MANDATORY_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
@@ -605,18 +597,12 @@ export function guardMeets32HourBlockVerified(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
 }
 
-/** Four BSIS skill courses on file, or a legacy 32-hour rollup on file — activation Continuing Education. */
+/** Four BSIS skill courses on file — activation Continuing Education. */
 export function guardMeetsMandatoryCourses(guard: SecurityGuard): boolean {
-  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialOnFile(guard, id))) {
-    return true;
-  }
   return MANDATORY_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id));
 }
 
 export function guardMeetsMandatoryCoursesVerified(guard: SecurityGuard): boolean {
-  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasGuardrVerifiedCredential(guard, id))) {
-    return true;
-  }
   return MANDATORY_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
 }
 

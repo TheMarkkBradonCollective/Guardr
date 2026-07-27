@@ -8,7 +8,6 @@ import type { CredentialViewSectionId } from './guardCredentialSections';
 import {
   getMandatoryCourseCatalogEntries,
   getPtaUofCatalogEntries,
-  getThirtyTwoHourRollupCatalogEntries,
   isMandatoryCourseCatalogId,
   isPtaUofCatalogId,
 } from './guardQualification';
@@ -21,7 +20,7 @@ export function catalogOptionsForStaffAddSection(section: CredentialViewSectionI
     return getPtaUofCatalogEntries();
   }
   if (section === 'bsis-32-hour') {
-    return [...getThirtyTwoHourRollupCatalogEntries(), ...getMandatoryCourseCatalogEntries()];
+    return getMandatoryCourseCatalogEntries();
   }
   if (section === 'bsis-refresher') {
     const entry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);

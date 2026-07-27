@@ -71,11 +71,9 @@ export function guardActivationCeStepDetail(guard: SecurityGuard): string {
   const progress = getQualificationProgress(guard);
 
   if (guardMeetsContinuingEducation(guard)) {
-    return progress.thirtyTwoHourRollup
-      ? 'Continuing Education on file (completion certificate)'
-      : `All ${progress.totalMandatoryCourses} Continuing Education courses on file`;
+    return `All ${progress.totalMandatoryCourses} Continuing Education courses on file`;
   }
-  if (progress.thirtyTwoHourRollup || progress.uploadedMandatoryCount > 0) {
+  if (progress.uploadedMandatoryCount > 0) {
     return `${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} Continuing Education courses on file — keep uploading`;
   }
   return 'Upload the 4 BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal)';

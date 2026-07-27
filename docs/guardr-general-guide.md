@@ -1093,7 +1093,7 @@ Staff can also open credentials from **Guards → guard detail** and upload docu
 | **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo. **Staff verify** the card before eligibility is granted. |
 | **Certificate of Insurance (COI)** | General liability insurance — required to apply to jobs. Upload your COI. **Staff verify** before the guard can apply. |
 | **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | **Mandatory training** — required for activation. Upload your PTA and UOF completion certificates (or the combined 8-hour cert). |
-| **Continuing Education** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required for activation. A legacy 32-hour completion certificate may cover these courses. |
+| **Continuing Education** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required for activation. Upload each course certificate. |
 | **8-Hour BSIS Refresher** | Annual refresher — staff may request later. Not required for initial activation. |
 | **Elective & Other BSIS Training** | Optional electives (Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure, and more). Not required for activation. |
 | **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |

@@ -162,13 +162,7 @@ function resolveViewSectionId(cert: Certification): CredentialViewSectionId {
 
   if (category === 'guard-card') return 'guard-card';
   if (isPtaUofCatalogId(catalogId)) return 'bsis-pta-uof';
-  if (
-    isMandatoryCourseCatalogId(catalogId) ||
-    catalogId === 'bsis-32-hour-completed' ||
-    catalogId === 'bsis-40-hour-completed'
-  ) {
-    return 'bsis-32-hour';
-  }
+  if (isMandatoryCourseCatalogId(catalogId)) return 'bsis-32-hour';
   if (catalogId === BSIS_REFRESHER_CATALOG_ID) return 'bsis-refresher';
   if (isElectiveCourseCatalogId(catalogId) || category === 'bsis-training') return 'bsis-other-training';
   if (category === 'bsis-permit') return 'bsis-permit';
@@ -210,23 +204,16 @@ export function getGuardCredentialViewSections(
 
   const bsisTraining = filterCerts(grouped['bsis-training'] ?? [], excludeRejected);
   const ptaUof = bsisTraining.filter((cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)));
-  const mandatoryCourses = bsisTraining.filter((cert) => {
-    const id = resolveCertCatalogId(cert);
-    return (
-      isMandatoryCourseCatalogId(id) ||
-      id === 'bsis-32-hour-completed' ||
-      id === 'bsis-40-hour-completed'
-    );
-  });
+  const mandatoryCourses = bsisTraining.filter((cert) =>
+    isMandatoryCourseCatalogId(resolveCertCatalogId(cert))
+  );
   const refresher = bsisTraining.filter((cert) => resolveCertCatalogId(cert) === BSIS_REFRESHER_CATALOG_ID);
   const otherBsis = bsisTraining.filter((cert) => {
     const id = resolveCertCatalogId(cert);
     return (
       !isMandatoryCourseCatalogId(id) &&
       !isPtaUofCatalogId(id) &&
-      id !== BSIS_REFRESHER_CATALOG_ID &&
-      id !== 'bsis-32-hour-completed' &&
-      id !== 'bsis-40-hour-completed'
+      id !== BSIS_REFRESHER_CATALOG_ID
     );
   });
 

@@ -56,14 +56,14 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Completion certificate covering Continuing Education courses — does not replace PTA/UOF.',
+    description: 'Deprecated catalog entry — not used for activation. Upload the 4 Continuing Education courses individually.',
   },
   {
     id: 'bsis-40-hour-completed',
-    name: '32-Hour BSIS Training Completed (legacy ID)',
+    name: '32-Hour BSIS Training Completed (deprecated)',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Legacy rollup ID — may count toward Continuing Education courses only.',
+    description: 'Deprecated catalog entry — not used for activation.',
   },
   {
     id: 'bsis-8-hour-refresher',

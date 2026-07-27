@@ -139,9 +139,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           label="5. Continuing Education (4 mandatory courses) — required to work"
           detail={
             guardMeetsContinuingEducation(guard)
-              ? progress.thirtyTwoHourRollup
-                ? 'Continuing Education on file (completion certificate)'
-                : `All ${progress.totalMandatoryCourses} Continuing Education courses on file`
+              ? `All ${progress.totalMandatoryCourses} Continuing Education courses on file`
               : `Upload the 4 BSIS mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} on file)`
           }
         />

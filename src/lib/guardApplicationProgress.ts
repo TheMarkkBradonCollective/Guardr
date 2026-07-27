@@ -38,8 +38,7 @@ export function getGuardApplicationProgress(guard: SecurityGuard, state = 'CA'):
   const ceDone = guardMeetsContinuingEducation(guard);
 
   const cePartial =
-    !ceDone &&
-    (qual.uploadedMandatoryCount > 0 || qual.listedMandatoryCount > 0 || qual.thirtyTwoHourRollup);
+    !ceDone && (qual.uploadedMandatoryCount > 0 || qual.listedMandatoryCount > 0);
 
   let cePoints = 0;
   if (ceDone) {
