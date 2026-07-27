@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { GuardGearCarryPanel } from './GuardGearCarryPanel';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
 import {
   GUARD_APPLICATION_INTAKE_LOCKED_MESSAGE,
@@ -301,7 +303,20 @@ export function UserProfileScreen({
         </div>
       )}
       {profileTab === 'certs' && canBuildResume && guard ? (
-        <section className="border-b border-brand-border">
+        <section className="border-b border-brand-border space-y-6">
+          <GuardGearCarryPanel
+            guard={guard}
+            weaponGearEditing={credentialsEditing}
+            equipmentGearEditing={editing}
+            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+            onWeaponGearChange={(listedWeaponGear) =>
+              setResume((r) => ({ ...r, listedWeaponGear }))
+            }
+            onEquipmentGearChange={(listedEquipmentGear) =>
+              setResume((r) => ({ ...r, listedEquipmentGear }))
+            }
+          />
           <GuardCredentialsPanel
             guard={guard}
             editing={credentialsEditing}
@@ -405,10 +420,16 @@ export function UserProfileScreen({
           />
         )}
         {isGuardAccount && guard && (
-          <div className="flex justify-between text-sm py-2 border-t border-brand-border">
-            <span className="text-brand-text-muted">Guard status</span>
-            <span className="font-medium">{GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}</span>
-          </div>
+          <>
+            <div className="flex justify-between text-sm py-2 border-t border-brand-border">
+              <span className="text-brand-text-muted">Account status</span>
+              <span className="font-medium">{GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm py-2 border-t border-brand-border">
+              <span className="text-brand-text-muted">Carry status</span>
+              <GuardArmedStatusPill guard={guard} />
+            </div>
+          </>
         )}
       </AppDashboardZone>
 

@@ -4,6 +4,8 @@ import type { SecurityGuard } from '../types';
 import {
   getClientVisibleListedWeaponGear,
   getEligibleWeaponGear,
+  getMissingWeaponGearCatalogIds,
+  getWeaponGearUnlockLabels,
   guardMeetsWeaponGearRequirements,
   GUARD_WEAPON_GEAR_RULES,
 } from './guardWeaponGear.ts';
@@ -46,6 +48,23 @@ describe('GUARD_WEAPON_GEAR_RULES', () => {
       GUARD_WEAPON_GEAR_RULES.find((rule) => rule.id === 'firearm')?.requiredCatalogIds,
       ['bsis-exposed-firearm', 'bsis-firearms-training', 'bsis-firearms-qualification']
     );
+  });
+});
+
+describe('weapon gear catalog helpers', () => {
+  const guardCard = verifiedCert('bsis-guard-card', 'guard-card');
+
+  it('lists missing catalog ids for weapon gear', () => {
+    const guard = guardWithCerts([guardCard]);
+    assert.deepEqual(getMissingWeaponGearCatalogIds(guard, 'baton'), [
+      'bsis-baton',
+      'bsis-baton-training',
+    ]);
+  });
+
+  it('maps catalog ids to gear unlock labels', () => {
+    assert.deepEqual(getWeaponGearUnlockLabels('bsis-baton'), ['Baton']);
+    assert.deepEqual(getWeaponGearUnlockLabels('bsis-exposed-firearm'), ['Firearm']);
   });
 });
 

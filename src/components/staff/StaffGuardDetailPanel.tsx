@@ -46,6 +46,8 @@ import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
 import { StaffGuardPerformancePanel } from './StaffGuardPerformancePanel';
 import { GuardResumeEditor, GuardResumeSavePayload } from '../profile/GuardResumeEditor';
+import { GuardGearCarryPanel } from '../profile/GuardGearCarryPanel';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
@@ -211,6 +213,8 @@ export function StaffGuardDetailPanel({
     yearsExperience: guard.yearsExperience,
     availabilityNotes: guard.availabilityNotes ?? '',
     hourlyRateRequirement: guard.hourlyRateRequirement,
+    listedWeaponGear: guard.listedWeaponGear ?? [],
+    listedEquipmentGear: guard.listedEquipmentGear ?? [],
   });
 
   useEffect(() => {
@@ -233,6 +237,8 @@ export function StaffGuardDetailPanel({
       yearsExperience: guard.yearsExperience,
       availabilityNotes: guard.availabilityNotes ?? '',
       hourlyRateRequirement: guard.hourlyRateRequirement,
+      listedWeaponGear: guard.listedWeaponGear ?? [],
+      listedEquipmentGear: guard.listedEquipmentGear ?? [],
     });
   }, [guard]);
 
@@ -414,6 +420,8 @@ export function StaffGuardDetailPanel({
       yearsExperience: guard.yearsExperience,
       availabilityNotes: guard.availabilityNotes ?? '',
       hourlyRateRequirement: guard.hourlyRateRequirement,
+      listedWeaponGear: guard.listedWeaponGear ?? [],
+      listedEquipmentGear: guard.listedEquipmentGear ?? [],
     });
     setPhotoError('');
     setSaveError('');
@@ -568,6 +576,19 @@ export function StaffGuardDetailPanel({
               )}
             </div>
           )}
+          <GuardGearCarryPanel
+            guard={guard}
+            weaponGearEditing={editing && canEdit}
+            equipmentGearEditing={editing && canEdit}
+            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+            onWeaponGearChange={(listedWeaponGear) =>
+              setResume((r) => ({ ...r, listedWeaponGear }))
+            }
+            onEquipmentGearChange={(listedEquipmentGear) =>
+              setResume((r) => ({ ...r, listedEquipmentGear }))
+            }
+          />
           <GuardCredentialsPanel
             guard={guard}
             editing={editing && canEdit}
@@ -687,6 +708,7 @@ export function StaffGuardDetailPanel({
           )}
           {!guard.isStaff && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
+              <GuardArmedStatusPill guard={guard} />
               <GuardRosterStatusBadges guard={guard} className="shrink-0" />
             </div>
           )}
@@ -858,6 +880,12 @@ export function StaffGuardDetailPanel({
               )}
             </div>
           </section>
+          )}
+
+          {!editing && (
+            <section className="staff-detail-section">
+              <GuardGearCarryPanel guard={guard} showFullCatalog />
+            </section>
           )}
 
           {!editing && (

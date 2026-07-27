@@ -1,4 +1,4 @@
-import type { GuardEquipmentGearId } from '../types';
+import type { GuardEquipmentGearId, SecurityGuard } from '../types';
 
 export interface GuardEquipmentGearRule {
   id: GuardEquipmentGearId;
@@ -38,4 +38,9 @@ export function normalizeListedEquipmentGear(values: string[] | undefined): Guar
     normalized.push(value);
   }
   return normalized;
+}
+
+export function getClientVisibleListedEquipmentGear(guard: SecurityGuard): GuardEquipmentGearRule[] {
+  const listed = normalizeListedEquipmentGear(guard.listedEquipmentGear);
+  return listed.map((id) => RULE_BY_ID.get(id)!).filter(Boolean);
 }
