@@ -1,17 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Certification, CertCategory, SecurityGuard } from '../../types';
+import { Certification, SecurityGuard } from '../../types';
+import { catalogOptionsForCredentialSection } from '../../lib/guardCredentialCatalog';
 import {
-  BSIS_REFRESHER_CATALOG_ID,
   credentialRequiresExpiry,
   getCertCatalogEntry,
-  getCertsByCategory,
 } from '../../lib/certCatalog';
 import { getOptionalCredentialSections } from '../../lib/guardCredentialSections';
-import {
-  isCombinedPtaUofCatalogId,
-  isMandatoryCourseCatalogId,
-  isPtaUofCatalogId,
-} from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -31,24 +25,6 @@ interface GuardOptionalCredentialAddSheetProps {
   initialSection?: OptionalAddSection;
 }
 
-function catalogOptionsForSection(section: OptionalAddSection) {
-  if (section === 'bsis-refresher') {
-    const entry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
-    return entry ? [entry] : [];
-  }
-  if (section === 'bsis-other-training') {
-    return getCertsByCategory('bsis-training').filter(
-      (opt) =>
-        !isMandatoryCourseCatalogId(opt.id) &&
-        !isPtaUofCatalogId(opt.id) &&
-        !isCombinedPtaUofCatalogId(opt.id) &&
-        opt.id !== BSIS_REFRESHER_CATALOG_ID &&
-        opt.id !== 'bsis-32-hour-completed' &&
-        opt.id !== 'bsis-40-hour-completed'
-    );
-  }
-  return getCertsByCategory(section as CertCategory);
-}
 
 export function GuardOptionalCredentialAddSheet({
   open,
@@ -73,7 +49,7 @@ export function GuardOptionalCredentialAddSheet({
     ? sections.find((section) => section.id === selectedSection)
     : undefined;
 
-  const catalogOptions = selectedSection ? catalogOptionsForSection(selectedSection) : [];
+  const catalogOptions = selectedSection ? catalogOptionsForCredentialSection(selectedSection) : [];
 
   const resetForm = () => {
     setSelectedSection(null);
@@ -89,7 +65,7 @@ export function GuardOptionalCredentialAddSheet({
   };
 
   const openSection = (sectionId: OptionalAddSection) => {
-    const options = catalogOptionsForSection(sectionId);
+    const options = catalogOptionsForCredentialSection(sectionId);
     setSelectedSection(sectionId);
     setSelectedCatalogId(options[0]?.id ?? '');
     setCustomCertName('');

@@ -49,6 +49,13 @@ export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'guard-card',
   'bsis-pta-uof',
   'bsis-32-hour',
+  'bsis-refresher',
+  'bsis-other-training',
+  'bsis-permit',
+  'medical',
+  'fema',
+  'security-advanced',
+  'industry',
 ];
 
 /** Optional credentials guards may add during activation or from profile. */
