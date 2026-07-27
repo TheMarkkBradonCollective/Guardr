@@ -71,12 +71,12 @@ export function guardActivationCeStepDetail(guard: SecurityGuard): string {
   const progress = getQualificationProgress(guard);
 
   if (guardMeetsContinuingEducation(guard)) {
-    return `All ${progress.totalMandatoryCourses} Continuing Education courses on file`;
+    return `All ${progress.total32HourCourses} Continuing Education courses on file`;
   }
-  if (progress.uploadedMandatoryCount > 0) {
-    return `${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} Continuing Education courses on file — keep uploading`;
+  if (progress.uploaded32HourCount > 0) {
+    return `${progress.uploaded32HourCount} of ${progress.total32HourCourses} Continuing Education courses on file — keep uploading`;
   }
-  return 'Upload the 4 BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal)';
+  return 'Upload all 9 certificates in the 32-hour BSIS Continuing Education package (after PTA/UOF)';
 }
 
 export function guardActivationCoiStepDetail(guard: SecurityGuard): string {

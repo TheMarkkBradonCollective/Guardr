@@ -56,7 +56,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Deprecated catalog entry — not used for activation. Upload the 4 Continuing Education courses individually.',
+    description: 'Deprecated catalog entry — not used for activation. Upload all 9 Continuing Education courses individually.',
   },
   {
     id: 'bsis-40-hour-completed',
@@ -70,7 +70,8 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '8-Hour BSIS Refresher Course',
     shortLabel: '8-Hr Refresher',
     category: 'bsis-training',
-    description: '8-hour refresher — staff may request later for renewals. Not required for initial activation.',
+    description:
+      'Annual 8-hour renewal — BSIS labels this Continuing Education on their site. Staff may request later for renewals. Not required for initial activation.',
   },
 
   // ── PTA / UOF — separate certificates only (combined uploads are deleted) ──
@@ -124,35 +125,35 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: 'Officer Safety (4 hr)',
     shortLabel: 'Officer Safety',
     category: 'bsis-training',
-    description: 'Optional BSIS elective — personal safety and situational awareness.',
+    description: 'Required Continuing Education course — part of the 32-hour BSIS CE package.',
   },
   {
     id: 'bsis-trespass',
     name: 'Trespass (4 hr)',
     shortLabel: 'Trespass',
     category: 'bsis-training',
-    description: 'Optional BSIS elective — trespass laws and enforcement.',
+    description: 'Required Continuing Education course — trespass laws and enforcement (32-hour BSIS CE package).',
   },
   {
     id: 'bsis-evacuation-procedures',
     name: 'Evacuation Procedures (2 hr)',
     shortLabel: 'Evacuation',
     category: 'bsis-training',
-    description: 'Optional BSIS elective — evacuation and emergency movement.',
+    description: 'Required Continuing Education course — evacuation and emergency movement (32-hour BSIS CE package).',
   },
   {
     id: 'bsis-monitoring-crowd-control',
     name: 'Monitoring Crowd Control (2 hr)',
     shortLabel: 'Crowd Control',
     category: 'bsis-training',
-    description: 'Optional BSIS elective — monitoring posts and crowd control.',
+    description: 'Required Continuing Education course — monitoring posts and crowd control (32-hour BSIS CE package).',
   },
   {
     id: 'bsis-arrest-search-seizure',
     name: 'Arrests, Search and Seizure (4 hr)',
     shortLabel: 'Search & Seizure',
     category: 'bsis-training',
-    description: 'Optional BSIS elective — citizen arrest and search authority.',
+    description: 'Required Continuing Education course — citizen arrest and search authority (32-hour BSIS CE package).',
   },
 
   // ── Additional BSIS / security training (optional) ──

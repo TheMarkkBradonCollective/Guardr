@@ -183,7 +183,7 @@ export function checkJobRequirements(
         guardGraceWaivesTrainingCredential(guard, 'mandatory-training', licenseState),
     },
     {
-      label: 'Continuing Education (4 BSIS mandatory courses)',
+      label: 'Continuing Education (32-hour BSIS CE package)',
       met:
         guardMeetsContinuingEducation(guard) ||
         isGuardUserStatusActive(guard) ||

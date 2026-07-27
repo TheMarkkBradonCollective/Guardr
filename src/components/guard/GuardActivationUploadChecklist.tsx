@@ -45,6 +45,7 @@ import { GuardCardPanel } from '../profile/GuardCardPanel';
 import { GuardPtaUofPanel } from './GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
+import { GuardBsisRequirementsReference } from './GuardBsisRequirementsReference';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
 type UploadKind = 'id' | 'coi' | 'guardCard' | 'mandatoryTraining' | 'ce' | 'optional';
@@ -164,13 +165,14 @@ export function GuardActivationUploadChecklist({
   const optionalCanUpload = !!onAddCertification;
   const optionalDetail =
     optionalOnFile.length > 0
-      ? `${optionalOnFile.length} on file — electives, 8-hr refresher, and extras. Not required for activation.`
-      : 'Electives, 8-hr refresher, firearms, medical, FEMA, and more. Not required for activation.';
+      ? `${optionalOnFile.length} on file — 8-hr refresher and extras. Not required for activation.`
+      : '8-hr refresher, firearms, medical, FEMA, and more. Not required for activation.';
 
   return (
     <>
       <div className="app-checklist-panel">
-        <div className="app-checklist-steps">
+        <GuardBsisRequirementsReference />
+        <div className="app-checklist-steps mt-4">
           <StepRow
             done={idDone}
             label="1. Government ID — required to work"
@@ -207,7 +209,7 @@ export function GuardActivationUploadChecklist({
           />
           <StepRow
             done={ceDone}
-            label="5. Continuing Education (4 mandatory courses) — required to work"
+            label="5. Continuing Education (32-hour BSIS CE package) — required to work"
             detail={guardActivationCeStepDetail(guard)}
             actionLabel={
               ceCanUpload

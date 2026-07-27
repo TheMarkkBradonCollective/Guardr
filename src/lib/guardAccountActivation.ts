@@ -46,7 +46,7 @@ export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
 /**
  * Already-active accounts keep marketplace access for Continuing Education under the new
- * 4-course taxonomy. Mandatory training (separate PTA + UOF) is still required — combined
+ * 32-hour CE package taxonomy. Mandatory training (separate PTA + UOF) is still required — combined
  * 8-hour certs do not count and must be replaced with separates.
  */
 export function guardHasActiveTrainingGrandfather(guard: SecurityGuard): boolean {
@@ -164,7 +164,7 @@ function buildMandatoryTrainingSubmissionBlockers(guard: SecurityGuard): string[
 function buildContinuingEducationSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsContinuingEducation(guard)) {
     return [
-      'Continuing Education not complete — the 4 BSIS mandatory courses are required for profile approval',
+      'Continuing Education not complete — the full 32-hour BSIS CE package is required for profile approval',
     ];
   }
   return [];
@@ -213,7 +213,7 @@ function buildCredentialActivationBlockers(guard: SecurityGuard, state = 'CA'): 
     ...buildGuardCardVerificationBlockers(guard, state),
     ...buildMandatoryTrainingVerificationBlockers(guard),
   ];
-  // Already-active guards are grandfathered only for Continuing Education (4-course taxonomy).
+  // Already-active guards are grandfathered only for Continuing Education (32-hour CE package).
   if (guardHasActiveTrainingGrandfather(guard)) {
     return identityBlockers;
   }

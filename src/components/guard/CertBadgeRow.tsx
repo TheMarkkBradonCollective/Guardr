@@ -109,15 +109,15 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
             <p className="text-[10px] text-brand-text-muted mt-2">
               {formatThirtyTwoHourCourseProgressCounts(
                 {
-                  uploaded32HourCount: progress.uploadedMandatoryCount,
-                  listed32HourCount: progress.listedMandatoryCount,
-                  total32HourCourses: progress.totalMandatoryCourses,
+                  uploaded32HourCount: progress.uploaded32HourCount,
+                  listed32HourCount: progress.listed32HourCount,
+                  total32HourCourses: progress.total32HourCourses,
                 },
                 {
                   scopeLabel: 'Continuing Education courses',
                 }
               )}{' '}
-              · {progress.mandatoryCourseProgressPercent}%
+              · {progress.continuingEducationProgressPercent}%
             </p>
           )}
         </div>

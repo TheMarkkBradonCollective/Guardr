@@ -10,14 +10,14 @@ import {
 } from './guardIdentityVerification';
 import {
   computePtaUofProgress,
-  guardMeetsMandatoryCourses,
-  guardMeetsMandatoryCoursesVerified,
+  guardMeetsContinuingEducation,
+  guardMeetsContinuingEducationVerified,
   guardMeetsPtaUofTrainingVerified,
 } from './guardQualification';
 import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
 import {
-  countMandatoryCourseSlotStatuses,
   countPtaUofSlotStatuses,
+  countThirtyTwoHourCourseSlotStatuses,
   formatCredentialSlotStatusSummary,
 } from './certStatus';
 
@@ -145,11 +145,11 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
 
 export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
   void staffMode;
-  if (guardMeetsMandatoryCoursesVerified(guard)) {
+  if (guardMeetsContinuingEducationVerified(guard)) {
     return { label: 'Verified — on file', tone: 'success' };
   }
-  const summary = formatCredentialSlotStatusSummary(countMandatoryCourseSlotStatuses(guard));
-  if (guardMeetsMandatoryCourses(guard)) {
+  const summary = formatCredentialSlotStatusSummary(countThirtyTwoHourCourseSlotStatuses(guard));
+  if (guardMeetsContinuingEducation(guard)) {
     return { label: 'On file — pending review', tone: 'warning' };
   }
   if (summary === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {

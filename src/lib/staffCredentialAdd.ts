@@ -6,10 +6,10 @@ import {
 } from './certCatalog';
 import type { CredentialViewSectionId } from './guardCredentialSections';
 import {
-  getMandatoryCourseCatalogEntries,
   getPtaUofCatalogEntries,
+  getThirtyTwoHourCourseCatalogEntries,
   isCombinedPtaUofCatalogId,
-  isMandatoryCourseCatalogId,
+  isContinuingEducationCatalogId,
   isPtaUofCatalogId,
 } from './guardQualification';
 
@@ -21,7 +21,7 @@ export function catalogOptionsForStaffAddSection(section: CredentialViewSectionI
     return getPtaUofCatalogEntries();
   }
   if (section === 'bsis-32-hour') {
-    return getMandatoryCourseCatalogEntries();
+    return getThirtyTwoHourCourseCatalogEntries();
   }
   if (section === 'bsis-refresher') {
     const entry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
@@ -30,7 +30,7 @@ export function catalogOptionsForStaffAddSection(section: CredentialViewSectionI
   if (section === 'bsis-other-training') {
     return getCertsByCategory('bsis-training').filter(
       (opt) =>
-        !isMandatoryCourseCatalogId(opt.id) &&
+        !isContinuingEducationCatalogId(opt.id) &&
         !isPtaUofCatalogId(opt.id) &&
         !isCombinedPtaUofCatalogId(opt.id) &&
         opt.id !== BSIS_REFRESHER_CATALOG_ID &&

@@ -5,9 +5,9 @@ import { getThirtyTwoHourSectionStatus } from '../../lib/credentialSectionStatus
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  getMandatoryCourseCatalogEntries,
-  isMandatoryCourseCatalogId,
-  MANDATORY_COURSE_IDS,
+  getThirtyTwoHourCourseCatalogEntries,
+  isContinuingEducationCatalogId,
+  THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import {
@@ -51,7 +51,7 @@ interface GuardThirtyTwoHourPanelProps {
 
 function allContinuingEducationCerts(guard: SecurityGuard): Certification[] {
   return guard.certifications.filter((cert) =>
-    isMandatoryCourseCatalogId(resolveCertCatalogId(cert))
+    isContinuingEducationCatalogId(resolveCertCatalogId(cert))
   );
 }
 
@@ -67,7 +67,7 @@ export function GuardThirtyTwoHourPanel({
   activationFormOnly,
   certOverlayNav,
 }: GuardThirtyTwoHourPanelProps) {
-  const courses = getMandatoryCourseCatalogEntries();
+  const courses = getThirtyTwoHourCourseCatalogEntries();
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
   const catalogOptions = useMemo(() => courses, [courses]);
 
@@ -80,8 +80,8 @@ export function GuardThirtyTwoHourPanel({
   const [formError, setFormError] = useState('');
 
   const listedCerts = useMemo(() => allContinuingEducationCerts(guard), [guard]);
-  const mandatorySlots = useMemo(
-    () => buildCredentialCatalogSlots(guard, [...MANDATORY_COURSE_IDS]),
+  const ceSlots = useMemo(
+    () => buildCredentialCatalogSlots(guard, [...THIRTY_TWO_HOUR_COURSE_IDS]),
     [guard]
   );
 
@@ -89,7 +89,7 @@ export function GuardThirtyTwoHourPanel({
   const sectionUploadStatus =
     listedCerts.length > 0
       ? 'on-file'
-      : getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]);
+      : getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]);
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -335,7 +335,7 @@ export function GuardThirtyTwoHourPanel({
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-brand-text-muted">
-                Upload all {MANDATORY_COURSE_IDS.length} Continuing Education course certificates.
+                Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} Continuing Education course certificates (32-hour BSIS CE package).
               </p>
               {courses.map((course) =>
                 renderCourseRow({
@@ -392,7 +392,7 @@ export function GuardThirtyTwoHourPanel({
       <div className="border-t border-brand-border pt-3">
         <CredentialCatalogSlotList
           guard={guard}
-          slots={mandatorySlots}
+          slots={ceSlots}
           staffMode={staffMode}
           canUpload={canUpload}
           editing={editing}
