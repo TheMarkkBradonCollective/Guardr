@@ -158,10 +158,11 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
   });
 
-  it('routes approved-but-not-active guards to activation', () => {
+  it('routes approved-but-not-active guards to activation except settings and support', () => {
     const guard = { userStatus: 'approved' as const, isStaff: false };
     assert.equal(normalizeGuardTabForAccount('map', guard), 'activation');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
+    assert.equal(normalizeGuardTabForAccount('support', guard), 'support');
   });
 
   it('routes user_status active guards missing credentials to activation', () => {

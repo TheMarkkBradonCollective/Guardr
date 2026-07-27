@@ -3,6 +3,7 @@ import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
 import { isGuardUserStatusActive } from './accountStatus';
 import { isGuardAccountActive } from './guardAccountActivation';
+import { isGuardAccountApproved } from './accountStatus';
 import type { GuardJobsBrowseTab } from './guardJobsBrowse';
 import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
 import { isPerformanceFactorId } from './guardPerformanceFactorDetail';
@@ -152,6 +153,7 @@ export function normalizeGuardTabForAccount(
     return resolved === 'activation' ? 'map' : resolved;
   }
   if (resolved === 'settings') return 'settings';
+  if (resolved === 'support' && isGuardAccountApproved(guard)) return 'support';
   return 'activation';
 }
 

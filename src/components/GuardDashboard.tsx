@@ -73,7 +73,7 @@ import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrom
 import { AppGuidePage } from './docs/AppGuidePage';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
-import { AppScreen } from './ui/app/AppPrimitives';
+import { AppScreen, AppSubScreenHeader } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
 import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, Plus, LifeBuoy } from 'lucide-react';
 import {
@@ -109,9 +109,10 @@ import {
 } from '../lib/shiftAuditViolations';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
-import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
+import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPreActive } from '../lib/accountStatus';
 import { isGuardCredentialExpiryRestricted } from '../lib/guardCredentialExpiryEnforcement';
 import { isGuardAccountActive } from '../lib/guardAccountActivation';
+import { findActivationSupportChat } from '../lib/support';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardMessagesPanel } from './guard/GuardMessagesPanel';
 import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
@@ -262,6 +263,7 @@ interface GuardDashboardProps {
   supportMode?: GuardSupportMode | null;
   supportSection?: 'support' | 'reports';
   onOpenSupportCompose?: () => void;
+  onOpenActivationSupport?: () => void;
   onOpenSupportReport?: () => void;
   onCloseSupportForm?: () => void;
   performanceFactorId?: PerformanceFactorId | null;
@@ -291,13 +293,15 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
-const GUARD_ACTIVATION_BASE_TABS: GuardTab[] = ['settings'];
-
 function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
+  const tabs: GuardTab[] = ['settings'];
   if (guard.applicationRevisionRequestedAt) {
-    return [...GUARD_ACTIVATION_BASE_TABS, 'profile'];
+    tabs.push('profile');
   }
-  return GUARD_ACTIVATION_BASE_TABS;
+  if (isGuardAccountApproved(guard)) {
+    tabs.push('support');
+  }
+  return tabs;
 }
 const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'map',
@@ -415,6 +419,7 @@ export function GuardDashboard({
   supportMode = null,
   supportSection = 'support',
   onOpenSupportCompose,
+  onOpenActivationSupport,
   onOpenSupportReport,
   onCloseSupportForm,
   performanceFactorId = null,
@@ -1337,6 +1342,7 @@ export function GuardDashboard({
   const userStatus = getGuardUserStatus(guard);
   const credentialRestricted = isGuardCredentialExpiryRestricted(guard);
   const accountNeedsActivation = !isGuardAccountActive(guard);
+  const approvedAwaitingActivation = isGuardAccountApproved(guard) && accountNeedsActivation;
   const activationAllowedTabs = guardActivationAllowedTabs(guard);
   const showPendingGate =
     accountNeedsActivation && !activationAllowedTabs.includes(tab);
@@ -2034,7 +2040,7 @@ export function GuardDashboard({
 
   const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
-  const visibleMainPanel = showPendingGate ? (
+  const visibleMainPanel = showPendingGate && tab !== 'support' ? (
     <AccountPendingScreen
       role="guard"
       guard={guard}
@@ -2046,6 +2052,12 @@ export function GuardDashboard({
       onUpdateCertification={onUpdateCertification}
       onSubmitIdentityVerification={onSubmitIdentityVerification}
       onSaveInsurance={onSaveInsurance}
+      onContactSupport={approvedAwaitingActivation ? onOpenActivationSupport : undefined}
+      hasActivationSupportChat={Boolean(
+        approvedAwaitingActivation &&
+          currentUser &&
+          findActivationSupportChat(supportTickets, currentUser)
+      )}
     />
   ) : (
     renderGuardMainPanel()
@@ -2086,7 +2098,15 @@ export function GuardDashboard({
           ? 'Trusted Guardr professional'
           : 'Available for vetted jobs';
 
-  const shellHeaderOverride = messagesChromeActive ? guardMessagesChrome.override : null;
+  const activationSupportHeader =
+    approvedAwaitingActivation && tab === 'support' && !messagesChromeActive ? (
+      <AppSubScreenHeader
+        title="Activation support"
+        onBack={() => setTab('activation')}
+        backLabel="Credentials"
+      />
+    ) : null;
+  const shellHeaderOverride = activationSupportHeader ?? (messagesChromeActive ? guardMessagesChrome.override : null);
   const shellHeaderExtension = messagesChromeActive ? guardMessagesChrome.extension : null;
 
   const shellHideHeader =
