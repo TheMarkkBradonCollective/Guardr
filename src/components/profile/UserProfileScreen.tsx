@@ -297,7 +297,7 @@ export function UserProfileScreen({
             onChange={(id) => setProfileTab(id as GuardProfileTab)}
             tabs={[
               { id: 'profile', label: 'Profile' },
-              { id: 'certs', label: 'Certs' },
+              { id: 'certs', label: 'Credentials' },
             ]}
           />
         </div>
@@ -453,6 +453,7 @@ export function UserProfileScreen({
           onSaveVehicleInsurance={onSaveVehicleInsurance}
           onEditCredentialFullPage={!editing ? () => setEditing(true) : undefined}
           hideCredentials
+          hideGear
         />
         </section>
       )}

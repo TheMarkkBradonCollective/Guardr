@@ -247,13 +247,14 @@ export function GuardProfileScreen({
               onChange={(id) => setProfileTab(id as GuardProfileTab)}
               tabs={[
                 { id: 'profile', label: 'Overview' },
-                { id: 'certs', label: 'Certs' },
+                { id: 'certs', label: 'Credentials' },
               ]}
             />
           </div>
 
           {profileTab === 'certs' ? (
-            <section>
+            <section className="space-y-6">
+              <GuardGearCarryClientSection guard={guard} />
               <CertBadgeRow guard={guard} clientMode />
               <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
             </section>
@@ -269,8 +270,6 @@ export function GuardProfileScreen({
             variant="full"
             showSpecialtyRatings
           />
-
-          <GuardGearCarryClientSection guard={guard} />
 
           {aboutText && (
             <section>
