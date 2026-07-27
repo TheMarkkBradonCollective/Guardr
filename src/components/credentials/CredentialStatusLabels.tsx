@@ -116,12 +116,17 @@ export function CredentialRowAction({
   sectionStatus,
   canUpload,
   onAdd,
+  onEdit,
+  editMode = false,
 }: {
   staffMode?: boolean;
   uploadStatus: CredentialListStatus;
   sectionStatus?: CredentialSectionStatus;
   canUpload: boolean;
   onAdd: () => void;
+  /** When set, shows Edit/Resubmit instead of Add for credentials already on file. */
+  onEdit?: () => void;
+  editMode?: boolean;
 }) {
   const badge = sectionStatus ? (
     <CredentialSectionStatusBadge label={sectionStatus.label} tone={sectionStatus.tone} />
@@ -129,8 +134,11 @@ export function CredentialRowAction({
     <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
   );
 
-  if (staffMode || !credentialNeedsUploadAction(uploadStatus)) {
+  if (staffMode || (!credentialNeedsUploadAction(uploadStatus) && !editMode)) {
     return badge;
+  }
+  if (canUpload && editMode && onEdit) {
+    return <CredentialSectionEditButton onClick={onEdit} />;
   }
   if (canUpload) {
     return <CredentialSectionAddButton onClick={onAdd} />;
@@ -147,6 +155,19 @@ export function CredentialSectionAddButton({ onClick }: { onClick: () => void })
       className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
     >
       Add
+    </button>
+  );
+}
+
+/** Section-header action when a credential already exists and needs resubmit. */
+export function CredentialSectionEditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+    >
+      Edit
     </button>
   );
 }

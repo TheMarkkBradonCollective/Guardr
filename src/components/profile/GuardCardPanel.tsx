@@ -19,6 +19,8 @@ import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import { findRejectedCertForCatalog, guardHasRejectedCertForCatalog } from '../../lib/certResubmit';
+import { CertDetailModal } from '../credentials/CertDetailModal';
 
 interface GuardCardPanelProps {
   guard: SecurityGuard;
@@ -56,11 +58,20 @@ export function GuardCardPanel({
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
 
   const [showForm, setShowForm] = useState(false);
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [state, setState] = useState('CA');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
+
+  const rejectedGuardCard = useMemo(
+    () => findRejectedCertForCatalog(guard, 'bsis-guard-card'),
+    [guard]
+  );
+  const editingCert = editingCertId
+    ? guard.certifications.find((cert) => cert.id === editingCertId)
+    : undefined;
 
   const resetForm = () => {
     setIssuer('');
@@ -69,12 +80,28 @@ export function GuardCardPanel({
     setImageUrl(undefined);
     setFormError('');
     setShowForm(false);
+    setEditingCertId(null);
     activationFormOnly?.onClose();
   };
 
+  const openGuardCardUpload = () => {
+    if (rejectedGuardCard && onUpdateCertification) {
+      setEditingCertId(rejectedGuardCard.id);
+      setShowForm(false);
+      return;
+    }
+    setShowForm(true);
+  };
+
   useEffect(() => {
-    if (activationFormOnly?.open) setShowForm(true);
-  }, [activationFormOnly?.open]);
+    if (!activationFormOnly?.open) return;
+    if (rejectedGuardCard && onUpdateCertification) {
+      setEditingCertId(rejectedGuardCard.id);
+      setShowForm(false);
+      return;
+    }
+    setShowForm(true);
+  }, [activationFormOnly?.open, rejectedGuardCard, onUpdateCertification]);
 
   const submitGuardCard = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,15 +216,33 @@ export function GuardCardPanel({
     <AppFormSheet
       open={(activationFormOnly?.open ?? false) || (showForm && canUpload)}
       onClose={resetForm}
-      title={items.length ? 'Add another guard card' : 'Add guard card'}
+      title={rejectedGuardCard ? 'Edit guard card' : items.length ? 'Add another guard card' : 'Add guard card'}
       subtitle="BSIS Guard Card"
     >
       {uploadForm}
     </AppFormSheet>
   );
 
+  const editModal =
+    editingCert && onUpdateCertification ? (
+      <CertDetailModal
+        cert={editingCert}
+        guardName={guard.name}
+        canEdit={staffMode ? staffCanEditCertification(guard, editingCert) : guardCertificationCanEdit(editingCert)}
+        staffMode={staffMode}
+        initialEditMode
+        onSubmit={(payload) => onUpdateCertification(editingCert.id, payload)}
+        onClose={resetForm}
+      />
+    ) : null;
+
   if (activationFormOnly) {
-    return uploadSheet;
+    return (
+      <>
+        {!editingCert && uploadSheet}
+        {editModal}
+      </>
+    );
   }
 
   const cardRows = items.map((cert) => (
@@ -225,7 +270,11 @@ export function GuardCardPanel({
               uploadStatus={guardCardUploadStatus}
               sectionStatus={sectionStatus}
               canUpload={canUpload}
-              onAdd={() => setShowForm(true)}
+              editMode={guardHasRejectedCertForCatalog(guard, 'bsis-guard-card')}
+              onEdit={() => {
+                if (rejectedGuardCard) setEditingCertId(rejectedGuardCard.id);
+              }}
+              onAdd={openGuardCardUpload}
             />
           }
         />
@@ -241,6 +290,7 @@ export function GuardCardPanel({
         )}
       </section>
       {uploadSheet}
+      {editModal}
     </>
   );
 }
