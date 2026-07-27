@@ -63,17 +63,6 @@ const baseGuard = {
       imageUrl: '32hr',
       category: 'bsis-training',
     },
-    {
-      id: 'c4',
-      catalogId: 'bsis-8-hour-refresher',
-      name: '8-Hour BSIS Refresher',
-      issuer: 'BSIS',
-      number: 'CE-1',
-      issueDate: '2024-01-01',
-      status: 'verified',
-      imageUrl: 'ce',
-      category: 'bsis-training',
-    },
   ],
 } as SecurityGuard;
 

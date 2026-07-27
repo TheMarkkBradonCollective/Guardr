@@ -56,22 +56,21 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Completion certificate covering mandatory courses — does not replace PTA/UOF or Continuing Education.',
+    description: 'Completion certificate covering Continuing Education courses — does not replace PTA/UOF.',
   },
   {
     id: 'bsis-40-hour-completed',
     name: '32-Hour BSIS Training Completed (legacy ID)',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Legacy rollup ID — may count toward mandatory courses only.',
+    description: 'Legacy rollup ID — may count toward Continuing Education courses only.',
   },
   {
     id: 'bsis-8-hour-refresher',
     name: '8-Hour BSIS Refresher Course',
     shortLabel: '8-Hr Refresher',
     category: 'bsis-training',
-    description:
-      '8-hour refresher / continuing education — required for Guardr activation.',
+    description: '8-hour refresher — staff may request later for renewals. Not required for initial activation.',
   },
 
   // ── PTA / UOF — valid as separate certs or as the combined 8-hr course ──
@@ -97,28 +96,28 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: 'Communication and Its Significance (4 hr)',
     shortLabel: 'Communication',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS mandatory module on guard communication and reporting.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on guard communication and reporting.',
   },
   {
     id: 'bsis-public-relations',
     name: 'Public Relations (4 hr)',
     shortLabel: 'Public Relations',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS mandatory module on professional public contact.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on professional public contact.',
   },
   {
     id: 'bsis-observation-documentation',
     name: 'Observation and Documentation (4 hr)',
     shortLabel: 'Observation',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS mandatory module on observation, notes, and reports.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on observation, notes, and reports.',
   },
   {
     id: 'bsis-liability-legal',
     name: 'Liability / Legal Aspects (4 hr)',
     shortLabel: 'Legal Aspects',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS mandatory module on legal limits and liability.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on legal limits and liability.',
   },
   {
     id: 'bsis-officer-safety',

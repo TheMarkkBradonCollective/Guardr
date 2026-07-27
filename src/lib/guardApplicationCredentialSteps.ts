@@ -1,6 +1,6 @@
 import { SecurityGuard } from '../types';
 import { certHasDocumentProof } from './certImagePolicy';
-import { resolveCertCatalogId, BSIS_REFRESHER_CATALOG_ID } from './certCatalog';
+import { resolveCertCatalogId } from './certCatalog';
 import { getGuardActivationChecklist, getGuardCardCertifications } from './guardAccountActivation';
 import { coiApprovalItemId, govIdApprovalItemId } from './guardCredentialSections';
 import { guardHasInsuranceSubmitted } from './guardInsurance';
@@ -12,7 +12,7 @@ import {
   guardMeetsMandatoryTraining,
   guardMeetsMandatoryTrainingVerified,
   isContinuingEducationCatalogId,
-  isMandatoryTrainingCatalogId,
+  isPtaUofCatalogId,
 } from './guardQualification';
 
 export type GuardApplicationCredentialStepStatus = 'pending' | 'submitted' | 'verified';
@@ -112,19 +112,17 @@ export function getGuardApplicationCredentialSteps(guard: SecurityGuard): GuardA
     },
     {
       key: 'mandatory-training',
-      label: 'Mandatory training',
+      label: 'Mandatory training (PTA/UOF)',
       status: mandatoryStatus,
       credentialItemId:
-        mandatoryStatus === 'pending' ? null : firstCertItemId(guard, isMandatoryTrainingCatalogId),
+        mandatoryStatus === 'pending' ? null : firstCertItemId(guard, isPtaUofCatalogId),
     },
     {
       key: 'ce',
       label: 'Continuing Education',
       status: ceStatus,
       credentialItemId:
-        ceStatus === 'pending'
-          ? null
-          : firstCertItemId(guard, (id) => id === BSIS_REFRESHER_CATALOG_ID || isContinuingEducationCatalogId(id)),
+        ceStatus === 'pending' ? null : firstCertItemId(guard, isContinuingEducationCatalogId),
     },
   ];
 }

@@ -49,11 +49,11 @@ export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'guard-card',
   'bsis-pta-uof',
   'bsis-32-hour',
-  'bsis-refresher',
 ];
 
 /** Optional credentials guards may add during activation or from profile. */
 export const OPTIONAL_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
+  'bsis-refresher',
   'bsis-other-training',
   'bsis-permit',
   'medical',
@@ -67,7 +67,6 @@ export const STAFF_ADD_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
   'guard-card',
   'bsis-pta-uof',
   'bsis-32-hour',
-  'bsis-refresher',
   ...OPTIONAL_CREDENTIAL_SECTION_IDS,
 ];
 
@@ -102,18 +101,19 @@ const SECTION_META: Record<
     category: 'industry',
   },
   'bsis-pta-uof': {
-    title: 'Power to Arrest & Appropriate Use of Force',
-    subtitle: 'Required mandatory training — part of activation with the 4 mandatory courses.',
+    title: 'Mandatory Training (PTA/UOF)',
+    subtitle: 'Power to Arrest & Appropriate Use of Force — required for activation.',
     category: 'bsis-training',
   },
   'bsis-32-hour': {
-    title: 'Mandatory Courses',
-    subtitle: 'Required BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal).',
+    title: 'Continuing Education',
+    subtitle:
+      'The 4 BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal) — required for activation.',
     category: 'bsis-training',
   },
   'bsis-refresher': {
-    title: 'Continuing Education',
-    subtitle: '8-hour BSIS continuing education / refresher — required for activation.',
+    title: getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID)?.name ?? '8-Hour BSIS Refresher Course',
+    subtitle: 'Annual refresher — staff may request this later. Not required for initial activation.',
     category: 'bsis-training',
   },
   'bsis-other-training': {

@@ -10,12 +10,8 @@ import {
 } from './guardIdentityVerification';
 import {
   computePtaUofProgress,
-  guardMeetsContinuingEducation,
-  guardMeetsContinuingEducationVerified,
   guardMeetsMandatoryCourses,
   guardMeetsMandatoryCoursesVerified,
-  guardMeetsMandatoryTraining,
-  guardMeetsMandatoryTrainingVerified,
   guardMeetsPtaUofTrainingVerified,
 } from './guardQualification';
 import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
@@ -162,27 +158,10 @@ export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = 
   return { label: summary, tone: 'warning' };
 }
 
-export function getContinuingEducationSectionStatus(guard: SecurityGuard): CredentialSectionStatus {
-  if (guardMeetsContinuingEducationVerified(guard)) {
-    return { label: 'Verified — on file', tone: 'success' };
-  }
-  if (guardMeetsContinuingEducation(guard)) {
-    return { label: 'On file — pending review', tone: 'warning' };
-  }
-  return notListedOrOnFileStatus();
+export function getContinuingEducationSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
+  return getThirtyTwoHourSectionStatus(guard, staffMode);
 }
 
 export function getMandatoryTrainingSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
-  if (guardMeetsMandatoryTrainingVerified(guard)) {
-    return { label: 'Verified — on file', tone: 'success' };
-  }
-  if (guardMeetsMandatoryTraining(guard)) {
-    return { label: 'On file — pending review', tone: 'warning' };
-  }
-  const pta = getPtaUofSectionStatus(guard, staffMode);
-  const courses = getThirtyTwoHourSectionStatus(guard, staffMode);
-  if (pta.label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL && courses.label === CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL) {
-    return notListedOrOnFileStatus();
-  }
-  return { label: 'Incomplete — PTA/UOF and mandatory courses required', tone: 'warning' };
+  return getPtaUofSectionStatus(guard, staffMode);
 }

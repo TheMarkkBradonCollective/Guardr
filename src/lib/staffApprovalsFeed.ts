@@ -627,9 +627,9 @@ export type CredentialFeedContext =
 
 const ACTIVATION_STEP_LABELS: Record<ActivationCredentialKey, string> = {
   'guard-card': 'BSIS Guard Card',
-  'mandatory-training': 'Mandatory training',
+  'mandatory-training': 'Mandatory training (PTA/UOF)',
   ce: 'Continuing Education',
-  'pta-uof': 'Mandatory training',
+  'pta-uof': 'Mandatory training (PTA/UOF)',
   '32-hour': 'Continuing Education',
 };
 

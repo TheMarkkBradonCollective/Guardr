@@ -145,7 +145,7 @@ function buildGuardCardVerificationBlockers(guard: SecurityGuard, state = 'CA'):
 function buildMandatoryTrainingSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsMandatoryTraining(guard)) {
     return [
-      'Mandatory training not complete — PTA/UOF and the 4 BSIS mandatory courses are required for profile approval',
+      'Mandatory training (Power to Arrest & Appropriate Use of Force) not on file — required for profile approval',
     ];
   }
   return [];
@@ -153,7 +153,9 @@ function buildMandatoryTrainingSubmissionBlockers(guard: SecurityGuard): string[
 
 function buildContinuingEducationSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsContinuingEducation(guard)) {
-    return ['Continuing Education (8-hour BSIS refresher) not on file — required for profile approval'];
+    return [
+      'Continuing Education not complete — the 4 BSIS mandatory courses are required for profile approval',
+    ];
   }
   return [];
 }

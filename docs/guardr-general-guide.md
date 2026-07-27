@@ -558,8 +558,8 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
      - Government ID (front, back, selfie, state, number, expiration).
      - Certificate of Insurance (COI).
      - BSIS guard card.
-     - Mandatory training (PTA/UOF + 4 mandatory BSIS courses).
-     - Continuing Education (8-hour BSIS refresher).
+     - Mandatory training (PTA/UOF).
+     - Continuing Education (4 BSIS mandatory courses).
      - Optional extra credentials (firearms, medical, FEMA, etc.).
 4. **Administrators verify each credential** — nothing auto-verifies on upload.
 5. When all five required credentials are verified, an **Administrator+ manually activates** your account (`approved` → `active`).
@@ -1070,7 +1070,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 |---------|------------|
 | **Title** | **Application under review** (pending) or **Complete your credentials** (approved) or **Awaiting account activation** (approved, all creds verified) |
 | **Subtitle** | Short explanation of what to do next or that staff are finishing activation |
-| **Progress bar** | % complete across five requirements: government ID, COI, guard card, mandatory training (PTA/UOF + 4 mandatory courses), Continuing Education |
+| **Progress bar** | % complete across five requirements: government ID, COI, guard card, mandatory training (PTA/UOF), Continuing Education (4 BSIS mandatory courses) |
 | **Credential uploads** | Same upload UI as **Profile → Credentials** — tap each row to add or update documents |
 | **Contact support** | Opens the **Activation help** support thread with staff (approved guards only) |
 
@@ -1092,9 +1092,9 @@ Staff can also open credentials from **Guards → guard detail** and upload docu
 | **Government ID** | State-issued photo ID — required before marketplace eligibility. Upload front, back, live selfie, plus state, number, and expiration. **Staff verify** before the guard can work. |
 | **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo. **Staff verify** the card before eligibility is granted. |
 | **Certificate of Insurance (COI)** | General liability insurance — required to apply to jobs. Upload your COI. **Staff verify** before the guard can apply. |
-| **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | Part of **mandatory training** — required with the 4 mandatory courses. Upload your PTA and UOF completion certificates (or the combined 8-hour cert). |
-| **Mandatory Courses** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required with PTA/UOF for activation. A legacy 32-hour completion certificate may cover these courses. |
-| **Continuing Education** | 8-hour BSIS refresher / CE — required for activation. |
+| **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | **Mandatory training** — required for activation. Upload your PTA and UOF completion certificates (or the combined 8-hour cert). |
+| **Continuing Education** | The 4 BSIS mandatory skill courses (Public Relations, Observation & Documentation, Communication, Liability/Legal) — required for activation. A legacy 32-hour completion certificate may cover these courses. |
+| **8-Hour BSIS Refresher** | Annual refresher — staff may request later. Not required for initial activation. |
 | **Elective & Other BSIS Training** | Optional electives (Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure, and more). Not required for activation. |
 | **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |
 | **Medical & safety** | CPR/AED, First Aid, and similar certifications. |
@@ -1115,8 +1115,8 @@ Staff must **verify** (not auto-approve) these before a guard becomes active:
 1. **Government ID** — fully on file with photos and details, staff-verified.
 2. **BSIS Guard Card** — document photo on file, staff-verified.
 3. **Certificate of Insurance** — current COI on file, staff-verified.
-4. **Mandatory training** — PTA/UOF + 4 mandatory courses on file (or within 48h grace window).
-5. **Continuing Education** — 8-hour BSIS refresher on file (or within 48h grace window).
+4. **Mandatory training** — PTA/UOF on file (or within 48h grace window).
+5. **Continuing Education** — the 4 BSIS mandatory courses on file (or within 48h grace window).
 
 Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time.
 

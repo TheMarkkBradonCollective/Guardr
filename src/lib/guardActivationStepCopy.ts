@@ -56,21 +56,10 @@ export function guardActivationPtaStepDetail(guard: SecurityGuard): string {
 }
 
 export function guardActivationMandatoryTrainingStepDetail(guard: SecurityGuard): string {
-  const progress = getQualificationProgress(guard);
-
   if (guardMeetsMandatoryTraining(guard)) {
-    return 'PTA/UOF and mandatory courses on file';
+    return 'PTA/UOF mandatory training on file';
   }
-  if (progress.ptaUofTraining && !progress.mandatoryCoursesComplete) {
-    return `PTA/UOF on file — upload ${progress.totalMandatoryCourses} mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} on file)`;
-  }
-  if (progress.mandatoryCoursesComplete && !progress.ptaUofTraining) {
-    return `Mandatory courses on file — upload PTA/UOF. ${PTA_UOF_UPLOAD_GUIDANCE}`;
-  }
-  if (progress.uploadedMandatoryCount > 0 || progress.thirtyTwoHourRollup) {
-    return `Mandatory courses ${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} — also upload PTA/UOF`;
-  }
-  return `Upload PTA/UOF and the 4 mandatory BSIS courses. ${PTA_UOF_UPLOAD_GUIDANCE}`;
+  return `Upload your PTA/UOF certificate. ${PTA_UOF_UPLOAD_GUIDANCE}`;
 }
 
 /** @deprecated Use guardActivationCeStepDetail */
@@ -79,10 +68,17 @@ export function guardActivation32HourStepDetail(guard: SecurityGuard): string {
 }
 
 export function guardActivationCeStepDetail(guard: SecurityGuard): string {
+  const progress = getQualificationProgress(guard);
+
   if (guardMeetsContinuingEducation(guard)) {
-    return '8-hour continuing education on file';
+    return progress.thirtyTwoHourRollup
+      ? 'Continuing Education on file (completion certificate)'
+      : `All ${progress.totalMandatoryCourses} Continuing Education courses on file`;
   }
-  return 'Upload your 8-hour BSIS Continuing Education / refresher certificate';
+  if (progress.thirtyTwoHourRollup || progress.uploadedMandatoryCount > 0) {
+    return `${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} Continuing Education courses on file — keep uploading`;
+  }
+  return 'Upload the 4 BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal)';
 }
 
 export function guardActivationCoiStepDetail(guard: SecurityGuard): string {

@@ -176,13 +176,13 @@ export function checkJobRequirements(
 
   checks.push(
     {
-      label: 'Mandatory training (PTA/UOF + 4 BSIS mandatory courses)',
+      label: 'Mandatory training (PTA/UOF)',
       met:
         guardMeetsMandatoryTraining(guard) ||
         guardGraceWaivesTrainingCredential(guard, 'mandatory-training', licenseState),
     },
     {
-      label: 'Continuing Education (8-hour BSIS refresher)',
+      label: 'Continuing Education (4 BSIS mandatory courses)',
       met:
         guardMeetsContinuingEducation(guard) ||
         guardGraceWaivesTrainingCredential(guard, 'ce', licenseState),

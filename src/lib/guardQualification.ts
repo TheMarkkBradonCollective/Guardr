@@ -28,7 +28,7 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
-  active: 'Guard Card plus mandatory BSIS training and continuing education on file',
+  active: 'Guard Card plus PTA/UOF mandatory training and Continuing Education (4 mandatory courses) on file',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
@@ -69,7 +69,7 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   return guardCanWorkFieldJobs(guard, licenseState) ? 'active' : 'inactive';
 }
 
-/** Active account with all five activation credentials verified (ID, COI, guard card, mandatory training, CE). */
+/** Active account with all five activation credentials verified (ID, COI, guard card, PTA/UOF mandatory training, CE courses). */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   const licenseState = normalizeWorkLicenseState(state);
   if (guard.isStaff) return false;
@@ -106,7 +106,7 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
       if (blocker) {
         return `Upload all five activation credentials before staff can approve your profile — ${blocker}`;
       }
-      return 'Upload government ID, COI, guard card, mandatory training, and continuing education before staff can approve your profile.';
+      return 'Upload government ID, COI, guard card, PTA/UOF mandatory training, and Continuing Education courses before staff can approve your profile.';
     }
     if (isGuardAccountApproved(guard)) {
       if (guard.credentialExpiryRestricted) {
@@ -153,7 +153,8 @@ export const PTA_UOF_UPLOAD_GUIDANCE =
   'Upload the combined 8-hour certificate, or Power to Arrest and Appropriate Use of Force as two separate certs.';
 
 /**
- * BSIS mandatory skill courses (16 hours) — required for activation with PTA/UOF.
+ * BSIS Continuing Education courses for activation (16 hours) — the 4 mandatory skill courses.
+ * Distinct from the annual 8-hour refresher, which staff may request later.
  * @see https://www.bsis.ca.gov/industries/g_train.shtml
  */
 export const MANDATORY_COURSE_IDS = [
@@ -162,6 +163,9 @@ export const MANDATORY_COURSE_IDS = [
   'bsis-communication',
   'bsis-liability-legal',
 ] as const;
+
+/** Alias — activation Continuing Education uses the 4 BSIS mandatory skill courses. */
+export const CONTINUING_EDUCATION_COURSE_IDS = MANDATORY_COURSE_IDS;
 
 /**
  * BSIS elective courses — optional extras, not required for activation.
@@ -209,7 +213,6 @@ export function getRequiredPathwayCatalogIds(): readonly string[] {
     BSIS_WMD_AWARENESS_ID,
     ...MANDATORY_COURSE_IDS,
     ...THIRTY_TWO_HOUR_ROLLUP_IDS,
-    BSIS_REFRESHER_CATALOG_ID,
   ];
 }
 
@@ -249,17 +252,20 @@ export function isElectiveCourseCatalogId(catalogId: string | undefined): boolea
 
 export function isContinuingEducationCatalogId(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
-  return (canonicalCatalogId(catalogId) ?? catalogId) === BSIS_REFRESHER_CATALOG_ID;
-}
-
-/** Mandatory training pathway certs — PTA/UOF, 4 mandatory courses, or legacy 32-hour rollup. */
-export function isMandatoryTrainingCatalogId(catalogId: string | undefined): boolean {
-  if (!catalogId) return false;
   return (
-    isPtaUofCatalogId(catalogId) ||
     isMandatoryCourseCatalogId(catalogId) ||
     (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(catalogId)
   );
+}
+
+/** @deprecated Prefer isPtaUofCatalogId — mandatory training is PTA/UOF only. */
+export function isMandatoryTrainingCatalogId(catalogId: string | undefined): boolean {
+  return isPtaUofCatalogId(catalogId);
+}
+
+export function isEightHourRefresherCatalogId(catalogId: string | undefined): boolean {
+  if (!catalogId) return false;
+  return (canonicalCatalogId(catalogId) ?? catalogId) === BSIS_REFRESHER_CATALOG_ID;
 }
 
 /** @deprecated Prefer isMandatoryCourseCatalogId / isElectiveCourseCatalogId */
@@ -490,7 +496,7 @@ export function guardMeets32HourBlockListed(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
-/** Four BSIS mandatory skill courses listed, or a legacy 32-hour rollup listed. */
+/** Four BSIS skill courses listed, or a legacy 32-hour rollup listed — activation Continuing Education. */
 export function guardMeetsMandatoryCoursesListed(guard: SecurityGuard): boolean {
   if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialListed(guard, id))) {
     return true;
@@ -498,12 +504,17 @@ export function guardMeetsMandatoryCoursesListed(guard: SecurityGuard): boolean 
   return MANDATORY_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
-/** PTA/UOF + 4 mandatory skill courses listed. */
+/** @deprecated Prefer guardMeetsPtaUofTrainingListed — mandatory training is PTA/UOF only. */
 export function guardMeetsMandatoryTrainingListed(guard: SecurityGuard): boolean {
-  return guardMeetsPtaUofTrainingListed(guard) && guardMeetsMandatoryCoursesListed(guard);
+  return guardMeetsPtaUofTrainingListed(guard);
 }
 
+/** Activation Continuing Education (4 mandatory courses) listed. */
 export function guardMeetsContinuingEducationListed(guard: SecurityGuard): boolean {
+  return guardMeetsMandatoryCoursesListed(guard);
+}
+
+export function guardMeetsEightHourRefresherListed(guard: SecurityGuard): boolean {
   return guardHasCredentialListed(guard, BSIS_REFRESHER_CATALOG_ID);
 }
 
@@ -594,7 +605,7 @@ export function guardMeets32HourBlockVerified(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
 }
 
-/** Four BSIS mandatory skill courses on file, or a legacy 32-hour rollup on file. */
+/** Four BSIS skill courses on file, or a legacy 32-hour rollup on file — activation Continuing Education. */
 export function guardMeetsMandatoryCourses(guard: SecurityGuard): boolean {
   if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialOnFile(guard, id))) {
     return true;
@@ -609,21 +620,30 @@ export function guardMeetsMandatoryCoursesVerified(guard: SecurityGuard): boolea
   return MANDATORY_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
 }
 
-/** PTA/UOF + 4 mandatory skill courses on file — activation step 4. */
+/** PTA/UOF on file — activation step 4 (Mandatory training). */
 export function guardMeetsMandatoryTraining(guard: SecurityGuard): boolean {
-  return guardMeetsPtaUofTraining(guard) && guardMeetsMandatoryCourses(guard);
+  return guardMeetsPtaUofTraining(guard);
 }
 
 export function guardMeetsMandatoryTrainingVerified(guard: SecurityGuard): boolean {
-  return guardMeetsPtaUofTrainingVerified(guard) && guardMeetsMandatoryCoursesVerified(guard);
+  return guardMeetsPtaUofTrainingVerified(guard);
 }
 
-/** 8-hour BSIS continuing education / refresher — activation step 5. */
+/** 4 BSIS mandatory skill courses on file — activation step 5 (Continuing Education). */
 export function guardMeetsContinuingEducation(guard: SecurityGuard): boolean {
-  return guardHasCredentialOnFile(guard, BSIS_REFRESHER_CATALOG_ID);
+  return guardMeetsMandatoryCourses(guard);
 }
 
 export function guardMeetsContinuingEducationVerified(guard: SecurityGuard): boolean {
+  return guardMeetsMandatoryCoursesVerified(guard);
+}
+
+/** Annual 8-hour refresher — not required for activation; staff may request later. */
+export function guardMeetsEightHourRefresher(guard: SecurityGuard): boolean {
+  return guardHasCredentialOnFile(guard, BSIS_REFRESHER_CATALOG_ID);
+}
+
+export function guardMeetsEightHourRefresherVerified(guard: SecurityGuard): boolean {
   return guardHasGuardrVerifiedCredential(guard, BSIS_REFRESHER_CATALOG_ID);
 }
 
@@ -632,7 +652,7 @@ export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
   return guardMeets32HourBlock(guard);
 }
 
-/** Full required BSIS training on file — mandatory training + continuing education. */
+/** Full required BSIS training on file — PTA/UOF mandatory training + CE courses. */
 export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
   return guardMeetsMandatoryTraining(guard) && guardMeetsContinuingEducation(guard);
 }
@@ -716,6 +736,8 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     mandatoryTrainingVerified: guardMeetsMandatoryTrainingVerified(guard),
     continuingEducation,
     continuingEducationVerified: guardMeetsContinuingEducationVerified(guard),
+    eightHourRefresher: guardMeetsEightHourRefresher(guard),
+    eightHourRefresherVerified: guardMeetsEightHourRefresherVerified(guard),
     thirtyTwoHourRollup,
     thirtyTwoHourBlockComplete,
     thirtyTwoHourExpired: false,

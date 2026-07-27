@@ -351,7 +351,7 @@ export function GuardThirtyTwoHourPanel({
     </ul>
   );
 
-  const sheetTitle = editingCert ? 'Edit mandatory courses' : 'Add mandatory courses';
+  const sheetTitle = editingCert ? 'Edit Continuing Education' : 'Add Continuing Education';
 
   if (activationFormOnly) {
     return (
@@ -382,12 +382,12 @@ export function GuardThirtyTwoHourPanel({
                 >
                   {guardHasRejectedCertForCatalog(guard, ROLLUP_COMPLETION_CATALOG_ID)
                     ? 'Edit completion certificate'
-                    : 'Upload completion certificate (covers mandatory courses)'}
+                    : 'Upload completion certificate (covers Continuing Education courses)'}
                 </button>
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-brand-text-muted">
-                    Upload all {MANDATORY_COURSE_IDS.length} mandatory course certificates.
+                    Upload all {MANDATORY_COURSE_IDS.length} Continuing Education course certificates.
                   </p>
                   {courses.map((course) =>
                     renderCourseRow({
@@ -431,7 +431,7 @@ export function GuardThirtyTwoHourPanel({
         }
         subtitle={
           <div className="mt-2">
-            <CredentialGracePeriodStatusBar guard={guard} kind="mandatory-training" />
+            <CredentialGracePeriodStatusBar guard={guard} kind="ce" />
           </div>
         }
         action={
@@ -448,7 +448,7 @@ export function GuardThirtyTwoHourPanel({
       {listedCerts.length === 0 ? (
         <div className="border-t border-brand-border py-3">
           <p className="text-xs text-brand-text-muted">
-            No mandatory courses on file yet.
+            No Continuing Education courses on file yet.
             {rollupEntry?.description ? ` ${rollupEntry.description}` : ''}
           </p>
         </div>

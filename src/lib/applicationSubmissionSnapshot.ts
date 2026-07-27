@@ -19,9 +19,7 @@ import {
 } from './guardIdentityVerification';
 import {
   isContinuingEducationCatalogId,
-  isMandatoryTrainingCatalogId,
   isPtaUofCatalogId,
-  isThirtyTwoHourCatalogId,
 } from './guardQualification';
 import { isGuardCardCert } from './guardLicenses';
 import { getGuardUserStatus } from './accountStatus';
@@ -214,10 +212,10 @@ export function captureCertApplicationSnapshot(
   let key: ApplicationCredentialSnapshotKey | null = null;
   if (isGuardCardCert(cert)) {
     key = 'guard-card';
+  } else if (isPtaUofCatalogId(catalogId)) {
+    key = 'mandatory-training';
   } else if (isContinuingEducationCatalogId(catalogId)) {
     key = 'ce';
-  } else if (isMandatoryTrainingCatalogId(catalogId) || isPtaUofCatalogId(catalogId) || isThirtyTwoHourCatalogId(catalogId)) {
-    key = 'mandatory-training';
   }
   if (!key) return null;
   if (!canWriteApplicationCredentialSnapshotSlot(guard, key)) return null;
@@ -265,16 +263,13 @@ export function sealApplicationSubmissionSnapshot(
   if (card) fill('guard-card', snapshotFromCert(card, at));
 
   const mandatory = (guard.certifications ?? []).find(
-    (cert) =>
-      (isMandatoryTrainingCatalogId(resolveCertCatalogId(cert)) ||
-        isPtaUofCatalogId(resolveCertCatalogId(cert)) ||
-        isThirtyTwoHourCatalogId(resolveCertCatalogId(cert))) &&
-      certHasDocumentProof(cert)
+    (cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
   );
   if (mandatory) fill('mandatory-training', snapshotFromCert(mandatory, at));
 
   const ce = (guard.certifications ?? []).find(
-    (cert) => isContinuingEducationCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
+    (cert) =>
+      isContinuingEducationCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
   );
   if (ce) fill('ce', snapshotFromCert(ce, at));
 
@@ -320,9 +315,9 @@ const STEP_LABELS: Record<ApplicationCredentialSnapshotKey, string> = {
   'gov-id': 'Government ID',
   coi: 'Certificate of Insurance',
   'guard-card': 'BSIS Guard Card',
-  'mandatory-training': 'Mandatory training',
+  'mandatory-training': 'Mandatory training (PTA/UOF)',
   ce: 'Continuing Education',
-  'pta-uof': 'Mandatory training',
+  'pta-uof': 'Mandatory training (PTA/UOF)',
   '32-hour': 'Continuing Education',
 };
 

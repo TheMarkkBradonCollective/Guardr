@@ -9,7 +9,6 @@ import {
   getThirtyTwoHourSectionStatus,
 } from '../../lib/credentialSectionStatus';
 import { getCourseUploadStatus } from '../../lib/certStatus';
-import { BSIS_REFRESHER_CATALOG_ID } from '../../lib/certCatalog';
 import { LEGACY_PTA_ID } from '../../lib/guardQualification';
 import type { ApprovalFeedItem } from '../../lib/staffApprovalsFeed';
 import { StaffCredentialReviewDetail } from './StaffCredentialReviewDetail';
@@ -32,26 +31,26 @@ const ACTIVATION_SECTION_CONFIG: Record<
     uploadStatus: (guard) => getCourseUploadStatus(guard, 'bsis-guard-card'),
   },
   'mandatory-training': {
-    title: 'Mandatory training',
-    emptyMessage: 'No mandatory training on file (PTA/UOF + 4 mandatory courses).',
+    title: 'Mandatory training (PTA/UOF)',
+    emptyMessage: 'No PTA/UOF mandatory training on file.',
     sectionStatus: (guard) => getMandatoryTrainingSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
   },
   ce: {
     title: 'Continuing Education',
-    emptyMessage: 'No Continuing Education on file.',
+    emptyMessage: 'No Continuing Education courses on file (4 BSIS mandatory courses).',
     sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
-    uploadStatus: (guard) => getCourseUploadStatus(guard, BSIS_REFRESHER_CATALOG_ID),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID),
   },
   'pta-uof': {
-    title: 'Mandatory training',
+    title: 'Mandatory training (PTA/UOF)',
     emptyMessage: 'No PTA/UOF training on file.',
     sectionStatus: (guard) => getPtaUofSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
   },
   '32-hour': {
-    title: 'Mandatory Courses',
-    emptyMessage: 'No mandatory courses on file.',
+    title: 'Continuing Education',
+    emptyMessage: 'No Continuing Education courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID),
   },

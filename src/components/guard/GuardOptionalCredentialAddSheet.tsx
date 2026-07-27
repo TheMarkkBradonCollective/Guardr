@@ -8,7 +8,6 @@ import {
 } from '../../lib/certCatalog';
 import { getOptionalCredentialSections } from '../../lib/guardCredentialSections';
 import {
-  isElectiveCourseCatalogId,
   isMandatoryCourseCatalogId,
   isPtaUofCatalogId,
 } from '../../lib/guardQualification';
@@ -27,7 +26,7 @@ interface GuardOptionalCredentialAddSheetProps {
   open: boolean;
   onClose: () => void;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
-  /** Skip section picker and open directly on a catalog section (e.g. CE upload). */
+  /** Skip section picker and open directly on a catalog section. */
   initialSection?: OptionalAddSection;
 }
 
@@ -55,21 +54,7 @@ export function GuardOptionalCredentialAddSheet({
   onAddCertification,
   initialSection,
 }: GuardOptionalCredentialAddSheetProps) {
-  const sections = useMemo(() => {
-    const all = getOptionalCredentialSections();
-    if (initialSection === 'bsis-refresher') {
-      return [
-        {
-          id: 'bsis-refresher' as const,
-          title: 'Continuing Education',
-          subtitle: '8-hour BSIS continuing education / refresher — required for activation.',
-          category: 'bsis-training' as const,
-          certs: [],
-        },
-      ];
-    }
-    return all;
-  }, [initialSection]);
+  const sections = useMemo(() => getOptionalCredentialSections(), []);
   const [selectedSection, setSelectedSection] = useState<OptionalAddSection | null>(
     initialSection ?? null
   );

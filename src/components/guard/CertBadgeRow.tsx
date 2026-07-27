@@ -46,7 +46,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
     },
     {
       id: 'mandatory-training',
-      label: 'Mandatory training',
+      label: 'Mandatory training (PTA/UOF)',
       onFile: progress.mandatoryTrainingComplete,
       verified: progress.mandatoryTrainingVerified,
     },
@@ -103,7 +103,9 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
               </span>
             ))}
           </div>
-          {progress.level === 'pending' && progress.ptaUofTraining && !progress.mandatoryCoursesComplete && (
+          {progress.level === 'pending' &&
+            progress.mandatoryTrainingComplete &&
+            !progress.continuingEducation && (
             <p className="text-[10px] text-brand-text-muted mt-2">
               {formatThirtyTwoHourCourseProgressCounts(
                 {
@@ -112,7 +114,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
                   total32HourCourses: progress.totalMandatoryCourses,
                 },
                 {
-                  scopeLabel: 'mandatory courses',
+                  scopeLabel: 'Continuing Education courses',
                 }
               )}{' '}
               · {progress.mandatoryCourseProgressPercent}%

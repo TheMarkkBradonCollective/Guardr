@@ -75,10 +75,10 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           COI {guardHasValidInsurance(guard) ? 'verified' : guard.insurancePolicy?.documentUrl ? 'pending' : 'needed'}
         </WfBadge>
         <WfBadge tone={guardMeetsMandatoryTraining(guard) ? 'success' : 'default'}>
-          Mandatory {guardMeetsMandatoryTraining(guard) ? 'on file' : 'needed'}
+          PTA/UOF {guardMeetsMandatoryTraining(guard) ? 'on file' : 'needed'}
         </WfBadge>
         <WfBadge tone={guardMeetsContinuingEducation(guard) ? 'success' : 'default'}>
-          CE {guardMeetsContinuingEducation(guard) ? 'on file' : 'needed'}
+          CE courses {guardMeetsContinuingEducation(guard) ? 'on file' : 'needed'}
         </WfBadge>
         {approved && <WfBadge tone="primary">Profile approved</WfBadge>}
         {checklist.canActivate && !approved && <WfBadge tone="primary">Ready for approval</WfBadge>}
@@ -127,27 +127,27 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsMandatoryTraining(guard)}
-          label="4. Mandatory training — PTA/UOF + 4 mandatory courses"
+          label="4. Mandatory training (PTA/UOF) — required to work"
           detail={
             guardMeetsMandatoryTraining(guard)
-              ? 'PTA/UOF and mandatory courses on file'
-              : progress.ptaUofTraining && !progress.mandatoryCoursesComplete
-                ? `PTA/UOF on file — upload ${progress.totalMandatoryCourses} mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses})`
-                : `Upload PTA/UOF and the 4 mandatory BSIS courses. ${PTA_UOF_UPLOAD_GUIDANCE}`
+              ? 'PTA/UOF mandatory training on file'
+              : `Upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
           }
         />
         <StepRow
           done={guardMeetsContinuingEducation(guard)}
-          label="5. Continuing Education — required to work"
+          label="5. Continuing Education (4 mandatory courses) — required to work"
           detail={
             guardMeetsContinuingEducation(guard)
-              ? '8-hour continuing education on file'
-              : 'Upload your 8-hour BSIS Continuing Education / refresher certificate'
+              ? progress.thirtyTwoHourRollup
+                ? 'Continuing Education on file (completion certificate)'
+                : `All ${progress.totalMandatoryCourses} Continuing Education courses on file`
+              : `Upload the 4 BSIS mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} on file)`
           }
         />
         <OptionalNote
-          label="Electives & extra credentials (optional)"
-          detail="Elective BSIS courses, firearms permits, medical certs, FEMA, and more — not required for activation."
+          label="Electives, 8-hr refresher & extras (optional)"
+          detail="Elective BSIS courses, annual 8-hour refresher (staff may request later), firearms, medical, FEMA — not required for activation."
         />
       </div>
       {!approved && checklist.canStaffApprove && (
