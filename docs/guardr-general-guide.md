@@ -25,7 +25,7 @@ Use it as the operating manual for the whole app:
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
-| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline. **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** remain blocked until **active**. |
+| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, PTA/UOF, 32-hour block inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Pay**, **Profile**, and **Guide** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
@@ -1072,6 +1072,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 | **Subtitle** | Short explanation of what to do next or that staff are finishing activation |
 | **Progress bar** | % complete across five requirements: government ID, COI, guard card, PTA/UOF, 32-hour block |
 | **Credential uploads** | Same upload UI as **Profile → Credentials** — tap each row to add or update documents |
+| **Contact support** | Opens the **Activation help** support thread with staff (approved guards only) |
 
 **Account menu while pending/approved:** **Settings** and **Sign out** only — no **Profile** link.
 
@@ -1256,7 +1257,7 @@ On phone, the Applications roster fits the viewport — scroll inside the list, 
 
 **Where:** Staff sidebar → **Credentials**
 
-Credential and COI verification queue — staff verify license photos, government ID, and training documents. Approve or reject each upload. Pending guards can also upload activation credentials from their application review screen.
+Credential and COI verification queue — staff verify license photos, government ID, and training documents. Approve or reject each upload. Filter tabs: **All**, **Pending review**, **Pending upload**, **Verified**, and **Rejected**. Pending guards can also upload activation credentials from their application review screen.
 
 **Add credential** (Administrator+): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
 
@@ -1316,7 +1317,7 @@ Guards on the platform have access to a shared community channel — visible onl
 
 #### Contact support
 
-Available from the **Support** sidebar tab for clients and guards. Opens a new support thread with the Guardr operations team. The team responds in the same thread.
+Available from the **Support** sidebar tab for clients and guards. Opens a new support thread with the Guardr operations team. The team responds in the same thread. Approved guards waiting on activation also get an **Activation help** thread automatically — use **Contact support** on the activation screen or open **Support** in the sidebar.
 
 #### File a report
 
@@ -1326,7 +1327,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.95**, build **195**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.99**, build **199**).
 
 | Surface | How to install |
 |---------|----------------|
