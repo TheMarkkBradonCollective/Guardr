@@ -5,14 +5,11 @@ import { getThirtyTwoHourSectionStatus } from '../../lib/credentialSectionStatus
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  getThirtyTwoHourCourseCatalogEntries,
-  getThirtyTwoHourRollupCatalogEntries,
-  isThirtyTwoHourCatalogId,
-  THIRTY_TWO_HOUR_COURSE_IDS,
-  THIRTY_TWO_HOUR_ROLLUP_IDS,
+  getMandatoryCourseCatalogEntries,
+  isMandatoryCourseCatalogId,
+  MANDATORY_COURSE_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, ChevronRight } from 'lucide-react';
-import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialRowAction,
   CredentialRowHeader,
@@ -36,8 +33,6 @@ import {
 } from '../../lib/certResubmit';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 
-const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
-
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
@@ -52,19 +47,10 @@ interface GuardThirtyTwoHourPanelProps {
   certOverlayNav?: CertOverlayNavigation;
 }
 
-function rollupCertsForGuard(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((cert) => {
-    const id = resolveCertCatalogId(cert);
-    return id && (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(id);
-  });
-}
-
-function allThirtyTwoHourCerts(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((cert) => isThirtyTwoHourCatalogId(resolveCertCatalogId(cert)));
-}
-
-function defaultThirtyTwoHourUploadPath(guard: SecurityGuard): CredentialUploadPath {
-  return rollupCertsForGuard(guard).length > 0 ? 'combined' : 'individual';
+function allContinuingEducationCerts(guard: SecurityGuard): Certification[] {
+  return guard.certifications.filter((cert) =>
+    isMandatoryCourseCatalogId(resolveCertCatalogId(cert))
+  );
 }
 
 export function GuardThirtyTwoHourPanel({
@@ -79,12 +65,9 @@ export function GuardThirtyTwoHourPanel({
   activationFormOnly,
   certOverlayNav,
 }: GuardThirtyTwoHourPanelProps) {
-  const courses = getThirtyTwoHourCourseCatalogEntries();
+  const courses = getMandatoryCourseCatalogEntries();
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
-  const catalogOptions = useMemo(
-    () => [...getThirtyTwoHourRollupCatalogEntries(), ...courses],
-    [courses]
-  );
+  const catalogOptions = useMemo(() => courses, [courses]);
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [showAddPicker, setShowAddPicker] = useState(false);
@@ -93,29 +76,14 @@ export function GuardThirtyTwoHourPanel({
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
-  const [uploadPath, setUploadPath] = useState<CredentialUploadPath>(() =>
-    defaultThirtyTwoHourUploadPath(guard)
-  );
 
-  const rollupCerts = useMemo(() => rollupCertsForGuard(guard), [guard.certifications]);
-  const listedCerts = useMemo(() => allThirtyTwoHourCerts(guard), [guard]);
-
-  const hasIndividualCourseCerts = useMemo(
-    () => THIRTY_TWO_HOUR_COURSE_IDS.some((id) => certsForCatalogId(guard, id).length > 0),
-    [guard]
-  );
-  const hasAnyCerts = rollupCerts.length > 0 || hasIndividualCourseCerts;
-  const effectivePath: CredentialUploadPath = hasAnyCerts
-    ? rollupCerts.length > 0
-      ? 'combined'
-      : 'individual'
-    : uploadPath;
+  const listedCerts = useMemo(() => allContinuingEducationCerts(guard), [guard]);
 
   const sectionStatus = getThirtyTwoHourSectionStatus(guard, staffMode);
   const sectionUploadStatus =
     listedCerts.length > 0
       ? 'on-file'
-      : getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID);
+      : getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]);
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -345,7 +313,7 @@ export function GuardThirtyTwoHourPanel({
     </ul>
   );
 
-  const sheetTitle = editingCert ? 'Edit 32-hour training' : 'Add 32-hour training';
+  const sheetTitle = editingCert ? 'Edit Continuing Education' : 'Add Continuing Education';
 
   if (activationFormOnly) {
     return (
@@ -359,39 +327,17 @@ export function GuardThirtyTwoHourPanel({
           {addingCatalogId ? (
             certUploadForm
           ) : (
-            <div className="space-y-4">
-              <CredentialPathToggle
-                value={effectivePath}
-                onChange={(path) => {
-                  if (!hasAnyCerts) setUploadPath(path);
-                }}
-                combinedLabel="Combined certificate"
-                individualLabel="Individual parts"
-              />
-              {effectivePath === 'combined' ? (
-                <button
-                  type="button"
-                  onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-                  className="app-button-primary !w-full !h-11 !text-sm"
-                >
-                  {guardHasRejectedCertForCatalog(guard, ROLLUP_COMPLETION_CATALOG_ID)
-                    ? 'Edit 32-hour completion certificate'
-                    : 'Upload 32-hour completion certificate'}
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-brand-text-muted">
-                    Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} individual course certificates.
-                  </p>
-                  {courses.map((course) =>
-                    renderCourseRow({
-                      catalogId: course.id,
-                      label: course.name,
-                      subtitle: course.description,
-                      uploaded: certsForCatalogId(guard, course.id),
-                    })
-                  )}
-                </div>
+            <div className="space-y-3">
+              <p className="text-xs text-brand-text-muted">
+                Upload all {MANDATORY_COURSE_IDS.length} Continuing Education course certificates.
+              </p>
+              {courses.map((course) =>
+                renderCourseRow({
+                  catalogId: course.id,
+                  label: course.name,
+                  subtitle: course.description,
+                  uploaded: certsForCatalogId(guard, course.id),
+                })
               )}
             </div>
           )}
@@ -411,8 +357,6 @@ export function GuardThirtyTwoHourPanel({
     );
   }
 
-  const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
-
   return (
     <section className="app-form-section space-y-3 pb-5 border-b border-brand-border">
       <CredentialRowHeader
@@ -420,12 +364,12 @@ export function GuardThirtyTwoHourPanel({
         title={
           <p className="uber-label flex items-center gap-2 flex-wrap">
             <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-            32-Hour BSIS Course Block
+            Continuing Education
           </p>
         }
         subtitle={
           <div className="mt-2">
-            <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
+            <CredentialGracePeriodStatusBar guard={guard} kind="ce" />
           </div>
         }
         action={
@@ -442,8 +386,7 @@ export function GuardThirtyTwoHourPanel({
       {listedCerts.length === 0 ? (
         <div className="border-t border-brand-border py-3">
           <p className="text-xs text-brand-text-muted">
-            No 32-hour training on file yet.
-            {rollupEntry?.description ? ` ${rollupEntry.description}` : ''}
+            No Continuing Education courses on file yet. Upload all 4 BSIS mandatory course certificates.
           </p>
         </div>
       ) : (

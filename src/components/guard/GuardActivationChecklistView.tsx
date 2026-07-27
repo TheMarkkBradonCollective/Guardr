@@ -7,16 +7,15 @@ import {
   guardInsuranceActivationDetail,
 } from '../../lib/guardInsurance';
 import {
-  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
+  guardMeetsContinuingEducation,
   guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
+  guardMeetsMandatoryTraining,
   PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { WfBadge } from '../ui/wireframe';
-import { Check, Circle, Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 
 interface GuardActivationChecklistProps {
   guard: SecurityGuard;
@@ -75,11 +74,11 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         <WfBadge tone={guardHasValidInsurance(guard) ? 'success' : guard.insurancePolicy?.documentUrl ? 'warning' : 'default'}>
           COI {guardHasValidInsurance(guard) ? 'verified' : guard.insurancePolicy?.documentUrl ? 'pending' : 'needed'}
         </WfBadge>
-        <WfBadge tone={guardMeetsPtaUofTraining(guard) ? 'success' : 'default'}>
-          PTA/UOF {guardMeetsPtaUofTraining(guard) ? 'on file' : 'needed'}
+        <WfBadge tone={guardMeetsMandatoryTraining(guard) ? 'success' : 'default'}>
+          PTA/UOF {guardMeetsMandatoryTraining(guard) ? 'on file' : 'needed'}
         </WfBadge>
-        <WfBadge tone={guardMeets32HourBlock(guard) ? 'success' : 'default'}>
-          32-hr {guardMeets32HourBlock(guard) ? 'on file' : 'needed'}
+        <WfBadge tone={guardMeetsContinuingEducation(guard) ? 'success' : 'default'}>
+          CE courses {guardMeetsContinuingEducation(guard) ? 'on file' : 'needed'}
         </WfBadge>
         {approved && <WfBadge tone="primary">Profile approved</WfBadge>}
         {checklist.canActivate && !approved && <WfBadge tone="primary">Ready for approval</WfBadge>}
@@ -127,41 +126,31 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           }
         />
         <StepRow
-          done={guardMeetsPtaUofTraining(guard)}
-          label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
+          done={guardMeetsMandatoryTraining(guard)}
+          label="4. Mandatory training (PTA/UOF) — required to work"
           detail={
-            guardMeetsPtaUofTraining(guard)
-              ? 'PTA/UOF training on file'
+            guardMeetsMandatoryTraining(guard)
+              ? 'PTA/UOF mandatory training on file'
               : `Upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
           }
         />
         <StepRow
-          done={guardMeets32HourBlock(guard)}
-          label="5. 32-hour BSIS course block — required to work"
+          done={guardMeetsContinuingEducation(guard)}
+          label="5. Continuing Education (4 mandatory courses) — required to work"
           detail={
-            guardMeets32HourBlock(guard)
-              ? progress.thirtyTwoHourRollup
-                ? '32-hour completion certificate on file'
-                : `All ${progress.total32HourCourses} courses on file`
-              : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0
-                ? `${formatThirtyTwoHourCourseProgressCounts(progress)} — finish in Credentials under 32-Hour BSIS Course Block`
-                : 'Upload in Credentials — all 9 individual course certificates or one 32-hour completion certificate.'
+            guardMeetsContinuingEducation(guard)
+              ? `All ${progress.totalMandatoryCourses} Continuing Education courses on file`
+              : `Upload the 4 BSIS mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} on file)`
           }
         />
         <OptionalNote
-          label="Add extra credentials (optional)"
-          detail="Firearms permits, medical certs, FEMA, and more can be added anytime — not required for marketplace eligibility."
+          label="Electives, 8-hr refresher & extras (optional)"
+          detail="Elective BSIS courses, annual 8-hour refresher (staff may request later), firearms, medical, FEMA — not required for activation."
         />
       </div>
       {!approved && checklist.canStaffApprove && (
         <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
           Staff is reviewing your credentials. You can keep uploading your guard card and certs while you wait.
-        </p>
-      )}
-      {approved && !guardMeetsLevel1(guard) && (
-        <p className="text-xs text-brand-primary font-bold pt-3 border-t border-brand-border mt-3 tracking-tight">
-          Upload your guard card, COI, and required certs with document photos in Credentials. Your account
-          activates automatically once staff verify all five items.
         </p>
       )}
     </div>

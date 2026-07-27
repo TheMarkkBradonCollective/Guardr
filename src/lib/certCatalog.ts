@@ -49,38 +49,38 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
     description:
-      'Single certificate covering both parts — required to work. You may also upload Power to Arrest and Appropriate Use of Force as two separate certs.',
+      'Deprecated — combined certificates are deleted. Upload Power to Arrest and Appropriate Use of Force as two separate certificates.',
   },
   {
     id: 'bsis-32-hour-completed',
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Completion certificate for the mandatory 32-hour course block — required to work field jobs.',
+    description: 'Deprecated catalog entry — not used for activation. Upload the 4 Continuing Education courses individually.',
   },
   {
     id: 'bsis-40-hour-completed',
-    name: '32-Hour BSIS Training Completed (legacy ID)',
+    name: '32-Hour BSIS Training Completed (deprecated)',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Legacy rollup ID — counts toward the 32-hour block.',
+    description: 'Deprecated catalog entry — not used for activation.',
   },
   {
     id: 'bsis-8-hour-refresher',
     name: '8-Hour BSIS Refresher Course',
     shortLabel: '8-Hr Refresher',
     category: 'bsis-training',
-    description: '8-hour refresher — upload when applicable for guard card renewals.',
+    description: '8-hour refresher — staff may request later for renewals. Not required for initial activation.',
   },
 
-  // ── PTA / UOF — valid as separate certs or as the combined 8-hr course ──
+  // ── PTA / UOF — separate certificates only (combined uploads are deleted) ──
   {
     id: 'bsis-power-to-arrest',
     name: 'Power to Arrest',
     shortLabel: 'PTA',
     category: 'bsis-training',
     description:
-      'Upload as its own certificate. Pair with Appropriate Use of Force, or use the combined 8-hour PTA & UOF cert instead.',
+      'Upload as its own certificate. Pair with Appropriate Use of Force (or WMD Awareness as the second part).',
   },
   {
     id: 'bsis-appropriate-use-of-force',
@@ -88,7 +88,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'UOF',
     category: 'bsis-training',
     description:
-      'Upload as its own certificate alongside Power to Arrest, or use the combined 8-hour PTA & UOF cert instead.',
+      'Upload as its own certificate alongside Power to Arrest.',
   },
   // ── 32-hour mandatory course block (9 courses) ──
   {
@@ -96,63 +96,63 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: 'Communication and Its Significance (4 hr)',
     shortLabel: 'Communication',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on guard communication and reporting.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on guard communication and reporting.',
   },
   {
     id: 'bsis-public-relations',
     name: 'Public Relations (4 hr)',
     shortLabel: 'Public Relations',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on professional public contact.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on professional public contact.',
   },
   {
     id: 'bsis-observation-documentation',
     name: 'Observation and Documentation (4 hr)',
     shortLabel: 'Observation',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on observation, notes, and reports.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on observation, notes, and reports.',
   },
   {
     id: 'bsis-liability-legal',
     name: 'Liability / Legal Aspects (4 hr)',
     shortLabel: 'Legal Aspects',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on legal limits and liability.',
+    description: 'Required Continuing Education course — 4-hour BSIS module on legal limits and liability.',
   },
   {
     id: 'bsis-officer-safety',
     name: 'Officer Safety (4 hr)',
     shortLabel: 'Officer Safety',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on personal safety and situational awareness.',
+    description: 'Optional BSIS elective — personal safety and situational awareness.',
   },
   {
     id: 'bsis-trespass',
     name: 'Trespass (4 hr)',
     shortLabel: 'Trespass',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on trespass laws and enforcement.',
+    description: 'Optional BSIS elective — trespass laws and enforcement.',
   },
   {
     id: 'bsis-evacuation-procedures',
     name: 'Evacuation Procedures (2 hr)',
     shortLabel: 'Evacuation',
     category: 'bsis-training',
-    description: 'Required 2-hour BSIS module on evacuation and emergency movement.',
+    description: 'Optional BSIS elective — evacuation and emergency movement.',
   },
   {
     id: 'bsis-monitoring-crowd-control',
     name: 'Monitoring Crowd Control (2 hr)',
     shortLabel: 'Crowd Control',
     category: 'bsis-training',
-    description: 'Required 2-hour BSIS module on monitoring posts and crowd control.',
+    description: 'Optional BSIS elective — monitoring posts and crowd control.',
   },
   {
     id: 'bsis-arrest-search-seizure',
     name: 'Arrests, Search and Seizure (4 hr)',
     shortLabel: 'Search & Seizure',
     category: 'bsis-training',
-    description: 'Required 4-hour BSIS module on citizen arrest and search authority.',
+    description: 'Optional BSIS elective — citizen arrest and search authority.',
   },
 
   // ── Additional BSIS / security training (optional) ──

@@ -5,16 +5,15 @@ import { getPtaUofSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  BSIS_PTA_UOF_COMBINED_ID,
   BSIS_WMD_AWARENESS_ID,
   LEGACY_PTA_ID,
   LEGACY_UOF_ID,
   PTA_UOF_SEPARATE_PART_COUNT,
+  PTA_UOF_UPLOAD_GUIDANCE,
   getPtaUofCatalogEntries,
   isPtaUofCatalogId,
 } from '../../lib/guardQualification';
 import { BookOpen, ChevronRight } from 'lucide-react';
-import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialRowAction,
   CredentialRowHeader,
@@ -63,10 +62,6 @@ function allPtaUofCerts(guard: SecurityGuard): Certification[] {
   return guard.certifications.filter((cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)));
 }
 
-function defaultPtaUofUploadPath(guard: SecurityGuard): CredentialUploadPath {
-  return certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID).length > 0 ? 'combined' : 'individual';
-}
-
 export function GuardPtaUofPanel({
   guard,
   editing,
@@ -80,7 +75,6 @@ export function GuardPtaUofPanel({
   certOverlayNav,
 }: GuardPtaUofPanelProps) {
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
-  const combinedEntry = getCertCatalogEntry(BSIS_PTA_UOF_COMBINED_ID);
   const ptaEntry = getCertCatalogEntry(LEGACY_PTA_ID);
   const uofEntry = getCertCatalogEntry(LEGACY_UOF_ID);
   const catalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
@@ -92,22 +86,10 @@ export function GuardPtaUofPanel({
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
-  const [uploadPath, setUploadPath] = useState<CredentialUploadPath>(() => defaultPtaUofUploadPath(guard));
 
-  const combinedCerts = useMemo(
-    () => certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID),
-    [guard]
-  );
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
   const listedCerts = useMemo(() => allPtaUofCerts(guard), [guard]);
-
-  const hasAnyCerts = combinedCerts.length > 0 || ptaCerts.length > 0 || secondPartCerts.length > 0;
-  const effectivePath: CredentialUploadPath = hasAnyCerts
-    ? combinedCerts.length > 0
-      ? 'combined'
-      : 'individual'
-    : uploadPath;
 
   const sectionStatus = getPtaUofSectionStatus(guard, staffMode);
   const sectionUploadStatus = listedCerts.length > 0 ? 'on-file' : getCourseUploadStatus(guard, LEGACY_PTA_ID);
@@ -283,6 +265,28 @@ export function GuardPtaUofPanel({
     </div>
   );
 
+  const separatePartsPicker = (
+    <div className="space-y-3">
+      <p className="text-xs text-brand-text-muted">
+        {PTA_UOF_UPLOAD_GUIDANCE} ({PTA_UOF_SEPARATE_PART_COUNT} required).
+      </p>
+      {renderPartRow({
+        catalogId: LEGACY_PTA_ID,
+        label: ptaEntry?.name ?? 'Power to Arrest',
+        subtitle: ptaEntry?.description,
+        uploaded: ptaCerts,
+      })}
+      {renderPartRow({
+        catalogId: LEGACY_UOF_ID,
+        label: uofEntry?.name ?? 'Appropriate Use of Force',
+        subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
+        uploaded: secondPartCerts,
+        alternateCatalogId: BSIS_WMD_AWARENESS_ID,
+        alternateLabel: 'Upload WMD Awareness instead',
+      })}
+    </div>
+  );
+
   const certUploadForm = addingCatalogId ? (
     <form onSubmit={submitCert} className="space-y-3">
       <input
@@ -364,51 +368,7 @@ export function GuardPtaUofPanel({
           title={sheetTitle}
           subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
         >
-          {addingCatalogId ? (
-            certUploadForm
-          ) : (
-            <div className="space-y-4">
-              <CredentialPathToggle
-                value={effectivePath}
-                onChange={(path) => {
-                  if (!hasAnyCerts) setUploadPath(path);
-                }}
-                combinedLabel="Combined certificate"
-                individualLabel="Individual parts"
-              />
-              {effectivePath === 'combined' ? (
-                <button
-                  type="button"
-                  onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
-                  className="app-button-primary !w-full !h-11 !text-sm"
-                >
-                  {guardHasRejectedCertForCatalog(guard, BSIS_PTA_UOF_COMBINED_ID)
-                    ? 'Edit combined 8-hour certificate'
-                    : 'Upload combined 8-hour certificate'}
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-brand-text-muted">
-                    Upload both parts separately ({PTA_UOF_SEPARATE_PART_COUNT} required).
-                  </p>
-                  {renderPartRow({
-                    catalogId: LEGACY_PTA_ID,
-                    label: ptaEntry?.name ?? 'Power to Arrest',
-                    subtitle: ptaEntry?.description,
-                    uploaded: ptaCerts,
-                  })}
-                  {renderPartRow({
-                    catalogId: LEGACY_UOF_ID,
-                    label: uofEntry?.name ?? 'Appropriate Use of Force',
-                    subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
-                    uploaded: secondPartCerts,
-                    alternateCatalogId: BSIS_WMD_AWARENESS_ID,
-                    alternateLabel: 'Upload WMD Awareness instead',
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+          {addingCatalogId ? certUploadForm : separatePartsPicker}
         </AppFormSheet>
         {editingCert && onUpdateCertification && (
           <CertDetailModal
@@ -454,8 +414,7 @@ export function GuardPtaUofPanel({
       {listedCerts.length === 0 ? (
         <div className="border-t border-brand-border py-3">
           <p className="text-xs text-brand-text-muted">
-            No PTA/UOF training on file yet.
-            {combinedEntry?.description ? ` ${combinedEntry.description}` : ''}
+            No PTA/UOF training on file yet. {PTA_UOF_UPLOAD_GUIDANCE}
           </p>
         </div>
       ) : (

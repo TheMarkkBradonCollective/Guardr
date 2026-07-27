@@ -18,8 +18,8 @@ import {
   governmentIdDocumentTypeLabel,
 } from './guardIdentityVerification';
 import {
+  isContinuingEducationCatalogId,
   isPtaUofCatalogId,
-  isThirtyTwoHourCatalogId,
 } from './guardQualification';
 import { isGuardCardCert } from './guardLicenses';
 import { getGuardUserStatus } from './accountStatus';
@@ -49,7 +49,15 @@ export function parseApplicationSubmissionSnapshot(
       ? (row.credentials as Record<string, unknown>)
       : {};
   const credentials: GuardApplicationSubmissionSnapshot['credentials'] = {};
-  for (const key of ['gov-id', 'coi', 'guard-card', 'pta-uof', '32-hour'] as const) {
+  for (const key of [
+    'gov-id',
+    'coi',
+    'guard-card',
+    'mandatory-training',
+    'ce',
+    'pta-uof',
+    '32-hour',
+  ] as const) {
     const entry = credentialsRaw[key];
     if (!entry || typeof entry !== 'object') continue;
     const e = entry as Record<string, unknown>;
@@ -205,9 +213,9 @@ export function captureCertApplicationSnapshot(
   if (isGuardCardCert(cert)) {
     key = 'guard-card';
   } else if (isPtaUofCatalogId(catalogId)) {
-    key = 'pta-uof';
-  } else if (isThirtyTwoHourCatalogId(catalogId)) {
-    key = '32-hour';
+    key = 'mandatory-training';
+  } else if (isContinuingEducationCatalogId(catalogId)) {
+    key = 'ce';
   }
   if (!key) return null;
   if (!canWriteApplicationCredentialSnapshotSlot(guard, key)) return null;
@@ -254,15 +262,16 @@ export function sealApplicationSubmissionSnapshot(
   const card = getGuardCardCertifications(guard).find((cert) => certHasDocumentProof(cert));
   if (card) fill('guard-card', snapshotFromCert(card, at));
 
-  const pta = (guard.certifications ?? []).find(
+  const mandatory = (guard.certifications ?? []).find(
     (cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
   );
-  if (pta) fill('pta-uof', snapshotFromCert(pta, at));
+  if (mandatory) fill('mandatory-training', snapshotFromCert(mandatory, at));
 
-  const block = (guard.certifications ?? []).find(
-    (cert) => isThirtyTwoHourCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
+  const ce = (guard.certifications ?? []).find(
+    (cert) =>
+      isContinuingEducationCatalogId(resolveCertCatalogId(cert)) && certHasDocumentProof(cert)
   );
-  if (block) fill('32-hour', snapshotFromCert(block, at));
+  if (ce) fill('ce', snapshotFromCert(ce, at));
 
   return {
     ...next,
@@ -306,8 +315,10 @@ const STEP_LABELS: Record<ApplicationCredentialSnapshotKey, string> = {
   'gov-id': 'Government ID',
   coi: 'Certificate of Insurance',
   'guard-card': 'BSIS Guard Card',
-  'pta-uof': 'PTA/UOF training',
-  '32-hour': '32-hour BSIS block',
+  'mandatory-training': 'Mandatory training (PTA/UOF)',
+  ce: 'Continuing Education',
+  'pta-uof': 'Mandatory training (PTA/UOF)',
+  '32-hour': 'Continuing Education',
 };
 
 /**
@@ -317,9 +328,22 @@ const STEP_LABELS: Record<ApplicationCredentialSnapshotKey, string> = {
 export function getApplicationSnapshotCredentialSteps(
   guard: SecurityGuard
 ): ApplicationSnapshotCredentialStep[] {
-  const keys = Object.keys(STEP_LABELS) as ApplicationCredentialSnapshotKey[];
+  const keys: ApplicationCredentialSnapshotKey[] = [
+    'gov-id',
+    'coi',
+    'guard-card',
+    'mandatory-training',
+    'ce',
+  ];
   return keys.map((key) => {
-    const snap = getApplicationCredentialSnapshotEntry(guard, key);
+    const snap =
+      getApplicationCredentialSnapshotEntry(guard, key) ??
+      (key === 'mandatory-training'
+        ? getApplicationCredentialSnapshotEntry(guard, 'pta-uof') ??
+          getApplicationCredentialSnapshotEntry(guard, '32-hour')
+        : key === 'ce'
+          ? getApplicationCredentialSnapshotEntry(guard, '32-hour')
+          : undefined);
     if (snap) {
       return {
         key,

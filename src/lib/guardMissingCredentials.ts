@@ -2,9 +2,9 @@ import { showAppConfirm, showAppPrompt } from '../components/ui/AppConfirm';
 import { showAppToast } from '../components/ui/AppToast';
 import { SecurityGuard } from '../types';
 import {
-  guardMeets32HourBlockListed,
+  guardMeetsContinuingEducationListed,
   guardMeetsLevel1,
-  guardMeetsPtaUofTrainingListed,
+  guardMeetsMandatoryTrainingListed,
 } from './guardQualification';
 
 export const GUARD_MISSING_CREDENTIALS_BADGE_LABEL = 'Missing credentials';
@@ -20,17 +20,21 @@ export interface ActivateGuardAccountOptions {
 }
 
 /** Labels stored on guard.credentialGraceMissing when staff grants activation grace. */
-export const GRACE_CREDENTIAL_PTA_UOF_LABEL = 'PTA/UOF training';
-export const GRACE_CREDENTIAL_32_HOUR_LABEL = '32-hour BSIS training';
+export const GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL = 'Mandatory training (PTA/UOF)';
+export const GRACE_CREDENTIAL_CE_LABEL = 'Continuing Education';
+/** @deprecated Use GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL */
+export const GRACE_CREDENTIAL_PTA_UOF_LABEL = GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL;
+/** @deprecated Use GRACE_CREDENTIAL_CE_LABEL */
+export const GRACE_CREDENTIAL_32_HOUR_LABEL = GRACE_CREDENTIAL_CE_LABEL;
 
 /** Optional credentials completely absent — not listed and not on file. */
 export function getGuardMissingGraceCredentialLabels(guard: SecurityGuard, _state = 'CA'): string[] {
   const missing: string[] = [];
-  if (!guardMeetsPtaUofTrainingListed(guard)) {
-    missing.push(GRACE_CREDENTIAL_PTA_UOF_LABEL);
+  if (!guardMeetsMandatoryTrainingListed(guard)) {
+    missing.push(GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL);
   }
-  if (!guardMeets32HourBlockListed(guard)) {
-    missing.push(GRACE_CREDENTIAL_32_HOUR_LABEL);
+  if (!guardMeetsContinuingEducationListed(guard)) {
+    missing.push(GRACE_CREDENTIAL_CE_LABEL);
   }
   return missing;
 }

@@ -3,15 +3,15 @@ import { BookOpen, Shield } from 'lucide-react';
 import type { SecurityGuard } from '../../types';
 import type { ActivationCredentialKey } from '../../lib/guardCredentialSections';
 import {
+  getContinuingEducationSectionStatus,
   getGuardCardSectionStatus,
+  getMandatoryTrainingSectionStatus,
   getPtaUofSectionStatus,
   getThirtyTwoHourSectionStatus,
 } from '../../lib/credentialSectionStatus';
 import { getCourseUploadStatus } from '../../lib/certStatus';
-import { LEGACY_PTA_ID } from '../../lib/guardQualification';
+import { LEGACY_PTA_ID, MANDATORY_COURSE_IDS } from '../../lib/guardQualification';
 import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
-
-const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
 const ACTIVATION_SECTION_CONFIG: Record<
   ActivationCredentialKey,
@@ -33,11 +33,33 @@ const ACTIVATION_SECTION_CONFIG: Record<
     sectionStatus: (guard) => getGuardCardSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, 'bsis-guard-card'),
   },
+  'mandatory-training': {
+    title: (
+      <p className="uber-label flex items-center gap-2 flex-wrap">
+        <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
+        Mandatory training (PTA/UOF)
+      </p>
+    ),
+    emptyMessage: 'No PTA/UOF mandatory training on file.',
+    sectionStatus: (guard) => getMandatoryTrainingSectionStatus(guard, true),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
+  },
+  ce: {
+    title: (
+      <p className="uber-label flex items-center gap-2 flex-wrap">
+        <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
+        Continuing Education
+      </p>
+    ),
+    emptyMessage: 'No Continuing Education courses on file (4 BSIS mandatory courses).',
+    sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]),
+  },
   'pta-uof': {
     title: (
       <p className="uber-label flex items-center gap-2 flex-wrap">
         <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-        Power to Arrest &amp; Appropriate Use of Force
+        Mandatory training (PTA/UOF)
       </p>
     ),
     emptyMessage: 'No PTA/UOF training on file.',
@@ -48,12 +70,12 @@ const ACTIVATION_SECTION_CONFIG: Record<
     title: (
       <p className="uber-label flex items-center gap-2 flex-wrap">
         <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-        32-Hour BSIS Course Block
+        Continuing Education
       </p>
     ),
-    emptyMessage: 'No 32-hour training on file.',
+    emptyMessage: 'No Continuing Education courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
-    uploadStatus: (guard) => getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]),
   },
 };
 

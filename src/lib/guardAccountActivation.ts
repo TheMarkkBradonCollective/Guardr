@@ -9,11 +9,11 @@ import {
   guardHasCredentialListed,
   guardHasCredentialOnFile,
   guardHasIdOnFile,
-  guardMeets32HourBlock,
-  guardMeets32HourBlockVerified,
+  guardMeetsContinuingEducation,
+  guardMeetsContinuingEducationVerified,
+  guardMeetsMandatoryTraining,
+  guardMeetsMandatoryTrainingVerified,
   guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
-  guardMeetsPtaUofTrainingVerified,
   guardHasVerifiedIdForWork,
 } from './guardQualification';
 import {
@@ -44,7 +44,17 @@ import {
 
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
-/** Active for marketplace work — user_status active and all five credentials verified. */
+/**
+ * Already-active accounts keep marketplace access for Continuing Education under the new
+ * 4-course taxonomy. Mandatory training (separate PTA + UOF) is still required — combined
+ * 8-hour certs do not count and must be replaced with separates.
+ */
+export function guardHasActiveTrainingGrandfather(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return true;
+  return isGuardUserStatusActive(guard);
+}
+
+/** Active for marketplace work — user_status active and required credentials verified. */
 export function isGuardAccountActive(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return true;
   if (!isGuardUserStatusActive(guard)) return false;
@@ -142,16 +152,20 @@ function buildGuardCardVerificationBlockers(guard: SecurityGuard, state = 'CA'):
   return [];
 }
 
-function buildPtaUofSubmissionBlockers(guard: SecurityGuard): string[] {
-  if (!guardMeetsPtaUofTraining(guard)) {
-    return ['Power to Arrest & Appropriate Use of Force (PTA/UOF) not on file — required for profile approval'];
+function buildMandatoryTrainingSubmissionBlockers(guard: SecurityGuard): string[] {
+  if (!guardMeetsMandatoryTraining(guard)) {
+    return [
+      'Mandatory training (Power to Arrest & Appropriate Use of Force) not on file — required for profile approval',
+    ];
   }
   return [];
 }
 
-function build32HourSubmissionBlockers(guard: SecurityGuard): string[] {
-  if (!guardMeets32HourBlock(guard)) {
-    return ['32-hour BSIS course block not complete — required for profile approval'];
+function buildContinuingEducationSubmissionBlockers(guard: SecurityGuard): string[] {
+  if (!guardMeetsContinuingEducation(guard)) {
+    return [
+      'Continuing Education not complete — the 4 BSIS mandatory courses are required for profile approval',
+    ];
   }
   return [];
 }
@@ -174,31 +188,38 @@ function buildInsuranceVerificationBlockers(guard: SecurityGuard): string[] {
   return [];
 }
 
-function buildPtaUofVerificationBlockers(guard: SecurityGuard): string[] {
-  const submissionBlockers = buildPtaUofSubmissionBlockers(guard);
+function buildMandatoryTrainingVerificationBlockers(guard: SecurityGuard): string[] {
+  const submissionBlockers = buildMandatoryTrainingSubmissionBlockers(guard);
   if (submissionBlockers.length > 0) return submissionBlockers;
-  if (!guardMeetsPtaUofTrainingVerified(guard)) {
-    return ['PTA/UOF training awaiting staff verification'];
+  if (!guardMeetsMandatoryTrainingVerified(guard)) {
+    return ['Mandatory training awaiting staff verification'];
   }
   return [];
 }
 
-function build32HourVerificationBlockers(guard: SecurityGuard): string[] {
-  const submissionBlockers = build32HourSubmissionBlockers(guard);
+function buildContinuingEducationVerificationBlockers(guard: SecurityGuard): string[] {
+  const submissionBlockers = buildContinuingEducationSubmissionBlockers(guard);
   if (submissionBlockers.length > 0) return submissionBlockers;
-  if (!guardMeets32HourBlockVerified(guard)) {
-    return ['32-hour BSIS block awaiting staff verification'];
+  if (!guardMeetsContinuingEducationVerified(guard)) {
+    return ['Continuing Education awaiting staff verification'];
   }
   return [];
 }
 
 function buildCredentialActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  return [
+  const identityBlockers = [
     ...buildIdVerificationBlockers(guard),
     ...buildInsuranceVerificationBlockers(guard),
     ...buildGuardCardVerificationBlockers(guard, state),
-    ...buildPtaUofVerificationBlockers(guard),
-    ...build32HourVerificationBlockers(guard),
+    ...buildMandatoryTrainingVerificationBlockers(guard),
+  ];
+  // Already-active guards are grandfathered only for Continuing Education (4-course taxonomy).
+  if (guardHasActiveTrainingGrandfather(guard)) {
+    return identityBlockers;
+  }
+  return [
+    ...identityBlockers,
+    ...buildContinuingEducationVerificationBlockers(guard),
   ];
 }
 

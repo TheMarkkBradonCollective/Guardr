@@ -3,12 +3,11 @@ import { credentialRequiresExpiry, resolveCertCatalogId } from './certCatalog';
 import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
-  BSIS_PTA_UOF_COMBINED_ID,
   BSIS_WMD_AWARENESS_ID,
   LEGACY_PTA_ID,
   LEGACY_UOF_ID,
+  MANDATORY_COURSE_IDS,
   THIRTY_TWO_HOUR_COURSE_IDS,
-  computePtaUofProgress,
   guardHasCredentialListed,
   guardHasCredentialUploaded,
   guardPtaUofSecondPartListed,
@@ -179,6 +178,12 @@ export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCo
   return segments.join(' · ');
 }
 
+export function countMandatoryCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
+  const statuses = MANDATORY_COURSE_IDS.map((catalogId) => getCourseUploadStatus(guard, catalogId));
+  return summarizeCredentialSlotStatuses(statuses);
+}
+
+/** @deprecated Prefer countMandatoryCourseSlotStatuses — electives are no longer required. */
 export function countThirtyTwoHourCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
   const statuses = THIRTY_TWO_HOUR_COURSE_IDS.map((catalogId) =>
     getCourseUploadStatus(guard, catalogId)
@@ -198,12 +203,6 @@ export function getPtaUofSecondPartUploadStatus(guard: SecurityGuard): CourseUpl
 }
 
 export function countPtaUofSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
-  const progress = computePtaUofProgress(guard);
-  if (progress.combinedOnFile || progress.usingCombinedPath) {
-    return summarizeCredentialSlotStatuses([
-      getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID),
-    ]);
-  }
   return summarizeCredentialSlotStatuses([
     getCourseUploadStatus(guard, LEGACY_PTA_ID),
     getPtaUofSecondPartUploadStatus(guard),

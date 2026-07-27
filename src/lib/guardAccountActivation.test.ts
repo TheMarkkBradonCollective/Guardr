@@ -64,9 +64,9 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         category: 'guard-card',
       },
       {
-        id: 'c2',
-        catalogId: 'bsis-pta-uof-8hr',
-        name: 'PTA/UOF',
+        id: 'c-pta',
+        catalogId: 'bsis-power-to-arrest',
+        name: 'Power to Arrest',
         issuer: 'BSIS',
         number: 'PTA-1',
         issueDate: '2024-01-01',
@@ -75,14 +75,58 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         category: 'bsis-training',
       },
       {
-        id: 'c3',
-        catalogId: 'bsis-32-hour-completed',
-        name: '32-hour block',
+        id: 'c-uof',
+        catalogId: 'bsis-appropriate-use-of-force',
+        name: 'Appropriate Use of Force',
         issuer: 'BSIS',
-        number: '32-1',
+        number: 'UOF-1',
         issueDate: '2024-01-01',
         status: 'verified',
-        imageUrl: '32hr',
+        imageUrl: 'uof',
+        category: 'bsis-training',
+      },
+      {
+        id: 'c-pr',
+        catalogId: 'bsis-public-relations',
+        name: 'Public Relations',
+        issuer: 'BSIS',
+        number: 'PR-1',
+        issueDate: '2024-01-01',
+        status: 'verified',
+        imageUrl: 'pr',
+        category: 'bsis-training',
+      },
+      {
+        id: 'c-obs',
+        catalogId: 'bsis-observation-documentation',
+        name: 'Observation and Documentation',
+        issuer: 'BSIS',
+        number: 'OBS-1',
+        issueDate: '2024-01-01',
+        status: 'verified',
+        imageUrl: 'obs',
+        category: 'bsis-training',
+      },
+      {
+        id: 'c-comm',
+        catalogId: 'bsis-communication',
+        name: 'Communication',
+        issuer: 'BSIS',
+        number: 'COMM-1',
+        issueDate: '2024-01-01',
+        status: 'verified',
+        imageUrl: 'comm',
+        category: 'bsis-training',
+      },
+      {
+        id: 'c-legal',
+        catalogId: 'bsis-liability-legal',
+        name: 'Liability / Legal Aspects',
+        issuer: 'BSIS',
+        number: 'LEG-1',
+        issueDate: '2024-01-01',
+        status: 'verified',
+        imageUrl: 'legal',
         category: 'bsis-training',
       },
     ],
@@ -120,26 +164,71 @@ describe('guard account activation gates', () => {
     const guard = fullyVerifiedGuard({
       userStatus: 'approved',
       certifications: fullyVerifiedGuard().certifications.filter(
-        (cert) => cert.catalogId !== 'bsis-32-hour-completed'
+        (cert) => cert.catalogId !== 'bsis-public-relations'
       ),
     });
 
     assert.equal(guardCanStaffActivateAccount(guard), false);
     assert.ok(
-      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) => b.includes('32-hour'))
+      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) =>
+        /Continuing Education/i.test(b)
+      )
     );
   });
 
-  it('treats active user_status without all five verified credentials as not active', () => {
+  it('grandfathers already-active guards missing Continuing Education course certs only', () => {
     const guard = fullyVerifiedGuard({
       userStatus: 'active',
       certifications: fullyVerifiedGuard().certifications.filter(
-        (cert) => cert.catalogId !== 'bsis-32-hour-completed'
+        (cert) => cert.catalogId !== 'bsis-public-relations'
+      ),
+    });
+
+    assert.equal(isGuardAccountActive(guard), true);
+    assert.equal(getGuardActivationChecklist(guard).canActivate, true);
+  });
+
+  it('does not grandfather combined PTA/UOF — active guards must submit separates', () => {
+    const guard = fullyVerifiedGuard({
+      userStatus: 'active',
+      certifications: [
+        ...fullyVerifiedGuard().certifications.filter(
+          (cert) =>
+            cert.catalogId !== 'bsis-power-to-arrest' &&
+            cert.catalogId !== 'bsis-appropriate-use-of-force'
+        ),
+        {
+          id: 'c-combined',
+          catalogId: 'bsis-pta-uof-8hr',
+          name: 'PTA/UOF Combined',
+          issuer: 'BSIS',
+          number: 'COMB-1',
+          issueDate: '2024-01-01',
+          status: 'verified',
+          imageUrl: 'combined',
+          category: 'bsis-training',
+        },
+      ],
+    });
+
+    assert.equal(isGuardAccountActive(guard), false);
+    assert.ok(
+      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) =>
+        /Mandatory training|Power to Arrest|Use of Force|PTA/i.test(b)
+      )
+    );
+  });
+
+  it('still blocks approved (not yet active) guards missing Continuing Education courses', () => {
+    const guard = fullyVerifiedGuard({
+      userStatus: 'approved',
+      certifications: fullyVerifiedGuard().certifications.filter(
+        (cert) => cert.catalogId !== 'bsis-public-relations'
       ),
     });
 
     assert.equal(isGuardAccountActive(guard), false);
-    assert.equal(getGuardActivationChecklist(guard).canActivate, false);
+    assert.equal(guardCanStaffActivateAccount(guard), false);
   });
 
   it('treats guards as active when user_status is active and all five are verified', () => {

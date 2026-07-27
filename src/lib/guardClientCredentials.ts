@@ -3,23 +3,28 @@ import { resolveCertCatalogId } from './certCatalog';
 import { guardHasVerifiedIdForWork } from './guardQualification';
 import { guardHasValidInsurance } from './guardInsurance';
 import {
-  guardMeets32HourBlockVerified,
-  guardMeetsPtaUofTrainingVerified,
+  guardMeetsContinuingEducationVerified,
+  guardMeetsMandatoryTrainingVerified,
   isRequiredPathwayCredential,
 } from './guardQualification';
-import { guardHasVerifiedGuardCard } from './guardAccountActivation';
+import {
+  guardHasActiveTrainingGrandfather,
+  guardHasVerifiedGuardCard,
+} from './guardAccountActivation';
 
 /** Client-facing credential rows — Guardr-verified only. */
 export function guardHasClientVisibleActivationCredentials(
   guard: SecurityGuard,
   state = 'CA'
 ): boolean {
-  return (
+  const identityReady =
     guardHasVerifiedIdForWork(guard) &&
     guardHasValidInsurance(guard) &&
-    guardHasVerifiedGuardCard(guard, state) &&
-    guardMeetsPtaUofTrainingVerified(guard) &&
-    guardMeets32HourBlockVerified(guard)
+    guardHasVerifiedGuardCard(guard, state);
+  if (!identityReady) return false;
+  if (guardHasActiveTrainingGrandfather(guard)) return true;
+  return (
+    guardMeetsMandatoryTrainingVerified(guard) && guardMeetsContinuingEducationVerified(guard)
   );
 }
 

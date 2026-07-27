@@ -6,7 +6,7 @@ import { getGuardActivationChecklist, getGuardCardCertifications } from '../../l
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { findRejectedCertForCatalog } from '../../lib/certResubmit';
 import {
-  isThirtyTwoHourCatalogId,
+  isContinuingEducationCatalogId,
   isPtaUofCatalogId,
 } from '../../lib/guardQualification';
 import { guardHasSubmittedItemsForStaffReview } from '../../lib/approvalSubmissions';
@@ -20,15 +20,15 @@ import {
 } from '../../lib/guardIdentityVerification';
 import {
   guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
+  guardMeetsContinuingEducation,
   guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
+  guardMeetsMandatoryTraining,
 } from '../../lib/guardQualification';
 import {
-  guardActivation32HourStepDetail,
+  guardActivationCeStepDetail,
   guardActivationGuardCardStepDetail,
   guardActivationIdStepDetail,
-  guardActivationPtaStepDetail,
+  guardActivationMandatoryTrainingStepDetail,
 } from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
 import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
@@ -47,7 +47,7 @@ import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
-type UploadKind = 'id' | 'coi' | 'guardCard' | 'pta' | 'thirtyTwoHour' | 'optional';
+type UploadKind = 'id' | 'coi' | 'guardCard' | 'mandatoryTraining' | 'ce' | 'optional';
 
 interface GuardActivationUploadChecklistProps {
   guard: SecurityGuard;
@@ -144,28 +144,28 @@ export function GuardActivationUploadChecklist({
   const coiCanUpload = !!onSaveInsurance && guardCoiCanGuardEdit(guard);
 
   const guardCardRejected = findRejectedCertForCatalog(guard, 'bsis-guard-card');
-  const ptaRejected = guard.certifications.some(
+  const mandatoryRejected = guard.certifications.some(
     (cert) => cert.status === 'rejected' && isPtaUofCatalogId(resolveCertCatalogId(cert))
   );
-  const blockRejected = guard.certifications.some(
-    (cert) => cert.status === 'rejected' && isThirtyTwoHourCatalogId(resolveCertCatalogId(cert))
+  const ceRejected = guard.certifications.some(
+    (cert) => cert.status === 'rejected' && isContinuingEducationCatalogId(resolveCertCatalogId(cert))
   );
 
   const guardCardDone = guardMeetsLevel1(guard) || checklist.guardCardVerified;
   const guardCardCanUpload = !!onAddCertification && !guardMeetsLevel1(guard) && !guardCardAwaitingReview(guard);
 
-  const ptaDone = guardMeetsPtaUofTraining(guard);
-  const ptaCanUpload = !!onAddCertification && !ptaDone;
+  const mandatoryDone = guardMeetsMandatoryTraining(guard);
+  const mandatoryCanUpload = !!onAddCertification && !mandatoryDone;
 
-  const blockDone = guardMeets32HourBlock(guard);
-  const blockCanUpload = !!onAddCertification && !blockDone;
+  const ceDone = guardMeetsContinuingEducation(guard);
+  const ceCanUpload = !!onAddCertification && !ceDone;
 
   const optionalOnFile = getSupplementalCredentialsOnFile(guard);
   const optionalCanUpload = !!onAddCertification;
   const optionalDetail =
     optionalOnFile.length > 0
-      ? `${optionalOnFile.length} on file — add more anytime. Not required for activation.`
-      : 'Firearms, medical, FEMA, and more. Not required for activation.';
+      ? `${optionalOnFile.length} on file — electives, 8-hr refresher, and extras. Not required for activation.`
+      : 'Electives, 8-hr refresher, firearms, medical, FEMA, and more. Not required for activation.';
 
   return (
     <>
@@ -193,18 +193,30 @@ export function GuardActivationUploadChecklist({
             onAction={guardCardCanUpload ? () => setOpenUpload('guardCard') : undefined}
           />
           <StepRow
-            done={ptaDone}
-            label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
-            detail={guardActivationPtaStepDetail(guard)}
-            actionLabel={ptaCanUpload ? (ptaRejected ? 'Resubmit PTA/UOF' : 'Add PTA/UOF') : undefined}
-            onAction={ptaCanUpload ? () => setOpenUpload('pta') : undefined}
+            done={mandatoryDone}
+            label="4. Mandatory training (PTA/UOF) — required to work"
+            detail={guardActivationMandatoryTrainingStepDetail(guard)}
+            actionLabel={
+              mandatoryCanUpload
+                ? mandatoryRejected
+                  ? 'Resubmit PTA/UOF'
+                  : 'Add PTA/UOF'
+                : undefined
+            }
+            onAction={mandatoryCanUpload ? () => setOpenUpload('mandatoryTraining') : undefined}
           />
           <StepRow
-            done={blockDone}
-            label="5. 32-hour BSIS course block — required to work"
-            detail={guardActivation32HourStepDetail(guard)}
-            actionLabel={blockCanUpload ? (blockRejected ? 'Resubmit 32-hour training' : 'Add 32-hour training') : undefined}
-            onAction={blockCanUpload ? () => setOpenUpload('thirtyTwoHour') : undefined}
+            done={ceDone}
+            label="5. Continuing Education (4 mandatory courses) — required to work"
+            detail={guardActivationCeStepDetail(guard)}
+            actionLabel={
+              ceCanUpload
+                ? ceRejected
+                  ? 'Resubmit Continuing Education'
+                  : 'Add Continuing Education'
+                : undefined
+            }
+            onAction={ceCanUpload ? () => setOpenUpload('ce') : undefined}
           />
           <div className="flex items-start gap-3 pt-3">
             <span className="shrink-0 mt-0.5">
@@ -278,7 +290,7 @@ export function GuardActivationUploadChecklist({
         />
       )}
 
-      {openUpload === 'pta' && (
+      {openUpload === 'mandatoryTraining' && (
         <GuardPtaUofPanel
           guard={guard}
           editing
@@ -290,7 +302,7 @@ export function GuardActivationUploadChecklist({
         />
       )}
 
-      {openUpload === 'thirtyTwoHour' && (
+      {openUpload === 'ce' && (
         <GuardThirtyTwoHourPanel
           guard={guard}
           editing
