@@ -31,6 +31,12 @@ import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import {
+  certsForCatalogId,
+  findRejectedCertForCatalog,
+  guardHasRejectedCertForCatalog,
+} from '../../lib/certResubmit';
+import { CertDetailModal } from '../credentials/CertDetailModal';
 
 interface GuardPtaUofPanelProps {
   guard: SecurityGuard;
@@ -46,26 +52,15 @@ interface GuardPtaUofPanelProps {
   certOverlayNav?: CertOverlayNavigation;
 }
 
-function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
-  return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
-    return resolveCertCatalogId(cert) === catalogId;
-  });
-}
-
 function certsForSecondPart(guard: SecurityGuard): Certification[] {
   return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
     const id = resolveCertCatalogId(cert);
     return id === LEGACY_UOF_ID || id === BSIS_WMD_AWARENESS_ID;
   });
 }
 
 function allPtaUofCerts(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
-    return isPtaUofCatalogId(resolveCertCatalogId(cert));
-  });
+  return guard.certifications.filter((cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)));
 }
 
 function defaultPtaUofUploadPath(guard: SecurityGuard): CredentialUploadPath {
@@ -92,6 +87,7 @@ export function GuardPtaUofPanel({
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [showAddPicker, setShowAddPicker] = useState(false);
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -119,6 +115,7 @@ export function GuardPtaUofPanel({
   const resetForm = () => {
     setAddingCatalogId(null);
     setShowAddPicker(false);
+    setEditingCertId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -126,9 +123,22 @@ export function GuardPtaUofPanel({
     activationFormOnly?.onClose();
   };
 
+  const openCertEdit = (cert: Certification) => {
+    setAddingCatalogId(null);
+    setShowAddPicker(false);
+    setEditingCertId(cert.id);
+    setFormError('');
+  };
+
   const startAdd = (catalogId: string) => {
+    const rejected = findRejectedCertForCatalog(guard, catalogId);
+    if (rejected && onUpdateCertification) {
+      openCertEdit(rejected);
+      return;
+    }
     setAddingCatalogId(catalogId);
     setShowAddPicker(false);
+    setEditingCertId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -208,6 +218,11 @@ export function GuardPtaUofPanel({
     ...certOverlayProps(certOverlayNav, cert.id),
   });
 
+  const editingCert = editingCertId
+    ? guard.certifications.find((cert) => cert.id === editingCertId)
+    : undefined;
+  const sheetTitle = editingCert ? 'Edit PTA/UOF training' : 'Add PTA/UOF training';
+
   const renderCertRow = (cert: Certification) => (
     <div key={cert.id} className="space-y-2">
       <CertItemCard cert={cert} editing={editing} compact showCategory={false} {...certCardProps(cert)} />
@@ -240,6 +255,11 @@ export function GuardPtaUofPanel({
             staffMode={staffMode}
             uploadStatus={getCourseUploadStatus(guard, catalogId)}
             canUpload={canUpload}
+            editMode={guardHasRejectedCertForCatalog(guard, catalogId)}
+            onEdit={() => {
+              const rejected = findRejectedCertForCatalog(guard, catalogId);
+              if (rejected) openCertEdit(rejected);
+            }}
             onAdd={() => startAdd(catalogId)}
           />
         }
@@ -337,56 +357,71 @@ export function GuardPtaUofPanel({
 
   if (activationFormOnly) {
     return (
-      <AppFormSheet
-        open={activationFormOnly.open}
-        onClose={resetForm}
-        title="Upload PTA/UOF credential"
-        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
-      >
-        {addingCatalogId ? (
-          certUploadForm
-        ) : (
-          <div className="space-y-4">
-            <CredentialPathToggle
-              value={effectivePath}
-              onChange={(path) => {
-                if (!hasAnyCerts) setUploadPath(path);
-              }}
-              combinedLabel="Combined certificate"
-              individualLabel="Individual parts"
-            />
-            {effectivePath === 'combined' ? (
-              <button
-                type="button"
-                onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
-                className="app-button-primary !w-full !h-11 !text-sm"
-              >
-                Upload combined 8-hour certificate
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-brand-text-muted">
-                  Upload both parts separately ({PTA_UOF_SEPARATE_PART_COUNT} required).
-                </p>
-                {renderPartRow({
-                  catalogId: LEGACY_PTA_ID,
-                  label: ptaEntry?.name ?? 'Power to Arrest',
-                  subtitle: ptaEntry?.description,
-                  uploaded: ptaCerts,
-                })}
-                {renderPartRow({
-                  catalogId: LEGACY_UOF_ID,
-                  label: uofEntry?.name ?? 'Appropriate Use of Force',
-                  subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
-                  uploaded: secondPartCerts,
-                  alternateCatalogId: BSIS_WMD_AWARENESS_ID,
-                  alternateLabel: 'Upload WMD Awareness instead',
-                })}
-              </div>
-            )}
-          </div>
+      <>
+        <AppFormSheet
+          open={activationFormOnly.open}
+          onClose={resetForm}
+          title={sheetTitle}
+          subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+        >
+          {addingCatalogId ? (
+            certUploadForm
+          ) : (
+            <div className="space-y-4">
+              <CredentialPathToggle
+                value={effectivePath}
+                onChange={(path) => {
+                  if (!hasAnyCerts) setUploadPath(path);
+                }}
+                combinedLabel="Combined certificate"
+                individualLabel="Individual parts"
+              />
+              {effectivePath === 'combined' ? (
+                <button
+                  type="button"
+                  onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
+                  className="app-button-primary !w-full !h-11 !text-sm"
+                >
+                  {guardHasRejectedCertForCatalog(guard, BSIS_PTA_UOF_COMBINED_ID)
+                    ? 'Edit combined 8-hour certificate'
+                    : 'Upload combined 8-hour certificate'}
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-brand-text-muted">
+                    Upload both parts separately ({PTA_UOF_SEPARATE_PART_COUNT} required).
+                  </p>
+                  {renderPartRow({
+                    catalogId: LEGACY_PTA_ID,
+                    label: ptaEntry?.name ?? 'Power to Arrest',
+                    subtitle: ptaEntry?.description,
+                    uploaded: ptaCerts,
+                  })}
+                  {renderPartRow({
+                    catalogId: LEGACY_UOF_ID,
+                    label: uofEntry?.name ?? 'Appropriate Use of Force',
+                    subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
+                    uploaded: secondPartCerts,
+                    alternateCatalogId: BSIS_WMD_AWARENESS_ID,
+                    alternateLabel: 'Upload WMD Awareness instead',
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </AppFormSheet>
+        {editingCert && onUpdateCertification && (
+          <CertDetailModal
+            cert={editingCert}
+            guardName={guard.name}
+            canEdit={staffMode ? staffCanEditCertification(guard, editingCert) : guardCertificationCanEdit(editingCert)}
+            staffMode={staffMode}
+            initialEditMode
+            onSubmit={(payload) => onUpdateCertification(editingCert.id, payload)}
+            onClose={resetForm}
+          />
         )}
-      </AppFormSheet>
+      </>
     );
   }
 
@@ -432,11 +467,23 @@ export function GuardPtaUofPanel({
       <AppFormSheet
         open={showAddPicker || Boolean(addingCatalogId)}
         onClose={resetForm}
-        title="Add PTA/UOF credential"
+        title={sheetTitle}
         subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : 'Choose which certificate to upload'}
       >
         {addingCatalogId ? certUploadForm : catalogPicker}
       </AppFormSheet>
+
+      {editingCert && onUpdateCertification && (
+        <CertDetailModal
+          cert={editingCert}
+          guardName={guard.name}
+          canEdit={staffMode ? staffCanEditCertification(guard, editingCert) : guardCertificationCanEdit(editingCert)}
+          staffMode={staffMode}
+          initialEditMode
+          onSubmit={(payload) => onUpdateCertification(editingCert.id, payload)}
+          onClose={() => setEditingCertId(null)}
+        />
+      )}
     </section>
   );
 }

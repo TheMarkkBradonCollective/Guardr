@@ -12,12 +12,13 @@ import {
   CREDENTIAL_PENDING_UPLOAD_LABEL,
   isApplicationFeedItemPending,
   isCredentialFeedItemAwaitingStaffReview,
+  isCredentialFeedItemRejected,
 } from './staffApprovalsFeed';
 
 export type ApplicationStatusFilter = 'all' | 'pending' | 'approved' | 'denied';
 export type ApplicationKindFilter = 'all' | 'client' | 'guard' | 'staff';
 
-export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'all';
+export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'rejected' | 'all';
 
 export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
@@ -72,6 +73,8 @@ export function matchesCredentialStatusFilter(
       return isCredentialFeedItemPendingUpload(item);
     case 'verified':
       return isCredentialFeedItemVerified(item);
+    case 'rejected':
+      return isCredentialFeedItemRejected(item);
   }
 }
 

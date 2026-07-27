@@ -29,6 +29,12 @@ import { staffCanEditCertification } from '../../lib/staffCredentialRules';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
+import {
+  certsForCatalogId,
+  findRejectedCertForCatalog,
+  guardHasRejectedCertForCatalog,
+} from '../../lib/certResubmit';
+import { CertDetailModal } from '../credentials/CertDetailModal';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
@@ -46,26 +52,15 @@ interface GuardThirtyTwoHourPanelProps {
   certOverlayNav?: CertOverlayNavigation;
 }
 
-function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
-  return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
-    return resolveCertCatalogId(cert) === catalogId;
-  });
-}
-
 function rollupCertsForGuard(guard: SecurityGuard): Certification[] {
   return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
     const id = resolveCertCatalogId(cert);
     return id && (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(id);
   });
 }
 
 function allThirtyTwoHourCerts(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((cert) => {
-    if (cert.status === 'rejected') return false;
-    return isThirtyTwoHourCatalogId(resolveCertCatalogId(cert));
-  });
+  return guard.certifications.filter((cert) => isThirtyTwoHourCatalogId(resolveCertCatalogId(cert)));
 }
 
 function defaultThirtyTwoHourUploadPath(guard: SecurityGuard): CredentialUploadPath {
@@ -93,6 +88,7 @@ export function GuardThirtyTwoHourPanel({
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [showAddPicker, setShowAddPicker] = useState(false);
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
@@ -124,6 +120,7 @@ export function GuardThirtyTwoHourPanel({
   const resetForm = () => {
     setAddingCatalogId(null);
     setShowAddPicker(false);
+    setEditingCertId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -131,9 +128,22 @@ export function GuardThirtyTwoHourPanel({
     activationFormOnly?.onClose();
   };
 
+  const openCertEdit = (cert: Certification) => {
+    setAddingCatalogId(null);
+    setShowAddPicker(false);
+    setEditingCertId(cert.id);
+    setFormError('');
+  };
+
   const startAdd = (catalogId: string) => {
+    const rejected = findRejectedCertForCatalog(guard, catalogId);
+    if (rejected && onUpdateCertification) {
+      openCertEdit(rejected);
+      return;
+    }
     setAddingCatalogId(catalogId);
     setShowAddPicker(false);
+    setEditingCertId(null);
     setIssuer('');
     setNumber('');
     setImageUrl(undefined);
@@ -220,6 +230,10 @@ export function GuardThirtyTwoHourPanel({
     </div>
   );
 
+  const editingCert = editingCertId
+    ? guard.certifications.find((cert) => cert.id === editingCertId)
+    : undefined;
+
   const renderCourseRow = ({
     catalogId,
     label,
@@ -241,6 +255,11 @@ export function GuardThirtyTwoHourPanel({
             staffMode={staffMode}
             uploadStatus={getCourseUploadStatus(guard, catalogId)}
             canUpload={canUpload}
+            editMode={guardHasRejectedCertForCatalog(guard, catalogId)}
+            onEdit={() => {
+              const rejected = findRejectedCertForCatalog(guard, catalogId);
+              if (rejected) openCertEdit(rejected);
+            }}
             onAdd={() => startAdd(catalogId)}
           />
         }
@@ -326,52 +345,69 @@ export function GuardThirtyTwoHourPanel({
     </ul>
   );
 
+  const sheetTitle = editingCert ? 'Edit 32-hour training' : 'Add 32-hour training';
+
   if (activationFormOnly) {
     return (
-      <AppFormSheet
-        open={activationFormOnly.open}
-        onClose={resetForm}
-        title="Add 32-hour training"
-        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
-      >
-        {addingCatalogId ? (
-          certUploadForm
-        ) : (
-          <div className="space-y-4">
-            <CredentialPathToggle
-              value={effectivePath}
-              onChange={(path) => {
-                if (!hasAnyCerts) setUploadPath(path);
-              }}
-              combinedLabel="Combined certificate"
-              individualLabel="Individual parts"
-            />
-            {effectivePath === 'combined' ? (
-              <button
-                type="button"
-                onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-                className="app-button-primary !w-full !h-11 !text-sm"
-              >
-                Upload 32-hour completion certificate
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-brand-text-muted">
-                  Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} individual course certificates.
-                </p>
-                {courses.map((course) =>
-                  renderCourseRow({
-                    catalogId: course.id,
-                    label: course.name,
-                    subtitle: course.description,
-                    uploaded: certsForCatalogId(guard, course.id),
-                  })
-                )}
-              </div>
-            )}
-          </div>
+      <>
+        <AppFormSheet
+          open={activationFormOnly.open}
+          onClose={resetForm}
+          title={sheetTitle}
+          subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+        >
+          {addingCatalogId ? (
+            certUploadForm
+          ) : (
+            <div className="space-y-4">
+              <CredentialPathToggle
+                value={effectivePath}
+                onChange={(path) => {
+                  if (!hasAnyCerts) setUploadPath(path);
+                }}
+                combinedLabel="Combined certificate"
+                individualLabel="Individual parts"
+              />
+              {effectivePath === 'combined' ? (
+                <button
+                  type="button"
+                  onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+                  className="app-button-primary !w-full !h-11 !text-sm"
+                >
+                  {guardHasRejectedCertForCatalog(guard, ROLLUP_COMPLETION_CATALOG_ID)
+                    ? 'Edit 32-hour completion certificate'
+                    : 'Upload 32-hour completion certificate'}
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-brand-text-muted">
+                    Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} individual course certificates.
+                  </p>
+                  {courses.map((course) =>
+                    renderCourseRow({
+                      catalogId: course.id,
+                      label: course.name,
+                      subtitle: course.description,
+                      uploaded: certsForCatalogId(guard, course.id),
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </AppFormSheet>
+        {editingCert && onUpdateCertification && (
+          <CertDetailModal
+            cert={editingCert}
+            guardName={guard.name}
+            canEdit={staffMode ? staffCanEditCertification(guard, editingCert) : guardCertificationCanEdit(editingCert)}
+            staffMode={staffMode}
+            initialEditMode
+            onSubmit={(payload) => onUpdateCertification(editingCert.id, payload)}
+            onClose={resetForm}
+          />
         )}
-      </AppFormSheet>
+      </>
     );
   }
 
@@ -419,11 +455,23 @@ export function GuardThirtyTwoHourPanel({
       <AppFormSheet
         open={showAddPicker || Boolean(addingCatalogId)}
         onClose={resetForm}
-        title="Add 32-hour training"
+        title={sheetTitle}
         subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : 'Choose which certificate to upload'}
       >
         {addingCatalogId ? certUploadForm : catalogPicker}
       </AppFormSheet>
+
+      {editingCert && onUpdateCertification && (
+        <CertDetailModal
+          cert={editingCert}
+          guardName={guard.name}
+          canEdit={staffMode ? staffCanEditCertification(guard, editingCert) : guardCertificationCanEdit(editingCert)}
+          staffMode={staffMode}
+          initialEditMode
+          onSubmit={(payload) => onUpdateCertification(editingCert.id, payload)}
+          onClose={() => setEditingCertId(null)}
+        />
+      )}
     </section>
   );
 }

@@ -9,11 +9,14 @@ import {
   countPendingCredentialApprovals,
   countPendingCredentialReviews,
   countPendingCredentialUploads,
+  countRejectedCredentials,
   CREDENTIAL_PENDING_UPLOAD_LABEL,
+  credentialFeedThumbnailUrl,
   isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
+  isCredentialFeedItemRejected,
 } from './staffApprovalsFeed.ts';
-import { govIdApprovalItemId } from './guardCredentialSections.ts';
+import { activationCredentialItemId, govIdApprovalItemId } from './guardCredentialSections.ts';
 
 function staffProvisionedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   return {
@@ -263,5 +266,59 @@ describe('buildApplicationFeed', () => {
       (item) => item.id === govIdApprovalItemId('g-staff')
     );
     assert.equal(govId?.subtitle, 'Select Government ID or driver’s license');
+  });
+
+  it('does not show government ID photos on activation-pending credential rows', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'approved',
+      verified: true,
+      idVerificationStatus: 'verified',
+      idFrontUrl: 'front.jpg',
+      idSelfieUrl: 'selfie.jpg',
+    });
+    const ptaItemId = activationCredentialItemId('g-staff', 'pta-uof');
+    const bsisItemId = activationCredentialItemId('g-staff', '32-hour');
+
+    assert.equal(credentialFeedThumbnailUrl([guard], ptaItemId), undefined);
+    assert.equal(credentialFeedThumbnailUrl([guard], bsisItemId), undefined);
+    assert.equal(credentialFeedThumbnailUrl([guard], govIdApprovalItemId('g-staff')), 'front.jpg');
+  });
+
+  it('counts rejected credentials in the rejected tab', () => {
+    const guard = staffProvisionedGuard({
+      userStatus: 'active',
+      verified: true,
+      certifications: [
+        {
+          id: 'cert-rejected',
+          catalogId: 'bsis-guard-card',
+          name: 'BSIS Guard Card',
+          issuer: 'BSIS',
+          number: 'GC-1',
+          state: 'CA',
+          issueDate: '2024-01-01',
+          status: 'rejected',
+          imageUrl: 'rejected.jpg',
+          category: 'guard-card',
+          submittedByRole: 'guard',
+        },
+      ],
+      insurancePolicy: {
+        status: 'rejected',
+        documentUrl: 'coi.jpg',
+        submittedAt: '2026-01-01T00:00:00.000Z',
+      },
+      idVerificationStatus: 'rejected',
+      idFrontUrl: 'front.jpg',
+    } as SecurityGuard);
+
+    const feed = buildStaffApprovalsFeed({ guards: [guard], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+    const rejected = feed.filter(isCredentialFeedItemRejected);
+
+    assert.equal(rejected.length, 3);
+    assert.equal(countRejectedCredentials([guard]), 3);
+    assert.ok(rejected.every((item) => item.statusLabel === 'Rejected'));
   });
 });

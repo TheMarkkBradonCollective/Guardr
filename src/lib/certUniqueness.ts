@@ -61,6 +61,17 @@ export function validateCertNumberAvailable(
 
   const conflict = findCertNumberConflict(guards, input);
   if (conflict) {
+    if (conflict.sameGuard) {
+      const guard = guards.find((entry) => entry.id === input.guardId);
+      const existing = guard?.certifications.find((cert) => cert.id === conflict.existingCert.id);
+      if (existing?.status === 'rejected') {
+        return {
+          ok: false,
+          error:
+            'This credential is already on your profile and needs a clearer photo. Tap it in your credentials list and choose Edit to resubmit.',
+        };
+      }
+    }
     return { ok: false, error: formatCertNumberConflictMessage(conflict) };
   }
 

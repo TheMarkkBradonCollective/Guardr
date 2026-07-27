@@ -3,6 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved, isGuardAccountPending } from '../../lib/accountStatus';
 import { getGuardActivationChecklist, getGuardCardCertifications } from '../../lib/guardAccountActivation';
+import { resolveCertCatalogId } from '../../lib/certCatalog';
+import { findRejectedCertForCatalog } from '../../lib/certResubmit';
+import {
+  isThirtyTwoHourCatalogId,
+  isPtaUofCatalogId,
+} from '../../lib/guardQualification';
 import { guardHasSubmittedItemsForStaffReview } from '../../lib/approvalSubmissions';
 import {
   guardCoiCanGuardEdit,
@@ -137,6 +143,14 @@ export function GuardActivationUploadChecklist({
   const coiDone = coi.done || checklist.insuranceSubmitted;
   const coiCanUpload = !!onSaveInsurance && guardCoiCanGuardEdit(guard);
 
+  const guardCardRejected = findRejectedCertForCatalog(guard, 'bsis-guard-card');
+  const ptaRejected = guard.certifications.some(
+    (cert) => cert.status === 'rejected' && isPtaUofCatalogId(resolveCertCatalogId(cert))
+  );
+  const blockRejected = guard.certifications.some(
+    (cert) => cert.status === 'rejected' && isThirtyTwoHourCatalogId(resolveCertCatalogId(cert))
+  );
+
   const guardCardDone = guardMeetsLevel1(guard) || checklist.guardCardVerified;
   const guardCardCanUpload = !!onAddCertification && !guardMeetsLevel1(guard) && !guardCardAwaitingReview(guard);
 
@@ -175,21 +189,21 @@ export function GuardActivationUploadChecklist({
             done={guardCardDone}
             label="3. BSIS Guard Card — required to work"
             detail={guardActivationGuardCardStepDetail(guard)}
-            actionLabel={guardCardCanUpload ? 'Add guard card' : undefined}
+            actionLabel={guardCardCanUpload ? (guardCardRejected ? 'Resubmit guard card' : 'Add guard card') : undefined}
             onAction={guardCardCanUpload ? () => setOpenUpload('guardCard') : undefined}
           />
           <StepRow
             done={ptaDone}
             label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
             detail={guardActivationPtaStepDetail(guard)}
-            actionLabel={ptaCanUpload ? 'Add PTA/UOF' : undefined}
+            actionLabel={ptaCanUpload ? (ptaRejected ? 'Resubmit PTA/UOF' : 'Add PTA/UOF') : undefined}
             onAction={ptaCanUpload ? () => setOpenUpload('pta') : undefined}
           />
           <StepRow
             done={blockDone}
             label="5. 32-hour BSIS course block — required to work"
             detail={guardActivation32HourStepDetail(guard)}
-            actionLabel={blockCanUpload ? 'Add 32-hour training' : undefined}
+            actionLabel={blockCanUpload ? (blockRejected ? 'Resubmit 32-hour training' : 'Add 32-hour training') : undefined}
             onAction={blockCanUpload ? () => setOpenUpload('thirtyTwoHour') : undefined}
           />
           <div className="flex items-start gap-3 pt-3">

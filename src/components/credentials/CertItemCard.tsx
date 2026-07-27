@@ -58,7 +58,10 @@ export function CertItemCard({
   const displayImageUrl = resolveCertImageUrl(cert);
   const canEditCert = Boolean(canEdit);
   const useModalEdit = Boolean(onUpdate);
-  const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
+  const openInEditMode =
+    useModalEdit &&
+    canEditCert &&
+    ((cert.status === 'rejected' && !staffMode) || !certHasDetailsOnFile(cert));
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;
   const canAttachImage =
     editing &&
