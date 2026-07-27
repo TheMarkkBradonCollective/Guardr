@@ -71,6 +71,8 @@ interface GuardResumeEditorProps {
   /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
   staffMode?: boolean;
   onEditCredentialFullPage?: () => void;
+  /** Omit credential panels — used when credentials live on a separate profile tab. */
+  hideCredentials?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -92,6 +94,7 @@ export function GuardResumeEditor({
   applicationIntakeEditing,
   staffMode = false,
   onEditCredentialFullPage,
+  hideCredentials = false,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
   const intakeEditing = applicationIntakeEditing ?? editing;
@@ -269,7 +272,7 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      {credEditing && (
+      {credEditing && !hideCredentials && (
         <GuardCredentialsPanel
           guard={guard}
           editing={credEditing}
@@ -307,7 +310,7 @@ export function GuardResumeEditor({
         onAdd={() => setShowAddEdu(true)}
       />
 
-      {!credEditing && (
+      {!credEditing && !hideCredentials && (
         <GuardCredentialsPanel
           guard={guard}
           editing={credEditing}
