@@ -38,13 +38,13 @@ export function getGuardApplicationProgress(guard: SecurityGuard, state = 'CA'):
   const ceDone = guardMeetsContinuingEducation(guard);
 
   const cePartial =
-    !ceDone && (qual.uploadedMandatoryCount > 0 || qual.listedMandatoryCount > 0);
+    !ceDone && (qual.uploaded32HourCount > 0 || qual.listed32HourCount > 0);
 
   let cePoints = 0;
   if (ceDone) {
     cePoints = stepWeight;
   } else if (cePartial) {
-    cePoints = stepWeight * Math.max(0.25, (qual.mandatoryCourseProgressPercent ?? 0) / 100);
+    cePoints = stepWeight * Math.max(0.25, (qual.continuingEducationProgressPercent ?? 0) / 100);
   }
 
   const percent = Math.round(

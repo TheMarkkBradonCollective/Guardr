@@ -308,7 +308,7 @@ export function GuardCredentialsPanel({
     if (openSection === 'bsis-training') {
       return {
         title: 'Add BSIS training',
-        subtitle: 'Optional electives and supplemental BSIS courses — not required for activation.',
+        subtitle: 'Supplemental BSIS courses beyond the 32-hour CE package — not required for activation.',
       };
     }
     const sectionMeta = CREDENTIAL_SECTIONS.find((s) => s.category === openSection);

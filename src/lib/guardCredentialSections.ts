@@ -7,7 +7,7 @@ import {
 } from './certCatalog';
 import { groupGuardCertsByCategory } from './certMatching';
 import { getGuardLicenses } from './guardResume';
-import { isMandatoryCourseCatalogId, isPtaUofCatalogId, isElectiveCourseCatalogId } from './guardQualification';
+import { isContinuingEducationCatalogId, isPtaUofCatalogId } from './guardQualification';
 
 export type CredentialViewSectionId =
   | 'guard-card'
@@ -115,7 +115,7 @@ const SECTION_META: Record<
   'bsis-32-hour': {
     title: 'Continuing Education',
     subtitle:
-      'The 4 BSIS mandatory courses (Public Relations, Observation, Communication, Liability/Legal) — required for activation.',
+      '32-hour BSIS CE package for first-year guards — all 9 course certificates required after PTA/UOF.',
     category: 'bsis-training',
   },
   'bsis-refresher': {
@@ -124,8 +124,8 @@ const SECTION_META: Record<
     category: 'bsis-training',
   },
   'bsis-other-training': {
-    title: 'Elective & Other BSIS Training',
-    subtitle: 'Optional electives and supplemental BSIS courses — not required for activation.',
+    title: 'Other BSIS Training',
+    subtitle: 'Supplemental BSIS courses beyond the 32-hour CE package — not required for activation.',
     category: 'bsis-training',
   },
   'bsis-permit': {
@@ -169,9 +169,9 @@ function resolveViewSectionId(cert: Certification): CredentialViewSectionId {
 
   if (category === 'guard-card') return 'guard-card';
   if (isPtaUofCatalogId(catalogId)) return 'bsis-pta-uof';
-  if (isMandatoryCourseCatalogId(catalogId)) return 'bsis-32-hour';
+  if (isContinuingEducationCatalogId(catalogId)) return 'bsis-32-hour';
   if (catalogId === BSIS_REFRESHER_CATALOG_ID) return 'bsis-refresher';
-  if (isElectiveCourseCatalogId(catalogId) || category === 'bsis-training') return 'bsis-other-training';
+  if (category === 'bsis-training') return 'bsis-other-training';
   if (category === 'bsis-permit') return 'bsis-permit';
   if (category === 'medical') return 'medical';
   if (category === 'fema') return 'fema';
@@ -211,14 +211,14 @@ export function getGuardCredentialViewSections(
 
   const bsisTraining = filterCerts(grouped['bsis-training'] ?? [], excludeRejected);
   const ptaUof = bsisTraining.filter((cert) => isPtaUofCatalogId(resolveCertCatalogId(cert)));
-  const mandatoryCourses = bsisTraining.filter((cert) =>
-    isMandatoryCourseCatalogId(resolveCertCatalogId(cert))
+  const ceCourses = bsisTraining.filter((cert) =>
+    isContinuingEducationCatalogId(resolveCertCatalogId(cert))
   );
   const refresher = bsisTraining.filter((cert) => resolveCertCatalogId(cert) === BSIS_REFRESHER_CATALOG_ID);
   const otherBsis = bsisTraining.filter((cert) => {
     const id = resolveCertCatalogId(cert);
     return (
-      !isMandatoryCourseCatalogId(id) &&
+      !isContinuingEducationCatalogId(id) &&
       !isPtaUofCatalogId(id) &&
       id !== BSIS_REFRESHER_CATALOG_ID
     );
@@ -228,7 +228,7 @@ export function getGuardCredentialViewSections(
     'guard-card': guardCards,
     coi: [],
     'bsis-pta-uof': ptaUof,
-    'bsis-32-hour': mandatoryCourses,
+    'bsis-32-hour': ceCourses,
     'bsis-refresher': refresher,
     'bsis-other-training': otherBsis,
     'bsis-permit': filterCerts(grouped['bsis-permit'] ?? [], excludeRejected),

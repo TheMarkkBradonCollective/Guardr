@@ -28,7 +28,7 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
-  active: 'Guard Card plus PTA/UOF mandatory training and Continuing Education (4 mandatory courses) on file',
+  active: 'Guard Card plus PTA/UOF mandatory training and the 32-hour Continuing Education package on file',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
@@ -153,8 +153,7 @@ export const PTA_UOF_UPLOAD_GUIDANCE =
   'Upload Power to Arrest and Appropriate Use of Force as two separate certificates.';
 
 /**
- * BSIS Continuing Education courses for activation (16 hours) — the 4 mandatory skill courses.
- * Distinct from the annual 8-hour refresher, which staff may request later.
+ * Four core courses within the BSIS first-year 32-hour Continuing Education package.
  * @see https://www.bsis.ca.gov/industries/g_train.shtml
  */
 export const MANDATORY_COURSE_IDS = [
@@ -164,12 +163,8 @@ export const MANDATORY_COURSE_IDS = [
   'bsis-liability-legal',
 ] as const;
 
-/** Alias — activation Continuing Education uses the 4 BSIS mandatory skill courses. */
-export const CONTINUING_EDUCATION_COURSE_IDS = MANDATORY_COURSE_IDS;
-
 /**
- * BSIS elective courses — optional extras, not required for activation.
- * Schools often package some of these into a 32-hour skills block with the mandatories.
+ * Additional courses in the 32-hour first-year CE package (schools package these with the four core courses).
  */
 export const ELECTIVE_COURSE_IDS = [
   'bsis-officer-safety',
@@ -180,13 +175,16 @@ export const ELECTIVE_COURSE_IDS = [
 ] as const;
 
 /**
- * @deprecated Legacy 9-course package (4 mandatory + 5 elective). Activation no longer requires the full set.
- * Prefer MANDATORY_COURSE_IDS for required training and ELECTIVE_COURSE_IDS for optional extras.
+ * Full 32-hour BSIS Continuing Education package for first-year guards — required after PTA/UOF.
+ * Certificates stay with the employer; not submitted to BSIS.
  */
 export const THIRTY_TWO_HOUR_COURSE_IDS = [
   ...MANDATORY_COURSE_IDS,
   ...ELECTIVE_COURSE_IDS,
 ] as const;
+
+/** Activation Continuing Education — all 9 courses in the 32-hour CE package. */
+export const CONTINUING_EDUCATION_COURSE_IDS = THIRTY_TWO_HOUR_COURSE_IDS;
 
 /** Legacy rollup catalog IDs — not used for activation; kept only for old stored rows. */
 export const THIRTY_TWO_HOUR_ROLLUP_IDS = ['bsis-32-hour-completed', 'bsis-40-hour-completed'] as const;
@@ -210,7 +208,7 @@ export function getRequiredPathwayCatalogIds(): readonly string[] {
     LEGACY_PTA_ID,
     LEGACY_UOF_ID,
     BSIS_WMD_AWARENESS_ID,
-    ...MANDATORY_COURSE_IDS,
+    ...CONTINUING_EDUCATION_COURSE_IDS,
   ];
 }
 
@@ -249,7 +247,8 @@ export function isElectiveCourseCatalogId(catalogId: string | undefined): boolea
 }
 
 export function isContinuingEducationCatalogId(catalogId: string | undefined): boolean {
-  return isMandatoryCourseCatalogId(catalogId);
+  if (!catalogId) return false;
+  return (CONTINUING_EDUCATION_COURSE_IDS as readonly string[]).includes(catalogId);
 }
 
 /** @deprecated Prefer isPtaUofCatalogId — mandatory training is PTA/UOF only. */
@@ -530,9 +529,9 @@ export function guardMeetsMandatoryTrainingListed(guard: SecurityGuard): boolean
   return guardMeetsPtaUofTrainingListed(guard);
 }
 
-/** Activation Continuing Education (4 mandatory courses) listed. */
+/** Full 32-hour CE package listed. */
 export function guardMeetsContinuingEducationListed(guard: SecurityGuard): boolean {
-  return guardMeetsMandatoryCoursesListed(guard);
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
 export function guardMeetsEightHourRefresherListed(guard: SecurityGuard): boolean {
@@ -642,13 +641,13 @@ export function guardMeetsMandatoryTrainingVerified(guard: SecurityGuard): boole
   return guardMeetsPtaUofTrainingVerified(guard);
 }
 
-/** 4 BSIS mandatory skill courses on file — activation step 5 (Continuing Education). */
+/** Full 32-hour CE package on file — activation step 5 (Continuing Education). */
 export function guardMeetsContinuingEducation(guard: SecurityGuard): boolean {
-  return guardMeetsMandatoryCourses(guard);
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id));
 }
 
 export function guardMeetsContinuingEducationVerified(guard: SecurityGuard): boolean {
-  return guardMeetsMandatoryCoursesVerified(guard);
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
 }
 
 /** Annual 8-hour refresher — not required for activation; staff may request later. */
@@ -723,6 +722,12 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
       ? 0
       : Math.round((uploadedMandatoryCount / MANDATORY_COURSE_IDS.length) * 100);
 
+  const continuingEducationProgressPercent = continuingEducation
+    ? 100
+    : THIRTY_TWO_HOUR_COURSE_IDS.length <= 0
+      ? 0
+      : Math.round((uploaded32HourCount / THIRTY_TWO_HOUR_COURSE_IDS.length) * 100);
+
   return {
     level: getGuardQualificationLevel(guard, licenseState),
     governmentId: guardHasIdOnFile(guard),
@@ -748,6 +753,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     mandatoryTrainingVerified: guardMeetsMandatoryTrainingVerified(guard),
     continuingEducation,
     continuingEducationVerified: guardMeetsContinuingEducationVerified(guard),
+    continuingEducationProgressPercent,
     eightHourRefresher: guardMeetsEightHourRefresher(guard),
     eightHourRefresherVerified: guardMeetsEightHourRefresherVerified(guard),
     thirtyTwoHourRollup,

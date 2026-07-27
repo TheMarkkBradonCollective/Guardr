@@ -136,16 +136,16 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsContinuingEducation(guard)}
-          label="5. Continuing Education (4 mandatory courses) — required to work"
+          label="5. Continuing Education (32-hour BSIS CE package) — required to work"
           detail={
             guardMeetsContinuingEducation(guard)
-              ? `All ${progress.totalMandatoryCourses} Continuing Education courses on file`
-              : `Upload the 4 BSIS mandatory courses (${progress.uploadedMandatoryCount} of ${progress.totalMandatoryCourses} on file)`
+              ? `All ${progress.total32HourCourses} Continuing Education courses on file`
+              : `Upload the 32-hour CE package (${progress.uploaded32HourCount} of ${progress.total32HourCourses} on file)`
           }
         />
         <OptionalNote
-          label="Electives, 8-hr refresher & extras (optional)"
-          detail="Elective BSIS courses, annual 8-hour refresher (staff may request later), firearms, medical, FEMA — not required for activation."
+          label="8-hr refresher & extras (optional)"
+          detail="Annual 8-hour refresher (staff may request later), supplemental BSIS courses, firearms, medical, FEMA — not required for activation."
         />
       </div>
       {!approved && checklist.canStaffApprove && (

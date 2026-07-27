@@ -10,7 +10,7 @@ import {
   getThirtyTwoHourSectionStatus,
 } from '../../lib/credentialSectionStatus';
 import { getCourseUploadStatus } from '../../lib/certStatus';
-import { LEGACY_PTA_ID, MANDATORY_COURSE_IDS } from '../../lib/guardQualification';
+import { LEGACY_PTA_ID, THIRTY_TWO_HOUR_COURSE_IDS } from '../../lib/guardQualification';
 import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
 
 const ACTIVATION_SECTION_CONFIG: Record<
@@ -51,9 +51,9 @@ const ACTIVATION_SECTION_CONFIG: Record<
         Continuing Education
       </p>
     ),
-    emptyMessage: 'No Continuing Education courses on file (4 BSIS mandatory courses).',
+    emptyMessage: 'No Continuing Education courses on file (32-hour BSIS CE package).',
     sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
-    uploadStatus: (guard) => getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },
   'pta-uof': {
     title: (
@@ -75,7 +75,7 @@ const ACTIVATION_SECTION_CONFIG: Record<
     ),
     emptyMessage: 'No Continuing Education courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
-    uploadStatus: (guard) => getCourseUploadStatus(guard, MANDATORY_COURSE_IDS[0]),
+    uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },
 };
 

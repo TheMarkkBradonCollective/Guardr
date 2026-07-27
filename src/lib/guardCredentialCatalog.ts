@@ -10,7 +10,7 @@ import { getCourseUploadStatus, type CourseUploadStatus } from './certStatus';
 import type { CredentialViewSectionId } from './guardCredentialSections';
 import {
   isCombinedPtaUofCatalogId,
-  isMandatoryCourseCatalogId,
+  isContinuingEducationCatalogId,
   isPtaUofCatalogId,
 } from './guardQualification';
 
@@ -39,7 +39,7 @@ export function catalogOptionsForCredentialSection(section: CredentialViewSectio
   if (section === 'bsis-other-training') {
     return getCertsByCategory('bsis-training').filter(
       (opt) =>
-        !isMandatoryCourseCatalogId(opt.id) &&
+        !isContinuingEducationCatalogId(opt.id) &&
         !isPtaUofCatalogId(opt.id) &&
         !isCombinedPtaUofCatalogId(opt.id) &&
         opt.id !== BSIS_REFRESHER_CATALOG_ID &&

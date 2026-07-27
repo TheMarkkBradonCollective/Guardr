@@ -178,12 +178,13 @@ export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCo
   return segments.join(' · ');
 }
 
+/** @deprecated Prefer countThirtyTwoHourCourseSlotStatuses */
 export function countMandatoryCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
   const statuses = MANDATORY_COURSE_IDS.map((catalogId) => getCourseUploadStatus(guard, catalogId));
   return summarizeCredentialSlotStatuses(statuses);
 }
 
-/** @deprecated Prefer countMandatoryCourseSlotStatuses — electives are no longer required. */
+/** Count upload status for all courses in the 32-hour CE package. */
 export function countThirtyTwoHourCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
   const statuses = THIRTY_TWO_HOUR_COURSE_IDS.map((catalogId) =>
     getCourseUploadStatus(guard, catalogId)
