@@ -6,7 +6,7 @@ import {
   guardCredentialRestrictedDetail,
   isGuardCredentialExpiryRestricted,
 } from '../../lib/guardCredentialExpiryEnforcement';
-import { AlertTriangle, Clock, Check, User } from 'lucide-react';
+import { AlertTriangle, Clock, Check, LifeBuoy, User } from 'lucide-react';
 import { GuardActivationUploadChecklist } from '../guard/GuardActivationUploadChecklist';
 import {
   type GuardIdentityVerificationPayload,
@@ -36,6 +36,8 @@ interface AccountPendingScreenProps {
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
   onSaveInsurance?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
+  onContactSupport?: () => void;
+  hasActivationSupportChat?: boolean;
 }
 
 function guardActivationSubtitle(approved: boolean, percent: number): string {
@@ -60,6 +62,8 @@ export function AccountPendingScreen({
   onUpdateCertification,
   onSubmitIdentityVerification,
   onSaveInsurance,
+  onContactSupport,
+  hasActivationSupportChat = false,
 }: AccountPendingScreenProps) {
   const isGuard = role === 'guard';
   const approved = isGuard && guard ? isGuardAccountApproved(guard) : false;
@@ -161,6 +165,22 @@ export function AccountPendingScreen({
                 style={{ width: `${applicationProgress.percent}%` }}
               />
             </div>
+          </div>
+        )}
+
+        {isGuard && approved && !revisionOpen && onContactSupport && (
+          <div className="mt-5 text-left">
+            <button
+              type="button"
+              onClick={onContactSupport}
+              className="app-button-outline !w-full !h-11 gap-2"
+            >
+              <LifeBuoy className="w-4 h-4" />
+              {hasActivationSupportChat ? 'Open activation support chat' : 'Contact support'}
+            </button>
+            <p className="text-xs text-brand-text-muted mt-2 leading-relaxed">
+              Guardr staff can reach out here to help you finish activation and get on the marketplace.
+            </p>
           </div>
         )}
       </div>

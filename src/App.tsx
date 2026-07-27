@@ -349,7 +349,10 @@ import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
+  buildActivationSupportTicketForGuard,
   buildNewTicket,
+  findActivationSupportChat,
+  ACTIVATION_SUPPORT_SUBJECT,
   isDeletableResolvedSupportChat,
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
@@ -1249,6 +1252,64 @@ export default function App() {
         supportSection: undefined,
       })
     );
+  };
+
+  const ensureActivationSupportTicket = async (guard: SecurityGuard): Promise<string | null> => {
+    if (!currentUser) return null;
+    const existing = findActivationSupportChat(supportTickets, { id: guard.id, email: guard.email });
+    if (existing) return existing.id;
+
+    const staffActor = isStaffRole(currentUser.role) && currentUser.id !== guard.id;
+    const ticket = staffActor
+      ? buildActivationSupportTicketForGuard(guard, currentUser)
+      : buildNewTicket(currentUser, {
+          kind: 'chat',
+          subject: ACTIVATION_SUPPORT_SUBJECT,
+          category: 'account',
+          body: 'I need help completing activation.',
+          priority: 'normal',
+        });
+
+    beginLocalMutation();
+    setSupportTickets((prev) => {
+      const next = [ticket, ...prev];
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+    await persistSupportTicketToDb(ticket);
+    notifySupportTicketCreated(currentUser, ticket);
+    if (staffActor) {
+      void reportPushEvent(currentUser, {
+        type: 'support_message',
+        recipientUserId: guard.id,
+        ticketId: ticket.id,
+        title: 'Activation support',
+        body: 'Guardr staff opened a support chat to help you complete activation.',
+      });
+    }
+    return ticket.id;
+  };
+
+  const openGuardActivationSupport = () => {
+    if (!activeGuard?.id) return;
+    void (async () => {
+      const ticketId =
+        findActivationSupportChat(supportTickets, { id: activeGuard.id, email: activeGuard.email })?.id ??
+        (await ensureActivationSupportTicket(activeGuard));
+      if (!ticketId) return;
+      setGuardTabState('support');
+      setSupportTicketIdState(ticketId);
+      setSupportModeState(null);
+      syncAppRoute(
+        buildAppRoute({
+          role: 'guard',
+          guardTab: 'support',
+          supportTicketId: ticketId,
+          supportMode: undefined,
+          supportSection: 'support',
+        })
+      );
+    })();
   };
 
   const closeGuardSupportForm = (section: 'support' | 'reports' = 'support') => {
@@ -3480,6 +3541,9 @@ export default function App() {
     (activeGuardId ? verifiedGuards.find((g) => g.id === activeGuardId) : undefined) ??
     ({} as SecurityGuard);
   const resolvedGuardTab: GuardTab = normalizeGuardTabForAccount(guardTab, sessionGuard);
+  const activationSupportChat = sessionGuard
+    ? findActivationSupportChat(supportTickets, { id: sessionGuard.id, email: sessionGuard.email })
+    : null;
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;
@@ -6044,6 +6108,7 @@ export default function App() {
       'Application approved',
       'Your guard application is approved. Open Guardr to upload your activation credentials.'
     );
+    void ensureActivationSupportTicket(approvedGuard);
   };
 
   const handleRequestGuardApplicationRevision = async (guardId: string, reason?: string) => {
@@ -13510,7 +13575,7 @@ export default function App() {
     }
     const inactiveGuard = isInactiveGuardSession(currentUser, verifiedGuards);
 
-    if (inactiveGuard && resolvedGuardTab !== 'settings') {
+    if (inactiveGuard && resolvedGuardTab !== 'settings' && resolvedGuardTab !== 'support') {
       return (
         <>
           {marketplaceLegalGate}
@@ -13533,6 +13598,8 @@ export default function App() {
               role="guard"
               guard={activeGuard}
               onOpenProfile={() => setGuardTab('settings')}
+              onContactSupport={isGuardAccountApproved(activeGuard) ? openGuardActivationSupport : undefined}
+              hasActivationSupportChat={Boolean(activationSupportChat)}
               onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
               onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
               onAttachCertificationImage={(certId, imageUrl) =>
@@ -13678,6 +13745,7 @@ export default function App() {
           supportMode={supportMode}
           supportSection={supportSection}
           onOpenSupportCompose={openGuardSupportCompose}
+          onOpenActivationSupport={openGuardActivationSupport}
           onOpenSupportReport={openGuardSupportReport}
           onCloseSupportForm={closeGuardSupportForm}
           performanceFactorId={performanceFactorId}

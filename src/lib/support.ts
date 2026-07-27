@@ -1,6 +1,7 @@
 import {
   CreateSupportTicketInput,
   PlatformRole,
+  SecurityGuard,
   SessionUser,
   SupportMessage,
   SupportPriority,
@@ -90,6 +91,60 @@ export function ticketsForUser(tickets: SupportTicket[], user: Pick<SessionUser,
 
 export function openTicketCount(tickets: SupportTicket[]): number {
   return tickets.filter((t) => t.status !== 'resolved').length;
+}
+
+export const ACTIVATION_SUPPORT_SUBJECT = 'Activation help';
+
+export function findOpenSupportChat(
+  tickets: SupportTicket[],
+  user: Pick<SessionUser, 'id' | 'email'>
+): SupportTicket | null {
+  return ticketsForUser(tickets, user).find((t) => t.kind === 'chat' && t.status !== 'resolved') ?? null;
+}
+
+export function findActivationSupportChat(
+  tickets: SupportTicket[],
+  user: Pick<SessionUser, 'id' | 'email'>
+): SupportTicket | null {
+  const openChat = findOpenSupportChat(tickets, user);
+  if (!openChat) return null;
+  if (openChat.subject === ACTIVATION_SUPPORT_SUBJECT) return openChat;
+  return openChat.category === 'account' ? openChat : null;
+}
+
+export function buildActivationSupportTicketForGuard(
+  guard: Pick<SecurityGuard, 'id' | 'name' | 'email'>,
+  staff: Pick<SessionUser, 'id' | 'name' | 'role'>
+): SupportTicket {
+  const now = new Date().toISOString();
+  const ticketId = `support-${Date.now()}`;
+  const firstName = guard.name.trim().split(/\s+/)[0] || guard.name;
+  const body = `Hi ${firstName}, your application was approved! Upload your activation credentials on this screen, or reply here if you need help getting activated.`;
+  const message: SupportMessage = {
+    id: `smsg-${Date.now()}`,
+    ticketId,
+    senderId: staff.id,
+    senderName: staff.name,
+    senderRole: staff.role,
+    body,
+    createdAt: now,
+  };
+
+  return {
+    id: ticketId,
+    userId: guard.id,
+    userName: guard.name,
+    userEmail: guard.email,
+    userRole: 'guard',
+    kind: 'chat',
+    subject: ACTIVATION_SUPPORT_SUBJECT,
+    category: 'account',
+    priority: 'normal',
+    status: 'open',
+    createdAt: now,
+    updatedAt: now,
+    messages: [message],
+  };
 }
 
 export function isStaffSender(role: PlatformRole): boolean {
