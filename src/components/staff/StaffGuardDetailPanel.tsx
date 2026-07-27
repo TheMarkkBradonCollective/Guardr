@@ -537,7 +537,7 @@ export function StaffGuardDetailPanel({
             onChange={(id) => onStaffGuardTabChange(id as StaffGuardDetailTab)}
             tabs={[
               { id: 'profile', label: 'Profile' },
-              { id: 'certs', label: 'Certs' },
+              { id: 'certs', label: 'Credentials' },
               { id: 'performance', label: 'Guard status' },
             ]}
           />
@@ -883,12 +883,6 @@ export function StaffGuardDetailPanel({
           )}
 
           {!editing && (
-            <section className="staff-detail-section">
-              <GuardGearCarryPanel guard={guard} showFullCatalog />
-            </section>
-          )}
-
-          {!editing && (
             <section className="staff-detail-section space-y-2">
               <WfSectionHeader title="Qualification" className="!px-0 !mb-0" />
               <p className="text-sm">
@@ -931,6 +925,7 @@ export function StaffGuardDetailPanel({
                     : undefined
                 }
                 hideCredentials
+                hideGear
               />
             </section>
           )}

@@ -72,6 +72,8 @@ interface GuardResumeEditorProps {
   onEditCredentialFullPage?: () => void;
   /** Omit credential panels — used when credentials live on a separate profile tab. */
   hideCredentials?: boolean;
+  /** Omit gear panel — used when gear lives on the credentials profile tab. */
+  hideGear?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -94,6 +96,7 @@ export function GuardResumeEditor({
   staffMode = false,
   onEditCredentialFullPage,
   hideCredentials = false,
+  hideGear = false,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
   const intakeEditing = applicationIntakeEditing ?? editing;
@@ -328,15 +331,17 @@ export function GuardResumeEditor({
         />
       )}
 
-      <GuardGearCarryPanel
-        guard={guard}
-        weaponGearEditing={intakeEditing}
-        equipmentGearEditing={editing}
-        weaponGearSelected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-        equipmentGearSelected={payload.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-        onWeaponGearChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
-        onEquipmentGearChange={(listedEquipmentGear) => onChange({ listedEquipmentGear })}
-      />
+      {!hideGear && (
+        <GuardGearCarryPanel
+          guard={guard}
+          weaponGearEditing={intakeEditing}
+          equipmentGearEditing={editing}
+          weaponGearSelected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+          equipmentGearSelected={payload.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+          onWeaponGearChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
+          onEquipmentGearChange={(listedEquipmentGear) => onChange({ listedEquipmentGear })}
+        />
+      )}
 
       <AppFormSheet
         open={showAddExp}
