@@ -49,7 +49,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
     description:
-      'Single certificate covering both parts — required to work. You may also upload Power to Arrest and Appropriate Use of Force as two separate certs.',
+      'Deprecated — combined certificates are deleted. Upload Power to Arrest and Appropriate Use of Force as two separate certificates.',
   },
   {
     id: 'bsis-32-hour-completed',
@@ -73,14 +73,14 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     description: '8-hour refresher — staff may request later for renewals. Not required for initial activation.',
   },
 
-  // ── PTA / UOF — valid as separate certs or as the combined 8-hr course ──
+  // ── PTA / UOF — separate certificates only (combined uploads are deleted) ──
   {
     id: 'bsis-power-to-arrest',
     name: 'Power to Arrest',
     shortLabel: 'PTA',
     category: 'bsis-training',
     description:
-      'Upload as its own certificate. Pair with Appropriate Use of Force, or use the combined 8-hour PTA & UOF cert instead.',
+      'Upload as its own certificate. Pair with Appropriate Use of Force (or WMD Awareness as the second part).',
   },
   {
     id: 'bsis-appropriate-use-of-force',
@@ -88,7 +88,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'UOF',
     category: 'bsis-training',
     description:
-      'Upload as its own certificate alongside Power to Arrest, or use the combined 8-hour PTA & UOF cert instead.',
+      'Upload as its own certificate alongside Power to Arrest.',
   },
   // ── 32-hour mandatory course block (9 courses) ──
   {

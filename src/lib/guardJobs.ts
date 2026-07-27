@@ -180,7 +180,6 @@ export function checkJobRequirements(
       label: 'Mandatory training (PTA/UOF)',
       met:
         guardMeetsMandatoryTraining(guard) ||
-        isGuardUserStatusActive(guard) ||
         guardGraceWaivesTrainingCredential(guard, 'mandatory-training', licenseState),
     },
     {

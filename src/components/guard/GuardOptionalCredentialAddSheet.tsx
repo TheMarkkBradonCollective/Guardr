@@ -8,6 +8,7 @@ import {
 } from '../../lib/certCatalog';
 import { getOptionalCredentialSections } from '../../lib/guardCredentialSections';
 import {
+  isCombinedPtaUofCatalogId,
   isMandatoryCourseCatalogId,
   isPtaUofCatalogId,
 } from '../../lib/guardQualification';
@@ -40,6 +41,7 @@ function catalogOptionsForSection(section: OptionalAddSection) {
       (opt) =>
         !isMandatoryCourseCatalogId(opt.id) &&
         !isPtaUofCatalogId(opt.id) &&
+        !isCombinedPtaUofCatalogId(opt.id) &&
         opt.id !== BSIS_REFRESHER_CATALOG_ID &&
         opt.id !== 'bsis-32-hour-completed' &&
         opt.id !== 'bsis-40-hour-completed'

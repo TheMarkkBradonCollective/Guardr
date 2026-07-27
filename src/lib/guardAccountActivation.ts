@@ -45,8 +45,9 @@ import {
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
 /**
- * Already-active accounts keep marketplace access under the new Mandatory training / CE taxonomy.
- * New activations (pending/approved → active) still require the full five credentials.
+ * Already-active accounts keep marketplace access for Continuing Education under the new
+ * 4-course taxonomy. Mandatory training (separate PTA + UOF) is still required — combined
+ * 8-hour certs do not count and must be replaced with separates.
  */
 export function guardHasActiveTrainingGrandfather(guard: SecurityGuard): boolean {
   if (guard.isStaff) return true;
@@ -210,14 +211,14 @@ function buildCredentialActivationBlockers(guard: SecurityGuard, state = 'CA'): 
     ...buildIdVerificationBlockers(guard),
     ...buildInsuranceVerificationBlockers(guard),
     ...buildGuardCardVerificationBlockers(guard, state),
+    ...buildMandatoryTrainingVerificationBlockers(guard),
   ];
-  // Already-active guards are grandfathered for Mandatory training + Continuing Education.
+  // Already-active guards are grandfathered only for Continuing Education (4-course taxonomy).
   if (guardHasActiveTrainingGrandfather(guard)) {
     return identityBlockers;
   }
   return [
     ...identityBlockers,
-    ...buildMandatoryTrainingVerificationBlockers(guard),
     ...buildContinuingEducationVerificationBlockers(guard),
   ];
 }

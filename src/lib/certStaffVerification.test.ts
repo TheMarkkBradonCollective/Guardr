@@ -6,8 +6,8 @@ import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from './
 function cert(overrides: Partial<Certification> = {}): Certification {
   return {
     id: 'c1',
-    catalogId: 'bsis-pta-uof-8hr',
-    name: 'PTA & UOF',
+    catalogId: 'bsis-power-to-arrest',
+    name: 'Power to Arrest',
     issuer: 'BSIS',
     number: 'TR-1',
     issueDate: '2024-01-01',

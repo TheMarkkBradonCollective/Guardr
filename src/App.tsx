@@ -299,7 +299,11 @@ import {
   persistJobTeamMeta,
   teamJobReadyForAcceptance,
 } from './lib/guardTeamDb';
-import { guardWorkBlockedMessage } from './lib/guardQualification';
+import {
+  guardWorkBlockedMessage,
+  isDisallowedCombinedGuardCertificate,
+  sanitizeGuardCombinedCertificates,
+} from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
@@ -2429,7 +2433,21 @@ export default function App() {
         (g: any) => !g.migrated_to_staff_at && !g.is_staff
       );
 
-      setGuards([...fieldGuardRows.map(mapGuardRow), ...staffFromTable]);
+      const loadedGuards = [...fieldGuardRows.map(mapGuardRow), ...staffFromTable].map(
+        sanitizeGuardCombinedCertificates
+      );
+      const disallowedCombinedCertIds = (dbCerts ?? [])
+        .filter((c: any) =>
+          isDisallowedCombinedGuardCertificate({
+            catalogId: c.catalog_id?.trim() || undefined,
+            name: c.name ?? '',
+          })
+        )
+        .map((c: any) => String(c.id));
+      setGuards(loadedGuards);
+      if (disallowedCombinedCertIds.length > 0) {
+        void supabase.from('certifications').delete().in('id', disallowedCombinedCertIds);
+      }
 
       setClients((dbClients ?? []).map((c: any) => {
         const nameParts = resolvePersonNameParts({
@@ -4512,6 +4530,19 @@ export default function App() {
     submittedByRole: 'guard' | 'staff' = 'guard'
   ): Promise<AddCertificationResult> => {
     const staffSubmission = submittedByRole === 'staff' || newCert.submittedByRole === 'staff';
+
+    if (
+      isDisallowedCombinedGuardCertificate({
+        catalogId: newCert.catalogId,
+        name: newCert.name ?? '',
+      })
+    ) {
+      return {
+        ok: false,
+        error:
+          'Combined PTA/UOF and legacy rollup certificates are not accepted. Upload Power to Arrest and Use of Force as separate certificates, and Continuing Education as the four individual courses.',
+      };
+    }
 
     const available = validateCertNumberAvailable(guards, {
       number: newCert.number ?? '',

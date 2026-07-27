@@ -8,6 +8,7 @@ import type { CredentialViewSectionId } from './guardCredentialSections';
 import {
   getMandatoryCourseCatalogEntries,
   getPtaUofCatalogEntries,
+  isCombinedPtaUofCatalogId,
   isMandatoryCourseCatalogId,
   isPtaUofCatalogId,
 } from './guardQualification';
@@ -31,6 +32,7 @@ export function catalogOptionsForStaffAddSection(section: CredentialViewSectionI
       (opt) =>
         !isMandatoryCourseCatalogId(opt.id) &&
         !isPtaUofCatalogId(opt.id) &&
+        !isCombinedPtaUofCatalogId(opt.id) &&
         opt.id !== BSIS_REFRESHER_CATALOG_ID &&
         opt.id !== 'bsis-32-hour-completed' &&
         opt.id !== 'bsis-40-hour-completed'

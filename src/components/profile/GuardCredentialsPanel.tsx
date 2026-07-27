@@ -10,6 +10,7 @@ import {
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
+  isCombinedPtaUofCatalogId,
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
 } from '../../lib/guardQualification';
@@ -255,7 +256,12 @@ export function GuardCredentialsPanel({
     () =>
       (grouped['bsis-training'] ?? []).filter((cert) => {
         const id = resolveCertCatalogId(cert);
-        return !isThirtyTwoHourCatalogId(id) && !isPtaUofCatalogId(id) && id !== BSIS_REFRESHER_CATALOG_ID;
+        return (
+          !isThirtyTwoHourCatalogId(id) &&
+          !isPtaUofCatalogId(id) &&
+          !isCombinedPtaUofCatalogId(id) &&
+          id !== BSIS_REFRESHER_CATALOG_ID
+        );
       }),
     [grouped]
   );
@@ -265,6 +271,7 @@ export function GuardCredentialsPanel({
         (opt) =>
           !isThirtyTwoHourCatalogId(opt.id) &&
           !isPtaUofCatalogId(opt.id) &&
+          !isCombinedPtaUofCatalogId(opt.id) &&
           opt.id !== BSIS_REFRESHER_CATALOG_ID
       ),
     []

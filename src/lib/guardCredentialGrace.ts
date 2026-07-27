@@ -4,6 +4,7 @@ import {
   GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL,
   getGuardMissingGraceCredentialLabels,
 } from './guardMissingCredentials';
+import { sanitizeGuardCombinedCertificates } from './guardQualification';
 
 /** Hours of self-serve work grace when optional credentials are missing at marketplace eligibility. */
 export const CREDENTIAL_GRACE_PERIOD_HOURS = 48;
@@ -154,7 +155,8 @@ export function guardCredentialGracePatchAfterCredentialChange(
 }
 
 export function syncGuardCredentialGraceState(guard: SecurityGuard, state = 'CA'): SecurityGuard {
-  let next = applyExpiredCredentialGrace(guard, state);
+  let next = sanitizeGuardCombinedCertificates(guard);
+  next = applyExpiredCredentialGrace(next, state);
   const clearPatch = guardCredentialGracePatchAfterCredentialChange(next, state);
   if (clearPatch) next = { ...next, ...clearPatch };
   return next;
