@@ -27,7 +27,7 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - BSIS activation alignment: separate PTA/UOF uploads, full 32-hour CE package (9 courses), site-wide BSIS requirements reference
 - Active guards gated on **account status** (`user_status: active`) — no more redirect to **Application under review** when credentials are still hydrating or on grace period
 - Staff **Credentials** tab: **Suspend**, **Flag / Block**, and **Restore** on guard detail; removed misplaced **Reject application** from Government ID review (deny/revoke stays in **Applications**)
-- **v1.0.100** (build **200**) web + PWA; APK CI rebuild on push to `main`
+- **v1.0.100** (build **200**) web + PWA + APK; FCM-enabled binary at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=200)
 - PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
 
 **Supabase:** no new SQL.
