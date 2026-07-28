@@ -49,10 +49,17 @@ import {
 import { WfSearchBar } from '../ui/wireframe';
 import {
   CATALOG_CREDENTIAL_SECTION_IDS,
+  CATALOG_SECTIONS_AFTER_WEAPONS,
+  CATALOG_SECTIONS_BEFORE_WEAPONS,
   getCredentialSectionMeta,
   type CredentialViewSectionId,
 } from '../../lib/guardCredentialSections';
 import { GuardCredentialCatalogSectionBlock } from '../credentials/GuardCredentialCatalogSectionBlock';
+import {
+  GuardEquipmentGearCredentialSection,
+  GuardWeaponGearCredentialSection,
+} from '../credentials/GuardWeaponGearCredentialSection';
+import { WEAPON_GEAR_CREDENTIAL_SECTION_ORDER } from '../../lib/guardWeaponGear';
 
 type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-other-training';
 
@@ -254,14 +261,18 @@ export function GuardCredentialsPanel({
     if (!openSection) return null;
     const showCatalogSelect =
       openSection === 'bsis-other-training' ||
-      (openSection !== 'bsis-refresher' && CATALOG_CREDENTIAL_SECTION_IDS.includes(openSection as CredentialViewSectionId));
+      openSection === 'bsis-permit' ||
+      (openSection !== 'bsis-refresher' &&
+        CATALOG_CREDENTIAL_SECTION_IDS.includes(openSection as CredentialViewSectionId));
 
     const catalogOptions =
       openSection === 'bsis-other-training'
         ? catalogOptionsForCredentialSection('bsis-other-training')
-        : openSection !== 'bsis-refresher'
-          ? catalogOptionsForCredentialSection(openSection as CredentialViewSectionId)
-          : [];
+        : openSection === 'bsis-permit'
+          ? catalogOptionsForCredentialSection('bsis-permit')
+          : openSection !== 'bsis-refresher'
+            ? catalogOptionsForCredentialSection(openSection as CredentialViewSectionId)
+            : [];
 
     const showPermitExpiry =
       openSection === 'bsis-permit' ||
@@ -489,7 +500,7 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
         certOverlayNav={certOverlayNav}
       />
-      {CATALOG_CREDENTIAL_SECTION_IDS.map((sectionId) => (
+      {CATALOG_SECTIONS_BEFORE_WEAPONS.map((sectionId) => (
         <GuardCredentialCatalogSectionBlock
           key={sectionId}
           sectionId={sectionId}
@@ -499,13 +510,50 @@ export function GuardCredentialsPanel({
           canUpload={canUpload}
           editing={editing}
           showFullCatalog
-          showFullGearCatalog={showFullGearCatalog}
+          groupedCerts={grouped}
+          onAdd={(catalogId, section) => openCredentialAddSheet(credentialAddSectionKey(section), catalogId)}
+          renderCertRow={renderCertRow}
+          certCardProps={certCardProps}
+        />
+      ))}
+
+      {WEAPON_GEAR_CREDENTIAL_SECTION_ORDER.map((weaponId) => (
+        <GuardWeaponGearCredentialSection
+          key={weaponId}
+          weaponId={weaponId}
+          guard={guard}
+          search={search}
+          staffMode={staffMode}
+          canUpload={canUpload}
+          editing={editing}
+          showFullCatalog
           weaponGearEditing={weaponGearEditing}
-          equipmentGearEditing={equipmentGearEditing}
           weaponGearSelected={weaponGearSelected}
-          equipmentGearSelected={equipmentGearSelected}
           onWeaponGearChange={onWeaponGearChange}
-          onEquipmentGearChange={onEquipmentGearChange}
+          onAdd={(catalogId, section) => openCredentialAddSheet(section, catalogId)}
+          renderCertRow={renderCertRow}
+          certCardProps={certCardProps}
+        />
+      ))}
+
+      <GuardEquipmentGearCredentialSection
+        guard={guard}
+        equipmentGearEditing={equipmentGearEditing}
+        equipmentGearSelected={equipmentGearSelected}
+        onEquipmentGearChange={onEquipmentGearChange}
+        showFullCatalog={showFullGearCatalog}
+      />
+
+      {CATALOG_SECTIONS_AFTER_WEAPONS.map((sectionId) => (
+        <GuardCredentialCatalogSectionBlock
+          key={sectionId}
+          sectionId={sectionId}
+          guard={guard}
+          search={search}
+          staffMode={staffMode}
+          canUpload={canUpload}
+          editing={editing}
+          showFullCatalog
           groupedCerts={grouped}
           onAdd={(catalogId, section) => openCredentialAddSheet(credentialAddSectionKey(section), catalogId)}
           renderCertRow={renderCertRow}

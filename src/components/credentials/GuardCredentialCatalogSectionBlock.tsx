@@ -12,14 +12,10 @@ import { CredentialCatalogSlotList } from './CredentialCatalogSlotList';
 import { CredentialRowAction, CredentialRowHeader } from './CredentialStatusLabels';
 import { getCourseUploadStatus } from '../../lib/certStatus';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
-import { GuardGearCarryClientFields, GuardGearCarryFields } from '../profile/GuardGearCarryPanel';
-import type { GuardEquipmentGearId, GuardWeaponGearId } from '../../types';
 
 const SECTION_ICONS: Partial<Record<CredentialViewSectionId, typeof Shield>> = {
   'bsis-refresher': BookOpen,
   'bsis-other-training': BookOpen,
-  'bsis-permit': Shield,
   medical: Award,
   fema: Award,
   'security-advanced': Award,
@@ -35,13 +31,6 @@ interface GuardCredentialCatalogSectionBlockProps {
   editing?: boolean;
   verifiedOnly?: boolean;
   showFullCatalog?: boolean;
-  showFullGearCatalog?: boolean;
-  weaponGearEditing?: boolean;
-  equipmentGearEditing?: boolean;
-  weaponGearSelected?: GuardWeaponGearId[];
-  equipmentGearSelected?: GuardEquipmentGearId[];
-  onWeaponGearChange?: (next: GuardWeaponGearId[]) => void;
-  onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
   onAdd?: (catalogId: string, sectionId: CredentialViewSectionId) => void;
   onEditCert?: (cert: Certification) => void;
   renderCertRow?: (cert: Certification) => React.ReactNode;
@@ -58,13 +47,6 @@ export function GuardCredentialCatalogSectionBlock({
   editing = false,
   verifiedOnly = false,
   showFullCatalog = true,
-  showFullGearCatalog = true,
-  weaponGearEditing = false,
-  equipmentGearEditing = false,
-  weaponGearSelected,
-  equipmentGearSelected,
-  onWeaponGearChange,
-  onEquipmentGearChange,
   onAdd,
   onEditCert,
   renderCertRow,
@@ -78,8 +60,6 @@ export function GuardCredentialCatalogSectionBlock({
     verifiedOnly,
     excludeRejected: true,
   });
-  const isWeaponsSection = sectionId === 'bsis-permit';
-  const showGear = isWeaponsSection && (weaponGearEditing || equipmentGearEditing || showFullGearCatalog);
   const searchActive = Boolean(search.trim());
 
   if (
@@ -87,7 +67,6 @@ export function GuardCredentialCatalogSectionBlock({
       searchActive,
       matchingSlotCount: slots.length,
       showFullCatalog,
-      hasEmbeddedGear: showGear,
     })
   ) {
     return null;
@@ -105,7 +84,6 @@ export function GuardCredentialCatalogSectionBlock({
           <p className="uber-label flex items-center gap-2 flex-wrap">
             <Icon className="w-4 h-4 text-brand-primary shrink-0" />
             {meta.title}
-            {isWeaponsSection && <GuardArmedStatusPill guard={guard} className="!text-xs" />}
           </p>
         }
         subtitle={
@@ -139,22 +117,6 @@ export function GuardCredentialCatalogSectionBlock({
           renderCertRow={renderCertRow}
           certCardProps={certCardProps}
         />
-        {isWeaponsSection &&
-          (canUpload || weaponGearEditing || equipmentGearEditing ? (
-            <GuardGearCarryFields
-              guard={guard}
-              embedded
-              weaponGearEditing={weaponGearEditing}
-              equipmentGearEditing={equipmentGearEditing}
-              weaponGearSelected={weaponGearSelected}
-              equipmentGearSelected={equipmentGearSelected}
-              onWeaponGearChange={onWeaponGearChange}
-              onEquipmentGearChange={onEquipmentGearChange}
-              showFullCatalog={showFullGearCatalog}
-            />
-          ) : (
-            <GuardGearCarryClientFields guard={guard} />
-          ))}
       </div>
     </section>
   );

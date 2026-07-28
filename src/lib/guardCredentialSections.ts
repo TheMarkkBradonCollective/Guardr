@@ -66,7 +66,18 @@ export const CREDENTIAL_SECTION_ORDER: CredentialViewSectionId[] = SECTION_ORDER
 export const CATALOG_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
   'bsis-refresher',
   'bsis-other-training',
-  'bsis-permit',
+  'medical',
+  'fema',
+  'security-advanced',
+  'industry',
+];
+
+export const CATALOG_SECTIONS_BEFORE_WEAPONS: CredentialViewSectionId[] = [
+  'bsis-refresher',
+  'bsis-other-training',
+];
+
+export const CATALOG_SECTIONS_AFTER_WEAPONS: CredentialViewSectionId[] = [
   'medical',
   'fema',
   'security-advanced',
