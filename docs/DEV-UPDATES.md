@@ -3,11 +3,42 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, July 28, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.100**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.101**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, July 28, 2026 — /updateit → v1.0.101
+
+**PR cleanup**
+- Merged **#864** (grey credential rows, black section headers, divider lines)
+- Merged **#865** (PTA/UOF section header → **BSIS Mandatory**)
+- Merged **#866** (**Continuing Education** renamed to **Continued Education**)
+- Merged **#867** (separate **Inventory** tab — equipment + uniform profiles)
+
+**Shipped**
+- **Credentials** tab polish — cert row titles grey; section headers solid black; divider lines between rows
+- **BSIS Mandatory** section label for PTA/UOF (was long weapon title)
+- **Continued Education** label for the 32-hour CE package (Guardr product copy; BSIS official wording unchanged in explanatory text)
+- **Inventory** tab on guard profile (guards edit) and staff guard detail (`?gtab=inventory`) — separate from credentials
+- **Equipment inventory** — type, brand, model, condition, quantity, notes, primary + additional photos; certified gear (OC, baton, ECD, firearm) only lists when credentials verified
+- **Uniform inventory** — corporate, tactical, polo, executive protection, hi-vis, event staff, business casual, custom — full description + preview photo for client assignment requests
+- Free gear (body cam, flashlight, handcuffs, duty belt, radio, IFAK, etc.) available without weapon permits; cred-gated items unlock from **Credentials** tab first
+- **v1.0.101** (build **201**) web + PWA + APK
+- PWA service worker cache bust: `guardr-cache-v1-0-101-beta`
+
+**Release verification**
+- `npm run lint`, `npm test` (477), and `npm run build` pass on `main`
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **201**), and `public/sw.js` aligned on **1.0.101-beta**
+
+**Supabase:** run new columns on `guards` if not already applied:
+```sql
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_equipment JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]'::jsonb;
+```
 
 ---
 
