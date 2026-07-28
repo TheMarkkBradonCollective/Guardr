@@ -62,7 +62,6 @@ import {
   getGuardActivationChecklist,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
-import { promptRevokeGuardApplicationNote } from '../../lib/staffDocumentReview';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
@@ -145,13 +144,11 @@ export function StaffGuardDetailPanel({
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
-  onRejectGuardApplication,
   onSetGuardTrusted,
   onMakeCrewLead,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
-  onRejectIdentityVerification,
   onRequestIdentityResubmit,
   onUpdateGuardIdImages,
   onRequestCertImageResubmit,
@@ -190,7 +187,6 @@ export function StaffGuardDetailPanel({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const [revoking, setRevoking] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const initialName = resolvePersonNameParts(guard);
@@ -326,20 +322,6 @@ export function StaffGuardDetailPanel({
     }
   };
 
-  const handleRevokeApplication = async () => {
-    if (!onRejectGuardApplication) return;
-    const reason = await promptRevokeGuardApplicationNote();
-    if (reason === null) return;
-    setRevoking(true);
-    try {
-      await onRejectGuardApplication(guard.id, reason);
-    } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not revoke application.', { tone: 'error' });
-    } finally {
-      setRevoking(false);
-    }
-  };
-
   const handleToggleTrusted = async () => {
     if (!onSetGuardTrusted) return;
     const affectedJobs = guard.trusted
@@ -397,6 +379,159 @@ export function StaffGuardDetailPanel({
     const count = guard.failedAudits ?? 0;
     if (!(await confirmClearAuditViolations(guard.name, count))) return;
     onResetAuditFailures(guard.id);
+  };
+
+  const renderAccountControlsSection = (showProfileEdit: boolean) => {
+    if (!canManage || guard.isStaff) return null;
+
+    return (
+      <section className="staff-detail-section space-y-3">
+        <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
+        <div className="staff-detail-actions">
+          {canEdit && showProfileEdit && (
+            <>
+              <AppButton
+                variant="primary"
+                size="sm"
+                onClick={() => (editing ? void handleSave() : setEditing(true))}
+                disabled={saving}
+                startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+              >
+                {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+              </AppButton>
+              {editing && (
+                <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
+                  Cancel
+                </AppButton>
+              )}
+            </>
+          )}
+          {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
+            <AppButton
+              variant="primary"
+              size="sm"
+              className="staff-action-btn--ok"
+              onClick={() => {
+                if (onOpenGuardApplication) {
+                  onOpenGuardApplication(guard.id);
+                  return;
+                }
+                void handleApproveProfile();
+              }}
+              disabled={!onOpenGuardApplication && !guardCanStaffApproveProfile(guard)}
+              title={
+                onOpenGuardApplication
+                  ? 'Open this application in Applications to review and approve'
+                  : activationChecklist.staffApprovalBlockers.length > 0
+                    ? activationChecklist.staffApprovalBlockers.join(' · ')
+                    : 'Approve guard application'
+              }
+            >
+              {onOpenGuardApplication ? 'Review application' : 'Approve application'}
+            </AppButton>
+          )}
+          {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
+            <AppButton
+              variant="danger"
+              size="sm"
+              className="staff-action-btn--danger"
+              onClick={() => void handleDeleteGuard()}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : 'Delete account'}
+            </AppButton>
+          )}
+          {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
+            <AppButton
+              variant="outline"
+              size="sm"
+              className="staff-action-btn--warn"
+              onClick={() => void handleUpdateUserStatus('suspended')}
+            >
+              Suspend
+            </AppButton>
+          )}
+          {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
+            <AppButton
+              variant="danger"
+              size="sm"
+              className="staff-action-btn--danger"
+              onClick={() => void handleUpdateUserStatus('blocked')}
+            >
+              Flag / Block
+            </AppButton>
+          )}
+          {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
+            <AppButton
+              variant="primary"
+              size="sm"
+              className="staff-action-btn--ok"
+              onClick={() => void handleUpdateUserStatus('active')}
+            >
+              Restore account
+            </AppButton>
+          )}
+          {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
+            <AppButton
+              variant="outline"
+              size="sm"
+              className="staff-action-btn--warn"
+              onClick={() => void handleResetAuditFailures()}
+            >
+              Clear violations ({guard.failedAudits}/3)
+            </AppButton>
+          )}
+          {onUpdateBackgroundChecked && (
+            <AppButton
+              variant="outline"
+              size="sm"
+              className={guard.backgroundChecked ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
+              onClick={() => void handleBackgroundCheckToggle()}
+            >
+              {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
+            </AppButton>
+          )}
+          {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
+            <AppButton
+              variant={guard.trusted ? 'outline' : 'primary'}
+              size="sm"
+              className={guard.trusted ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
+              onClick={() => void handleToggleTrusted()}
+              title={
+                guard.trusted
+                  ? 'Remove trusted status — guard will require Guardr applicant review'
+                  : 'Mark as trusted — skips Guardr review on Stripe jobs; cash always needs staff confirmation'
+              }
+            >
+              {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
+            </AppButton>
+          )}
+          {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
+            <AppButton
+              variant="primary"
+              size="sm"
+              className="staff-action-btn--ok"
+              disabled
+              title="Guard must be approved and active before they can be marked as trusted."
+            >
+              Mark as trusted
+            </AppButton>
+          )}
+          {onMakeCrewLead && !alreadyCrewLead && (
+            <AppButton
+              variant="primary"
+              size="sm"
+              className="staff-action-btn--ok"
+              disabled={Boolean(makeCrewLeadBlocker)}
+              onClick={() => void handleMakeCrewLead()}
+              title={makeCrewLeadBlocker ?? 'Initialize this guard as a standing crew lead'}
+            >
+              Make crew lead
+            </AppButton>
+          )}
+        </div>
+      </section>
+    );
   };
 
   const handleCancelEdit = () => {
@@ -553,6 +688,7 @@ export function StaffGuardDetailPanel({
         />
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
+          {renderAccountControlsSection(false)}
           {canManage && (
             <div className="staff-detail-actions">
               {canEdit && (
@@ -617,7 +753,6 @@ export function StaffGuardDetailPanel({
                         : undefined
                   }
                   approveActionLabel={onOpenGuardCredential ? 'Review in Credentials' : undefined}
-                  onReject={onRejectIdentityVerification}
                   onRequestResubmit={
                     onRequestIdentityResubmit
                       ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
@@ -713,170 +848,7 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          {canManage && (
-          <section className="staff-detail-section space-y-3">
-            <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
-            <div className="staff-detail-actions">
-              {canEdit && !guard.isStaff && staffGuardTab === 'profile' && (
-                <>
-                  <AppButton
-                    variant="primary"
-                    size="sm"
-                    onClick={() => (editing ? void handleSave() : setEditing(true))}
-                    disabled={saving}
-                    startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                  >
-                    {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-                  </AppButton>
-                  {editing && (
-                    <AppButton
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </AppButton>
-                  )}
-                </>
-              )}
-              {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  className="staff-action-btn--ok"
-                  onClick={() => {
-                    if (onOpenGuardApplication) {
-                      onOpenGuardApplication(guard.id);
-                      return;
-                    }
-                    void handleApproveProfile();
-                  }}
-                  disabled={!onOpenGuardApplication && !guardCanStaffApproveProfile(guard)}
-                  title={
-                    onOpenGuardApplication
-                      ? 'Open this application in Applications to review and approve'
-                      : activationChecklist.staffApprovalBlockers.length > 0
-                        ? activationChecklist.staffApprovalBlockers.join(' · ')
-                        : 'Approve guard application'
-                  }
-                >
-                  {onOpenGuardApplication ? 'Review application' : 'Approve application'}
-                </AppButton>
-              )}
-              {(guardAccountStatus === 'pending' || guardAccountStatus === 'approved') &&
-                onRejectGuardApplication && (
-                  <AppButton
-                    variant="danger"
-                    size="sm"
-                    className="staff-action-btn--danger"
-                    onClick={() => void handleRevokeApplication()}
-                    disabled={revoking}
-                  >
-                    {revoking ? 'Revoking…' : 'Revoke application'}
-                  </AppButton>
-                )}
-              {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
-                <AppButton
-                  variant="danger"
-                  size="sm"
-                  className="staff-action-btn--danger"
-                  onClick={() => void handleDeleteGuard()}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting…' : 'Delete account'}
-                </AppButton>
-              )}
-              {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
-                <AppButton
-                  variant="outline"
-                  size="sm"
-                  className="staff-action-btn--warn"
-                  onClick={() => void handleUpdateUserStatus('suspended')}
-                >
-                  Suspend
-                </AppButton>
-              )}
-              {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
-                <AppButton
-                  variant="danger"
-                  size="sm"
-                  className="staff-action-btn--danger"
-                  onClick={() => void handleUpdateUserStatus('blocked')}
-                >
-                  Flag / Block
-                </AppButton>
-              )}
-              {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  className="staff-action-btn--ok"
-                  onClick={() => void handleUpdateUserStatus('active')}
-                >
-                  Restore account
-                </AppButton>
-              )}
-              {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <AppButton
-                  variant="outline"
-                  size="sm"
-                  className="staff-action-btn--warn"
-                  onClick={() => void handleResetAuditFailures()}
-                >
-                  Clear violations ({guard.failedAudits}/3)
-                </AppButton>
-              )}
-              {onUpdateBackgroundChecked && (
-                <AppButton
-                  variant="outline"
-                  size="sm"
-                  className={guard.backgroundChecked ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
-                  onClick={() => void handleBackgroundCheckToggle()}
-                >
-                  {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
-                </AppButton>
-              )}
-              {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
-                <AppButton
-                  variant={guard.trusted ? 'outline' : 'primary'}
-                  size="sm"
-                  className={guard.trusted ? 'staff-action-btn--warn' : 'staff-action-btn--ok'}
-                  onClick={() => void handleToggleTrusted()}
-                  title={
-                    guard.trusted
-                      ? 'Remove trusted status — guard will require Guardr applicant review'
-                      : 'Mark as trusted — skips Guardr review on Stripe jobs; cash always needs staff confirmation'
-                  }
-                >
-                  {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
-                </AppButton>
-              )}
-              {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  className="staff-action-btn--ok"
-                  disabled
-                  title="Guard must be approved and active before they can be marked as trusted."
-                >
-                  Mark as trusted
-                </AppButton>
-              )}
-              {onMakeCrewLead && !alreadyCrewLead && (
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  className="staff-action-btn--ok"
-                  disabled={Boolean(makeCrewLeadBlocker)}
-                  onClick={() => void handleMakeCrewLead()}
-                  title={makeCrewLeadBlocker ?? 'Initialize this guard as a standing crew lead'}
-                >
-                  Make crew lead
-                </AppButton>
-              )}
-            </div>
-          </section>
-          )}
+          {renderAccountControlsSection(true)}
 
           {!editing && (
             <section className="staff-detail-section space-y-2">
