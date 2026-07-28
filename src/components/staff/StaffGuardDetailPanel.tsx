@@ -376,6 +376,15 @@ export function StaffGuardDetailPanel({
     const { editLabel, showAdminActions = false, stickyWhenEditing = false } = options ?? {};
     const sticky = stickyWhenEditing && editing;
 
+    if (editing) {
+      if (!editLabel) return null;
+      return (
+        <div className={sticky ? 'staff-guard-detail-top-bar--sticky' : undefined}>
+          <div className="staff-detail-actions">{renderEditActions(editLabel)}</div>
+        </div>
+      );
+    }
+
     return (
       <div className={sticky ? 'staff-guard-detail-top-bar--sticky' : undefined}>
         <StaffGuardAccountControls
