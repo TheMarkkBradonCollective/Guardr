@@ -5215,6 +5215,18 @@ html.theme-light .staff-ops-btn-primary:hover {
   min-width: 0;
 }
 
+.staff-guard-detail-top-bar--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--brand-bg);
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--brand-border);
+  box-shadow: 0 8px 16px -12px rgba(0, 0, 0, 0.35);
+}
+
 .role-app-shell main > div {
   height: 100%;
   overflow: hidden;

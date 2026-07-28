@@ -350,36 +350,46 @@ export function StaffGuardDetailPanel({
     onUpdateUserStatus(guard.id, status);
   };
 
-  const renderAccountControlsSection = (showProfileEdit: boolean) => {
+  const renderEditActions = (editLabel: string) =>
+    canEdit ? (
+      <>
+        <AppButton
+          variant="primary"
+          size="sm"
+          onClick={() => (editing ? void handleSave() : setEditing(true))}
+          disabled={saving}
+          startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+        >
+          {editing ? (saving ? 'Saving…' : 'Save changes') : editLabel}
+        </AppButton>
+        {editing && (
+          <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
+            Cancel
+          </AppButton>
+        )}
+      </>
+    ) : null;
+
+  const renderAccountControlsSection = (options?: {
+    editLabel?: string;
+    showAdminActions?: boolean;
+    stickyWhenEditing?: boolean;
+  }) => {
     if (!canManage || guard.isStaff) return null;
+    const { editLabel, showAdminActions = false, stickyWhenEditing = false } = options ?? {};
+    const sticky = stickyWhenEditing && editing;
 
     return (
-      <StaffGuardAccountControls
-        guard={guard}
-        canManage={canManage}
-        canSuspend={canSuspend}
-        onUpdateUserStatus={onUpdateUserStatus}
-        onRejectGuardApplication={onRejectGuardApplication}
-      >
-        {canEdit && showProfileEdit && (
-          <>
-            <AppButton
-              variant="primary"
-              size="sm"
-              onClick={() => (editing ? void handleSave() : setEditing(true))}
-              disabled={saving}
-              startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-            >
-              {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
-            </AppButton>
-            {editing && (
-              <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
-                Cancel
-              </AppButton>
-            )}
-          </>
-        )}
-        {guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
+      <div className={sticky ? 'staff-guard-detail-top-bar--sticky' : undefined}>
+        <StaffGuardAccountControls
+          guard={guard}
+          canManage={canManage}
+          canSuspend={canSuspend}
+          onUpdateUserStatus={onUpdateUserStatus}
+          onRejectGuardApplication={onRejectGuardApplication}
+          leadingActions={editLabel ? renderEditActions(editLabel) : undefined}
+        >
+          {showAdminActions && guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
           <AppButton
             variant="primary"
             size="sm"
@@ -403,7 +413,7 @@ export function StaffGuardDetailPanel({
             {onOpenGuardApplication ? 'Review application' : 'Approve application'}
           </AppButton>
         )}
-        {onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
+        {showAdminActions && onDeleteGuard && (guardAccountStatus !== 'pending' || canSuspend) && (
           <AppButton
             variant="danger"
             size="sm"
@@ -414,7 +424,7 @@ export function StaffGuardDetailPanel({
             {deleting ? 'Deleting…' : 'Delete account'}
           </AppButton>
         )}
-        {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
+        {showAdminActions && (guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
           <AppButton
             variant="outline"
             size="sm"
@@ -424,7 +434,7 @@ export function StaffGuardDetailPanel({
             Clear violations ({guard.failedAudits}/3)
           </AppButton>
         )}
-        {onUpdateBackgroundChecked && (
+        {showAdminActions && onUpdateBackgroundChecked && (
           <AppButton
             variant="outline"
             size="sm"
@@ -434,7 +444,7 @@ export function StaffGuardDetailPanel({
             {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
           </AppButton>
         )}
-        {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
+        {showAdminActions && onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
           <AppButton
             variant={guard.trusted ? 'outline' : 'primary'}
             size="sm"
@@ -449,7 +459,7 @@ export function StaffGuardDetailPanel({
             {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
           </AppButton>
         )}
-        {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
+        {showAdminActions && onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
           <AppButton
             variant="primary"
             size="sm"
@@ -460,7 +470,7 @@ export function StaffGuardDetailPanel({
             Mark as trusted
           </AppButton>
         )}
-        {onMakeCrewLead && !alreadyCrewLead && (
+        {showAdminActions && onMakeCrewLead && !alreadyCrewLead && (
           <AppButton
             variant="primary"
             size="sm"
@@ -472,7 +482,8 @@ export function StaffGuardDetailPanel({
             Make crew lead
           </AppButton>
         )}
-      </StaffGuardAccountControls>
+        </StaffGuardAccountControls>
+      </div>
     );
   };
 
@@ -645,7 +656,7 @@ export function StaffGuardDetailPanel({
 
       {staffGuardTab === 'performance' && !guard.isStaff ? (
         <div className="space-y-3">
-          {renderAccountControlsSection(false)}
+          {renderAccountControlsSection()}
           <StaffGuardPerformancePanel
             guard={guard}
             requests={requests}
@@ -656,29 +667,7 @@ export function StaffGuardDetailPanel({
         </div>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
-          {renderAccountControlsSection(false)}
-          {canManage && (
-            <div className="staff-detail-actions">
-              {canEdit && (
-                <>
-                  <AppButton
-                    variant="primary"
-                    size="sm"
-                    onClick={() => (editing ? void handleSave() : setEditing(true))}
-                    disabled={saving}
-                    startEnhancer={editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                  >
-                    {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit credentials'}
-                  </AppButton>
-                  {editing && (
-                    <AppButton variant="outline" size="sm" onClick={handleCancelEdit}>
-                      Cancel
-                    </AppButton>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+          {renderAccountControlsSection({ editLabel: 'Edit credentials', stickyWhenEditing: true })}
           <GuardCredentialsPanel
             guard={guard}
             editing={editing && canEdit}
@@ -816,7 +805,7 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          {renderAccountControlsSection(true)}
+          {renderAccountControlsSection({ showAdminActions: true, editLabel: 'Edit profile', stickyWhenEditing: true })}
 
           {!editing && (
             <section className="staff-detail-section space-y-2">
