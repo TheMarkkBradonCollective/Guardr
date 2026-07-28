@@ -140,7 +140,7 @@ const SECTION_META: Record<
     category: 'industry',
   },
   'bsis-pta-uof': {
-    title: 'Mandatory Training (PTA/UOF)',
+    title: 'BSIS Mandatory',
     subtitle: 'Power to Arrest & Appropriate Use of Force — required for activation.',
     category: 'bsis-training',
   },
