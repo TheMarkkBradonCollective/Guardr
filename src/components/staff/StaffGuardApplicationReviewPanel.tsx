@@ -19,22 +19,27 @@ import {
 } from '../../lib/guardAccountActivation';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffApplicationCredentialViewModal } from './StaffApplicationCredentialViewModal';
+import { StaffGuardAccountControls } from './StaffGuardAccountControls';
 
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
   canReview: boolean;
+  canSuspend?: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
+  onUpdateUserStatus?: (guardId: string, status: 'active' | 'suspended' | 'blocked') => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
 }
 
 export function StaffGuardApplicationReviewPanel({
   guard,
   canReview,
+  canSuspend = false,
   onApproveGuardAccount,
   onRejectGuardApplication,
   onRequestGuardApplicationRevision,
+  onUpdateUserStatus,
   onOpenGuardProfile,
 }: StaffGuardApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
@@ -192,6 +197,17 @@ export function StaffGuardApplicationReviewPanel({
             )}
           </div>
         </section>
+      )}
+
+      {canReview && (
+        <StaffGuardAccountControls
+          guard={guard}
+          canManage
+          canSuspend={canSuspend}
+          onUpdateUserStatus={onUpdateUserStatus}
+          onRejectGuardApplication={onRejectGuardApplication}
+          showApplicationActions={false}
+        />
       )}
     </div>
   );

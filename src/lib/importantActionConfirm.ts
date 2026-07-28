@@ -62,9 +62,12 @@ export async function confirmRemoveClientTrusted(clientName: string): Promise<bo
 
 export async function confirmSuspendAccount(displayName: string, kind: AccountKind): Promise<boolean> {
   return showAppConfirm({
-    title: `Suspend ${accountLabel(kind)} account?`,
-    message: `${displayName} will be suspended and unable to use the platform until restored.`,
-    confirmLabel: 'Suspend account',
+    title: kind === 'guard' ? 'Deactivate guard account?' : `Suspend ${accountLabel(kind)} account?`,
+    message:
+      kind === 'guard'
+        ? `${displayName} will be deactivated and unable to use the platform until access is restored.`
+        : `${displayName} will be suspended and unable to use the platform until restored.`,
+    confirmLabel: kind === 'guard' ? 'Deactivate account' : 'Suspend account',
     tone: 'danger',
   });
 }
