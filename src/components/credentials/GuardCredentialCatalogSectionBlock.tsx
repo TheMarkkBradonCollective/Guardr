@@ -81,7 +81,7 @@ export function GuardCredentialCatalogSectionBlock({
       <CredentialRowHeader
         rawTitle
         title={
-          <p className="uber-label flex items-center gap-2 flex-wrap">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text flex items-center gap-2 flex-wrap">
             <Icon className="w-4 h-4 text-brand-primary shrink-0" />
             {meta.title}
           </p>

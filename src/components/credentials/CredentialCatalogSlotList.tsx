@@ -59,7 +59,6 @@ export function CredentialCatalogSlotList({
           <CredentialRowHeader
             title={slot.entry.name}
             subtitle={slot.entry.description}
-            titleMuted={slot.certs.length === 0}
             action={
               <CredentialRowAction
                 staffMode={staffMode}
