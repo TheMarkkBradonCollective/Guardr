@@ -56,7 +56,7 @@ import {
 } from '../../lib/guardCredentialSections';
 import { GuardCredentialCatalogSectionBlock } from '../credentials/GuardCredentialCatalogSectionBlock';
 import {
-  GuardEquipmentGearCredentialSection,
+  GuardGearCredentialSection,
   GuardWeaponGearCredentialSection,
 } from '../credentials/GuardWeaponGearCredentialSection';
 import { WEAPON_GEAR_CREDENTIAL_SECTION_ORDER } from '../../lib/guardWeaponGear';
@@ -536,10 +536,13 @@ export function GuardCredentialsPanel({
         />
       ))}
 
-      <GuardEquipmentGearCredentialSection
+      <GuardGearCredentialSection
         guard={guard}
+        weaponGearEditing={weaponGearEditing}
         equipmentGearEditing={equipmentGearEditing}
+        weaponGearSelected={weaponGearSelected}
         equipmentGearSelected={equipmentGearSelected}
+        onWeaponGearChange={onWeaponGearChange}
         onEquipmentGearChange={onEquipmentGearChange}
         showFullCatalog={showFullGearCatalog}
       />

@@ -5,6 +5,7 @@ import {
   GUARD_WEAPON_GEAR_CATEGORY_LABELS,
   GUARD_WEAPON_GEAR_CATEGORY_ORDER,
   GUARD_WEAPON_GEAR_RULES,
+  catalogIdsForWeaponGearSection,
   getEligibleWeaponGear,
   getMissingWeaponGearCatalogIds,
   getWeaponGearRequiredCatalogIds,
@@ -243,6 +244,7 @@ function WeaponGearRow({
   listed,
   showOnProfile,
   onToggle,
+  hideCredentialChecklist = false,
 }: {
   rule: typeof GUARD_WEAPON_GEAR_RULES[number];
   guard: SecurityGuard;
@@ -251,9 +253,13 @@ function WeaponGearRow({
   listed: boolean;
   showOnProfile: boolean;
   onToggle: () => void;
+  /** When credential slots are shown above, omit guard card / duplicate checklist. */
+  hideCredentialChecklist?: boolean;
 }) {
-  const requiredIds = getWeaponGearRequiredCatalogIds(rule.id);
-  const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id);
+  const displayCatalogIds = catalogIdsForWeaponGearSection(rule.id);
+  const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id).filter(
+    (id) => id !== 'bsis-guard-card'
+  );
 
   const statusLabel = showOnProfile
     ? 'On profile'
@@ -286,7 +292,9 @@ function WeaponGearRow({
             <span className="text-sm font-semibold text-brand-text">{rule.label}</span>
             <CredentialSectionStatusBadge label={statusLabel} tone={statusTone} />
           </span>
-          <GearCredentialRequirements guard={guard} catalogIds={requiredIds} />
+          {!hideCredentialChecklist && displayCatalogIds.length > 0 && (
+            <GearCredentialRequirements guard={guard} catalogIds={displayCatalogIds} />
+          )}
         </span>
       </label>
     );
@@ -298,14 +306,18 @@ function WeaponGearRow({
         <p className="text-sm font-semibold text-brand-text">{rule.label}</p>
         <CredentialSectionStatusBadge label={statusLabel} tone={statusTone} />
       </div>
-      <GearCredentialRequirements guard={guard} catalogIds={requiredIds} compact={showOnProfile} />
-      {!eligible && missingIds.length > 0 && (
-        <p className="text-xs text-brand-text-muted">
-          Still needed:{' '}
-          {missingIds
-            .map((id) => getCertCatalogEntry(id)?.shortLabel ?? getCertCatalogEntry(id)?.name ?? id)
-            .join(' · ')}
-        </p>
+      {!hideCredentialChecklist && (
+        <>
+          <GearCredentialRequirements guard={guard} catalogIds={displayCatalogIds} compact={showOnProfile} />
+          {!eligible && missingIds.length > 0 && (
+            <p className="text-xs text-brand-text-muted">
+              Still needed:{' '}
+              {missingIds
+                .map((id) => getCertCatalogEntry(id)?.shortLabel ?? getCertCatalogEntry(id)?.name ?? id)
+                .join(' · ')}
+            </p>
+          )}
+        </>
       )}
     </div>
   );

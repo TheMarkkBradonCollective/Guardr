@@ -4,8 +4,10 @@ import type { CertCategory } from '../../lib/certCatalog';
 import { getCertCatalogEntry } from '../../lib/certCatalog';
 import { buildCredentialCatalogSlots } from '../../lib/guardCredentialCatalog';
 import {
+  GUARD_DUTY_GEAR_SECTION_ORDER,
   GUARD_WEAPON_GEAR_RULES,
   catalogIdsForWeaponGearSection,
+  dutyGearSectionSubtitle,
   getEligibleWeaponGear,
   guardMeetsWeaponGearRequirements,
   weaponGearSectionSubtitle,
@@ -135,6 +137,100 @@ export function GuardWeaponGearCredentialSection({
           listed={listed}
           showOnProfile={showOnProfile}
           onToggle={toggleWeapon}
+          hideCredentialChecklist
+        />
+      </div>
+    </section>
+  );
+}
+
+interface GuardGearCredentialSectionProps {
+  guard: SecurityGuard;
+  weaponGearEditing?: boolean;
+  equipmentGearEditing?: boolean;
+  weaponGearSelected?: GuardWeaponGearId[];
+  equipmentGearSelected?: GuardEquipmentGearId[];
+  onWeaponGearChange?: (next: GuardWeaponGearId[]) => void;
+  onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
+  showFullCatalog?: boolean;
+}
+
+/** Flashlight, handcuffs, and equipment badges — no separate credential uploads. */
+export function GuardGearCredentialSection({
+  guard,
+  weaponGearEditing = false,
+  equipmentGearEditing = false,
+  weaponGearSelected,
+  equipmentGearSelected,
+  onWeaponGearChange,
+  onEquipmentGearChange,
+  showFullCatalog = true,
+}: GuardGearCredentialSectionProps) {
+  const selectedWeapon = weaponGearSelected ?? guard.listedWeaponGear ?? [];
+  const eligibleIds = new Set(getEligibleWeaponGear(guard).map((entry) => entry.id));
+
+  const toggleWeapon = (weaponId: GuardWeaponGearId) => {
+    if (!weaponGearEditing || !onWeaponGearChange) return;
+    if (!guardMeetsWeaponGearRequirements(guard, weaponId)) return;
+    if (selectedWeapon.includes(weaponId)) {
+      onWeaponGearChange(selectedWeapon.filter((item) => item !== weaponId));
+      return;
+    }
+    onWeaponGearChange([...selectedWeapon, weaponId]);
+  };
+
+  return (
+    <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
+      <CredentialRowHeader
+        rawTitle
+        title={
+          <p className="uber-label flex items-center gap-2 flex-wrap">
+            <Shield className="w-4 h-4 text-brand-primary shrink-0" />
+            Guard gear
+          </p>
+        }
+        subtitle={
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{dutyGearSectionSubtitle()}</p>
+        }
+      />
+      <div className="border-t border-brand-border pt-3 space-y-4">
+        <div className="space-y-2">
+          {GUARD_DUTY_GEAR_SECTION_ORDER.map((weaponId) => {
+            const rule = GUARD_WEAPON_GEAR_RULES.find((entry) => entry.id === weaponId);
+            if (!rule) return null;
+            const eligible = eligibleIds.has(weaponId);
+            const listed = selectedWeapon.includes(weaponId);
+            if (!weaponGearEditing && !showFullCatalog && !listed) return null;
+
+            return (
+              <GuardWeaponGearCarryRow
+                key={weaponId}
+                rule={rule}
+                guard={guard}
+                editing={weaponGearEditing}
+                eligible={eligible}
+                listed={listed}
+                showOnProfile={eligible && listed}
+                onToggle={() => toggleWeapon(weaponId)}
+                hideCredentialChecklist
+              />
+            );
+          })}
+        </div>
+        <div className="space-y-2 pt-2 border-t border-brand-border">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+            Equipment badges
+          </p>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Optional gear clients see on your profile — no credential upload required.
+          </p>
+        </div>
+        <GuardGearCarryEquipmentFields
+          guard={guard}
+          equipmentGearEditing={equipmentGearEditing}
+          equipmentGearSelected={equipmentGearSelected}
+          onEquipmentGearChange={onEquipmentGearChange}
+          showFullCatalog={showFullCatalog}
         />
       </div>
     </section>
@@ -149,6 +245,7 @@ interface GuardEquipmentGearCredentialSectionProps {
   showFullCatalog?: boolean;
 }
 
+/** @deprecated Use GuardGearCredentialSection */
 export function GuardEquipmentGearCredentialSection({
   guard,
   equipmentGearEditing = false,
@@ -157,30 +254,12 @@ export function GuardEquipmentGearCredentialSection({
   showFullCatalog = true,
 }: GuardEquipmentGearCredentialSectionProps) {
   return (
-    <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
-      <CredentialRowHeader
-        rawTitle
-        title={
-          <p className="uber-label flex items-center gap-2 flex-wrap">
-            <Shield className="w-4 h-4 text-brand-primary shrink-0" />
-            Equipment badges
-          </p>
-        }
-        subtitle={
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Optional gear clients see on your profile — no credential upload required.
-          </p>
-        }
-      />
-      <div className="border-t border-brand-border pt-3">
-        <GuardGearCarryEquipmentFields
-          guard={guard}
-          equipmentGearEditing={equipmentGearEditing}
-          equipmentGearSelected={equipmentGearSelected}
-          onEquipmentGearChange={onEquipmentGearChange}
-          showFullCatalog={showFullCatalog}
-        />
-      </div>
-    </section>
+    <GuardGearCredentialSection
+      guard={guard}
+      equipmentGearEditing={equipmentGearEditing}
+      equipmentGearSelected={equipmentGearSelected}
+      onEquipmentGearChange={onEquipmentGearChange}
+      showFullCatalog={showFullCatalog}
+    />
   );
 }
