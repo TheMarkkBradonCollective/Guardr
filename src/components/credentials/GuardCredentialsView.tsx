@@ -3,7 +3,7 @@ import { Certification, SecurityGuard } from '../../types';
 import {
   CATALOG_SECTIONS_AFTER_WEAPONS,
   CATALOG_SECTIONS_BEFORE_WEAPONS,
-  CREDENTIAL_SECTION_ORDER,
+  type CredentialViewSectionId,
   getCredentialSectionMeta,
   getGuardCredentialViewSections,
 } from '../../lib/guardCredentialSections';
@@ -37,9 +37,11 @@ interface GuardCredentialsViewProps {
   showFullCatalog?: boolean;
 }
 
-const CORE_READ_SECTION_IDS = CREDENTIAL_SECTION_ORDER.filter(
-  (id) => id === 'guard-card' || id === 'bsis-pta-uof' || id === 'bsis-32-hour'
-);
+const CORE_READ_SECTION_IDS: CredentialViewSectionId[] = [
+  'guard-card',
+  'bsis-pta-uof',
+  'bsis-32-hour',
+];
 
 export function GuardCredentialsView({
   guard,
