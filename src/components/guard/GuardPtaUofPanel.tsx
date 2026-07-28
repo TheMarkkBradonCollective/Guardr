@@ -411,7 +411,7 @@ export function GuardPtaUofPanel({
         title={
           <p className="uber-label flex items-center gap-2 flex-wrap">
             <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-            Power to Arrest &amp; Appropriate Use of Force
+            BSIS Mandatory
           </p>
         }
         subtitle={
