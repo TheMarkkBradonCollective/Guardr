@@ -2,8 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getGuardCredentialViewSections } from '../../lib/guardCredentialSections';
 import { CertItemCard } from './CertItemCard';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { GuardGearCarryClientFields } from '../profile/GuardGearCarryPanel';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { credentialMatchesSearch } from '../../lib/credentialSearch';
+import { getEligibleWeaponGear } from '../../lib/guardWeaponGear';
+import { getClientVisibleListedEquipmentGear } from '../../lib/guardEquipmentGear';
 import { AppDashboardZone, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSearchBar } from '../ui/wireframe';
 
@@ -22,6 +26,12 @@ interface GuardCredentialsViewProps {
   renderCertActions?: (cert: Certification) => React.ReactNode;
   className?: string;
   showSearch?: boolean;
+}
+
+function guardHasClientVisibleCarryGear(guard: SecurityGuard): boolean {
+  const eligibleIds = new Set(getEligibleWeaponGear(guard).map((rule) => rule.id));
+  const hasListedWeapon = (guard.listedWeaponGear ?? []).some((id) => eligibleIds.has(id));
+  return hasListedWeapon || getClientVisibleListedEquipmentGear(guard).length > 0;
 }
 
 export function GuardCredentialsView({
@@ -50,7 +60,12 @@ export function GuardCredentialsView({
             (cert) => credentialMatchesSearch(cert, search)
           ),
         }))
-        .filter((section) => !hideEmpty || section.certs.length > 0),
+        .filter(
+          (section) =>
+            !hideEmpty ||
+            section.certs.length > 0 ||
+            (section.id === 'bsis-permit' && guardHasClientVisibleCarryGear(guard))
+        ),
     [guard, hideEmpty, excludeRejected, verifiedOnly, search]
   );
 
@@ -66,7 +81,7 @@ export function GuardCredentialsView({
     [guard, hideEmpty, excludeRejected, verifiedOnly]
   );
 
-  if (totalCerts === 0) {
+  if (totalCerts === 0 && !guardHasClientVisibleCarryGear(guard)) {
     return <p className="text-sm text-brand-text-muted px-5">No credentials on file.</p>;
   }
 
@@ -89,6 +104,11 @@ export function GuardCredentialsView({
             key={section.id}
             title={section.certs.length > 0 ? `${section.title} (${section.certs.length})` : section.title}
           >
+            {section.id === 'bsis-permit' && (
+              <div className="mb-3 -mt-1">
+                <GuardArmedStatusPill guard={guard} className="!text-xs" />
+              </div>
+            )}
             {section.subtitle && (
               <p className="text-xs text-brand-text-muted mb-3 leading-relaxed -mt-1">{section.subtitle}</p>
             )}
@@ -112,6 +132,9 @@ export function GuardCredentialsView({
                 </div>
               ))}
             </AppItemCardStack>
+            {section.id === 'bsis-permit' && (
+              <GuardGearCarryClientFields guard={guard} />
+            )}
           </AppDashboardZone>
         ))
       )}

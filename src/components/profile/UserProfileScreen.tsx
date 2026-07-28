@@ -3,7 +3,6 @@ import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuar
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
-import { GuardGearCarryPanel } from './GuardGearCarryPanel';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
 import {
   GUARD_APPLICATION_INTAKE_LOCKED_MESSAGE,
@@ -304,8 +303,9 @@ export function UserProfileScreen({
       )}
       {profileTab === 'certs' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
-          <GuardGearCarryPanel
+          <GuardCredentialsPanel
             guard={guard}
+            editing={credentialsEditing}
             weaponGearEditing={credentialsEditing}
             equipmentGearEditing={editing}
             weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
@@ -316,10 +316,6 @@ export function UserProfileScreen({
             onEquipmentGearChange={(listedEquipmentGear) =>
               setResume((r) => ({ ...r, listedEquipmentGear }))
             }
-          />
-          <GuardCredentialsPanel
-            guard={guard}
-            editing={credentialsEditing}
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
