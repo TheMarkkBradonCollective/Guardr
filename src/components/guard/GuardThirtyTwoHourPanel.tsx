@@ -223,7 +223,6 @@ export function GuardThirtyTwoHourPanel({
       <CredentialRowHeader
         title={label}
         subtitle={subtitle}
-        titleMuted={uploaded.length === 0}
         action={
           <CredentialRowAction
             staffMode={staffMode}

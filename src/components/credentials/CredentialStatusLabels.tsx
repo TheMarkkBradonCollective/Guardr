@@ -69,14 +69,11 @@ export function CredentialRowHeader({
   title,
   subtitle,
   action,
-  titleMuted = false,
   rawTitle = false,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
-  titleMuted?: boolean;
-  /** When true, title is rendered as-is (for section labels with custom styling). */
   rawTitle?: boolean;
 }) {
   return (
@@ -85,11 +82,7 @@ export function CredentialRowHeader({
         {rawTitle ? (
           title
         ) : (
-          <div
-            className={`text-sm font-semibold leading-snug break-words ${
-              titleMuted ? 'text-brand-text-muted' : 'text-brand-text'
-            }`}
-          >
+          <div className="text-sm font-semibold leading-snug break-words text-brand-text">
             {title}
           </div>
         )}

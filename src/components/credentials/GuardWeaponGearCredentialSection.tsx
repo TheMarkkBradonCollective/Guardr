@@ -103,7 +103,7 @@ export function GuardWeaponGearCredentialSection({
       <CredentialRowHeader
         rawTitle
         title={
-          <p className="uber-label flex items-center gap-2 flex-wrap">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text flex items-center gap-2 flex-wrap">
             <Shield className="w-4 h-4 text-brand-primary shrink-0" />
             {rule.label}
             {weaponId === 'firearm' && <GuardArmedStatusPill guard={guard} className="!text-xs" />}
@@ -190,7 +190,7 @@ export function GuardGearCredentialSection({
       <CredentialRowHeader
         rawTitle
         title={
-          <p className="uber-label flex items-center gap-2 flex-wrap">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text flex items-center gap-2 flex-wrap">
             <Shield className="w-4 h-4 text-brand-primary shrink-0" />
             Guard gear
           </p>
