@@ -26,6 +26,7 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - Merged **#854** (fold post-release fixes into v1.0.100 release notes)
 - Merged **#855** (Save/Cancel pinned to top of profile edit form)
 - Merged **#856** (remove revoke application for approved guards)
+- Merged **#857** (CI typecheck fix + final v1.0.100 release notes)
 - **#838–#844** already on `main` (credentials catalog, gear, per-weapon sections)
 
 **Shipped**
@@ -41,6 +42,12 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - Removed staff **Add credential** and **Edit credentials** flows; removed **Revoke application** for approved guards (use Deactivate/Block instead)
 - **v1.0.100** (build **200**) web + PWA + APK; FCM-enabled binary at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=200)
 - PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
+
+**Release verification**
+- `npm run lint`, `npm test` (474), and `npm run build` pass on `main`
+- CI **build-and-test** and **Android APK** green after **#857**
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **200**), and `public/sw.js` aligned on **1.0.100-beta**
+- APK binary refreshed from CI artifact (post-**#857** `main` build)
 
 **Supabase:** no new SQL.
 
