@@ -36,8 +36,8 @@ const SECTION_ORDER: CredentialViewSectionId[] = [
   'bsis-pta-uof',
   'bsis-32-hour',
   'bsis-refresher',
-  'bsis-other-training',
   'bsis-permit',
+  'bsis-other-training',
   'medical',
   'fema',
   'security-advanced',
@@ -51,8 +51,8 @@ export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'bsis-pta-uof',
   'bsis-32-hour',
   'bsis-refresher',
-  'bsis-other-training',
   'bsis-permit',
+  'bsis-other-training',
   'medical',
   'fema',
   'security-advanced',
@@ -74,10 +74,10 @@ export const CATALOG_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
 
 export const CATALOG_SECTIONS_BEFORE_WEAPONS: CredentialViewSectionId[] = [
   'bsis-refresher',
-  'bsis-other-training',
 ];
 
 export const CATALOG_SECTIONS_AFTER_WEAPONS: CredentialViewSectionId[] = [
+  'bsis-other-training',
   'medical',
   'fema',
   'security-advanced',
