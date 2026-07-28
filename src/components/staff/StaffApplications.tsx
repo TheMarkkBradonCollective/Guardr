@@ -48,8 +48,6 @@ interface StaffApplicationsProps {
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
-  onUpdateGuardUserStatus?: (guardId: string, status: 'active' | 'suspended' | 'blocked') => void | Promise<void>;
-  canSuspendGuardAccounts?: boolean;
   onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestClientApplicationRevision?: (clientId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
@@ -219,8 +217,6 @@ export function StaffApplications({
   onApproveClient,
   onRejectClient,
   onRejectGuardApplication,
-  onUpdateGuardUserStatus,
-  canSuspendGuardAccounts = false,
   onRequestGuardApplicationRevision,
   onRequestClientApplicationRevision,
   onOpenGuardProfile,
@@ -358,10 +354,8 @@ export function StaffApplications({
           <StaffGuardApplicationReviewPanel
             guard={guard}
             canReview={canApproveGuardAccounts || canManageGuardAccounts}
-            canSuspend={canSuspendGuardAccounts}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
             onRejectGuardApplication={onRejectGuardApplication}
-            onUpdateUserStatus={onUpdateGuardUserStatus}
             onRequestGuardApplicationRevision={
               canApproveGuardAccounts || canManageGuardAccounts
                 ? onRequestGuardApplicationRevision

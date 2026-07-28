@@ -382,6 +382,7 @@ export function StaffGuardDetailPanel({
           canSuspend={canSuspend}
           onUpdateUserStatus={onUpdateUserStatus}
           onRejectGuardApplication={onRejectGuardApplication}
+          showApplicationActions={false}
           leadingActions={editLabel ? renderEditActions(editLabel) : undefined}
         >
           {showAdminActions && guardAccountStatus === 'pending' && (onOpenGuardApplication || onApproveGuardAccount) && (
@@ -651,7 +652,6 @@ export function StaffGuardDetailPanel({
 
       {staffGuardTab === 'performance' && !guard.isStaff ? (
         <div className="space-y-3">
-          {renderAccountControlsSection()}
           <StaffGuardPerformancePanel
             guard={guard}
             requests={requests}
@@ -662,7 +662,6 @@ export function StaffGuardDetailPanel({
         </div>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
-          {renderAccountControlsSection()}
           <GuardCredentialsPanel
             guard={guard}
             editing={false}
