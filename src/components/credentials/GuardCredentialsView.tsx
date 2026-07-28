@@ -14,7 +14,6 @@ import { WEAPON_GEAR_CREDENTIAL_SECTION_ORDER } from '../../lib/guardWeaponGear'
 import { WfSearchBar } from '../ui/wireframe';
 import { GuardCredentialCatalogSectionBlock } from './GuardCredentialCatalogSectionBlock';
 import {
-  GuardGearCredentialSection,
   GuardWeaponGearCredentialSection,
 } from './GuardWeaponGearCredentialSection';
 import { AppDashboardZone, AppItemCardStack } from '../ui/app/AppPrimitives';
@@ -184,6 +183,7 @@ export function GuardCredentialsView({
         WEAPON_GEAR_CREDENTIAL_SECTION_ORDER.map((weaponId) => (
           <GuardWeaponGearCredentialSection
             key={weaponId}
+            variant="credentials"
             weaponId={weaponId}
             guard={guard}
             search={search}
@@ -193,10 +193,6 @@ export function GuardCredentialsView({
             renderCertRow={renderCertRow}
           />
         ))}
-
-      {showWeapons && (
-        <GuardGearCredentialSection guard={guard} showFullCatalog={showFullCatalog} />
-      )}
 
       {catalogAfterWeapons.map((sectionId) => (
         <GuardCredentialCatalogSectionBlock

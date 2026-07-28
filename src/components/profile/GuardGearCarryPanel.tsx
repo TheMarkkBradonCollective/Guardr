@@ -247,6 +247,7 @@ function WeaponGearRow({
   onToggle,
   hideCredentialChecklist = false,
   headerShowsStatus = false,
+  inventoryMode = false,
 }: {
   rule: typeof GUARD_WEAPON_GEAR_RULES[number];
   guard: SecurityGuard;
@@ -259,6 +260,7 @@ function WeaponGearRow({
   hideCredentialChecklist?: boolean;
   /** Section header already shows title and status — only render edit checkbox when editing. */
   headerShowsStatus?: boolean;
+  inventoryMode?: boolean;
 }) {
   const displayCatalogIds = catalogIdsForWeaponGearSection(rule.id);
   const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id).filter(
@@ -292,7 +294,9 @@ function WeaponGearRow({
             aria-label={`List ${rule.label} on profile`}
           />
           <span className="text-sm text-brand-text-muted leading-relaxed">
-            List {rule.shortLabel} on your profile after credentials are verified
+            {inventoryMode
+              ? `Add ${rule.shortLabel} to your inventory`
+              : `List ${rule.shortLabel} on your profile after credentials are verified`}
           </span>
         </label>
       );
@@ -319,6 +323,11 @@ function WeaponGearRow({
           </span>
           {!hideCredentialChecklist && displayCatalogIds.length > 0 && (
             <GearCredentialRequirements guard={guard} catalogIds={displayCatalogIds} />
+          )}
+          {inventoryMode && !eligible && (
+            <p className="text-xs text-brand-text-muted mt-2">
+              Upload and verify required credentials on the Credentials tab to unlock Add.
+            </p>
           )}
         </span>
       </label>

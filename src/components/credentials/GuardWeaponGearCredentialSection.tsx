@@ -37,6 +37,8 @@ interface GuardWeaponGearCredentialSectionProps {
   onEditCert?: (cert: Certification) => void;
   renderCertRow?: (cert: Certification) => React.ReactNode;
   certCardProps?: (cert: Certification) => Record<string, unknown>;
+  /** Credentials tab shows permit uploads; inventory tab shows gear listing only. */
+  variant?: 'credentials' | 'inventory';
 }
 
 export function GuardWeaponGearCredentialSection({
@@ -55,6 +57,7 @@ export function GuardWeaponGearCredentialSection({
   onEditCert,
   renderCertRow,
   certCardProps,
+  variant = 'credentials',
 }: GuardWeaponGearCredentialSectionProps) {
   const rule = GUARD_WEAPON_GEAR_RULES.find((entry) => entry.id === weaponId);
   if (!rule) return null;
@@ -71,13 +74,14 @@ export function GuardWeaponGearCredentialSection({
     !searchActive ||
     rule.label.toLowerCase().includes(normalizedSearch) ||
     rule.shortLabel.toLowerCase().includes(normalizedSearch);
+  const selectedWeapon = weaponGearSelected ?? guard.listedWeaponGear ?? [];
+  const listed = selectedWeapon.includes(weaponId);
 
   if (searchActive && !nameMatches && slots.length === 0) return null;
-  if (!showFullCatalog && slots.length === 0 && !weaponGearEditing) return null;
+  if (variant === 'credentials' && !showFullCatalog && slots.length === 0) return null;
+  if (variant === 'inventory' && !showFullCatalog && !weaponGearEditing && !listed) return null;
 
-  const selectedWeapon = weaponGearSelected ?? guard.listedWeaponGear ?? [];
   const eligible = getEligibleWeaponGear(guard).some((entry) => entry.id === weaponId);
-  const listed = selectedWeapon.includes(weaponId);
   const showOnProfile = eligible && listed;
   const carryStatus = getWeaponGearCarryStatus({ eligible, listed, showOnProfile });
   const firearmStatusLabel =
@@ -112,12 +116,14 @@ export function GuardWeaponGearCredentialSection({
         }
         subtitle={
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            {weaponGearSectionSubtitle(weaponId)}
+            {weaponGearSectionSubtitle(weaponId, variant)}
           </p>
         }
         action={
           weaponId === 'firearm' ? (
             <span className="text-xs font-semibold text-brand-text">{firearmStatusLabel}</span>
+          ) : variant === 'inventory' ? (
+            <CredentialSectionStatusBadge label={carryStatus.label} tone={carryStatus.tone} />
           ) : (
             <CredentialSectionStatusBadge label={carryStatus.label} tone={carryStatus.tone} />
           )
@@ -125,7 +131,7 @@ export function GuardWeaponGearCredentialSection({
       />
 
       <div className="border-t border-brand-border pt-3 space-y-3">
-        {catalogIds.length > 0 && (
+        {variant === 'credentials' && catalogIds.length > 0 && (
           <CredentialCatalogSlotList
             guard={guard}
             slots={slots}
@@ -139,17 +145,20 @@ export function GuardWeaponGearCredentialSection({
           />
         )}
 
-        <GuardWeaponGearCarryRow
-          rule={rule}
-          guard={guard}
-          editing={weaponGearEditing}
-          eligible={eligible}
-          listed={listed}
-          showOnProfile={showOnProfile}
-          onToggle={toggleWeapon}
-          hideCredentialChecklist
-          headerShowsStatus
-        />
+        {variant === 'inventory' && (
+          <GuardWeaponGearCarryRow
+            rule={rule}
+            guard={guard}
+            editing={weaponGearEditing}
+            eligible={eligible}
+            listed={listed}
+            showOnProfile={showOnProfile}
+            onToggle={toggleWeapon}
+            hideCredentialChecklist={false}
+            headerShowsStatus={false}
+            inventoryMode
+          />
+        )}
       </div>
     </section>
   );
@@ -197,7 +206,7 @@ export function GuardGearCredentialSection({
         title={
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text flex items-center gap-2 flex-wrap">
             <Shield className="w-4 h-4 text-brand-primary shrink-0" />
-            Guard gear
+            Guard gear & equipment
           </p>
         }
         subtitle={
@@ -224,6 +233,7 @@ export function GuardGearCredentialSection({
                 showOnProfile={eligible && listed}
                 onToggle={() => toggleWeapon(weaponId)}
                 hideCredentialChecklist
+                inventoryMode
               />
             );
           })}

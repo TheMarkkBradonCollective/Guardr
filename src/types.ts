@@ -471,6 +471,62 @@ export type GuardWeaponGearId = 'flashlight' | 'oc-spray' | 'baton' | 'handcuffs
 /** Non-weapon equipment badges shown on guard profiles. */
 export type GuardEquipmentGearId = 'body-cam' | 'walkie-talkie';
 
+/** Equipment types guards can list in their inventory. */
+export type GuardInventoryEquipmentTypeId =
+  | 'body-camera'
+  | 'flashlight'
+  | 'handcuffs'
+  | 'duty-belt'
+  | 'radio'
+  | 'radio-earpiece'
+  | 'medical-ifak'
+  | 'tourniquet'
+  | 'protective-vest'
+  | 'traffic-vest'
+  | 'gloves'
+  | 'oc-spray'
+  | 'baton'
+  | 'ecd'
+  | 'firearm'
+  | 'other-certified';
+
+export type GuardInventoryEquipmentCondition = 'new' | 'like-new' | 'good' | 'fair' | 'worn';
+
+export type GuardInventoryUniformTypeId =
+  | 'corporate-security'
+  | 'tactical'
+  | 'polo'
+  | 'executive-protection'
+  | 'high-visibility'
+  | 'event-staff'
+  | 'business-casual'
+  | 'custom';
+
+export interface GuardInventoryEquipmentItem {
+  id: string;
+  typeId: GuardInventoryEquipmentTypeId;
+  brand?: string;
+  model?: string;
+  condition?: GuardInventoryEquipmentCondition;
+  quantity: number;
+  notes?: string;
+  primaryImageUrl?: string;
+  additionalImageUrls?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GuardInventoryUniform {
+  id: string;
+  typeId: GuardInventoryUniformTypeId;
+  /** Display name when typeId is custom or to override the preset label. */
+  label?: string;
+  description: string;
+  previewImageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type LocationRiskLevel = 'low' | 'medium' | 'high';
 
 export type ClientLocationStatus = 'pending' | 'active' | 'rejected';
@@ -648,6 +704,10 @@ export interface SecurityGuard {
   listedWeaponGear?: GuardWeaponGearId[];
   /** Body cam, walkie-talkie, and other equipment badges. */
   listedEquipmentGear?: GuardEquipmentGearId[];
+  /** Detailed duty equipment listings with photos and specs. */
+  inventoryEquipment?: GuardInventoryEquipmentItem[];
+  /** Uniform profiles clients can preview when booking. */
+  inventoryUniforms?: GuardInventoryUniform[];
   /** Job types the guard wants to be notified about (DoorDash-style preferences). */
   jobTypePreferences?: JobType[];
   /** ISO timestamps when the guard completed onboarding for each job type. */

@@ -190,6 +190,7 @@ import {
   guardIdVerificationCanEdit,
   GOV_ID_SUBMITTED_LOCKED_MESSAGE,
 } from './lib/guardIdentityVerification';
+import { parseInventoryEquipmentJson, parseInventoryUniformsJson } from './lib/guardInventory';
 import { guardApplicationCredentialVerificationBlocker } from './lib/guardApplicationIntake';
 import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
@@ -2343,6 +2344,8 @@ export default function App() {
         listedEquipmentGear: parseJsonStringArray(g.listed_equipment_gear).filter(
           (value): value is GuardEquipmentGearId => value === 'body-cam' || value === 'walkie-talkie'
         ),
+        inventoryEquipment: parseInventoryEquipmentJson(g.inventory_equipment),
+        inventoryUniforms: parseInventoryUniformsJson(g.inventory_uniforms),
         jobTypePreferences: parseJsonStringArray(g.job_type_preferences).filter((value): value is JobType =>
           isJobType(value)
         ),
@@ -5440,6 +5443,9 @@ export default function App() {
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
               listedWeaponGear: payload.listedWeaponGear ?? g.listedWeaponGear,
+              listedEquipmentGear: payload.listedEquipmentGear ?? g.listedEquipmentGear,
+              inventoryEquipment: payload.inventoryEquipment ?? g.inventoryEquipment,
+              inventoryUniforms: payload.inventoryUniforms ?? g.inventoryUniforms,
               isArmed: payload.listedWeaponGear?.includes('firearm') ?? g.isArmed,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
               badgeNumber: payload.badgeNumber ?? g.badgeNumber,
@@ -5482,6 +5488,8 @@ export default function App() {
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
           listed_weapon_gear: payload.listedWeaponGear ?? [],
           listed_equipment_gear: payload.listedEquipmentGear ?? [],
+          inventory_equipment: payload.inventoryEquipment ?? [],
+          inventory_uniforms: payload.inventoryUniforms ?? [],
           job_type_preferences: payload.jobTypePreferences ?? [],
           is_armed: payload.listedWeaponGear?.includes('firearm') ?? previous.isArmed,
         });

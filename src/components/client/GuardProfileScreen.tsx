@@ -18,6 +18,7 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
+import { GuardInventoryPanel } from '../profile/GuardInventoryPanel';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {
@@ -247,6 +248,7 @@ export function GuardProfileScreen({
               tabs={[
                 { id: 'profile', label: 'Overview' },
                 { id: 'certs', label: 'Credentials' },
+                { id: 'inventory', label: 'Inventory' },
               ]}
             />
           </div>
@@ -261,6 +263,15 @@ export function GuardProfileScreen({
                 excludeRejected
                 verifiedOnly
                 showFullCatalog
+              />
+            </section>
+          ) : profileTab === 'inventory' ? (
+            <section className="space-y-6">
+              <GuardInventoryPanel
+                guard={guard}
+                editing={false}
+                equipment={guard.inventoryEquipment ?? []}
+                uniforms={guard.inventoryUniforms ?? []}
               />
             </section>
           ) : (

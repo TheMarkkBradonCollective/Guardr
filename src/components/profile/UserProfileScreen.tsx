@@ -18,6 +18,8 @@ import { ProfileHero } from './ProfileHero';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
+import { GuardInventoryPanel } from './GuardInventoryPanel';
+import { syncLegacyGearFromInventory } from '../../lib/guardInventory';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
@@ -123,6 +125,8 @@ export function UserProfileScreen({
     hourlyRateRequirement: guard?.hourlyRateRequirement,
     listedWeaponGear: guard?.listedWeaponGear ?? [],
     listedEquipmentGear: guard?.listedEquipmentGear ?? [],
+    inventoryEquipment: guard?.inventoryEquipment ?? [],
+    inventoryUniforms: guard?.inventoryUniforms ?? [],
   });
 
   useEffect(() => {
@@ -297,6 +301,7 @@ export function UserProfileScreen({
             tabs={[
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
+              { id: 'inventory', label: 'Inventory' },
             ]}
           />
         </div>
@@ -306,16 +311,6 @@ export function UserProfileScreen({
           <GuardCredentialsPanel
             guard={guard}
             editing={credentialsEditing}
-            weaponGearEditing={credentialsEditing}
-            equipmentGearEditing={editing}
-            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-            onWeaponGearChange={(listedWeaponGear) =>
-              setResume((r) => ({ ...r, listedWeaponGear }))
-            }
-            onEquipmentGearChange={(listedEquipmentGear) =>
-              setResume((r) => ({ ...r, listedEquipmentGear }))
-            }
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
@@ -324,6 +319,44 @@ export function UserProfileScreen({
             onSaveInsurance={onSaveInsurance}
             onSaveVehicleInsurance={onSaveVehicleInsurance}
             certOverlayNav={!editing ? { onEditFullPage: () => setEditing(true) } : undefined}
+          />
+        </section>
+      ) : profileTab === 'inventory' && canBuildResume && guard ? (
+        <section className="border-b border-brand-border space-y-6">
+          <GuardInventoryPanel
+            guard={guard}
+            editing={credentialsEditing || editing}
+            equipment={resume.inventoryEquipment ?? guard.inventoryEquipment ?? []}
+            uniforms={resume.inventoryUniforms ?? guard.inventoryUniforms ?? []}
+            onEquipmentChange={async (inventoryEquipment) => {
+              const inventoryUniforms = resume.inventoryUniforms ?? guard.inventoryUniforms ?? [];
+              const legacy = syncLegacyGearFromInventory(guard, inventoryEquipment);
+              setResume((r) => ({
+                ...r,
+                inventoryEquipment,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              }));
+              await onSave({
+                ...buildPayload(),
+                inventoryEquipment,
+                inventoryUniforms,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              });
+            }}
+            onUniformsChange={async (inventoryUniforms) => {
+              const inventoryEquipment = resume.inventoryEquipment ?? guard.inventoryEquipment ?? [];
+              const legacy = syncLegacyGearFromInventory(guard, inventoryEquipment);
+              setResume((r) => ({ ...r, inventoryUniforms }));
+              await onSave({
+                ...buildPayload(),
+                inventoryEquipment,
+                inventoryUniforms,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              });
+            }}
           />
         </section>
       ) : (
