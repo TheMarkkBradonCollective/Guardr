@@ -53,7 +53,7 @@ export function CredentialCatalogSlotList({
   const renderRow = renderCertRow ?? defaultRenderCertRow;
 
   return (
-    <div className="app-list-subrows">
+    <div className="credential-catalog-slot-list app-list-subrows">
       {slots.map((slot) => (
         <div key={slot.catalogId} className="app-list-subrow space-y-2">
           <CredentialRowHeader

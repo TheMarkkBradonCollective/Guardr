@@ -82,7 +82,7 @@ export function CredentialRowHeader({
         {rawTitle ? (
           title
         ) : (
-          <div className="text-sm font-semibold leading-snug break-words text-brand-text">
+          <div className="text-sm font-semibold leading-snug break-words text-brand-text-muted">
             {title}
           </div>
         )}

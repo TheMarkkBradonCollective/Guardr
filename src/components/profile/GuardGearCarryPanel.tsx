@@ -368,7 +368,7 @@ function GearCredentialRequirements({
         const verified = guardHasGuardrVerifiedCredential(guard, catalogId);
         const label = entry?.shortLabel ?? entry?.name ?? catalogId;
         return (
-          <li key={catalogId} className="flex items-center gap-2 text-xs text-brand-text">
+          <li key={catalogId} className="flex items-center gap-2 text-xs text-brand-text-muted">
             {verified ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden />
             ) : (

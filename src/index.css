@@ -4062,6 +4062,24 @@ button.app-cert-item-interactive:hover {
   justify-content: flex-end;
 }
 
+.credential-catalog-slot-list .app-list-subrow {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.credential-catalog-slot-list .app-list-subrow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.credential-catalog-slot-list .app-list-subrow:first-child {
+  padding-top: 0;
+}
+
+.app-form-section > .border-t.border-brand-border {
+  margin-top: 0.25rem;
+}
+
 .credential-section-status {
   display: block;
   width: 100%;
@@ -20946,6 +20964,21 @@ button.staff-action-btn--ok:hover:not(:disabled) {
 .uber-app-shell .staff-credentials-panel .app-form-section:last-child {
   border-bottom: none !important;
   padding-bottom: 0 !important;
+}
+
+.uber-app-shell .staff-credentials-panel .credential-catalog-slot-list .app-list-subrow {
+  border-bottom: 1px solid var(--uber-border, var(--brand-border)) !important;
+  padding: 0.75rem 0 !important;
+}
+
+.uber-app-shell .staff-credentials-panel .credential-catalog-slot-list .app-list-subrow:last-child {
+  border-bottom: none !important;
+}
+
+.uber-app-shell .staff-credentials-panel .app-form-section > .border-t.border-brand-border {
+  border-top: 1px solid var(--uber-border, var(--brand-border)) !important;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem !important;
 }
 
 .uber-app-shell .app-cert-item,
