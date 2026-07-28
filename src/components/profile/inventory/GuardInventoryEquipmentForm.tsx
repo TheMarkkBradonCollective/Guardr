@@ -4,12 +4,12 @@ import type {
   GuardInventoryEquipmentItem,
   GuardInventoryEquipmentTypeId,
   SecurityGuard,
-} from '../../types';
+} from '../../../types';
 import {
   GUARD_INVENTORY_CONDITION_LABELS,
   GUARD_INVENTORY_EQUIPMENT_TYPES,
-} from '../../lib/guardInventoryCatalog';
-import { guardCanListInventoryEquipmentType } from '../../lib/guardInventory';
+} from '../../../lib/guardInventoryCatalog';
+import { guardCanListInventoryEquipmentType } from '../../../lib/guardInventory';
 import { DocumentPhotoUploadField } from '../../credentials/DocumentPhotoUploadField';
 import { AppFormSheet } from '../../ui/app/AppFormSheet';
 import { AppButton } from '../../ui/AppButton';

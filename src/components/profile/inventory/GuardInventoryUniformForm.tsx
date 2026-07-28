@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { GuardInventoryUniform, GuardInventoryUniformTypeId } from '../../types';
-import { GUARD_INVENTORY_UNIFORM_TYPES } from '../../lib/guardInventoryCatalog';
+import type { GuardInventoryUniform, GuardInventoryUniformTypeId } from '../../../types';
+import { GUARD_INVENTORY_UNIFORM_TYPES } from '../../../lib/guardInventoryCatalog';
 import { DocumentPhotoUploadField } from '../../credentials/DocumentPhotoUploadField';
 import { AppFormSheet } from '../../ui/app/AppFormSheet';
 import { AppButton } from '../../ui/AppButton';
