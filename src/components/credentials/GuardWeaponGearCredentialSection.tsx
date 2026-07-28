@@ -15,8 +15,8 @@ import {
 } from '../../lib/guardWeaponGear';
 import { CredentialCatalogSlotList } from './CredentialCatalogSlotList';
 import { CredentialRowHeader, CredentialSectionStatusBadge } from './CredentialStatusLabels';
+import { computeGuardArmedStatus } from '../../lib/guardArmedStatus';
 import { GuardGearCarryEquipmentFields, GuardWeaponGearCarryRow } from '../profile/GuardGearCarryPanel';
-import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { Shield } from 'lucide-react';
 
 type CredentialAddSection = CertCategory | 'bsis-other-training';
@@ -80,6 +80,8 @@ export function GuardWeaponGearCredentialSection({
   const listed = selectedWeapon.includes(weaponId);
   const showOnProfile = eligible && listed;
   const carryStatus = getWeaponGearCarryStatus({ eligible, listed, showOnProfile });
+  const firearmStatusLabel =
+    computeGuardArmedStatus(guard) === 'armed' ? 'Armed' : 'Unarmed';
 
   const toggleWeapon = () => {
     if (!weaponGearEditing || !onWeaponGearChange) return;
@@ -106,7 +108,6 @@ export function GuardWeaponGearCredentialSection({
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text flex items-center gap-2 flex-wrap">
             <Shield className="w-4 h-4 text-brand-primary shrink-0" />
             {rule.label}
-            {weaponId === 'firearm' && <GuardArmedStatusPill guard={guard} className="!text-xs" />}
           </p>
         }
         subtitle={
@@ -115,7 +116,11 @@ export function GuardWeaponGearCredentialSection({
           </p>
         }
         action={
-          <CredentialSectionStatusBadge label={carryStatus.label} tone={carryStatus.tone} />
+          weaponId === 'firearm' ? (
+            <span className="text-xs font-semibold text-brand-text">{firearmStatusLabel}</span>
+          ) : (
+            <CredentialSectionStatusBadge label={carryStatus.label} tone={carryStatus.tone} />
+          )
         }
       />
 
