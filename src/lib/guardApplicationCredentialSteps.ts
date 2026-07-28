@@ -119,7 +119,7 @@ export function getGuardApplicationCredentialSteps(guard: SecurityGuard): GuardA
     },
     {
       key: 'ce',
-      label: 'Continuing Education',
+      label: 'Continued Education',
       status: ceStatus,
       credentialItemId:
         ceStatus === 'pending' ? null : firstCertItemId(guard, isContinuingEducationCatalogId),

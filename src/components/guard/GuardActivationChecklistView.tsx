@@ -136,10 +136,10 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsContinuingEducation(guard)}
-          label="5. Continuing Education (32-hour BSIS CE package) — required to work"
+          label="5. Continued Education (32-hour BSIS CE package) — required to work"
           detail={
             guardMeetsContinuingEducation(guard)
-              ? `All ${progress.total32HourCourses} Continuing Education courses on file`
+              ? `All ${progress.total32HourCourses} Continued Education courses on file`
               : `Upload the 32-hour CE package (${progress.uploaded32HourCount} of ${progress.total32HourCourses} on file)`
           }
         />

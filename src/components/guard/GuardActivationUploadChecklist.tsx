@@ -209,13 +209,13 @@ export function GuardActivationUploadChecklist({
           />
           <StepRow
             done={ceDone}
-            label="5. Continuing Education (32-hour BSIS CE package) — required to work"
+            label="5. Continued Education (32-hour BSIS CE package) — required to work"
             detail={guardActivationCeStepDetail(guard)}
             actionLabel={
               ceCanUpload
                 ? ceRejected
-                  ? 'Resubmit Continuing Education'
-                  : 'Add Continuing Education'
+                  ? 'Resubmit Continued Education'
+                  : 'Add Continued Education'
                 : undefined
             }
             onAction={ceCanUpload ? () => setOpenUpload('ce') : undefined}

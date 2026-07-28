@@ -39,7 +39,7 @@ export const GUARD_ACTIVATION_REQUIREMENTS: GuardActivationRequirement[] = [
   },
   {
     key: 'ce',
-    label: 'Continuing Education (32-hour BSIS CE package)',
+    label: 'Continued Education (32-hour BSIS CE package)',
     detail:
       'All 9 course certificates from your school’s 32-hour first-year package — after PTA/UOF. Turn certificates in to your employer; BSIS does not collect them.',
   },
@@ -51,7 +51,7 @@ export interface CePackageCourse {
   hoursLabel: string;
 }
 
-/** Nine courses in the Guardr Continuing Education (32-hour) activation package. */
+/** Nine courses in the Guardr Continued Education (32-hour) activation package. */
 export function getContinuingEducationPackageCourses(): CePackageCourse[] {
   return THIRTY_TWO_HOUR_COURSE_IDS.map((catalogId) => {
     const entry = getCertCatalogEntry(catalogId);
@@ -66,7 +66,7 @@ export function getContinuingEducationPackageCourses(): CePackageCourse[] {
 }
 
 export const BSIS_TERMINOLOGY_NOTE =
-  'On the official BSIS site, “Mandatory Courses” and “Elective Courses” are the skills block schools package into a 32-hour first-year course. BSIS labels the annual 8-hour renewal as “Continuing Education.” On Guardr, Continuing Education means that full 32-hour first-year package — the annual 8-hour refresher is separate and not required to activate.';
+  'On the official BSIS site, “Mandatory Courses” and “Elective Courses” are the skills block schools package into a 32-hour first-year course. BSIS labels the annual 8-hour renewal as “Continuing Education.” On Guardr, Continued Education means that full 32-hour first-year package — the annual 8-hour refresher is separate and not required to activate.';
 
 export const BSIS_EMPLOYER_CERT_NOTE =
   'Course completion certificates are kept by your employer on file — not submitted to BSIS. Upload each certificate here so Guardr staff can verify marketplace eligibility.';

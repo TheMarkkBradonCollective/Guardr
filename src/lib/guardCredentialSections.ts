@@ -145,7 +145,7 @@ const SECTION_META: Record<
     category: 'bsis-training',
   },
   'bsis-32-hour': {
-    title: 'Continuing Education',
+    title: 'Continued Education',
     subtitle:
       '32-hour BSIS CE package for first-year guards — all 9 course certificates required after PTA/UOF.',
     category: 'bsis-training',

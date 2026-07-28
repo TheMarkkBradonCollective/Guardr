@@ -48,10 +48,10 @@ const ACTIVATION_SECTION_CONFIG: Record<
     title: (
       <p className="uber-label flex items-center gap-2 flex-wrap">
         <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-        Continuing Education
+        Continued Education
       </p>
     ),
-    emptyMessage: 'No Continuing Education courses on file (32-hour BSIS CE package).',
+    emptyMessage: 'No Continued Education courses on file (32-hour BSIS CE package).',
     sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
     uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },
@@ -70,10 +70,10 @@ const ACTIVATION_SECTION_CONFIG: Record<
     title: (
       <p className="uber-label flex items-center gap-2 flex-wrap">
         <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-        Continuing Education
+        Continued Education
       </p>
     ),
-    emptyMessage: 'No Continuing Education courses on file.',
+    emptyMessage: 'No Continued Education courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },

@@ -4545,7 +4545,7 @@ export default function App() {
       return {
         ok: false,
         error:
-          'Combined PTA/UOF and legacy rollup certificates are not accepted. Upload Power to Arrest and Use of Force as separate certificates, and Continuing Education as the four individual courses.',
+          'Combined PTA/UOF and legacy rollup certificates are not accepted. Upload Power to Arrest and Use of Force as separate certificates, and Continued Education as the four individual courses.',
       };
     }
 

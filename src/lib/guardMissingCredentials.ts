@@ -21,7 +21,7 @@ export interface ActivateGuardAccountOptions {
 
 /** Labels stored on guard.credentialGraceMissing when staff grants activation grace. */
 export const GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL = 'Mandatory training (PTA/UOF)';
-export const GRACE_CREDENTIAL_CE_LABEL = 'Continuing Education';
+export const GRACE_CREDENTIAL_CE_LABEL = 'Continued Education';
 /** @deprecated Use GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL */
 export const GRACE_CREDENTIAL_PTA_UOF_LABEL = GRACE_CREDENTIAL_MANDATORY_TRAINING_LABEL;
 /** @deprecated Use GRACE_CREDENTIAL_CE_LABEL */
