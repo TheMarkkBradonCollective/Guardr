@@ -9,6 +9,7 @@ import {
   getEligibleWeaponGear,
   getMissingWeaponGearCatalogIds,
   getWeaponGearRequiredCatalogIds,
+  getWeaponGearCarryStatus,
   guardMeetsWeaponGearRequirements,
   groupWeaponGearRulesByCategory,
 } from '../../lib/guardWeaponGear';
@@ -245,6 +246,7 @@ function WeaponGearRow({
   showOnProfile,
   onToggle,
   hideCredentialChecklist = false,
+  headerShowsStatus = false,
 }: {
   rule: typeof GUARD_WEAPON_GEAR_RULES[number];
   guard: SecurityGuard;
@@ -255,23 +257,46 @@ function WeaponGearRow({
   onToggle: () => void;
   /** When credential slots are shown above, omit guard card / duplicate checklist. */
   hideCredentialChecklist?: boolean;
+  /** Section header already shows title and status — only render edit checkbox when editing. */
+  headerShowsStatus?: boolean;
 }) {
   const displayCatalogIds = catalogIdsForWeaponGearSection(rule.id);
   const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id).filter(
     (id) => id !== 'bsis-guard-card'
   );
 
-  const statusLabel = showOnProfile
-    ? 'On profile'
-    : eligible
-      ? listed
-        ? 'Listed — pending verification'
-        : 'Eligible — not listed'
-      : 'Credentials needed';
+  const { label: statusLabel, tone: statusTone } = getWeaponGearCarryStatus({
+    eligible,
+    listed,
+    showOnProfile,
+  });
 
-  const statusTone = showOnProfile ? 'success' : eligible ? 'primary' : 'warning';
+  if (headerShowsStatus && !editing) return null;
 
   if (editing) {
+    if (headerShowsStatus) {
+      return (
+        <label
+          className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
+            eligible
+              ? 'border-brand-border bg-brand-surface cursor-pointer hover:border-brand-primary/40'
+              : 'border-brand-border/60 bg-brand-bg-sec opacity-80 cursor-not-allowed'
+          }`}
+        >
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={listed}
+            disabled={!eligible}
+            onChange={onToggle}
+            aria-label={`List ${rule.label} on profile`}
+          />
+          <span className="text-sm text-brand-text-muted leading-relaxed">
+            List {rule.shortLabel} on your profile after credentials are verified
+          </span>
+        </label>
+      );
+    }
     return (
       <label
         className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${

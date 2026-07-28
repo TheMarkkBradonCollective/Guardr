@@ -225,3 +225,18 @@ export function weaponGearSectionSubtitle(weaponId: GuardWeaponGearId): string {
 export function dutyGearSectionSubtitle(): string {
   return 'Standard duty gear — verified guard card required. No separate credential upload.';
 }
+
+export function getWeaponGearCarryStatus(input: {
+  eligible: boolean;
+  listed: boolean;
+  showOnProfile: boolean;
+}): { label: string; tone: 'success' | 'primary' | 'warning' } {
+  const { eligible, listed, showOnProfile } = input;
+  if (showOnProfile) return { label: 'On profile', tone: 'success' };
+  if (eligible) {
+    return listed
+      ? { label: 'Listed — pending verification', tone: 'primary' }
+      : { label: 'Eligible — not listed', tone: 'primary' };
+  }
+  return { label: 'Credentials needed', tone: 'warning' };
+}

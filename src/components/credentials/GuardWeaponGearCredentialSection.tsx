@@ -9,11 +9,12 @@ import {
   catalogIdsForWeaponGearSection,
   dutyGearSectionSubtitle,
   getEligibleWeaponGear,
+  getWeaponGearCarryStatus,
   guardMeetsWeaponGearRequirements,
   weaponGearSectionSubtitle,
 } from '../../lib/guardWeaponGear';
 import { CredentialCatalogSlotList } from './CredentialCatalogSlotList';
-import { CredentialRowHeader } from './CredentialStatusLabels';
+import { CredentialRowHeader, CredentialSectionStatusBadge } from './CredentialStatusLabels';
 import { GuardGearCarryEquipmentFields, GuardWeaponGearCarryRow } from '../profile/GuardGearCarryPanel';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { Shield } from 'lucide-react';
@@ -78,6 +79,7 @@ export function GuardWeaponGearCredentialSection({
   const eligible = getEligibleWeaponGear(guard).some((entry) => entry.id === weaponId);
   const listed = selectedWeapon.includes(weaponId);
   const showOnProfile = eligible && listed;
+  const carryStatus = getWeaponGearCarryStatus({ eligible, listed, showOnProfile });
 
   const toggleWeapon = () => {
     if (!weaponGearEditing || !onWeaponGearChange) return;
@@ -112,6 +114,9 @@ export function GuardWeaponGearCredentialSection({
             {weaponGearSectionSubtitle(weaponId)}
           </p>
         }
+        action={
+          <CredentialSectionStatusBadge label={carryStatus.label} tone={carryStatus.tone} />
+        }
       />
 
       <div className="border-t border-brand-border pt-3 space-y-3">
@@ -138,6 +143,7 @@ export function GuardWeaponGearCredentialSection({
           showOnProfile={showOnProfile}
           onToggle={toggleWeapon}
           hideCredentialChecklist
+          headerShowsStatus
         />
       </div>
     </section>
