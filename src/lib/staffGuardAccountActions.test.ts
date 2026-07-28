@@ -5,7 +5,6 @@ import {
   guardCanDeactivateAccount,
   guardCanDenyApplication,
   guardCanRestoreAccountAccess,
-  guardCanRevokeApplication,
 } from './staffGuardAccountActions.ts';
 
 describe('staffGuardAccountActions', () => {
@@ -30,10 +29,8 @@ describe('staffGuardAccountActions', () => {
     assert.equal(guardCanRestoreAccountAccess('active'), false);
   });
 
-  it('scopes application deny/revoke to the right statuses', () => {
+  it('scopes application deny to pending only', () => {
     assert.equal(guardCanDenyApplication('pending'), true);
     assert.equal(guardCanDenyApplication('approved'), false);
-    assert.equal(guardCanRevokeApplication('approved'), true);
-    assert.equal(guardCanRevokeApplication('active'), false);
   });
 });
