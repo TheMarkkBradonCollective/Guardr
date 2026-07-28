@@ -1,9 +1,9 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Monday, July 27, 2026  
+**Last updated:** Tuesday, July 28, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.99**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.100**
 
 ---
 
@@ -11,7 +11,24 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 ---
 
-## Monday, July 27, 2026 — /updateit → v1.0.99
+## Tuesday, July 28, 2026 — /update → v1.0.100
+
+**PR cleanup**
+- Merged **#836** (active guards no longer bounced to activation screen)
+- **#838–#844** already on `main` (credentials catalog, gear, per-weapon sections)
+
+**Shipped**
+- **Credentials tab** on guard profiles (renamed from Certs) — full credential catalog for self-service upload and staff verify
+- **Gear & carry status** moved to Credentials tab; duty gear (flashlight, handcuffs, equipment) in **Guard gear** section
+- **Per-weapon credential sections** (OC spray, baton, TASER, firearm) — weapon permits/training only, no duplicate guard card
+- BSIS activation alignment: separate PTA/UOF uploads, full 32-hour CE package (9 courses), site-wide BSIS requirements reference
+- Active guards gated on **account status** (`user_status: active`) — no more redirect to **Application under review** when credentials are still hydrating or on grace period
+- **v1.0.100** (build **200**) web + PWA; APK CI rebuild on push to `main`
+- PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
+
+**Supabase:** no new SQL.
+
+---
 
 **PR cleanup**
 - Merged **#834** (Rejected credentials tab, thumbnail fix, Edit/resubmit flow)
