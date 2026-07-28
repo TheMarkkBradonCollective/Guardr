@@ -19,8 +19,3 @@ export function guardCanRestoreAccountAccess(status: GuardUserStatus): boolean {
 export function guardCanDenyApplication(status: GuardUserStatus): boolean {
   return status === 'pending';
 }
-
-/** Approved-but-not-active applications can be revoked (blocks the account). */
-export function guardCanRevokeApplication(status: GuardUserStatus): boolean {
-  return status === 'approved';
-}

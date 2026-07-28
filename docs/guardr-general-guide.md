@@ -1254,7 +1254,7 @@ The Guards panel lists all field guard accounts. Staff can:
 - Open a guard profile to view credentials, eligibility status, jobs, and contact info.
 - Add a new guard account (**Add guard** button).
 - Review credentials and verify documents uploaded by the guard (staff cannot edit credential data — guards upload and resubmit).
-- **Credentials** tab — full credential catalog plus **Account access** (**Deactivate**, **Block**, **Restore access**). Government ID review is approve/resubmit only; deny or revoke applications from **Applications**.
+- **Credentials** tab — full credential catalog plus **Account access** (**Deactivate**, **Block**, **Restore access**). Government ID review is approve/resubmit only; deny pending applications from **Applications**.
 - **Edit profile** — Save/Cancel stay pinned at the top while editing; account access and admin actions are hidden until you save or cancel.
 - Verify credentials; accounts auto-activate when all five required credentials are verified.
 - Deactivate, block, or restore guard access (Administrator+).

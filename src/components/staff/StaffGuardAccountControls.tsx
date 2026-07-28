@@ -7,7 +7,6 @@ import {
   guardCanDeactivateAccount,
   guardCanDenyApplication,
   guardCanRestoreAccountAccess,
-  guardCanRevokeApplication,
 } from '../../lib/staffGuardAccountActions';
 import {
   confirmBlockAccount,
@@ -16,7 +15,6 @@ import {
 } from '../../lib/importantActionConfirm';
 import {
   promptDenyGuardApplicationNote,
-  promptRevokeGuardApplicationNote,
 } from '../../lib/staffDocumentReview';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
@@ -40,7 +38,7 @@ function statusBadgeTone(status: GuardUserStatus): 'success' | 'warning' | 'dang
   return 'default';
 }
 
-/** Suspend, block, restore, deny, and revoke guard account access. */
+/** Suspend, block, restore, and deny pending guard applications. */
 export function StaffGuardAccountControls({
   guard,
   canManage = false,
@@ -91,27 +89,12 @@ export function StaffGuardAccountControls({
     }
   };
 
-  const runRevokeApplication = async () => {
-    if (!onRejectGuardApplication) return;
-    const reason = await promptRevokeGuardApplicationNote();
-    if (reason === null) return;
-    setActionPending(true);
-    try {
-      await onRejectGuardApplication(guard.id, reason);
-    } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not revoke application.', { tone: 'error' });
-    } finally {
-      setActionPending(false);
-    }
-  };
-
   const showAccessActions =
     canModerateAccess &&
     (guardCanDeactivateAccount(status) ||
       guardCanBlockAccount(status) ||
       guardCanRestoreAccountAccess(status) ||
-      guardCanDenyApplication(status) ||
-      guardCanRevokeApplication(status));
+      guardCanDenyApplication(status));
 
   return (
     <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
@@ -139,17 +122,6 @@ export function StaffGuardAccountControls({
               onClick={() => void runDenyApplication()}
             >
               Deny application
-            </AppButton>
-          )}
-          {showApplicationActions && guardCanRevokeApplication(status) && onRejectGuardApplication && (
-            <AppButton
-              variant="danger"
-              size="sm"
-              className="staff-action-btn--danger"
-              disabled={actionPending}
-              onClick={() => void runRevokeApplication()}
-            >
-              Revoke application
             </AppButton>
           )}
           {guardCanDeactivateAccount(status) && onUpdateUserStatus && (

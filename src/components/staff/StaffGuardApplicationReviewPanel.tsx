@@ -11,7 +11,6 @@ import { confirmApproveGuardProfile } from '../../lib/importantActionConfirm';
 import {
   promptDenyGuardApplicationNote,
   promptRequestGuardApplicationRevisionNote,
-  promptRevokeGuardApplicationNote,
 } from '../../lib/staffDocumentReview';
 import {
   getGuardActivationChecklist,
@@ -84,20 +83,6 @@ export function StaffGuardApplicationReviewPanel({
       showAppToast('Revision requested — application returned to Pending.');
     } catch (err) {
       showAppToast(err instanceof Error ? err.message : 'Could not request revision.', { tone: 'error' });
-    } finally {
-      setActionPending(false);
-    }
-  };
-
-  const handleRevokeApplication = async () => {
-    if (!onRejectGuardApplication) return;
-    const reason = await promptRevokeGuardApplicationNote();
-    if (reason === null) return;
-    setActionPending(true);
-    try {
-      await onRejectGuardApplication(guard.id, reason);
-    } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not revoke application.', { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -183,16 +168,6 @@ export function StaffGuardApplicationReviewPanel({
                 className="app-button-outline app-btn-sm disabled:opacity-50"
               >
                 Request revision
-              </button>
-            )}
-            {isApprovedOrActive && guardAccountStatus === 'approved' && onRejectGuardApplication && (
-              <button
-                type="button"
-                onClick={() => void handleRevokeApplication()}
-                disabled={actionPending}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
-              >
-                Revoke application
               </button>
             )}
           </div>
