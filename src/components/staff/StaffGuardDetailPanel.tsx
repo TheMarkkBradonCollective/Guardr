@@ -370,23 +370,12 @@ export function StaffGuardDetailPanel({
   const renderAccountControlsSection = (options?: {
     editLabel?: string;
     showAdminActions?: boolean;
-    stickyWhenEditing?: boolean;
   }) => {
     if (!canManage || guard.isStaff) return null;
-    const { editLabel, showAdminActions = false, stickyWhenEditing = false } = options ?? {};
-    const sticky = stickyWhenEditing && editing;
-
-    if (editing) {
-      if (!editLabel) return null;
-      return (
-        <div className={sticky ? 'staff-guard-detail-top-bar--sticky' : undefined}>
-          <div className="staff-detail-actions">{renderEditActions(editLabel)}</div>
-        </div>
-      );
-    }
+    const { editLabel, showAdminActions = false } = options ?? {};
 
     return (
-      <div className={sticky ? 'staff-guard-detail-top-bar--sticky' : undefined}>
+      <div>
         <StaffGuardAccountControls
           guard={guard}
           canManage={canManage}
@@ -723,6 +712,11 @@ export function StaffGuardDetailPanel({
         </section>
       ) : (
         <>
+      {editing && canEdit && (
+        <div className="staff-guard-detail-top-bar--sticky">
+          <div className="staff-detail-actions">{renderEditActions('Edit profile')}</div>
+        </div>
+      )}
       <div className="staff-detail-header">
         <div className="relative shrink-0">
           <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
@@ -796,7 +790,7 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          {renderAccountControlsSection({ showAdminActions: true, editLabel: 'Edit profile', stickyWhenEditing: true })}
+          {!editing && renderAccountControlsSection({ showAdminActions: true, editLabel: 'Edit profile' })}
 
           {!editing && (
             <section className="staff-detail-section space-y-2">
