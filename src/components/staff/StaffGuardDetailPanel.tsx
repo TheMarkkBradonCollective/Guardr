@@ -32,6 +32,7 @@ import {
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
+import { GuardInventoryPanel } from '../profile/GuardInventoryPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
@@ -644,6 +645,7 @@ export function StaffGuardDetailPanel({
             tabs={[
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
+              { id: 'inventory', label: 'Inventory' },
               { id: 'performance', label: 'Guard status' },
             ]}
           />
@@ -665,10 +667,6 @@ export function StaffGuardDetailPanel({
           <GuardCredentialsPanel
             guard={guard}
             editing={false}
-            weaponGearEditing={false}
-            equipmentGearEditing={false}
-            weaponGearSelected={guard.listedWeaponGear ?? []}
-            equipmentGearSelected={guard.listedEquipmentGear ?? []}
             staffMode={canManage}
             onReviewInsurance={
               onReviewInsurance
@@ -708,6 +706,16 @@ export function StaffGuardDetailPanel({
               onReject={onRejectVehicle}
             />
           ) : null}
+        </section>
+      ) : staffGuardTab === 'inventory' && !guard.isStaff ? (
+        <section className="staff-detail-section space-y-3">
+          <GuardInventoryPanel
+            guard={guard}
+            editing={false}
+            weaponGearSelected={guard.listedWeaponGear ?? []}
+            equipmentGearSelected={guard.listedEquipmentGear ?? []}
+            showFullCatalog
+          />
         </section>
       ) : (
         <>

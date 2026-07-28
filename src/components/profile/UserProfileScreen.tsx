@@ -18,6 +18,7 @@ import { ProfileHero } from './ProfileHero';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
+import { GuardInventoryPanel } from './GuardInventoryPanel';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
@@ -297,6 +298,7 @@ export function UserProfileScreen({
             tabs={[
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
+              { id: 'inventory', label: 'Inventory' },
             ]}
           />
         </div>
@@ -306,16 +308,6 @@ export function UserProfileScreen({
           <GuardCredentialsPanel
             guard={guard}
             editing={credentialsEditing}
-            weaponGearEditing={credentialsEditing}
-            equipmentGearEditing={editing}
-            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-            onWeaponGearChange={(listedWeaponGear) =>
-              setResume((r) => ({ ...r, listedWeaponGear }))
-            }
-            onEquipmentGearChange={(listedEquipmentGear) =>
-              setResume((r) => ({ ...r, listedEquipmentGear }))
-            }
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
@@ -324,6 +316,25 @@ export function UserProfileScreen({
             onSaveInsurance={onSaveInsurance}
             onSaveVehicleInsurance={onSaveVehicleInsurance}
             certOverlayNav={!editing ? { onEditFullPage: () => setEditing(true) } : undefined}
+          />
+        </section>
+      ) : profileTab === 'inventory' && canBuildResume && guard ? (
+        <section className="border-b border-brand-border space-y-6">
+          <GuardInventoryPanel
+            guard={guard}
+            editing={credentialsEditing || editing}
+            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
+            onWeaponGearChange={async (listedWeaponGear) => {
+              const listedEquipmentGear = resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? [];
+              setResume((r) => ({ ...r, listedWeaponGear }));
+              await onSave({ ...buildPayload(), listedWeaponGear, listedEquipmentGear });
+            }}
+            onEquipmentGearChange={async (listedEquipmentGear) => {
+              const listedWeaponGear = resume.listedWeaponGear ?? guard.listedWeaponGear ?? [];
+              setResume((r) => ({ ...r, listedEquipmentGear }));
+              await onSave({ ...buildPayload(), listedWeaponGear, listedEquipmentGear });
+            }}
           />
         </section>
       ) : (

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Certification, GuardEquipmentGearId, GuardInsurancePolicy, GuardWeaponGearId, SecurityGuard } from '../../types';
+import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import {
   BSIS_REFRESHER_CATALOG_ID,
   CertCategory,
@@ -55,10 +55,7 @@ import {
   type CredentialViewSectionId,
 } from '../../lib/guardCredentialSections';
 import { GuardCredentialCatalogSectionBlock } from '../credentials/GuardCredentialCatalogSectionBlock';
-import {
-  GuardGearCredentialSection,
-  GuardWeaponGearCredentialSection,
-} from '../credentials/GuardWeaponGearCredentialSection';
+import { GuardWeaponGearCredentialSection } from '../credentials/GuardWeaponGearCredentialSection';
 import { WEAPON_GEAR_CREDENTIAL_SECTION_ORDER } from '../../lib/guardWeaponGear';
 
 type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-other-training';
@@ -90,13 +87,6 @@ interface GuardCredentialsPanelProps {
   ) => Promise<void>;
   onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   certOverlayNav?: CertOverlayNavigation;
-  weaponGearEditing?: boolean;
-  equipmentGearEditing?: boolean;
-  weaponGearSelected?: GuardWeaponGearId[];
-  equipmentGearSelected?: GuardEquipmentGearId[];
-  onWeaponGearChange?: (next: GuardWeaponGearId[]) => void;
-  onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
-  showFullGearCatalog?: boolean;
 }
 
 export function GuardCredentialsPanel({
@@ -114,13 +104,6 @@ export function GuardCredentialsPanel({
   onSaveVehicleInsurance,
   onReviewInsurance,
   certOverlayNav,
-  weaponGearEditing = false,
-  equipmentGearEditing = false,
-  weaponGearSelected,
-  equipmentGearSelected,
-  onWeaponGearChange,
-  onEquipmentGearChange,
-  showFullGearCatalog = true,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -520,6 +503,7 @@ export function GuardCredentialsPanel({
       {WEAPON_GEAR_CREDENTIAL_SECTION_ORDER.map((weaponId) => (
         <GuardWeaponGearCredentialSection
           key={weaponId}
+          variant="credentials"
           weaponId={weaponId}
           guard={guard}
           search={search}
@@ -527,25 +511,11 @@ export function GuardCredentialsPanel({
           canUpload={canUpload}
           editing={editing}
           showFullCatalog
-          weaponGearEditing={weaponGearEditing}
-          weaponGearSelected={weaponGearSelected}
-          onWeaponGearChange={onWeaponGearChange}
           onAdd={(catalogId, section) => openCredentialAddSheet(section, catalogId)}
           renderCertRow={renderCertRow}
           certCardProps={certCardProps}
         />
       ))}
-
-      <GuardGearCredentialSection
-        guard={guard}
-        weaponGearEditing={weaponGearEditing}
-        equipmentGearEditing={equipmentGearEditing}
-        weaponGearSelected={weaponGearSelected}
-        equipmentGearSelected={equipmentGearSelected}
-        onWeaponGearChange={onWeaponGearChange}
-        onEquipmentGearChange={onEquipmentGearChange}
-        showFullCatalog={showFullGearCatalog}
-      />
 
       {CATALOG_SECTIONS_AFTER_WEAPONS.map((sectionId) => (
         <GuardCredentialCatalogSectionBlock

@@ -215,15 +215,21 @@ export const WEAPON_GEAR_CREDENTIAL_SECTION_ORDER: GuardWeaponGearId[] = [
   'firearm',
 ];
 
-export function weaponGearSectionSubtitle(weaponId: GuardWeaponGearId): string {
+export function weaponGearSectionSubtitle(
+  weaponId: GuardWeaponGearId,
+  context: 'credentials' | 'inventory' = 'credentials'
+): string {
   const rule = RULE_BY_ID.get(weaponId);
   if (!rule) return '';
   const tier = GUARD_WEAPON_GEAR_CATEGORY_LABELS[rule.category];
-  return `${tier} — upload and verify the BSIS permits and training below, then list on your profile.`;
+  if (context === 'inventory') {
+    return `${tier} — add to your inventory after Guardr verifies the required credentials on the Credentials tab.`;
+  }
+  return `${tier} — upload and verify the BSIS permits and training below.`;
 }
 
 export function dutyGearSectionSubtitle(): string {
-  return 'Standard duty gear — verified guard card required. No separate credential upload.';
+  return 'Standard duty gear — verified guard card required. Add from inventory when eligible.';
 }
 
 export function getWeaponGearCarryStatus(input: {
