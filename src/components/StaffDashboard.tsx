@@ -713,6 +713,8 @@ export function StaffDashboard({
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onRejectGuardApplication={onRejectGuardIdentityVerification}
+            onUpdateGuardUserStatus={canSuspend ? onUpdateGuardUserStatus : undefined}
+            canSuspendGuardAccounts={canSuspend}
             onRequestGuardApplicationRevision={
               canApproveGuardAccounts || canManageGuardAccounts
                 ? onRequestGuardApplicationRevision

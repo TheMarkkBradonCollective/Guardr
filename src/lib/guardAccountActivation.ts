@@ -311,6 +311,13 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
   return getGuardActivationChecklist(guard, state).staffActivationBlockers;
 }
 
+/** Restore suspended/blocked guards to active or approved based on activation readiness. */
+export function resolveGuardRestoreUserStatus(guard: SecurityGuard, state = 'CA'): 'active' | 'approved' {
+  if (guard.isStaff) return 'active';
+  if (guardAccountActivationBlockers(guard, state).length === 0) return 'active';
+  return 'approved';
+}
+
 export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountApproved(g)) return false;

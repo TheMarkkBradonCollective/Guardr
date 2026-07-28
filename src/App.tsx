@@ -109,6 +109,7 @@ import {
   getPendingGuardAccountReviews,
   guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
+  resolveGuardRestoreUserStatus,
 } from './lib/guardAccountActivation';
 import {
   guardAutoActivated,
@@ -5579,11 +5580,11 @@ export default function App() {
   };
 
   // ── Staff controls ─────────────────────────────────────────
-  const handleUpdateGuardUserStatus = async (guardId: string, status: 'active' | 'suspended' | 'blocked') => {
+  const handleUpdateGuardUserStatus = async (guardId: string, requestedStatus: 'active' | 'suspended' | 'blocked') => {
     const target = guards.find((g) => g.id === guardId);
     if (!target) return;
     if (!currentUser) return;
-    if (status !== 'active' && !canSuspendUsers(currentUser)) {
+    if (requestedStatus !== 'active' && !canSuspendUsers(currentUser)) {
       appToast('You do not have permission to suspend or block accounts.', 'error');
       return;
     }
@@ -5597,12 +5598,16 @@ export default function App() {
         return;
       }
     }
-    if (!target.isStaff && status === 'active') {
-      if (isGuardAccountPending(target)) {
+    let nextStatus: SecurityGuard['userStatus'] = requestedStatus;
+    if (!target.isStaff && requestedStatus === 'active') {
+      const currentStatus = getGuardUserStatus(target);
+      const isRestore = currentStatus === 'suspended' || currentStatus === 'blocked';
+      if (isRestore) {
+        nextStatus = resolveGuardRestoreUserStatus(target);
+      } else if (isGuardAccountPending(target)) {
         appToast('Approve this guard profile before activating their account.', 'error');
         return;
-      }
-      if (isGuardAccountApproved(target)) {
+      } else if (isGuardAccountApproved(target)) {
         const blockers = guardAccountActivationBlockers(target);
         if (blockers.length > 0) {
           appToast(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`, 'error');
@@ -5615,18 +5620,20 @@ export default function App() {
         return;
       }
     }
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
+    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: nextStatus } : g));
     if (isDbConnected) {
       const table = target.isStaff ? 'staff' : 'guards';
-      await supabase.from(table).update({ user_status: status }).eq('id', guardId);
+      await supabase.from(table).update({ user_status: nextStatus }).eq('id', guardId);
     }
     if (currentUser && !target.isStaff) {
       const statusCopy =
-        status === 'suspended'
+        nextStatus === 'suspended'
           ? 'Your guard account was suspended. Contact Guardr support if you have questions.'
-          : status === 'blocked'
+          : nextStatus === 'blocked'
             ? 'Your guard account was blocked. Contact Guardr support if you have questions.'
-            : 'Your guard account status was updated by staff.';
+            : nextStatus === 'approved'
+              ? 'Your guard account access was restored. Finish any remaining credentials for activation.'
+              : 'Your guard account status was updated by staff.';
       notifyAccountUpdate(currentUser, guardId, 'Account status updated', statusCopy);
     }
   };
