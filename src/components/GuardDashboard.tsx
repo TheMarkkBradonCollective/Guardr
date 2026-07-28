@@ -109,9 +109,13 @@ import {
 } from '../lib/shiftAuditViolations';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
-import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPreActive } from '../lib/accountStatus';
+import {
+  getGuardUserStatus,
+  isGuardAccountApproved,
+  isGuardAccountPreActive,
+  isGuardUserStatusActive,
+} from '../lib/accountStatus';
 import { isGuardCredentialExpiryRestricted } from '../lib/guardCredentialExpiryEnforcement';
-import { isGuardAccountActive } from '../lib/guardAccountActivation';
 import { findActivationSupportChat } from '../lib/support';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardMessagesPanel } from './guard/GuardMessagesPanel';
@@ -452,7 +456,7 @@ export function GuardDashboard({
     (next: GuardTab) => {
       const allowed = guardActivationAllowedTabs(guard);
       const resolved =
-        !isGuardAccountActive(guard) && !allowed.includes(next) ? 'activation' : next;
+        !isGuardUserStatusActive(guard) && !allowed.includes(next) ? 'activation' : next;
       if (!isControlled) setStandaloneTab(resolved);
       onTabChange?.(resolved);
     },
@@ -464,7 +468,7 @@ export function GuardDashboard({
   }, [controlledTab, isControlled]);
 
   useEffect(() => {
-    if (isGuardAccountActive(guard)) return;
+    if (isGuardUserStatusActive(guard)) return;
     const allowed = guardActivationAllowedTabs(guard);
     if (!allowed.includes(tab) && tab !== 'activation') {
       setTab('activation');
@@ -1341,7 +1345,7 @@ export function GuardDashboard({
 
   const userStatus = getGuardUserStatus(guard);
   const credentialRestricted = isGuardCredentialExpiryRestricted(guard);
-  const accountNeedsActivation = !isGuardAccountActive(guard);
+  const accountNeedsActivation = !isGuardUserStatusActive(guard);
   const approvedAwaitingActivation = isGuardAccountApproved(guard) && accountNeedsActivation;
   const activationAllowedTabs = guardActivationAllowedTabs(guard);
   const showPendingGate =

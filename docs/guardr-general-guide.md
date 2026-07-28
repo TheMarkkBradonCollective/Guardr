@@ -580,7 +580,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Sidebar **Messages** group (active guards only) | Job chats and team threads |
 | **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
-| **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
+| **Profile** | Account menu (active guards only) | Personal profile, resume, experience; **Credentials** tab for uploads and gear |
 | **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
 | **Settings** | Account menu | Appearance, push notifications, app update / install options, notification sound (APK), legal pages, sign out — available on activation screen too |
 | **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
@@ -1126,7 +1126,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 **Where:**
 
 - **Before active:** Activation screen (inline uploads on the same page).
-- **After active:** Account menu → **Profile** → **Credentials**.
+- **After active:** Account menu → **Profile** → **Credentials** tab (full catalog + gear & carry status).
 
 Staff can also open credentials from **Guards → guard detail** and upload documents on the guard's behalf.
 
@@ -1139,7 +1139,8 @@ Staff can also open credentials from **Guards → guard detail** and upload docu
 | **Continuing Education** | Full **32-hour BSIS CE package** — all 9 course certificates (Communication, Public Relations, Observation, Liability/Legal, Officer Safety, Trespass, Evacuation, Crowd Control, Arrest/Search/Seizure). Required after PTA/UOF. Upload each certificate. |
 | **8-Hour BSIS Refresher** | Annual renewal course — on BSIS this is labeled **Continuing Education**. Staff may request later. Not required for initial activation. |
 | **Other BSIS Training** | Supplemental BSIS courses beyond the 32-hour CE package (Access Control, Driver Safety, Workplace Violence, etc.). Not required for activation. |
-| **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |
+| **Permits & armed training** | One section per weapon type (OC spray, baton, TASER, firearm) — permits and weapon-specific training only. Required for armed posts that request them. |
+| **Guard gear** | Flashlight, handcuffs, and equipment you carry on duty — list what you have on profile; no credential uploads for these items. |
 | **Medical & safety** | CPR/AED, First Aid, and similar certifications. |
 | **FEMA / emergency mgmt** | FEMA ICS and related emergency management credentials. |
 
@@ -1370,7 +1371,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.99**, build **199**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.100**, build **200**).
 
 | Surface | How to install |
 |---------|----------------|
