@@ -18,6 +18,11 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - Merged **#845** (release integration)
 - Merged **#846** (weapon sections above Other BSIS Training)
 - Merged **#847** (staff account controls on Credentials tab)
+- Merged **#849** (ship v1.0.100 FCM APK matching web/PWA)
+- Merged **#850** (guard deactivate, block, and restore account controls)
+- Merged **#851** (sticky Save/Cancel while editing profile)
+- Merged **#852** (staff cannot edit guard credentials)
+- Merged **#853** (hide account/admin buttons while editing profile)
 - **#838–#844** already on `main` (credentials catalog, gear, per-weapon sections)
 
 **Shipped**
@@ -26,7 +31,11 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - **Per-weapon credential sections** (OC spray, baton, TASER, firearm) — weapon permits/training only, no duplicate guard card; weapons render above **Other BSIS Training**
 - BSIS activation alignment: separate PTA/UOF uploads, full 32-hour CE package (9 courses), site-wide BSIS requirements reference
 - Active guards gated on **account status** (`user_status: active`) — no more redirect to **Application under review** when credentials are still hydrating or on grace period
-- Staff **Credentials** tab: **Suspend**, **Flag / Block**, and **Restore** on guard detail; removed misplaced **Reject application** from Government ID review (deny/revoke stays in **Applications**)
+- Staff **account access** on guard detail (Profile, Credentials, Guard status): **Deactivate**, **Block**, and **Restore access**; deny/revoke application stays in **Applications** only
+- Removed misplaced **Reject application** from Government ID review (approve/resubmit only)
+- Staff **cannot edit** guard credentials — review, verify, reject, and request updates only; guards upload and resubmit
+- **Edit profile** pinned Save/Cancel at top while editing; account access and admin actions hidden until save or cancel
+- Removed staff **Add credential** and **Edit credentials** flows
 - **v1.0.100** (build **200**) web + PWA + APK; FCM-enabled binary at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=200)
 - PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
 
