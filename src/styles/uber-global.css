@@ -124,6 +124,38 @@ html.theme-dark .adm-btn--primary {
 /* Ghost / tertiary */
 .uber-button-ghost { background: transparent !important; color: var(--uber-text, #000) !important; border: none !important; }
 
+/* Navigation back — ghost tertiary, not solid black CTA */
+.app-subscreen-back,
+.app-chat-header-back,
+.app-back-pill {
+  background: transparent !important;
+  color: var(--uber-text-muted, #767676) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  min-height: 32px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.app-subscreen-back:hover,
+.app-chat-header-back:hover,
+.app-back-pill:hover {
+  color: var(--uber-text, #000) !important;
+  background: var(--uber-surface, #f6f6f6) !important;
+}
+
+html.theme-dark .app-subscreen-back:hover,
+html.theme-dark .app-chat-header-back:hover,
+html.theme-dark .app-back-pill:hover {
+  color: var(--uber-text, #fff) !important;
+  background: var(--uber-surface, #1a1a1a) !important;
+}
+
+.app-chat-header-back {
+  border-radius: 50% !important;
+}
+
 /* ─── Cards — white with very subtle shadow ──────────────────────────────── */
 
 .uber-panel,

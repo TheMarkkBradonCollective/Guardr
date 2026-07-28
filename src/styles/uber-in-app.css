@@ -1141,8 +1141,8 @@ html.theme-dark .app-full-page-detail--scroll .app-subscreen-header {
 
 .app-subscreen-header--back-only {
   min-height: auto;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.375rem;
 }
 
 .app-subscreen-back,
@@ -1151,20 +1151,25 @@ html.theme-dark .app-full-page-detail--scroll .app-subscreen-header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
+  gap: 4px;
+  min-height: 32px;
+  padding: 6px 10px 6px 8px;
+  margin: 0;
+  border-radius: 8px;
   border: none;
-  background: var(--uber-text, #000);
-  color: var(--uber-bg, #fff);
-  font-size: 14px;
+  background: transparent;
+  color: var(--uber-text-muted, #767676);
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
   font-family: inherit;
   flex-shrink: 0;
   box-shadow: none;
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
 }
 
 .app-chat-header-back {
@@ -1172,19 +1177,41 @@ html.theme-dark .app-full-page-detail--scroll .app-subscreen-header {
   min-width: 36px;
   height: 36px;
   padding: 0;
-}
-
-html.theme-dark .app-subscreen-back,
-html.theme-dark .app-chat-header-back,
-html.theme-dark .app-back-pill {
-  background: var(--uber-text, #fff);
-  color: var(--uber-bg, #000);
+  border-radius: 50%;
 }
 
 .app-subscreen-back:hover,
 .app-chat-header-back:hover,
 .app-back-pill:hover {
-  opacity: 0.88;
+  color: var(--uber-text, #000);
+  background: var(--uber-surface, #f6f6f6);
+}
+
+html.theme-dark .app-subscreen-back:hover,
+html.theme-dark .app-chat-header-back:hover,
+html.theme-dark .app-back-pill:hover {
+  color: var(--uber-text, #fff);
+  background: var(--uber-surface, #1a1a1a);
+}
+
+.app-subscreen-back:active,
+.app-chat-header-back:active,
+.app-back-pill:active {
+  transform: scale(0.97);
+  background: var(--uber-elevated, #eeeeee);
+}
+
+html.theme-dark .app-subscreen-back:active,
+html.theme-dark .app-chat-header-back:active,
+html.theme-dark .app-back-pill:active {
+  background: var(--uber-elevated, #2b2b2b);
+}
+
+.app-subscreen-back:focus-visible,
+.app-chat-header-back:focus-visible,
+.app-back-pill:focus-visible {
+  outline: 2px solid var(--uber-accent, #000);
+  outline-offset: 2px;
 }
 
 .app-subscreen-title {
@@ -1203,10 +1230,6 @@ html.theme-dark .app-subscreen-title { color: #fff; }
 /* Subscreen titles wrap to full width — never ellipsize with "..." */
 .app-subscreen-header--shrink {
   flex-shrink: 0;
-}
-
-.app-subscreen-header--back-only {
-  min-height: auto;
 }
 
 .app-subscreen-header--wrap {
