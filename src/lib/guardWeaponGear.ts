@@ -187,3 +187,41 @@ export function groupWeaponGearRulesByCategory(): Record<
   }
   return grouped;
 }
+
+/** Credential catalog slots shown in each weapon's credentials section (weapon-specific only). */
+export function catalogIdsForWeaponGearSection(weaponId: GuardWeaponGearId): string[] {
+  switch (weaponId) {
+    case 'oc-spray':
+      return ['bsis-chemical-agent', 'bsis-chemical-agent-training'];
+    case 'baton':
+      return ['bsis-baton', 'bsis-baton-training'];
+    case 'taser':
+      return ['bsis-taser', 'bsis-taser-training'];
+    case 'firearm':
+      return ['bsis-exposed-firearm', 'bsis-firearms-training', 'bsis-firearms-qualification'];
+    default:
+      return RULE_BY_ID.get(weaponId)?.requiredCatalogIds ?? [];
+  }
+}
+
+/** Duty gear listed on profile — no separate credential uploads in the credentials tab. */
+export const GUARD_DUTY_GEAR_SECTION_ORDER: GuardWeaponGearId[] = ['flashlight', 'handcuffs'];
+
+/** Weapons that need their own credentials section (permits + training). */
+export const WEAPON_GEAR_CREDENTIAL_SECTION_ORDER: GuardWeaponGearId[] = [
+  'oc-spray',
+  'baton',
+  'taser',
+  'firearm',
+];
+
+export function weaponGearSectionSubtitle(weaponId: GuardWeaponGearId): string {
+  const rule = RULE_BY_ID.get(weaponId);
+  if (!rule) return '';
+  const tier = GUARD_WEAPON_GEAR_CATEGORY_LABELS[rule.category];
+  return `${tier} — upload and verify the BSIS permits and training below, then list on your profile.`;
+}
+
+export function dutyGearSectionSubtitle(): string {
+  return 'Standard duty gear — verified guard card required. No separate credential upload.';
+}

@@ -5,6 +5,7 @@ import {
   GUARD_WEAPON_GEAR_CATEGORY_LABELS,
   GUARD_WEAPON_GEAR_CATEGORY_ORDER,
   GUARD_WEAPON_GEAR_RULES,
+  catalogIdsForWeaponGearSection,
   getEligibleWeaponGear,
   getMissingWeaponGearCatalogIds,
   getWeaponGearRequiredCatalogIds,
@@ -54,7 +55,6 @@ export function GuardGearCarryFields({
   const eligibleWeaponIds = new Set(eligibleWeapon.map((rule) => rule.id));
   const groupedWeaponRules = groupWeaponGearRulesByCategory();
   const armedStatus = computeGuardArmedStatus(guard);
-  const equipmentActive = new Set(normalizeListedEquipmentGear(selectedEquipment));
 
   const toggleWeapon = (id: GuardWeaponGearId) => {
     if (!weaponGearEditing || !onWeaponGearChange) return;
@@ -64,15 +64,6 @@ export function GuardGearCarryFields({
       return;
     }
     onWeaponGearChange([...selectedWeapon, id]);
-  };
-
-  const toggleEquipment = (id: GuardEquipmentGearId) => {
-    if (!equipmentGearEditing || !onEquipmentGearChange) return;
-    if (equipmentActive.has(id)) {
-      onEquipmentGearChange([...equipmentActive].filter((g) => g !== id) as GuardEquipmentGearId[]);
-      return;
-    }
-    onEquipmentGearChange([...equipmentActive, id] as GuardEquipmentGearId[]);
   };
 
   return (
@@ -156,56 +147,84 @@ export function GuardGearCarryFields({
         );
       })}
 
-      <div className="space-y-2">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Equipment badges
-          </p>
-          <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
-            Optional gear clients see on your profile — no credential upload required.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          {GUARD_EQUIPMENT_GEAR_RULES.map((rule) => {
-            const isOn = equipmentActive.has(rule.id);
-            if (!equipmentGearEditing && !showFullCatalog && !isOn) return null;
+      <GuardGearCarryEquipmentFields
+        guard={guard}
+        equipmentGearEditing={equipmentGearEditing}
+        equipmentGearSelected={equipmentGearSelected}
+        onEquipmentGearChange={onEquipmentGearChange}
+        showFullCatalog={showFullCatalog}
+      />
+    </div>
+  );
+}
 
-            if (equipmentGearEditing) {
-              return (
-                <button
-                  key={rule.id}
-                  type="button"
-                  onClick={() => toggleEquipment(rule.id)}
-                  className={`wf-list-card text-left transition-all ${
-                    isOn ? '!border-brand-primary bg-brand-primary/8' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-sm">{rule.label}</p>
-                      <p className="text-xs text-brand-text-muted mt-0.5">{rule.description}</p>
-                    </div>
-                    {isOn ? <Check className="w-5 h-5 text-brand-primary shrink-0" /> : null}
-                  </div>
-                </button>
-              );
-            }
+/** Equipment badge toggles — used in the credentials equipment section. */
+export function GuardGearCarryEquipmentFields({
+  guard,
+  equipmentGearEditing = false,
+  equipmentGearSelected,
+  onEquipmentGearChange,
+  showFullCatalog = true,
+}: {
+  guard: SecurityGuard;
+  equipmentGearEditing?: boolean;
+  equipmentGearSelected?: GuardEquipmentGearId[];
+  onEquipmentGearChange?: (next: GuardEquipmentGearId[]) => void;
+  showFullCatalog?: boolean;
+}) {
+  const equipmentActive = new Set(normalizeListedEquipmentGear(equipmentGearSelected ?? guard.listedEquipmentGear ?? []));
 
-            if (!isOn) return null;
+  const toggleEquipment = (id: GuardEquipmentGearId) => {
+    if (!equipmentGearEditing || !onEquipmentGearChange) return;
+    if (equipmentActive.has(id)) {
+      onEquipmentGearChange([...equipmentActive].filter((g) => g !== id) as GuardEquipmentGearId[]);
+      return;
+    }
+    onEquipmentGearChange([...equipmentActive, id] as GuardEquipmentGearId[]);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-1 gap-2">
+        {GUARD_EQUIPMENT_GEAR_RULES.map((rule) => {
+          const isOn = equipmentActive.has(rule.id);
+          if (!equipmentGearEditing && !showFullCatalog && !isOn) return null;
+
+          if (equipmentGearEditing) {
             return (
-              <div key={rule.id} className="wf-list-card">
-                <p className="font-semibold text-sm">{rule.label}</p>
-                <p className="text-xs text-brand-text-muted mt-0.5">{rule.description}</p>
-              </div>
+              <button
+                key={rule.id}
+                type="button"
+                onClick={() => toggleEquipment(rule.id)}
+                className={`wf-list-card text-left transition-all ${
+                  isOn ? '!border-brand-primary bg-brand-primary/8' : ''
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-sm">{rule.label}</p>
+                    <p className="text-xs text-brand-text-muted mt-0.5">{rule.description}</p>
+                  </div>
+                  {isOn ? <Check className="w-5 h-5 text-brand-primary shrink-0" /> : null}
+                </div>
+              </button>
             );
-          })}
-        </div>
-        {!equipmentGearEditing &&
-          showFullCatalog &&
-          getClientVisibleListedEquipmentGear(guard).length === 0 && (
-            <p className="text-xs text-brand-text-muted">No equipment badges listed yet.</p>
-          )}
+          }
+
+          if (!isOn) return null;
+          return (
+            <div key={rule.id} className="wf-list-card">
+              <p className="font-semibold text-sm">{rule.label}</p>
+              <p className="text-xs text-brand-text-muted mt-0.5">{rule.description}</p>
+            </div>
+          );
+        })}
       </div>
+      {!equipmentGearEditing &&
+        showFullCatalog &&
+        getClientVisibleListedEquipmentGear(guard).length === 0 && (
+          <p className="text-xs text-brand-text-muted">No equipment badges listed yet.</p>
+        )}
     </div>
   );
 }
@@ -225,6 +244,7 @@ function WeaponGearRow({
   listed,
   showOnProfile,
   onToggle,
+  hideCredentialChecklist = false,
 }: {
   rule: typeof GUARD_WEAPON_GEAR_RULES[number];
   guard: SecurityGuard;
@@ -233,9 +253,13 @@ function WeaponGearRow({
   listed: boolean;
   showOnProfile: boolean;
   onToggle: () => void;
+  /** When credential slots are shown above, omit guard card / duplicate checklist. */
+  hideCredentialChecklist?: boolean;
 }) {
-  const requiredIds = getWeaponGearRequiredCatalogIds(rule.id);
-  const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id);
+  const displayCatalogIds = catalogIdsForWeaponGearSection(rule.id);
+  const missingIds = getMissingWeaponGearCatalogIds(guard, rule.id).filter(
+    (id) => id !== 'bsis-guard-card'
+  );
 
   const statusLabel = showOnProfile
     ? 'On profile'
@@ -268,7 +292,9 @@ function WeaponGearRow({
             <span className="text-sm font-semibold text-brand-text">{rule.label}</span>
             <CredentialSectionStatusBadge label={statusLabel} tone={statusTone} />
           </span>
-          <GearCredentialRequirements guard={guard} catalogIds={requiredIds} />
+          {!hideCredentialChecklist && displayCatalogIds.length > 0 && (
+            <GearCredentialRequirements guard={guard} catalogIds={displayCatalogIds} />
+          )}
         </span>
       </label>
     );
@@ -280,18 +306,24 @@ function WeaponGearRow({
         <p className="text-sm font-semibold text-brand-text">{rule.label}</p>
         <CredentialSectionStatusBadge label={statusLabel} tone={statusTone} />
       </div>
-      <GearCredentialRequirements guard={guard} catalogIds={requiredIds} compact={showOnProfile} />
-      {!eligible && missingIds.length > 0 && (
-        <p className="text-xs text-brand-text-muted">
-          Still needed:{' '}
-          {missingIds
-            .map((id) => getCertCatalogEntry(id)?.shortLabel ?? getCertCatalogEntry(id)?.name ?? id)
-            .join(' · ')}
-        </p>
+      {!hideCredentialChecklist && (
+        <>
+          <GearCredentialRequirements guard={guard} catalogIds={displayCatalogIds} compact={showOnProfile} />
+          {!eligible && missingIds.length > 0 && (
+            <p className="text-xs text-brand-text-muted">
+              Still needed:{' '}
+              {missingIds
+                .map((id) => getCertCatalogEntry(id)?.shortLabel ?? getCertCatalogEntry(id)?.name ?? id)
+                .join(' · ')}
+            </p>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+export const GuardWeaponGearCarryRow = WeaponGearRow;
 
 function GearCredentialRequirements({
   guard,

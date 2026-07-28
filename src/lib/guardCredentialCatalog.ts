@@ -9,6 +9,8 @@ import { certsForCatalogId } from './certResubmit';
 import { getCourseUploadStatus, type CourseUploadStatus } from './certStatus';
 import type { CredentialViewSectionId } from './guardCredentialSections';
 import {
+  getPtaUofCatalogEntries,
+  getThirtyTwoHourCourseCatalogEntries,
   isCombinedPtaUofCatalogId,
   isContinuingEducationCatalogId,
   isPtaUofCatalogId,
@@ -21,17 +23,17 @@ export interface CredentialCatalogSlot {
   uploadStatus: CourseUploadStatus;
 }
 
-export function catalogEntryMatchesSearch(entry: CertCatalogEntry, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return true;
-  return (
-    entry.name.toLowerCase().includes(normalized) ||
-    (entry.description ?? '').toLowerCase().includes(normalized)
-  );
-}
-
-/** Catalog entries for optional credential sections (shared by profile view and add sheet). */
+/** Catalog entries for every credential section — full self-service listing. */
 export function catalogOptionsForCredentialSection(section: CredentialViewSectionId): CertCatalogEntry[] {
+  if (section === 'guard-card') {
+    return getCertsByCategory('guard-card');
+  }
+  if (section === 'bsis-pta-uof') {
+    return getPtaUofCatalogEntries();
+  }
+  if (section === 'bsis-32-hour') {
+    return getThirtyTwoHourCourseCatalogEntries();
+  }
   if (section === 'bsis-refresher') {
     const entry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
     return entry ? [entry] : [];
@@ -47,10 +49,39 @@ export function catalogOptionsForCredentialSection(section: CredentialViewSectio
         opt.id !== 'bsis-40-hour-completed'
     );
   }
-  if (section === 'guard-card' || section === 'coi' || section === 'bsis-pta-uof' || section === 'bsis-32-hour') {
+  if (section === 'coi') {
     return [];
   }
   return getCertsByCategory(section as CertCategory);
+}
+
+export function catalogIdsForCredentialSection(section: CredentialViewSectionId): string[] {
+  return catalogOptionsForCredentialSection(section).map((entry) => entry.id);
+}
+
+/** Whether a credentials panel section should render (search filters empty sections). */
+export function shouldShowCredentialSectionInPanel(
+  _sectionId: CredentialViewSectionId,
+  options: {
+    searchActive: boolean;
+    matchingSlotCount: number;
+    showFullCatalog?: boolean;
+    hasEmbeddedGear?: boolean;
+  }
+): boolean {
+  const { searchActive, matchingSlotCount, showFullCatalog = true, hasEmbeddedGear = false } = options;
+  if (searchActive) return matchingSlotCount > 0 || hasEmbeddedGear;
+  if (showFullCatalog) return true;
+  return matchingSlotCount > 0 || hasEmbeddedGear;
+}
+
+export function catalogEntryMatchesSearch(entry: CertCatalogEntry, query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+  return (
+    entry.name.toLowerCase().includes(normalized) ||
+    (entry.description ?? '').toLowerCase().includes(normalized)
+  );
 }
 
 export function buildCredentialCatalogSlots(

@@ -47,6 +47,7 @@ const SECTION_ORDER: CredentialViewSectionId[] = [
 /** Credential sections shown even when the guard has no uploads yet. */
 export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'guard-card',
+  'coi',
   'bsis-pta-uof',
   'bsis-32-hour',
   'bsis-refresher',
@@ -57,6 +58,37 @@ export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'security-advanced',
   'industry',
 ];
+
+/** Canonical credentials tab section order. */
+export const CREDENTIAL_SECTION_ORDER: CredentialViewSectionId[] = SECTION_ORDER;
+
+/** Catalog-driven sections rendered via CredentialCatalogSlotList. */
+export const CATALOG_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
+  'bsis-refresher',
+  'bsis-other-training',
+  'medical',
+  'fema',
+  'security-advanced',
+  'industry',
+];
+
+export const CATALOG_SECTIONS_BEFORE_WEAPONS: CredentialViewSectionId[] = [
+  'bsis-refresher',
+  'bsis-other-training',
+];
+
+export const CATALOG_SECTIONS_AFTER_WEAPONS: CredentialViewSectionId[] = [
+  'medical',
+  'fema',
+  'security-advanced',
+  'industry',
+];
+
+export function getCredentialSectionMeta(
+  sectionId: CredentialViewSectionId
+): Pick<CredentialViewSection, 'title' | 'subtitle' | 'category'> {
+  return SECTION_META[sectionId];
+}
 
 /** Optional credentials guards may add during activation or from profile. */
 export const OPTIONAL_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
@@ -131,27 +163,28 @@ const SECTION_META: Record<
   },
   'bsis-permit': {
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Licenses separate from training certificates — firearm, baton, and OC spray permits expire.',
+    subtitle:
+      'Permits, training, and what you carry — firearm, baton, and OC spray permits expire and require staff verification.',
     category: 'bsis-permit',
   },
   medical: {
-    title: CERT_CATEGORY_LABELS.medical,
-    subtitle: 'CPR, AED, First Aid, and emergency response.',
+    title: 'Medical & Emergency',
+    subtitle: 'CPR, AED, First Aid, Narcan, Stop the Bleed — highly recommended and often required by clients.',
     category: 'medical',
   },
   fema: {
-    title: CERT_CATEGORY_LABELS.fema,
-    subtitle: 'ICS and homeland security awareness.',
+    title: 'FEMA / Homeland Security',
+    subtitle: 'ICS and awareness courses for incident command and emergency coordination.',
     category: 'fema',
   },
   'security-advanced': {
-    title: CERT_CATEGORY_LABELS['security-advanced'],
-    subtitle: 'Executive protection, active shooter, de-escalation, and specialty training.',
+    title: 'Advanced Security',
+    subtitle: 'Executive protection, active shooter, de-escalation, defensive driving, and specialty training.',
     category: 'security-advanced',
   },
   industry: {
-    title: CERT_CATEGORY_LABELS.industry,
-    subtitle: 'OSHA, professional licenses, and other credentials.',
+    title: 'Industry & Professional',
+    subtitle: 'OSHA, CIT, mental health first aid, other licenses — or use Other to add anything not listed.',
     category: 'industry',
   },
 };
