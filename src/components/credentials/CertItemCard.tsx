@@ -120,7 +120,7 @@ export function CertItemCard({
           {renderThumbnail()}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+              <p className="font-semibold text-sm leading-snug break-words text-brand-text-muted">{title}</p>
               <div className="shrink-0">
                 <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
               </div>
@@ -144,7 +144,7 @@ export function CertItemCard({
           {renderThumbnail()}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+              <p className="font-semibold text-sm leading-snug break-words text-brand-text-muted">{title}</p>
               <div className="shrink-0">
                 <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
               </div>
