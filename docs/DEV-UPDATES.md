@@ -15,20 +15,26 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 **PR cleanup**
 - Merged **#836** (active guards no longer bounced to activation screen)
+- Merged **#845** (release integration)
+- Merged **#846** (weapon sections above Other BSIS Training)
+- Merged **#847** (staff account controls on Credentials tab)
 - **#838–#844** already on `main` (credentials catalog, gear, per-weapon sections)
 
 **Shipped**
 - **Credentials tab** on guard profiles (renamed from Certs) — full credential catalog for self-service upload and staff verify
 - **Gear & carry status** moved to Credentials tab; duty gear (flashlight, handcuffs, equipment) in **Guard gear** section
-- **Per-weapon credential sections** (OC spray, baton, TASER, firearm) — weapon permits/training only, no duplicate guard card
+- **Per-weapon credential sections** (OC spray, baton, TASER, firearm) — weapon permits/training only, no duplicate guard card; weapons render above **Other BSIS Training**
 - BSIS activation alignment: separate PTA/UOF uploads, full 32-hour CE package (9 courses), site-wide BSIS requirements reference
 - Active guards gated on **account status** (`user_status: active`) — no more redirect to **Application under review** when credentials are still hydrating or on grace period
+- Staff **Credentials** tab: **Suspend**, **Flag / Block**, and **Restore** on guard detail; removed misplaced **Reject application** from Government ID review (deny/revoke stays in **Applications**)
 - **v1.0.100** (build **200**) web + PWA; APK CI rebuild on push to `main`
 - PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
 
 **Supabase:** no new SQL.
 
 ---
+
+## Monday, July 27, 2026 — /updateit → v1.0.99
 
 **PR cleanup**
 - Merged **#834** (Rejected credentials tab, thumbnail fix, Edit/resubmit flow)
