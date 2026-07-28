@@ -76,7 +76,7 @@ describe('staffCredentialRules', () => {
         guard({
           userStatus: 'active',
           idVerificationStatus: 'verified',
-          idDocumentType: 'government_id',
+          idDocumentType: 'state_id',
         })
       ),
       false

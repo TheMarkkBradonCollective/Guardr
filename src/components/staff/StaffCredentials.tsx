@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronRight, RefreshCw, ShieldCheck, X } from 'lucide-react';
-import { SecurityGuard } from '../../types';
+import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildStaffApprovalsFeed,

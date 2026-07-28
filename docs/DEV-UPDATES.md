@@ -23,6 +23,9 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - Merged **#851** (sticky Save/Cancel while editing profile)
 - Merged **#852** (staff cannot edit guard credentials)
 - Merged **#853** (hide account/admin buttons while editing profile)
+- Merged **#854** (fold post-release fixes into v1.0.100 release notes)
+- Merged **#855** (Save/Cancel pinned to top of profile edit form)
+- Merged **#856** (remove revoke application for approved guards)
 - **#838–#844** already on `main` (credentials catalog, gear, per-weapon sections)
 
 **Shipped**
@@ -31,11 +34,11 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - **Per-weapon credential sections** (OC spray, baton, TASER, firearm) — weapon permits/training only, no duplicate guard card; weapons render above **Other BSIS Training**
 - BSIS activation alignment: separate PTA/UOF uploads, full 32-hour CE package (9 courses), site-wide BSIS requirements reference
 - Active guards gated on **account status** (`user_status: active`) — no more redirect to **Application under review** when credentials are still hydrating or on grace period
-- Staff **account access** on guard detail (Profile, Credentials, Guard status): **Deactivate**, **Block**, and **Restore access**; deny/revoke application stays in **Applications** only
+- Staff **account access** on guard detail (Profile, Credentials, Guard status): **Deactivate**, **Block**, and **Restore access**; deny pending applications from **Applications** only
 - Removed misplaced **Reject application** from Government ID review (approve/resubmit only)
 - Staff **cannot edit** guard credentials — review, verify, reject, and request updates only; guards upload and resubmit
-- **Edit profile** pinned Save/Cancel at top while editing; account access and admin actions hidden until save or cancel
-- Removed staff **Add credential** and **Edit credentials** flows
+- **Edit profile** — Save/Cancel pinned at top while editing; account access and admin actions hidden until save or cancel
+- Removed staff **Add credential** and **Edit credentials** flows; removed **Revoke application** for approved guards (use Deactivate/Block instead)
 - **v1.0.100** (build **200**) web + PWA + APK; FCM-enabled binary at [guardr.co/download](https://www.guardr.co/download/guardr.apk?v=200)
 - PWA service worker cache bust: `guardr-cache-v1-0-100-beta`
 
