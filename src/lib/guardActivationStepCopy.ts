@@ -71,12 +71,12 @@ export function guardActivationCeStepDetail(guard: SecurityGuard): string {
   const progress = getQualificationProgress(guard);
 
   if (guardMeetsContinuingEducation(guard)) {
-    return `All ${progress.total32HourCourses} Continuing Education courses on file`;
+    return `All ${progress.total32HourCourses} Continued Education courses on file`;
   }
   if (progress.uploaded32HourCount > 0) {
-    return `${progress.uploaded32HourCount} of ${progress.total32HourCourses} Continuing Education courses on file — keep uploading`;
+    return `${progress.uploaded32HourCount} of ${progress.total32HourCourses} Continued Education courses on file — keep uploading`;
   }
-  return 'Upload all 9 certificates in the 32-hour BSIS Continuing Education package (after PTA/UOF)';
+  return 'Upload all 9 certificates in the 32-hour BSIS Continued Education package (after PTA/UOF)';
 }
 
 export function guardActivationCoiStepDetail(guard: SecurityGuard): string {

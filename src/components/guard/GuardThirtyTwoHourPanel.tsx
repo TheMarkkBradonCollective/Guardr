@@ -318,7 +318,7 @@ export function GuardThirtyTwoHourPanel({
     </ul>
   );
 
-  const sheetTitle = editingCert ? 'Edit Continuing Education' : 'Add Continuing Education';
+  const sheetTitle = editingCert ? 'Edit Continued Education' : 'Add Continued Education';
 
   if (activationFormOnly) {
     return (
@@ -334,7 +334,7 @@ export function GuardThirtyTwoHourPanel({
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-brand-text-muted">
-                Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} Continuing Education course certificates (32-hour BSIS CE package).
+                Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} Continued Education course certificates (32-hour BSIS CE package).
               </p>
               {courses.map((course) =>
                 renderCourseRow({
@@ -369,7 +369,7 @@ export function GuardThirtyTwoHourPanel({
         title={
           <p className="uber-label flex items-center gap-2 flex-wrap">
             <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
-            Continuing Education
+            Continued Education
           </p>
         }
         subtitle={

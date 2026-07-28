@@ -28,7 +28,7 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
-  active: 'Guard Card plus PTA/UOF mandatory training and the 32-hour Continuing Education package on file',
+  active: 'Guard Card plus PTA/UOF mandatory training and the 32-hour Continued Education package on file',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
@@ -106,7 +106,7 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
       if (blocker) {
         return `Upload all five activation credentials before staff can approve your profile — ${blocker}`;
       }
-      return 'Upload government ID, COI, guard card, PTA/UOF mandatory training, and Continuing Education courses before staff can approve your profile.';
+      return 'Upload government ID, COI, guard card, PTA/UOF mandatory training, and Continued Education courses before staff can approve your profile.';
     }
     if (isGuardAccountApproved(guard)) {
       if (guard.credentialExpiryRestricted) {

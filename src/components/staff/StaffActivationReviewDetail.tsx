@@ -35,8 +35,8 @@ const ACTIVATION_SECTION_CONFIG: Record<
     uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
   },
   ce: {
-    title: 'Continuing Education',
-    emptyMessage: 'No Continuing Education courses on file (32-hour BSIS CE package).',
+    title: 'Continued Education',
+    emptyMessage: 'No Continued Education courses on file (32-hour BSIS CE package).',
     sectionStatus: (guard) => getContinuingEducationSectionStatus(guard),
     uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },
@@ -47,8 +47,8 @@ const ACTIVATION_SECTION_CONFIG: Record<
     uploadStatus: (guard) => getCourseUploadStatus(guard, LEGACY_PTA_ID),
   },
   '32-hour': {
-    title: 'Continuing Education',
-    emptyMessage: 'No Continuing Education courses on file.',
+    title: 'Continued Education',
+    emptyMessage: 'No Continued Education courses on file.',
     sectionStatus: (guard) => getThirtyTwoHourSectionStatus(guard, true),
     uploadStatus: (guard) => getCourseUploadStatus(guard, THIRTY_TWO_HOUR_COURSE_IDS[0]),
   },

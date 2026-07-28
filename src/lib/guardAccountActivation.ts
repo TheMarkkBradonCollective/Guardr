@@ -164,7 +164,7 @@ function buildMandatoryTrainingSubmissionBlockers(guard: SecurityGuard): string[
 function buildContinuingEducationSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsContinuingEducation(guard)) {
     return [
-      'Continuing Education not complete — the full 32-hour BSIS CE package is required for profile approval',
+      'Continued Education not complete — the full 32-hour BSIS CE package is required for profile approval',
     ];
   }
   return [];
@@ -201,7 +201,7 @@ function buildContinuingEducationVerificationBlockers(guard: SecurityGuard): str
   const submissionBlockers = buildContinuingEducationSubmissionBlockers(guard);
   if (submissionBlockers.length > 0) return submissionBlockers;
   if (!guardMeetsContinuingEducationVerified(guard)) {
-    return ['Continuing Education awaiting staff verification'];
+    return ['Continued Education awaiting staff verification'];
   }
   return [];
 }

@@ -226,7 +226,7 @@ describe('guard account activation gates', () => {
     assert.equal(guardCanStaffActivateAccount(guard), false);
     assert.ok(
       getGuardActivationChecklist(guard).staffActivationBlockers.some((b) =>
-        /Continuing Education/i.test(b)
+        /Continued Education/i.test(b)
       )
     );
   });

@@ -52,7 +52,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
     },
     {
       id: 'ce',
-      label: 'Continuing Education',
+      label: 'Continued Education',
       onFile: progress.continuingEducation,
       verified: progress.continuingEducationVerified,
     },
@@ -114,7 +114,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
                   total32HourCourses: progress.total32HourCourses,
                 },
                 {
-                  scopeLabel: 'Continuing Education courses',
+                  scopeLabel: 'Continued Education courses',
                 }
               )}{' '}
               · {progress.continuingEducationProgressPercent}%
