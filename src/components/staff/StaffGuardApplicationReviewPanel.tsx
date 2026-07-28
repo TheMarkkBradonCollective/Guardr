@@ -180,7 +180,7 @@ export function StaffGuardApplicationReviewPanel({
                 Request revision
               </button>
             )}
-            {isApprovedOrActive && onRejectGuardApplication && (
+            {isApprovedOrActive && guardAccountStatus === 'approved' && onRejectGuardApplication && (
               <button
                 type="button"
                 onClick={() => void handleRevokeApplication()}

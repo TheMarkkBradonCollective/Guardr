@@ -1,6 +1,6 @@
 import { showAppToast } from '../ui/AppToast';
 import React, { useEffect, useState } from 'react';
-import { Check, RefreshCw, X } from 'lucide-react';
+import { Check, RefreshCw } from 'lucide-react';
 import { DRIVER_LICENSE_CLASSES, SecurityGuard, type GovernmentIdDocumentType } from '../../types';
 import {
   getGuardIdVerificationStatus,
@@ -15,10 +15,8 @@ import {
 } from '../../lib/guardIdentityVerification';
 import {
   IdVerificationSlot,
-  promptRejectGuardApplicationNote,
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
-import { getGuardUserStatus } from '../../lib/accountStatus';
 import { AppButton } from '../ui/AppButton';
 import type { GuardIdentityVerificationPayload, IdentityVerificationSubmitResult } from '../profile/GuardIdentityVerificationPanel';
 
@@ -26,7 +24,6 @@ interface StaffIdReviewSectionProps {
   guard: SecurityGuard;
   canManage?: boolean;
   onApprove?: (guardId: string) => void | Promise<void>;
-  onReject?: (guardId: string, reason?: string) => void | Promise<void>;
   approveActionLabel?: string;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
   /** When set, staff can set Government ID vs driver’s license inline (Credentials review only). */
@@ -43,14 +40,12 @@ export function StaffIdReviewSection({
   guard,
   canManage = false,
   onApprove,
-  onReject,
   approveActionLabel = 'Approve ID',
   onRequestResubmit,
   onUpdateImages,
   documentTypeEdit = onUpdateImages ? 'inline' : 'credentials-flag',
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
-  const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
   const applicationVerifyBlocker = staffApproveIdVerificationBlocker(guard);
   const resubmitPending = guardIdVerificationResubmitPending(guard);
   const canApprove = staffCanApproveIdVerification(guard);
@@ -285,31 +280,6 @@ export function StaffIdReviewSection({
               Resubmit all ID photos
             </AppButton>
           </>
-        )}
-        {onReject && !applicationBlocked && status !== 'verified' && (
-          <AppButton
-            variant="danger"
-            size="sm"
-            disabled={actionPending}
-            onClick={() => {
-              if (actionPending) return;
-              void (async () => {
-                const reason = await promptRejectGuardApplicationNote();
-                if (reason === null) return;
-                setActionPending(true);
-                try {
-                  await onReject(guard.id, reason);
-                } catch (err) {
-                  showAppToast(err instanceof Error ? err.message : 'Could not reject application.', { tone: 'error' });
-                } finally {
-                  setActionPending(false);
-                }
-              })();
-            }}
-            startEnhancer={<X className="w-3.5 h-3.5" />}
-          >
-            Reject application
-          </AppButton>
         )}
       </div>
     </div>

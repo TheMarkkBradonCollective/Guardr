@@ -403,7 +403,6 @@ export function StaffCredentials({
       canManage={canVerifyCredentials}
       documentTypeEdit="inline"
       onApprove={onApproveIdentityVerification}
-      onReject={onRejectIdentityVerification}
       onRequestResubmit={onRequestIdentityResubmit}
       onUpdateImages={
         onUpdateGuardIdImages
