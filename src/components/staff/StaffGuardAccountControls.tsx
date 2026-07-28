@@ -28,6 +28,7 @@ interface StaffGuardAccountControlsProps {
   onUpdateUserStatus?: (guardId: string, status: 'active' | 'suspended' | 'blocked') => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   showApplicationActions?: boolean;
+  leadingActions?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
 }
@@ -47,6 +48,7 @@ export function StaffGuardAccountControls({
   onUpdateUserStatus,
   onRejectGuardApplication,
   showApplicationActions = true,
+  leadingActions,
   children,
   className = '',
 }: StaffGuardAccountControlsProps) {
@@ -113,6 +115,8 @@ export function StaffGuardAccountControls({
 
   return (
     <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
+      {leadingActions ? <div className="staff-detail-actions">{leadingActions}</div> : null}
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <WfSectionHeader title="Account access" className="!px-0 !mb-0" />
         <WfBadge tone={statusBadgeTone(status)}>{GUARD_USER_STATUS_LABELS[status]}</WfBadge>
