@@ -1128,7 +1128,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 - **Before active:** Activation screen (inline uploads on the same page).
 - **After active:** Account menu → **Profile** → **Credentials** tab (full catalog + gear & carry status).
 
-Staff can also open credentials from **Guards → guard detail** and upload documents on the guard's behalf.
+Staff can also open credentials from **Guards → guard detail** to review uploads and approve or reject them.
 
 | Section | What it is |
 |---------|------------|
@@ -1253,7 +1253,7 @@ The Guards panel lists all field guard accounts. Staff can:
 - Search and filter the guard roster.
 - Open a guard profile to view credentials, eligibility status, jobs, and contact info.
 - Add a new guard account (**Add guard** button).
-- Edit credentials and verify documents on behalf of the guard.
+- Review credentials and verify documents uploaded by the guard.
 - **Credentials** tab — full credential catalog plus **Account controls** (Suspend, Flag / Block, Restore for active guards). Government ID review is approve/resubmit only; deny or revoke applications from **Applications**.
 - Verify credentials; accounts auto-activate when all five required credentials are verified.
 - Suspend or restore access.

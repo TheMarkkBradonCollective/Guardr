@@ -6,6 +6,7 @@ import {
   staffCanEditExistingCredential,
   staffCanEditGuardCoi,
   staffCanEditGuardGovernmentId,
+  staffCanSetGovernmentIdDocumentType,
 } from './staffCredentialRules.ts';
 
 function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -21,54 +22,64 @@ function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
 }
 
 describe('staffCredentialRules', () => {
-  it('allows staff to edit pending credentials before decision', () => {
+  it('never allows staff to edit credential data', () => {
     assert.equal(
       staffCanEditExistingCredential({ guard: guard(), credentialStatus: 'pending' }),
-      true
+      false
     );
-  });
-
-  it('blocks staff from creating not-yet-submitted credentials', () => {
     assert.equal(
       staffCanEditExistingCredential({ guard: guard(), credentialStatus: 'not_submitted' }),
       false
     );
     assert.equal(staffCanEditExistingCredential({ guard: guard() }), false);
-  });
-
-  it('blocks staff from editing verified credentials without an update request', () => {
     assert.equal(
       staffCanEditExistingCredential({
         guard: guard({ userStatus: 'active' }),
         credentialStatus: 'verified',
       }),
       false
-    );
-  });
-
-  it('blocks staff from editing rejected credentials without an update request', () => {
-    assert.equal(
-      staffCanEditExistingCredential({ guard: guard(), credentialStatus: 'rejected' }),
-      false
-    );
-  });
-
-  it('allows staff edit when an update was requested after a decision', () => {
-    assert.equal(
-      staffCanEditExistingCredential({
-        guard: guard({ userStatus: 'active' }),
-        credentialStatus: 'verified',
-        updateRequested: true,
-      }),
-      true
     );
     assert.equal(
       staffCanEditExistingCredential({
         guard: guard(),
         credentialStatus: 'rejected',
+      }),
+      false
+    );
+    assert.equal(
+      staffCanEditExistingCredential({
+        guard: guard({ userStatus: 'active' }),
+        credentialStatus: 'verified',
         updateRequested: true,
       }),
+      false
+    );
+  });
+
+  it('allows staff to set government ID document type during pending review only', () => {
+    assert.equal(
+      staffCanSetGovernmentIdDocumentType(guard({ idVerificationStatus: 'pending' })),
       true
+    );
+    assert.equal(
+      staffCanSetGovernmentIdDocumentType(guard({ idVerificationStatus: 'not_submitted' })),
+      false
+    );
+    assert.equal(
+      staffCanSetGovernmentIdDocumentType(
+        guard({ userStatus: 'active', idVerificationStatus: 'verified' })
+      ),
+      false
+    );
+    assert.equal(
+      staffCanSetGovernmentIdDocumentType(
+        guard({
+          userStatus: 'active',
+          idVerificationStatus: 'verified',
+          idDocumentType: 'government_id',
+        })
+      ),
+      false
     );
   });
 
@@ -76,7 +87,7 @@ describe('staffCredentialRules', () => {
     const pendingCert = { status: 'pending', updateRequestedAt: undefined } as Certification;
     const verifiedCert = { status: 'verified', updateRequestedAt: undefined } as Certification;
     const rejectedCert = { status: 'rejected', updateRequestedAt: undefined } as Certification;
-    assert.equal(staffCanEditCertification(guard(), pendingCert), true);
+    assert.equal(staffCanEditCertification(guard(), pendingCert), false);
     assert.equal(staffCanEditCertification(guard({ userStatus: 'approved' }), verifiedCert), false);
     assert.equal(staffCanEditCertification(guard(), rejectedCert), false);
 
@@ -94,16 +105,6 @@ describe('staffCredentialRules', () => {
       ),
       false
     );
-    assert.equal(
-      staffCanEditGuardGovernmentId(
-        guard({
-          userStatus: 'active',
-          idVerificationStatus: 'verified',
-          idUpdateRequestedAt: '2026-01-01T00:00:00.000Z',
-        })
-      ),
-      true
-    );
 
     assert.equal(
       staffCanEditGuardCoi(
@@ -118,7 +119,7 @@ describe('staffCredentialRules', () => {
           },
         })
       ),
-      true
+      false
     );
     assert.equal(
       staffCanEditGuardCoi(

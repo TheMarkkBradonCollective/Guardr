@@ -175,14 +175,11 @@ export function StaffGuardDetailPanel({
   };
 
   const certOverlayNav = useMemo((): CertOverlayNavigation | undefined => {
-    if (!onOpenGuardCredential && !canManage) return undefined;
+    if (!onOpenGuardCredential) return undefined;
     return {
-      onViewFull: onOpenGuardCredential
-        ? (credentialItemId: string) => onOpenGuardCredential(guard.id, credentialItemId)
-        : undefined,
-      onEditFullPage: canManage ? () => setEditing(true) : undefined,
+      onViewFull: (credentialItemId: string) => onOpenGuardCredential(guard.id, credentialItemId),
     };
-  }, [onOpenGuardCredential, canManage, guard.id, onEditingChange, controlledEditing]);
+  }, [onOpenGuardCredential, guard.id]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -667,30 +664,15 @@ export function StaffGuardDetailPanel({
         </div>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
-          {renderAccountControlsSection({ editLabel: 'Edit credentials', stickyWhenEditing: true })}
+          {renderAccountControlsSection()}
           <GuardCredentialsPanel
             guard={guard}
-            editing={editing && canEdit}
-            weaponGearEditing={editing && canEdit}
-            equipmentGearEditing={editing && canEdit}
-            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-            onWeaponGearChange={(listedWeaponGear) =>
-              setResume((r) => ({ ...r, listedWeaponGear }))
-            }
-            onEquipmentGearChange={(listedEquipmentGear) =>
-              setResume((r) => ({ ...r, listedEquipmentGear }))
-            }
+            editing={false}
+            weaponGearEditing={false}
+            equipmentGearEditing={false}
+            weaponGearSelected={guard.listedWeaponGear ?? []}
+            equipmentGearSelected={guard.listedEquipmentGear ?? []}
             staffMode={canManage}
-            onSubmitIdentityVerification={
-              onUpdateGuardIdImages
-                ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                : undefined
-            }
-            onAddCertification={canManage ? onAddCertification : undefined}
-            onDeleteCertification={canManage ? onDeleteCertification : undefined}
-            onAttachCertificationImage={canManage ? onAttachCertificationImage : undefined}
-            onUpdateCertification={onUpdateCertification}
             onReviewInsurance={
               onReviewInsurance
                 ? (status, rejectionReason) => Promise.resolve(onReviewInsurance(status, rejectionReason))
@@ -831,17 +813,8 @@ export function StaffGuardDetailPanel({
                     hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement,
                   }))
                 }
-                onAddCertification={onAddCertification}
-                onDeleteCertification={onDeleteCertification}
-                onAttachCertificationImage={onAttachCertificationImage}
-                onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
-                onSubmitIdentityVerification={
-                  onUpdateGuardIdImages
-                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                    : onSubmitIdentityVerification
-                }
                 onReviewInsurance={
                   onReviewInsurance
                     ? async (status, rejectionReason) => {

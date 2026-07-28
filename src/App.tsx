@@ -4532,6 +4532,10 @@ export default function App() {
   ): Promise<AddCertificationResult> => {
     const staffSubmission = submittedByRole === 'staff' || newCert.submittedByRole === 'staff';
 
+    if (staffSubmission) {
+      return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
+    }
+
     if (
       isDisallowedCombinedGuardCertificate({
         catalogId: newCert.catalogId,
@@ -7010,28 +7014,29 @@ export default function App() {
     const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
     const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
     const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
-    if (
-      !front &&
-      !back &&
-      !selfie &&
-      !idState &&
-      !idNumber &&
-      !idExpiryDate &&
-      !payload.idDocumentType
-    ) {
-      return { ok: false, error: 'Enter ID details or upload at least one ID photo to save.' };
-    }
-
-    const complete = Boolean(idState && idNumber && idExpiryDate && front && back && selfie);
-    const dataChanged =
+    const documentTypeChanged =
+      idDocumentType !== guard.idDocumentType ||
+      (idLicenseClass ?? '') !== (guard.idLicenseClass ?? '').trim();
+    const credentialDataChanged =
       idState !== (guard.idState ?? '').trim().toUpperCase() ||
       idNumber !== (guard.idNumber ?? '').trim() ||
       idExpiryDate !== (guard.idExpiryDate ?? '').trim() ||
-      idDocumentType !== guard.idDocumentType ||
-      (idLicenseClass ?? '') !== (guard.idLicenseClass ?? '').trim() ||
       front !== (guard.idFrontUrl ?? '').trim() ||
       back !== (guard.idBackUrl ?? '').trim() ||
       selfie !== (guard.idSelfieUrl ?? '').trim();
+    if (credentialDataChanged) {
+      return { ok: false, error: STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE };
+    }
+    if (!documentTypeChanged) return { ok: true };
+    if (!idDocumentType) {
+      return { ok: false, error: 'Select Government ID or Driver’s license.' };
+    }
+    if (idDocumentType === 'drivers_license' && !idLicenseClass) {
+      return { ok: false, error: 'Select the driver’s license class.' };
+    }
+
+    const complete = Boolean(idState && idNumber && idExpiryDate && front && back && selfie);
+    const dataChanged = documentTypeChanged;
     if (!dataChanged) return { ok: true };
 
     const previous = { ...guard };
