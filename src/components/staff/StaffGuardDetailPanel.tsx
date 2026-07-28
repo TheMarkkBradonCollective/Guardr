@@ -712,9 +712,8 @@ export function StaffGuardDetailPanel({
           <GuardInventoryPanel
             guard={guard}
             editing={false}
-            weaponGearSelected={guard.listedWeaponGear ?? []}
-            equipmentGearSelected={guard.listedEquipmentGear ?? []}
-            showFullCatalog
+            equipment={guard.inventoryEquipment ?? []}
+            uniforms={guard.inventoryUniforms ?? []}
           />
         </section>
       ) : (

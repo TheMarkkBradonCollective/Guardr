@@ -270,9 +270,8 @@ export function GuardProfileScreen({
               <GuardInventoryPanel
                 guard={guard}
                 editing={false}
-                weaponGearSelected={guard.listedWeaponGear ?? []}
-                equipmentGearSelected={guard.listedEquipmentGear ?? []}
-                showFullCatalog={false}
+                equipment={guard.inventoryEquipment ?? []}
+                uniforms={guard.inventoryUniforms ?? []}
               />
             </section>
           ) : (

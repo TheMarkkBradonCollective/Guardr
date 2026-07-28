@@ -33,6 +33,8 @@ export interface GuardResumeSavePayload {
   hourlyRateRequirement?: number;
   listedWeaponGear?: GuardWeaponGearId[];
   listedEquipmentGear?: GuardEquipmentGearId[];
+  inventoryEquipment?: import('../../types').GuardInventoryEquipmentItem[];
+  inventoryUniforms?: import('../../types').GuardInventoryUniform[];
   jobTypePreferences?: JobType[];
 }
 

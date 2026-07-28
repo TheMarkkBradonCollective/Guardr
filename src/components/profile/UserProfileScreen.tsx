@@ -19,6 +19,7 @@ import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardInventoryPanel } from './GuardInventoryPanel';
+import { syncLegacyGearFromInventory } from '../../lib/guardInventory';
 import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
@@ -124,6 +125,8 @@ export function UserProfileScreen({
     hourlyRateRequirement: guard?.hourlyRateRequirement,
     listedWeaponGear: guard?.listedWeaponGear ?? [],
     listedEquipmentGear: guard?.listedEquipmentGear ?? [],
+    inventoryEquipment: guard?.inventoryEquipment ?? [],
+    inventoryUniforms: guard?.inventoryUniforms ?? [],
   });
 
   useEffect(() => {
@@ -323,17 +326,36 @@ export function UserProfileScreen({
           <GuardInventoryPanel
             guard={guard}
             editing={credentialsEditing || editing}
-            weaponGearSelected={resume.listedWeaponGear ?? guard.listedWeaponGear ?? []}
-            equipmentGearSelected={resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? []}
-            onWeaponGearChange={async (listedWeaponGear) => {
-              const listedEquipmentGear = resume.listedEquipmentGear ?? guard.listedEquipmentGear ?? [];
-              setResume((r) => ({ ...r, listedWeaponGear }));
-              await onSave({ ...buildPayload(), listedWeaponGear, listedEquipmentGear });
+            equipment={resume.inventoryEquipment ?? guard.inventoryEquipment ?? []}
+            uniforms={resume.inventoryUniforms ?? guard.inventoryUniforms ?? []}
+            onEquipmentChange={async (inventoryEquipment) => {
+              const inventoryUniforms = resume.inventoryUniforms ?? guard.inventoryUniforms ?? [];
+              const legacy = syncLegacyGearFromInventory(guard, inventoryEquipment);
+              setResume((r) => ({
+                ...r,
+                inventoryEquipment,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              }));
+              await onSave({
+                ...buildPayload(),
+                inventoryEquipment,
+                inventoryUniforms,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              });
             }}
-            onEquipmentGearChange={async (listedEquipmentGear) => {
-              const listedWeaponGear = resume.listedWeaponGear ?? guard.listedWeaponGear ?? [];
-              setResume((r) => ({ ...r, listedEquipmentGear }));
-              await onSave({ ...buildPayload(), listedWeaponGear, listedEquipmentGear });
+            onUniformsChange={async (inventoryUniforms) => {
+              const inventoryEquipment = resume.inventoryEquipment ?? guard.inventoryEquipment ?? [];
+              const legacy = syncLegacyGearFromInventory(guard, inventoryEquipment);
+              setResume((r) => ({ ...r, inventoryUniforms }));
+              await onSave({
+                ...buildPayload(),
+                inventoryEquipment,
+                inventoryUniforms,
+                listedWeaponGear: legacy.listedWeaponGear,
+                listedEquipmentGear: legacy.listedEquipmentGear,
+              });
             }}
           />
         </section>

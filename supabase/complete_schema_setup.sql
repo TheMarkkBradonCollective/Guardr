@@ -55,6 +55,8 @@ ALTER TABLE guards ADD CONSTRAINT guards_guard_card_status_check
   CHECK (guard_card_status IS NULL OR guard_card_status IN ('active', 'in_progress', 'none'));
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_weapon_gear JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_equipment_gear JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_equipment JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_preferences JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_onboarding JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
