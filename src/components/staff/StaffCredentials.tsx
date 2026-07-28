@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronRight, RefreshCw, ShieldCheck, X } from 'lucide-react';
-import { Certification, SecurityGuard } from '../../types';
+import { SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildStaffApprovalsFeed,
@@ -41,11 +41,8 @@ import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
-import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
-import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -71,15 +68,7 @@ interface StaffCredentialsProps {
     rejectionReason?: string
   ) => void | Promise<void>;
   onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
-  onUpdateCertification?: (
-    guardId: string,
-    certId: string,
-    payload: CertUpdatePayload
-  ) => Promise<CertUpdateResult>;
   onOpenGuardProfile?: (guardId: string) => void;
-  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
-  onAddCredentialForGuard?: (guardId: string) => void;
-  onEditGuardProfile?: (guardId: string) => void;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -164,11 +153,7 @@ export function StaffCredentials({
   onRequestIdentityResubmit,
   onReviewGuardInsurance,
   onRequestCoiUpdate,
-  onUpdateCertification,
   onOpenGuardProfile,
-  onAddCertification,
-  onAddCredentialForGuard,
-  onEditGuardProfile,
   onUpdateGuardIdImages,
 }: StaffCredentialsProps) {
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
@@ -571,14 +556,6 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
-      <div className="staff-ops-cta-stack">
-        {onAddCertification && (
-          <StaffCredentialAddForGuardForm
-            guards={guards}
-            onAddCertification={onAddCertification}
-          />
-        )}
-      </div>
       <WfSearchBar
         value={search}
         onChange={setSearch}

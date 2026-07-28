@@ -190,14 +190,6 @@ export function StaffGuardsPanel({
       onRejectCert,
       onUpdateBackgroundChecked,
       onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(guard.id, payload) : undefined,
-      onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(guard.id, cert) : undefined,
-      onDeleteCertification: onDeleteCertification ? (certId: string) => onDeleteCertification(guard.id, certId) : undefined,
-      onAttachCertificationImage: onAttachCertificationImage
-        ? (certId: string, imageUrl: string) => onAttachCertificationImage(guard.id, certId, imageUrl)
-        : undefined,
-      onUpdateCertification: onUpdateCertification
-        ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
-        : undefined,
       onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(guard.id, exp) : undefined,
       onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(guard.id, edu) : undefined,
       onApproveGuardAccount,
@@ -219,9 +211,6 @@ export function StaffGuardsPanel({
         : undefined,
       onRequestCertImageResubmit: onRequestCertImageResubmit
         ? (certId, staffNote) => onRequestCertImageResubmit(guard.id, certId, staffNote)
-        : undefined,
-      onUpdateGuardIdImages: onUpdateGuardIdImages
-        ? (payload) => onUpdateGuardIdImages(guard.id, payload)
         : undefined,
       onReviewInsurance: onReviewGuardInsurance
         ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)

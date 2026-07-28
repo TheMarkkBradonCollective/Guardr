@@ -1,7 +1,7 @@
 import type { Certification, SecurityGuard } from '../types';
 import { getGuardUserStatus } from './accountStatus';
 import { certUpdateSubmissionAllowed } from './certRevisionHistory';
-import { getGuardIdVerificationStatus } from './guardIdentityVerification';
+import { getGuardIdVerificationStatus, guardGovIdNeedsDocumentTypeSelection } from './guardIdentityVerification';
 import { resolveInsuranceStatus } from './guardInsurance';
 
 export const STAFF_CANNOT_SUBMIT_CREDENTIAL_MESSAGE =
@@ -11,29 +11,15 @@ export const STAFF_CREDENTIAL_LOCKED_AFTER_DECISION_MESSAGE =
   'This credential is locked after review. Request an update so it can be resubmitted.';
 
 /**
- * Staff may edit fields on an existing credential while it is still open
- * (pending / expired) or after Request update reopens it.
- * Once approved or denied (verified / rejected) with no update request,
- * nothing can change in place — staff must request an update so the guard
- * can resubmit. Staff must never create/submit a new credential for a guard.
+ * Staff may not edit guard credential data. They verify, approve, reject, and
+ * request updates — guards upload and resubmit.
  */
-export function staffCanEditExistingCredential(input: {
+export function staffCanEditExistingCredential(_input: {
   guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>;
   /** Credential review status when applicable. */
   credentialStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected' | 'expired';
   updateRequested?: boolean;
 }): boolean {
-  const { guard, credentialStatus, updateRequested } = input;
-  if (guard.isStaff) return false;
-
-  const account = getGuardUserStatus(guard);
-  if (account === 'blocked') return false;
-
-  if (updateRequested) return true;
-  // No credential yet — creating/submitting is the guard's job.
-  if (!credentialStatus || credentialStatus === 'not_submitted') return false;
-  if (credentialStatus === 'pending' || credentialStatus === 'expired') return true;
-  // Verified or rejected: sealed until staff requests an update / resubmit.
   return false;
 }
 
@@ -48,18 +34,23 @@ export function staffCanEditCertification(
   });
 }
 
+/** Staff may classify a pending government ID as ID vs driver's license during review. */
+export function staffCanSetGovernmentIdDocumentType(
+  guard: Pick<SecurityGuard, 'userStatus' | 'isStaff' | 'idVerificationStatus' | 'idDocumentType'>
+): boolean {
+  if (guard.isStaff) return false;
+  if (getGuardUserStatus(guard) === 'blocked') return false;
+  const status = getGuardIdVerificationStatus(guard);
+  return status === 'pending' && guardGovIdNeedsDocumentTypeSelection(guard);
+}
+
 export function staffCanEditGuardGovernmentId(
   guard: Pick<
     SecurityGuard,
-    'userStatus' | 'isStaff' | 'idVerificationStatus' | 'idUpdateRequestedAt'
+    'userStatus' | 'isStaff' | 'idVerificationStatus' | 'idDocumentType' | 'idUpdateRequestedAt'
   >
 ): boolean {
-  const status = getGuardIdVerificationStatus(guard);
-  return staffCanEditExistingCredential({
-    guard,
-    credentialStatus: status,
-    updateRequested: Boolean(guard.idUpdateRequestedAt),
-  });
+  return staffCanSetGovernmentIdDocumentType(guard);
 }
 
 export function staffCanEditGuardCoi(

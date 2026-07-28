@@ -756,27 +756,7 @@ export function StaffDashboard({
             onRequestIdentityResubmit={onRequestGuardIdResubmit}
             onReviewGuardInsurance={onReviewGuardInsurance}
             onRequestCoiUpdate={onRequestCoiUpdate}
-            onUpdateCertification={onUpdateCertification}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
-            onAddCertification={
-              canManageGuardAccounts && onAddCertification ? onAddCertification : undefined
-            }
-            onAddCredentialForGuard={
-              canManageGuardAccounts
-                ? (guardId) => {
-                    onStaffGuardEditChange?.(true);
-                    navigateSection('guards', { guardId });
-                  }
-                : undefined
-            }
-            onEditGuardProfile={
-              canManageGuardAccounts
-                ? (guardId) => {
-                    onStaffGuardEditChange?.(true);
-                    navigateSection('guards', { guardId });
-                  }
-                : undefined
-            }
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
           />
