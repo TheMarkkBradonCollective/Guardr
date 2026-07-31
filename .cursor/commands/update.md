@@ -64,7 +64,7 @@ Do not proceed to release steps with open PRs that should ship in this release.
 1. Deploy website (per project process)
 2. Update `docs/DEV-UPDATES.md` with release notes
 3. Update `docs/guardr-general-guide.md` if user-facing behavior changed
-4. Push `cursor/full-platform-update-8442`, **merge to `main`**, pull `main` locally
+4. Push `cursor/full-platform-update-97bf`, **merge to `main`**, pull `main` locally
 
 ## Clear all PRs
 
@@ -77,7 +77,7 @@ After merging what belongs on `main`:
 
 ## Rules
 
-- Branch names: `cursor/<descriptive-name>-8442`
+- Branch names: `cursor/<descriptive-name>-97bf`
 - Commit and push as you go
 - Never ship an APK where `version.json` says N but the binary is N-1
 - Website, PWA, and APK must be on the **same build** for a release

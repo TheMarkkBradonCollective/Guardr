@@ -1,13 +1,33 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Tuesday, July 28, 2026  
+**Last updated:** Friday, July 31, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.101**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.102**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Friday, July 31, 2026 — /update → v1.0.102
+
+**Shipped**
+- **Map-first mobile** — guard, client, and staff map tabs are full-bleed on phone/PWA/APK; the browse list no longer stacks under the map (desktop keeps the side inspector)
+- **PWA auto-update** — service worker checks on load and when the tab returns; new builds activate and reload automatically
+- **Loading screen** — app version (`beta v1.0.102`) shown on the boot splash for web, PWA, and APK
+- **UI fit** — map canvas uses absolute inset layout on all roles; FAB/offer cards no longer offset for a hidden browse dock
+- **v1.0.102** (build **202**) web + PWA + APK manifest aligned; APK binary rebuild via CI
+- PWA service worker cache bust: `guardr-cache-v1-0-102-beta`
+- `/update` slash command documented in `.cursor/commands/update.md`
+
+**Release verification**
+- `npm run lint`, `npm test`, and `npm run build` pass
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **202**), and `public/sw.js` aligned on **1.0.102-beta**
+- Schema: `complete_schema_setup.sql` current (inventory columns from v1.0.101 — no new migration)
+
+**Supabase:** no new SQL for this release if v1.0.101 inventory columns are already applied.
 
 ---
 

@@ -90,33 +90,22 @@ export function MapBrowseDock({
 
   if (selectedId) return null;
 
-  // Website desktop: side inspector list — no slide-up card / grab handle.
-  if (!gestureUi) {
-    return (
-      <aside
-        className="desktop-map-inspector dsk-map-inspector map-browse-dock--desktop"
-        aria-label="Jobs on map"
-      >
-        <div className="desktop-map-inspector-header">
-          <p className="desktop-map-inspector-header-label">Jobs on map</p>
-        </div>
-        <div className="desktop-map-inspector-body guard-scroll-panel">
-          {leading ? <div className="map-browse-leading mb-3">{leading}</div> : null}
-          <BrowseRows items={items} onSelect={onSelect} emptyMessage={emptyMessage} />
-        </div>
-      </aside>
-    );
-  }
+  // Map-first on mobile/PWA/APK: full-bleed canvas; jobs via pins + offer sheet only.
+  if (gestureUi) return null;
 
+  // Website desktop: side inspector list.
   return (
-    <div className={`map-browse-dock ${bottomOffsetClass}`}>
-      <div className="map-browse-dock-inner">
-        <div className="map-offer-card-handle" aria-hidden />
-
-        {leading ? <div className="map-browse-leading">{leading}</div> : null}
-
+    <aside
+      className="desktop-map-inspector dsk-map-inspector map-browse-dock--desktop"
+      aria-label="Jobs on map"
+    >
+      <div className="desktop-map-inspector-header">
+        <p className="desktop-map-inspector-header-label">Jobs on map</p>
+      </div>
+      <div className="desktop-map-inspector-body guard-scroll-panel">
+        {leading ? <div className="map-browse-leading mb-3">{leading}</div> : null}
         <BrowseRows items={items} onSelect={onSelect} emptyMessage={emptyMessage} />
       </div>
-    </div>
+    </aside>
   );
 }
