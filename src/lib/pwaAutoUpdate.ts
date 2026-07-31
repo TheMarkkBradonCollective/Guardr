@@ -5,7 +5,18 @@ let reloadScheduled = false;
 function scheduleReload(): void {
   if (reloadScheduled) return;
   reloadScheduled = true;
-  window.setTimeout(() => window.location.reload(), 120);
+  // Delay slightly so the toast renders before the page unloads.
+  window.setTimeout(() => window.location.reload(), 1200);
+}
+
+function notifyAndReload(): void {
+  try {
+    // Dynamically import so this module stays free of React/BaseUI deps at load time.
+    void import('./pwaUpdateToast').then(({ showPwaUpdateToast }) => showPwaUpdateToast());
+  } catch {
+    /* ignore if toast bridge not ready */
+  }
+  scheduleReload();
 }
 
 /** Check for a waiting service worker and activate it. */
@@ -32,7 +43,7 @@ export function initPwaAutoUpdate(): void {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    scheduleReload();
+    notifyAndReload();
   });
 
   void navigator.serviceWorker.ready.then((registration) => {

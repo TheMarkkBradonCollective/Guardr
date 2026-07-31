@@ -56,11 +56,11 @@ export function LoadingScreen() {
         }}
       />
 
-      {/* Version — visible on all surfaces (web, PWA, APK) */}
+      {/* Version — safe-area aware so it never clips on notched phones or APK */}
       <p
         style={{
           position: 'absolute',
-          bottom: '24px',
+          bottom: 'max(24px, calc(24px + env(safe-area-inset-bottom, 0px)))',
           left: 0,
           right: 0,
           textAlign: 'center',
