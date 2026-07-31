@@ -129,6 +129,9 @@ body[data-view-surface="pwa-mobile"] {
   .uber-bottom-nav {
     padding-bottom: max(0.25rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   }
+
+  /* Native tab bars sit taller so the thumb target clears the gesture bar. */
+  .uber-tab-btn { min-height: 60px; }
 }
 
 /* PWA tablet — hybrid touch+pointer layout */

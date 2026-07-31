@@ -1385,8 +1385,8 @@ html.theme-dark .uber-bottom-nav {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-height: 52px;
+  gap: 4px;
+  min-height: 56px;
   padding: 8px 4px 6px;
   border: none;
   background: transparent;

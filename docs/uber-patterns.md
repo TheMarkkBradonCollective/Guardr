@@ -4,7 +4,7 @@ Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/c
 
 ## Theme
 
-Production uses **Guardr-branded Base Web themes** — sage-green accent on stock Uber Base infrastructure:
+Production uses **Guardr-branded Base Web themes** — monochrome accent on stock Uber Base infrastructure:
 
 ```ts
 import { guardrThemeForMode } from '../theme/guardrBaseTheme';
@@ -14,11 +14,32 @@ import { useThemeMode } from '../lib/platform/useThemeMode';
 const theme = withAppBreakpoints(guardrThemeForMode(useThemeMode()));
 ```
 
-- **Light:** Guardr `LightTheme` — sage-green accent `#4A6B4E`, black primary CTA
-- **Dark:** Guardr `DarkTheme` — sage-green accent `#7AAE7F`, white primary CTA
+- **Light:** black accent `#000000`, black primary CTA on white / `#F6F6F6` surfaces
+- **Dark:** white accent `#FFFFFF`, white primary CTA; navigation and chrome layer on `#101010` so they stay legible against the `#000` canvas
 - `UberThemeVars` syncs theme tokens to CSS custom properties on every render
 - Use `useStyletron()` or Styletron token strings in overrides — **not** raw hex values
 - `--brand-*` CSS variables are bridged from theme tokens via `UberThemeVars`
+
+## Typography
+
+`src/theme/typography.ts` is the single source for font stacks and Uber's tracking scale — never inline a font stack.
+
+```ts
+import { FONT_DISPLAY, FONT_TEXT, TRACKING } from '../theme/typography';
+```
+
+- Uber Move / Uber Move Text are proprietary. `styles/uber-typography.css` declares **`Guardr Sans`** from `/public/fonts` (latin + latin-ext variable subsets) as the loaded stand-in, so stacks read `"Uber Move Text", "Guardr Sans", …` and render Uber's type colour even without Uber Move installed.
+- `withUberTypeScale()` retightens the Base Web display and heading slots (`-0.04em` display, `-0.02em` heading, `-0.01em` title); body and label slots stay at zero.
+- The service worker precaches the two normal-weight subsets, so an installed PWA never cold-starts in Arial.
+- Ops numerals use `.uber-tabular` / `font-variant-numeric: tabular-nums` so columns align.
+
+## Forms
+
+`styles/uber-forms.css` loads last and owns field chrome app-wide:
+
+- `.uber-label` / `.app-field-label` — sentence case, 14px/500, primary content colour (**not** uppercase micro-caps)
+- `.app-field-hint` — 13px caption in muted grey
+- Focus ring — 2px `--uber-text` on both native inputs and Base Web containers
 
 ## Provider stack
 
@@ -94,6 +115,35 @@ Global overlays live in `src/components/baseui/overlays/`:
 - `GuardrDrawerShell` — Uber-style shell: persistent sidebar (desktop), drawer (mobile/tablet), compact top bar
 - `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`
 - `PublicPageChrome`
+
+### Desktop workspace — Uber Freight TMS
+
+`resolveMobilityChrome()` turns these on for `*-desktop` surfaces only; nothing is passed per screen:
+
+| Piece | Element | Notes |
+|-------|---------|-------|
+| Icon rail | `GuardrIconRail` (`.uber-rail`) | Black column on the left edge: app-menu toggle on top, first nav group below, hover labels + badges. Stays put on full-bleed map screens. |
+| Global bar | `UberDirectTopHeader` | Wordmark left · `contextLabel` centred · notifications + account right. |
+| Page band | `.uber-page-band` | `pageBreadcrumb` › `title`, plus `headerContext` and `pageActions`. Suppressed when a screen passes `bleed` or `headerOverride`. |
+| Tabs | `WorkbenchTabBar` | Renders as underline tabs inside `[data-uber-direct]`; stays a chip row on phones. |
+
+Tablet and phone keep the compact `mobility-header` title, so the band never duplicates it.
+
+## Data display
+
+`src/components/baseui/`:
+
+- `UberDataTable` — quiet sentence-case headers, hairline rules, tabular figures, right-aligned amounts, whole-row hover/keyboard activation, optional per-column sorting. It measures its own container and switches to stacked record cards (`.uber-record`) whenever a table would scroll sideways — phones always, plus tablet portrait and split panes. Map columns onto card slots with `cardLayout`, or force a shape with `layout`.
+- `StatusChip` — tinted state pill (`positive` / `negative` / `warning` / `info` / `neutral` / `accent`), light and dark.
+
+Legacy `.uber-workbench-table` markup follows the same conventions, so existing staff/guard/client tables inherit the look without component changes.
+
+## Dev preview
+
+`npm run dev` then open `/?ui-preview=1` to render the signed-in chrome (rail, bar, band, sidebar, tabs, table, bottom nav) with static data — no session required. Dev only; the production bundle drops it.
+
+- `node scripts/ui-shots.mjs <outDir>` — public pages × desktop/tablet/mobile × light/dark
+- `node scripts/ui-tier-shots.mjs <outDir> [path]` — website · PWA full/lite · APK full/premium
 - `shellStyles.ts` — breakpoints + nav overrides
 - `mobilityChrome.ts` — per-`viewSurface` + experience-tier chrome (PWA Full/Lite, APK Full/Premium)
 

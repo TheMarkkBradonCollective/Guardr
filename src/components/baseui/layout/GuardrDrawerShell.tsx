@@ -165,8 +165,10 @@ export function GuardrDrawerShell({
     minWidth: `${iconSize}px`,
     minHeight: `${iconSize}px`,
     borderRadius: chrome.nativeChrome || chrome.premiumChrome ? '12px' : '10px',
-    border: `1px solid ${theme.colors.borderOpaque}`,
-    backgroundColor: theme.colors.backgroundPrimary,
+    // Uber's app headers use a ghost icon button; the outlined chip only
+    // appears when the header floats over a map.
+    border: isMapMode ? `1px solid ${theme.colors.borderOpaque}` : 'none',
+    backgroundColor: isMapMode ? theme.colors.backgroundPrimary : 'transparent',
     color: theme.colors.contentPrimary,
     display: 'flex',
     alignItems: 'center',

@@ -391,9 +391,12 @@ html.theme-dark .uber-workbench-tab--active {
 .uber-workbench-search-row-main {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   flex: 1;
-  min-width: 280px;
+  /* A fixed min-width pushed the trailing action past the content gutter on
+     phones; let the row shrink and wrap instead. */
+  min-width: 0;
 }
 
 .uber-workbench-search-row-filters {
@@ -408,7 +411,7 @@ html.theme-dark .uber-workbench-tab--active {
   align-items: center;
   gap: 10px;
   flex: 1;
-  min-width: 240px;
+  min-width: min(240px, 100%);
   max-width: 520px;
   min-height: 44px;
   padding: 0 14px;
