@@ -49,7 +49,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
     description:
-      'Deprecated — combined certificates are deleted. Upload Power to Arrest and Appropriate Use of Force as two separate certificates.',
+      'One certificate covering both Power to Arrest and Appropriate Use of Force when your school issued them together.',
   },
   {
     id: 'bsis-32-hour-completed',
@@ -74,7 +74,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
       'Annual 8-hour renewal — BSIS labels this Continuing Education on their site. Staff may request later for renewals. Not required for initial activation.',
   },
 
-  // ── PTA / UOF — separate certificates only (combined uploads are deleted) ──
+  // ── PTA / UOF — separate certificates or combined 8-hour cert ──
   {
     id: 'bsis-power-to-arrest',
     name: 'Power to Arrest',
