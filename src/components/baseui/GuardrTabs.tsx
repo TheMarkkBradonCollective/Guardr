@@ -8,6 +8,7 @@
 import React from 'react';
 import { Tabs, Tab } from './baseuiShims';
 import { useStyletron } from 'baseui';
+import { FONT_TEXT } from '../../theme/typography';
 
 export interface GuardrTab {
   key: string;
@@ -77,7 +78,7 @@ export function GuardrTabs({
           overrides={{
             Tab: {
               style: ({ $active }: { $active?: boolean }) => ({
-                fontFamily: '"Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontFamily: FONT_TEXT,
                 fontWeight: $active ? 700 : 500,
                 fontSize: '14px',
                 color: $active ? theme.colors.contentPrimary : theme.colors.contentSecondary,

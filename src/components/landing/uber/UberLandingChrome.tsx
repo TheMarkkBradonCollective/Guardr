@@ -6,6 +6,7 @@ import { ChevronDown, MapPin, Menu, Navigation, Shield, X } from 'lucide-react';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 interface UberLandingNavProps {
   themeMode: ThemeMode;
@@ -172,7 +173,7 @@ export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: Ub
         as="h1"
         margin={`0 0 ${theme.sizing.scale600}`}
         $style={{
-          fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+          fontFamily: FONT_DISPLAY,
           fontWeight: 700,
           fontSize: isMobile
             ? 'clamp(2.25rem, 8vw, 2.75rem)'

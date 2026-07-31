@@ -17,6 +17,7 @@ import { initPwaAutoUpdate } from './lib/pwaAutoUpdate';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
+import './styles/uber-typography.css';
 import './styles/guardr-design-tokens.css';
 import './styles/uber-tokens.css';
 import './styles/uber-surfaces.css';

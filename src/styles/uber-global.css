@@ -7,7 +7,7 @@
 /* ─── Typography ─────────────────────────────────────────────────────────── */
 
 html, body, .mobility-platform {
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   color: var(--uber-text, #000);
   background: var(--uber-bg, #fff);
@@ -18,7 +18,7 @@ h1, h2, h3, h4, h5, h6,
 .landing-hero-title,
 .adm-card-title,
 .adm-card-heading {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   letter-spacing: -0.025em;
   color: var(--uber-text, #000);
 }
@@ -80,7 +80,7 @@ html.theme-dark .signature-security-brand:hover {
   font-weight: 600 !important;
   min-height: 48px;
   box-shadow: none !important;
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   transition: background-color 150ms ease, transform 120ms ease;
 }
 
@@ -135,7 +135,7 @@ html.theme-dark .adm-btn--primary {
   min-height: 32px !important;
   font-weight: 600 !important;
   box-shadow: none !important;
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .app-subscreen-back:hover,
@@ -539,7 +539,7 @@ html.theme-dark .uber-action-icon-circle { background: var(--uber-elevated, #2b2
 }
 
 .uber-overlay-sheet-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--uber-text, #000);

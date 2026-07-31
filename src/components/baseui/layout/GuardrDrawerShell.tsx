@@ -13,6 +13,7 @@ import { useDevice } from '../../../lib/platform';
 import { prefersReducedMotion } from '../../../theme/motionTokens';
 import { MoreMenuSheet } from '../../layouts/MoreMenuSheet';
 import type { BottomNavItem } from '../../layouts/BottomNavBar';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 export interface SidebarPrimaryAction {
   label: string;
@@ -251,7 +252,7 @@ export function GuardrDrawerShell({
             margin={0}
             className={isDesktopWorkspace ? 'uber-direct-wordmark' : undefined}
             $style={{
-              fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontFamily: FONT_DISPLAY,
               fontWeight: 800,
               letterSpacing: '-0.04em',
               lineHeight: 1.05,
@@ -465,7 +466,7 @@ export function GuardrDrawerShell({
                   margin={0}
                   className={isDesktopWorkspace ? 'uber-direct-page-title' : undefined}
                   $style={{
-                    fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontFamily: FONT_DISPLAY,
                     fontSize: isDesktopWorkspace ? '32px' : '28px',
                     fontWeight: 700,
                     lineHeight: 1.15,

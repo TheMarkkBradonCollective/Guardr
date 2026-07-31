@@ -10,7 +10,7 @@
   min-height: 100vh;
   background: var(--uber-bg, #fff);
   color: var(--uber-text, #000);
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -53,7 +53,7 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   text-decoration: none;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   white-space: nowrap;
 }
 
@@ -205,7 +205,7 @@
 
 /* Giant bold heading — "Move the way you want" / "Get in the driving seat" */
 .dsk-hero-heading {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: clamp(2.5rem, 4vw, 3.75rem);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -238,7 +238,7 @@ html.theme-dark .dsk-hero-heading { color: #fff; }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   letter-spacing: -0.01em;
 }
 
@@ -290,7 +290,7 @@ html.theme-dark .dsk-hero-role-card-link { color: #fff; border-color: #fff; }
   border-radius: 8px;
   font-size: 15px;
   font-weight: 700;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding: 14px 24px;
   cursor: pointer;
   transition: background-color 120ms ease, transform 100ms ease;
@@ -461,7 +461,7 @@ html.theme-dark .dsk-hero-cta-link { color: #fff; text-decoration-color: rgba(25
 }
 
 .dsk-explore-heading {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -517,7 +517,7 @@ html.theme-dark .dsk-explore-card { background: var(--uber-surface, #1a1a1a); }
 html.theme-dark .dsk-explore-card-icon { background: var(--uber-elevated, #2b2b2b); color: #fff; }
 
 .dsk-explore-card-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 17px;
   font-weight: 700;
   color: var(--uber-text, #000);
@@ -563,7 +563,7 @@ html.theme-dark .dsk-login-band { background: var(--uber-surface, #1a1a1a); }
 }
 
 .dsk-login-band-heading {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -627,7 +627,7 @@ html.theme-dark .dsk-login-band-stat-card {
 }
 
 .dsk-login-band-stat-value {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.03em;

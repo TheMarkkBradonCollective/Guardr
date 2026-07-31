@@ -4,6 +4,7 @@ import { useStyletron } from 'baseui';
 import type { FormFactor } from '../../../lib/platform/device';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { EXPLORE_SERVICES } from './uberLandingData';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 interface UberExploreGridProps {
   formFactor: FormFactor;
@@ -29,7 +30,7 @@ export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGri
           as="h2"
           margin="0 0 scale800"
           $style={{
-            fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontFamily: FONT_DISPLAY,
             fontWeight: 700,
             fontSize: isMobile ? '1.375rem' : '1.75rem',
             letterSpacing: '-0.025em',
@@ -98,7 +99,7 @@ export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGri
                     as="h3"
                     margin="0 0 6px"
                     $style={{
-                      fontFamily: '"Uber Move", Helvetica, Arial',
+                      fontFamily: FONT_DISPLAY,
                       fontWeight: 700,
                       fontSize: '16px',
                       color: theme.colors.contentPrimary,
@@ -161,7 +162,7 @@ export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLogi
             as="h2"
             margin="0 0 scale400"
             $style={{
-              fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontFamily: FONT_DISPLAY,
               fontWeight: 700,
               fontSize: isMobile ? '1.5rem' : '2rem',
               letterSpacing: '-0.025em',

@@ -6,6 +6,7 @@
 import React from 'react';
 import { FormControl } from './baseuiShims';
 import { useStyletron } from 'baseui';
+import { FONT_TEXT } from '../../theme/typography';
 
 interface GuardrFormControlProps {
   label?: React.ReactNode;
@@ -39,7 +40,7 @@ export function GuardrFormControl({
       overrides={{
         Label: {
           style: {
-            fontFamily: '"Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontFamily: FONT_TEXT,
             fontSize: '12px',
             fontWeight: 700,
             textTransform: 'uppercase',

@@ -1,0 +1,130 @@
+/* ─────────────────────────────────────────────────────────────
+   Uber Base — typography foundation
+
+   Uber Move / Uber Move Text are proprietary. When they are not
+   installed locally we fall back to a self-hosted variable
+   grotesque (Inter) that matches Uber Move Text's tall x-height
+   and neutral grotesque skeleton, so the product renders with the
+   intended type colour instead of Arial.
+
+   Files live in /public/fonts (latin + latin-ext subsets only) so
+   the PWA and APK ship the type system offline.
+   ───────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Guardr Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Guardr Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Guardr Sans';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-italic.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+/* ── Uber type scale ───────────────────────────────────────────
+   Uber Base sets display type tight (-0.02 → -0.04em) and body
+   type at 0. These tokens are the single source for both Base Web
+   overrides (theme/typography.ts) and legacy CSS.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --uber-tracking-display: -0.04em;
+  --uber-tracking-heading: -0.02em;
+  --uber-tracking-title: -0.01em;
+  --uber-tracking-body: 0;
+  --uber-tracking-label: 0.02em;
+  --uber-tracking-overline: 0.08em;
+
+  --uber-display-lg: clamp(40px, 6vw, 64px);
+  --uber-display-md: clamp(32px, 4.6vw, 48px);
+  --uber-display-sm: clamp(28px, 3.6vw, 36px);
+
+  --uber-heading-xxl: 36px;
+  --uber-heading-xl: 32px;
+  --uber-heading-lg: 28px;
+  --uber-heading-md: 24px;
+  --uber-heading-sm: 20px;
+  --uber-heading-xs: 16px;
+
+  --uber-body-lg: 18px;
+  --uber-body-md: 16px;
+  --uber-body-sm: 14px;
+  --uber-body-xs: 12px;
+
+  --uber-leading-display: 1.06;
+  --uber-leading-heading: 1.16;
+  --uber-leading-body: 1.5;
+
+  --uber-weight-display: 700;
+  --uber-weight-heading: 600;
+  --uber-weight-label: 500;
+}
+
+/* Headings inherit Uber's display treatment app-wide. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.uber-display,
+.uber-page-title {
+  font-family: var(--uber-font-display, 'Guardr Sans', sans-serif);
+  letter-spacing: var(--uber-tracking-heading);
+  line-height: var(--uber-leading-heading);
+}
+
+h1,
+.uber-display {
+  letter-spacing: var(--uber-tracking-display);
+  line-height: var(--uber-leading-display);
+}
+
+/* Uber renders numerals in tables/metrics with tabular figures so
+   columns stay optically aligned. */
+.uber-tabular,
+.uber-metric-value,
+.uber-table td,
+.uber-table th,
+[data-uber-numeric] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv05' 1;
+}
+
+.uber-overline {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--uber-tracking-overline);
+  text-transform: uppercase;
+  color: var(--uber-text-muted, #767676);
+}
+
+/* Uber Move has a lower optical weight than Inter at the same
+   numeric weight — nudge rendering so headlines read the same. */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
