@@ -26,7 +26,7 @@
 /* ─── Section titles — Uber bold page header ─────────────────────────────── */
 
 .app-screen-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -54,7 +54,7 @@ html.theme-dark .app-screen-title { color: #fff; }
 }
 
 .app-dashboard-hero-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: clamp(1.625rem, 5vw, 2rem);
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -76,7 +76,7 @@ html.theme-dark .app-dashboard-hero-title { color: #fff; }
 }
 
 .app-section-head h2 {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -286,7 +286,7 @@ html.theme-dark .app-search-inline:focus-within { background: var(--uber-elevate
 .uber-stat-cell:last-child { border-right: none; }
 
 .uber-stat-value {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -405,7 +405,7 @@ html.theme-dark .uber-live-card { background: #1a1a1a; border: 1px solid #2b2b2b
 }
 
 .uber-live-card-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: #fff;
@@ -425,7 +425,7 @@ html.theme-dark .uber-live-card { background: #1a1a1a; border: 1px solid #2b2b2b
 }
 
 .uber-live-stat-value {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: #fff;
@@ -594,7 +594,7 @@ html.theme-dark .uber-map-bottom-sheet { background: var(--uber-bg, #000); }
 }
 
 .uber-map-bottom-sheet-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -618,7 +618,7 @@ html.theme-dark .uber-map-bottom-sheet-title { color: #fff; }
 }
 
 .uber-earnings-amount {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 36px;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -770,7 +770,7 @@ html.theme-dark .uber-status-badge--inactive { background: var(--uber-elevated, 
   border-radius: 8px;
   font-size: 15px;
   font-weight: 700;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding: 16px 24px;
   cursor: pointer;
   min-height: 52px;
@@ -797,7 +797,7 @@ html.theme-dark .uber-cta-full:hover { background: #e2e2e2; }
   border-radius: 8px;
   font-size: 15px;
   font-weight: 700;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding: 14px 24px;
   cursor: pointer;
   min-height: 52px;
@@ -904,7 +904,7 @@ html.theme-dark .client-home-live-card { background: #1a1a1a !important; border:
 }
 
 .client-home-stat-value {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -979,7 +979,7 @@ html.theme-dark .client-home-glance-tile { background: var(--uber-elevated, #2b2
 html.theme-dark .client-home-glance-tile:hover { background: var(--uber-border, #3d3d3d); }
 
 .client-home-glance-value {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -1215,7 +1215,7 @@ html.theme-dark .app-back-pill:active {
 }
 
 .app-subscreen-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 17px;
   font-weight: 700;
   color: var(--uber-text, #000);
@@ -1385,8 +1385,8 @@ html.theme-dark .uber-bottom-nav {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-height: 52px;
+  gap: 4px;
+  min-height: 56px;
   padding: 8px 4px 6px;
   border: none;
   background: transparent;
@@ -1424,7 +1424,7 @@ html.theme-dark .uber-tab-btn[data-active="true"] { color: #fff; }
   line-height: 1;
   letter-spacing: 0.01em;
   color: inherit;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .uber-tab-btn[data-active="true"] .uber-tab-label {
@@ -1739,7 +1739,7 @@ html.theme-dark .uber-payment-row { background: #111; border-top-color: #222; co
 }
 
 .adm-panel-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 18px;
   font-weight: 700;
   color: var(--uber-text, #000);
@@ -1763,7 +1763,7 @@ html.theme-dark .adm-panel-title { color: #fff; }
 }
 
 .app-page-lead-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 24px;
   font-weight: 700;
   color: var(--uber-text, #000);

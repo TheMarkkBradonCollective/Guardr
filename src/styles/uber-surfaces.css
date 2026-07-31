@@ -16,7 +16,7 @@
   --adm-text: var(--uber-text, #000000);
   --adm-muted: var(--uber-text-muted, #6b6b6b);
   --adm-border: var(--uber-border, #e2e2e2);
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 html.theme-dark .uber-app-shell {

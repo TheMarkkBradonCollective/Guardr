@@ -8,6 +8,7 @@
 import React from 'react';
 import { Badge as BaseBadge, SHAPE, COLOR } from 'baseui/badge';
 import { useStyletron } from 'baseui';
+import { FONT_TEXT } from '../../theme/typography';
 
 interface GuardrBadgeProps {
   count: number;
@@ -39,7 +40,7 @@ export function GuardrBadge({
       overrides={{
         Badge: {
           style: {
-            fontFamily: '"Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontFamily: FONT_TEXT,
             fontWeight: 700,
             fontSize: '10px',
             minWidth: '16px',

@@ -4,6 +4,7 @@ import { useStyletron } from 'baseui';
 import type { FormFactor } from '../../../lib/platform/device';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { EXPLORE_SERVICES } from './uberLandingData';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 interface UberExploreGridProps {
   formFactor: FormFactor;
@@ -20,16 +21,19 @@ export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGri
     <Block
       as="section"
       aria-label="Explore Guardr services"
-      padding={isMobile ? 'scale800 scale600' : 'scale1200 scale800'}
+      paddingTop={isMobile ? 'scale800' : 'scale1200'}
+      paddingBottom={isMobile ? 'scale800' : 'scale1200'}
+      paddingLeft={isMobile ? 'scale600' : 'scale800'}
+      paddingRight={isMobile ? 'scale600' : 'scale800'}
       backgroundColor="backgroundPrimary"
     >
       <Block maxWidth="1280px" margin="0 auto" width="100%">
         {/* Section heading */}
         <Block
           as="h2"
-          margin="0 0 scale800"
+          marginTop={0} marginBottom="scale800" marginLeft={0} marginRight={0}
           $style={{
-            fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontFamily: FONT_DISPLAY,
             fontWeight: 700,
             fontSize: isMobile ? '1.375rem' : '1.75rem',
             letterSpacing: '-0.025em',
@@ -98,7 +102,7 @@ export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGri
                     as="h3"
                     margin="0 0 6px"
                     $style={{
-                      fontFamily: '"Uber Move", Helvetica, Arial',
+                      fontFamily: FONT_DISPLAY,
                       fontWeight: 700,
                       fontSize: '16px',
                       color: theme.colors.contentPrimary,
@@ -144,7 +148,10 @@ export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLogi
       as="section"
       aria-label="Sign in to your account"
       className="uber-landing-login-band"
-      padding={isMobile ? 'scale800 scale600' : 'scale1200 scale800'}
+      paddingTop={isMobile ? 'scale800' : 'scale1200'}
+      paddingBottom={isMobile ? 'scale800' : 'scale1200'}
+      paddingLeft={isMobile ? 'scale600' : 'scale800'}
+      paddingRight={isMobile ? 'scale600' : 'scale800'}
       backgroundColor="backgroundPrimary"
       overrides={{ Block: { style: { borderTop: `1px solid ${theme.colors.borderOpaque}` } } }}
     >
@@ -159,9 +166,9 @@ export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLogi
         <Block>
           <Block
             as="h2"
-            margin="0 0 scale400"
+            marginTop={0} marginBottom="scale400" marginLeft={0} marginRight={0}
             $style={{
-              fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontFamily: FONT_DISPLAY,
               fontWeight: 700,
               fontSize: isMobile ? '1.5rem' : '2rem',
               letterSpacing: '-0.025em',
@@ -172,7 +179,7 @@ export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLogi
           </Block>
           <Block
             as="p"
-            margin="0 0 scale600"
+            marginTop={0} marginBottom="scale600" marginLeft={0} marginRight={0}
             $style={{ fontSize: '15px', color: theme.colors.contentSecondary, lineHeight: 1.5 }}
           >
             View active shifts, past jobs, earnings, and messages — all in one place.

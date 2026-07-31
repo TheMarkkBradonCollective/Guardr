@@ -106,7 +106,7 @@ function FeatureColumn({
       <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary">
         {lead}
       </ParagraphMedium>
-      <Block as="ul" margin="0 0 scale800" padding={0} $style={{ listStyle: 'none' }}>
+      <Block as="ul" marginTop={0} marginBottom="scale800" marginLeft={0} marginRight={0} padding={0} $style={{ listStyle: 'none' }}>
         {features.map(({ icon: Icon, title, body }) => (
           <Block
             as="li"
@@ -157,7 +157,7 @@ export function LandingTrustStrip({ formFactor }: { formFactor: FormFactor }) {
   if (formFactor === 'mobile') return null;
 
   return (
-    <Block as="section" padding="scale800 0" backgroundColor="backgroundSecondary" aria-label="Platform highlights">
+    <Block as="section" paddingTop="scale800" paddingBottom="scale800" backgroundColor="backgroundSecondary" aria-label="Platform highlights">
       <Block maxWidth="1200px" margin="0 auto" paddingLeft="scale800" paddingRight="scale800">
         <Block
           display="grid"
@@ -202,7 +202,7 @@ export function LandingBodySections({
 
       <LandingTrustStrip formFactor={formFactor} />
 
-      <Block as="section" padding={`${sectionPad} 0`}>
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad}>
         <Block maxWidth={containerMax} margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad}>
           <LandingSectionHead
             badge="How it works"
@@ -229,7 +229,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundPrimary" overrides={{ Block: { style: { borderTop: '1px solid', borderColor: 'borderOpaque' } } }}>
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundPrimary" overrides={{ Block: { style: { borderTop: '1px solid', borderColor: 'borderOpaque' } } }}>
         <Block maxWidth={containerMax} margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad}>
           <Block
             display="grid"
@@ -259,7 +259,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundSecondary">
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundSecondary">
         <Block maxWidth={containerMax} margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad}>
           <LandingSectionHead
             badge="Everything included"
@@ -287,7 +287,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundPrimary">
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundPrimary">
         <Block maxWidth={containerMax} margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad} $style={{ textAlign: 'center' }}>
           <LandingSectionHead
             badge="Coverage types"
@@ -299,7 +299,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundSecondary">
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundSecondary">
         <Block maxWidth="640px" margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad}>
           <GuardrCard>
             <Block $style={{ textAlign: 'center' }}>
@@ -321,7 +321,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundPrimary">
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundPrimary">
         <Block maxWidth={containerMax} margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad}>
           <Block $style={{ textAlign: 'center' }} marginBottom="scale800">
             <HeadingMedium marginTop="0" marginBottom="scale400" overrides={{ Block: { style: { fontWeight: 900 } } }}>
@@ -335,7 +335,7 @@ export function LandingBodySections({
         </Block>
       </Block>
 
-      <Block as="section" padding={`${sectionPad} 0`} backgroundColor="backgroundSecondary">
+      <Block as="section" paddingTop={sectionPad} paddingBottom={sectionPad} backgroundColor="backgroundSecondary">
         <Block maxWidth="640px" margin="0 auto" paddingLeft={sectionPad} paddingRight={sectionPad} $style={{ textAlign: 'center' }}>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -393,7 +393,8 @@ export function LandingHeroSection({
   return (
     <Block
       as="section"
-      padding={`${sectionPad} 0 scale1000`}
+      paddingTop={sectionPad}
+      paddingBottom="scale1000"
       position="relative"
       overflow="hidden"
       data-landing-hero
@@ -417,7 +418,7 @@ export function LandingHeroSection({
             >
               <Block
                 as="h1"
-                margin="0 0 scale500"
+                marginTop={0} marginBottom="scale500" marginLeft={0} marginRight={0}
                 $style={{
                   fontWeight: 900,
                   letterSpacing: '-0.04em',

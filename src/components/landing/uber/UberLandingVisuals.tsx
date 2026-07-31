@@ -2,6 +2,7 @@ import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
 import { MapPin, Shield, Star, Radio, ChevronRight, Phone } from 'lucide-react';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 /**
  * Hero illustration — mimics Uber's mobile app screenshot:
@@ -114,7 +115,7 @@ export function UberLandingHeroVisual() {
         display="flex"
         alignItems="center"
         gridGap="scale200"
-        padding="scale300 scale400"
+        paddingTop="scale300" paddingBottom="scale300" paddingLeft="scale400" paddingRight="scale400"
         overrides={{
           Block: {
             style: {
@@ -170,7 +171,7 @@ export function UberLandingHeroVisual() {
           paddingBottom="scale400"
           overrides={{ Block: { style: { borderBottom: `1px solid ${isDark ? '#1a1a1a' : '#eeeeee'}` } } }}
         >
-          <Block as="p" margin={0} $style={{ fontFamily: '"Uber Move", Helvetica, Arial', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.02em', color: isDark ? '#fff' : '#000' }}>
+          <Block as="p" margin={0} $style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: '18px', letterSpacing: '-0.02em', color: isDark ? '#fff' : '#000' }}>
             Available guards
           </Block>
         </Block>
@@ -180,7 +181,7 @@ export function UberLandingHeroVisual() {
           display="flex"
           alignItems="center"
           gridGap="scale400"
-          padding="scale500 scale600"
+          paddingTop="scale500" paddingBottom="scale500" paddingLeft="scale600" paddingRight="scale600"
           overrides={{ Block: { style: { borderBottom: `1px solid ${isDark ? '#1a1a1a' : '#eeeeee'}` } } }}
         >
           <Block
@@ -222,7 +223,7 @@ export function UberLandingHeroVisual() {
           display="flex"
           alignItems="center"
           gridGap="scale400"
-          padding="scale500 scale600"
+          paddingTop="scale500" paddingBottom="scale500" paddingLeft="scale600" paddingRight="scale600"
         >
           <Block
             width="44px"

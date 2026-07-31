@@ -17,10 +17,12 @@ Guardr is **not** an employer, staffing agency, or licensed security services pr
 
 ## Design
 
-- Uber-inspired, mobile-first UI
-- Sage green primary brand color (`#7C9A7A` / `#84a279`)
-- Two themes: Dark and Light
-- Large typography, minimal clutter, action-focused flows
+Built on Uber's [Base design system](https://baseweb.design) — see **[docs/uber-patterns.md](docs/uber-patterns.md)**.
+
+- Monochrome palette: black primary actions on white / `#F6F6F6` surfaces, inverted in dark mode
+- Uber Move type scale, self-hosted so it renders offline in the PWA and APK
+- Purpose-built chrome per surface: Uber Freight workspace on desktop (icon rail, page band, ops tables), labelled sidebar on tablet, tab bar and record cards on phones
+- Two themes: Light and Dark, plus PWA Full/Lite and APK Full/Premium experience tiers
 
 ## Tech Stack
 

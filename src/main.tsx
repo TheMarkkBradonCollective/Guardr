@@ -17,6 +17,7 @@ import { initPwaAutoUpdate } from './lib/pwaAutoUpdate';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
+import './styles/uber-typography.css';
 import './styles/guardr-design-tokens.css';
 import './styles/uber-tokens.css';
 import './styles/uber-surfaces.css';
@@ -32,6 +33,9 @@ import './styles/staff-management-flat.css';
 import './styles/uber-mobile-overview.css';
 import './styles/platform-optimizations.css';
 import './styles/uber-in-app.css';
+import './styles/uber-data.css';
+import './styles/uber-forms.css';
+import './styles/uber-text-case.css';
 
 applyThemeToDocument(loadTheme());
 
@@ -57,18 +61,35 @@ if (!Capacitor.isNativePlatform()) {
   });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <DeviceProvider>
-      <BaseUIProvider>
-        <AppMotionProvider>
-          <AppSnackbarProvider>
-            <App />
-            <OfflineBanner />
-            <AppConfirmHost />
-          </AppSnackbarProvider>
-        </AppMotionProvider>
-      </BaseUIProvider>
-    </DeviceProvider>
-  </StrictMode>,
-);
+const root = createRoot(document.getElementById('root')!);
+
+function renderApp(children: React.ReactNode) {
+  root.render(
+    <StrictMode>
+      <DeviceProvider>
+        <BaseUIProvider>
+          <AppMotionProvider>
+            <AppSnackbarProvider>
+              {children}
+              <OfflineBanner />
+              <AppConfirmHost />
+            </AppSnackbarProvider>
+          </AppMotionProvider>
+        </BaseUIProvider>
+      </DeviceProvider>
+    </StrictMode>,
+  );
+}
+
+// Dev-only shell harness: `?ui-preview=1` renders the signed-in chrome with
+// static data so layout work can be reviewed without a live session.
+const wantsUiPreview =
+  import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('ui-preview');
+
+if (wantsUiPreview) {
+  void import('./dev/UiPreview').then(({ default: UiPreview }) => renderApp(<UiPreview />));
+} else {
+  renderApp(<App />);
+}

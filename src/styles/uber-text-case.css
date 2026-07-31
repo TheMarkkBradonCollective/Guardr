@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER BASE — text case
+
+   Uber writes field labels, section headings and metric captions in
+   sentence case; only small overlines (kickers, eyebrows, divider labels)
+   stay uppercase. The legacy stylesheets had drifted to uppercase
+   micro-caps for all of them, which reads as an admin console rather than
+   an Uber product surface.
+
+   Loaded last so one rule settles the case for every screen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Field labels ────────────────────────────────────────────────────────── */
+
+.detail-field-label,
+.auth-form-label,
+.incident-report-label,
+.client-violation-section-label,
+.guard-rating-group-label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--uber-text, #000000) !important;
+}
+
+/* ─── Section headings ────────────────────────────────────────────────────── */
+
+.app-form-section-title,
+.form-sheet-section-title,
+.settings-section-head,
+.app-inbox-section-head,
+.overview-visual-title,
+.overview-tier-progress-stack-title,
+.landing-preview-title {
+  font-family: var(--uber-font-display) !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: var(--uber-tracking-title, -0.01em) !important;
+  text-transform: none !important;
+  color: var(--uber-text, #000000) !important;
+}
+
+/* ─── Metric captions ─────────────────────────────────────────────────────── */
+
+.app-metric-cell-label,
+.dashboard-kpi-label,
+.guard-performance-stat-label,
+.guard-rating-compact-score-label,
+.staff-stats-metric-label,
+.client-home-stat-label,
+.wf-metric-label,
+.guard-card-stat-label,
+.map-filter-step-label {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+/* Metric values keep Uber's tabular figures so stacked cards line up. */
+.app-metric-cell-value,
+.dashboard-kpi-value,
+.guard-performance-stat-value,
+.staff-stats-metric-value,
+.client-home-stat-value,
+.wf-metric-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--uber-tracking-title, -0.01em);
+}

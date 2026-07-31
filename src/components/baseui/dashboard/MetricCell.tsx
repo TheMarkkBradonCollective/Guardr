@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStyletron } from 'baseui';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 export type MetricTrend = 'up' | 'down' | 'neutral';
 
@@ -49,7 +50,7 @@ export function MetricCell({
   const inner = (
     <div className="app-metric-cell" style={{ padding: '16px 12px', textAlign: 'center' }}>
       <p style={{
-        fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+        fontFamily: FONT_DISPLAY,
         fontSize: '22px',
         fontWeight: 700,
         letterSpacing: '-0.02em',

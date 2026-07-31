@@ -22,7 +22,7 @@ body[data-form-factor="desktop"] {
   --adm-border: var(--uber-border, #e2e2e2);
   --adm-header-h: 3.5rem;
   --adm-hero-h: 6rem;
-  --adm-font: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --adm-font: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 html.theme-dark body[data-form-factor="desktop"] {
@@ -1996,13 +1996,13 @@ body[data-form-factor="desktop"] .dsk-app-topbar-brand {
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #fff;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 body[data-form-factor="desktop"] .dsk-app-topbar-wordmark {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #fff;
@@ -2048,7 +2048,7 @@ body[data-form-factor="desktop"] .dsk-app-topbar-tab {
   color: rgba(255, 255, 255, 0.72);
   font-size: 14px;
   font-weight: 500;
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   cursor: pointer;
   transition: color 100ms ease, background-color 100ms ease;
   white-space: nowrap;

@@ -8,6 +8,7 @@
 import React from 'react';
 import { Avatar as BaseAvatar } from 'baseui/avatar';
 import { useStyletron } from 'baseui';
+import { FONT_DISPLAY } from '../../theme/typography';
 
 export type GuardrAvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -47,7 +48,7 @@ export function GuardrAvatar({ name, src, size = 'md', className }: GuardrAvatar
         },
         Initials: {
           style: {
-            fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontFamily: FONT_DISPLAY,
             fontWeight: 700,
             fontSize: parseInt(px) < 40 ? '13px' : parseInt(px) < 60 ? '18px' : '24px',
             color: theme.colors.contentPrimary,

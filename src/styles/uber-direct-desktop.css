@@ -7,6 +7,283 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] {
   background: var(--uber-bg, #ffffff);
 }
 
+/* ─── Icon rail (Uber Freight TMS) ────────────────────────────────────────────
+   Black column pinned to the left edge of the workspace: app menu toggle on
+   top, primary destinations below. The labelled panel beside it keeps every
+   group, so the rail never hides a destination.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.uber-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 8px 0 12px;
+  background: #000000;
+  color: #ffffff;
+  z-index: 40;
+  padding-top: max(8px, var(--gr-safe-area-top, env(safe-area-inset-top, 0px)));
+  padding-bottom: max(12px, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+html.theme-dark .uber-rail {
+  background: #141414;
+  border-right: 1px solid #2b2b2b;
+}
+
+.uber-rail-top {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.uber-rail-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.uber-rail-items::-webkit-scrollbar {
+  display: none;
+}
+
+.uber-rail-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.uber-rail-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 120ms ease;
+}
+
+.uber-rail-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.uber-rail-btn:active {
+  transform: scale(0.94);
+}
+
+.uber-rail-btn[data-active='true'] {
+  background: #ffffff;
+  color: #000000;
+}
+
+html.theme-dark .uber-rail-btn[data-active='true'] {
+  background: #ffffff;
+  color: #000000;
+}
+
+.uber-rail-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.uber-rail-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.uber-rail-btn[data-active='true'] .uber-rail-badge {
+  background: #000000;
+  color: #ffffff;
+}
+
+/* Hover label — Uber shows the destination name beside the rail. */
+.uber-rail-tip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #000000;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+  z-index: 60;
+}
+
+html.theme-dark .uber-rail-tip {
+  background: #ffffff;
+  color: #000000;
+}
+
+.uber-rail-btn:hover .uber-rail-tip,
+.uber-rail-btn:focus-visible .uber-rail-tip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uber-rail-btn,
+  .uber-rail-tip {
+    transition: none;
+  }
+}
+
+/* ─── Page title band (Uber Freight TMS) ──────────────────────────────────── */
+
+.uber-page-band {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-shrink: 0;
+  padding: 24px 40px 16px;
+  background: var(--uber-bg, #ffffff);
+}
+
+.uber-page-band-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
+}
+
+.uber-page-band-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+  font-family: var(--uber-font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--uber-text, #000000);
+}
+
+.uber-page-band-crumb {
+  color: var(--uber-text-muted, #767676);
+}
+
+.uber-page-band-crumb-sep {
+  color: var(--uber-text-muted, #767676);
+  flex-shrink: 0;
+}
+
+.uber-page-band-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uber-page-band-context,
+.uber-page-band-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  .uber-page-band {
+    padding: 20px 24px 12px;
+  }
+
+  .uber-page-band-title {
+    font-size: 26px;
+  }
+}
+
+/* ─── Page-level tabs ─────────────────────────────────────────────────────────
+   Under a page title band Uber uses underline tabs, not chips. Chips stay on
+   phones, where they scroll horizontally as filters.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-tabs {
+  gap: 24px;
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+  margin-bottom: 20px;
+}
+
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-tab {
+  padding: 0 0 12px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  font-size: 14px;
+  color: var(--uber-text-muted, #767676);
+}
+
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-tab:hover {
+  color: var(--uber-text, #000000);
+}
+
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-tab--active {
+  background: transparent;
+  border-bottom-color: var(--uber-text, #000000);
+  color: var(--uber-text, #000000);
+  font-weight: 600;
+}
+
+html.theme-dark .uber-app-shell[data-uber-direct='true'] .uber-workbench-tab--active {
+  background: transparent;
+  border-bottom-color: #ffffff;
+  color: #ffffff;
+}
+
+/* Search field reads as an input on the workspace canvas. */
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-search-field {
+  max-width: 320px;
+  min-height: 40px;
+  background: var(--uber-bg, #ffffff);
+  border-color: var(--uber-border, #eeeeee);
+}
+
+.uber-app-shell[data-uber-direct='true'] .uber-workbench-search-field:focus-within {
+  border-color: var(--uber-text, #000000);
+}
+
 /* ─── Sidebar ─────────────────────────────────────────────────────────────── */
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
@@ -23,7 +300,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -51,7 +328,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   border-radius: 999px;
   background: #000000;
   color: #ffffff;
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
@@ -95,7 +372,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 /* Side nav — Uber Direct pills + section labels */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav [data-baseweb="side-nav"] {
-  padding: 0 16px;
+  padding: 0 12px;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li {
@@ -109,10 +386,10 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a {
   border-radius: 8px !important;
-  margin: 2px 0 !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
-  min-height: 44px !important;
+  margin: 1px 0 !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  min-height: 40px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
   color: var(--uber-text, #000000) !important;
@@ -196,7 +473,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-title {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -575,13 +852,48 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 .uber-direct-top-header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   min-height: 56px;
   padding: 0 24px;
   width: 100%;
+}
+
+.uber-direct-top-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Centred workspace context — "Bev's Beverages Operations" in Uber Freight. */
+.uber-direct-top-header-context {
+  margin: 0;
+  grid-column: 2;
+  justify-self: center;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--uber-text, #000000);
+}
+
+.uber-direct-top-header-product {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--uber-text-muted, #767676);
+}
+
+@media (max-width: 900px) {
+  .uber-direct-top-header-context {
+    display: none;
+  }
 }
 
 .uber-direct-top-header-brand {
@@ -598,7 +910,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 .uber-direct-top-header-wordmark {
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -609,7 +921,9 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 .uber-direct-top-header-trailing {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
+  grid-column: 3;
   flex-shrink: 0;
 }
 

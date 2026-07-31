@@ -8,7 +8,7 @@
 @import "./styles/app-pwa.css";
 @import "./styles/app-native.css";
 
-@theme {--font-sans: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@theme {--font-sans: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
   --color-brand-primary: var(--brand-primary);
@@ -23460,7 +23460,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
 
 /* /uberit — unified drawer shell (all roles, all breakpoints) */
 .uber-app-shell {
-  font-family: "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .uber-app-shell .uber-shell-content {

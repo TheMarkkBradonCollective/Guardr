@@ -9,11 +9,12 @@ import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
+import { FONT_DISPLAY } from '../../theme/typography';
 const APK_DOWNLOAD_URL = '/download/guardr.apk';
 const APK_QR_URL = '/download/apk-qr.png';
 const DOWNLOAD_PAGE_URL = '/download';
 
-const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
+const HEADING_FONT = FONT_DISPLAY;
 
 interface LandingAppDownloadsProps {
   formFactor: FormFactor;

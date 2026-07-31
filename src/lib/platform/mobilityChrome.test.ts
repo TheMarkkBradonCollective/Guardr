@@ -34,4 +34,32 @@ describe('resolveMobilityChrome', () => {
     assert.equal(premium.touchTargetPx, 48);
     assert.equal(premium.sidebarWidth, '260px');
   });
+
+  it('puts the Uber Freight icon rail and page band on desktop workspaces only', () => {
+    for (const surface of ['browser-desktop', 'pwa-desktop', 'native-desktop'] as const) {
+      const chrome = resolveMobilityChrome(surface);
+      assert.equal(chrome.showIconRail, true, `${surface} should show the rail`);
+      assert.equal(chrome.showPageTitleBand, true, `${surface} should show the page band`);
+      assert.ok(Number.parseInt(chrome.iconRailWidth, 10) >= 56);
+    }
+
+    for (const surface of ['browser-tablet', 'browser-mobile', 'pwa-mobile', 'native-mobile'] as const) {
+      const chrome = resolveMobilityChrome(surface);
+      assert.equal(chrome.showIconRail, false, `${surface} should not show the rail`);
+      assert.equal(chrome.iconRailWidth, '0px');
+      assert.equal(
+        chrome.showPageTitleBand,
+        false,
+        `${surface} keeps the title in its compact header`,
+      );
+    }
+  });
+
+  it('widens the desktop rail for native shells so touch targets stay 48px', () => {
+    assert.equal(resolveMobilityChrome('browser-desktop').iconRailWidth, '56px');
+    assert.equal(
+      resolveMobilityChrome('native-desktop', { shell: 'native', mode: 'premium' }).iconRailWidth,
+      '64px',
+    );
+  });
 });

@@ -8,8 +8,8 @@
 :root,
 html.theme-light {
   /* ─── Typography ─── */
-  --uber-font-display: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --uber-font-text:    "Uber Move Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --uber-font-display: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --uber-font-text:    "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --uber-font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
   /* ─── Color system — Uber black/white/gray ─── */

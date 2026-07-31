@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStyletron } from 'baseui';
+import { FONT_DISPLAY } from '../../../theme/typography';
 
 export function DashboardZone({
   title,
@@ -21,7 +22,7 @@ export function DashboardZone({
       {/* Uber-style section header */}
       <div className="app-section-head">
         <h2 style={{
-          fontFamily: '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif',
+          fontFamily: FONT_DISPLAY,
           fontSize: '18px',
           fontWeight: 700,
           letterSpacing: '-0.02em',

@@ -7,8 +7,9 @@ import { useDevice } from '../../lib/platform';
 import type { AuthViewRole } from '../../lib/appNavigation';
 import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { FONT_DISPLAY } from '../../theme/typography';
 
-const HEADING_FONT = '"Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif';
+const HEADING_FONT = FONT_DISPLAY;
 
 export type AuthRoleChoiceMode = 'sign-in' | 'sign-up';
 

@@ -102,7 +102,7 @@ html.theme-dark .auth-sheet-panel {
 
 .auth-sheet-form-header .auth-sheet-title {
   margin: 0;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 28px;
   font-weight: 700;
   line-height: 1.1;
@@ -391,7 +391,7 @@ html.theme-dark .auth-sheet-panel {
 
 .auth-form-page-title {
   margin: 0;
-  font-family: "Uber Move", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: clamp(2rem, 7vw, 2.5rem);
   font-weight: 700;
   line-height: 1.05;

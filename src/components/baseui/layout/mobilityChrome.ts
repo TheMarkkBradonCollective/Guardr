@@ -31,6 +31,11 @@ export interface MobilityChromeConfig {
   touchTargetPx: number;
   contentMaxWidth?: string;
   contentDensity: 'compact' | 'comfortable' | 'spacious';
+  /** Uber Freight TMS black icon rail — desktop workspaces only. */
+  showIconRail: boolean;
+  iconRailWidth: string;
+  /** Uber Freight TMS page title band (breadcrumb + large title + actions). */
+  showPageTitleBand: boolean;
 }
 
 /** Per-platform Uber mobility chrome — independent layouts, not scaled desktop. */
@@ -62,6 +67,9 @@ export function resolveMobilityChrome(
       liteChrome,
       touchTargetPx: nativeChrome || premiumChrome ? 48 : 44,
       contentDensity: liteChrome ? 'compact' : 'comfortable',
+      showIconRail: false,
+      iconRailWidth: '0px',
+      showPageTitleBand: false,
     };
   }
 
@@ -84,6 +92,12 @@ export function resolveMobilityChrome(
       touchTargetPx: nativeChrome || premiumChrome ? 48 : 44,
       contentMaxWidth: '100%',
       contentDensity: premiumChrome ? 'spacious' : 'comfortable',
+      // Tablets keep the labelled sidebar and the compact header title; an
+      // icon rail would cost a second tap-target column on a touch-first
+      // surface, and the title band would duplicate the header title.
+      showIconRail: false,
+      iconRailWidth: '0px',
+      showPageTitleBand: false,
     };
   }
 
@@ -103,5 +117,8 @@ export function resolveMobilityChrome(
     touchTargetPx: nativeChrome ? 48 : 40,
     contentMaxWidth: shellKind === 'browser' ? '1600px' : '100%',
     contentDensity: shellKind === 'browser' ? 'spacious' : 'comfortable',
+    showIconRail: true,
+    iconRailWidth: premiumChrome || nativeChrome ? '64px' : '56px',
+    showPageTitleBand: true,
   };
 }

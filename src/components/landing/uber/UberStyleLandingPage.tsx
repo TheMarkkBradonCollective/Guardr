@@ -37,7 +37,10 @@ function TrustStrip({ isMobile }: { isMobile: boolean }) {
       as="section"
       aria-label="Platform features"
       className="uber-landing-trust-strip"
-      padding={isMobile ? 'scale500 scale600' : 'scale600 scale800'}
+      paddingTop={isMobile ? 'scale500' : 'scale600'}
+      paddingBottom={isMobile ? 'scale500' : 'scale600'}
+      paddingLeft={isMobile ? 'scale600' : 'scale800'}
+      paddingRight={isMobile ? 'scale600' : 'scale800'}
       backgroundColor="backgroundSecondary"
     >
         <Block
