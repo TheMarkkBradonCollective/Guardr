@@ -24,6 +24,10 @@ const OFFLINE_URLS = [
   '/icons/icon-dark-192.png',
   '/badge-72.png',
   '/manifest.json',
+  // Type system — precached so the installed app never falls back to Arial
+  // on a cold offline start.
+  '/fonts/inter-latin-wght-normal.woff2',
+  '/fonts/inter-latin-ext-wght-normal.woff2',
   WALKIE_CHIRP_SOUND,
 ];
 

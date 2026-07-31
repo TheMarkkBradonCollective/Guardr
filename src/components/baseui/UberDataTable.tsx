@@ -1,6 +1,28 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
+
+/** Below this container width a table stops being readable and becomes cards. */
+const CARD_BREAKPOINT_PX = 720;
+
+function useContainerWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number | null] {
+  const ref = useRef<T | null>(null);
+  const [width, setWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setWidth(entry.contentRect.width);
+    });
+    observer.observe(node);
+    setWidth(node.getBoundingClientRect().width);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, width];
+}
 
 export interface UberTableColumn<T> {
   id: string;
@@ -66,7 +88,14 @@ export function UberDataTable<T>({
 }: UberDataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
   const { formFactor } = useDevice();
-  const useCards = layout === 'cards' || (layout === 'auto' && formFactor === 'mobile');
+  const [measureRef, containerWidth] = useContainerWidth<HTMLElement>();
+  // Cards win whenever the table would have to scroll sideways — phones
+  // always, and any narrow container (tablet portrait, split panes).
+  const tooNarrowForTable =
+    containerWidth != null && containerWidth < Math.min(CARD_BREAKPOINT_PX, columns.length * 130);
+  const useCards =
+    layout === 'cards' ||
+    (layout === 'auto' && (formFactor === 'mobile' || tooNarrowForTable));
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
@@ -103,7 +132,7 @@ export function UberDataTable<T>({
         );
 
     return (
-      <ul className={`uber-record-list ${className}`.trim()} aria-label={caption}>
+      <ul ref={measureRef as React.RefObject<HTMLUListElement | null>} className={`uber-record-list ${className}`.trim()} aria-label={caption}>
         {sortedRows.length === 0 ? (
           <li className="uber-record-empty">{emptyMessage}</li>
         ) : (
@@ -154,7 +183,7 @@ export function UberDataTable<T>({
   }
 
   return (
-    <div className={`uber-table-wrap ${className}`.trim()}>
+    <div ref={measureRef as React.RefObject<HTMLDivElement | null>} className={`uber-table-wrap ${className}`.trim()}>
       <table className={`uber-table${density === 'compact' ? ' uber-table--compact' : ''}`}>
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <thead>
