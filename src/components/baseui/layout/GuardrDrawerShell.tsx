@@ -117,7 +117,9 @@ export function GuardrDrawerShell({
     setMoreOpen(false);
   };
 
-  const showIconRail = chrome.showIconRail && !hideHeader;
+  // The rail is navigation, not chrome: it stays put on full-bleed map and
+  // active-shift screens that suppress the page header.
+  const showIconRail = chrome.showIconRail;
 
   // The rail carries primary destinations only — the labelled panel beside it
   // still lists every group, so nothing becomes rail-only.

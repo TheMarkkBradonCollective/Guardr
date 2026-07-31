@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UBER BASE — forms
+
+   Base Web labels are sentence case at 14px on the primary content colour,
+   with a quiet caption underneath. The legacy stylesheets rendered every
+   field label as an uppercase 11px admin micro-label; this file is loaded
+   last so one Uber definition wins across every screen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.uber-label,
+.app-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--uber-font-text) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--uber-text, #000000) !important;
+}
+
+.uber-label--optional::after,
+.app-field-label--optional::after {
+  content: ' (optional)';
+  color: var(--uber-text-muted, #767676);
+  font-weight: 400;
+}
+
+.app-field-hint,
+.uber-field-hint {
+  margin-top: 6px;
+  font-size: 13px !important;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+/* Uber keeps section eyebrows uppercase — labels are the exception. */
+.uber-overline,
+.uber-section-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: var(--uber-tracking-overline, 0.08em);
+}
+
+/* ─── Controls ────────────────────────────────────────────────────────────── */
+
+.uber-input,
+.app-input,
+.app-select,
+.app-textarea {
+  font-family: var(--uber-font-text);
+  font-size: 15px;
+  letter-spacing: 0;
+  border-radius: 8px;
+}
+
+.uber-input:focus-visible,
+.app-input:focus-visible,
+.app-select:focus-visible,
+.app-textarea:focus-visible {
+  outline: none;
+  border-color: var(--uber-text, #000000);
+  box-shadow: 0 0 0 2px var(--uber-text, #000000);
+}
+
+/* Base Web inputs render their own container; keep the focus ring identical. */
+[data-baseweb='input'] > div:focus-within,
+[data-baseweb='select'] > div:focus-within,
+[data-baseweb='textarea'] > div:focus-within {
+  box-shadow: 0 0 0 2px var(--uber-text, #000000);
+}
+
+/* ─── Error + success messaging ───────────────────────────────────────────── */
+
+.app-field-error,
+.uber-field-error {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  text-transform: none;
+  color: var(--status-danger, #e11900);
+}

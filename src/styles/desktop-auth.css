@@ -147,7 +147,7 @@ body[data-form-factor="desktop"] .dsk-auth-form-scroll {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: 0 clamp(1.5rem, 4vw, 3rem) 3rem;
+  padding: 2rem clamp(1.5rem, 4vw, 3rem) 3rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -155,7 +155,8 @@ body[data-form-factor="desktop"] .dsk-auth-form-scroll {
 body[data-form-factor="desktop"] .dsk-auth-form-inner {
   width: 100%;
   max-width: 24rem;
-  margin: 0 auto;
+  /* Auto margins centre the card without clipping a tall form. */
+  margin: auto;
   padding: 0 !important;
   background: transparent !important;
   border: none !important;

@@ -34,6 +34,7 @@ import './styles/uber-mobile-overview.css';
 import './styles/platform-optimizations.css';
 import './styles/uber-in-app.css';
 import './styles/uber-data.css';
+import './styles/uber-forms.css';
 
 applyThemeToDocument(loadTheme());
 
