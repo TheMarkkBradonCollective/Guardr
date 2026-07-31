@@ -9,6 +9,10 @@ import {
 } from './mapJobVisibility';
 import type { SecurityRequest } from '../types';
 
+function futureIso(hoursFromNow: number): string {
+  return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString();
+}
+
 function job(overrides: Partial<SecurityRequest> = {}): SecurityRequest {
   return {
     id: 'j1',
@@ -16,8 +20,8 @@ function job(overrides: Partial<SecurityRequest> = {}): SecurityRequest {
     clientId: 'c1',
     clientName: 'Client',
     location: 'LA',
-    startDate: '2026-07-30T18:00:00.000Z',
-    endDate: '2026-07-30T22:00:00.000Z',
+    startDate: futureIso(4),
+    endDate: futureIso(8),
     status: 'open',
     assignedGuardId: null,
     applicants: [],

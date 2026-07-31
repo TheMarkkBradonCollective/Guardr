@@ -7,6 +7,7 @@ android {
         applicationId "com.signaturesecurity.guardr"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // Keep in sync with package.json via npm run generate:download-version
         versionCode 202
         versionName "1.0.102-beta"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

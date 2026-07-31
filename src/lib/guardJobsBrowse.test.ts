@@ -8,13 +8,21 @@ import {
 } from './guardJobsBrowse';
 import type { GuardJobView } from './guardJobView';
 
+function futureIso(hoursFromNow: number): string {
+  return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString();
+}
+
+function pastIso(hoursAgo: number): string {
+  return new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
+}
+
 function openJob(id: string, city: string): GuardJobView {
   return {
     id,
     status: 'open',
     state: city,
-    startDate: '2026-07-28T10:00:00',
-    endDate: '2026-07-28T16:00:00',
+    startDate: futureIso(24),
+    endDate: futureIso(30),
     guardPay: 30,
     durationHours: 6,
     title: `Job ${id}`,
@@ -29,8 +37,8 @@ function acceptedJob(id: string, guardId: string): GuardJobView {
     status: 'accepted',
     assignedGuardId: guardId,
     state: 'Los Angeles',
-    startDate: '2026-07-29T10:00:00',
-    endDate: '2026-07-29T16:00:00',
+    startDate: futureIso(48),
+    endDate: futureIso(54),
     guardPay: 30,
     durationHours: 6,
     title: `Booked ${id}`,
@@ -43,8 +51,8 @@ function completedJob(id: string, guardId: string): GuardJobView {
   return {
     ...acceptedJob(id, guardId),
     status: 'completed',
-    startDate: '2026-07-10T10:00:00',
-    endDate: '2026-07-10T16:00:00',
+    startDate: pastIso(240),
+    endDate: pastIso(234),
   };
 }
 

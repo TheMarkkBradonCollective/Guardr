@@ -369,7 +369,7 @@ Issue or exception
 
 | Page | Where it is | What it is for |
 |------|-------------|----------------|
-| **Map** | Bottom navigation | Live job geography and active shift map |
+| **Map** | Bottom navigation | Full-screen job geography — tap pins for details; active shift tracking |
 | **Home** | Bottom navigation | Quick actions, account status, live coverage shortcuts, reports shortcuts |
 | **Messages** | Sidebar **Messages** group | Job chats and team threads |
 | **Support** | Sidebar **Messages** group | Contact support, file a report, view ticket threads |
@@ -574,7 +574,7 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | Page | Where it is | What it is for |
 |------|-------------|----------------|
 | **Activation screen** | Shown automatically after sign-in until account is **active** | Upload credentials, track application progress, wait for staff activation |
-| **Map** | Bottom navigation (active guards only) | Find open jobs, claim direct requests, and run active shifts |
+| **Map** | Bottom navigation (active guards only) | Full-screen map — tap pins for open jobs, direct requests, and active shifts |
 | **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
 | **Crew** | Bottom navigation (trusted guards only) | Standing team roster, job crews, team codes |
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
@@ -1374,7 +1374,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.101**, build **201**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.102**, build **202**).
 
 | Surface | How to install |
 |---------|----------------|
