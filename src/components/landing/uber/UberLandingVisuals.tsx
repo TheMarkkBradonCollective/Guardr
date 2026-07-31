@@ -115,7 +115,7 @@ export function UberLandingHeroVisual() {
         display="flex"
         alignItems="center"
         gridGap="scale200"
-        padding="scale300 scale400"
+        paddingTop="scale300" paddingBottom="scale300" paddingLeft="scale400" paddingRight="scale400"
         overrides={{
           Block: {
             style: {
@@ -181,7 +181,7 @@ export function UberLandingHeroVisual() {
           display="flex"
           alignItems="center"
           gridGap="scale400"
-          padding="scale500 scale600"
+          paddingTop="scale500" paddingBottom="scale500" paddingLeft="scale600" paddingRight="scale600"
           overrides={{ Block: { style: { borderBottom: `1px solid ${isDark ? '#1a1a1a' : '#eeeeee'}` } } }}
         >
           <Block
@@ -223,7 +223,7 @@ export function UberLandingHeroVisual() {
           display="flex"
           alignItems="center"
           gridGap="scale400"
-          padding="scale500 scale600"
+          paddingTop="scale500" paddingBottom="scale500" paddingLeft="scale600" paddingRight="scale600"
         >
           <Block
             width="44px"
