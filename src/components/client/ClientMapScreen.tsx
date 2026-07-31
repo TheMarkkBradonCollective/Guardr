@@ -209,7 +209,7 @@ export function ClientMapScreen({
           loadingRoute={routeLoading}
           crewSettings={billingSettings}
           onClose={() => setSelectedBrowseJobId(null)}
-          bottomOffsetClass="map-browse-offset"
+          bottomOffsetClass=""
           clientActions={
             selectedBrowseJob && currentUser ? (
               <ClientJobActionsPanel
@@ -244,12 +244,11 @@ export function ClientMapScreen({
           selectedId={selectedBrowseJobId}
           onSelect={setSelectedBrowseJobId}
           emptyMessage={CLIENT_MAP_BROWSE_EMPTY_MESSAGE}
-          bottomOffsetClass="map-browse-offset"
         />
       )}
 
       {!showShiftOverlay && !selectedBrowseJobId && onPostJob && onRequestGuard && (
-        <div className="map-post-fab-layer map-post-fab-layer--right map-browse-offset">
+        <div className="map-post-fab-layer map-post-fab-layer--right">
           <ClientMapPostMenu onPostJob={onPostJob} onRequestGuard={onRequestGuard} />
         </div>
       )}

@@ -129,7 +129,7 @@ export function StaffOpsMapScreen({
             selectedId={selectedJobId}
             onSelect={setSelectedJobId}
             emptyMessage={STAFF_MAP_BROWSE_EMPTY_MESSAGE}
-            bottomOffsetClass="map-browse-offset"
+            bottomOffsetClass=""
           />
         ) : null}
 
@@ -140,7 +140,7 @@ export function StaffOpsMapScreen({
           loadingRoute={routeLoading}
           guards={guards}
           onClose={() => setSelectedJobId(null)}
-          bottomOffsetClass="map-browse-offset"
+          bottomOffsetClass=""
           staffActions={
             selectedJob ? (
               <StaffJobDetailPanel

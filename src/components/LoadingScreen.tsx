@@ -56,9 +56,8 @@ export function LoadingScreen() {
         }}
       />
 
-      {/* Version */}
+      {/* Version — visible on all surfaces (web, PWA, APK) */}
       <p
-        aria-hidden
         style={{
           position: 'absolute',
           bottom: '24px',

@@ -105,7 +105,7 @@ export function useMapBottomOverlayInset(
 
       const measure = () => {
         const rect = node.getBoundingClientRect();
-        const mapRoot = node.closest('.guard-map-layout, .client-map-layout');
+        const mapRoot = node.closest('.guard-map-layout, .client-map-layout, .staff-map-layout');
         const mapRect = mapRoot?.getBoundingClientRect();
         if (!mapRect) {
           setBottomInset(rect.height + extraPadding);
@@ -144,7 +144,7 @@ export function useMapTopOverlayInset(
 
       const measure = () => {
         const rect = node.getBoundingClientRect();
-        const mapRoot = node.closest('.guard-map-layout, .client-map-layout');
+        const mapRoot = node.closest('.guard-map-layout, .client-map-layout, .staff-map-layout');
         const mapRect = mapRoot?.getBoundingClientRect();
         if (!mapRect) {
           setTopInset(rect.bottom + extraPadding);

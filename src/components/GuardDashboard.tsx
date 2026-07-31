@@ -1517,7 +1517,6 @@ export function GuardDashboard({
           selectedId={guardSelectedJobId}
           onSelect={handleGuardSelectedJobChange}
           emptyMessage={GUARD_MAP_BROWSE_EMPTY_MESSAGE}
-          bottomOffsetClass="map-browse-offset"
           leading={
             showNextShiftOnDock && nextShiftJob ? (
               <GuardNextShiftCard
@@ -1554,7 +1553,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'map' && replacementOffers.length > 0 && !showShiftOverlay && (
-        <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2 map-browse-offset">
+        <div className="absolute inset-x-4 bottom-28 z-[1002] space-y-2">
           {replacementOffers.map((offer) => (
             <ReplacementOfferCard
               key={offer.id}
@@ -1573,7 +1572,7 @@ export function GuardDashboard({
           route={mapRoute}
           loadingRoute={mapRouteLoading}
           onClose={() => handleGuardSelectedJobChange(null)}
-          bottomOffsetClass="map-browse-offset"
+          bottomOffsetClass=""
           guardFullBody={
             <GuardJobDetailView
               job={selectedJob}

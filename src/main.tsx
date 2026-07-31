@@ -13,6 +13,7 @@ import { DeviceProvider } from './lib/platform';
 import { BaseUIProvider } from './components/baseui';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
 import { registerServiceWorker, initNativePushListeners } from './lib/push';
+import { initPwaAutoUpdate } from './lib/pwaAutoUpdate';
 import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
@@ -50,6 +51,7 @@ void initNativeShell();
 
 if (!Capacitor.isNativePlatform()) {
   registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
+  initPwaAutoUpdate();
   void registerServiceWorker().catch((error) => {
     console.warn('[pwa] service worker registration failed:', error);
   });

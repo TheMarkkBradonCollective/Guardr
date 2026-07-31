@@ -452,6 +452,12 @@ h1, h2, h3, h4 {
   right: 0;
 }
 
+.guard-map-layout .guardr-map-root,
+.client-map-layout .guardr-map-root {
+  position: absolute;
+  inset: 0;
+}
+
 .staff-split-pane {
   display: flex;
   flex-direction: column;
