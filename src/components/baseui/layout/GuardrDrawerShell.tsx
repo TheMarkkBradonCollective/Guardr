@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingXSmall, LabelSmall, ParagraphMedium } from 'baseui/typography';
-import { Menu } from 'lucide-react';
+import { ChevronRight, Menu } from 'lucide-react';
 import { useStyletron } from 'baseui';
 import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
 import { GuardrBottomNav } from './GuardrBottomNav';
+import { GuardrIconRail } from './GuardrIconRail';
 import { UberDirectTopHeader } from './UberDirectTopHeader';
 import { resolveMobilityChrome } from './mobilityChrome';
 import type { GuardrNavGroup, GuardrNavItem } from './types';
@@ -41,7 +42,12 @@ export interface GuardrDrawerShellProps {
   variant?: 'default' | 'dark';
   children: React.ReactNode;
   ariaLabel?: string;
+  /** Force the Uber Freight page title band on surfaces that opt out by default. */
   showTitleBand?: boolean;
+  /** Breadcrumb parent rendered before the page title, e.g. "Jobs". */
+  pageBreadcrumb?: string;
+  /** Actions rendered on the right of the page title band. */
+  pageActions?: React.ReactNode;
   /** Primary tabs for Uber-style bottom nav on mobile/PWA/APK. */
   mobileBottomNavItems?: GuardrNavItem[];
   mobileBottomNavOverflow?: GuardrNavItem[];
@@ -68,7 +74,9 @@ export function GuardrDrawerShell({
   variant = 'default',
   children,
   ariaLabel = 'Main navigation',
-  showTitleBand = false,
+  showTitleBand,
+  pageBreadcrumb,
+  pageActions,
   mobileBottomNavItems,
   mobileBottomNavOverflow = [],
   headerContext,
@@ -85,7 +93,8 @@ export function GuardrDrawerShell({
   const isMapMode = variant === 'dark';
   const useBottomNav = chrome.layout === 'mobile' && !!mobileBottomNavItems?.length;
   const showChromeHeader = !hideHeader && !isDesktopWorkspace;
-  const showPageTitleBand = showTitleBand && !hideHeader && !headerOverride;
+  const showPageTitleBand =
+    (showTitleBand ?? chrome.showPageTitleBand) && !hideHeader && !headerOverride && !bleed;
   const [sidebarOpen, setSidebarOpen] = useState(chrome.defaultSidebarOpen);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -107,6 +116,20 @@ export function GuardrDrawerShell({
     if (isMobile) closeSidebar();
     setMoreOpen(false);
   };
+
+  const showIconRail = chrome.showIconRail && !hideHeader;
+
+  // The rail carries primary destinations only — the labelled panel beside it
+  // still lists every group, so nothing becomes rail-only.
+  const railItems = useMemo(() => {
+    const primary = navGroups[0]?.items ?? [];
+    const withIcons = primary.filter((item) => item.icon && !item.disabled);
+    if (withIcons.length > 0) return withIcons.slice(0, 8);
+    return navGroups
+      .flatMap((group) => group.items)
+      .filter((item) => item.icon && !item.disabled)
+      .slice(0, 8);
+  }, [navGroups]);
 
   const overflowItems = mobileBottomNavOverflow ?? [];
   const showMoreTab = useBottomNav && overflowItems.length > 0;
@@ -435,60 +458,24 @@ export function GuardrDrawerShell({
           </Block>
         ) : null}
 
-        {!hideHeader && !headerOverride && showPageTitleBand ? (
-          <Block
-            className={isDesktopWorkspace ? 'uber-direct-page-header' : undefined}
-            paddingTop={isDesktopWorkspace ? 'scale800' : 'scale600'}
-            paddingBottom={isDesktopWorkspace ? 'scale600' : 'scale600'}
-            paddingLeft="scale800"
-            paddingRight="scale800"
-            backgroundColor="backgroundPrimary"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            overrides={{
-              Block: {
-                style: {
-                  flexShrink: 0,
-                  borderBottom: isDesktopWorkspace
-                    ? `1px solid ${theme.colors.borderOpaque}`
-                    : `1px solid ${theme.colors.borderOpaque}`,
-                },
-              },
-            }}
-          >
-            <Block
-              display="flex"
-              alignItems="flex-start"
-              justifyContent="space-between"
-              gridGap="scale600"
-            >
-              <Block minWidth={0} flex="1">
-                <ParagraphMedium
-                  margin={0}
-                  className={isDesktopWorkspace ? 'uber-direct-page-title' : undefined}
-                  $style={{
-                    fontFamily: FONT_DISPLAY,
-                    fontSize: isDesktopWorkspace ? '32px' : '28px',
-                    fontWeight: 700,
-                    lineHeight: 1.15,
-                    letterSpacing: '-0.03em',
-                  }}
-                >
-                  {title}
-                </ParagraphMedium>
-                {!isDesktopWorkspace ? (
-                  <LabelSmall marginTop="scale200" $style={{ color: 'contentSecondary' }}>
-                    {workspaceLabel}
-                  </LabelSmall>
+        {showPageTitleBand ? (
+          <div className="uber-page-band" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="uber-page-band-main">
+              <h1 className="uber-page-band-title">
+                {pageBreadcrumb ? (
+                  <>
+                    <span className="uber-page-band-crumb">{pageBreadcrumb}</span>
+                    <ChevronRight size={22} aria-hidden className="uber-page-band-crumb-sep" />
+                  </>
                 ) : null}
-              </Block>
-              {isDesktopWorkspace ? (
-                <Block display="flex" alignItems="center" gridGap="scale400" overrides={{ Block: { style: { flexShrink: 0 } } }}>
-                  {headerContext}
-                  {notifications}
-                </Block>
+                <span className="uber-page-band-current">{title}</span>
+              </h1>
+              {headerContext ? (
+                <div className="uber-page-band-context">{headerContext}</div>
               ) : null}
-            </Block>
-          </Block>
+            </div>
+            {pageActions ? <div className="uber-page-band-actions">{pageActions}</div> : null}
+          </div>
         ) : null}
 
         {headerExtension ? (
@@ -572,7 +559,7 @@ export function GuardrDrawerShell({
       right={0}
       bottom={0}
       display="flex"
-      flexDirection={isDesktopWorkspace ? 'column' : 'row'}
+      flexDirection="row"
       height="100dvh"
       maxHeight="100dvh"
       overflow="hidden"
@@ -583,27 +570,49 @@ export function GuardrDrawerShell({
       data-sidebar-open={sidebarOpen ? 'true' : 'false'}
       data-view-surface={viewSurface}
       data-uber-direct={isDesktopWorkspace ? 'true' : undefined}
+      data-icon-rail={showIconRail ? 'true' : undefined}
     >
-      {isDesktopWorkspace ? (
-        <UberDirectTopHeader
-          trailing={
-            <Block display="flex" alignItems="center" gridGap="scale300">
-              {notifications}
-              {accountMenu}
-            </Block>
-          }
+      {showIconRail ? (
+        <GuardrIconRail
+          items={railItems}
+          activeId={activeNavId}
+          onSelect={handleNavigate}
+          onToggleSidebar={chrome.collapsibleSidebar ? toggleSidebar : undefined}
+          sidebarOpen={sidebarOpen}
+          width={chrome.iconRailWidth}
+          ariaLabel="Primary navigation"
         />
       ) : null}
 
       <Block
         display="flex"
-        flexDirection="row"
+        flexDirection="column"
         flex="1"
-        minHeight={0}
         minWidth={0}
-        className={isDesktopWorkspace ? 'uber-direct-workspace-body' : undefined}
+        minHeight={0}
       >
-        {workspaceBody}
+        {isDesktopWorkspace ? (
+          <UberDirectTopHeader
+            contextLabel={workspaceLabel}
+            trailing={
+              <Block display="flex" alignItems="center" gridGap="scale300">
+                {notifications}
+                {accountMenu}
+              </Block>
+            }
+          />
+        ) : null}
+
+        <Block
+          display="flex"
+          flexDirection="row"
+          flex="1"
+          minHeight={0}
+          minWidth={0}
+          className={isDesktopWorkspace ? 'uber-direct-workspace-body' : undefined}
+        >
+          {workspaceBody}
+        </Block>
       </Block>
 
       {isMobileDrawer && showDrawerBackdrop ? (

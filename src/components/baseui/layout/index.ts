@@ -3,7 +3,8 @@ export { UberDirectContextSelect } from './UberDirectContextSelect';
 export { UberDirectTopHeader } from './UberDirectTopHeader';
 export { resolveMobilityChrome, type MobilityChromeConfig, type MobilityLayout } from './mobilityChrome';
 export { GuardrSideNav, guardrNavItemsFlat, guardrNavItemsFromGroups } from './GuardrSideNav';
-export { GuardrIconRail, GuardrBottomNav, type GuardrBottomNavItem } from './GuardrBottomNav';
+export { GuardrBottomNav, type GuardrBottomNavItem } from './GuardrBottomNav';
+export { GuardrIconRail, type GuardrIconRailProps } from './GuardrIconRail';
 export { PublicPageChrome } from './PublicPageChrome';
 export {
   WorkbenchPage,

@@ -64,8 +64,11 @@ export { GuardrTooltip, PLACEMENT as TooltipPlacement } from './GuardrTooltip';
 // ─── App shell layouts ────────────────────────────────────────────────────────
 export { GuardrDrawerShell }  from './layout/GuardrDrawerShell';
 export { GuardrSideNav }      from './layout/GuardrSideNav';
-export { GuardrBottomNav, GuardrIconRail } from './layout/GuardrBottomNav';
+export { GuardrBottomNav } from './layout/GuardrBottomNav';
 export type { GuardrBottomNavItem } from './layout/GuardrBottomNav';
+export { GuardrIconRail, type GuardrIconRailProps } from './layout/GuardrIconRail';
+export { UberDataTable, type UberTableColumn } from './UberDataTable';
+export { StatusChip, type StatusTone } from './StatusChip';
 
 // ─── Overlays ─────────────────────────────────────────────────────────────────
 export { GuardrModal }        from './overlays/GuardrModal';

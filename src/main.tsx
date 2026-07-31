@@ -33,6 +33,7 @@ import './styles/staff-management-flat.css';
 import './styles/uber-mobile-overview.css';
 import './styles/platform-optimizations.css';
 import './styles/uber-in-app.css';
+import './styles/uber-data.css';
 
 applyThemeToDocument(loadTheme());
 
@@ -58,18 +59,35 @@ if (!Capacitor.isNativePlatform()) {
   });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <DeviceProvider>
-      <BaseUIProvider>
-        <AppMotionProvider>
-          <AppSnackbarProvider>
-            <App />
-            <OfflineBanner />
-            <AppConfirmHost />
-          </AppSnackbarProvider>
-        </AppMotionProvider>
-      </BaseUIProvider>
-    </DeviceProvider>
-  </StrictMode>,
-);
+const root = createRoot(document.getElementById('root')!);
+
+function renderApp(children: React.ReactNode) {
+  root.render(
+    <StrictMode>
+      <DeviceProvider>
+        <BaseUIProvider>
+          <AppMotionProvider>
+            <AppSnackbarProvider>
+              {children}
+              <OfflineBanner />
+              <AppConfirmHost />
+            </AppSnackbarProvider>
+          </AppMotionProvider>
+        </BaseUIProvider>
+      </DeviceProvider>
+    </StrictMode>,
+  );
+}
+
+// Dev-only shell harness: `?ui-preview=1` renders the signed-in chrome with
+// static data so layout work can be reviewed without a live session.
+const wantsUiPreview =
+  import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('ui-preview');
+
+if (wantsUiPreview) {
+  void import('./dev/UiPreview').then(({ default: UiPreview }) => renderApp(<UiPreview />));
+} else {
+  renderApp(<App />);
+}
