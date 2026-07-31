@@ -23,9 +23,13 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 - `/update` slash command documented in `.cursor/commands/update.md`
 
 **Release verification**
-- `npm run lint`, `npm test`, and `npm run build` pass
+- `npm run lint`, `npm test` (479), and `npm run build` pass
 - Version parity: `package.json`, `version.json`, `build.gradle` (code **202**), and `public/sw.js` aligned on **1.0.102-beta**
 - Schema: `complete_schema_setup.sql` current (inventory columns from v1.0.101 — no new migration)
+- Fixed date-sensitive unit tests for map pin / Jobs history buckets
+- Guide updated to **v1.0.102** / build **202**
+
+**APK note:** GitHub Actions returned `startup_failure` on the merge push (Actions billing/runtime). Manifest + gradle are on **202**; commit the CI-built `public/download/guardr.apk` once Android APK workflow succeeds so the binary matches (do not leave download at build **201**).
 
 **Supabase:** no new SQL for this release if v1.0.101 inventory columns are already applied.
 
