@@ -1,7 +1,8 @@
-# Re-trigger CI after Actions billing recovery (2026-07-31).
+# Re-trigger CI after Actions billing recovery (2026-07-31, retry 2).
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, 'cursor/**']
   pull_request:
