@@ -1,6 +1,6 @@
 // Dev-only helper: capture UI screenshots across viewports/themes.
 // Usage: node scripts/ui-shots.mjs <outDir> [baseUrl]
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
 const outDir = process.argv[2] ?? '/tmp/shots';
