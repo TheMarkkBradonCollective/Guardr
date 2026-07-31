@@ -4548,7 +4548,7 @@ export default function App() {
       return {
         ok: false,
         error:
-          'Combined PTA/UOF and legacy rollup certificates are not accepted. Upload Power to Arrest and Use of Force as separate certificates, and Continued Education as the four individual courses.',
+          'Legacy combined Continued Education rollup certificates are not accepted. Upload all 9 courses in the 32-hour BSIS CE package individually.',
       };
     }
 

@@ -46,8 +46,8 @@ export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
 /**
  * Already-active accounts keep marketplace access for Continuing Education under the new
- * 32-hour CE package taxonomy. Mandatory training (separate PTA + UOF) is still required — combined
- * 8-hour certs do not count and must be replaced with separates.
+ * 32-hour CE package taxonomy. Mandatory training (PTA/UOF) is still required — separate or combined
+ * 8-hour certificates are accepted.
  */
 export function guardHasActiveTrainingGrandfather(guard: SecurityGuard): boolean {
   if (guard.isStaff) return true;

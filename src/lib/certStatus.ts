@@ -3,6 +3,7 @@ import { credentialRequiresExpiry, resolveCertCatalogId } from './certCatalog';
 import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
+  BSIS_PTA_UOF_COMBINED_ID,
   BSIS_WMD_AWARENESS_ID,
   LEGACY_PTA_ID,
   LEGACY_UOF_ID,
@@ -12,6 +13,7 @@ import {
   guardHasCredentialUploaded,
   guardPtaUofSecondPartListed,
   guardPtaUofSecondPartOnFile,
+  guardPtaUofUsingCombinedPath,
   isCertExpired,
 } from './guardQualification';
 
@@ -204,6 +206,11 @@ export function getPtaUofSecondPartUploadStatus(guard: SecurityGuard): CourseUpl
 }
 
 export function countPtaUofSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {
+  if (guardPtaUofUsingCombinedPath(guard)) {
+    return summarizeCredentialSlotStatuses([
+      getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID),
+    ]);
+  }
   return summarizeCredentialSlotStatuses([
     getCourseUploadStatus(guard, LEGACY_PTA_ID),
     getPtaUofSecondPartUploadStatus(guard),

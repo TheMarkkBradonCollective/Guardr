@@ -243,7 +243,7 @@ describe('guard account activation gates', () => {
     assert.equal(getGuardActivationChecklist(guard).canActivate, true);
   });
 
-  it('does not grandfather combined PTA/UOF — active guards must submit separates', () => {
+  it('accepts combined PTA/UOF certificate for active guards', () => {
     const guard = fullyVerifiedGuard({
       userStatus: 'active',
       certifications: [
@@ -266,12 +266,8 @@ describe('guard account activation gates', () => {
       ],
     });
 
-    assert.equal(isGuardAccountActive(guard), false);
-    assert.ok(
-      getGuardActivationChecklist(guard).staffActivationBlockers.some((b) =>
-        /Mandatory training|Power to Arrest|Use of Force|PTA/i.test(b)
-      )
-    );
+    assert.equal(isGuardAccountActive(guard), true);
+    assert.equal(getGuardActivationChecklist(guard).canActivate, true);
   });
 
   it('still blocks approved (not yet active) guards missing Continuing Education courses', () => {

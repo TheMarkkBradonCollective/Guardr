@@ -145,12 +145,12 @@ export function guardPathwayStatusLabel(level: GuardQualificationLevel): string 
   return GUARD_STATUS_LABELS.active;
 }
 
-/** Combined 8-hour PTA/UOF catalog ID — deprecated; does not satisfy activation. Guards must upload separate certs. */
+/** Combined 8-hour PTA/UOF catalog ID — one certificate covering both courses when a school issues them together. */
 export const BSIS_PTA_UOF_COMBINED_ID = 'bsis-pta-uof-8hr';
 
-/** Shown in upload flows — separate Power to Arrest and Appropriate Use of Force certificates only. */
+/** Shown in upload flows — separate or combined PTA/UOF certificates accepted. */
 export const PTA_UOF_UPLOAD_GUIDANCE =
-  'Upload Power to Arrest and Appropriate Use of Force as two separate certificates.';
+  'Upload Power to Arrest and Appropriate Use of Force as two separate certificates, or one combined 8-hour PTA/UOF certificate if your school issued both together.';
 
 /**
  * Four core courses within the BSIS first-year 32-hour Continuing Education package.
@@ -205,6 +205,7 @@ export const PTA_UOF_SEPARATE_PART_COUNT = 2;
 export function getRequiredPathwayCatalogIds(): readonly string[] {
   return [
     'bsis-guard-card',
+    BSIS_PTA_UOF_COMBINED_ID,
     LEGACY_PTA_ID,
     LEGACY_UOF_ID,
     BSIS_WMD_AWARENESS_ID,
@@ -274,13 +275,14 @@ export function isPtaUofCatalogId(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
   const canonical = canonicalCatalogId(catalogId) ?? catalogId;
   return (
+    canonical === BSIS_PTA_UOF_COMBINED_ID ||
     canonical === LEGACY_PTA_ID ||
     canonical === LEGACY_UOF_ID ||
     canonical === BSIS_WMD_AWARENESS_ID
   );
 }
 
-/** Deprecated combined 8-hour PTA/UOF cert — must be removed; does not satisfy Mandatory training. */
+/** Combined 8-hour PTA/UOF certificate — satisfies mandatory training when uploaded. */
 export function isCombinedPtaUofCatalogId(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
   return (canonicalCatalogId(catalogId) ?? catalogId) === BSIS_PTA_UOF_COMBINED_ID;
@@ -294,8 +296,8 @@ export function isLegacyTrainingRollupCatalogId(catalogId: string | undefined): 
 }
 
 /**
- * Combined PTA/UOF or legacy CE rollup — delete if present; guards must submit separates.
- * Matching also uses certificate name resolution for rows missing catalog_id.
+ * Legacy CE rollup completion certs — must be removed; upload all 9 CE package courses individually.
+ * Combined PTA/UOF certificates are allowed.
  */
 export function isDisallowedCombinedGuardCertificate(cert: {
   catalogId?: string;
@@ -305,10 +307,10 @@ export function isDisallowedCombinedGuardCertificate(cert: {
     catalogId: cert.catalogId,
     name: cert.name ?? '',
   });
-  return isCombinedPtaUofCatalogId(resolved) || isLegacyTrainingRollupCatalogId(resolved);
+  return isLegacyTrainingRollupCatalogId(resolved);
 }
 
-/** Remove combined PTA/UOF and legacy CE rollup certs from a list. */
+/** Remove legacy CE rollup certs from a list. */
 export function stripDisallowedCombinedGuardCertificates<T extends { catalogId?: string; name?: string }>(
   certificates: T[]
 ): T[] {
@@ -324,14 +326,27 @@ export function sanitizeGuardCombinedCertificates(guard: SecurityGuard): Securit
 }
 
 export function getPtaUofCatalogEntries() {
-  return [LEGACY_PTA_ID, LEGACY_UOF_ID, BSIS_WMD_AWARENESS_ID]
+  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID, BSIS_WMD_AWARENESS_ID]
     .map((id) => getCertCatalogEntry(id))
     .filter((entry): entry is NonNullable<typeof entry> => !!entry);
 }
 
-/** @deprecated Combined path is no longer accepted. */
-export function guardPtaUofUsingCombinedPath(_guard: SecurityGuard): boolean {
-  return false;
+export function guardPtaUofUsingCombinedPath(guard: SecurityGuard): boolean {
+  return (
+    guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID) ||
+    guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID)
+  );
+}
+
+export function guardPtaUofCombinedOnFile(guard: SecurityGuard): boolean {
+  return guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
+}
+
+export function guardPtaUofCombinedListed(guard: SecurityGuard): boolean {
+  return (
+    guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID) &&
+    !guardPtaUofCombinedOnFile(guard)
+  );
 }
 
 export function guardPtaUofSecondPartOnFile(guard: SecurityGuard): boolean {
@@ -349,6 +364,9 @@ export function guardPtaUofSecondPartListed(guard: SecurityGuard): boolean {
 }
 
 export function computePtaUofProgress(guard: SecurityGuard) {
+  const combinedOnFile = guardPtaUofCombinedOnFile(guard);
+  const combinedListed = guardPtaUofCombinedListed(guard);
+  const usingCombinedPath = guardPtaUofUsingCombinedPath(guard);
   const ptaOnFile = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
   const ptaListed = guardHasCredentialListed(guard, LEGACY_PTA_ID) && !ptaOnFile;
   const secondOnFile = guardPtaUofSecondPartOnFile(guard);
@@ -358,6 +376,8 @@ export function computePtaUofProgress(guard: SecurityGuard) {
   let progressPercent = 0;
   if (complete) {
     progressPercent = 100;
+  } else if (usingCombinedPath) {
+    progressPercent = combinedOnFile ? 100 : combinedListed ? 50 : 0;
   } else {
     const ptaWeight = ptaOnFile ? 1 : ptaListed ? 0.5 : 0;
     const secondWeight = secondOnFile ? 1 : secondListed ? 0.5 : 0;
@@ -367,22 +387,29 @@ export function computePtaUofProgress(guard: SecurityGuard) {
   return {
     complete,
     progressPercent,
-    combinedOnFile: false,
-    combinedListed: false,
+    combinedOnFile,
+    combinedListed,
     ptaOnFile,
     ptaListed,
     secondOnFile,
     secondListed,
-    usingCombinedPath: false,
+    usingCombinedPath,
   };
 }
 
 export function formatPtaUofProgressSummary(guard: SecurityGuard): string {
   const progress = computePtaUofProgress(guard);
   if (progress.complete) {
+    if (progress.combinedOnFile) {
+      return 'Combined PTA/UOF certificate on file';
+    }
     return progress.ptaOnFile && progress.secondOnFile
       ? 'Power to Arrest and Appropriate Use of Force on file'
       : 'PTA/UOF training on file';
+  }
+  if (progress.usingCombinedPath) {
+    if (progress.combinedListed) return 'Combined PTA/UOF listed — upload certificate photo';
+    return 'Not on file';
   }
   const partsOnFile =
     (progress.ptaOnFile ? 1 : 0) + (progress.secondOnFile ? 1 : 0);
@@ -502,8 +529,9 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
   );
 }
 
-/** Both separate parts listed (PTA + UOF, or PTA + WMD). Combined 8-hour cert does not count. */
+/** Combined 8-hour cert, or both separate parts listed (PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTrainingListed(guard: SecurityGuard): boolean {
+  if (guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
   const hasPta = guardHasCredentialListed(guard, LEGACY_PTA_ID);
   if (!hasPta) return false;
   return (
@@ -589,8 +617,9 @@ export function thirtyTwoHourCourseProgressPercent(
   return Math.round((weight / total32HourCourses) * 100);
 }
 
-/** Both separate parts on file (PTA + UOF, or PTA + WMD). Combined 8-hour cert does not count. */
+/** Combined 8-hour cert on file, or both separate parts (PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
+  if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
   const hasPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
   if (!hasPta) return false;
   return (
@@ -599,8 +628,9 @@ export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   );
 }
 
-/** Both separate parts verified (PTA + UOF, or PTA + WMD). Combined 8-hour cert does not count. */
+/** Combined 8-hour cert verified, or both separate parts verified (PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTrainingVerified(guard: SecurityGuard): boolean {
+  if (guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
   if (!guardHasGuardrVerifiedCredential(guard, LEGACY_PTA_ID)) return false;
   return (
     guardHasGuardrVerifiedCredential(guard, LEGACY_UOF_ID) ||
@@ -738,8 +768,8 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     guardCardExpired: false,
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', licenseState),
     ptaUofTraining: guardMeetsPtaUofTraining(guard),
-    ptaUofCombined: false,
-    ptaUofCombinedVerified: false,
+    ptaUofCombined: guardPtaUofCombinedOnFile(guard),
+    ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
     legacyPta,
     legacyUof,
     legacyWmd,
