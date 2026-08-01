@@ -1693,3 +1693,158 @@ body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ─── Uber-style mobile drawer menu (reverse B&W) ─────────────────────────── */
+
+.mobility-drawer-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--uber-text, #000000);
+}
+
+.mobility-drawer-identity-name {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobility-drawer--uber-menu .mobility-drawer-brand {
+  background: var(--uber-bg, #ffffff) !important;
+  flex-shrink: 0;
+}
+
+.mobility-drawer--uber-menu .mobility-drawer-scroll {
+  padding-top: 4px !important;
+  padding-bottom: 8px !important;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] {
+  padding: 0 20px !important;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a[aria-disabled="true"] {
+  display: none !important;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]) {
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 12px 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--uber-text, #000000) !important;
+  font-size: clamp(22px, 5.8vw, 28px) !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.03em !important;
+  transition: opacity 120ms ease;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]) svg {
+  display: none !important;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]) p,
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]) span {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+}
+
+.mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]):hover {
+  background: transparent !important;
+  opacity: 0.72;
+}
+
+.mobility-drawer--uber-menu a[aria-current="page"] {
+  background: transparent !important;
+  color: var(--uber-text, #000000) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 6px !important;
+  text-decoration-thickness: 2px !important;
+}
+
+.mobility-drawer--uber-menu a[aria-current="page"] * {
+  color: inherit !important;
+}
+
+.mobility-drawer--uber-menu .mobility-drawer-footer {
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  padding: 16px 20px 20px !important;
+  margin-top: auto;
+  background: var(--uber-bg, #ffffff);
+}
+
+.mobility-drawer--uber-menu .uber-direct-sidebar-footer-links {
+  gap: 10px;
+}
+
+.mobility-drawer--uber-menu .uber-direct-sidebar-footer-link--primary {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.35 !important;
+  color: var(--uber-text, #000000) !important;
+}
+
+.mobility-drawer--uber-menu .uber-direct-sidebar-footer-legal-wrap {
+  column-gap: 14px;
+  row-gap: 6px;
+}
+
+.mobility-drawer--uber-menu .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+/* Dark theme — reverse: dark drawer, light type, active item underlined in white */
+html.theme-dark .mobility-drawer--uber-menu .mobility-drawer-brand,
+html.theme-dark .mobility-drawer--uber-menu .mobility-drawer-footer {
+  background: #101010 !important;
+}
+
+html.theme-dark .mobility-drawer--uber-menu .mobility-drawer-identity {
+  color: #ffffff;
+}
+
+html.theme-dark .mobility-drawer--uber-menu [data-baseweb="side-nav"] a:not([aria-disabled="true"]) {
+  color: #ffffff !important;
+}
+
+html.theme-dark .mobility-drawer--uber-menu a[aria-current="page"] {
+  color: #ffffff !important;
+}
+
+html.theme-dark .mobility-drawer--uber-menu .uber-direct-sidebar-footer-link--primary {
+  color: #ffffff !important;
+}
+
+html.theme-dark .mobility-drawer--uber-menu .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+html.theme-dark .mobility-drawer--uber-menu .mobility-drawer-footer {
+  border-top-color: #2b2b2b;
+}

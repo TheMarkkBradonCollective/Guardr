@@ -12,6 +12,7 @@ import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
 import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
 import { useDevice } from '../../../lib/platform';
+import { MobileDrawerIdentity } from '../MobileDrawerIdentity';
 
 interface DesktopStaffAdminShellProps {
   children: React.ReactNode;
@@ -177,6 +178,15 @@ export function DesktopStaffAdminShell({
           onOpenSettings={() => onNavigate('preferences')}
           onOpenLegal={onOpenLegal}
         />
+      }
+      sidebarIdentity={
+        isMobileShell ? (
+          <MobileDrawerIdentity
+            userName={currentUser.name}
+            avatarUrl={currentUser.avatar}
+            onClick={() => onNavigate('profile')}
+          />
+        ) : undefined
       }
       hideHeader={hideHeader}
       headerExtension={headerExtension}

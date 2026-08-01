@@ -58,7 +58,7 @@ export function resolveMobilityChrome(
       viewSurface,
       experienceTier: tier,
       sidebarWidth: '0px',
-      drawerWidth: liteChrome ? 'min(280px, 86vw)' : 'min(300px, 88vw)',
+      drawerWidth: liteChrome ? 'min(300px, 72vw)' : 'min(320px, 72vw)',
       defaultSidebarOpen: false,
       collapsibleSidebar: true,
       headerGlass,

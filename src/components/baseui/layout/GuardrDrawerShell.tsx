@@ -38,6 +38,8 @@ export interface GuardrDrawerShellProps {
   /** When set, renders stacked sidebar CTAs (e.g. Applications: add guard + add client). */
   sidebarPrimaryActions?: SidebarPrimaryAction[];
   sidebarFooter?: React.ReactNode;
+  /** Uber-style mobile drawer header — avatar + name instead of logo. */
+  sidebarIdentity?: React.ReactNode;
   hideHeader?: boolean;
   headerOverride?: React.ReactNode;
   headerExtension?: React.ReactNode;
@@ -70,6 +72,7 @@ export function GuardrDrawerShell({
   sidebarPrimaryAction,
   sidebarPrimaryActions,
   sidebarFooter,
+  sidebarIdentity,
   hideHeader = false,
   headerOverride,
   headerExtension,
@@ -202,7 +205,7 @@ export function GuardrDrawerShell({
   const sidebarNode = (
     <Block
       as="aside"
-      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer'}${useBottomNav ? ' mobility-drawer--bottom-nav' : ''}${sidebarVisible ? ' mobility-drawer--open' : ''}`.trim()}
+      className={`${isDesktopWorkspace ? 'uber-direct-sidebar' : 'mobility-drawer mobility-drawer--uber-menu'}${useBottomNav ? ' mobility-drawer--bottom-nav' : ''}${sidebarVisible ? ' mobility-drawer--open' : ''}`.trim()}
       aria-label={ariaLabel}
       aria-hidden={!sidebarVisible}
       display="flex"
@@ -265,20 +268,33 @@ export function GuardrDrawerShell({
             style: {
               borderBottom: isDesktopWorkspace
                 ? 'none'
-                : `1px solid ${theme.colors.borderOpaque}`,
+                : sidebarIdentity
+                  ? 'none'
+                  : `1px solid ${theme.colors.borderOpaque}`,
               minWidth: isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth,
               flexShrink: 0,
-              // Match main mobility-header chrome height exactly.
               boxSizing: 'border-box',
-              height: 'var(--mobility-header-h, 56px)',
-              minHeight: 'var(--mobility-header-h, 56px)',
-              maxHeight: 'var(--mobility-header-h, 56px)',
-              paddingTop: 0,
-              paddingBottom: 0,
+              ...(sidebarIdentity
+                ? {
+                    height: 'auto',
+                    minHeight: 'auto',
+                    maxHeight: 'none',
+                    paddingTop: '20px',
+                    paddingBottom: '12px',
+                  }
+                : {
+                    height: 'var(--mobility-header-h, 56px)',
+                    minHeight: 'var(--mobility-header-h, 56px)',
+                    maxHeight: 'var(--mobility-header-h, 56px)',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                  }),
             },
           },
         }}
       >
+        {sidebarIdentity ?? (
+          <>
         <Logo
           size={chrome.layout === 'mobile' ? 32 : 30}
           className="shrink-0"
@@ -313,6 +329,8 @@ export function GuardrDrawerShell({
             </LabelSmall>
           ) : null}
         </Block>
+          </>
+        )}
         {isFlowSidebar ? sidebarBrandExtra : null}
       </Block>
       ) : null}
@@ -358,7 +376,14 @@ export function GuardrDrawerShell({
             },
           }}
         >
-          <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
+          <GuardrSideNav
+            groups={navGroups}
+            activeId={activeNavId}
+            onSelect={handleNavigate}
+            ariaLabel={ariaLabel}
+            hideIcons={!isDesktopWorkspace}
+            hideGroupHeaders={!isDesktopWorkspace}
+          />
         </Block>
         {sidebarFooter ? (
           <Block

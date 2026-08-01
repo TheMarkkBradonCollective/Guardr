@@ -3,6 +3,7 @@ import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { BottomNavItem } from './BottomNavBar';
 import { GuardrDrawerShell, type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
 import { useDevice } from '../../lib/platform';
+import { MobileDrawerIdentity } from './MobileDrawerIdentity';
 
 interface RoleAppShellProps {
   title: string;
@@ -101,6 +102,15 @@ export function RoleAppShell({
       mobileBottomNavOverflow={hideBottomNav ? undefined : mobileBottomNavOverflow}
       sidebarPrimaryAction={sidebarPrimaryAction}
       sidebarFooter={sidebarFooter}
+      sidebarIdentity={
+        isMobileShell ? (
+          <MobileDrawerIdentity
+            userName={accountMenu.userName}
+            avatarUrl={accountMenu.avatarUrl}
+            onClick={accountMenu.hideProfile ? accountMenu.onOpenSettings : accountMenu.onOpenProfile}
+          />
+        ) : undefined
+      }
       headerContext={headerContext}
     >
       {children}
