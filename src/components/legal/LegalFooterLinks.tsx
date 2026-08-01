@@ -5,13 +5,21 @@ interface LegalFooterLinksProps {
   className?: string;
 }
 
-const LEGAL_LINK_ORDER: LegalPageId[] = [
+export const LEGAL_LINK_ORDER: LegalPageId[] = [
   'terms',
   'privacy',
   'ica',
   'client-agreement',
   'guard-conduct',
 ];
+
+export function legalLinkLabel(page: LegalPageId): string {
+  if (page === 'ica') return 'Independent Contractor Agreement';
+  if (page === 'client-agreement') return 'Client Agreement';
+  if (page === 'guard-conduct') return 'Guard Code of Conduct';
+  if (page === 'terms') return 'Terms of Service';
+  return 'Privacy Policy';
+}
 
 export function LegalFooterLinks({ onOpenLegal, className = '' }: LegalFooterLinksProps) {
   return (
@@ -23,15 +31,7 @@ export function LegalFooterLinks({ onOpenLegal, className = '' }: LegalFooterLin
           onClick={() => onOpenLegal(page)}
           className="legal-footer-link font-semibold"
         >
-          {page === 'ica'
-            ? 'Independent Contractor Agreement'
-            : page === 'client-agreement'
-              ? 'Client Agreement'
-              : page === 'guard-conduct'
-                ? 'Guard Code of Conduct'
-                : page === 'terms'
-                  ? 'Terms of Service'
-                  : 'Privacy Policy'}
+          {legalLinkLabel(page)}
         </button>
       ))}
     </div>

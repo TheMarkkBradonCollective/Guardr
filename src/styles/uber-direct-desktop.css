@@ -386,10 +386,11 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
-  margin-top: 8px;
+  margin-top: 0;
   padding: 12px 20px 16px;
   border-top: 1px solid var(--uber-border, #eeeeee);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer a,
@@ -673,9 +674,10 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 .mobility-drawer-footer {
-  margin-top: 8px;
+  margin-top: 0;
   padding-top: 12px;
   border-top: 1px solid var(--uber-border, #eeeeee);
+  flex-shrink: 0;
 }
 
 /* Home hub cards */

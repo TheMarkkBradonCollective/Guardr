@@ -71,7 +71,7 @@ import { RoleAppShell } from './layouts/RoleAppShell';
 import { AccountMenu, type AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { AppGuidePage } from './docs/AppGuidePage';
-import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import { SidebarFooterLinks } from './layouts/SidebarFooterLinks';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen, AppSubScreenHeader } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
@@ -2142,7 +2142,10 @@ export function GuardDashboard({
           : undefined
       }
       sidebarFooter={
-        onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : undefined
+        <SidebarFooterLinks
+          onOpenSettings={() => setTab('settings')}
+          onOpenLegal={onOpenLegal}
+        />
       }
     >
       <div className="relative h-full min-h-0">

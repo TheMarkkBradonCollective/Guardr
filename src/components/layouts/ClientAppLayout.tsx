@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { LegalFooterLinks } from '../legal/LegalFooterLinks';
+import { SidebarFooterLinks } from './SidebarFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import type { AccountMenuNotificationProps } from './AccountMenu';
@@ -186,12 +186,10 @@ export function ClientAppLayout({
   );
 
   const sidebarFooter = (
-    <div className="uber-direct-sidebar-footer-links">
-      <button type="button" className="uber-direct-sidebar-footer-link" onClick={() => onNavigate?.('settings')}>
-        Account settings
-      </button>
-      {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : null}
-    </div>
+    <SidebarFooterLinks
+      onOpenSettings={() => onNavigate?.('settings')}
+      onOpenLegal={onOpenLegal}
+    />
   );
 
   const chromeActive = activeView === 'messages' || activeView === 'support';
