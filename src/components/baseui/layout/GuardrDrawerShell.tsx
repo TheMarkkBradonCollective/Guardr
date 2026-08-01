@@ -125,8 +125,9 @@ export function GuardrDrawerShell({
 
   // The rail is navigation, not chrome: it stays put on full-bleed map and
   // active-shift screens that suppress the page header.
-  // Desktop uses the labelled sidebar only; the black icon rail is retired.
-  const showIconRail = chrome.showIconRail && !isDesktopWorkspace;
+  // Desktop: icon rail only when the labelled panel is collapsed (Uber Freight TMS).
+  const showIconRail = chrome.showIconRail && (!isDesktopWorkspace || !sidebarOpen);
+  const showHeaderSidebarToggle = isDesktopWorkspace && chrome.collapsibleSidebar && sidebarOpen;
 
   // Uber Freight TMS puts every workspace destination on the rail, so it stays
   // usable with the labelled panel collapsed. Taking only the first nav group
@@ -153,6 +154,26 @@ export function GuardrDrawerShell({
   const isMobileDrawer = isMobile;
   const sidebarCtaActions =
     sidebarPrimaryActions ?? (sidebarPrimaryAction ? [sidebarPrimaryAction] : []);
+
+  const resolvedPageActions = useMemo(() => {
+    if (pageActions) return pageActions;
+    if (!isDesktopWorkspace || bleed || hideHeader) return undefined;
+    const action = sidebarPrimaryAction ?? sidebarPrimaryActions?.[0];
+    if (!action) return undefined;
+    return (
+      <button type="button" className="uber-direct-page-cta" onClick={action.onClick}>
+        {action.icon}
+        <span>{action.label}</span>
+      </button>
+    );
+  }, [
+    pageActions,
+    isDesktopWorkspace,
+    bleed,
+    hideHeader,
+    sidebarPrimaryAction,
+    sidebarPrimaryActions,
+  ]);
   const showDrawerBackdrop = sidebarVisible && isMobileDrawer;
   const flowSidebarWidth = sidebarVisible ? chrome.sidebarWidth : '0px';
   const drawerPanelWidth = chrome.drawerWidth;
@@ -527,7 +548,7 @@ export function GuardrDrawerShell({
                 <div className="uber-page-band-context">{headerContext}</div>
               ) : null}
             </div>
-            {pageActions ? <div className="uber-page-band-actions">{pageActions}</div> : null}
+            {resolvedPageActions ? <div className="uber-page-band-actions">{resolvedPageActions}</div> : null}
           </div>
         ) : null}
 
@@ -649,7 +670,7 @@ export function GuardrDrawerShell({
           <UberDirectTopHeader
             contextLabel={workspaceLabel}
             leading={
-              chrome.collapsibleSidebar ? (
+              showHeaderSidebarToggle ? (
                 <button
                   type="button"
                   className="uber-direct-sidebar-toggle"

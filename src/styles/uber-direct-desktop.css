@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    UBER DIRECT — desktop signed-in workspace (browser-desktop)
-   White sidebar · black CTA · white canvas · nav indicates active page
+   Black top bar · grey canvas · white panels · collapsible labelled sidebar
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] {
@@ -187,6 +187,12 @@ html.theme-dark .uber-rail-tip {
   flex-shrink: 0;
   padding: 24px 40px 16px;
   background: var(--uber-bg, #ffffff);
+  border-bottom: 1px solid var(--uber-border, #eeeeee);
+}
+
+html.theme-dark .uber-page-band {
+  background: #101010;
+  border-bottom-color: #2b2b2b;
 }
 
 .uber-page-band-main {
@@ -211,7 +217,9 @@ html.theme-dark .uber-rail-tip {
 .uber-shell-content[data-page-band='true'] .staff-overview-desktop-eyebrow,
 .uber-shell-content[data-page-band='true'] .staff-overview-desktop-title,
 .uber-shell-content[data-page-band='true'] .staff-overview-pro-kicker,
-.uber-shell-content[data-page-band='true'] .staff-overview-pro-title {
+.uber-shell-content[data-page-band='true'] .staff-overview-pro-title,
+.uber-shell-content[data-page-band='true'] .staff-overview-desktop-subtitle,
+.uber-shell-content[data-page-band='true'] .uber-workbench-toolbar-eyebrow {
   display: none;
 }
 
@@ -572,8 +580,12 @@ html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-di
 /* ─── Main content pane ───────────────────────────────────────────────────── */
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
-  background: var(--uber-bg, #ffffff);
+  background: var(--uber-bg-secondary, #f6f6f6);
   min-width: 0;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
+  background: #0a0a0a;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-header {
@@ -594,13 +606,21 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
-  background: var(--uber-bg, #ffffff) !important;
+  background: var(--uber-bg-secondary, #f6f6f6) !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
+  background: #0a0a0a !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner {
   padding: 32px 40px 48px !important;
   max-width: none !important;
   width: 100%;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content[data-page-band='true'] .uber-direct-content-inner {
+  padding-top: 20px !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner--bleed {
@@ -991,6 +1011,70 @@ body[data-view-surface$="-desktop"] .mobility-drawer-footer .uber-direct-sidebar
   background: var(--uber-bg, #ffffff);
   border-bottom: 1px solid var(--uber-border, #eeeeee);
   z-index: 30;
+}
+
+/* Signed-in desktop — Uber Freight black product bar */
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header {
+  background: #000000;
+  border-bottom-color: #000000;
+  color: #ffffff;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-context,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-wordmark,
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-product {
+  color: #ffffff;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle {
+  color: #ffffff;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Shield mark reads on black; invert dark wordmark assets if used */
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-brand .guardr-logo--opaque {
+  filter: none;
+}
+
+/* Page band primary CTA — mirrors sidebar black pill */
+.uber-direct-page-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 999px;
+  background: #000000;
+  color: #ffffff;
+  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.uber-direct-page-cta:hover {
+  opacity: 0.88;
+}
+
+.uber-direct-page-cta:active {
+  transform: scale(0.98);
+}
+
+html.theme-dark .uber-direct-page-cta {
+  background: #ffffff;
+  color: #000000;
 }
 
 .uber-direct-top-header-inner {
