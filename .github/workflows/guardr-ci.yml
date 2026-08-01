@@ -1,4 +1,4 @@
-# Fresh workflow file to bypass phantom BuildFailed routing (2026-08-01).
+# Fresh workflow file to bypass phantom BuildFailed routing (2026-08-01, retry 4).
 name: Guardr CI
 
 on:
