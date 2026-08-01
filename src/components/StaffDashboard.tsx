@@ -350,7 +350,6 @@ interface StaffDashboardProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
 }
 
 export function StaffDashboard({
@@ -502,7 +501,6 @@ export function StaffDashboard({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -1078,7 +1076,6 @@ export function StaffDashboard({
             tutorialCompleted={tutorialCompleted}
             tutorialActive={tutorialActive}
             onStartTutorial={onStartTutorial}
-            onEnterPracticeMode={onEnterPracticeMode}
           />
         );
       case 'dev-updates':
@@ -1179,6 +1176,7 @@ export function StaffDashboard({
         );
       case 'settings':
         return (
+          <div data-tour="staff-settings">
           <StaffSettingsPanel
             currentUser={currentUser}
             platformSettings={platformSettings}
@@ -1187,6 +1185,7 @@ export function StaffDashboard({
             onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
             onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
           />
+          </div>
         );
       case 'integrations':
         return (

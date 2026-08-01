@@ -195,7 +195,7 @@ export function ClientHomeDesktop({
         </Block>
       ) : null}
 
-      <div className="uber-direct-home-hub">
+      <div className="uber-direct-home-hub" data-tour="client-home-cta">
         <UberDirectHubCard
           title="Jobs"
           description="Create and manage jobs for your locations"

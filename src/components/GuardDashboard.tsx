@@ -290,7 +290,6 @@ interface GuardDashboardProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
   isDbConnected?: boolean;
 }
 
@@ -443,7 +442,6 @@ export function GuardDashboard({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
   isDbConnected = false,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
@@ -1466,7 +1464,7 @@ export function GuardDashboard({
 
       {activeTab === 'map' && requests.find((r) => isTutorialDemoId(r.id)) && (
         <div data-tour="guard-demo-job" className="tutorial-demo-card relative z-[1003] mx-4 mt-3">
-          <p className="tutorial-demo-card-label">Tutorial practice job</p>
+          <p className="tutorial-demo-card-label">Tutorial sample job</p>
           <p className="text-sm font-semibold mt-1">
             {requests.find((r) => isTutorialDemoId(r.id))?.title}
           </p>
@@ -1479,6 +1477,7 @@ export function GuardDashboard({
       {activeTab === 'map' && (
         <MapViewportInsetsProvider>
       {activeTab === 'map' && !showShiftOverlay && (
+        <div data-tour="guard-map-filters">
         <MapPinFilterStepper
           filters={GUARD_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
@@ -1495,6 +1494,7 @@ export function GuardDashboard({
             ) : null
           }
         />
+        </div>
       )}
 
       {activeTab === 'map' && (
@@ -1512,6 +1512,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'map' && !showShiftOverlay && !guardSelectedJobId ? (
+        <div data-tour="guard-map-browse">
         <MapBrowseDock
           items={mapBrowseItems}
           selectedId={guardSelectedJobId}
@@ -1526,6 +1527,7 @@ export function GuardDashboard({
             ) : null
           }
         />
+        </div>
       ) : null}
 
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
@@ -1809,7 +1811,6 @@ export function GuardDashboard({
                 tutorialCompleted={tutorialCompleted}
                 tutorialActive={tutorialActive}
                 onStartTutorial={onStartTutorial}
-                onEnterPracticeMode={onEnterPracticeMode}
               />
             </div>
           )}
@@ -1834,7 +1835,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'settings' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0 overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0 overflow-hidden" data-tour="guard-settings">
               <UserSettingsScreen
                 currentUser={currentUser}
                 onOpenLegal={onOpenLegal}

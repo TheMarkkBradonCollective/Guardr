@@ -3,7 +3,7 @@ import { createInitialTutorialDemoData } from './tutorialDemoData';
 import { getTourForRole, type OnboardingTour } from './onboardingTours';
 
 export type TutorialLifecycle = 'never' | 'declined' | 'completed';
-export type TutorialPhase = 'prompt' | 'active' | 'practice';
+export type TutorialPhase = 'prompt' | 'active';
 
 export interface TutorialSession {
   tourId: string;
@@ -23,15 +23,29 @@ function emptyState(): TutorialPersistedState {
   return { lifecycle: 'never', session: null };
 }
 
+function normalizeSession(session: TutorialSession | null | undefined): TutorialSession | null {
+  if (!session) return null;
+  // Legacy sessions stored phase: 'practice' — treat as completed walkthrough.
+  if ((session as { phase?: string }).phase === 'practice') return null;
+  return {
+    ...session,
+    phase: 'active',
+  };
+}
+
 export function loadTutorialState(userId: string): TutorialPersistedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY(userId));
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw) as TutorialPersistedState;
     if (!parsed || typeof parsed !== 'object') return emptyState();
+    const session = normalizeSession(parsed.session);
+    if (parsed.session && !session) {
+      return { lifecycle: 'completed', session: null };
+    }
     return {
       lifecycle: parsed.lifecycle ?? 'never',
-      session: parsed.session ?? null,
+      session,
     };
   } catch {
     return emptyState();
@@ -57,7 +71,7 @@ export function shouldOfferTutorialPrompt(
 }
 
 export function isTutorialActive(state: TutorialPersistedState | null): boolean {
-  return Boolean(state?.session && (state.session.phase === 'active' || state.session.phase === 'practice'));
+  return Boolean(state?.session && state.session.phase === 'active');
 }
 
 export function startTutorialSession(userId: string, role: string): TutorialPersistedState {
@@ -94,32 +108,19 @@ export function restartTutorial(userId: string, role: string): TutorialPersisted
   return startTutorialSession(userId, role);
 }
 
-export function enterPracticeFromSettings(userId: string, role: string): TutorialPersistedState {
-  const tour = getTourForRole(role);
-  if (!tour) return loadTutorialState(userId);
-
-  const existing = loadTutorialState(userId);
-  const demoData =
-    existing.session?.demoData ?? createInitialTutorialDemoData(tour.role, userId);
-  const session: TutorialSession = {
-    tourId: tour.id,
-    phase: 'practice',
-    stepIndex: tour.steps.length - 1,
-    demoData,
-  };
-  const next: TutorialPersistedState = { lifecycle: existing.lifecycle, session };
-  saveTutorialState(userId, next);
-  return next;
-}
-
 export function advanceTutorialStep(userId: string, state: TutorialPersistedState): TutorialPersistedState {
   const tour = getTourForRoleFromId(state.session?.tourId);
   if (!state.session || !tour) return state;
 
   const isLast = state.session.stepIndex >= tour.steps.length - 1;
-  const session: TutorialSession = isLast
-    ? { ...state.session, phase: 'practice' }
-    : { ...state.session, stepIndex: state.session.stepIndex + 1 };
+  if (isLast) {
+    return endTutorial(userId);
+  }
+
+  const session: TutorialSession = {
+    ...state.session,
+    stepIndex: state.session.stepIndex + 1,
+  };
 
   const next = { ...state, session };
   saveTutorialState(userId, next);
@@ -130,7 +131,6 @@ export function retreatTutorialStep(userId: string, state: TutorialPersistedStat
   if (!state.session || state.session.stepIndex <= 0) return state;
   const session = {
     ...state.session,
-    phase: 'active' as const,
     stepIndex: state.session.stepIndex - 1,
   };
   const next = { ...state, session };

@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  addPracticeDemoRequest,
   createInitialTutorialDemoData,
   isTutorialDemoId,
   mergeTutorialRequests,
@@ -74,12 +73,5 @@ describe('tutorialDemoData', () => {
     const stripped = stripTutorialRequests(merged);
     assert.equal(stripped.length, 1);
     assert.equal(stripped[0].id, 'live-1');
-  });
-
-  it('adds practice demo requests', () => {
-    const initial = createInitialTutorialDemoData('client', USER);
-    const next = addPracticeDemoRequest(initial, 'client', USER);
-    assert.equal(next.requests.length, 2);
-    assert.ok(isTutorialDemoId(next.requests[1].id));
   });
 });

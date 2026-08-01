@@ -31,7 +31,7 @@ function baseDemoRequest(
     clientId: partial.clientId,
     clientName: partial.clientName,
     clientLogo: '',
-    location: partial.location ?? 'Tutorial Site — Private practice data',
+    location: partial.location ?? 'Tutorial Site — sample data only',
     siteName: partial.siteName ?? 'Tutorial venue',
     address: partial.address ?? '100 Tutorial Lane',
     state: 'California',
@@ -80,11 +80,11 @@ export function createInitialTutorialDemoData(
       baseDemoRequest(`${TUTORIAL_DEMO_PREFIX}client-request-${userId}`, {
         title: 'Tutorial: Weekend festival coverage',
         clientId: userId,
-        clientName: 'Your company (practice)',
+        clientName: 'Your company (tutorial)',
         status: 'pending-review',
         location: 'Tutorial festival grounds',
         description:
-          'Practice posting flow — this draft is stored locally and never goes live until you post a real job.',
+          'Tutorial draft — stored locally and never goes live until you post a real job.',
       })
     );
   }
@@ -97,55 +97,12 @@ export function createInitialTutorialDemoData(
         clientName: 'Tutorial Client Co.',
         status: 'pending-review',
         location: 'Tutorial corporate campus',
-        description: 'Practice approval — only you see this while the tutorial or practice mode is active.',
+        description: 'Tutorial sample — only you see this while the guided tour is active.',
       })
     );
   }
 
   return { requests, createdAt: now, updatedAt: now };
-}
-
-export function addPracticeDemoRequest(
-  snapshot: TutorialDemoSnapshot,
-  role: 'guard' | 'client' | 'staff',
-  userId: string
-): TutorialDemoSnapshot {
-  const index = snapshot.requests.length + 1;
-  const id = `${TUTORIAL_DEMO_PREFIX}practice-${role}-${userId}-${index}`;
-  let request: SecurityRequest;
-
-  if (role === 'guard') {
-    request = baseDemoRequest(id, {
-      title: `Practice job #${index}: Overnight patrol`,
-      clientId: `${TUTORIAL_DEMO_PREFIX}client`,
-      clientName: 'Practice Client',
-      status: 'open',
-      location: `Practice site ${index}`,
-      hourlyRate: 40 + index,
-    });
-  } else if (role === 'client') {
-    request = baseDemoRequest(id, {
-      title: `Practice request #${index}: Store opening`,
-      clientId: userId,
-      clientName: 'Your company (practice)',
-      status: 'draft',
-      location: `Practice location ${index}`,
-    });
-  } else {
-    request = baseDemoRequest(id, {
-      title: `Practice approval #${index}: New client offer`,
-      clientId: `${TUTORIAL_DEMO_PREFIX}client-${index}`,
-      clientName: `Practice Client ${index}`,
-      status: 'pending-review',
-      location: `Practice venue ${index}`,
-    });
-  }
-
-  return {
-    ...snapshot,
-    requests: [...snapshot.requests, request],
-    updatedAt: new Date().toISOString(),
-  };
 }
 
 export function mergeTutorialRequests(

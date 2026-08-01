@@ -268,11 +268,13 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
         }
       />
 
+      <div data-tour="client-jobs-tabs">
       <WorkbenchStatChips<JobTab>
         items={TAB_OPTIONS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
         activeId={activeTab}
         onSelect={setActiveTab}
       />
+      </div>
 
       <WorkbenchPanel padding={false}>
       <WorkbenchSplit

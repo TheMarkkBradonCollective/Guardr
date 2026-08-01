@@ -221,11 +221,13 @@ export function GuardMyJobsDesktop({
     <WorkbenchPage data-tour="guard-my-jobs">
       <WorkbenchToolbar eyebrow="Your shifts" subtitle={subtitle} />
 
+      <div data-tour="guard-my-jobs-tabs">
       <WorkbenchStatChips<GuardJobsBrowseTab>
         items={TABS.map(({ id, label }) => ({ id, label, value: tallies[id] }))}
         activeId={activeTab}
         onSelect={setActiveTab}
       />
+      </div>
 
       <WorkbenchSplit
         list={

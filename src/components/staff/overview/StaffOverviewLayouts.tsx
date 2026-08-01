@@ -124,7 +124,7 @@ export function StaffOverviewMobileLayout({
     >
       {header}
 
-      <section className="staff-overview-mobile-primary" aria-label="Quick actions">
+      <section className="staff-overview-mobile-primary" aria-label="Quick actions" data-tour="staff-overview-shortcuts">
         {shortcuts}
       </section>
 
@@ -134,7 +134,7 @@ export function StaffOverviewMobileLayout({
 
       {queueBoard}
 
-      <section className="staff-overview-mobile-ops">{attentionPanel}</section>
+      <section className="staff-overview-mobile-ops" data-tour="staff-overview-queues">{attentionPanel}</section>
       <section className="staff-overview-mobile-live">{livePanel}</section>
 
       {insightsPanel ? <section className="staff-overview-mobile-glance">{insightsPanel}</section> : null}
@@ -180,7 +180,7 @@ export function StaffOverviewTabletLayout({
 
       {activityPanel ? <section className="staff-overview-tablet-activity">{activityPanel}</section> : null}
 
-      <section className="staff-overview-tablet-shortcuts">
+      <section className="staff-overview-tablet-shortcuts" data-tour="staff-overview-shortcuts">
         <StaffOverviewSectionHeader title="More tools" />
         {shortcuts}
       </section>
@@ -258,7 +258,7 @@ export function StaffOverviewDesktopLayout({
             </WorkbenchGrid>
           </div>
 
-          <aside className="staff-overview-desktop-rail" aria-label="Operations rail">
+          <aside className="staff-overview-desktop-rail" aria-label="Operations rail" data-tour="staff-overview-queues">
             {queueBoard}
             {attentionPanel}
             {livePanel}
