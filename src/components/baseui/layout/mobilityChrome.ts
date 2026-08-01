@@ -108,7 +108,7 @@ export function resolveMobilityChrome(
     experienceTier: tier,
     sidebarWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
     drawerWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
-    // Labelled sidebar is the sole desktop nav — no parallel icon rail.
+    // Uber Freight TMS: labelled panel open by default; icon rail appears when collapsed.
     defaultSidebarOpen: true,
     collapsibleSidebar: true,
     headerGlass: false,
@@ -118,7 +118,7 @@ export function resolveMobilityChrome(
     touchTargetPx: nativeChrome ? 48 : 40,
     contentMaxWidth: shellKind === 'browser' ? '1600px' : '100%',
     contentDensity: shellKind === 'browser' ? 'spacious' : 'comfortable',
-    showIconRail: false,
+    showIconRail: true,
     iconRailWidth: premiumChrome || nativeChrome ? '64px' : '56px',
     showPageTitleBand: true,
   };
