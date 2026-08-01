@@ -15,7 +15,9 @@ import {
   WorkbenchStatChips,
 } from '../baseui/layout/WorkbenchLayout';
 import { GuardrButton } from '../baseui/GuardrButton';
-import { GuardrTag } from '../baseui/GuardrTag';
+import { StatusChip } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
@@ -86,12 +88,42 @@ const TAB_OPTIONS: { id: JobTab; label: string }[] = [
   { id: 'missed', label: JOB_TALLY_LABELS.missed },
 ];
 
-function statusKind(status: SecurityRequest['status']): 'success' | 'warning' | 'danger' | 'neutral' {
-  if (status === 'in-progress' || status === 'accepted' || status === 'completed') return 'success';
-  if (status === 'open' || status === 'pending-review') return 'warning';
-  if (status === 'cancelled') return 'danger';
-  return 'neutral';
-}
+const REQUEST_COLUMNS: UberTableColumn<SecurityRequest>[] = [
+  {
+    id: 'job',
+    header: 'Job',
+    grow: true,
+    sortValue: (job) => job.title.toLowerCase(),
+    render: (job) => (
+      <>
+        <p className="uber-workbench-table-primary">{job.title}</p>
+        <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
+      </>
+    ),
+  },
+  {
+    id: 'schedule',
+    header: 'Schedule',
+    sortValue: (job) => job.startDate,
+    render: (job) => formatShiftRange(job.startDate, job.endDate),
+  },
+  {
+    id: 'rate',
+    header: 'Rate',
+    numeric: true,
+    align: 'right',
+    sortValue: (job) => job.hourlyRate,
+    render: (job) => `$${job.hourlyRate}/hr`,
+  },
+  {
+    id: 'status',
+    header: 'Status',
+    sortValue: (job) => job.status,
+    render: (job) => (
+      <StatusChip tone={jobStatusTone(job.status)}>{jobStatusLabel(job.status)}</StatusChip>
+    ),
+  },
+];
 
 export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
   const {
@@ -258,37 +290,15 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
               }
             />
           ) : (
-            <table className="uber-workbench-table">
-              <thead>
-                <tr>
-                  <th>Job</th>
-                  <th>Schedule</th>
-                  <th>Rate</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {listJobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className={`uber-workbench-table-row${selectedId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
-                    onClick={() => updateSelectedId(job.id)}
-                  >
-                    <td>
-                      <p className="uber-workbench-table-primary">{job.title}</p>
-                      <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
-                    </td>
-                    <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                    <td className="uber-workbench-table-value">${job.hourlyRate}/hr</td>
-                    <td>
-                      <GuardrTag closeable={false} kind={statusKind(job.status)}>
-                        {job.status}
-                      </GuardrTag>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <UberDataTable
+              columns={REQUEST_COLUMNS}
+              rows={listJobs}
+              rowKey={(job) => job.id}
+              selectedKey={selectedId ?? undefined}
+              onRowClick={(job) => updateSelectedId(job.id)}
+              caption="Your jobs"
+              cardLayout={{ title: 'job', subtitle: 'schedule', trailing: 'status' }}
+            />
           )
         }
         detail={
@@ -296,9 +306,9 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-bold m-0">{selectedRequest.title}</h2>
-                <GuardrTag closeable={false} kind={statusKind(selectedRequest.status)}>
-                  {selectedRequest.status}
-                </GuardrTag>
+                <StatusChip tone={jobStatusTone(selectedRequest.status)}>
+                  {jobStatusLabel(selectedRequest.status)}
+                </StatusChip>
               </div>
               <JobListingProfile
                 job={selectedRequest}
