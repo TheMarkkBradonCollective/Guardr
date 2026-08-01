@@ -99,9 +99,18 @@ function TutorialStepPanel({
           Step {stepIndex + 1} of {tour.steps.length}
         </p>
         <h2 className="text-lg font-bold text-brand-text mb-1">{step.title}</h2>
-        <p className="text-sm font-medium text-brand-text mb-2">{step.body}</p>
-        <p className="text-sm text-brand-text-muted leading-relaxed mb-4">{step.detail}</p>
-        <div className="flex gap-2">
+        <div className="tutorial-step-panel-body">
+          <p className="text-sm font-medium text-brand-text mb-2">{step.body}</p>
+          <p className="text-sm text-brand-text-muted leading-relaxed mb-2">{step.detail}</p>
+          {step.tips && step.tips.length > 0 ? (
+            <ul className="tutorial-step-panel-tips">
+              {step.tips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+        <div className="flex gap-2 tutorial-step-panel-actions">
           {stepIndex > 0 && (
             <button type="button" onClick={onBack} className="app-button-outline app-btn-sm flex items-center gap-1">
               <ChevronLeft className="w-4 h-4" /> Back

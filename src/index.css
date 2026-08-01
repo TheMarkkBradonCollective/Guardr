@@ -21353,13 +21353,41 @@ to {
 
 .tutorial-step-panel-inner {
   pointer-events: auto;
-  max-width: 36rem;
+  max-width: 40rem;
   margin: 0 auto;
   background: var(--brand-surface);
   border: 1px solid var(--brand-border);
   border-radius: var(--radius-sheet);
-  padding: 1rem 1.125rem;
+  padding: 1.125rem 1.25rem;
   box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: min(72vh, 34rem);
+}
+
+.tutorial-step-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.125rem;
+}
+
+.tutorial-step-panel-tips {
+  margin: 0.5rem 0 0;
+  padding-left: 1.125rem;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--brand-text-muted);
+}
+
+.tutorial-step-panel-actions {
+  flex-shrink: 0;
+  padding-top: 0.125rem;
 }
 
 .tutorial-highlight {
