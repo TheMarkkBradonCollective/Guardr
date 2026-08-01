@@ -363,10 +363,10 @@ export function GuardrDrawerShell({
         {sidebarFooter ? (
           <Block
             className={isDesktopWorkspace ? 'uber-direct-sidebar-footer' : 'mobility-drawer-footer'}
-            paddingLeft="scale500"
-            paddingRight="scale500"
-            paddingTop="scale500"
-            paddingBottom="scale400"
+            paddingLeft="scale400"
+            paddingRight="scale400"
+            paddingTop="scale200"
+            paddingBottom="scale200"
             minWidth={isDesktopWorkspace ? chrome.sidebarWidth : undefined}
             overrides={{
               Block: {

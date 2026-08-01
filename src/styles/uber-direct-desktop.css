@@ -387,10 +387,12 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
   margin-top: 0;
-  padding: 12px 20px 16px;
+  padding: 6px 12px 8px;
   border-top: 1px solid var(--uber-border, #eeeeee);
-  font-size: 12px;
+  font-size: 10px;
   flex-shrink: 0;
+  max-height: 5.5rem;
+  overflow: hidden;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer a,
@@ -640,7 +642,15 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 .uber-direct-sidebar-footer-links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  max-height: 4.75rem;
+}
+
+.uber-direct-sidebar-footer-legal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+  row-gap: 1px;
 }
 
 .uber-direct-sidebar-footer-link {
@@ -650,9 +660,29 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   padding: 0;
   text-align: left;
   color: var(--uber-text-muted, #6b6b6b);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
+  line-height: 1.2;
+  min-height: 0;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uber-direct-sidebar-footer-link--primary {
+  display: flex;
+  align-items: center;
+  min-height: 2.25rem;
+  max-height: 2.25rem;
+  font-size: 11px;
+  border-radius: 8px;
+  padding: 0 8px;
+  background: var(--uber-bg-secondary, #f6f6f6);
+}
+
+html.theme-dark .uber-direct-sidebar-footer-link--primary {
+  background: #1f1f1f;
 }
 
 .uber-direct-sidebar-footer-link:hover {
@@ -675,9 +705,17 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
 
 .mobility-drawer-footer {
   margin-top: 0;
-  padding-top: 12px;
+  padding: 6px 12px 8px;
   border-top: 1px solid var(--uber-border, #eeeeee);
   flex-shrink: 0;
+  max-height: 5.5rem;
+  overflow: hidden;
+}
+
+/* Sidebar footer links stay compact — not full 44px touch bands. */
+.uber-direct-sidebar-footer .uber-direct-sidebar-footer-link,
+.mobility-drawer-footer .uber-direct-sidebar-footer-link {
+  min-height: 0 !important;
 }
 
 /* Home hub cards */

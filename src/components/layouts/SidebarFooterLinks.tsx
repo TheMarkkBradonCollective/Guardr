@@ -6,6 +6,15 @@ interface SidebarFooterLinksProps {
   onOpenLegal?: (page: LegalPageId) => void;
 }
 
+/** Short labels so the pinned footer fits in ~two nav-tab rows. */
+function sidebarLegalLabel(page: LegalPageId): string {
+  if (page === 'terms') return 'Terms';
+  if (page === 'privacy') return 'Privacy';
+  if (page === 'ica') return 'Contractor';
+  if (page === 'client-agreement') return 'Client';
+  return 'Conduct';
+}
+
 /** Pinned sidebar footer: account settings plus legal documents. */
 export function SidebarFooterLinks({ onOpenSettings, onOpenLegal }: SidebarFooterLinksProps) {
   if (!onOpenSettings && !onOpenLegal) return null;
@@ -13,22 +22,25 @@ export function SidebarFooterLinks({ onOpenSettings, onOpenLegal }: SidebarFoote
   return (
     <div className="uber-direct-sidebar-footer-links">
       {onOpenSettings ? (
-        <button type="button" className="uber-direct-sidebar-footer-link" onClick={onOpenSettings}>
+        <button type="button" className="uber-direct-sidebar-footer-link uber-direct-sidebar-footer-link--primary" onClick={onOpenSettings}>
           Account settings
         </button>
       ) : null}
-      {onOpenLegal
-        ? LEGAL_LINK_ORDER.map((page) => (
+      {onOpenLegal ? (
+        <div className="uber-direct-sidebar-footer-legal-grid" role="group" aria-label="Legal documents">
+          {LEGAL_LINK_ORDER.map((page) => (
             <button
               key={page}
               type="button"
               className="uber-direct-sidebar-footer-link"
               onClick={() => onOpenLegal(page)}
+              title={legalLinkLabel(page)}
             >
-              {legalLinkLabel(page)}
+              {sidebarLegalLabel(page)}
             </button>
-          ))
-        : null}
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
