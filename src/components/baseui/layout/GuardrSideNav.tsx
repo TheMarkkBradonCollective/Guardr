@@ -5,11 +5,11 @@ import { ParagraphMedium, LabelSmall } from 'baseui/typography';
 import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { shellNavOverrides } from './shellStyles';
 
-function NavTitle({ item }: { item: GuardrNavItem }) {
+function NavTitle({ item, hideIcon = false }: { item: GuardrNavItem; hideIcon?: boolean }) {
   const Icon = item.icon;
   return (
     <Block display="flex" alignItems="center" gridGap="scale400" width="100%">
-      {Icon ? <Icon size={18} strokeWidth={2} aria-hidden /> : null}
+      {Icon && !hideIcon ? <Icon size={18} strokeWidth={2} aria-hidden /> : null}
       <ParagraphMedium $style={{ fontWeight: 600, margin: 0, flex: 1 }}>{item.label}</ParagraphMedium>
       {item.badge != null && item.badge > 0 ? (
         <LabelSmall
@@ -31,14 +31,15 @@ function NavTitle({ item }: { item: GuardrNavItem }) {
   );
 }
 
-export function guardrNavItemsFromGroups(groups: GuardrNavGroup[]) {
+export function guardrNavItemsFromGroups(groups: GuardrNavGroup[], options?: { hideIcons?: boolean }) {
+  const hideIcons = options?.hideIcons ?? false;
   return groups.flatMap((group) => {
     const header = group.title
       ? [{ title: group.title.toUpperCase(), itemId: `__group_${group.title}`, disabled: true as const }]
       : [];
     const items = group.items.flatMap((item) => {
       const parent = {
-        title: <NavTitle item={item} />,
+        title: <NavTitle item={item} hideIcon={hideIcons} />,
         itemId: item.id,
         disabled: item.disabled,
       };
@@ -74,17 +75,26 @@ export function GuardrSideNav({
   activeId,
   onSelect,
   ariaLabel = 'Main navigation',
+  hideIcons = false,
+  hideGroupHeaders = false,
 }: {
   groups?: GuardrNavGroup[];
   items?: GuardrNavItem[];
   activeId: string;
   onSelect: (id: string) => void;
   ariaLabel?: string;
+  hideIcons?: boolean;
+  hideGroupHeaders?: boolean;
 }) {
-  const navItems = useMemo(
-    () => (groups ? guardrNavItemsFromGroups(groups) : guardrNavItemsFlat(items ?? [])),
-    [groups, items],
-  );
+  const navItems = useMemo(() => {
+    const sourceGroups = groups ?? [{ items: items ?? [] }];
+    const effectiveGroups = hideGroupHeaders
+      ? [{ items: sourceGroups.flatMap((group) => group.items) }]
+      : sourceGroups;
+    return groups
+      ? guardrNavItemsFromGroups(effectiveGroups, { hideIcons })
+      : guardrNavItemsFlat(items ?? []);
+  }, [groups, items, hideIcons, hideGroupHeaders]);
 
   return (
     <Block aria-label={ariaLabel} role="navigation">
