@@ -41,7 +41,9 @@ export function searchBarInputOverrides(className = ''): InputOverrides {
       style: { backgroundColor: 'transparent', padding: 0 },
     },
     StartEnhancer: {
-      style: { backgroundColor: 'transparent', paddingLeft: 0, paddingRight: 0 },
+      // Uber separates the leading search glyph from the query text; with no
+      // gap the icon reads as the first letter of the placeholder.
+      style: { backgroundColor: 'transparent', paddingLeft: 0, paddingRight: '10px' },
     },
     EndEnhancer: {
       style: { backgroundColor: 'transparent', paddingLeft: 0, paddingRight: 0 },

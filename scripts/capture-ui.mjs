@@ -62,22 +62,23 @@ async function run(label, viewport, theme) {
   await signIn(page);
   await shoot(page, `${label}-01-signed-in`);
 
-  // Walk the primary nav destinations that exist on this surface.
-  const navTargets = await page.evaluate(() => {
-    const seen = new Set();
-    const out = [];
-    document
-      .querySelectorAll('[data-tour], nav button, .uber-rail-item, .guardr-icon-rail button')
-      .forEach((el) => {
-        const label = (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 24);
-        if (label && !seen.has(label)) {
-          seen.add(label);
-          out.push(label);
-        }
-      });
-    return out.slice(0, 10);
-  });
-  console.log(`${label} nav targets:`, navTargets);
+  // Walk each primary destination so data-heavy screens get reviewed too.
+  const rail = page.locator('.uber-rail-items .uber-rail-btn');
+  const bottom = page.locator('nav[aria-label="Primary"] button, .guardr-bottom-nav button');
+  const nav = (await rail.count()) > 0 ? rail : bottom;
+  const count = Math.min(await nav.count(), 8);
+
+  for (let i = 0; i < count; i += 1) {
+    const item = nav.nth(i);
+    const name = (await item.getAttribute('aria-label')) || `dest-${i}`;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    try {
+      await item.click({ timeout: 5000 });
+      await shoot(page, `${label}-${String(i + 2).padStart(2, '0')}-${slug}`);
+    } catch {
+      console.log('skipped', name);
+    }
+  }
 
   await context.close();
   await browser.close();
