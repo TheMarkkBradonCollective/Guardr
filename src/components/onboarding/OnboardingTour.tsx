@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo } from 'react';
-import { Block } from 'baseui/block';
-import { HeadingMedium, LabelSmall, ParagraphSmall } from 'baseui/typography';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import type { OnboardingTour } from '../../lib/onboardingTours';
 import { shouldOfferTutorialPrompt, type TutorialPersistedState } from '../../lib/tutorialSession';
@@ -29,7 +27,7 @@ function TutorialEndBar({ onEnd }: { onEnd: () => void }) {
   return (
     <div className="tutorial-end-bar" role="toolbar" aria-label="Tutorial controls">
       <button type="button" onClick={onEnd} className="tutorial-end-bar-primary">
-        End tutorial
+        End
       </button>
     </div>
   );
@@ -46,34 +44,26 @@ function TutorialPrompt({
 }) {
   return (
     <AppModal open onClose={onDecline} align="center" zIndex={9998} ariaLabelledBy="tutorial-prompt-title">
-      <Block padding="scale800" className="w-full max-w-lg">
-        <Block display="flex" alignItems="center" gridGap="scale300" marginBottom="scale400">
-          <AccentIcon icon={Sparkles} size={20} />
-          <LabelSmall margin={0} $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-            Interactive tutorial
-          </LabelSmall>
-        </Block>
-        <HeadingMedium id="tutorial-prompt-title" marginTop={0} marginBottom="scale400">
-          Take a guided tour?
-        </HeadingMedium>
-        <ParagraphSmall color="contentSecondary" marginBottom="scale500">
-          Walk through each page of the {tour.role === 'staff' ? 'staff console' : `${tour.role} app`} with
-          step-by-step explanations. Sample data stays on your device only and is removed when you finish.
-        </ParagraphSmall>
-        <ul className="text-sm uber-text-muted space-y-1.5 list-disc list-inside mb-6">
-          <li>Each step focuses on one part of the current page</li>
-          <li>Sample jobs and requests are not sent live</li>
-          <li>Restart anytime from Guide → Interactive tutorial</li>
-        </ul>
-        <Block display="flex" flexDirection={['column', 'column', 'row']} gridGap="scale300">
+      <div className="tutorial-prompt-card w-full max-w-md p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <AccentIcon icon={Sparkles} size={18} />
+          <p className="text-[10px] font-bold uppercase tracking-wider text-brand-primary m-0">Tutorial</p>
+        </div>
+        <h2 id="tutorial-prompt-title" className="text-lg font-bold text-brand-text m-0 mb-2">
+          Quick page-by-page tour?
+        </h2>
+        <p className="text-sm text-brand-text-muted m-0 mb-5 leading-relaxed">
+          Short tips on each {tour.role === 'staff' ? 'staff' : tour.role} screen. Sample data stays on this device only.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
           <AppButton type="button" variant="primary" fullWidth onClick={onStart}>
-            Start tutorial
+            Start
           </AppButton>
           <AppButton type="button" variant="outline" fullWidth onClick={onDecline}>
-            Skip for now
+            Skip
           </AppButton>
-        </Block>
-      </Block>
+        </div>
+      </div>
     </AppModal>
   );
 }
@@ -93,23 +83,24 @@ function TutorialStepPanel({
   const isLastStep = stepIndex >= tour.steps.length - 1;
 
   return (
-    <div className="tutorial-step-panel" role="dialog" aria-live="polite">
+    <div className="tutorial-step-panel" role="dialog" aria-live="polite" aria-label={step.title}>
       <div className="tutorial-step-panel-inner">
-        <p className="text-xs font-bold uppercase tracking-wider text-brand-primary mb-1">
-          Step {stepIndex + 1} of {tour.steps.length}
-        </p>
-        <h2 className="text-lg font-bold text-brand-text mb-1">{step.title}</h2>
-        <p className="text-sm font-medium text-brand-text mb-2">{step.body}</p>
-        <p className="text-sm text-brand-text-muted leading-relaxed mb-4">{step.detail}</p>
-        <div className="flex gap-2">
-          {stepIndex > 0 && (
-            <button type="button" onClick={onBack} className="app-button-outline app-btn-sm flex items-center gap-1">
-              <ChevronLeft className="w-4 h-4" /> Back
+        <div className="tutorial-step-panel-copy">
+          <p className="tutorial-step-panel-kicker">
+            {stepIndex + 1}/{tour.steps.length}
+          </p>
+          <p className="tutorial-step-panel-title">{step.title}</p>
+          <p className="tutorial-step-panel-body">{step.body}</p>
+        </div>
+        <div className="tutorial-step-panel-actions">
+          {stepIndex > 0 ? (
+            <button type="button" onClick={onBack} className="tutorial-step-btn tutorial-step-btn--ghost" aria-label="Back">
+              <ChevronLeft className="w-4 h-4" aria-hidden />
             </button>
-          )}
-          <button type="button" onClick={onNext} className="app-button-primary app-btn-sm flex-1 flex items-center justify-center gap-1">
-            {isLastStep ? 'Finish tutorial' : 'Next'}
-            {!isLastStep && <ChevronRight className="w-4 h-4" />}
+          ) : null}
+          <button type="button" onClick={onNext} className="tutorial-step-btn tutorial-step-btn--primary">
+            {isLastStep ? 'Done' : 'Next'}
+            {!isLastStep ? <ChevronRight className="w-4 h-4" aria-hidden /> : null}
           </button>
         </div>
       </div>
@@ -144,7 +135,7 @@ export function TutorialExperience({
     const timer = window.setTimeout(() => {
       const el = document.querySelector(step.targetSelector!);
       el?.classList.add('tutorial-highlight');
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 280);
     return () => {
       window.clearTimeout(timer);
