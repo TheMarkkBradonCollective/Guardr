@@ -113,6 +113,10 @@
 
 .staff-overview-list-panel {
   padding: 16px !important;
+  /* Flex/grid parents hand this panel an auto minimum, so a long row title
+     widened it past its column and the shell clipped the overflow. */
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .staff-overview-list {

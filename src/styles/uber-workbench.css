@@ -97,6 +97,7 @@ html.theme-dark .uber-stat-chip--active {
 .uber-workbench-body {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -111,17 +112,24 @@ html.theme-dark .uber-stat-chip--active {
   border-top: 1px solid var(--uber-border, #e2e2e2);
 }
 
+/* Grid children default to min-width:auto, so a wide table widens its track past
+   the shell and the surrounding overflow:hidden clips it out of reach. Pinning
+   min-width:0 lets the track shrink, and overflow-x keeps dense tables scrollable
+   rather than cut off. */
 .uber-workbench-list {
   overflow-y: auto;
+  overflow-x: auto;
   border-right: 1px solid var(--uber-border, #e2e2e2);
   background: var(--uber-bg, #fff);
   min-height: 0;
+  min-width: 0;
 }
 
 .uber-workbench-detail {
   overflow-y: auto;
   background: var(--uber-bg, #fff);
   min-height: 0;
+  min-width: 0;
 }
 
 .uber-workbench-detail-inner {

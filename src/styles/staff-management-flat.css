@@ -29,6 +29,9 @@ body[data-form-factor="desktop"] .uber-ops-page-body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* Without this the column takes its children's intrinsic width and the
+     overflow:hidden above clips the tail of wide tables. */
+  min-width: 0;
   gap: 0.75rem;
 }
 

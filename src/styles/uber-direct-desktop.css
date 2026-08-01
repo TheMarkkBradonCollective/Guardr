@@ -49,9 +49,19 @@ html.theme-dark .uber-rail {
   width: 100%;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* The hover label sits outside the 56px rail, so this column must not clip.
+     A scrolling box would force overflow-x and swallow every tooltip. */
+  overflow: visible;
   scrollbar-width: none;
+}
+
+/* Only clip once the rail genuinely cannot fit: reaching a destination matters
+   more than its hover label. */
+@media (max-height: 640px) {
+  .uber-rail-items {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
 
 .uber-rail-items::-webkit-scrollbar {

@@ -286,6 +286,28 @@ body[data-view-surface="native-tablet"][data-apk-mode="premium"] {
   --space-gutter: 1.5rem;
 }
 
+/* ─── Touch target floor (all touch surfaces) ──────────────────────────── */
+
+/* Text links render at their type size, which leaves an 18px tap target. Uber
+   gives them a real 44px band on touch rather than an invisible overlay, so the
+   target matches what the finger sees. */
+body[data-view-surface$="-mobile"] .legal-footer-link,
+body[data-view-surface$="-mobile"] .uber-direct-inline-link,
+body[data-view-surface$="-mobile"] .uber-direct-sidebar-footer-link,
+body[data-view-surface$="-tablet"] .legal-footer-link,
+body[data-view-surface$="-tablet"] .uber-direct-inline-link,
+body[data-view-surface$="-tablet"] .uber-direct-sidebar-footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+body[data-view-surface$="-mobile"] .uber-direct-avatar-trigger,
+body[data-view-surface$="-tablet"] .uber-direct-avatar-trigger {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 /* ─── High-contrast / forced-colors accessibility ──────────────────────── */
 
 @media (forced-colors: active) {

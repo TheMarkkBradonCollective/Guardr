@@ -215,6 +215,9 @@ export function GuardrDrawerShell({
             flexShrink: 0,
             borderRight: sidebarVisible ? `1px solid ${theme.colors.borderOpaque}` : 'none',
             overflow: 'hidden',
+            // A zero-width panel still holds its links in the tab order;
+            // visibility takes them out without breaking the width transition.
+            visibility: sidebarVisible ? 'visible' : 'hidden',
             transition: reducedMotion
               ? 'none'
               : isFlowSidebar
