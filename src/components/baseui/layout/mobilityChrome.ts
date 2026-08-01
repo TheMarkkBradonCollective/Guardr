@@ -108,7 +108,10 @@ export function resolveMobilityChrome(
     experienceTier: tier,
     sidebarWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
     drawerWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
-    defaultSidebarOpen: true,
+    // Uber Freight TMS leads with the icon rail alone and gives the whole
+    // remaining width to the work surface; the labelled panel is opt-in via the
+    // rail's menu button rather than a permanent second nav column.
+    defaultSidebarOpen: false,
     collapsibleSidebar: true,
     headerGlass: false,
     nativeChrome,

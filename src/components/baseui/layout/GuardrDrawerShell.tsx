@@ -16,6 +16,9 @@ import { MoreMenuSheet } from '../../layouts/MoreMenuSheet';
 import type { BottomNavItem } from '../../layouts/BottomNavBar';
 import { FONT_DISPLAY } from '../../../theme/typography';
 
+/** Uber Freight's rail tops out around a dozen icons before it needs scrolling. */
+const RAIL_MAX_ITEMS = 12;
+
 export interface SidebarPrimaryAction {
   label: string;
   onClick: () => void;
@@ -121,16 +124,19 @@ export function GuardrDrawerShell({
   // active-shift screens that suppress the page header.
   const showIconRail = chrome.showIconRail;
 
-  // The rail carries primary destinations only — the labelled panel beside it
-  // still lists every group, so nothing becomes rail-only.
+  // Uber Freight TMS puts every workspace destination on the rail, so it stays
+  // usable with the labelled panel collapsed. Taking only the first nav group
+  // left the rail with two icons beside a full-width text drawer.
   const railItems = useMemo(() => {
-    const primary = navGroups[0]?.items ?? [];
-    const withIcons = primary.filter((item) => item.icon && !item.disabled);
-    if (withIcons.length > 0) return withIcons.slice(0, 8);
+    const seen = new Set<string>();
     return navGroups
       .flatMap((group) => group.items)
-      .filter((item) => item.icon && !item.disabled)
-      .slice(0, 8);
+      .filter((item) => {
+        if (!item.icon || item.disabled || seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      })
+      .slice(0, RAIL_MAX_ITEMS);
   }, [navGroups]);
 
   const overflowItems = mobileBottomNavOverflow ?? [];
@@ -496,6 +502,7 @@ export function GuardrDrawerShell({
           overflow="hidden"
           backgroundColor="backgroundPrimary"
           className="uber-shell-content"
+          data-page-band={showPageTitleBand ? 'true' : undefined}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           overrides={{
             Block: {
