@@ -29,7 +29,15 @@ export function LegalAcceptanceCheckbox({
 
   return (
     <div className={`legal-accept-row${className ? ` ${className}` : ''}`}>
-      <label htmlFor={id} className="legal-accept-checkbox-hit" aria-label="Accept terms and agreements">
+      <label
+        htmlFor={id}
+        className="legal-accept-checkbox-hit"
+        aria-label="Accept terms and agreements"
+        onMouseDown={(e) => {
+          // Avoid focus-scroll on mobile when the label activates the checkbox.
+          e.preventDefault();
+        }}
+      >
         <input
           id={id}
           type="checkbox"
@@ -37,12 +45,10 @@ export function LegalAcceptanceCheckbox({
           disabled={disabled}
           tabIndex={0}
           onChange={(e) => onChange(e.target.checked)}
-          onFocus={(e) => {
-            // Stop mobile browsers from scrolling the page when the hidden input focuses.
-            try {
-              e.currentTarget.focus({ preventScroll: true });
-            } catch {
-              /* unsupported */
+          onKeyDown={(e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              if (!disabled) onChange(!checked);
             }
           }}
           className="legal-accept-input-native"
