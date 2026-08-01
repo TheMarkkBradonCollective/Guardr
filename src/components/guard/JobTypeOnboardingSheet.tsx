@@ -162,13 +162,13 @@ export function JobTypeOnboardingSheet({
             <OnboardingBulletList items={content.beforeAccepting} />
           </div>
 
-          <label className="legal-accept-row cursor-pointer guard-pref-onboarding-ack">
+          <label className="legal-accept-row guard-pref-onboarding-ack">
             <input
               type="checkbox"
               checked={acknowledged}
               disabled={!reader.readComplete}
               onChange={(e) => setAcknowledged(e.target.checked)}
-              className="app-checkbox mt-0.5"
+              className="app-checkbox legal-accept-checkbox"
             />
             <span className="text-brand-text leading-relaxed">{content.acknowledgment}</span>
           </label>
