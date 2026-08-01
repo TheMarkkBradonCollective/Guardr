@@ -17,6 +17,8 @@ import { LegalEntityName } from '../SignatureSecurityBrand';
 import { GuardrModal } from '../baseui/overlays/GuardrModal';
 import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from './LegalFooterLinks';
+import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox';
+import { LegalDocumentLink } from './LegalDocumentLink';
 
 interface LegalAcceptanceModalProps {
   role: LegalUserRole;
@@ -81,27 +83,23 @@ export function LegalAcceptanceModal({
         <Block as="ul" marginTop={0} marginBottom="scale600" paddingLeft={0} $style={{ listStyle: 'none' }}>
           {missing.map((documentId) => (
             <Block as="li" key={documentId} marginBottom="scale400">
-              <label className="legal-accept-row cursor-pointer flex gap-3 items-start">
-                <input
-                  type="checkbox"
-                  className="app-checkbox mt-0.5"
-                  checked={!!checked[documentId]}
-                  onChange={(e) =>
-                    setChecked((prev) => ({ ...prev, [documentId]: e.target.checked }))
-                  }
-                />
+              <LegalAcceptanceCheckbox
+                id={`legal-accept-${documentId}`}
+                checked={!!checked[documentId]}
+                onChange={(next) => setChecked((prev) => ({ ...prev, [documentId]: next }))}
+              >
                 <span>
                   I agree to the{' '}
-                  <button
-                    type="button"
+                  <LegalDocumentLink
+                    page={documentId}
+                    onOpenLegal={onOpenLegal}
                     className="font-semibold uber-text-accent hover:underline"
-                    onClick={() => onOpenLegal(documentId)}
                   >
                     {legalDocumentLabel(documentId)}
-                  </button>{' '}
+                  </LegalDocumentLink>{' '}
                   (version {CURRENT_LEGAL_VERSIONS[documentId]})
                 </span>
-              </label>
+              </LegalAcceptanceCheckbox>
               <ParagraphSmall color="contentSecondary" marginTop="scale200" marginLeft="scale1000">
                 {LEGAL_DOCUMENTS[documentId].intro.slice(0, 140)}…
               </ParagraphSmall>

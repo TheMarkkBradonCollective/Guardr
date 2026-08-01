@@ -17574,6 +17574,32 @@ html.theme-dark .availability-off-day-card.guard-factor-card:active {
   border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
 }
 
+.legal-accept-checkbox {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  /* Expand tap target without shifting layout (mobile WebViews). */
+  box-sizing: content-box;
+  padding: 0.625rem;
+  margin-left: -0.625rem;
+  margin-top: calc(0.125rem - 0.625rem);
+}
+
+.legal-accept-copy {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legal-accept-copy a,
+.legal-accept-copy button {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
 .legal-accept-row span {
   font-size: 0.9375rem;
   line-height: 1.5;

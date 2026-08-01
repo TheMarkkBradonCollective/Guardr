@@ -34,4 +34,25 @@ test.describe('Guardr public pages', () => {
     await waitForAppReady(page);
     await expect(page.locator('body')).toContainText(/terms of service/i);
   });
+
+  test('sign-up terms checkbox is tappable on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 727 });
+    await page.goto('/?auth=sign-up&ar=guard');
+    await waitForAppReady(page);
+
+    const checkbox = page.locator('#auth-accept-terms');
+    await checkbox.scrollIntoViewIfNeeded();
+    await expect(checkbox).toBeVisible();
+
+    const termsLink = page.locator('#auth-accept-terms-copy a').first();
+    await expect(termsLink).toHaveAttribute('href', '/legal/terms');
+    await expect(termsLink).toHaveAttribute('target', '_blank');
+
+    await checkbox.click();
+    await expect(checkbox).toBeChecked();
+
+    const copy = page.locator('#auth-accept-terms-copy');
+    await copy.click({ position: { x: 8, y: 8 } });
+    await expect(checkbox).not.toBeChecked();
+  });
 });

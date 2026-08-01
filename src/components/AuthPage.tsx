@@ -41,6 +41,8 @@ import type { LegalPageId } from '../lib/legalContent';
 import { SITE_NAME } from '../lib/siteConfig';
 import { LegalEntityName } from './SignatureSecurityBrand';
 import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalContent';
+import { LegalAcceptanceCheckbox } from './legal/LegalAcceptanceCheckbox';
+import { LegalDocumentLink } from './legal/LegalDocumentLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { UberDirectTopHeader } from './baseui/layout/UberDirectTopHeader';
 import {
@@ -1507,59 +1509,35 @@ export function AuthPage({
 
 
               {isSignUp && (
-                <label className="legal-accept-row cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="app-checkbox mt-0.5"
-                  />
+                <LegalAcceptanceCheckbox
+                  id="auth-accept-terms"
+                  checked={acceptedTerms}
+                  onChange={setAcceptedTerms}
+                >
                   <span>
                     I agree to the{' '}
-                    {onOpenLegal ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => onOpenLegal('terms')}
-                          className="font-semibold text-brand-primary hover:underline"
-                        >
-                          Terms of Service
-                        </button>{' '}
-                        and{' '}
-                        <button
-                          type="button"
-                          onClick={() => onOpenLegal('privacy')}
-                          className="font-semibold text-brand-primary hover:underline"
-                        >
-                          Privacy Policy
-                        </button>
-                      </>
-                    ) : (
-                      'Terms of Service and Privacy Policy'
-                    )}
+                    <LegalDocumentLink page="terms">
+                      Terms of Service
+                    </LegalDocumentLink>{' '}
+                    and{' '}
+                    <LegalDocumentLink page="privacy">
+                      Privacy Policy
+                    </LegalDocumentLink>
                     . I understand {SITE_NAME} is a technology platform operated by <LegalEntityName />,
                     not a security services provider or employer of guards. I also accept the{' '}
                     {requiredLegalDocumentsForRole(role)
                       .filter((id) => id !== 'terms' && id !== 'privacy')
                       .map((id, index, arr) => (
                         <React.Fragment key={id}>
-                          {onOpenLegal ? (
-                            <button
-                              type="button"
-                              onClick={() => onOpenLegal(id)}
-                              className="font-semibold text-brand-primary hover:underline"
-                            >
-                              {legalDocumentLabel(id)}
-                            </button>
-                          ) : (
-                            legalDocumentLabel(id)
-                          )}
+                          <LegalDocumentLink page={id}>
+                            {legalDocumentLabel(id)}
+                          </LegalDocumentLink>
                           {index < arr.length - 1 ? ' and ' : ''}
                         </React.Fragment>
                       ))}
                     .
                   </span>
-                </label>
+                </LegalAcceptanceCheckbox>
               )}
 
               <AppButton type="submit" fullWidth className={isSheet ? 'auth-sheet-submit mt-3' : 'mt-3'}>
