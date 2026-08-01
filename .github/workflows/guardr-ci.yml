@@ -1,5 +1,5 @@
-# Re-trigger CI after Actions billing recovery (2026-08-01, retry 4).
-name: CI
+# Fresh workflow file to bypass phantom BuildFailed routing (2026-08-01, retry 4).
+name: Guardr CI
 
 on:
   workflow_dispatch:
