@@ -1,0 +1,14 @@
+{
+  "webVersion": "1.0.113-beta",
+  "apk": {
+    "ready": true,
+    "version": "1.0.113",
+    "versionCode": 213,
+    "url": "/guardr.apk",
+    "downloadName": "guardr-v1.0.113.apk",
+    "fileSize": 8378011,
+    "sha256": "2ce1a727f7fdebf2e06c6e788b0761f721b05f0a71e0c29e7e9deecb651e0896",
+    "releaseNotes": "Desktop workbench alignment across staff, client, and guard pages; Uber Freight-style table splits and credentials fix."
+  },
+  "updatedAt": "2026-08-01T11:30:03.494Z"
+}
