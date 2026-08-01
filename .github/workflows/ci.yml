@@ -1,4 +1,4 @@
-# Re-trigger CI after Actions billing recovery (2026-07-31, retry 2).
+# Re-trigger CI after Actions billing recovery (2026-08-01, retry 3).
 name: CI
 
 on:
