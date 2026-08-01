@@ -338,17 +338,15 @@ import {
   advanceTutorialStep,
   declineTutorial,
   endTutorial,
-  enterPracticeFromSettings,
   isTutorialActive,
   loadTutorialState,
   restartTutorial,
   retreatTutorialStep,
   shouldOfferTutorialPrompt,
   startTutorialSession,
-  updateTutorialDemoData,
   type TutorialPersistedState,
 } from './lib/tutorialSession';
-import { addPracticeDemoRequest, isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
+import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
@@ -13429,15 +13427,6 @@ export default function App() {
           if (!tutorialState) return;
           setTutorialState(retreatTutorialStep(currentUser.id, tutorialState));
         }}
-        onAddPracticeData={() => {
-          if (!tutorialState?.session || !activeOnboardingTour) return;
-          const demoData = addPracticeDemoRequest(
-            tutorialState.session.demoData,
-            activeOnboardingTour.role,
-            currentUser.id
-          );
-          setTutorialState(updateTutorialDemoData(currentUser.id, tutorialState, demoData));
-        }}
         navigation={{
           onGuardTab: (tab) => setGuardTab(tab as GuardTab),
           onClientView: (view) => setClientView(view as ClientView),
@@ -13453,10 +13442,6 @@ export default function App() {
         tutorialActive: isTutorialActive(tutorialState),
         onStartTutorial: () => {
           const next = restartTutorial(currentUser.id, currentUser.role);
-          setTutorialState(next);
-        },
-        onEnterPracticeMode: () => {
-          const next = enterPracticeFromSettings(currentUser.id, currentUser.role);
           setTutorialState(next);
         },
       }
@@ -13988,12 +13973,14 @@ export default function App() {
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
             />
           ) : clientView === 'settings' ? (
+            <div data-tour="client-settings">
             <UserSettingsScreen
               currentUser={currentUser}
               isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
               onOpenDownload={openDownloadPage}
             />
+            </div>
           ) : clientView === 'support-compose' ? (
             <SupportComposePage
               onBack={() => closeClientSupportForm('support')}

@@ -149,7 +149,6 @@ interface ClientDashboardProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
 }
 
 export function ClientDashboard({
@@ -236,7 +235,6 @@ export function ClientDashboard({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -355,7 +353,7 @@ export function ClientDashboard({
 
   const tutorialDemoBanner = tutorialDemoRequest ? (
     <div className="tutorial-demo-card relative z-[1003] mx-4 mt-3">
-      <p className="tutorial-demo-card-label">Tutorial practice request</p>
+      <p className="tutorial-demo-card-label">Tutorial sample request</p>
       <p className="text-sm font-semibold text-brand-text">{tutorialDemoRequest.title}</p>
       <p className="text-xs text-brand-text-muted mt-1">
         Stored on this device only — not visible to guards or staff until you post a real job.
@@ -761,7 +759,6 @@ export function ClientDashboard({
         tutorialCompleted={tutorialCompleted}
         tutorialActive={tutorialActive}
         onStartTutorial={onStartTutorial}
-        onEnterPracticeMode={onEnterPracticeMode}
       />
     );
   }

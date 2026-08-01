@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Block } from 'baseui/block';
 import { HeadingMedium, LabelSmall, ParagraphSmall } from 'baseui/typography';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import type { OnboardingTour } from '../../lib/onboardingTours';
-import { shouldOfferTutorialPrompt, type TutorialPhase, type TutorialPersistedState } from '../../lib/tutorialSession';
+import { shouldOfferTutorialPrompt, type TutorialPersistedState } from '../../lib/tutorialSession';
 import { AppModal } from '../ui/motion/AppMotion';
 import { AppButton } from '../ui/AppButton';
 import { AccentIcon } from '../baseui/dashboard';
@@ -22,26 +22,12 @@ interface TutorialExperienceProps {
   onEnd: () => void;
   onNext: () => void;
   onBack: () => void;
-  onAddPracticeData: () => void;
   navigation: TutorialNavigationHandlers;
 }
 
-function TutorialEndBar({
-  phase,
-  onEnd,
-  onAddPracticeData,
-}: {
-  phase: TutorialPhase;
-  onEnd: () => void;
-  onAddPracticeData: () => void;
-}) {
+function TutorialEndBar({ onEnd }: { onEnd: () => void }) {
   return (
     <div className="tutorial-end-bar" role="toolbar" aria-label="Tutorial controls">
-      {phase === 'practice' && (
-        <button type="button" onClick={onAddPracticeData} className="tutorial-end-bar-secondary">
-          Add practice data
-        </button>
-      )}
       <button type="button" onClick={onEnd} className="tutorial-end-bar-primary">
         End tutorial
       </button>
@@ -68,16 +54,16 @@ function TutorialPrompt({
           </LabelSmall>
         </Block>
         <HeadingMedium id="tutorial-prompt-title" marginTop={0} marginBottom="scale400">
-          Take a quick tour?
+          Take a guided tour?
         </HeadingMedium>
         <ParagraphSmall color="contentSecondary" marginBottom="scale500">
-          Walk through {tour.role === 'staff' ? 'staff ops' : `the ${tour.role} app`} step by step with
-          private practice data that never goes live. You can skip now and restart anytime from Settings.
+          Walk through each page of the {tour.role === 'staff' ? 'staff console' : `${tour.role} app`} with
+          step-by-step explanations. Sample data stays on your device only and is removed when you finish.
         </ParagraphSmall>
         <ul className="text-sm uber-text-muted space-y-1.5 list-disc list-inside mb-6">
-          <li>Practice jobs and requests stay on your device only</li>
-          <li>Deleted automatically when you end the tutorial</li>
-          <li>After the walkthrough, explore freely in practice mode</li>
+          <li>Each step focuses on one part of the current page</li>
+          <li>Sample jobs and requests are not sent live</li>
+          <li>Restart anytime from Guide → Interactive tutorial</li>
         </ul>
         <Block display="flex" flexDirection={['column', 'column', 'row']} gridGap="scale300">
           <AppButton type="button" variant="primary" fullWidth onClick={onStart}>
@@ -95,38 +81,35 @@ function TutorialPrompt({
 function TutorialStepPanel({
   tour,
   stepIndex,
-  phase,
   onNext,
   onBack,
 }: {
   tour: OnboardingTour;
   stepIndex: number;
-  phase: TutorialPhase;
   onNext: () => void;
   onBack: () => void;
 }) {
   const step = tour.steps[stepIndex];
   const isLastStep = stepIndex >= tour.steps.length - 1;
-  const inPractice = phase === 'practice';
 
   return (
     <div className="tutorial-step-panel" role="dialog" aria-live="polite">
       <div className="tutorial-step-panel-inner">
         <p className="text-xs font-bold uppercase tracking-wider text-brand-primary mb-1">
-          {inPractice ? 'Practice mode' : `Step ${stepIndex + 1} of ${tour.steps.length}`}
+          Step {stepIndex + 1} of {tour.steps.length}
         </p>
         <h2 className="text-lg font-bold text-brand-text mb-1">{step.title}</h2>
         <p className="text-sm font-medium text-brand-text mb-2">{step.body}</p>
         <p className="text-sm text-brand-text-muted leading-relaxed mb-4">{step.detail}</p>
         <div className="flex gap-2">
-          {!inPractice && stepIndex > 0 && (
+          {stepIndex > 0 && (
             <button type="button" onClick={onBack} className="app-button-outline app-btn-sm flex items-center gap-1">
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           )}
           <button type="button" onClick={onNext} className="app-button-primary app-btn-sm flex-1 flex items-center justify-center gap-1">
-            {inPractice ? 'Got it' : isLastStep ? 'Enter practice mode' : 'Next'}
-            {!inPractice && !isLastStep && <ChevronRight className="w-4 h-4" />}
+            {isLastStep ? 'Finish tutorial' : 'Next'}
+            {!isLastStep && <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -142,19 +125,12 @@ export function TutorialExperience({
   onEnd,
   onNext,
   onBack,
-  onAddPracticeData,
   navigation,
 }: TutorialExperienceProps) {
-  const [practiceDismissed, setPracticeDismissed] = useState(false);
   const showPrompt = shouldOfferTutorialPrompt(state, tour);
   const session = state.session;
-  const phase = session?.phase;
   const stepIndex = session?.stepIndex ?? 0;
   const step = session ? tour.steps[stepIndex] : null;
-
-  useEffect(() => {
-    setPracticeDismissed(false);
-  }, [session?.phase, stepIndex]);
 
   useEffect(() => {
     if (!session || !step) return;
@@ -179,27 +155,18 @@ export function TutorialExperience({
   }, [step?.targetSelector, stepIndex]);
 
   const endBar = useMemo(() => {
-    if (!session || !phase) return null;
-    return <TutorialEndBar phase={phase} onEnd={onEnd} onAddPracticeData={onAddPracticeData} />;
-  }, [session, phase, onEnd, onAddPracticeData]);
+    if (!session) return null;
+    return <TutorialEndBar onEnd={onEnd} />;
+  }, [session, onEnd]);
 
   return (
     <>
       {endBar}
       {showPrompt && <TutorialPrompt tour={tour} onStart={onStart} onDecline={onDecline} />}
-      {session && phase && step && !(phase === 'practice' && practiceDismissed) && (
+      {session && step && (
         <>
           <div className="tutorial-scrim" aria-hidden="true" />
-          <TutorialStepPanel
-            tour={tour}
-            stepIndex={stepIndex}
-            phase={phase}
-            onNext={() => {
-              if (phase === 'practice') setPracticeDismissed(true);
-              else onNext();
-            }}
-            onBack={onBack}
-          />
+          <TutorialStepPanel tour={tour} stepIndex={stepIndex} onNext={onNext} onBack={onBack} />
         </>
       )}
     </>

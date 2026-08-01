@@ -4,7 +4,6 @@ import {
   advanceTutorialStep,
   declineTutorial,
   endTutorial,
-  enterPracticeFromSettings,
   loadTutorialState,
   restartTutorial,
   shouldOfferTutorialPrompt,
@@ -51,16 +50,20 @@ describe('tutorialSession', () => {
     assert.equal(shouldOfferTutorialPrompt(state, GUARD_ONBOARDING_TOUR), false);
   });
 
-  it('starts session with demo data and advances to practice', () => {
+  it('starts session with demo data and completes on last step', () => {
     let state = startTutorialSession(USER, 'guard');
     assert.equal(state.session?.phase, 'active');
     assert.equal(state.session?.stepIndex, 0);
     assert.ok(state.session?.demoData.requests.length > 0);
 
-    for (let i = 0; i < GUARD_ONBOARDING_TOUR.steps.length; i += 1) {
+    for (let i = 0; i < GUARD_ONBOARDING_TOUR.steps.length - 1; i += 1) {
       state = advanceTutorialStep(USER, state);
+      assert.equal(state.session?.phase, 'active');
     }
-    assert.equal(state.session?.phase, 'practice');
+
+    state = advanceTutorialStep(USER, state);
+    assert.equal(state.lifecycle, 'completed');
+    assert.equal(state.session, null);
   });
 
   it('clears session on end', () => {
@@ -77,10 +80,21 @@ describe('tutorialSession', () => {
     assert.equal(restarted.session?.stepIndex, 0);
   });
 
-  it('enters practice mode from settings after completion', () => {
-    endTutorial(USER);
-    const practice = enterPracticeFromSettings(USER, 'guard');
-    assert.equal(practice.session?.phase, 'practice');
-    assert.ok(practice.session?.demoData.requests.length > 0);
+  it('migrates legacy practice sessions to completed', () => {
+    localStorage.setItem(
+      `guardr_tutorial_${USER}`,
+      JSON.stringify({
+        lifecycle: 'never',
+        session: {
+          tourId: 'guard-welcome',
+          phase: 'practice',
+          stepIndex: 6,
+          demoData: { requests: [], createdAt: '', updatedAt: '' },
+        },
+      }),
+    );
+    const state = loadTutorialState(USER);
+    assert.equal(state.lifecycle, 'completed');
+    assert.equal(state.session, null);
   });
 });

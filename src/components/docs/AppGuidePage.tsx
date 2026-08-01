@@ -326,22 +326,20 @@ function SectionCard({
 
 // ── Tutorial panel ────────────────────────────────────────────────────────────
 
-function TutorialPracticePanel({
+function TutorialPanel({
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
   variant = 'mobile',
 }: {
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
   variant?: 'mobile' | 'desktop';
 }) {
-  if (!tutorialAvailable || (!onStartTutorial && !onEnterPracticeMode)) return null;
+  if (!tutorialAvailable || !onStartTutorial) return null;
   const isDesktop = variant === 'desktop';
 
   return (
@@ -354,43 +352,28 @@ function TutorialPracticePanel({
         }
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">Tutorial & practice</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">Interactive tutorial</p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-            Walk through the app with private practice data that never goes live. Practice data stays on
-            this device and is removed when you end the tutorial.
+            Page-by-page walkthrough with sample data that stays on this device only. Sample rows are
+            removed when you finish or end the tutorial.
           </p>
         </div>
         <div className={`flex flex-col sm:flex-row gap-2${isDesktop ? ' adm-guide-tutorial-actions' : ''}`}>
-          {onStartTutorial && (
-            <button
-              type="button"
-              onClick={onStartTutorial}
-              className={
-                isDesktop
-                  ? 'adm-btn adm-btn--sand'
-                  : 'app-button-primary !w-auto !h-10 !px-5'
-              }
-            >
-              {tutorialCompleted ? 'Restart tutorial' : 'Start tutorial'}
-            </button>
-          )}
-          {onEnterPracticeMode && tutorialCompleted && !tutorialActive && (
-            <button
-              type="button"
-              onClick={onEnterPracticeMode}
-              className={
-                isDesktop
-                  ? 'adm-btn adm-btn--outline'
-                  : 'app-button-outline !w-auto !h-10 !px-5'
-              }
-            >
-              Practice mode
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onStartTutorial}
+            className={
+              isDesktop
+                ? 'adm-btn adm-btn--sand'
+                : 'app-button-primary !w-auto !h-10 !px-5'
+            }
+          >
+            {tutorialCompleted ? 'Restart tutorial' : 'Start tutorial'}
+          </button>
         </div>
         {tutorialActive && (
           <p className="text-xs text-brand-primary font-medium">
-            Tutorial or practice mode is active — use End tutorial (top right) when you are done.
+            Tutorial is active — use End tutorial (top right) when you are done.
           </p>
         )}
       </div>
@@ -412,7 +395,6 @@ function GuideHub({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
   variant = 'mobile',
 }: {
   sections: GuideSection[];
@@ -426,7 +408,6 @@ function GuideHub({
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
   variant?: 'mobile' | 'desktop';
 }) {
   const defaultTab = highlightAudience ?? initialAudience;
@@ -467,13 +448,12 @@ function GuideHub({
   if (isDesktop) {
     return (
       <div className="adm-guide-sidebar">
-        <TutorialPracticePanel
+        <TutorialPanel
           variant="desktop"
           tutorialAvailable={tutorialAvailable}
           tutorialCompleted={tutorialCompleted}
           tutorialActive={tutorialActive}
           onStartTutorial={onStartTutorial}
-          onEnterPracticeMode={onEnterPracticeMode}
         />
         {filterTabs}
         {sectionList}
@@ -489,12 +469,11 @@ function GuideHub({
         <AppScreenTitle>Guide</AppScreenTitle>
       )}
 
-      <TutorialPracticePanel
+      <TutorialPanel
         tutorialAvailable={tutorialAvailable}
         tutorialCompleted={tutorialCompleted}
         tutorialActive={tutorialActive}
         onStartTutorial={onStartTutorial}
-        onEnterPracticeMode={onEnterPracticeMode}
       />
 
       {filterTabs}
@@ -513,7 +492,6 @@ export interface AppGuidePageProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
-  onEnterPracticeMode?: () => void;
 }
 
 const ALL_SECTIONS = parseGuide();
@@ -526,7 +504,6 @@ export function AppGuidePage({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
-  onEnterPracticeMode,
 }: AppGuidePageProps) {
   const { formFactor } = useDevice();
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
@@ -582,7 +559,6 @@ export function AppGuidePage({
                 tutorialCompleted={tutorialCompleted}
                 tutorialActive={tutorialActive}
                 onStartTutorial={onStartTutorial}
-                onEnterPracticeMode={onEnterPracticeMode}
               />
             </div>
           }
@@ -618,7 +594,6 @@ export function AppGuidePage({
       tutorialCompleted={tutorialCompleted}
       tutorialActive={tutorialActive}
       onStartTutorial={onStartTutorial}
-      onEnterPracticeMode={onEnterPracticeMode}
     />
   );
 }
