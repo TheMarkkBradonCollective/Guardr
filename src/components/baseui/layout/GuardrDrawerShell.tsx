@@ -334,25 +334,32 @@ export function GuardrDrawerShell({
       ) : null}
 
       <Block
-        className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : 'mobility-drawer-scroll'}
         flex="1"
         minHeight={0}
-        overflow="auto"
-        paddingTop="scale300"
-        paddingBottom="scale300"
+        display="flex"
+        flexDirection="column"
         minWidth={isFlowSidebar ? chrome.sidebarWidth : drawerPanelWidth}
         backgroundColor="backgroundPrimary"
-        overrides={{
-          Block: {
-            style: {
-              overscrollBehavior: 'contain',
-              WebkitOverflowScrolling: 'touch',
-            },
-          },
-        }}
       >
-        <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
-        {/* Footer scrolls with nav — only the brand header stays locked. */}
+        <Block
+          className={isDesktopWorkspace ? 'uber-direct-sidebar-nav' : 'mobility-drawer-scroll'}
+          flex="1"
+          minHeight={0}
+          overflow="auto"
+          paddingTop="scale300"
+          paddingBottom="scale300"
+          backgroundColor="backgroundPrimary"
+          overrides={{
+            Block: {
+              style: {
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch',
+              },
+            },
+          }}
+        >
+          <GuardrSideNav groups={navGroups} activeId={activeNavId} onSelect={handleNavigate} ariaLabel={ariaLabel} />
+        </Block>
         {sidebarFooter ? (
           <Block
             className={isDesktopWorkspace ? 'uber-direct-sidebar-footer' : 'mobility-drawer-footer'}
@@ -361,6 +368,13 @@ export function GuardrDrawerShell({
             paddingTop="scale500"
             paddingBottom="scale400"
             minWidth={isDesktopWorkspace ? chrome.sidebarWidth : undefined}
+            overrides={{
+              Block: {
+                style: {
+                  flexShrink: 0,
+                },
+              },
+            }}
           >
             {sidebarFooter}
           </Block>

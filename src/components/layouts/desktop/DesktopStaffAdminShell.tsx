@@ -7,7 +7,7 @@ import { getStaffNavAccessNotice, isStaffNavItemVisible } from '../../../lib/sta
 import type { LegalPageId } from '../../../lib/legalContent';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
-import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
+import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
 import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
@@ -173,16 +173,10 @@ export function DesktopStaffAdminShell({
         ) : null
       }
       sidebarFooter={
-        <div className="uber-direct-sidebar-footer-links">
-          <button
-            type="button"
-            className="uber-direct-sidebar-footer-link"
-            onClick={() => onNavigate('preferences')}
-          >
-            Account settings
-          </button>
-          {onOpenLegal ? <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-start" /> : null}
-        </div>
+        <SidebarFooterLinks
+          onOpenSettings={() => onNavigate('preferences')}
+          onOpenLegal={onOpenLegal}
+        />
       }
       hideHeader={hideHeader}
       headerExtension={headerExtension}
