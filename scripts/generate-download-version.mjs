@@ -55,6 +55,13 @@ if (!/const CACHE_NAME = 'guardr-cache-v[^']+';/.test(sw)) {
 sw = sw.replace(/const CACHE_NAME = 'guardr-cache-v[^']+';/, `const CACHE_NAME = '${cacheName}';`);
 await writeFile(swPath, sw);
 
+const serviceWorkerPath = path.join(ROOT, 'public/service-worker.js');
+const serviceWorker = `// Guardr service worker entry — push + offline shell (see sw.js for implementation)
+// Bust import cache on each release: v${versionCode}
+importScripts('/sw.js?v=${versionCode}');
+`;
+await writeFile(serviceWorkerPath, serviceWorker);
+
 console.log(`Download manifest: web/apk v${version} (code ${versionCode})`);
 console.log(`APK direct URL: ${APK_DIRECT_URL}`);
 console.log(`APK QR code: public/download/apk-qr.png`);

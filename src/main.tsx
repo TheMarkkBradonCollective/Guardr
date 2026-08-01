@@ -55,10 +55,14 @@ void initNativeShell();
 
 if (!Capacitor.isNativePlatform()) {
   registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
-  initPwaAutoUpdate();
-  void registerServiceWorker().catch((error) => {
-    console.warn('[pwa] service worker registration failed:', error);
-  });
+  void registerServiceWorker()
+    .then((registration) => {
+      initPwaAutoUpdate(registration);
+    })
+    .catch((error) => {
+      console.warn('[pwa] service worker registration failed:', error);
+      initPwaAutoUpdate();
+    });
 }
 
 const root = createRoot(document.getElementById('root')!);
