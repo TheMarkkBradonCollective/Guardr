@@ -382,6 +382,7 @@ html.theme-dark .auth-sheet-panel {
 
 .auth-form-page .auth-role-choice-main {
   align-content: flex-start;
+  overflow-anchor: none;
 }
 
 .auth-form-page .auth-role-choice-options {

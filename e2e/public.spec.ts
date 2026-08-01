@@ -57,4 +57,23 @@ test.describe('Guardr public pages', () => {
     await copy.click({ position: { x: 8, y: 8 } });
     await expect(checkbox).not.toBeChecked();
   });
+
+  test('staff sign-up checkbox does not scroll page on tap', async ({ page }) => {
+    await page.setViewportSize({ width: 393, height: 727 });
+    await page.goto('/?auth=sign-up&ar=staff');
+    await waitForAppReady(page);
+
+    await expect(page.locator('body')).not.toContainText('I also accept the .');
+    await expect(page.locator('.legal-footer-link')).toHaveCount(0);
+
+    const main = page.locator('.auth-role-choice-main');
+    await page.locator('.legal-accept-checkbox-visual').scrollIntoViewIfNeeded();
+
+    const scrollBefore = await main.evaluate((el) => el.scrollTop);
+    await page.locator('.legal-accept-checkbox-visual').click();
+    const scrollAfter = await main.evaluate((el) => el.scrollTop);
+
+    expect(Math.abs(scrollAfter - scrollBefore)).toBeLessThan(8);
+    await expect(page.locator('#auth-accept-terms')).toBeChecked();
+  });
 });

@@ -12,6 +12,7 @@
 }
 
 .legal-accept-checkbox-hit {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   margin: 0;
@@ -20,17 +21,21 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Overlay the native input on the visual box so focus-scroll targets the checkbox,
+   not the top of the page (which caused a large white gap below the form). */
 .legal-accept-input-native {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  top: 0;
+  left: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
   padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  opacity: 0;
   border: 0;
+  cursor: pointer;
   scroll-margin: 0;
+  pointer-events: none;
 }
 
 .legal-accept-checkbox-visual {
