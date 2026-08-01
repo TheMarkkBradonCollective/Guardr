@@ -35,6 +35,8 @@ function RailButton({
       data-active={active ? 'true' : undefined}
       aria-current={active ? 'page' : undefined}
       aria-label={label}
+      // Native fallback for the short-viewport case where the hover label clips.
+      title={label}
       onClick={onClick}
       {...rest}
     >

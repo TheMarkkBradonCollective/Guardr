@@ -9,6 +9,7 @@ import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import { Briefcase, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -117,6 +118,35 @@ export function GuardMyJobsDesktop({
 
   const listJobs = jobsByTab[activeTab];
 
+  const shiftColumns: UberTableColumn<GuardJobView>[] = [
+    {
+      id: 'shift',
+      header: 'Shift',
+      grow: true,
+      sortValue: (job) => job.title.toLowerCase(),
+      render: (job) => (
+        <>
+          <p className="uber-workbench-table-primary">{job.title}</p>
+          <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
+        </>
+      ),
+    },
+    {
+      id: 'schedule',
+      header: 'Schedule',
+      sortValue: (job) => job.startDate,
+      render: (job) => formatShiftRange(job.startDate, job.endDate),
+    },
+    {
+      id: 'pay',
+      header: 'Pay',
+      numeric: true,
+      align: 'right',
+      sortValue: (job) => getGuardHourlyPay(job),
+      render: (job) => `$${getGuardHourlyPay(job)}/hr`,
+    },
+  ];
+
   const tallies = useMemo(
     () => ({
       available: availableJobs.length,
@@ -202,31 +232,15 @@ export function GuardMyJobsDesktop({
           listJobs.length === 0 ? (
             <WorkbenchEmpty icon={Map} message={`No ${JOB_TALLY_LABELS[activeTab].toLowerCase()} shifts`} />
           ) : (
-            <table className="uber-workbench-table">
-              <thead>
-                <tr>
-                  <th>Shift</th>
-                  <th>Schedule</th>
-                  <th>Pay</th>
-                </tr>
-              </thead>
-              <tbody>
-                {listJobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className={`uber-workbench-table-row${selectedId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
-                    onClick={() => updateSelectedId(job.id)}
-                  >
-                    <td>
-                      <p className="uber-workbench-table-primary">{job.title}</p>
-                      <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
-                    </td>
-                    <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                    <td className="uber-workbench-table-value">${getGuardHourlyPay(job)}/hr</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <UberDataTable
+              columns={shiftColumns}
+              rows={listJobs}
+              rowKey={(job) => job.id}
+              selectedKey={selectedId ?? undefined}
+              onRowClick={(job) => updateSelectedId(job.id)}
+              caption="Your shifts"
+              cardLayout={{ title: 'shift', subtitle: 'schedule', trailing: 'pay' }}
+            />
           )
         }
         detail={

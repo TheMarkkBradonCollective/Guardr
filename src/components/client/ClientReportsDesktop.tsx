@@ -5,6 +5,8 @@ import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { ClientInvoicePanel } from './ClientInvoicePanel';
 import type { Client, SecurityRequest } from '../../types';
 import { FileText } from 'lucide-react';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -13,10 +15,13 @@ import {
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 
-const REPORT_META: Record<ClientReportCard['type'], { emoji: string; label: string; tone: string }> = {
-  incident: { emoji: '🚨', label: 'Incident Report', tone: 'danger' },
-  activity: { emoji: '📝', label: 'Activity Report', tone: 'neutral' },
-  property: { emoji: '🏗️', label: 'Property Report', tone: 'warn' },
+const REPORT_META: Record<
+  ClientReportCard['type'],
+  { emoji: string; label: string; tone: string; chip: StatusTone }
+> = {
+  incident: { emoji: '🚨', label: 'Incident Report', tone: 'danger', chip: 'negative' },
+  activity: { emoji: '📝', label: 'Activity Report', tone: 'neutral', chip: 'neutral' },
+  property: { emoji: '🏗️', label: 'Property Report', tone: 'warn', chip: 'warning' },
 };
 
 type ReportsTab = 'reports' | 'invoices';
@@ -51,6 +56,37 @@ export function ClientReportsDesktop({
     }
   }, [reports.length, tab, selectedIncidentId, onSelectIncident, reports]);
 
+  const reportColumns: UberTableColumn<ClientReportCard>[] = [
+    {
+      id: 'report',
+      header: 'Report',
+      grow: true,
+      sortValue: (report) => report.title.toLowerCase(),
+      render: (report) => (
+        <>
+          <p className="uber-workbench-table-primary">{report.title}</p>
+          <p className="uber-workbench-table-secondary">{report.summary.slice(0, 80)}…</p>
+        </>
+      ),
+    },
+    {
+      id: 'site',
+      header: 'Site',
+      sortValue: (report) => report.siteName,
+      render: (report) => report.siteName,
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      sortValue: (report) => report.type,
+      render: (report) => (
+        <StatusChip tone={REPORT_META[report.type].chip}>
+          {REPORT_META[report.type].label}
+        </StatusChip>
+      ),
+    },
+  ];
+
   return (
     <WorkbenchPage className="adm-reports-workbench">
       <WorkbenchToolbar
@@ -78,41 +114,19 @@ export function ClientReportsDesktop({
             reports.length === 0 ? (
               <WorkbenchEmpty icon={FileText} message="No reports yet" />
             ) : (
-              <table className="uber-workbench-table">
-                <thead>
-                  <tr>
-                    <th>Report</th>
-                    <th>Site</th>
-                    <th>Type</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reports.map((report) => {
-                    const meta = REPORT_META[report.type];
-                    const isIncident = report.type === 'incident' && report.incidentId;
-                    return (
-                      <tr
-                        key={report.id}
-                        className={`uber-workbench-table-row${
-                          isIncident && selectedIncidentId === report.incidentId ? ' uber-workbench-table-row--selected' : ''
-                        }`}
-                        onClick={isIncident ? () => onSelectIncident(report.incidentId!) : undefined}
-                      >
-                        <td>
-                          <p className="uber-workbench-table-primary">{report.title}</p>
-                          <p className="uber-workbench-table-secondary">{report.summary.slice(0, 80)}…</p>
-                        </td>
-                        <td className="uber-workbench-table-secondary">{report.siteName}</td>
-                        <td>
-                          <span className={`adm-pill adm-pill--${meta.tone}`}>
-                            {meta.emoji} {meta.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <UberDataTable
+                columns={reportColumns}
+                rows={reports}
+                rowKey={(report) => report.id}
+                selectedKey={reports.find((r) => r.incidentId === selectedIncidentId)?.id}
+                onRowClick={(report) => {
+                  if (report.type === 'incident' && report.incidentId) {
+                    onSelectIncident(report.incidentId);
+                  }
+                }}
+                caption="Reports"
+                cardLayout={{ title: 'report', subtitle: 'site', trailing: 'type' }}
+              />
             )
           }
           detail={

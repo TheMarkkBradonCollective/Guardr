@@ -7,6 +7,7 @@ import { formatShiftRange } from '../../lib/dates';
 import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
 import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchCardTitle,
   WorkbenchGrid,
@@ -49,6 +50,48 @@ export function GuardEarningsDesktop({
   );
   const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
   const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
+
+  const earningsColumns: UberTableColumn<GuardJobView>[] = [
+    {
+      id: 'shift',
+      header: 'Shift',
+      grow: true,
+      sortValue: (job) => job.title.toLowerCase(),
+      render: (job) => (
+        <>
+          <p className="uber-workbench-table-primary">{job.title}</p>
+          <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
+        </>
+      ),
+    },
+    {
+      id: 'date',
+      header: 'Date',
+      sortValue: (job) => job.endDate,
+      render: (job) => formatShiftRange(job.startDate, job.endDate),
+    },
+    {
+      id: 'est',
+      header: 'Est. pay',
+      numeric: true,
+      align: 'right',
+      sortValue: (job) => getEstimatedGuardEarnings(job),
+      render: (job) => `$${getEstimatedGuardEarnings(job).toFixed(2)}`,
+    },
+    {
+      id: 'pay',
+      header: 'Status',
+      render: (job) => {
+        const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
+        return (
+          <>
+            <p className="uber-workbench-table-primary">{pay.headline}</p>
+            {pay.subtext ? <p className="uber-workbench-table-secondary">{pay.subtext}</p> : null}
+          </>
+        );
+      },
+    },
+  ];
 
   return (
     <WorkbenchPage className="mobility-workspace" data-tour="guard-earnings">
@@ -130,37 +173,13 @@ export function GuardEarningsDesktop({
                 Completed shifts and payouts will appear here.
               </ParagraphMedium>
             ) : (
-              <table className="uber-workbench-table">
-                <thead>
-                  <tr>
-                    <th>Shift</th>
-                    <th>Date</th>
-                    <th>Est. pay</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedShifts.map((job) => {
-                    const payout = paymentByJobId.get(job.id);
-                    const pay = getShiftPayDisplay(job, payout);
-                    const est = getEstimatedGuardEarnings(job);
-                    return (
-                      <tr key={job.id}>
-                        <td>
-                          <p className="uber-workbench-table-primary">{job.title}</p>
-                          <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
-                        </td>
-                        <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                        <td className="uber-workbench-table-value">${est.toFixed(2)}</td>
-                        <td>
-                          <p className="uber-workbench-table-primary">{pay.headline}</p>
-                          {pay.subtext ? <p className="uber-workbench-table-secondary">{pay.subtext}</p> : null}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <UberDataTable
+                columns={earningsColumns}
+                rows={sortedShifts}
+                rowKey={(job) => job.id}
+                caption="Completed shifts"
+                cardLayout={{ title: 'shift', subtitle: 'date', trailing: 'pay' }}
+              />
             )}
           </GuardrCard>
         </WorkbenchGridCell>

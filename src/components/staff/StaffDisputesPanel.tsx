@@ -5,6 +5,8 @@ import { computeOvertimeAmount } from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
+import { StatusChip } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
@@ -82,6 +84,39 @@ export function StaffDisputesPanel({
       setSelectedId(openDisputes[0]?.id ?? null);
     }
   }, [formFactor, openDisputes, selectedId]);
+
+  const disputeColumns: UberTableColumn<OpsDispute>[] = [
+    {
+      id: 'job',
+      header: 'Job',
+      grow: true,
+      sortValue: (d) => d.jobTitle.toLowerCase(),
+      render: (d) => (
+        <>
+          <p className="uber-workbench-table-primary">{d.jobTitle}</p>
+          <p className="uber-workbench-table-secondary">
+            {d.guardName} vs {d.clientName}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      sortValue: (d) => d.type,
+      render: (d) => (
+        <StatusChip tone={d.type === 'overtime' ? 'warning' : 'neutral'}>
+          {d.type === 'overtime' ? 'Overtime' : d.type}
+        </StatusChip>
+      ),
+    },
+    {
+      id: 'opened',
+      header: 'Opened',
+      sortValue: (d) => d.openedAt,
+      render: (d) => formatWhen(d.openedAt),
+    },
+  ];
 
   const resolveTicketDispute = (
     dispute: OpsDispute,
@@ -354,33 +389,15 @@ export function StaffDisputesPanel({
         {tabBar}
         <WorkbenchSplit
           list={
-            <table className="uber-workbench-table">
-              <thead>
-                <tr>
-                  <th>Job</th>
-                  <th>Type</th>
-                  <th>Opened</th>
-                </tr>
-              </thead>
-              <tbody>
-                {openDisputes.map((d) => (
-                  <tr
-                    key={d.id}
-                    className={`uber-workbench-table-row${selected?.id === d.id ? ' uber-workbench-table-row--selected' : ''}`}
-                    onClick={() => setSelectedId(d.id)}
-                  >
-                    <td>
-                      <p className="uber-workbench-table-primary">{d.jobTitle}</p>
-                      <p className="uber-workbench-table-secondary">{d.guardName} vs {d.clientName}</p>
-                    </td>
-                    <td className="uber-workbench-table-secondary">
-                      {d.type === 'overtime' ? 'Overtime' : d.type}
-                    </td>
-                    <td className="uber-workbench-table-secondary">{formatWhen(d.openedAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <UberDataTable
+              columns={disputeColumns}
+              rows={openDisputes}
+              rowKey={(d) => d.id}
+              selectedKey={selected?.id}
+              onRowClick={(d) => setSelectedId(d.id)}
+              caption="Open disputes"
+              cardLayout={{ title: 'job', subtitle: 'opened', trailing: 'type' }}
+            />
           }
           detail={
             selected ? (

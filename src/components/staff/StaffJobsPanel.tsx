@@ -4,7 +4,9 @@ import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../type
 import type { PlatformFeeConfig } from '../../lib/payments';
 import { formatShiftRange } from '../../lib/dates';
 import { useDevice } from '../../lib/platform';
-import { GuardrTag } from '../baseui/GuardrTag';
+import { StatusChip } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -61,13 +63,6 @@ function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
     default:
       return true;
   }
-}
-
-function statusKind(status: SecurityRequest['status']): 'success' | 'warning' | 'danger' | 'neutral' {
-  if (status === 'in-progress' || status === 'accepted' || status === 'completed') return 'success';
-  if (status === 'open' || status === 'pending-review') return 'warning';
-  if (status === 'cancelled') return 'danger';
-  return 'neutral';
 }
 
 function guardMeta(req: SecurityRequest, guards: SecurityGuard[]): string {
@@ -180,28 +175,48 @@ export function StaffJobsPanel({
     );
   }
 
-  function renderJobTableRows() {
-    return filtered.map((req) => (
-      <tr
-        key={req.id}
-        className={`uber-workbench-table-row${selectedId === req.id ? ' uber-workbench-table-row--selected' : ''}`}
-        onClick={() => setSelectedId(req.id)}
-      >
-        <td>
+  const jobColumns: UberTableColumn<SecurityRequest>[] = [
+    {
+      id: 'job',
+      header: 'Job',
+      grow: true,
+      sortValue: (req) => req.title.toLowerCase(),
+      render: (req) => (
+        <>
           <p className="uber-workbench-table-primary">{req.title}</p>
           <p className="uber-workbench-table-secondary">{req.clientName}</p>
-        </td>
-        <td className="uber-workbench-table-secondary">{formatShiftRange(req.startDate, req.endDate)}</td>
-        <td className="uber-workbench-table-secondary">{guardMeta(req, guards)}</td>
-        <td className="uber-workbench-table-value">${req.hourlyRate}/hr</td>
-        <td>
-          <GuardrTag closeable={false} kind={statusKind(req.status)}>
-            {req.status}
-          </GuardrTag>
-        </td>
-      </tr>
-    ));
-  }
+        </>
+      ),
+    },
+    {
+      id: 'schedule',
+      header: 'Schedule',
+      sortValue: (req) => req.startDate,
+      render: (req) => formatShiftRange(req.startDate, req.endDate),
+    },
+    {
+      id: 'guard',
+      header: 'Guard',
+      hideOnNarrow: true,
+      render: (req) => guardMeta(req, guards),
+    },
+    {
+      id: 'rate',
+      header: 'Rate',
+      numeric: true,
+      align: 'right',
+      sortValue: (req) => req.hourlyRate,
+      render: (req) => `$${req.hourlyRate}/hr`,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (req) => req.status,
+      render: (req) => (
+        <StatusChip tone={jobStatusTone(req.status)}>{jobStatusLabel(req.status)}</StatusChip>
+      ),
+    },
+  ];
 
   const toolbar = !showDetailOnly ? (
     <>
@@ -234,18 +249,15 @@ export function StaffJobsPanel({
                   message={search ? 'No matching jobs' : 'No jobs yet'}
                 />
               ) : (
-                <table className="uber-workbench-table">
-                  <thead>
-                    <tr>
-                      <th>Job</th>
-                      <th>Schedule</th>
-                      <th>Guard</th>
-                      <th>Rate</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>{renderJobTableRows()}</tbody>
-                </table>
+                <UberDataTable
+                  columns={jobColumns}
+                  rows={filtered}
+                  rowKey={(req) => req.id}
+                  selectedKey={selectedId ?? undefined}
+                  onRowClick={(req) => setSelectedId(req.id)}
+                  caption="Jobs"
+                  cardLayout={{ title: 'job', subtitle: 'schedule', trailing: 'status' }}
+                />
               )
             }
             detail={
@@ -295,9 +307,9 @@ export function StaffJobsPanel({
               subtitle={req.clientName}
               meta={
                 <div className="flex flex-col items-start gap-1.5 w-full">
-                  <GuardrTag closeable={false} kind={statusKind(req.status)}>
-                    {req.status}
-                  </GuardrTag>
+                  <StatusChip tone={jobStatusTone(req.status)} size="small">
+                    {jobStatusLabel(req.status)}
+                  </StatusChip>
                   <span className="text-[11px] text-brand-text-muted">
                     {formatShiftRange(req.startDate, req.endDate)} · {guardMeta(req, guards)}
                   </span>

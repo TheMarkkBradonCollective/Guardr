@@ -210,7 +210,9 @@ export function OverviewMeterBar({ meter }: { meter: OverviewMeter }) {
   return (
     <div className="overview-meter">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-xs font-medium text-brand-text">{meter.label}</p>
+        <p className="text-xs font-medium text-brand-text min-w-0 truncate" title={meter.label}>
+          {meter.label}
+        </p>
         <p className="text-xs font-bold shrink-0">{meter.value}</p>
       </div>
       <div className="overview-meter-track">

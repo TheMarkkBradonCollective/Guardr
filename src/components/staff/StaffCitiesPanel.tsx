@@ -22,6 +22,8 @@ import {
   staffCanManageCity,
 } from '../../lib/platformCities';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
@@ -56,6 +58,12 @@ interface StaffCitiesPanelProps {
 const STATUS_TONES: Record<CityMarketStatus, 'success' | 'danger' | 'warning'> = {
   open: 'success',
   closed: 'danger',
+  waitlist: 'warning',
+};
+
+const STATUS_CHIP_TONES: Record<CityMarketStatus, StatusTone> = {
+  open: 'positive',
+  closed: 'negative',
   waitlist: 'warning',
 };
 
@@ -260,6 +268,31 @@ export function StaffCitiesPanel({
     [visibleCities, search, statusFilter, sort]
   );
 
+  const cityColumns: UberTableColumn<(typeof filtered)[number]>[] = [
+    {
+      id: 'city',
+      header: 'City',
+      grow: true,
+      sortValue: (city) => city.name.toLowerCase(),
+      render: (city) => (
+        <>
+          <p className="uber-workbench-table-primary">{city.name}</p>
+          <p className="uber-workbench-table-secondary">{city.stateCode}</p>
+        </>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (city) => city.status,
+      render: (city) => (
+        <StatusChip tone={STATUS_CHIP_TONES[city.status]}>
+          {CITY_STATUS_LABELS[city.status]}
+        </StatusChip>
+      ),
+    },
+  ];
+
   useEffect(() => {
     if (filtered.length === 0) {
       setSelectedId(null);
@@ -377,31 +410,15 @@ export function StaffCitiesPanel({
           <WorkbenchSplit
             className="adm-finance-split"
             list={
-              <table className="uber-workbench-table">
-                <thead>
-                  <tr>
-                    <th>City</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((city) => (
-                    <tr
-                      key={city.id}
-                      className={`uber-workbench-table-row${selectedId === city.id ? ' uber-workbench-table-row--selected' : ''}`}
-                      onClick={() => setSelectedId(city.id)}
-                    >
-                      <td>
-                        <p className="uber-workbench-table-primary">{city.name}</p>
-                        <p className="uber-workbench-table-secondary">{city.stateCode}</p>
-                      </td>
-                      <td>
-                        <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <UberDataTable
+                columns={cityColumns}
+                rows={filtered}
+                rowKey={(city) => city.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(city) => setSelectedId(city.id)}
+                caption="Cities"
+                cardLayout={{ title: 'city', trailing: 'status' }}
+              />
             }
             detail={
               selectedCity ? (

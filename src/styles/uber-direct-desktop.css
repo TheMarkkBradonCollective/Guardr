@@ -49,9 +49,19 @@ html.theme-dark .uber-rail {
   width: 100%;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* The hover label sits outside the 56px rail, so this column must not clip.
+     A scrolling box would force overflow-x and swallow every tooltip. */
+  overflow: visible;
   scrollbar-width: none;
+}
+
+/* Only clip once the rail genuinely cannot fit: reaching a destination matters
+   more than its hover label. */
+@media (max-height: 640px) {
+  .uber-rail-items {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
 
 .uber-rail-items::-webkit-scrollbar {
@@ -185,6 +195,24 @@ html.theme-dark .uber-rail-tip {
   flex-wrap: wrap;
   gap: 8px 16px;
   min-width: 0;
+}
+
+/* The band already names the destination, so a page hero rendered inside a
+   banded shell drops its own kicker and title and leads with the summary line
+   instead of stacking a second heading under the first. Status chips and
+   subtitles stay — only the duplicated heading is removed. */
+.uber-shell-content[data-page-band='true'] .app-dashboard-hero {
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.uber-shell-content[data-page-band='true'] .app-dashboard-hero-kicker,
+.uber-shell-content[data-page-band='true'] .app-dashboard-hero-title,
+.uber-shell-content[data-page-band='true'] .staff-overview-desktop-eyebrow,
+.uber-shell-content[data-page-band='true'] .staff-overview-desktop-title,
+.uber-shell-content[data-page-band='true'] .staff-overview-pro-kicker,
+.uber-shell-content[data-page-band='true'] .staff-overview-pro-title {
+  display: none;
 }
 
 .uber-page-band-title {

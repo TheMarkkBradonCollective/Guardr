@@ -18,6 +18,7 @@ import {
   AppScreen,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
@@ -283,6 +284,37 @@ export function GuardCrewHubPanel({
 
   const selectedJob = coordinatingJobs.find((j) => j.id === selectedJobId) ?? null;
 
+  const crewColumns: UberTableColumn<GuardJobView>[] = [
+    {
+      id: 'crew',
+      header: 'Crew / job',
+      grow: true,
+      sortValue: (job) => crewJobLabel(job, guard, coworkerGuards).toLowerCase(),
+      render: (job) => (
+        <>
+          <p className="uber-workbench-table-primary">
+            {crewJobLabel(job, guard, coworkerGuards)}
+          </p>
+          <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
+        </>
+      ),
+    },
+    {
+      id: 'when',
+      header: 'When',
+      sortValue: (job) => job.startDate,
+      render: (job) => formatShiftRange(job.startDate, job.endDate),
+    },
+    {
+      id: 'guards',
+      header: 'Guards',
+      numeric: true,
+      align: 'right',
+      render: (job) =>
+        `${job.guardSlots?.filter((s) => s.guardId).length ?? 0}/${job.guardsNeeded ?? 1}`,
+    },
+  ];
+
   const tabBar = (
     <ListFilterTabs
       aria-label="Crew sections"
@@ -356,35 +388,15 @@ export function GuardCrewHubPanel({
                   }
                 />
               ) : (
-                <table className="uber-workbench-table">
-                  <thead>
-                    <tr>
-                      <th>Crew / job</th>
-                      <th>When</th>
-                      <th>Guards</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {coordinatingJobs.map((job) => {
-                      const slotCount = job.guardSlots?.filter((s) => s.guardId).length ?? 0;
-                      const needed = job.guardsNeeded ?? 1;
-                      return (
-                        <tr
-                          key={job.id}
-                          className={`uber-workbench-table-row${selectedJobId === job.id ? ' uber-workbench-table-row--selected' : ''}`}
-                          onClick={() => setSelectedJobId(job.id)}
-                        >
-                          <td>
-                            <p className="uber-workbench-table-primary">{crewJobLabel(job, guard, coworkerGuards)}</p>
-                            <p className="uber-workbench-table-secondary">{job.siteName || job.location}</p>
-                          </td>
-                          <td className="uber-workbench-table-secondary">{formatShiftRange(job.startDate, job.endDate)}</td>
-                          <td className="uber-workbench-table-secondary">{slotCount}/{needed}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <UberDataTable
+                  columns={crewColumns}
+                  rows={coordinatingJobs}
+                  rowKey={(job) => job.id}
+                  selectedKey={selectedJobId ?? undefined}
+                  onRowClick={(job) => setSelectedJobId(job.id)}
+                  caption="Crew jobs"
+                  cardLayout={{ title: 'crew', subtitle: 'when', trailing: 'guards' }}
+                />
               )
             }
             detail={

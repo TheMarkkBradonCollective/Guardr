@@ -72,6 +72,7 @@ export function DashboardHero({
             marginTop={0}
             marginBottom="scale200"
             color="contentSecondary"
+            className="app-dashboard-hero-kicker"
             $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, fontSize: '11px' }}
           >
             {kicker}

@@ -8,6 +8,8 @@ import { AlertTriangle } from 'lucide-react';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -27,6 +29,14 @@ const SEVERITY_TONE: Record<OpsIncident['severity'], 'default' | 'primary' | 'su
   critical: 'danger',
 };
 
+/** Severity climbs from neutral to negative the way Uber tints escalating states. */
+const SEVERITY_CHIP_TONE: Record<OpsIncident['severity'], StatusTone> = {
+  low: 'neutral',
+  medium: 'warning',
+  high: 'warning',
+  critical: 'negative',
+};
+
 export function StaffIncidentsPanel({
   incidents,
   incidentDetails = [],
@@ -37,6 +47,41 @@ export function StaffIncidentsPanel({
 
   const selectedIncident = selectedId ? incidents.find((inc) => inc.id === selectedId) ?? null : null;
   const selectedDetail = selectedId ? incidentDetails.find((d) => d.id === selectedId) ?? null : null;
+
+  const incidentColumns: UberTableColumn<OpsIncident>[] = [
+    {
+      id: 'location',
+      header: 'Location',
+      grow: true,
+      sortValue: (inc) => inc.location.toLowerCase(),
+      render: (inc) => (
+        <>
+          <p className="uber-workbench-table-primary">{inc.location}</p>
+          <p className="uber-workbench-table-secondary">{inc.guardName}</p>
+        </>
+      ),
+    },
+    {
+      id: 'severity',
+      header: 'Severity',
+      sortValue: (inc) => inc.severity,
+      render: (inc) => (
+        <StatusChip tone={SEVERITY_CHIP_TONE[inc.severity]}>{inc.severity}</StatusChip>
+      ),
+    },
+    {
+      id: 'when',
+      header: 'When',
+      sortValue: (inc) => inc.timestamp,
+      render: (inc) =>
+        new Date(inc.timestamp).toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+    },
+  ];
 
   useEffect(() => {
     if (formFactor === 'desktop' && !selectedId && incidents.length > 0) {
@@ -58,37 +103,15 @@ export function StaffIncidentsPanel({
             incidents.length === 0 ? (
               <WorkbenchEmpty icon={AlertTriangle} message="No incidents on file" />
             ) : (
-              <table className="uber-workbench-table">
-                <thead>
-                  <tr>
-                    <th>Location</th>
-                    <th>Severity</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incidents.map((inc) => (
-                    <tr
-                      key={inc.id}
-                      className={`uber-workbench-table-row${selectedId === inc.id ? ' uber-workbench-table-row--selected' : ''}`}
-                      onClick={() => setSelectedId(inc.id)}
-                    >
-                      <td>
-                        <p className="uber-workbench-table-primary">{inc.location}</p>
-                        <p className="uber-workbench-table-secondary">{inc.guardName}</p>
-                      </td>
-                      <td>
-                        <span className={`adm-pill adm-pill--${SEVERITY_TONE[inc.severity] === 'danger' ? 'danger' : 'warn'}`}>
-                          {inc.severity}
-                        </span>
-                      </td>
-                      <td className="uber-workbench-table-secondary">
-                        {new Date(inc.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <UberDataTable
+                columns={incidentColumns}
+                rows={incidents}
+                rowKey={(inc) => inc.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(inc) => setSelectedId(inc.id)}
+                caption="Incidents"
+                cardLayout={{ title: 'location', subtitle: 'when', trailing: 'severity' }}
+              />
             )
           }
           detail={
