@@ -18660,7 +18660,7 @@ body,
   overflow: hidden;
 }
 
-input,
+input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {
   max-width: 100%;
