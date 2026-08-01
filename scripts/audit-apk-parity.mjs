@@ -70,6 +70,13 @@ if (versionManifest) {
   }
 }
 
+let catalogManifest;
+try {
+  catalogManifest = await readJson('public/version.json');
+} catch {
+  fail('public/version.json is missing — run npm run generate:download-version');
+}
+
 const gradle = await readText('android/app/build.gradle').catch(() => '');
 const versionNameMatch = gradle.match(/versionName\s+"([^"]+)"/);
 const versionCodeMatch = gradle.match(/versionCode\s+(\d+)/);
@@ -86,6 +93,21 @@ const expectedCode =
 
 if (versionCodeMatch && Number.parseInt(versionCodeMatch[1], 10) !== expectedCode) {
   fail(`build.gradle versionCode ${versionCodeMatch[1]} !== expected ${expectedCode}`);
+}
+
+if (catalogManifest?.apk) {
+  if (!catalogManifest.apk.ready) {
+    warn('public/version.json apk.ready is false — MBC App Market will not list this build');
+  }
+  if (versionCodeMatch && catalogManifest.apk.versionCode !== Number(versionCodeMatch[1])) {
+    warn(
+      `catalog apk.versionCode ${catalogManifest.apk.versionCode} !== build.gradle ${versionCodeMatch[1]}`,
+    );
+  }
+  const mbcApkPath = 'public/guardr.apk';
+  if (catalogManifest.apk.ready && !(await fileExists(mbcApkPath))) {
+    fail('public/guardr.apk is missing but catalog apk.ready is true');
+  }
 }
 
 for (const rel of REQUIRED_SRC) {

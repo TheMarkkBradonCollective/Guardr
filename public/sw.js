@@ -112,6 +112,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (url.pathname === '/version.json') {
+    event.respondWith(networkFirst(event.request, '/version.json'));
+    return;
+  }
+
+  if (url.pathname.endsWith('.apk')) {
+    return;
+  }
+
   // Hashed Vite bundles must always prefer the network so PWAs pick up new deploys.
   if (url.pathname.startsWith('/assets/')) {
     event.respondWith(networkFirst(event.request));
