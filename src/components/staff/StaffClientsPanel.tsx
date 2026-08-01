@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Building2, Search } from 'lucide-react';
 import { Client, SecurityRequest, SessionUser } from '../../types';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
@@ -17,6 +18,15 @@ import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import { canManageStaffPermissions } from '../../lib/permissions';
 import type { StaffPermissionsPatch } from './StaffPermissionsPanel';
+import { useDevice } from '../../lib/platform';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchPanel,
+  WorkbenchSplit,
+} from '../baseui/layout/WorkbenchLayout';
 
 type ClientsPageTab = 'roster' | 'job-posting';
 
@@ -38,6 +48,19 @@ interface StaffClientsPanelProps {
   onAddClient?: (input: StaffAddClientInput) => Promise<string>;
 }
 
+function clientStatusTone(status: ReturnType<typeof getClientAccountStatus>): StatusTone {
+  switch (status) {
+    case 'active':
+      return 'positive';
+    case 'pending':
+      return 'warning';
+    case 'suspended':
+      return 'negative';
+    default:
+      return 'neutral';
+  }
+}
+
 export function StaffClientsPanel({
   currentUser,
   clients,
@@ -55,6 +78,7 @@ export function StaffClientsPanel({
   onOpenJob,
   onAddClient,
 }: StaffClientsPanelProps) {
+  const { formFactor } = useDevice();
   const [pageTab, setPageTab] = useState<ClientsPageTab>('roster');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('pending');
@@ -86,6 +110,63 @@ export function StaffClientsPanel({
       if (rank !== 0) return rank;
       return (a.companyName || a.name).localeCompare(b.companyName || b.name);
     });
+
+  const selectedClient = selectedId ? clients.find((c) => c.id === selectedId) ?? null : null;
+
+  useEffect(() => {
+    if (formFactor === 'mobile' || pageTab !== 'roster') return;
+    if (filtered.length === 0) {
+      if (selectedId) setSelectedId(null);
+      return;
+    }
+    const stillVisible = selectedId ? filtered.some((c) => c.id === selectedId) : false;
+    if (!stillVisible) setSelectedId(filtered[0].id);
+  }, [statusFilter, filtered, selectedId, formFactor, pageTab]);
+
+  const clientColumns: UberTableColumn<Client>[] = useMemo(
+    () => [
+      {
+        id: 'client',
+        header: 'Client',
+        grow: true,
+        sortValue: (client) => (client.companyName || client.name).toLowerCase(),
+        render: (client) => (
+          <>
+            <p className="uber-workbench-table-primary">{client.companyName || client.name}</p>
+            <p className="uber-workbench-table-secondary">{client.email}</p>
+          </>
+        ),
+      },
+      {
+        id: 'jobs',
+        header: 'Active jobs',
+        numeric: true,
+        align: 'right',
+        sortValue: (client) =>
+          requests.filter(
+            (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status),
+          ).length,
+        render: (client) => {
+          const activeJobs = requests.filter(
+            (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status),
+          ).length;
+          return activeJobs;
+        },
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        sortValue: (client) => getClientAccountStatus(client),
+        render: (client) => {
+          const status = getClientAccountStatus(client);
+          return (
+            <StatusChip tone={clientStatusTone(status)}>{CLIENT_ACCOUNT_STATUS_LABELS[status]}</StatusChip>
+          );
+        },
+      },
+    ],
+    [requests],
+  );
 
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
@@ -165,6 +246,43 @@ export function StaffClientsPanel({
           onPersistSettings={onUpdateStaffPermissions}
         />
       </StaffOpsPageShell>
+    );
+  }
+
+  if (formFactor === 'desktop' && pageTab === 'roster') {
+    return (
+      <WorkbenchPage className="staff-roster-panel">
+        {toolbar}
+        <WorkbenchPanel padding={false}>
+          <WorkbenchSplit
+            list={
+              filtered.length === 0 ? (
+                <WorkbenchEmpty
+                  icon={search ? Search : Building2}
+                  message={search ? 'No clients match your search' : 'No clients yet'}
+                />
+              ) : (
+                <UberDataTable
+                  columns={clientColumns}
+                  rows={filtered}
+                  rowKey={(client) => client.id}
+                  selectedKey={selectedId ?? undefined}
+                  onRowClick={(client) => setSelectedId(client.id)}
+                  caption="Clients"
+                  cardLayout={{ title: 'client', subtitle: 'jobs', trailing: 'status' }}
+                />
+              )
+            }
+            detail={
+              selectedClient ? (
+                renderClientDetail(selectedClient)
+              ) : (
+                <WorkbenchEmpty icon={Building2} message="Select a client to review account details" variant="detail" />
+              )
+            }
+          />
+        </WorkbenchPanel>
+      </WorkbenchPage>
     );
   }
 

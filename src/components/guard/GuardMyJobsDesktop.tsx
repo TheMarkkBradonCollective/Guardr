@@ -13,9 +13,9 @@ import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
+  WorkbenchPanel,
   WorkbenchSplit,
   WorkbenchStatChips,
-  WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 
 export interface GuardMyJobsDesktopProps {
@@ -219,7 +219,7 @@ export function GuardMyJobsDesktop({
 
   return (
     <WorkbenchPage data-tour="guard-my-jobs">
-      <WorkbenchToolbar eyebrow="Your shifts" subtitle={subtitle} />
+      <p className="uber-workbench-lead">{subtitle}</p>
 
       <div data-tour="guard-my-jobs-tabs">
       <WorkbenchStatChips<GuardJobsBrowseTab>
@@ -229,6 +229,7 @@ export function GuardMyJobsDesktop({
       />
       </div>
 
+      <WorkbenchPanel padding={false}>
       <WorkbenchSplit
         list={
           listJobs.length === 0 ? (
@@ -268,6 +269,7 @@ export function GuardMyJobsDesktop({
           )
         }
       />
+      </WorkbenchPanel>
     </WorkbenchPage>
   );
 }

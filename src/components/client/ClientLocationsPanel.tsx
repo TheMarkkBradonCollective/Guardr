@@ -11,8 +11,8 @@ import { browsableSharedLocations, isLocationListed } from '../../lib/jobLocatio
 import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { MapPin, Plus } from 'lucide-react';
-import { ResponsiveFormPage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
+import { WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface ClientLocationsPanelProps {
   client: Client;
@@ -70,14 +70,16 @@ export function ClientLocationsPanel({
 
   const content = (
     <div className={formFactor === 'desktop' ? 'adm-locations-panel' : 'space-y-5'}>
-      <div>
-        <h3 className="text-lg font-bold tracking-tight">My Locations</h3>
-        <p className="text-sm text-brand-text-muted mt-1">
-          Scroll familiar sites from approved jobs, save your own, or mark a site private so only staff
-          can manage it — other clients will not see it to reuse.
-          {trusted ? ' As a trusted client you set risk level directly.' : null}
-        </p>
-      </div>
+      {formFactor !== 'desktop' ? (
+        <div>
+          <h3 className="text-lg font-bold tracking-tight">My Locations</h3>
+          <p className="text-sm text-brand-text-muted mt-1">
+            Scroll familiar sites from approved jobs, save your own, or mark a site private so only staff
+            can manage it — other clients will not see it to reuse.
+            {trusted ? ' As a trusted client you set risk level directly.' : null}
+          </p>
+        </div>
+      ) : null}
 
       {familiar.length > 0 && (
         <div className="space-y-2">
@@ -192,9 +194,11 @@ export function ClientLocationsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <ResponsiveFormPage title="My locations" subtitle="Familiar sites, your saves, and private options">
-        {content}
-      </ResponsiveFormPage>
+      <WorkbenchPage>
+        <WorkbenchPanel>
+          {content}
+        </WorkbenchPanel>
+      </WorkbenchPage>
     );
   }
 

@@ -755,6 +755,7 @@ export function StaffDashboard({
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
+            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
           />
         );
       case 'jobs':
