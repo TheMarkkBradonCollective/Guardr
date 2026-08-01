@@ -319,6 +319,49 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   border-right: 1px solid var(--uber-border, #eeeeee) !important;
 }
 
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
+  background: #101010 !important;
+  border-right-color: #2b2b2b !important;
+}
+
+/* Header toggle — expand/collapse the labelled sidebar */
+.uber-direct-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--uber-text, #000000);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.uber-direct-sidebar-toggle:hover {
+  background: var(--uber-bg-secondary, #f6f6f6);
+}
+
+html.theme-dark .uber-direct-sidebar-toggle {
+  color: #ffffff;
+}
+
+html.theme-dark .uber-direct-sidebar-toggle:hover {
+  background: #2b2b2b;
+}
+
+.uber-direct-sidebar-toggle:focus-visible {
+  outline: 2px solid var(--uber-text, #000000);
+  outline-offset: 2px;
+}
+
+html.theme-dark .uber-direct-sidebar-toggle:focus-visible {
+  outline-color: #ffffff;
+}
+
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-brand {
   border-bottom: none !important;
   padding-top: 28px !important;
@@ -334,6 +377,10 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: var(--uber-text, #000000);
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
+  color: #ffffff;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta-wrap {
@@ -391,6 +438,23 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   border-top: 1px solid var(--uber-border, #eeeeee);
   font-size: 11px;
   flex-shrink: 0;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
+  border-top-color: #2b2b2b;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link--primary {
+  background: #1f1f1f;
+  color: #ffffff;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:hover {
+  color: #ffffff;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer a,
@@ -462,6 +526,20 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   background: #eeeeee !important;
 }
 
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) {
+  color: #ffffff !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+  background: #2b2b2b !important;
+  color: #ffffff !important;
+}
+
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
   background: #000000 !important;
   opacity: 0.92;
@@ -485,6 +563,10 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   pointer-events: none;
   cursor: default;
   opacity: 1 !important;
+}
+
+html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
+  color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* ─── Main content pane ───────────────────────────────────────────────────── */

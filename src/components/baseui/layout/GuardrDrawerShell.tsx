@@ -125,7 +125,8 @@ export function GuardrDrawerShell({
 
   // The rail is navigation, not chrome: it stays put on full-bleed map and
   // active-shift screens that suppress the page header.
-  const showIconRail = chrome.showIconRail;
+  // Desktop uses the labelled sidebar only; the black icon rail is retired.
+  const showIconRail = chrome.showIconRail && !isDesktopWorkspace;
 
   // Uber Freight TMS puts every workspace destination on the rail, so it stays
   // usable with the labelled panel collapsed. Taking only the first nav group
@@ -647,6 +648,19 @@ export function GuardrDrawerShell({
         {isDesktopWorkspace ? (
           <UberDirectTopHeader
             contextLabel={workspaceLabel}
+            leading={
+              chrome.collapsibleSidebar ? (
+                <button
+                  type="button"
+                  className="uber-direct-sidebar-toggle"
+                  onClick={toggleSidebar}
+                  aria-expanded={sidebarOpen}
+                  aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
+                >
+                  <Menu size={20} strokeWidth={2} aria-hidden />
+                </button>
+              ) : undefined
+            }
             trailing={
               <Block display="flex" alignItems="center" gridGap="scale300">
                 {notifications}
