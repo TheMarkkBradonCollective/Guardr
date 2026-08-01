@@ -4,6 +4,7 @@ import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../
 import { useAuditLogRealtime } from '../../lib/useAuditLogRealtime';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -81,40 +82,52 @@ export function StaffAuditLogPanel() {
       </button>
     );
 
+  const auditColumns: UberTableColumn<(typeof entries)[number]>[] = [
+    {
+      id: 'time',
+      header: 'Time',
+      sortValue: (e) => e.createdAt,
+      render: (e) => (
+        <span className="whitespace-nowrap">{new Date(e.createdAt).toLocaleString()}</span>
+      ),
+    },
+    {
+      id: 'actor',
+      header: 'Actor',
+      grow: true,
+      sortValue: (e) => e.actorEmail.toLowerCase(),
+      render: (e) => (
+        <>
+          <span className="uber-workbench-table-primary">{e.actorEmail}</span>
+          <span className="uber-workbench-table-secondary ml-1">({e.actorRole})</span>
+        </>
+      ),
+    },
+    {
+      id: 'action',
+      header: 'Action',
+      sortValue: (e) => e.action,
+      render: (e) => formatAuditAction(e.action),
+    },
+    {
+      id: 'entity',
+      header: 'Entity',
+      hideOnNarrow: true,
+      render: (e) => `${e.entityType}${e.entityId ? ` · ${e.entityId.slice(0, 12)}` : ''}`,
+    },
+  ];
+
   const desktopTable = (
     <div className="adm-finance-audit-table">
-      <table className="uber-workbench-table">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Actor</th>
-            <th>Action</th>
-            <th className="hidden md:table-cell">Entity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.length === 0 ? (
-            <tr>
-              <td colSpan={4}>{loading ? 'Loading…' : 'No audit entries yet.'}</td>
-            </tr>
-          ) : (
-            entries.map((e) => (
-              <tr key={e.id}>
-                <td className="uber-workbench-table-secondary whitespace-nowrap">{new Date(e.createdAt).toLocaleString()}</td>
-                <td>
-                  <span className="uber-workbench-table-primary">{e.actorEmail}</span>
-                  <span className="uber-workbench-table-secondary ml-1">({e.actorRole})</span>
-                </td>
-                <td className="uber-workbench-table-secondary">{formatAuditAction(e.action)}</td>
-                <td className="uber-workbench-table-secondary hidden md:table-cell">
-                  {e.entityType}
-                  {e.entityId ? ` · ${e.entityId.slice(0, 12)}` : ''}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <UberDataTable
+        columns={auditColumns}
+        rows={entries}
+        rowKey={(e) => e.id}
+        caption="Audit log"
+        density="compact"
+        layout="table"
+        emptyMessage={loading ? 'Loading…' : 'No audit entries yet.'}
+      />
     </div>
   );
 
