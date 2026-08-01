@@ -6,12 +6,12 @@ interface SidebarFooterLinksProps {
   onOpenLegal?: (page: LegalPageId) => void;
 }
 
-/** Short labels so the pinned footer fits in ~two nav-tab rows. */
+/** Short sidebar labels; full titles are in the `title` tooltip. */
 function sidebarLegalLabel(page: LegalPageId): string {
   if (page === 'terms') return 'Terms';
   if (page === 'privacy') return 'Privacy';
-  if (page === 'ica') return 'Contractor';
-  if (page === 'client-agreement') return 'Client';
+  if (page === 'ica') return 'ICA';
+  if (page === 'client-agreement') return 'Client Agmt';
   return 'Conduct';
 }
 
@@ -27,7 +27,7 @@ export function SidebarFooterLinks({ onOpenSettings, onOpenLegal }: SidebarFoote
         </button>
       ) : null}
       {onOpenLegal ? (
-        <div className="uber-direct-sidebar-footer-legal-grid" role="group" aria-label="Legal documents">
+        <div className="uber-direct-sidebar-footer-legal-wrap" role="group" aria-label="Legal documents">
           {LEGAL_LINK_ORDER.map((page) => (
             <button
               key={page}
