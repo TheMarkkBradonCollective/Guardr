@@ -5,7 +5,7 @@ import type { OvertimeDisputeInput } from '../../lib/shiftBilling';
 import { formatShiftRange } from '../../lib/dates';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
-import { ClipboardList, Clock, Plus, Search } from 'lucide-react';
+import { ClipboardList, Clock } from 'lucide-react';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -260,12 +260,6 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder="Search for a job or location"
-        actions={
-          <GuardrButton kind="primary" size="compact" onClick={onRequestNew}>
-            <Plus className="w-4 h-4" />
-            Post job
-          </GuardrButton>
-        }
       />
 
       <div data-tour="client-jobs-tabs">

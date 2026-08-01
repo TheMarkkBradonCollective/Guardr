@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, RefreshCw, ShieldCheck, X } from 'lucide-react';
+import { Check, ChevronRight, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
 import { Certification, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
@@ -43,6 +43,17 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { showAppToast } from '../ui/AppToast';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { useDevice } from '../../lib/platform';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchPanel,
+  WorkbenchSplit,
+} from '../baseui/layout/WorkbenchLayout';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -73,6 +84,14 @@ interface StaffCredentialsProps {
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+}
+
+function credentialStatusTone(status: ApprovalFeedItem['status']): StatusTone {
+  if (status === 'pending' || status === 'in_review') return 'warning';
+  if (status === 'approved' || status === 'active') return 'positive';
+  if (status === 'denied' || status === 'rejected') return 'negative';
+  return 'neutral';
 }
 
 function CredentialFeedRow({
@@ -155,7 +174,9 @@ export function StaffCredentials({
   onRequestCoiUpdate,
   onOpenGuardProfile,
   onUpdateGuardIdImages,
+  onAddCertification,
 }: StaffCredentialsProps) {
+  const { formFactor } = useDevice();
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
@@ -466,6 +487,53 @@ export function StaffCredentials({
   );
 
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
+  const activeItem = activeItemId ? findFeedItem(filteredFeed, activeItemId) ?? null : null;
+
+  useEffect(() => {
+    if (formFactor === 'mobile') return;
+    if (filteredFeed.length === 0) {
+      if (activeItemId) openItem(null);
+      return;
+    }
+    const stillVisible = activeItemId ? filteredFeed.some((item) => item.id === activeItemId) : false;
+    if (!stillVisible) openItem(filteredFeed[0].id);
+  }, [filter, filteredFeed, activeItemId, formFactor]);
+
+  const credentialColumns: UberTableColumn<ApprovalFeedItem>[] = useMemo(
+    () => [
+      {
+        id: 'credential',
+        header: 'Credential',
+        grow: true,
+        sortValue: (item) => item.title.toLowerCase(),
+        render: (item) => (
+          <>
+            <p className="uber-workbench-table-primary">{item.title}</p>
+            {item.subtitle ? <p className="uber-workbench-table-secondary">{item.subtitle}</p> : null}
+          </>
+        ),
+      },
+      {
+        id: 'submitted',
+        header: 'Submitted',
+        hideOnNarrow: true,
+        sortValue: (item) => item.submittedAt ?? '',
+        render: (item) =>
+          item.submittedAt && (item.status === 'pending' || item.status === 'in_review')
+            ? formatApprovalTimestamp(item.submittedAt)
+            : '—',
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        sortValue: (item) => item.status,
+        render: (item) => (
+          <StatusChip tone={credentialStatusTone(item.status)}>{item.statusLabel}</StatusChip>
+        ),
+      },
+    ],
+    [],
+  );
 
   if (!canVerifyCredentials) {
     return (
@@ -556,6 +624,15 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
+      {onAddCertification ? (
+        <div className="staff-ops-cta-stack">
+          <StaffCredentialAddForGuardForm
+            guards={guards}
+            onAddCertification={onAddCertification}
+            onCredentialAdded={(guardId) => onOpenGuardProfile?.(guardId)}
+          />
+        </div>
+      ) : null}
       <WfSearchBar
         value={search}
         onChange={setSearch}
@@ -576,6 +653,43 @@ export function StaffCredentials({
       />
     </>
   ) : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <WorkbenchPage className="staff-roster-panel" data-tour="staff-credentials">
+        {toolbar}
+        <WorkbenchPanel padding={false}>
+          <WorkbenchSplit
+            list={
+              filteredFeed.length === 0 ? (
+                <WorkbenchEmpty
+                  icon={search ? Search : ShieldCheck}
+                  message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
+                />
+              ) : (
+                <UberDataTable
+                  columns={credentialColumns}
+                  rows={filteredFeed}
+                  rowKey={(item) => item.id}
+                  selectedKey={activeItemId ?? undefined}
+                  onRowClick={(item) => openItem(item.id)}
+                  caption="Credentials"
+                  cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
+                />
+              )
+            }
+            detail={
+              activeItem ? (
+                renderCredentialDetail(activeItem)
+              ) : (
+                <WorkbenchEmpty icon={ShieldCheck} message="Select a credential to review" variant="detail" />
+              )
+            }
+          />
+        </WorkbenchPanel>
+      </WorkbenchPage>
+    );
+  }
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">

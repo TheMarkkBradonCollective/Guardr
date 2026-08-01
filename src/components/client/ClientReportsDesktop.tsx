@@ -10,9 +10,9 @@ import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
+  WorkbenchPanel,
   WorkbenchSplit,
   WorkbenchTabBar,
-  WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 
 const REPORT_META: Record<
@@ -89,26 +89,21 @@ export function ClientReportsDesktop({
 
   return (
     <WorkbenchPage className="adm-reports-workbench">
-      <WorkbenchToolbar
-        eyebrow="Coverage"
-        subtitle="Activity logs, incident reports, and invoices from your jobs."
-        actions={
-          <WorkbenchTabBar<ReportsTab>
-            items={[
-              { id: 'reports', label: `Reports (${reports.length})` },
-              { id: 'invoices', label: 'Invoices' },
-            ]}
-            activeId={tab}
-            onSelect={setTab}
-          />
-        }
+      <WorkbenchTabBar<ReportsTab>
+        items={[
+          { id: 'reports', label: `Reports (${reports.length})` },
+          { id: 'invoices', label: 'Invoices' },
+        ]}
+        activeId={tab}
+        onSelect={setTab}
       />
 
       {tab === 'invoices' ? (
-        <div className="adm-reports-invoices p-4">
+        <WorkbenchPanel>
           <ClientInvoicePanel client={client} requests={requests} desktop />
-        </div>
+        </WorkbenchPanel>
       ) : (
+        <WorkbenchPanel padding={false}>
         <WorkbenchSplit
           list={
             reports.length === 0 ? (
@@ -137,6 +132,7 @@ export function ClientReportsDesktop({
             )
           }
         />
+        </WorkbenchPanel>
       )}
     </WorkbenchPage>
   );

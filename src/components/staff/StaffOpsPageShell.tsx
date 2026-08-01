@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDevice } from '../../lib/platform';
-import { WorkbenchBody, WorkbenchPage } from '../baseui/layout/WorkbenchLayout';
+import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface StaffOpsPageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -20,7 +20,9 @@ export function StaffOpsPageShell({
     return (
       <WorkbenchPage className={`uber-ops-page ${className}`.trim()} {...rest}>
         {toolbar}
-        <WorkbenchBody className="uber-ops-page-body">{children}</WorkbenchBody>
+        <WorkbenchPanel padding={false}>
+          <WorkbenchBody className="uber-ops-page-body">{children}</WorkbenchBody>
+        </WorkbenchPanel>
       </WorkbenchPage>
     );
   }

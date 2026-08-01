@@ -627,17 +627,23 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   padding: 0 !important;
 }
 
-/* Workbench on white canvas — panels keep subtle borders for structure */
+/* Gray canvas — workbench shell is transparent; white cards float on top */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-workspace {
-  background: var(--uber-bg, #ffffff) !important;
+  background: transparent !important;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner,
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .staff-overview-desktop-grid {
   background: var(--uber-bg, #ffffff) !important;
+}
+
+body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-lead {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--uber-text-muted, #6b6b6b);
+  margin: 0 0 16px;
 }
 
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-split {

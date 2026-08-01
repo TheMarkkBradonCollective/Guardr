@@ -21,7 +21,7 @@ import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
-import { Building2, ChevronRight, Shield, UserCheck } from 'lucide-react';
+import { Building2, ChevronRight, Search, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
@@ -30,6 +30,15 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { useDevice } from '../../lib/platform';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import {
+  WorkbenchEmpty,
+  WorkbenchPage,
+  WorkbenchPanel,
+  WorkbenchSplit,
+} from '../baseui/layout/WorkbenchLayout';
 
 type ApplicationKind = 'client' | 'guard' | 'staff';
 
@@ -73,6 +82,19 @@ function resolveApplicationKind(
 
 function applicationListKey(entry: ApplicationListEntry): string {
   return `${entry.kind}:${entry.item.id}`;
+}
+
+function applicationKindLabel(kind: ApplicationKind): string {
+  if (kind === 'guard') return 'Guard';
+  if (kind === 'staff') return 'Staff';
+  return 'Client';
+}
+
+function applicationStatusTone(status: ApprovalFeedItem['status']): StatusTone {
+  if (status === 'pending' || status === 'in_review') return 'warning';
+  if (status === 'approved' || status === 'active') return 'positive';
+  if (status === 'denied' || status === 'rejected') return 'negative';
+  return 'neutral';
 }
 
 function ApplicationFeedRow({
@@ -227,6 +249,7 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
+  const { formFactor } = useDevice();
   const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
   const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
@@ -294,7 +317,7 @@ export function StaffApplications({
       .filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
   }, [applicationEntries, kindFilter, statusFilter, guards, clients, search]);
 
-  const { showDetailOnly } = useSplitListDetail(activeItemKey, 'page');
+  const activeEntry = activeItemKey ? feedByKey.get(activeItemKey) ?? null : null;
 
   const setSelection = (entry: ApplicationListEntry | null) => {
     const key = entry ? applicationListKey(entry) : null;
@@ -304,6 +327,60 @@ export function StaffApplications({
       clientId: entry?.kind === 'client' ? entry.item.id : null,
     });
   };
+
+  useEffect(() => {
+    if (formFactor === 'mobile') return;
+    if (visibleEntries.length === 0) {
+      if (activeItemKey) setSelection(null);
+      return;
+    }
+    const stillVisible = activeItemKey ? feedByKey.has(activeItemKey) : false;
+    if (!stillVisible) setSelection(visibleEntries[0]);
+  }, [statusFilter, kindFilter, visibleEntries, activeItemKey, formFactor]);
+
+  const applicationColumns: UberTableColumn<ApplicationListEntry>[] = useMemo(
+    () => [
+      {
+        id: 'type',
+        header: 'Type',
+        sortValue: (entry) => entry.kind,
+        render: (entry) => applicationKindLabel(entry.kind),
+      },
+      {
+        id: 'applicant',
+        header: 'Applicant',
+        grow: true,
+        sortValue: (entry) => entry.item.title.toLowerCase(),
+        render: (entry) => (
+          <>
+            <p className="uber-workbench-table-primary">{entry.item.title}</p>
+            {entry.item.subtitle ? (
+              <p className="uber-workbench-table-secondary">{entry.item.subtitle}</p>
+            ) : null}
+          </>
+        ),
+      },
+      {
+        id: 'submitted',
+        header: 'Submitted',
+        hideOnNarrow: true,
+        sortValue: (entry) => entry.item.submittedAt ?? '',
+        render: (entry) =>
+          entry.item.submittedAt ? formatApprovalTimestamp(entry.item.submittedAt) : '—',
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        sortValue: (entry) => entry.item.status,
+        render: (entry) => (
+          <StatusChip tone={applicationStatusTone(entry.item.status)}>{entry.item.statusLabel}</StatusChip>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const { showDetailOnly } = useSplitListDetail(activeItemKey, 'page');
 
   const renderApplicationDetail = (entry: ApplicationListEntry, options?: { onBack?: () => void }) => {
     const feedItem = entry.item;
@@ -517,6 +594,43 @@ export function StaffApplications({
       </div>
     </>
   ) : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <WorkbenchPage className="staff-roster-panel" data-tour="staff-applications">
+        {toolbar}
+        <WorkbenchPanel padding={false}>
+          <WorkbenchSplit
+            list={
+              visibleEntries.length === 0 ? (
+                <WorkbenchEmpty
+                  icon={search ? Search : UserCheck}
+                  message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
+                />
+              ) : (
+                <UberDataTable
+                  columns={applicationColumns}
+                  rows={visibleEntries}
+                  rowKey={applicationListKey}
+                  selectedKey={activeItemKey ?? undefined}
+                  onRowClick={(entry) => setSelection(entry)}
+                  caption="Applications"
+                  cardLayout={{ title: 'applicant', subtitle: 'submitted', trailing: 'status' }}
+                />
+              )
+            }
+            detail={
+              activeEntry ? (
+                renderApplicationDetail(activeEntry)
+              ) : (
+                <WorkbenchEmpty icon={UserCheck} message="Select an application to review" variant="detail" />
+              )
+            }
+          />
+        </WorkbenchPanel>
+      </WorkbenchPage>
+    );
+  }
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">

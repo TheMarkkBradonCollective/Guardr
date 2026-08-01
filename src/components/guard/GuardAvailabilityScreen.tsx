@@ -3,7 +3,7 @@ import type { SecurityGuard } from '../../types';
 import { GuardAvailabilityCalendar } from './GuardAvailabilityCalendar';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
-import { WorkbenchBody, WorkbenchPage, WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
+import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface GuardAvailabilityScreenProps {
   guard: SecurityGuard;
@@ -16,11 +16,9 @@ export function GuardAvailabilityScreen({ guard }: GuardAvailabilityScreenProps)
   if (formFactor === 'desktop') {
     return (
       <WorkbenchPage className="adm-availability-workbench">
-        <WorkbenchToolbar
-          eyebrow="Schedule"
-          subtitle="Weekly availability — jobs and alerts only match your enabled days and hours."
-        />
-        <WorkbenchBody>{calendar}</WorkbenchBody>
+        <WorkbenchPanel>
+          <WorkbenchBody>{calendar}</WorkbenchBody>
+        </WorkbenchPanel>
       </WorkbenchPage>
     );
   }
