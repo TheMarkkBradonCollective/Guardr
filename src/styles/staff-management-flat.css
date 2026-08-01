@@ -57,7 +57,9 @@ body[data-form-factor="desktop"] .adm-payment-settings-page .uber-ops-page-body 
 }
 
 .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
-  margin-inline: -0.25rem;
+  /* A negative inline margin made this strip 8px wider than the ops body, whose
+     overflow:hidden then clipped the last tab out of reach. */
+  margin-inline: 0;
   border-bottom-width: 1px;
   background: transparent !important;
   border-bottom-color: var(--brand-border) !important;

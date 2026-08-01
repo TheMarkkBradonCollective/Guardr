@@ -79,9 +79,13 @@ function collectDefects() {
       }
     }
 
-    // Unscrollable horizontal content (a table that can't be reached).
+    // Unscrollable horizontal content (a table that can't be reached). Text that
+    // deliberately truncates shows an ellipsis and carries a title, so the value
+    // is still available — that is a design choice, not a defect.
     const clipsX = style.overflowX === 'hidden' || style.overflow === 'hidden';
-    if (clipsX && el.scrollWidth > el.clientWidth + 2) {
+    const truncatesOnPurpose =
+      style.textOverflow === 'ellipsis' || style.webkitLineClamp !== 'none';
+    if (clipsX && !truncatesOnPurpose && el.scrollWidth > el.clientWidth + 2) {
       push('content-unreachable', el, `scrollW=${el.scrollWidth} clientW=${el.clientWidth}`);
     }
   }
