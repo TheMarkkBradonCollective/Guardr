@@ -122,7 +122,7 @@ export async function isPushConfigured(): Promise<boolean> {
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (isNativePushPlatform() || !('serviceWorker' in navigator)) return null;
-  return navigator.serviceWorker.register('/service-worker.js');
+  return navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' });
 }
 
 export async function getPushPermission(): Promise<NotificationPermission | 'unsupported'> {

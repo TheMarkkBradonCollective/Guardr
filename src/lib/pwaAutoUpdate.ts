@@ -1,4 +1,7 @@
 import { Capacitor } from '@capacitor/core';
+import { isVersionOlder } from './versionCompare';
+
+const UPDATE_POLL_MS = 5 * 60 * 1000;
 
 let reloadScheduled = false;
 
@@ -34,11 +37,58 @@ function watchInstallingWorker(worker: ServiceWorker, hasActiveController: boole
   });
 }
 
+/** True when the live manifest is ahead of this bundle — triggers a forced SW refresh. */
+export function shouldForcePwaRefresh(installedVersion: string, latestVersion: string): boolean {
+  return isVersionOlder(installedVersion, latestVersion);
+}
+
+async function checkManifestForUpdate(registration: ServiceWorkerRegistration): Promise<void> {
+  try {
+    const [{ APP_VERSION }, { fetchDownloadVersionManifest }] = await Promise.all([
+      import('./appVersion'),
+      import('./downloadVersion'),
+    ]);
+    const manifest = await fetchDownloadVersionManifest();
+    if (!shouldForcePwaRefresh(APP_VERSION, manifest.webVersion)) return;
+
+    await registration.update();
+    if (registration.waiting && navigator.serviceWorker.controller) {
+      activateWaitingServiceWorker(registration);
+    }
+  } catch {
+    /* offline or manifest unavailable */
+  }
+}
+
+function bindUpdateLifecycle(registration: ServiceWorkerRegistration): void {
+  if (registration.waiting && navigator.serviceWorker.controller) {
+    activateWaitingServiceWorker(registration);
+  }
+
+  registration.addEventListener('updatefound', () => {
+    const installing = registration.installing;
+    if (!installing) return;
+    watchInstallingWorker(installing, Boolean(navigator.serviceWorker.controller));
+  });
+
+  const check = () => {
+    void registration.update().catch(() => undefined);
+    void checkManifestForUpdate(registration);
+  };
+
+  check();
+  window.setInterval(check, UPDATE_POLL_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check();
+  });
+  window.addEventListener('focus', check);
+}
+
 /**
  * PWA shell: poll for new builds, activate waiting workers, and reload once.
  * Native APK sessions skip this — they use the download page / in-app updater.
  */
-export function initPwaAutoUpdate(): void {
+export function initPwaAutoUpdate(registration?: ServiceWorkerRegistration | null): void {
   if (Capacitor.isNativePlatform() || typeof window === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
 
@@ -46,25 +96,10 @@ export function initPwaAutoUpdate(): void {
     notifyAndReload();
   });
 
-  void navigator.serviceWorker.ready.then((registration) => {
-    if (registration.waiting && navigator.serviceWorker.controller) {
-      activateWaitingServiceWorker(registration);
-    }
+  if (registration) {
+    bindUpdateLifecycle(registration);
+    return;
+  }
 
-    registration.addEventListener('updatefound', () => {
-      const installing = registration.installing;
-      if (!installing) return;
-      watchInstallingWorker(installing, Boolean(navigator.serviceWorker.controller));
-    });
-
-    const check = () => {
-      void registration.update().catch(() => undefined);
-    };
-
-    check();
-    window.setInterval(check, 60 * 60 * 1000);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') check();
-    });
-  });
+  void navigator.serviceWorker.ready.then(bindUpdateLifecycle);
 }
