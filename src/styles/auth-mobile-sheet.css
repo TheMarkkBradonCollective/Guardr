@@ -371,9 +371,28 @@ html.theme-dark .auth-sheet-panel {
 }
 
 .auth-form-page-hero {
-  min-height: clamp(160px, 28vh, 280px);
+  min-height: auto;
   padding-top: 1rem;
-  padding-bottom: 1.25rem;
+  padding-bottom: 1rem;
+}
+
+.auth-form-page .auth-role-choice-hero {
+  min-height: auto;
+}
+
+.auth-form-page .auth-role-choice-main {
+  align-content: flex-start;
+}
+
+.auth-form-page .auth-role-choice-options {
+  flex: 0 0 auto;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+.auth-form-page-form .auth-sheet-legal {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 0;
 }
 
 .auth-form-page-hero-inner {
@@ -439,15 +458,9 @@ html.theme-dark .auth-form-page-form .auth-sheet-fields .uber-select {
   border-color: #2b2b2b;
 }
 
-.auth-form-page-form .auth-sheet-legal {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--uber-border, #eeeeee);
-}
-
 @media (min-width: 640px) {
   .auth-form-page-hero {
-    min-height: clamp(180px, 32vh, 320px);
+    min-height: auto;
     padding-top: 1.25rem;
     padding-bottom: 1.5rem;
   }

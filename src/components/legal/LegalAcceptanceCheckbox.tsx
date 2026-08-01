@@ -35,7 +35,16 @@ export function LegalAcceptanceCheckbox({
           type="checkbox"
           checked={checked}
           disabled={disabled}
+          tabIndex={0}
           onChange={(e) => onChange(e.target.checked)}
+          onFocus={(e) => {
+            // Stop mobile browsers from scrolling the page when the hidden input focuses.
+            try {
+              e.currentTarget.focus({ preventScroll: true });
+            } catch {
+              /* unsupported */
+            }
+          }}
           className="legal-accept-input-native"
         />
         <span className="legal-accept-checkbox-visual" aria-hidden="true">
@@ -49,16 +58,6 @@ export function LegalAcceptanceCheckbox({
           if ((e.target as HTMLElement).closest('a, button')) return;
           toggle();
         }}
-        onKeyDown={(e) => {
-          if (disabled) return;
-          if (e.key === ' ' || e.key === 'Enter') {
-            e.preventDefault();
-            toggle();
-          }
-        }}
-        role="button"
-        tabIndex={disabled ? -1 : 0}
-        aria-pressed={checked}
       >
         {children}
       </div>

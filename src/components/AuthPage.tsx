@@ -1524,18 +1524,28 @@ export function AuthPage({
                       Privacy Policy
                     </LegalDocumentLink>
                     . I understand {SITE_NAME} is a technology platform operated by <LegalEntityName />,
-                    not a security services provider or employer of guards. I also accept the{' '}
-                    {requiredLegalDocumentsForRole(role)
-                      .filter((id) => id !== 'terms' && id !== 'privacy')
-                      .map((id, index, arr) => (
-                        <React.Fragment key={id}>
-                          <LegalDocumentLink page={id}>
-                            {legalDocumentLabel(id)}
-                          </LegalDocumentLink>
-                          {index < arr.length - 1 ? ' and ' : ''}
-                        </React.Fragment>
-                      ))}
-                    .
+                    not a security services provider or employer of guards.
+                    {(() => {
+                      const extraDocs = requiredLegalDocumentsForRole(role).filter(
+                        (id) => id !== 'terms' && id !== 'privacy'
+                      );
+                      if (extraDocs.length === 0) return null;
+                      return (
+                        <>
+                          {' '}
+                          I also accept the{' '}
+                          {extraDocs.map((id, index) => (
+                            <React.Fragment key={id}>
+                              <LegalDocumentLink page={id}>
+                                {legalDocumentLabel(id)}
+                              </LegalDocumentLink>
+                              {index < extraDocs.length - 1 ? ' and ' : ''}
+                            </React.Fragment>
+                          ))}
+                          .
+                        </>
+                      );
+                    })()}
                   </span>
                 </LegalAcceptanceCheckbox>
               )}
@@ -1547,7 +1557,7 @@ export function AuthPage({
             </form>
         </div>
 
-        {onOpenLegal && !isDesktopAuth && (
+        {onOpenLegal && !isDesktopAuth && !isSignUp && (
           <div className={isSheet ? 'auth-sheet-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </div>
