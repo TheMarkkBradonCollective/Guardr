@@ -16,6 +16,7 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -295,6 +296,34 @@ export function StaffPaymentsPanel({
     return allQueueItems.filter((item) => item.kind === 'job' && item.stage === filter);
   }, [actionQueueItems, allQueueItems, filter]);
 
+  const queueColumns: UberTableColumn<PaymentQueueItem>[] = [
+    {
+      id: 'item',
+      header: 'Job / invoice',
+      grow: true,
+      sortValue: (item) => queueItemPrimary(item).toLowerCase(),
+      render: (item) => (
+        <>
+          <p className="uber-workbench-table-primary">{queueItemPrimary(item)}</p>
+          <p className="uber-workbench-table-secondary">{queueItemSecondary(item, guards)}</p>
+        </>
+      ),
+    },
+    {
+      id: 'stage',
+      header: 'Stage',
+      sortValue: (item) => queueItemLabel(item),
+      render: (item) => queueItemLabel(item),
+    },
+    {
+      id: 'amount',
+      header: 'Amount',
+      numeric: true,
+      align: 'right',
+      render: (item) => queueItemAmount(item),
+    },
+  ];
+
   useEffect(() => {
     if (formFactor !== 'desktop') return;
     if (filteredQueue.length === 0) {
@@ -395,31 +424,15 @@ export function StaffPaymentsPanel({
               <WorkbenchSplit
                 className="adm-finance-split adm-ops-list-detail"
                 list={
-                  <table className="uber-workbench-table">
-                    <thead>
-                      <tr>
-                        <th>Job / invoice</th>
-                        <th>Stage</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredQueue.map((item) => (
-                        <tr
-                          key={item.id}
-                          className={`uber-workbench-table-row${selectedId === item.id ? ' uber-workbench-table-row--selected' : ''}`}
-                          onClick={() => setSelectedId(item.id)}
-                        >
-                          <td>
-                            <p className="uber-workbench-table-primary">{queueItemPrimary(item)}</p>
-                            <p className="uber-workbench-table-secondary">{queueItemSecondary(item, guards)}</p>
-                          </td>
-                          <td className="uber-workbench-table-secondary">{queueItemLabel(item)}</td>
-                          <td className="uber-workbench-table-secondary">{queueItemAmount(item)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <UberDataTable
+                    columns={queueColumns}
+                    rows={filteredQueue}
+                    rowKey={(item) => item.id}
+                    selectedKey={selectedId ?? undefined}
+                    onRowClick={(item) => setSelectedId(item.id)}
+                    caption="Payment queue"
+                    cardLayout={{ title: 'item', subtitle: 'stage', trailing: 'amount' }}
+                  />
                 }
                 detail={
                   selectedItem ? (

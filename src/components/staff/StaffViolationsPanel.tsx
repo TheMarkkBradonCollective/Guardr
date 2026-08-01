@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { OpsShiftViolation } from '../../lib/staffOps';
 import { WfBadge } from '../ui/wireframe';
+import { StatusChip } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
@@ -81,6 +83,40 @@ export function StaffViolationsPanel({
     }
     return { all: violations.length, open, resolved };
   }, [violations, statusMap]);
+
+  const violationColumns: UberTableColumn<OpsShiftViolation>[] = [
+    {
+      id: 'violation',
+      header: 'Violation',
+      grow: true,
+      sortValue: (v) => v.label.toLowerCase(),
+      render: (v) => (
+        <>
+          <p className="uber-workbench-table-primary">{v.label}</p>
+          <p className="uber-workbench-table-secondary">{v.jobTitle}</p>
+        </>
+      ),
+    },
+    {
+      id: 'guard',
+      header: 'Guard',
+      sortValue: (v) => v.guardName,
+      render: (v) => v.guardName,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (v) => statusMap[v.id] ?? v.status,
+      render: (v) => {
+        const status = statusMap[v.id] ?? v.status;
+        return (
+          <StatusChip tone={OPEN_STATUSES.has(status) ? 'warning' : 'positive'}>
+            {statusLabel(status)}
+          </StatusChip>
+        );
+      },
+    },
+  ];
 
   useEffect(() => {
     if (formFactor === 'desktop' && filtered.length > 0 && !selectedId) {
@@ -287,34 +323,15 @@ export function StaffViolationsPanel({
         {tabBar}
         <WorkbenchSplit
           list={
-            <table className="uber-workbench-table">
-              <thead>
-                <tr>
-                  <th>Violation</th>
-                  <th>Guard</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((v) => {
-                  const status = statusMap[v.id] ?? v.status;
-                  return (
-                    <tr
-                      key={v.id}
-                      className={`uber-workbench-table-row${selected?.id === v.id ? ' uber-workbench-table-row--selected' : ''}`}
-                      onClick={() => setSelectedId(v.id)}
-                    >
-                      <td>
-                        <p className="uber-workbench-table-primary">{v.label}</p>
-                        <p className="uber-workbench-table-secondary">{v.jobTitle}</p>
-                      </td>
-                      <td className="uber-workbench-table-secondary">{v.guardName}</td>
-                      <td className="uber-workbench-table-secondary">{statusLabel(status)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <UberDataTable
+              columns={violationColumns}
+              rows={filtered}
+              rowKey={(v) => v.id}
+              selectedKey={selected?.id}
+              onRowClick={(v) => setSelectedId(v.id)}
+              caption="Shift violations"
+              cardLayout={{ title: 'violation', subtitle: 'guard', trailing: 'status' }}
+            />
           }
           detail={
             selected ? (

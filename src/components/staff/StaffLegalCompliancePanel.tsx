@@ -10,6 +10,8 @@ import type { Client, SecurityGuard } from '../../types';
 import { AppEmptyState, AppFormSection } from '../ui/app/AppPrimitives';
 import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfListCard } from '../ui/wireframe';
+import { StatusChip } from '../baseui/StatusChip';
+import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
@@ -103,6 +105,37 @@ export function StaffLegalCompliancePanel({
 
   const missingCount = report.filter((row) => !row.complete).length;
 
+  const complianceColumns: UberTableColumn<(typeof report)[number]>[] = [
+    {
+      id: 'user',
+      header: 'User',
+      grow: true,
+      sortValue: (row) => row.name.toLowerCase(),
+      render: (row) => (
+        <>
+          <p className="uber-workbench-table-primary">{row.name}</p>
+          <p className="uber-workbench-table-secondary">{row.email}</p>
+        </>
+      ),
+    },
+    {
+      id: 'role',
+      header: 'Role',
+      sortValue: (row) => row.roleLabel,
+      render: (row) => row.roleLabel,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (row) => (row.complete ? 1 : 0),
+      render: (row) => (
+        <StatusChip tone={row.complete ? 'positive' : 'warning'}>
+          {row.complete ? 'Complete' : 'Missing'}
+        </StatusChip>
+      ),
+    },
+  ];
+
   useEffect(() => {
     if (formFactor !== 'desktop') return;
     if (filtered.length === 0) {
@@ -149,41 +182,15 @@ export function StaffLegalCompliancePanel({
           <WorkbenchSplit
             className="adm-finance-split"
             list={
-              <table className="uber-workbench-table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((row) => (
-                    <tr
-                      key={row.userId}
-                      className={`uber-workbench-table-row${selectedId === row.userId ? ' uber-workbench-table-row--selected' : ''}`}
-                      onClick={() => setSelectedId(row.userId)}
-                    >
-                      <td>
-                        <p className="uber-workbench-table-primary">{row.name}</p>
-                        <p className="uber-workbench-table-secondary">{row.email}</p>
-                      </td>
-                      <td className="uber-workbench-table-secondary">{row.roleLabel}</td>
-                      <td>
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            row.complete
-                              ? 'bg-emerald-500/15 text-emerald-400'
-                              : 'bg-amber-500/15 text-amber-400'
-                          }`}
-                        >
-                          {row.complete ? 'Complete' : 'Missing'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <UberDataTable
+                columns={complianceColumns}
+                rows={filtered}
+                rowKey={(row) => row.userId}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(row) => setSelectedId(row.userId)}
+                caption="Legal acceptance"
+                cardLayout={{ title: 'user', subtitle: 'role', trailing: 'status' }}
+              />
             }
             detail={
               selectedRow ? (
