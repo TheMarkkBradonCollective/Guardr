@@ -1,0 +1,95 @@
+/* Terms acceptance row — visible checkbox + tappable legal links (no wrapping label). */
+
+.legal-accept-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--radius-app-lg, 12px);
+  background: color-mix(in srgb, var(--brand-primary, #000) 5%, var(--brand-bg-sec, #f6f6f6));
+  border: 1px solid color-mix(in srgb, var(--brand-primary, #000) 18%, var(--brand-border, #e5e5e5));
+}
+
+.legal-accept-checkbox-hit {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legal-accept-input-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.legal-accept-checkbox-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  border: 2px solid var(--uber-text, #000000);
+  border-radius: 0.375rem;
+  background: var(--uber-bg, #ffffff);
+  color: var(--uber-bg, #ffffff);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  box-sizing: border-box;
+}
+
+.legal-accept-checkbox-hit:has(.legal-accept-input-native:checked) .legal-accept-checkbox-visual,
+.legal-accept-checkbox-hit:has(.legal-accept-input-native[aria-checked='true']) .legal-accept-checkbox-visual {
+  background: var(--uber-text, #000000);
+  border-color: var(--uber-text, #000000);
+}
+
+.legal-accept-checkbox-hit:has(.legal-accept-input-native:focus-visible) .legal-accept-checkbox-visual {
+  outline: 2px solid var(--uber-text, #000000);
+  outline-offset: 2px;
+}
+
+.legal-accept-checkbox-hit:has(.legal-accept-input-native:disabled) .legal-accept-checkbox-visual {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.legal-accept-checkmark {
+  width: 0.4375rem;
+  height: 0.6875rem;
+  border: 2.5px solid currentColor;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.legal-accept-copy {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--uber-text, #000000);
+}
+
+.legal-accept-copy a,
+.legal-accept-copy button {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.legal-accept-copy span {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}

@@ -43,12 +43,14 @@ test.describe('Guardr public pages', () => {
     const checkbox = page.locator('#auth-accept-terms');
     await checkbox.scrollIntoViewIfNeeded();
     await expect(checkbox).toBeVisible();
+    await expect(page.locator('.legal-accept-checkbox-visual')).toBeVisible();
 
     const termsLink = page.locator('#auth-accept-terms-copy a').first();
     await expect(termsLink).toHaveAttribute('href', '/legal/terms');
     await expect(termsLink).toHaveAttribute('target', '_blank');
 
-    await checkbox.click();
+    await expect(checkbox).not.toBeChecked();
+    await page.locator('.legal-accept-checkbox-visual').click();
     await expect(checkbox).toBeChecked();
 
     const copy = page.locator('#auth-accept-terms-copy');
