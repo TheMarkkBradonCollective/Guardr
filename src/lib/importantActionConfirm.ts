@@ -105,6 +105,23 @@ export async function confirmApproveClientAccount(clientName: string): Promise<b
   });
 }
 
+export async function confirmApproveStaffAccount(displayName: string): Promise<boolean> {
+  return showAppConfirm({
+    title: 'Approve staff application?',
+    message: `Approve ${displayName} so they can sign in and use the Guardr staff console.`,
+    confirmLabel: 'Approve application',
+  });
+}
+
+export async function confirmRejectStaffAccount(displayName: string): Promise<boolean> {
+  return showAppConfirm({
+    title: 'Deny staff application?',
+    message: `${displayName} will be removed and will not be able to sign in. This cannot be undone from this screen.`,
+    confirmLabel: 'Deny application',
+    tone: 'danger',
+  });
+}
+
 export async function confirmBackgroundCheckToggle(guardName: string, markingChecked: boolean): Promise<boolean> {
   return showAppConfirm({
     title: markingChecked ? 'Mark background checked?' : 'Clear background check?',

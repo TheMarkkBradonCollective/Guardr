@@ -707,6 +707,7 @@ export function StaffDashboard({
             canApproveGuardAccounts={canApproveGuardAccounts}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}
+            canApproveStaffAccounts={canApproveStaff}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
@@ -719,8 +720,11 @@ export function StaffDashboard({
             onRequestClientApplicationRevision={
               canManageClientAccounts ? onRequestClientApplicationRevision : undefined
             }
+            onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
+            onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
+            onOpenStaffProfile={(staffId) => navigateSection('team', { teamId: staffId })}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}
             initialGuardId={selectedGuardId}
@@ -728,6 +732,7 @@ export function StaffDashboard({
             onSelectionChange={(selection) => {
               setSelectedGuardId(selection.guardId ?? null);
               setSelectedClientId(selection.clientId ?? null);
+              if (selection.staffId) setSelectedTeamId(selection.staffId);
               onSectionChange?.('applications', {
                 guardId: selection.guardId ?? null,
                 clientId: selection.clientId ?? null,
@@ -841,6 +846,7 @@ export function StaffDashboard({
             actorManagedCities={actorStaffProfile?.managedCities}
             canManageStaff={canManageStaff}
             canProposeStaff={canProposeStaff}
+            canApproveStaffAccounts={canApproveStaff}
             requiresDirectorApproval={requiresDirectorApproval}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onAddStaff={
@@ -852,6 +858,8 @@ export function StaffDashboard({
                     })
                 : undefined
             }
+            onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
+            onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
             onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
             onUpdateStaffCityAccess={onUpdateStaffCityAccess}
             selectedId={selectedTeamId}

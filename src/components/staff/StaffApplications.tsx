@@ -24,6 +24,7 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Building2, ChevronRight, Search, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
+import { StaffStaffApplicationReviewPanel } from './StaffStaffApplicationReviewPanel';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import { StaffAddClientForm } from './StaffAddClientForm';
@@ -53,19 +54,40 @@ interface StaffApplicationsProps {
   canApproveGuardAccounts?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
+  canApproveStaffAccounts?: boolean;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onApproveClient: (clientId: string) => void | Promise<void>;
   onRejectClient: (clientId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestClientApplicationRevision?: (clientId: string, reason?: string) => void | Promise<void>;
+  onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
+  onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
   onOpenClientProfile?: (clientId: string) => void;
+  onOpenStaffProfile?: (staffId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
   onAddClient?: (input: StaffAddClientInput) => Promise<string>;
   initialGuardId?: string | null;
   initialClientId?: string | null;
-  onSelectionChange?: (selection: { guardId?: string | null; clientId?: string | null }) => void;
+  onSelectionChange?: (selection: {
+    guardId?: string | null;
+    clientId?: string | null;
+    staffId?: string | null;
+  }) => void;
+}
+
+function applicationKeyForIds(
+  guards: SecurityGuard[],
+  guardId?: string | null,
+  clientId?: string | null
+): string | null {
+  if (guardId) {
+    const member = guards.find((g) => g.id === guardId);
+    return member?.isStaff ? `staff:${guardId}` : `guard:${guardId}`;
+  }
+  if (clientId) return `client:${clientId}`;
+  return null;
 }
 
 function resolveApplicationKind(
@@ -235,14 +257,18 @@ export function StaffApplications({
   canApproveGuardAccounts = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
+  canApproveStaffAccounts = false,
   onApproveGuardAccount,
   onApproveClient,
   onRejectClient,
   onRejectGuardApplication,
   onRequestGuardApplicationRevision,
   onRequestClientApplicationRevision,
+  onApproveStaffAccount,
+  onRejectStaffAccount,
   onOpenGuardProfile,
   onOpenClientProfile,
+  onOpenStaffProfile,
   onAddGuard,
   onAddClient,
   initialGuardId = null,
@@ -253,11 +279,9 @@ export function StaffApplications({
   const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
   const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');
-  const [activeItemKey, setActiveItemKey] = useState<string | null>(() => {
-    if (initialGuardId) return `guard:${initialGuardId}`;
-    if (initialClientId) return `client:${initialClientId}`;
-    return null;
-  });
+  const [activeItemKey, setActiveItemKey] = useState<string | null>(() =>
+    applicationKeyForIds(guards, initialGuardId, initialClientId)
+  );
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
 
   useEffect(() => {
@@ -293,20 +317,23 @@ export function StaffApplications({
   }, [applicationEntries]);
 
   useEffect(() => {
-    if (initialGuardId) setActiveItemKey(`guard:${initialGuardId}`);
-    else if (initialClientId) setActiveItemKey(`client:${initialClientId}`);
-  }, [initialGuardId, initialClientId]);
+    const nextKey = applicationKeyForIds(guards, initialGuardId, initialClientId);
+    if (nextKey) setActiveItemKey(nextKey);
+  }, [initialGuardId, initialClientId, guards]);
 
   useEffect(() => {
     if (!activeItemKey) return;
     if (!feedByKey.has(activeItemKey)) {
       setActiveItemKey(null);
-      onSelectionChange?.({ guardId: null, clientId: null });
+      onSelectionChange?.({ guardId: null, clientId: null, staffId: null });
     }
   }, [activeItemKey, feedByKey, onSelectionChange]);
 
   const canReview =
-    (canApproveGuardAccounts || canManageGuardAccounts) || canManageClientAccounts;
+    canApproveGuardAccounts ||
+    canManageGuardAccounts ||
+    canManageClientAccounts ||
+    canApproveStaffAccounts;
 
   const visibleEntries = useMemo(() => {
     return applicationEntries
@@ -323,8 +350,9 @@ export function StaffApplications({
     const key = entry ? applicationListKey(entry) : null;
     setActiveItemKey(key);
     onSelectionChange?.({
-      guardId: entry?.kind === 'guard' ? entry.item.id : null,
+      guardId: entry?.kind === 'guard' || entry?.kind === 'staff' ? entry.item.id : null,
       clientId: entry?.kind === 'client' ? entry.item.id : null,
+      staffId: entry?.kind === 'staff' ? entry.item.id : null,
     });
   };
 
@@ -388,17 +416,18 @@ export function StaffApplications({
 
     if (kind === 'staff') {
       const member = guards.find((g) => g.id === entry.item.id && g.isStaff);
-      const title = member?.badgeNumber || member?.name || feedItem.title;
+      if (!member) return null;
+      const title = member.badgeNumber || member.name || feedItem.title;
       const detailBody = (
         <div className="staff-detail-pane space-y-4">
           <ApplicationReviewMeta item={feedItem} />
-          <AppEmptyState
-            dashed
-            icon={<UserCheck className="w-5 h-5" />}
-            title="Staff application review coming soon"
-          >
-            Full staff application review will live here. Use Staff for roster actions for now.
-          </AppEmptyState>
+          <StaffStaffApplicationReviewPanel
+            member={member}
+            canReview={canApproveStaffAccounts}
+            onApproveStaffAccount={canApproveStaffAccounts ? onApproveStaffAccount : undefined}
+            onRejectStaffAccount={canApproveStaffAccounts ? onRejectStaffAccount : undefined}
+            onOpenStaffProfile={onOpenStaffProfile}
+          />
         </div>
       );
 
@@ -638,8 +667,14 @@ export function StaffApplications({
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
             ? 'No applications match your search.'
-            : kindFilter === 'staff' && (statusFilter === 'all' || statusFilter === 'pending')
-              ? 'Staff application review is coming soon.'
+            : kindFilter === 'staff'
+              ? statusFilter === 'pending'
+                ? 'No staff applications waiting for Director approval.'
+                : statusFilter === 'approved'
+                  ? 'No approved staff applications in this view.'
+                  : statusFilter === 'denied'
+                    ? 'No denied staff applications in this view.'
+                    : 'No staff applications in this view.'
               : statusFilter === 'all'
                 ? 'No account applications in this view.'
                 : statusFilter === 'pending'

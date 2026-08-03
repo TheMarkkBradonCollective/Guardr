@@ -24,6 +24,7 @@ interface StaffTeamPanelProps {
   actorManagedCities?: string[];
   canManageStaff: boolean;
   canProposeStaff: boolean;
+  canApproveStaffAccounts?: boolean;
   requiresDirectorApproval?: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
@@ -33,6 +34,8 @@ interface StaffTeamPanelProps {
     managedCities?: string[];
     assignedManagerIds?: string[];
   }) => Promise<string>;
+  onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
+  onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
@@ -51,9 +54,12 @@ export function StaffTeamPanel({
   actorManagedCities = [],
   canManageStaff,
   canProposeStaff,
+  canApproveStaffAccounts = false,
   requiresDirectorApproval = false,
   onUpdateUserStatus,
   onAddStaff,
+  onApproveStaffAccount,
+  onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
   selectedId: controlledSelectedId,
@@ -184,7 +190,10 @@ export function StaffTeamPanel({
               currentUserRole={currentUserRole}
               actorManagedCities={actorManagedCities}
               canManageStaff={canManageStaff}
+              canApproveStaffAccounts={canApproveStaffAccounts}
               onUpdateUserStatus={onUpdateUserStatus}
+              onApproveStaffAccount={onApproveStaffAccount}
+              onRejectStaffAccount={onRejectStaffAccount}
               onUpdateStaffRole={onUpdateStaffRole}
               onUpdateStaffCityAccess={onUpdateStaffCityAccess}
               onBack={options?.onBack}
