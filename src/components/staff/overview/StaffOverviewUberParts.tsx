@@ -89,7 +89,7 @@ export const STAFF_OVERVIEW_HUB_META: Record<
   },
   applications: {
     title: 'Applications',
-    description: 'Pending accounts, jobs, and schedule changes',
+    description: 'Pending guard, client, and staff sign-ups',
     iconTone: 'orange',
   },
   credentials: {
@@ -563,7 +563,7 @@ export function StaffOverviewQueueBoard({
       label: 'Job offers',
       count: stats.pendingJobApprovals,
       description: 'New job requests waiting for staff approval',
-      section: 'applications' as StaffSection,
+      section: 'jobs' as StaffSection,
       roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {
@@ -571,7 +571,7 @@ export function StaffOverviewQueueBoard({
       label: 'Schedule changes',
       count: stats.pendingScheduleChanges,
       description: 'Guard or client requested a schedule update',
-      section: 'applications' as StaffSection,
+      section: 'jobs' as StaffSection,
       roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
     {

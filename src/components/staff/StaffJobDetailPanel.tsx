@@ -12,6 +12,7 @@ import {
   isJobScheduleLocked,
   canStaffReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
+import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -19,6 +20,8 @@ import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
+import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft, X } from 'lucide-react';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
 
@@ -32,6 +35,9 @@ export interface StaffJobDetailPanelProps {
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChangeBilling?: (requestId: string) => void | Promise<void>;
   onBack?: () => void;
   /** Map card peek already shows status — hide duplicate header in full body */
   showStatusHeader?: boolean;
@@ -46,6 +52,9 @@ export function StaffJobDetailPanel({
   onEditJobListing,
   onApproveGuardApplication,
   onDenyGuardApplication,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
+  onApproveScheduleChangeBilling,
   onBack,
   staffRole,
   showStatusHeader = true,
@@ -74,6 +83,21 @@ export function StaffJobDetailPanel({
     [req, guards]
   );
 
+  const scheduleChangePending =
+    req.scheduleChangeStatus === 'pending_staff' ||
+    req.scheduleChangeStatus === 'pending_staff_billing';
+  const scheduleChangeBilling = req.scheduleChangeStatus === 'pending_staff_billing';
+  const currentRange = formatShiftRange(req.startDate, req.endDate);
+  const requestedRange =
+    req.pendingStartDate && req.pendingEndDate
+      ? formatShiftRange(req.pendingStartDate, req.pendingEndDate)
+      : '—';
+  const canReviewScheduleChange =
+    scheduleChangePending &&
+    (scheduleChangeBilling
+      ? Boolean(onApproveScheduleChangeBilling)
+      : Boolean(onApproveScheduleChange || onRejectScheduleChange));
+
   return (
     <div className="staff-detail-pane space-y-4">
       {onBack && (
@@ -90,6 +114,11 @@ export function StaffJobDetailPanel({
             <JobStatusBadge job={req} variant="staff" />
             {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
             {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
+            {scheduleChangePending && (
+              <WfBadge tone="warning">
+                {scheduleChangeBilling ? 'Confirm billing' : 'Schedule change'}
+              </WfBadge>
+            )}
             <span className="text-xs text-brand-text-muted">{req.id}</span>
           </div>
           <p className="text-sm">
@@ -97,6 +126,64 @@ export function StaffJobDetailPanel({
             {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
           </p>
         </>
+      )}
+      {scheduleChangePending && (
+        <section className="staff-detail-section space-y-3 border border-amber-500/30 bg-amber-500/5 rounded-xl p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold">
+              {scheduleChangeBilling ? 'Confirm schedule billing' : 'Schedule change review'}
+            </p>
+            {req.scheduleChangeRequestedBy === 'staff' && (
+              <WfBadge tone="default">Staff proposed</WfBadge>
+            )}
+          </div>
+          <div className="space-y-1 text-sm">
+            <p className="text-brand-text-muted">
+              Current: {currentRange}
+              {req.durationHours > 0 ? ` · ${formatDuration(req.durationHours)}` : ''}
+            </p>
+            <p className="font-medium text-brand-primary">
+              {scheduleChangeBilling ? 'Approved times' : 'Requested'}: {requestedRange}
+              {req.pendingDurationHours != null
+                ? ` · ${formatDuration(req.pendingDurationHours)}`
+                : ''}
+            </p>
+            {(req.scheduleChangeExtraAmount ?? 0) > 0 && (
+              <p className="text-amber-600">
+                Additional billing: ${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)}
+              </p>
+            )}
+          </div>
+          {canReviewScheduleChange && (
+            <div className="space-y-3 pt-1">
+              {!scheduleChangeBilling && onRejectScheduleChange && (
+                <div className="app-action-row--equal">
+                  <button
+                    type="button"
+                    onClick={() => void onRejectScheduleChange(req.id)}
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                  >
+                    <X className="w-3.5 h-3.5" /> Decline
+                  </button>
+                </div>
+              )}
+              <SlideToConfirm
+                label={
+                  scheduleChangeBilling
+                    ? 'Slide to confirm billing & publish'
+                    : 'Slide to approve new times'
+                }
+                confirmedLabel={scheduleChangeBilling ? 'Confirmed' : 'Approved'}
+                tone="success"
+                onConfirm={() =>
+                  scheduleChangeBilling
+                    ? onApproveScheduleChangeBilling?.(req.id)
+                    : onApproveScheduleChange?.(req.id)
+                }
+              />
+            </div>
+          )}
+        </section>
       )}
       {!editing && (
         <JobListingProfile

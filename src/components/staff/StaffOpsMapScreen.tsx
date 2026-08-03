@@ -30,6 +30,9 @@ interface StaffOpsMapScreenProps {
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChangeBilling?: (requestId: string) => void | Promise<void>;
 }
 
 /** Platform ops map — Uber-style filters, browse dock, and job detail sheet. */
@@ -43,6 +46,9 @@ export function StaffOpsMapScreen({
   onEditJobListing,
   onApproveGuardApplication,
   onDenyGuardApplication,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
+  onApproveScheduleChangeBilling,
 }: StaffOpsMapScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [mapStatusFilter, setMapStatusFilter] = useState<StaffMapStatusFilter>('all');
@@ -153,6 +159,9 @@ export function StaffOpsMapScreen({
                 onEditJobListing={onEditJobListing}
                 onApproveGuardApplication={onApproveGuardApplication}
                 onDenyGuardApplication={onDenyGuardApplication}
+                onApproveScheduleChange={onApproveScheduleChange}
+                onRejectScheduleChange={onRejectScheduleChange}
+                onApproveScheduleChangeBilling={onApproveScheduleChangeBilling}
                 showStatusHeader={false}
               />
             ) : null

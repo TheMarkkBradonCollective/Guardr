@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import {
+  confirmApproveStaffAccount,
   confirmBlockAccount,
+  confirmRejectStaffAccount,
   confirmRestoreAccount,
   confirmStaffRoleChange,
   confirmSuspendAccount,
@@ -25,6 +27,8 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
+import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
+import { showAppToast } from '../ui/AppToast';
 import { ArrowLeft } from 'lucide-react';
 
 interface StaffTeamDetailPanelProps {
@@ -35,7 +39,10 @@ interface StaffTeamDetailPanelProps {
   currentUserRole: PlatformRole;
   actorManagedCities?: string[];
   canManageStaff: boolean;
+  canApproveStaffAccounts?: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
+  onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
+  onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
@@ -72,12 +79,16 @@ export function StaffTeamDetailPanel({
   currentUserRole,
   actorManagedCities = [],
   canManageStaff,
+  canApproveStaffAccounts = false,
   onUpdateUserStatus,
+  onApproveStaffAccount,
+  onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
   onBack,
 }: StaffTeamDetailPanelProps) {
   const accountStatus = member.userStatus || 'active';
+  const isPending = accountStatus === 'pending';
   const [role, setRole] = useState<StaffRole>(member.staffRole || 'Moderator');
   const [roleMsg, setRoleMsg] = useState('');
   const [roleError, setRoleError] = useState('');
@@ -89,6 +100,7 @@ export function StaffTeamDetailPanel({
   const [cityMsg, setCityMsg] = useState('');
   const [cityError, setCityError] = useState('');
   const [savingCities, setSavingCities] = useState(false);
+  const [reviewPending, setReviewPending] = useState(false);
 
   useEffect(() => {
     setRole(member.staffRole || 'Moderator');
@@ -160,6 +172,38 @@ export function StaffTeamDetailPanel({
     onUpdateUserStatus(member.id, status);
   };
 
+  const displayName = member.badgeNumber || member.name;
+
+  const handleApproveApplication = async () => {
+    if (!onApproveStaffAccount) return;
+    if (!(await confirmApproveStaffAccount(displayName))) return;
+    setReviewPending(true);
+    try {
+      await onApproveStaffAccount(member.id);
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not approve staff account.', {
+        tone: 'error',
+      });
+    } finally {
+      setReviewPending(false);
+    }
+  };
+
+  const handleRejectApplication = async () => {
+    if (!onRejectStaffAccount) return;
+    if (!(await confirmRejectStaffAccount(displayName))) return;
+    setReviewPending(true);
+    try {
+      await onRejectStaffAccount(member.id);
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not reject staff account.', {
+        tone: 'error',
+      });
+    } finally {
+      setReviewPending(false);
+    }
+  };
+
   return (
     <div className="staff-detail-pane h-full overflow-y-auto space-y-0">
       {onBack && (
@@ -178,6 +222,7 @@ export function StaffTeamDetailPanel({
             <h2 className="font-bold text-lg">{member.badgeNumber || member.name}</h2>
             {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
+            {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{member.email}</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-3">
@@ -192,6 +237,46 @@ export function StaffTeamDetailPanel({
           </div>
         </div>
       </div>
+
+      {isPending && (
+        <>
+          <StaffStaffApplicationSummary member={member} />
+          {(canApproveStaffAccounts && (onApproveStaffAccount || onRejectStaffAccount)) ? (
+            <section className="staff-detail-section space-y-2">
+              <h3 className="text-sm font-semibold">Application review</h3>
+              <div className="app-action-row--equal">
+                {onApproveStaffAccount && (
+                  <AppButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => void handleApproveApplication()}
+                    disabled={reviewPending}
+                  >
+                    Approve application
+                  </AppButton>
+                )}
+                {onRejectStaffAccount && (
+                  <AppButton
+                    variant="danger"
+                    size="sm"
+                    onClick={() => void handleRejectApplication()}
+                    disabled={reviewPending}
+                  >
+                    Deny application
+                  </AppButton>
+                )}
+              </div>
+            </section>
+          ) : (
+            <section className="staff-detail-section space-y-2">
+              <h3 className="text-sm font-semibold">Application review</h3>
+              <p className="text-xs text-brand-text-muted">
+                Only Directors and Founders can approve or deny staff applications.
+              </p>
+            </section>
+          )}
+        </>
+      )}
 
       <section className="staff-detail-section space-y-3">
         <h3 className="text-sm font-semibold">Platform role</h3>
@@ -271,7 +356,7 @@ export function StaffTeamDetailPanel({
         </section>
       )}
 
-      {canModifyMember ? (
+      {!isPending && canModifyMember ? (
         <section className="staff-detail-section space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="app-action-row--equal">
@@ -293,6 +378,7 @@ export function StaffTeamDetailPanel({
           </div>
         </section>
       ) : (
+        !isPending &&
         canManageStaff && (
           <section className="staff-detail-section space-y-2">
             <h3 className="text-sm font-semibold">Account controls</h3>
@@ -301,7 +387,7 @@ export function StaffTeamDetailPanel({
         )
       )}
 
-      {member.bio && (
+      {!isPending && member.bio && (
         <section className="staff-detail-section">
           <h3 className="text-sm font-semibold mb-2">Notes</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">{member.bio}</p>
