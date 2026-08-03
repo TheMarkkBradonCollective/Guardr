@@ -15,18 +15,20 @@ import {
 } from '../baseui/layout/WorkbenchLayout';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfListCard, WfSearchBar } from '../ui/wireframe';
+import { getPendingScheduleChangeApprovals } from '../../lib/jobScheduleChange';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
-type JobsFilter = 'all' | 'open' | 'active' | 'complete' | 'cancelled';
+type JobsFilter = 'all' | 'open' | 'active' | 'schedule' | 'complete' | 'cancelled';
 
 const FILTER_OPTIONS: { id: JobsFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'open', label: 'Open' },
   { id: 'active', label: 'Active' },
+  { id: 'schedule', label: 'Schedule' },
   { id: 'complete', label: 'Complete' },
   { id: 'cancelled', label: 'Cancelled' },
 ];
@@ -43,11 +45,21 @@ interface StaffJobsPanelProps {
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChangeBilling?: (requestId: string) => void | Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
   staffRole?: PlatformRole;
   feeConfig: PlatformFeeConfig;
+}
+
+function hasPendingScheduleChange(req: SecurityRequest): boolean {
+  return (
+    req.scheduleChangeStatus === 'pending_staff' ||
+    req.scheduleChangeStatus === 'pending_staff_billing'
+  );
 }
 
 function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
@@ -56,6 +68,8 @@ function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
       return req.status === 'open' || req.status === 'pending-review';
     case 'active':
       return req.status === 'accepted' || req.status === 'in-progress';
+    case 'schedule':
+      return hasPendingScheduleChange(req);
     case 'complete':
       return req.status === 'completed' || req.status === 'closed';
     case 'cancelled':
@@ -86,6 +100,9 @@ export function StaffJobsPanel({
   canEditJobListing = false,
   onApproveGuardApplication,
   onDenyGuardApplication,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
+  onApproveScheduleChangeBilling,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
@@ -94,7 +111,9 @@ export function StaffJobsPanel({
 }: StaffJobsPanelProps) {
   const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<JobsFilter>('all');
+  const [filter, setFilter] = useState<JobsFilter>(() =>
+    getPendingScheduleChangeApprovals(requests).length > 0 ? 'schedule' : 'all'
+  );
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -114,6 +133,7 @@ export function StaffJobsPanel({
       all: requests.length,
       open: requests.filter((r) => matchesFilter(r, 'open')).length,
       active: requests.filter((r) => matchesFilter(r, 'active')).length,
+      schedule: requests.filter((r) => matchesFilter(r, 'schedule')).length,
       cancelled: requests.filter((r) => matchesFilter(r, 'cancelled')).length,
       complete: requests.filter((r) => matchesFilter(r, 'complete')).length,
     }),
@@ -169,6 +189,9 @@ export function StaffJobsPanel({
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}
+        onApproveScheduleChange={onApproveScheduleChange}
+        onRejectScheduleChange={onRejectScheduleChange}
+        onApproveScheduleChangeBilling={onApproveScheduleChangeBilling}
         onBack={onBack}
         staffRole={staffRole}
       />
@@ -307,9 +330,18 @@ export function StaffJobsPanel({
               subtitle={req.clientName}
               meta={
                 <div className="flex flex-col items-start gap-1.5 w-full">
-                  <StatusChip tone={jobStatusTone(req.status)} size="small">
-                    {jobStatusLabel(req.status)}
-                  </StatusChip>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusChip tone={jobStatusTone(req.status)} size="small">
+                      {jobStatusLabel(req.status)}
+                    </StatusChip>
+                    {hasPendingScheduleChange(req) && (
+                      <StatusChip tone="warning" size="small">
+                        {req.scheduleChangeStatus === 'pending_staff_billing'
+                          ? 'Confirm billing'
+                          : 'Schedule change'}
+                      </StatusChip>
+                    )}
+                  </div>
                   <span className="text-[11px] text-brand-text-muted">
                     {formatShiftRange(req.startDate, req.endDate)} · {guardMeta(req, guards)}
                   </span>

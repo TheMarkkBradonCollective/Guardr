@@ -356,7 +356,7 @@ export function StaffTeamDetailPanel({
         </section>
       )}
 
-      {canModifyMember ? (
+      {!isPending && canModifyMember ? (
         <section className="staff-detail-section space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="app-action-row--equal">
@@ -378,6 +378,7 @@ export function StaffTeamDetailPanel({
           </div>
         </section>
       ) : (
+        !isPending &&
         canManageStaff && (
           <section className="staff-detail-section space-y-2">
             <h3 className="text-sm font-semibold">Account controls</h3>
@@ -386,7 +387,7 @@ export function StaffTeamDetailPanel({
         )
       )}
 
-      {member.bio && (
+      {!isPending && member.bio && (
         <section className="staff-detail-section">
           <h3 className="text-sm font-semibold mb-2">Notes</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">{member.bio}</p>

@@ -696,6 +696,11 @@ export function StaffDashboard({
             onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
+            onApproveScheduleChange={canReviewJobs ? onApproveScheduleChange : undefined}
+            onRejectScheduleChange={canReviewJobs ? onRejectScheduleChange : undefined}
+            onApproveScheduleChangeBilling={
+              canReviewJobs ? onApproveScheduleChangeBilling : undefined
+            }
           />
           </div>
         );
@@ -778,6 +783,11 @@ export function StaffDashboard({
             onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
+            onApproveScheduleChange={canReviewJobs ? onApproveScheduleChange : undefined}
+            onRejectScheduleChange={canReviewJobs ? onRejectScheduleChange : undefined}
+            onApproveScheduleChangeBilling={
+              canReviewJobs ? onApproveScheduleChangeBilling : undefined
+            }
             selectedId={selectedJobId}
             onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
@@ -817,6 +827,8 @@ export function StaffDashboard({
             onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
             onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
+            onApproveVehicle={canManageGuardAccounts ? onApproveVehicle : undefined}
+            onRejectVehicle={canManageGuardAccounts ? onRejectVehicle : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             canVerifyCredentials={canVerifyGuardCredentials}
             selectedId={selectedGuardId}
