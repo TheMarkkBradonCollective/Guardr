@@ -12,8 +12,8 @@ SET
   credential_resource_links = '{
     "govId": [
       {
-        "url": "https://www.dmv.ca.gov/portal/driver-licenses-identification-cards/renewal-or-replacement/renewal-or-replacement/",
-        "label": "California DMV — renew or replace driver license / ID"
+        "url": "https://www.dmv.ca.gov/portal/driver-licenses-identification-cards/",
+        "label": "California DMV — driver license and ID cards"
       },
       {
         "url": "https://www.dmv.ca.gov/portal/locations/",
@@ -22,18 +22,23 @@ SET
     ],
     "coi": [
       {
-        "url": "https://www.bsis.ca.gov/industries/security_guards.shtml",
-        "label": "BSIS — security guard insurance requirements"
+        "url": "https://www.bsis.ca.gov/forms_pubs/guard_fact.shtml",
+        "label": "BSIS security guard fact sheet — training & registration requirements"
       },
       {
-        "url": "https://www.nextinsurance.com/business-insurance/general-liability/",
-        "label": "Next Insurance — general liability quote (COI)"
+        "url": "https://www.nextinsurance.com/general-liability-insurance/",
+        "label": "ERGO NEXT — general liability insurance (COI)",
+        "price": "from $19/mo"
       }
     ],
     "guardCard": [
       {
-        "url": "https://www.bsis.ca.gov/industries/guard_card.shtml",
-        "label": "BSIS — apply for guard card ($50 application fee)"
+        "url": "https://www.bsis.ca.gov/forms_pubs/guard_fact.shtml",
+        "label": "BSIS — security guard registration requirements"
+      },
+      {
+        "url": "https://www.breeze.ca.gov/",
+        "label": "Apply for a BSIS guard card online (BreEZe) — $50 application fee"
       },
       {
         "url": "https://www.guardcardcourses.com/sc101.asp",

@@ -110,14 +110,23 @@ export const PLATFORM_DEFAULT_CREDENTIAL_LINKS: CityCredentialResourceLinks = {
   ],
   coi: [
     {
-      url: 'https://www.bsis.ca.gov/industries/security_guards.shtml',
-      label: 'BSIS security guard requirements — insurance info',
+      url: 'https://www.bsis.ca.gov/forms_pubs/guard_fact.shtml',
+      label: 'BSIS security guard fact sheet — training & registration requirements',
+    },
+    {
+      url: 'https://www.nextinsurance.com/general-liability-insurance/',
+      label: 'ERGO NEXT — general liability insurance (COI)',
+      price: 'from $19/mo',
     },
   ],
   guardCard: [
     {
-      url: 'https://www.bsis.ca.gov/industries/guard_card.shtml',
-      label: 'Apply for a BSIS guard card',
+      url: 'https://www.bsis.ca.gov/forms_pubs/guard_fact.shtml',
+      label: 'BSIS — security guard registration requirements',
+    },
+    {
+      url: 'https://www.breeze.ca.gov/',
+      label: 'Apply for a BSIS guard card online (BreEZe)',
     },
   ],
   ptaUof: [
