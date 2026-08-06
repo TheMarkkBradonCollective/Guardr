@@ -1,29 +1,25 @@
 import { useEffect, useRef } from 'react';
-import {
-  closeActiveStaffSession,
-  finalizeIdleStaffSessions,
-  notifyStaffTimeEntriesChanged,
-  recordStaffActivity,
-  STAFF_ACTIVITY_IDLE_MS,
-} from '../lib/staffActivityTime';
+import { notifyStaffTimeEntriesChanged } from '../lib/staffActivityTime';
 import type { StaffTimeEntry } from '../lib/staffTimeTracking';
 import {
   loadStaffTimeEntries,
   persistStaffTimeEntries,
   saveStaffTimeEntriesToStorage,
 } from '../lib/staffTimeTrackingStorage';
+import {
+  closeActiveStaffSession,
+  finalizeIdleStaffSessions,
+  markStaffPresenceHidden,
+  recordStaffTimeEvent,
+  resumeStaffPresence,
+  STAFF_ACTIVITY_IDLE_MS,
+  STAFF_PRESENCE_RESUME_GRACE_MS,
+  STAFF_TRAVEL_ACTION_EVENT,
+  STAFF_WORK_ACTION_EVENT,
+} from '../lib/staffWorkActivity';
 
-const ACTIVITY_DEBOUNCE_MS = 5_000;
 const PERSIST_INTERVAL_MS = 30_000;
 const IDLE_CHECK_INTERVAL_MS = 60_000;
-
-const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
-  'pointerdown',
-  'keydown',
-  'click',
-  'scroll',
-  'touchstart',
-];
 
 export interface StaffActivityTrackerTarget {
   staffId: string;
@@ -42,15 +38,21 @@ function syncLocalStaffTimeEntries(entries: StaffTimeEntry[]): void {
 }
 
 /**
- * Automatically tracks staff time from first website action to last action in a session.
- * Mounted once for signed-in staff in App root.
+ * Smart staff time tracking:
+ * - Presence (app/tab open) starts time — not login
+ * - Staff navigation counts as travel toward the next action
+ * - Meaningful work actions extend time; passive page clicks do not
+ * - App/tab close ends the session; brief switches resume within a grace window
  */
 export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget | null): void {
   const entriesRef = useRef<StaffTimeEntry[]>([]);
   const loadedRef = useRef(false);
   const persistTimerRef = useRef<number | null>(null);
-  const lastRecordedAtRef = useRef(0);
   const targetRef = useRef(target);
+  const hiddenAtRef = useRef<number | null>(null);
+  const graceTimerRef = useRef<number | null>(null);
+  const appVisibleRef = useRef(typeof document !== 'undefined' && document.visibilityState === 'visible');
+
   targetRef.current = target;
 
   useEffect(() => {
@@ -66,6 +68,9 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
       if (cancelled) return;
       entriesRef.current = rows;
       loadedRef.current = true;
+      if (document.visibilityState === 'visible') {
+        applyEvent('presence', true);
+      }
     });
 
     const schedulePersist = () => {
@@ -76,36 +81,117 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
       }, PERSIST_INTERVAL_MS);
     };
 
-    const applyActivity = (force = false) => {
+    const applyEvent = (kind: 'presence' | 'travel' | 'work', forcePersist = false) => {
       const current = targetRef.current;
       if (!current || !loadedRef.current) return;
 
-      const nowMs = Date.now();
-      if (!force && nowMs - lastRecordedAtRef.current < ACTIVITY_DEBOUNCE_MS) return;
-      lastRecordedAtRef.current = nowMs;
-
-      const recorded = recordStaffActivity(entriesRef.current, {
+      const recorded = recordStaffTimeEvent(entriesRef.current, {
         staffId: current.staffId,
         staffName: current.staffName,
+        kind,
       });
-      if (!recorded.changed) return;
+      if (!recorded.changed && !forcePersist) return;
       entriesRef.current = recorded.entries;
       syncLocalStaffTimeEntries(entriesRef.current);
       schedulePersist();
     };
 
-    const onActivity = () => applyActivity(false);
+    const clearGraceTimer = () => {
+      if (graceTimerRef.current != null) {
+        window.clearTimeout(graceTimerRef.current);
+        graceTimerRef.current = null;
+      }
+    };
 
-    for (const eventName of ACTIVITY_EVENTS) {
-      window.addEventListener(eventName, onActivity, { capture: true, passive: true });
-    }
+    const finalizeHiddenSession = () => {
+      const current = targetRef.current;
+      if (!current || !loadedRef.current) return;
+      const hiddenAt = hiddenAtRef.current;
+      const closed = closeActiveStaffSession(
+        entriesRef.current,
+        current.staffId,
+        hiddenAt != null ? new Date(hiddenAt).toISOString() : undefined,
+      );
+      if (!closed.changed) return;
+      entriesRef.current = closed.entries;
+      void flushStaffTimeEntries(entriesRef.current);
+      hiddenAtRef.current = null;
+    };
+
+    const onPresenceHidden = () => {
+      const current = targetRef.current;
+      if (!current || !loadedRef.current) return;
+      appVisibleRef.current = false;
+      hiddenAtRef.current = Date.now();
+      const marked = markStaffPresenceHidden(entriesRef.current, current.staffId);
+      if (marked.changed) {
+        entriesRef.current = marked.entries;
+        syncLocalStaffTimeEntries(entriesRef.current);
+        schedulePersist();
+      }
+      clearGraceTimer();
+      graceTimerRef.current = window.setTimeout(() => {
+        graceTimerRef.current = null;
+        finalizeHiddenSession();
+      }, STAFF_PRESENCE_RESUME_GRACE_MS);
+    };
+
+    const onPresenceVisible = () => {
+      appVisibleRef.current = true;
+      const current = targetRef.current;
+      if (!current || !loadedRef.current) return;
+
+      const hiddenAt = hiddenAtRef.current;
+      const withinGrace =
+        hiddenAt != null && Date.now() - hiddenAt <= STAFF_PRESENCE_RESUME_GRACE_MS;
+
+      clearGraceTimer();
+
+      if (withinGrace) {
+        const resumed = resumeStaffPresence(entriesRef.current, current.staffId);
+        if (resumed.changed) {
+          entriesRef.current = resumed.entries;
+          syncLocalStaffTimeEntries(entriesRef.current);
+          schedulePersist();
+        }
+        hiddenAtRef.current = null;
+        return;
+      }
+
+      hiddenAtRef.current = null;
+      applyEvent('presence');
+    };
+
+    const onWorkAction = () => applyEvent('work');
+    const onTravelAction = () => {
+      if (!appVisibleRef.current) return;
+      applyEvent('travel');
+    };
 
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') applyActivity(true);
+      if (document.visibilityState === 'visible') onPresenceVisible();
+      else onPresenceHidden();
     };
+
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener(STAFF_WORK_ACTION_EVENT, onWorkAction);
+    window.addEventListener(STAFF_TRAVEL_ACTION_EVENT, onTravelAction);
+
+    let removeCapListener: (() => void) | undefined;
+    void import('@capacitor/core').then(({ Capacitor }) => {
+      if (!Capacitor.isNativePlatform()) return;
+      void import('@capacitor/app').then(({ App }) => {
+        void App.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) onPresenceVisible();
+          else onPresenceHidden();
+        }).then((handle) => {
+          removeCapListener = () => void handle.remove();
+        });
+      });
+    });
 
     const idleTimer = window.setInterval(() => {
+      if (!appVisibleRef.current) return;
       const finalized = finalizeIdleStaffSessions(entriesRef.current);
       if (!finalized.changed) return;
       entriesRef.current = finalized.entries;
@@ -114,12 +200,8 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
     }, IDLE_CHECK_INTERVAL_MS);
 
     const closeOpenSession = () => {
-      const current = targetRef.current;
-      if (!current || !loadedRef.current) return;
-      const closed = closeActiveStaffSession(entriesRef.current, current.staffId);
-      if (!closed.changed) return;
-      entriesRef.current = closed.entries;
-      void flushStaffTimeEntries(entriesRef.current);
+      clearGraceTimer();
+      finalizeHiddenSession();
     };
 
     window.addEventListener('pagehide', closeOpenSession);
@@ -127,13 +209,14 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
 
     return () => {
       cancelled = true;
-      for (const eventName of ACTIVITY_EVENTS) {
-        window.removeEventListener(eventName, onActivity, true);
-      }
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener(STAFF_WORK_ACTION_EVENT, onWorkAction);
+      window.removeEventListener(STAFF_TRAVEL_ACTION_EVENT, onTravelAction);
+      removeCapListener?.();
       window.removeEventListener('pagehide', closeOpenSession);
       window.removeEventListener('beforeunload', closeOpenSession);
       window.clearInterval(idleTimer);
+      clearGraceTimer();
       if (persistTimerRef.current != null) {
         window.clearTimeout(persistTimerRef.current);
         persistTimerRef.current = null;
@@ -143,4 +226,4 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
   }, [target?.staffId, target?.staffName]);
 }
 
-export { STAFF_ACTIVITY_IDLE_MS };
+export { STAFF_ACTIVITY_IDLE_MS, STAFF_PRESENCE_RESUME_GRACE_MS };

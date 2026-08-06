@@ -349,6 +349,7 @@ import {
 import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
+import { emitStaffTravelAction } from './lib/staffWorkActivity';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
@@ -1509,6 +1510,9 @@ export default function App() {
   const setStaffSection = (section: StaffSection, selection: StaffSectionSelection = {}) => {
     const normalizedSection =
       section === 'team-chat' || section === 'job-chats' ? 'messages' : section;
+    if (currentUser && isStaffRole(currentUser.role)) {
+      emitStaffTravelAction({ section: normalizedSection });
+    }
     setStaffSectionState(normalizedSection);
     const nextJobId = normalizedSection === 'jobs'
       ? selection.jobId !== undefined ? selection.jobId ?? undefined : staffJobId ?? undefined
@@ -1561,6 +1565,9 @@ export default function App() {
   };
 
   const setStaffGuardId = (guardId: string | null) => {
+    if (currentUser && isStaffRole(currentUser.role) && guardId) {
+      emitStaffTravelAction({ section: 'guards', label: `guard:${guardId}` });
+    }
     setStaffGuardIdState(guardId);
     if (!guardId) {
       setStaffEditState(false);
@@ -1581,6 +1588,9 @@ export default function App() {
   };
 
   const setStaffClientId = (clientId: string | null) => {
+    if (currentUser && isStaffRole(currentUser.role) && clientId) {
+      emitStaffTravelAction({ section: 'clients', label: `client:${clientId}` });
+    }
     setStaffClientIdState(clientId);
     syncAppRoute(
       buildAppRoute({
@@ -1592,6 +1602,9 @@ export default function App() {
   };
 
   const setStaffJobId = (jobId: string | null) => {
+    if (currentUser && isStaffRole(currentUser.role) && jobId) {
+      emitStaffTravelAction({ section: 'jobs', label: `job:${jobId}` });
+    }
     setStaffJobIdState(jobId);
     syncAppRoute(
       buildAppRoute({
