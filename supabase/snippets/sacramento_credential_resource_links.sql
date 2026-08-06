@@ -1,6 +1,11 @@
--- Sacramento — marketplace credential links with verified prices (Aug 2026)
--- Sources: guardcardcourses.com (TwoProtect / partner locations), valleyguardonline.com / guardboss.com
--- Run in Supabase SQL editor.
+-- Sacramento marketplace credential links (run entire file in Supabase SQL editor)
+-- Step 1 adds the column if your DB hasn't migrated yet.
+
+ALTER TABLE platform_cities
+  ADD COLUMN IF NOT EXISTS credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+COMMENT ON COLUMN platform_cities.credential_resource_links IS
+  'City-specific marketplace eligibility resource links (per credential / catalog key).';
 
 UPDATE platform_cities
 SET
