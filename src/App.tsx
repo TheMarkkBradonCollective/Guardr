@@ -22,8 +22,6 @@ import {
   StaffRole,
   JobChatThread,
   JobChatMessage,
-  TeamChatThread,
-  TeamChatMessage,
   StaffMessage,
   GuardMessage,
   ClientMessage,
@@ -35,8 +33,6 @@ import {
   JobLocation,
   AssignmentMode,
   DifferentialPayRates,
-  GuardStandingCrewMember,
-  GuardCrewJoinRequest,
   UserNotification,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
@@ -224,7 +220,6 @@ import {
 } from './lib/emergencyReplacement';
 import { jobsNeedingNoShowReplacement } from './lib/noShowDetection';
 import { guardScheduleConflictError } from './lib/guardSchedule';
-import { findOpenTeamJobByCode, generateUniqueTeamCode } from './lib/teamCode';
 import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
@@ -239,47 +234,14 @@ import {
   slotFromDbRow,
 } from './lib/guardTeams';
 import {
-  acceptTeamInvite,
-  applyAsTeamLead,
-  clientApproveFullTeam,
   clientApproveTeamSlot,
-  clientDenyFullTeam,
   clientDenyTeamSlot,
-  declineTeamInvite,
   ensureSlotIds,
-  joinTeamWithCode,
-  inviteGuardToTeam,
   proposeIndependentGuardToClient,
-  promoteFullCrewToClientIfReady,
-  removeGuardFromTeam,
-  revokeLeadIfNeeded,
-  staffDenyCrewSlot,
-  staffRemoveGuardFromTeam,
-  updateCrewProfile,
   staffApproveIndependentSlot,
-  staffApproveTeamSlot,
   applyTrustedRevocationToJobs,
   jobAffectedByTrustedRevocation,
 } from './lib/guardTeamFlow';
-import {
-  acceptStandingCrewInvite,
-  clearStandingCrewProfile,
-  declineStandingCrewInvite,
-  dissolveStandingCrewForUntrustedGuard,
-  guardLeadsOwnStandingCrew,
-  inviteToStandingCrew,
-  removeStandingCrewMember,
-} from './lib/guardStandingCrew';
-import {
-  approveCrewLeadRequest,
-  canRequestCrewLead,
-  declineCrewLeadRequest,
-  getPendingCrewLeadRequest,
-  makeGuardCrewLeadProfile,
-  revokeCrewLeadRequestsForGuard,
-  submitCrewLeadRequest,
-} from './lib/guardCrewJoinRequest';
-import { loadCrewJoinRequests, persistCrewJoinRequest } from './lib/crewJoinRequestStore';
 import {
   markAllNotificationsRead,
   markNotificationClicked,
@@ -293,12 +255,8 @@ import {
   persistUserNotifications,
 } from './lib/userNotificationStore';
 import {
-  loadStandingCrewMembers,
-  persistStandingCrewMember,
-} from './lib/standingCrewStore';
-import {
   persistJobGuardSlots,
-  persistJobTeamMeta,
+  persistJobSlotMeta,
   teamJobReadyForAcceptance,
 } from './lib/guardTeamDb';
 import {
@@ -373,15 +331,6 @@ import {
   saveJobChatThreadsToStorage,
   threadForRequest,
 } from './lib/jobChat';
-import {
-  buildTeamChatMessage,
-  buildTeamChatThread,
-  loadTeamChatMessagesFromStorage,
-  loadTeamChatThreadsFromStorage,
-  saveTeamChatMessagesToStorage,
-  saveTeamChatThreadsToStorage,
-  threadForTeamRequest,
-} from './lib/teamChat';
 import { clientMessagesBadge, clientSupportBadge } from './lib/messagesInbox';
 import {
   buildGuardMessage,
@@ -744,8 +693,6 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [jobChatThreads, setJobChatThreads] = useState<JobChatThread[]>(() => loadJobChatThreadsFromStorage());
   const [jobChatMessages, setJobChatMessages] = useState<JobChatMessage[]>(() => loadJobChatMessagesFromStorage());
-  const [teamChatThreads, setTeamChatThreads] = useState<TeamChatThread[]>(() => loadTeamChatThreadsFromStorage());
-  const [teamChatMessages, setTeamChatMessages] = useState<TeamChatMessage[]>(() => loadTeamChatMessagesFromStorage());
   const [staffMessages, setStaffMessages] = useState<StaffMessage[]>(() => loadStaffMessagesFromStorage());
   const [guardMessages, setGuardMessages] = useState<GuardMessage[]>(() => loadGuardMessagesFromStorage());
   const [clientMessages, setClientMessages] = useState<ClientMessage[]>(() => loadClientMessagesFromStorage());
@@ -766,8 +713,6 @@ export default function App() {
     return defaults;
   });
   const [isDbConnected, setIsDbConnected] = useState(false);
-  const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
-  const [crewJoinRequests, setCrewJoinRequests] = useState<GuardCrewJoinRequest[]>([]);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   const [jobLocations, setJobLocations] = useState<JobLocation[]>([]);
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
@@ -870,9 +815,6 @@ export default function App() {
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
-  const [teamChatRequestId, setTeamChatRequestIdState] = useState<string | null>(
-    () => initialRoute?.teamChatRequestId ?? null
-  );
   const [staffMessagesTab, setStaffMessagesTabState] = useState<'team' | 'jobs' | null>(
     () => initialRoute?.staffMessageTab ?? null
   );
@@ -907,7 +849,6 @@ export default function App() {
       clientGuardId: clientGuardId ?? undefined,
       clientDirectGuardId: clientDirectGuardId ?? undefined,
       jobChatRequestId: jobChatRequestId ?? undefined,
-      teamChatRequestId: teamChatRequestId ?? undefined,
       staffMessageTab: staffMessagesTab ?? undefined,
       supportTicketId: supportTicketId ?? undefined,
       supportSection: supportSection ?? undefined,
@@ -959,7 +900,6 @@ export default function App() {
     setClientGuardIdState(route.clientGuardId ?? null);
     setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
     setJobChatRequestIdState(route.jobChatRequestId ?? null);
-    setTeamChatRequestIdState(route.teamChatRequestId ?? null);
     setStaffMessagesTabState(route.staffMessageTab ?? null);
     setSupportTicketIdState(route.supportTicketId ?? null);
     setSupportSectionState(route.supportSection ?? 'support');
@@ -1425,37 +1365,6 @@ export default function App() {
     }
   };
 
-  const setTeamChatRequestId = (requestId: string | null) => {
-    setTeamChatRequestIdState(requestId);
-    if (requestId) setJobChatRequestIdState(null);
-    const role = currentUser ? appRoleForUser(currentUser) : null;
-    if (role === 'staff') {
-      setStaffSectionState('messages');
-      setStaffMessagesTabState('team');
-      syncAppRoute(
-        buildAppRoute({
-          role: 'staff',
-          staffSection: 'messages',
-          staffMessageTab: 'team',
-          teamChatRequestId: requestId ?? undefined,
-          jobChatRequestId: undefined,
-        })
-      );
-      return;
-    }
-    if (role === 'guard') {
-      setGuardTabState('messages');
-      syncAppRoute(
-        buildAppRoute({
-          role: 'guard',
-          guardTab: 'messages',
-          teamChatRequestId: requestId ?? undefined,
-          jobChatRequestId: undefined,
-          openJobChat: false,
-        })
-      );
-    }
-  };
 
   const setSupportTicketId = (ticketId: string | null) => {
     setSupportTicketIdState(ticketId);
@@ -2063,11 +1972,6 @@ export default function App() {
     return () => registerInboxPersistHandler(null);
   }, [currentUser?.id, currentUser?.role, isDbConnected]);
 
-  useEffect(() => {
-    if (isDbConnected) return;
-    void loadStandingCrewMembers(false).then(setStandingCrewMembers);
-    void loadCrewJoinRequests(false).then(setCrewJoinRequests);
-  }, [isDbConnected]);
 
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
@@ -2179,8 +2083,6 @@ export default function App() {
       const { data: dbSupportMessages, error: supportMessagesErr } = await supabase.from('support_messages').select('*');
       const { data: dbJobChatThreads, error: jobChatThreadsErr } = await supabase.from('job_chat_threads').select('*');
       const { data: dbJobChatMessages, error: jobChatMessagesErr } = await supabase.from('job_chat_messages').select('*');
-      const { data: dbTeamChatThreads, error: teamChatThreadsErr } = await supabase.from('team_chat_threads').select('*');
-      const { data: dbTeamChatMessages, error: teamChatMessagesErr } = await supabase.from('team_chat_messages').select('*');
       const { data: dbStaffMessages, error: staffMessagesErr } = await supabase.from('staff_messages').select('*');
       const { data: dbGuardMessages, error: guardMessagesErr } = await supabase.from('guard_messages').select('*');
       const { data: dbClientMessages, error: clientMessagesErr } = await supabase.from('client_messages').select('*');
@@ -2272,12 +2174,6 @@ export default function App() {
       }
       if (jobChatThreadsErr || jobChatMessagesErr) {
         console.warn('Job chat tables load (run migration if missing):', jobChatThreadsErr ?? jobChatMessagesErr);
-      }
-      if (teamChatThreadsErr && teamChatThreadsErr.code !== '42P01') {
-        console.warn('Team chat threads load (run migration if missing):', teamChatThreadsErr);
-      }
-      if (teamChatMessagesErr && teamChatMessagesErr.code !== '42P01') {
-        console.warn('Team chat messages load (run migration if missing):', teamChatMessagesErr);
       }
       if (staffMessagesErr) {
         console.warn('Staff messages load (run migration if missing):', staffMessagesErr);
@@ -2416,8 +2312,6 @@ export default function App() {
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
         credentialExpiryRestricted: g.credential_expiry_restricted === true,
         trusted: g.trusted === true,
-        standingCrewName: g.standing_crew_name?.trim() || undefined,
-        standingCrewDescription: g.standing_crew_description?.trim() || undefined,
         insurancePolicy: insuranceByGuardId.get(g.id),
         vehicleInsurancePolicy: vehicleInsuranceByGuardId.get(g.id),
         vehicleProfile: vehicleProfileByGuardId.get(g.id),
@@ -2646,10 +2540,6 @@ export default function App() {
           estimatedPayout: r.estimated_payout,
           status: normalizeJobStatus(r.status),
           assignedGuardId: r.assigned_guard_id,
-          teamLeadId: r.team_lead_id ?? undefined,
-          teamCode: r.team_code ?? undefined,
-          crewName: r.crew_name ?? undefined,
-          crewDescription: r.crew_description ?? undefined,
           openedAt: r.opened_at ?? undefined,
           pendingStartDate: r.pending_start_date ?? undefined,
           pendingEndDate: r.pending_end_date ?? undefined,
@@ -2835,32 +2725,6 @@ export default function App() {
         saveJobChatMessagesToStorage(mappedMessages);
       }
 
-      if (!teamChatThreadsErr && dbTeamChatThreads != null) {
-        const mappedTeamThreads = dbTeamChatThreads.map((t: any) => ({
-          id: t.id,
-          requestId: t.request_id,
-          teamLeadId: t.team_lead_id ?? '',
-          status: t.status,
-          createdAt: t.created_at,
-          archivedAt: t.archived_at ?? undefined,
-        }));
-        setTeamChatThreads(mappedTeamThreads);
-        saveTeamChatThreadsToStorage(mappedTeamThreads);
-      }
-
-      if (!teamChatMessagesErr && dbTeamChatMessages != null) {
-        const mappedTeamMessages = dbTeamChatMessages.map((m: any) => ({
-          id: m.id,
-          threadId: m.thread_id,
-          senderId: m.sender_id,
-          senderName: m.sender_name,
-          senderRole: m.sender_role,
-          body: m.body,
-          createdAt: m.created_at,
-        }));
-        setTeamChatMessages(mappedTeamMessages);
-        saveTeamChatMessagesToStorage(mappedTeamMessages);
-      }
 
       if (!staffMessagesErr && dbStaffMessages != null) {
         const mappedStaffMessages = dbStaffMessages.map((m: any) => ({
@@ -2941,19 +2805,6 @@ export default function App() {
         setPlatformCitiesCache(loadedCities);
       }
 
-      try {
-        const crewRows = await loadStandingCrewMembers(true);
-        setStandingCrewMembers(crewRows);
-      } catch (crewErr) {
-        console.warn('Standing crew load (run migration if missing):', crewErr);
-      }
-
-      try {
-        const joinRequestRows = await loadCrewJoinRequests(true);
-        setCrewJoinRequests(joinRequestRows);
-      } catch (joinErr) {
-        console.warn('Crew join requests load (run migration if missing):', joinErr);
-      }
 
       setIsDbConnected(true);
     } catch (err) {
@@ -3320,19 +3171,6 @@ export default function App() {
         });
         if (isNew && !fromSelf) void playWalkieChirpSound();
       },
-      onTeamChatMessage: (message) => {
-        if (shouldSkipRealtimeSync()) return;
-        const fromSelf = message.senderId === currentUser?.id;
-        let isNew = false;
-        setTeamChatMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          isNew = true;
-          const next = [...prev, message];
-          saveTeamChatMessagesToStorage(next);
-          return next;
-        });
-        if (isNew && !fromSelf) void playWalkieChirpSound();
-      },
       onStaffMessage: (message) => {
         const fromSelf = message.senderId === currentUser?.id;
         let isNew = false;
@@ -3412,14 +3250,6 @@ export default function App() {
               const next = prev.filter((m) => m.id !== id);
               if (next.length === prev.length) return prev;
               saveJobChatMessagesToStorage(next);
-              return next;
-            });
-            break;
-          case 'team_chat_messages':
-            setTeamChatMessages((prev) => {
-              const next = prev.filter((m) => m.id !== id);
-              if (next.length === prev.length) return prev;
-              saveTeamChatMessagesToStorage(next);
               return next;
             });
             break;
@@ -6390,8 +6220,6 @@ export default function App() {
     }
     const guard = guards.find((g) => g.id === guardId);
     let relistedCount = 0;
-    let standingCrewFreedCount = 0;
-    let standingCrewCleared = false;
     if (trusted) {
       if (!guard || guard.userStatus !== 'active' || !guard.verified) {
         appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
@@ -6408,7 +6236,7 @@ export default function App() {
             type: 'job_relisted',
             recipientUserId: update.job.clientId,
             requestId: update.job.id,
-            body: `"${update.job.title}" is back on the marketplace — the coordinated crew was dissolved.`,
+            body: `"${update.job.title}" is back on the marketplace.`,
           });
         }
         for (const removedId of update.removedGuardIds) {
@@ -6417,85 +6245,22 @@ export default function App() {
             type: 'assignment',
             recipientUserId: removedId,
             requestId: update.job.id,
-            body: `You were removed from "${update.job.title}" because the crew coordinator is no longer trusted.`,
+            body: `You were removed from "${update.job.title}" because a trusted guard on this job is no longer trusted.`,
           });
         }
       }
-
-      const dissolved = dissolveStandingCrewForUntrustedGuard(standingCrewMembers, guardId);
-      standingCrewFreedCount = dissolved.freedMemberIds.length;
-      standingCrewCleared =
-        dissolved.updatedRows.length > 0 ||
-        !!guard.standingCrewName?.trim() ||
-        !!guard.standingCrewDescription?.trim() ||
-        guardLeadsOwnStandingCrew(guard, standingCrewMembers) ||
-        getPendingCrewLeadRequest(crewJoinRequests, guardId) != null;
-
-      if (dissolved.updatedRows.length > 0) {
-        setStandingCrewMembers(dissolved.members);
-        for (const row of dissolved.updatedRows) {
-          await persistStandingCrewMember(row, isDbConnected);
-        }
-        for (const freedId of dissolved.freedMemberIds) {
-          if (!currentUser) continue;
-          void reportPushEvent(currentUser, {
-            type: 'standing_crew_invite',
-            recipientUserId: freedId,
-            guardId: freedId,
-            title: 'Standing crew dissolved',
-            body: `${guard.name}'s standing crew was dissolved. You are free to join another crew or lead your own.`,
-            url: '/guard/crew',
-          });
-        }
-      }
-
-      const revokedRequests = revokeCrewLeadRequestsForGuard(
-        crewJoinRequests,
-        guardId,
-        currentUser.id
-      );
-      if (revokedRequests.revoked.length > 0) {
-        setCrewJoinRequests(revokedRequests.requests);
-        for (const request of revokedRequests.revoked) {
-          await persistCrewJoinRequest(request, isDbConnected);
-        }
-      }
-
-      if (revocationUpdates.length > 0 || standingCrewCleared) {
-        const crewNote =
-          standingCrewFreedCount > 0
-            ? ` ${standingCrewFreedCount} standing crew member${standingCrewFreedCount === 1 ? '' : 's'} freed.`
-            : standingCrewCleared
-              ? ' Standing crew profile cleared.'
-              : '';
+      if (revocationUpdates.length > 0) {
         appToast(
           relistedCount > 0
-            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.${crewNote}`
-            : `${guard.name} is no longer trusted.${crewNote || ' Crew coordination access removed.'}`,
+            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed.`
+            : `${guard.name} is no longer trusted.`,
           'success'
         );
       }
     }
-    setGuards((prev) =>
-      prev.map((g) =>
-        g.id === guardId
-          ? {
-              ...g,
-              trusted,
-              ...(trusted ? {} : clearStandingCrewProfile(g)),
-            }
-          : g
-      )
-    );
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
     if (isDbConnected) {
-      const dbPatch = trusted
-        ? { trusted }
-        : {
-            trusted,
-            standing_crew_name: '',
-            standing_crew_description: '',
-          };
-      const { error } = await supabase.from('guards').update(dbPatch).eq('id', guardId);
+      const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
         appToast('Could not update guard trusted status.', 'error');
@@ -6509,7 +6274,7 @@ export default function App() {
           recipientUserId: guardId,
           guardId,
           title: 'You are now a trusted guard',
-          body: 'You can coordinate multi-guard crews and skip Guardr applicant review on Stripe jobs. Cash jobs still require staff confirmation.',
+          body: 'You can skip Guardr applicant review on Stripe jobs. Cash jobs still require staff confirmation.',
         });
         appToast(`${guard.name} is now a trusted guard.`, 'success');
       } else {
@@ -6520,10 +6285,8 @@ export default function App() {
           title: 'Trusted status removed',
           body:
             relistedCount > 0
-              ? `Your trusted status was removed. ${relistedCount} scheduled job${relistedCount === 1 ? '' : 's'} were re-listed and coordinated crews were dissolved.`
-              : standingCrewCleared
-                ? 'Your trusted status was removed. Your standing crew was dissolved and you can no longer coordinate crews.'
-                : 'Your trusted status was removed. Future applications will require Guardr staff review and you cannot coordinate crews.',
+              ? `Your trusted status was removed. ${relistedCount} scheduled job${relistedCount === 1 ? '' : 's'} were re-listed.`
+              : 'Your trusted status was removed. Future applications will require Guardr staff review.',
         });
       }
     }
@@ -7926,7 +7689,7 @@ export default function App() {
       });
     }
     if (currentUser && req.status === 'open') {
-      notifyOpenJobToGuards(currentUser, req, verifiedGuards, standingCrewMembers, {
+      notifyOpenJobToGuards(currentUser, req, verifiedGuards, {
         allRequests: requests,
       });
     }
@@ -9983,31 +9746,16 @@ export default function App() {
 
   const persistTeamJobUpdate = async (
     updatedJob: SecurityRequest,
-    slots: JobGuardSlot[],
-    options?: { notifyClientFullTeam?: boolean }
+    slots: JobGuardSlot[]
   ) => {
-    let normalizedSlots = ensureSlotIds(updatedJob, slots);
-    let nextJob = revokeLeadIfNeeded({ ...updatedJob, guardSlots: normalizedSlots }, normalizedSlots);
-    if (nextJob.teamLeadId && isMultiGuardJob(nextJob) && !nextJob.teamCode) {
-      nextJob = { ...nextJob, teamCode: generateUniqueTeamCode(requests) };
-    }
-    const promotion = promoteFullCrewToClientIfReady(nextJob, normalizedSlots);
-    let promoted = false;
-    if (promotion.promoted) {
-      nextJob = promotion.job;
-      normalizedSlots = promotion.slots;
-      promoted = true;
-    }
+    const normalizedSlots = ensureSlotIds(updatedJob, slots);
+    const nextJob = { ...updatedJob, guardSlots: normalizedSlots };
     setRequests((prev) =>
       prev.map((r) => (r.id === nextJob.id ? nextJob : r))
     );
     if (isDbConnected) {
       await persistJobGuardSlots(supabase, normalizedSlots);
-      await persistJobTeamMeta(supabase, nextJob.id, {
-        teamLeadId: nextJob.teamLeadId ?? null,
-        teamCode: nextJob.teamCode ?? null,
-        crewName: nextJob.crewName ?? null,
-        crewDescription: nextJob.crewDescription ?? null,
+      await persistJobSlotMeta(supabase, nextJob.id, {
         pendingGuardId: nextJob.pendingGuardId ?? null,
         staffApprovedGuardAt: nextJob.staffApprovedGuardAt,
         applicants: nextJob.applicants,
@@ -10015,23 +9763,13 @@ export default function App() {
         assignedGuardId: nextJob.assignedGuardId,
       });
     }
-    if (promoted && currentUser && options?.notifyClientFullTeam !== false) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: nextJob.clientId,
-        requestId: nextJob.id,
-        title: 'Full crew ready for approval',
-        body: `A coordinated crew of ${nextJob.guardsNeeded ?? 1} guards is ready for "${nextJob.title}". Review the full team or your independent guard option.`,
-      });
-    }
-    return { job: nextJob, slots: normalizedSlots, promoted };
+    return { job: nextJob, slots: normalizedSlots };
   };
 
   const finalizeTeamJobIfReady = async (job: SecurityRequest, slots: JobGuardSlot[]) => {
     if (!teamJobReadyForAcceptance(job, slots)) return;
     const leadId =
-      job.teamLeadId ??
-      slots.find((s) => s.isLead && s.guardId)?.guardId ??
+      slots.find((s) => s.isLead && s.guardId && s.status === 'approved')?.guardId ??
       slots.find((s) => s.status === 'approved' && s.guardId)?.guardId ??
       null;
     if (!leadId) return;
@@ -10068,470 +9806,7 @@ export default function App() {
       }
     }
     await ensureJobChatThread({ ...acceptedJob, status: 'accepted', assignedGuardId: leadId });
-    await ensureTeamChatThread(acceptedJob);
     appToast('Full team confirmed — job is locked in.', 'success');
-  };
-
-  const handleApplyAsTeamLead = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const result = applyAsTeamLead(job, activeGuard, requests);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const skipStaff = shouldSkipStaffGuardReview(activeGuard, job, {
-        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
-      });
-    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-      result.job,
-      result.slots,
-      { notifyClientFullTeam: true }
-    );
-    if (isMultiGuardJob(nextJob)) {
-      await ensureTeamChatThread(nextJob);
-    }
-    if (currentUser && !skipStaff) {
-      void reportPushEvent(currentUser, {
-        type: 'guard_application',
-        requestId,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        location: job.location,
-        body: `${activeGuard.name} applied as crew coordinator (cash job) for "${job.title}"`,
-      });
-    }
-    appToast(
-      promoted
-        ? 'Full crew is ready — the client can now review your team.'
-        : skipStaff
-          ? 'You are coordinating this crew. The client will review once every guard confirms.'
-          : 'Crew coordinator application submitted. Guardr staff will review (cash job).',
-      'success'
-    );
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
-  const handleJoinTeamWithCode = async (rawCode: string) => {
-    const jobPreview = findOpenTeamJobByCode(rawCode, requests);
-    if (!jobPreview) {
-      appToast(
-        'Crew code not found. Codes only work for joining an existing coordinated crew with open slots.',
-        'error'
-      );
-      return;
-    }
-    const skipStaff = shouldSkipStaffGuardReview(activeGuard, jobPreview, {
-        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
-      });
-    const result = joinTeamWithCode(rawCode, activeGuardId, requests, skipStaff);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-      result.job,
-      result.slots,
-      { notifyClientFullTeam: true }
-    );
-    if (!skipStaff && currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'guard_application',
-        requestId: nextJob.id,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        location: nextJob.location,
-        body: `${activeGuard.name} joined "${nextJob.title}" with a team code`,
-      });
-    }
-    appToast(
-      promoted
-        ? `Full crew for "${nextJob.title}" is ready for client review.`
-        : skipStaff
-          ? `Joined "${nextJob.title}". The client will review once every guard confirms.`
-          : `Joined "${nextJob.title}" — Guardr staff will review your slot request.`,
-      'success'
-    );
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
-  const handleInviteTeamGuard = async (requestId: string, inviteeId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const invitee = guards.find((g) => g.id === inviteeId);
-    if (!invitee) return;
-    const result = inviteGuardToTeam(job, activeGuard, inviteeId, requests, invitee.name);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        title: 'Crew invitation',
-        recipientUserId: inviteeId,
-        requestId,
-        url: `/guard/my-jobs?jc=${encodeURIComponent(requestId)}`,
-        body: `${activeGuard.name} invited you to join "${job.title}"`,
-      });
-    }
-    appToast(`Invitation sent to ${invitee.name}.`, 'success');
-  };
-
-  const handleRemoveTeamGuard = async (requestId: string, memberId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const member = guards.find((g) => g.id === memberId);
-    const result = removeGuardFromTeam(job, activeGuardId, memberId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser && member) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: memberId,
-        requestId,
-        body: `${activeGuard.name} removed you from the crew for "${job.title}".`,
-      });
-    }
-    appToast(`${member?.name ?? 'Guard'} removed from the crew.`, 'success');
-  };
-
-  const handleUpdateCrewProfile = async (
-    requestId: string,
-    patch: { crewName: string; crewDescription: string }
-  ) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const result = updateCrewProfile(job, activeGuardId, {
-      crewName: patch.crewName,
-      crewDescription: patch.crewDescription,
-    });
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? result.job : r)));
-    if (isDbConnected) {
-      await persistJobTeamMeta(supabase, requestId, {
-        crewName: result.job.crewName ?? null,
-        crewDescription: result.job.crewDescription ?? null,
-      });
-    }
-    appToast('Crew details saved.', 'success');
-  };
-
-  const handleUpdateStandingCrewProfile = async (patch: {
-    crewName: string;
-    crewDescription: string;
-  }) => {
-    if (!isGuardTrusted(activeGuard)) {
-      appToast('Only trusted guards can edit their standing team profile.', 'error');
-      return;
-    }
-    const standingCrewName = patch.crewName.trim();
-    const standingCrewDescription = patch.crewDescription.trim();
-    setGuards((prev) =>
-      prev.map((g) =>
-        g.id === activeGuardId
-          ? { ...g, standingCrewName, standingCrewDescription }
-          : g
-      )
-    );
-    if (isDbConnected) {
-      const { error } = await supabase
-        .from('guards')
-        .update({
-          standing_crew_name: standingCrewName,
-          standing_crew_description: standingCrewDescription,
-        })
-        .eq('id', activeGuardId);
-      if (error) {
-        setGuards((prev) =>
-          prev.map((g) =>
-            g.id === activeGuardId
-              ? {
-                  ...g,
-                  standingCrewName: activeGuard.standingCrewName,
-                  standingCrewDescription: activeGuard.standingCrewDescription,
-                }
-              : g
-          )
-        );
-        appToast('Could not save team profile.', 'error');
-        return;
-      }
-    }
-    appToast('Team profile saved. Clients can see this in the Teams directory.', 'success');
-  };
-
-  const handleAcceptTeamInvite = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const result = acceptTeamInvite(job, activeGuardId, requests);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-      result.job,
-      result.slots,
-      { notifyClientFullTeam: true }
-    );
-    appToast(
-      promoted
-        ? 'Full crew is ready — the client can now review your team.'
-        : 'Invite accepted — waiting for the rest of the crew to confirm.',
-      'success'
-    );
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
-  const handleDeclineTeamInvite = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const result = declineTeamInvite(job, activeGuardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots);
-    const leadId = job.teamLeadId ?? activeGuardId;
-    const lead = guards.find((g) => g.id === leadId);
-    if (currentUser && lead && lead.id !== activeGuardId) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: lead.id,
-        requestId,
-        title: 'Crew invite declined',
-        body: `${activeGuard.name} declined your crew invitation for "${job.title}".`,
-      });
-    }
-    appToast('Invitation declined.', 'info');
-  };
-
-  const handleInviteStandingCrew = async (memberGuardId: string) => {
-    const lead = guards.find((g) => g.id === activeGuardId);
-    if (!lead || !currentUser) return;
-    const member = guards.find((g) => g.id === memberGuardId);
-    const result = inviteToStandingCrew(standingCrewMembers, lead, memberGuardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setStandingCrewMembers(result.members);
-    await persistStandingCrewMember(result.invite, isDbConnected);
-    void reportPushEvent(currentUser, {
-      type: 'standing_crew_invite',
-      title: 'Standing crew invitation',
-      recipientUserId: memberGuardId,
-      guardId: lead.id,
-      url: '/guard/crew',
-      body: `${lead.name} invited you to join their standing crew.`,
-    });
-    appToast(`Invitation sent to ${member?.name ?? 'guard'}.`, 'success');
-  };
-
-  const handleAcceptStandingCrewInvite = async (inviteId: string) => {
-    const result = acceptStandingCrewInvite(standingCrewMembers, activeGuardId, inviteId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setStandingCrewMembers(result.members);
-    if (result.invite) {
-      await persistStandingCrewMember(result.invite, isDbConnected);
-      const lead = guards.find((g) => g.id === result.invite!.leadGuardId);
-      if (currentUser && lead) {
-        void reportPushEvent(currentUser, {
-          type: 'standing_crew_invite',
-          title: 'Crew invitation accepted',
-          recipientUserId: lead.id,
-          guardId: activeGuardId,
-          url: '/guard/crew',
-          body: `${activeGuard.name} accepted your standing crew invitation.`,
-        });
-      }
-    }
-    appToast('You joined the standing crew.', 'success');
-  };
-
-  const handleDeclineStandingCrewInvite = async (inviteId: string) => {
-    const result = declineStandingCrewInvite(standingCrewMembers, activeGuardId, inviteId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setStandingCrewMembers(result.members);
-    const declined = result.members.find((m) => m.id === inviteId);
-    if (declined) await persistStandingCrewMember(declined, isDbConnected);
-    const lead = guards.find((g) => g.id === declined?.leadGuardId);
-    if (currentUser && lead) {
-      void reportPushEvent(currentUser, {
-        type: 'standing_crew_invite',
-        title: 'Crew invitation declined',
-        recipientUserId: lead.id,
-        guardId: activeGuardId,
-        url: '/guard/crew',
-        body: `${activeGuard.name} declined your standing crew invitation.`,
-      });
-    }
-    appToast('Invitation declined.', 'info');
-  };
-
-  const handleRemoveStandingCrew = async (memberGuardId: string) => {
-    const result = removeStandingCrewMember(standingCrewMembers, activeGuardId, memberGuardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setStandingCrewMembers(result.members);
-    const removed = result.members.find(
-      (m) => m.leadGuardId === activeGuardId && m.memberGuardId === memberGuardId
-    );
-    if (removed) await persistStandingCrewMember(removed, isDbConnected);
-    const removedGuard = guards.find((g) => g.id === memberGuardId);
-    if (currentUser && removedGuard) {
-      void reportPushEvent(currentUser, {
-        type: 'standing_crew_invite',
-        title: 'Removed from standing crew',
-        recipientUserId: memberGuardId,
-        guardId: activeGuardId,
-        url: '/guard/crew',
-        body: `${activeGuard.name} removed you from their standing crew.`,
-      });
-    }
-    appToast('Guard removed from your standing crew.', 'success');
-  };
-
-  const handleRequestCrewLead = async () => {
-    const result = submitCrewLeadRequest(crewJoinRequests, activeGuard, standingCrewMembers);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    setCrewJoinRequests(result.requests);
-    await persistCrewJoinRequest(result.request, isDbConnected);
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'crew_lead_request',
-        title: 'Crew lead request',
-        body: `${activeGuard.name} requested approval to lead their own standing crew.`,
-        url: '/staff/crews',
-      });
-    }
-    appToast('Request sent to Guardr staff to lead your own crew.', 'success');
-  };
-
-  const applyGuardCrewLeadProfile = async (guardId: string) => {
-    const guard = guards.find((g) => g.id === guardId);
-    if (!guard) return { error: 'Guard not found.' } as const;
-    const result = makeGuardCrewLeadProfile(guard, standingCrewMembers);
-    if ('error' in result) return result;
-    const { standingCrewName, standingCrewDescription } = result;
-    setGuards((prev) =>
-      prev.map((g) =>
-        g.id === guardId ? { ...g, standingCrewName, standingCrewDescription } : g
-      )
-    );
-    if (isDbConnected) {
-      const { error } = await supabase
-        .from('guards')
-        .update({
-          standing_crew_name: standingCrewName,
-          standing_crew_description: standingCrewDescription,
-        })
-        .eq('id', guardId);
-      if (error) return { error: 'Could not set crew lead profile.' } as const;
-    }
-    return { standingCrewName, standingCrewDescription, guard } as const;
-  };
-
-  const handleStaffApproveCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
-      appToast('You do not have permission to manage crew lead requests.', 'error');
-      return;
-    }
-    const request = crewJoinRequests.find((r) => r.id === requestId);
-    if (!request) return;
-    const applied = await applyGuardCrewLeadProfile(request.guardId);
-    if ('error' in applied) {
-      appToast(applied.error, 'error');
-      return;
-    }
-    const approval = approveCrewLeadRequest(crewJoinRequests, requestId, currentUser.id);
-    if ('error' in approval) {
-      appToast(approval.error, 'error');
-      return;
-    }
-    setCrewJoinRequests(approval.requests);
-    await persistCrewJoinRequest(approval.request, isDbConnected);
-    void reportPushEvent(currentUser, {
-      type: 'guard_trusted_status',
-      recipientUserId: request.guardId,
-      guardId: request.guardId,
-      title: 'You are approved as a crew lead',
-      body: `Your standing crew profile is ready as "${applied.standingCrewName}". Invite members from your Crew hub.`,
-      url: '/guard/crew',
-    });
-    appToast(`${applied.guard.name} is now set up as a crew lead.`, 'success');
-  };
-
-  const handleStaffDeclineCrewLeadRequest = async (requestId: string) => {
-    if (!currentUser || !(canManageGuards(currentUser) || canReviewJobRequests(currentUser))) {
-      appToast('You do not have permission to manage crew lead requests.', 'error');
-      return;
-    }
-    const declined = declineCrewLeadRequest(crewJoinRequests, requestId, currentUser.id);
-    if ('error' in declined) {
-      appToast(declined.error, 'error');
-      return;
-    }
-    setCrewJoinRequests(declined.requests);
-    await persistCrewJoinRequest(declined.request, isDbConnected);
-    const requester = guards.find((g) => g.id === declined.request.guardId);
-    if (requester) {
-      void reportPushEvent(currentUser, {
-        type: 'crew_lead_request',
-        recipientUserId: requester.id,
-        title: 'Crew lead request declined',
-        body: 'Guardr staff declined your crew lead request. You can join another crew with a crew code or submit a new request.',
-        url: '/guard/crew',
-      });
-    }
-    appToast('Crew lead request declined.', 'info');
-  };
-
-  const handleMakeGuardCrewLead = async (guardId: string) => {
-    if (!currentUser || !canManageGuards(currentUser)) {
-      appToast('You do not have permission to manage guard crews.', 'error');
-      return;
-    }
-    const applied = await applyGuardCrewLeadProfile(guardId);
-    if ('error' in applied) {
-      appToast(applied.error, 'error');
-      return;
-    }
-    const pending = getPendingCrewLeadRequest(crewJoinRequests, guardId);
-    if (pending) {
-      const approval = approveCrewLeadRequest(crewJoinRequests, pending.id, currentUser.id);
-      if (!('error' in approval)) {
-        setCrewJoinRequests(approval.requests);
-        await persistCrewJoinRequest(approval.request, isDbConnected);
-      }
-    }
-    void reportPushEvent(currentUser, {
-      type: 'guard_trusted_status',
-      recipientUserId: guardId,
-      guardId,
-      title: 'You are set up as a crew lead',
-      body: `Your standing crew profile is ready as "${applied.standingCrewName}". Invite members from your Crew hub.`,
-      url: '/guard/crew',
-    });
-    appToast(`${applied.guard.name} is now set up as a crew lead.`, 'success');
   };
 
   const handleNotificationClick = async (notification: UserNotification) => {
@@ -10567,66 +9842,6 @@ export default function App() {
     ...accountNotificationMenuProps,
   };
 
-  const handleClientApproveFullTeam = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    for (const slot of job.guardSlots ?? []) {
-      if (!slot.guardId || slot.status !== 'pending_client') continue;
-      const guard = guards.find((g) => g.id === slot.guardId);
-      const scheduleBlocked = guardScheduleConflictError(slot.guardId, job, requests, {
-        guardName: guard?.name,
-      });
-      if (scheduleBlocked) {
-        appToast(scheduleBlocked, 'error');
-        return;
-      }
-    }
-    const result = clientApproveFullTeam(job);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots, {
-      notifyClientFullTeam: false,
-    });
-    if (currentUser) {
-      for (const slot of nextSlots.filter((s) => s.status === 'approved' && s.guardId)) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: slot.guardId!,
-          requestId,
-          body: `The client approved your coordinated crew for "${job.title}".`,
-        });
-      }
-    }
-    appToast('Full crew approved.', 'success');
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
-  const handleClientDenyFullTeam = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const result = clientDenyFullTeam(job);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
-    if (currentUser) {
-      for (const slot of job.guardSlots ?? []) {
-        if (slot.guardId && slot.status === 'pending_client') {
-          void reportPushEvent(currentUser, {
-            type: 'assignment',
-            recipientUserId: slot.guardId,
-            requestId,
-            body: `The client declined the coordinated crew for "${job.title}".`,
-          });
-        }
-      }
-    }
-    appToast('Coordinated crew declined — slots reopened.', 'info');
-  };
-
   const handleClientApproveTeamSlot = async (requestId: string, slotId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
@@ -10647,9 +9862,7 @@ export default function App() {
       return;
     }
     const slot = result.slots.find((s) => s.id === slotId);
-    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots, {
-      notifyClientFullTeam: false,
-    });
+    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots);
     if (slot?.guardId && currentUser) {
       void reportPushEvent(currentUser, {
         type: 'assignment',
@@ -10725,9 +9938,7 @@ export default function App() {
         appToast(result.error, 'error');
         return;
       }
-      const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots, {
-        notifyClientFullTeam: false,
-      });
+      const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots);
       if (currentUser) {
         if (options?.initiatedByGuard) {
           notifyGuardAppliedToJob(currentUser, job, guard);
@@ -11186,7 +10397,7 @@ export default function App() {
         appToast(result.error, 'error');
         return;
       }
-      await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
+      await persistTeamJobUpdate(result.job, result.slots);
       if (currentUser) {
         notifyGuardAppliedToJob(currentUser, job, activeGuard);
         void reportPushEvent(currentUser, {
@@ -11261,60 +10472,17 @@ export default function App() {
       return;
     }
     if (isMultiGuardJob(job)) {
-      const onCrewRoster = (job.guardSlots ?? []).some(
-        (s) =>
-          s.guardId === guardId &&
-          ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
-      );
-      if (onCrewRoster && job.teamLeadId) {
-        const pendingStaff = (job.guardSlots ?? []).find(
-          (s) => s.guardId === guardId && s.status === 'pending_staff'
-        );
-        if (pendingStaff) {
-          const result = staffApproveTeamSlot(job, guardId);
-          if ('error' in result) {
-            appToast(result.error, 'error');
-            return;
-          }
-          const guard = guards.find((g) => g.id === guardId);
-          const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-            result.job,
-            result.slots,
-            { notifyClientFullTeam: true }
-          );
-          if (currentUser && guard) {
-            void reportPushEvent(currentUser, {
-              type: 'assignment',
-              recipientUserId: guardId,
-              requestId,
-              body: promoted
-                ? `Full crew for "${job.title}" is ready for client review.`
-                : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
-            });
-          }
-          appToast(
-            promoted
-              ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
-              : `${guard?.name ?? 'Guard'} confirmed on crew — waiting for remaining guards.`,
-            'success'
-          );
-          await finalizeTeamJobIfReady(nextJob, nextSlots);
-          return;
-        }
-      }
-      const independentStaff = (job.guardSlots ?? []).find(
+      const pendingStaff = (job.guardSlots ?? []).find(
         (s) => s.guardId === guardId && s.status === 'pending_staff'
       );
-      if (independentStaff) {
+      if (pendingStaff) {
         const result = staffApproveIndependentSlot(job, guardId);
         if ('error' in result) {
           appToast(result.error, 'error');
           return;
         }
         const guard = guards.find((g) => g.id === guardId);
-        const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots, {
-          notifyClientFullTeam: false,
-        });
+        const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots);
         if (currentUser && guard) {
           void reportPushEvent(currentUser, {
             type: 'assignment',
@@ -11335,7 +10503,7 @@ export default function App() {
         return;
       }
       const guard = guards.find((g) => g.id === guardId);
-      await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
+      await persistTeamJobUpdate(result.job, result.slots);
       if (currentUser && guard) {
         void reportPushEvent(currentUser, {
           type: 'assignment',
@@ -11378,125 +10546,6 @@ export default function App() {
       return;
     }
     await denyGuardApplication(requestId, guardId, { deniedBy: 'staff' });
-  };
-
-  const handleStaffApproveCrewMember = async (requestId: string, guardId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
-      appToast('You do not have permission to approve crew members.', 'error');
-      return;
-    }
-    const job = requests.find((r) => r.id === requestId);
-    if (!job || job.status !== 'open') {
-      appToast('This job is not open for crew changes.', 'error');
-      return;
-    }
-    const pendingStaff = (job.guardSlots ?? []).find(
-      (s) => s.guardId === guardId && s.status === 'pending_staff'
-    );
-    if (!pendingStaff) {
-      appToast('This guard is not awaiting staff review on this crew.', 'error');
-      return;
-    }
-    const result = job.teamLeadId
-      ? staffApproveTeamSlot(job, guardId)
-      : staffApproveIndependentSlot(job, guardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const guard = guards.find((g) => g.id === guardId);
-    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-      result.job,
-      result.slots,
-      { notifyClientFullTeam: !!job.teamLeadId }
-    );
-    if (currentUser && guard) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: guardId,
-        requestId,
-        body: promoted
-          ? `Full crew for "${job.title}" is ready for client review.`
-          : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
-      });
-    }
-    appToast(
-      promoted
-        ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
-        : `${guard?.name ?? 'Guard'} confirmed on crew.`,
-      'success'
-    );
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
-  const handleStaffDenyCrewMember = async (requestId: string, guardId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
-      appToast('You do not have permission to decline crew members.', 'error');
-      return;
-    }
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const guard = guards.find((g) => g.id === guardId);
-    if (
-      !(await showAppConfirm({
-        title: 'Decline crew member?',
-        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
-        confirmLabel: 'Decline',
-        tone: 'danger',
-      }))
-    ) {
-      return;
-    }
-    const result = staffDenyCrewSlot(job, guardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser && guard) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: guardId,
-        requestId,
-        body: `Guardr declined your crew placement on "${job.title}".`,
-      });
-    }
-    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
-  };
-
-  const handleStaffRemoveFromCrew = async (requestId: string, guardId: string) => {
-    if (!currentUser || !canReviewJobRequests(currentUser)) {
-      appToast('You do not have permission to manage crews.', 'error');
-      return;
-    }
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const guard = guards.find((g) => g.id === guardId);
-    if (
-      !(await showAppConfirm({
-        title: 'Remove from crew?',
-        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
-        confirmLabel: 'Remove',
-        tone: 'danger',
-      }))
-    ) {
-      return;
-    }
-    const result = staffRemoveGuardFromTeam(job, guardId);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser && guard) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: guardId,
-        requestId,
-        body: `Guardr removed you from the crew for "${job.title}".`,
-      });
-    }
-    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
@@ -11791,7 +10840,6 @@ export default function App() {
 
     if (payload.status === 'completed') {
       await archiveJobChatThread(requestId);
-      await archiveTeamChatThread(requestId);
     }
     return true;
   };
@@ -12960,130 +12008,6 @@ export default function App() {
     }
   };
 
-  const persistTeamChatThreadToDb = async (thread: TeamChatThread) => {
-    if (!isDbConnected) return;
-    try {
-      await supabase.from('team_chat_threads').upsert({
-        id: thread.id,
-        request_id: thread.requestId,
-        team_lead_id: thread.teamLeadId || null,
-        status: thread.status,
-        created_at: thread.createdAt,
-        archived_at: thread.archivedAt ?? null,
-      });
-    } catch (e) {
-      console.warn('Team chat thread DB sync:', e);
-    }
-  };
-
-  const persistTeamChatMessageToDb = async (message: TeamChatMessage) => {
-    if (!isDbConnected) return;
-    try {
-      await supabase.from('team_chat_messages').upsert({
-        id: message.id,
-        thread_id: message.threadId,
-        sender_id: message.senderId,
-        sender_name: message.senderName,
-        sender_role: message.senderRole,
-        body: message.body,
-        created_at: message.createdAt,
-      });
-    } catch (e) {
-      console.warn('Team chat message DB sync:', e);
-    }
-  };
-
-  const ensureTeamChatThread = async (req: SecurityRequest) => {
-    if (!isMultiGuardJob(req)) return null;
-    if (!req.teamLeadId && !(req.guardSlots ?? []).some((s) => s.guardId && s.status !== 'open')) {
-      return null;
-    }
-    const existing = threadForTeamRequest(teamChatThreads, req.id);
-    if (existing) return existing;
-
-    const thread = buildTeamChatThread(req);
-    setTeamChatThreads((prev) => {
-      const next = [thread, ...prev.filter((t) => t.requestId !== req.id)];
-      saveTeamChatThreadsToStorage(next);
-      return next;
-    });
-    await persistTeamChatThreadToDb(thread);
-    return thread;
-  };
-
-  const archiveTeamChatThread = async (requestId: string) => {
-    const now = new Date().toISOString();
-    setTeamChatThreads((prev) => {
-      const next = prev.map((t) =>
-        t.requestId === requestId && t.status === 'active'
-          ? { ...t, status: 'archived' as const, archivedAt: now }
-          : t
-      );
-      saveTeamChatThreadsToStorage(next);
-      return next;
-    });
-    if (isDbConnected) {
-      try {
-        await supabase
-          .from('team_chat_threads')
-          .update({ status: 'archived', archived_at: now })
-          .eq('request_id', requestId);
-      } catch (e) {
-        console.warn('Team chat archive DB sync:', e);
-      }
-    }
-  };
-
-  const notifyTeamChatParticipants = async (
-    req: SecurityRequest,
-    sender: SessionUser,
-    body: string
-  ) => {
-    if (!currentUser) return;
-    const crewIds = new Set(
-      (req.guardSlots ?? [])
-        .map((s) => s.guardId)
-        .filter((id): id is string => !!id && id !== sender.id)
-    );
-    for (const guardId of crewIds) {
-      void reportPushEvent(currentUser, {
-        type: 'team_chat_message',
-        recipientUserId: guardId,
-        requestId: req.id,
-        body: `${sender.name} in crew chat (${req.title}): ${body.slice(0, 100)}`,
-      });
-    }
-    if (!isStaffRole(sender.role)) {
-      void reportPushEvent(currentUser, {
-        type: 'team_chat_message',
-        requestId: req.id,
-        body: `${sender.name} in crew chat for "${req.title}": ${body.slice(0, 100)}`,
-      });
-    }
-  };
-
-  const handleSendTeamChatMessage = async (requestId: string, body: string) => {
-    if (!currentUser || !body.trim()) return;
-    const req = requests.find((r) => r.id === requestId);
-    if (!req) return;
-
-    let thread = threadForTeamRequest(teamChatThreads, requestId);
-    if (!thread) {
-      thread = (await ensureTeamChatThread(req)) ?? undefined;
-    }
-    if (!thread) return;
-
-    const message = buildTeamChatMessage(thread, currentUser, body);
-    beginLocalMutation();
-    setTeamChatMessages((prev) => {
-      const next = [...prev, message];
-      saveTeamChatMessagesToStorage(next);
-      return next;
-    });
-    await persistTeamChatMessageToDb(message);
-    await notifyTeamChatParticipants(req, currentUser, body.trim());
-  };
-
   const notifyJobChatParticipants = async (
     req: SecurityRequest,
     sender: SessionUser,
@@ -13748,13 +12672,6 @@ export default function App() {
           browseTab={guardBrowseTab}
           onBrowseTabChange={setGuardBrowseTab}
           accountNotifications={accountNotificationMenuProps}
-          standingCrewMembers={standingCrewMembers}
-          onInviteStandingCrew={handleInviteStandingCrew}
-          onRemoveStandingCrew={handleRemoveStandingCrew}
-          onAcceptStandingCrewInvite={handleAcceptStandingCrewInvite}
-          onDeclineStandingCrewInvite={handleDeclineStandingCrewInvite}
-          onRequestCrewLead={handleRequestCrewLead}
-          crewJoinRequests={crewJoinRequests}
           requests={guardJobs}
           allRequests={requests}
           payments={guardPayouts}
@@ -13777,14 +12694,6 @@ export default function App() {
           onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
-          onApplyAsTeamLead={handleApplyAsTeamLead}
-          onInviteTeamGuard={handleInviteTeamGuard}
-          onRemoveTeamGuard={handleRemoveTeamGuard}
-          onUpdateCrewProfile={handleUpdateCrewProfile}
-          onUpdateStandingCrewProfile={handleUpdateStandingCrewProfile}
-          onJoinTeamWithCode={handleJoinTeamWithCode}
-          onAcceptTeamInvite={handleAcceptTeamInvite}
-          onDeclineTeamInvite={handleDeclineTeamInvite}
           feeConfig={platformSettings.feeConfig}
           onSubmitPriceOffer={(requestId, input) =>
             void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
@@ -13837,14 +12746,10 @@ export default function App() {
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           onSendJobChatMessage={handleSendJobChatMessage}
-          teamChatThreads={teamChatThreads}
-          teamChatMessages={teamChatMessages}
-          onSendTeamChatMessage={handleSendTeamChatMessage}
           guardMessages={guardMessages}
           onSendGuardMessage={handleSendGuardMessage}
           onRefreshGuardMessages={refreshGuardMessages}
           jobChatRequestId={jobChatRequestId}
-          initialTeamChatRequestId={teamChatRequestId}
           openJobChat={openJobChat}
           initialSelectedJobId={jobChatRequestId && !openJobChat ? jobChatRequestId : null}
           onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
@@ -14034,8 +12939,7 @@ export default function App() {
               requests={myRequests}
               platformRequests={requests}
               guards={hireableGuards}
-              standingCrewMembers={standingCrewMembers}
-              clientEmail={currentUser.email}
+                  clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
               activeView={clientView}
               onViewChange={handleClientNavigate}
@@ -14062,8 +12966,6 @@ export default function App() {
               onDenyPendingGuard={handleClientDenyPendingGuard}
               onApproveTeamSlot={handleClientApproveTeamSlot}
               onDenyTeamSlot={handleClientDenyTeamSlot}
-              onApproveFullTeam={handleClientApproveFullTeam}
-              onDenyFullTeam={handleClientDenyFullTeam}
               onRequestReplacement={handleRequestReplacement}
               onSubmitPriceOffer={(requestId, guardId, input) =>
                 void handleSubmitPriceOffer(requestId, guardId, input, 'client')
@@ -14155,8 +13057,6 @@ export default function App() {
           onSelectedSupportTicketIdChange={setSupportTicketId}
           selectedJobChatRequestId={jobChatRequestId}
           onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
-          selectedTeamChatRequestId={teamChatRequestId}
-          onSelectedTeamChatRequestIdChange={(id) => setTeamChatRequestId(id)}
           initialStaffMessagesTab={staffMessagesTab}
           guards={verifiedGuards}
           clients={clients}
@@ -14235,14 +13135,6 @@ export default function App() {
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}
-          standingCrewMembers={standingCrewMembers}
-          crewJoinRequests={crewJoinRequests}
-          onApproveCrewMember={handleStaffApproveCrewMember}
-          onDenyCrewMember={handleStaffDenyCrewMember}
-          onRemoveCrewMember={handleStaffRemoveFromCrew}
-          onApproveCrewLeadRequest={handleStaffApproveCrewLeadRequest}
-          onDeclineCrewLeadRequest={handleStaffDeclineCrewLeadRequest}
-          onMakeGuardCrewLead={handleMakeGuardCrewLead}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
@@ -14261,8 +13153,6 @@ export default function App() {
           onResolveDispute={handleResolveDispute}
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
-          teamChatThreads={teamChatThreads}
-          teamChatMessages={teamChatMessages}
           staffMessages={staffMessages}
           guardMessages={guardMessages}
           clientMessages={clientMessages}
@@ -14271,7 +13161,6 @@ export default function App() {
           onSendClientMessage={handleSendClientMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
-          onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
           onOpenDownload={openDownloadPage}
           legalAcceptances={legalAcceptanceRecords}
