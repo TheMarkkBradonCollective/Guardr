@@ -1693,15 +1693,18 @@ CREATE TABLE IF NOT EXISTS staff_time_entries (
   staff_id TEXT NOT NULL,
   staff_name TEXT NOT NULL,
   clock_in_at TIMESTAMPTZ NOT NULL,
+  last_activity_at TIMESTAMPTZ,
   clock_out_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(staff_id);
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_open ON staff_time_entries(staff_id) WHERE clock_out_at IS NULL;
 
-COMMENT ON TABLE staff_time_entries IS 'Staff active time tracker — clock in/out for hourly pay calculations.';
+COMMENT ON TABLE staff_time_entries IS 'Staff automatic time tracker — first to last website action per session.';
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,

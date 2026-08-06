@@ -73,6 +73,7 @@ test('sumStaffHoursInPeriod totals completed and active entries', () => {
       staffId: 'staff-1',
       staffName: 'Alex',
       clockInAt: '2026-08-05T10:00:00.000Z',
+      lastActivityAt: '2026-08-05T12:00:00.000Z',
       createdAt: '2026-08-05T10:00:00.000Z',
     },
   ];

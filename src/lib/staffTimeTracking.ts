@@ -3,6 +3,8 @@ export interface StaffTimeEntry {
   staffId: string;
   staffName: string;
   clockInAt: string;
+  /** Last staff action on the site — tracked hours end here (not at idle "now"). */
+  lastActivityAt?: string;
   clockOutAt?: string;
   createdAt: string;
 }
@@ -22,7 +24,11 @@ export function entryHoursInPeriod(
   now: Date = new Date(),
 ): number {
   const start = new Date(entry.clockInAt).getTime();
-  const end = entry.clockOutAt ? new Date(entry.clockOutAt).getTime() : now.getTime();
+  const end = entry.clockOutAt
+    ? new Date(entry.clockOutAt).getTime()
+    : entry.lastActivityAt
+      ? new Date(entry.lastActivityAt).getTime()
+      : now.getTime();
   const periodS = new Date(periodStart).getTime();
   const periodE = new Date(periodEnd).getTime();
   const overlapStart = Math.max(start, periodS);
@@ -65,9 +71,15 @@ export function formatTrackedHours(hours: number): string {
   return `${wholeHours}h ${minutes}m`;
 }
 
+function sessionEndMs(entry: StaffTimeEntry, now: Date): number {
+  if (entry.clockOutAt) return new Date(entry.clockOutAt).getTime();
+  if (entry.lastActivityAt) return new Date(entry.lastActivityAt).getTime();
+  return now.getTime();
+}
+
 export function elapsedActiveSessionSeconds(entry: StaffTimeEntry, now: Date = new Date()): number {
   const start = new Date(entry.clockInAt).getTime();
-  return Math.max(0, Math.floor((now.getTime() - start) / 1000));
+  return Math.max(0, Math.floor((sessionEndMs(entry, now) - start) / 1000));
 }
 
 export function formatElapsedDuration(totalSeconds: number): string {
@@ -78,23 +90,33 @@ export function formatElapsedDuration(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+/** @deprecated Manual clock-in — use createStaffActivitySession for automatic tracking. */
 export function createStaffClockInEntry(params: {
   staffId: string;
   staffName: string;
 }): StaffTimeEntry {
-  const now = new Date().toISOString();
+  return createStaffActivitySession(params);
+}
+
+export function createStaffActivitySession(params: {
+  staffId: string;
+  staffName: string;
+  at?: string;
+}): StaffTimeEntry {
+  const at = params.at ?? new Date().toISOString();
   return {
     id: `sttime-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     staffId: params.staffId,
     staffName: params.staffName,
-    clockInAt: now,
-    createdAt: now,
+    clockInAt: at,
+    lastActivityAt: at,
+    createdAt: at,
   };
 }
 
 export function closeStaffTimeEntry(entry: StaffTimeEntry, clockOutAt?: string): StaffTimeEntry {
   return {
     ...entry,
-    clockOutAt: clockOutAt ?? new Date().toISOString(),
+    clockOutAt: clockOutAt ?? entry.lastActivityAt ?? new Date().toISOString(),
   };
 }

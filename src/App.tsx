@@ -348,6 +348,7 @@ import {
 } from './lib/tutorialSession';
 import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
+import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
@@ -735,6 +736,13 @@ export default function App() {
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
   const guardsRef = useRef(guards);
   guardsRef.current = guards;
+  const staffActivityTarget = useMemo(() => {
+    if (!currentUser || !isStaffRole(currentUser.role)) return null;
+    const staffMember = guards.find((guard) => guard.id === currentUser.id && guard.isStaff);
+    if (!staffMember) return null;
+    return { staffId: currentUser.id, staffName: staffMember.name };
+  }, [currentUser, guards]);
+  useStaffActivityTimeTracker(staffActivityTarget);
   const certImageHydrationRef = useRef(new Set<string>());
   const activationSupportBackfillRunningRef = useRef(false);
   const activationSupportCreationInFlightRef = useRef(new Set<string>());
