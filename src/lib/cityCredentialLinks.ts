@@ -17,9 +17,13 @@ export type CredentialLinkKey =
 export interface CredentialResourceLink {
   url: string;
   label?: string;
+  /** Optional price hint, e.g. "$49" or "$120 online". */
+  price?: string;
 }
 
-export type CityCredentialResourceLinks = Partial<Record<CredentialLinkKey, CredentialResourceLink>>;
+export type CityCredentialResourceLinks = Partial<
+  Record<CredentialLinkKey, CredentialResourceLink[]>
+>;
 
 export interface ResolvedCredentialLink extends CredentialResourceLink {
   source: 'city' | 'platform';
@@ -43,26 +47,38 @@ export const CREDENTIAL_LINK_FIELD_LABELS: Record<CredentialLinkKey, string> = {
 
 /** Platform-wide fallback links when a city has no override. */
 export const PLATFORM_DEFAULT_CREDENTIAL_LINKS: CityCredentialResourceLinks = {
-  govId: {
-    url: 'https://www.dmv.ca.gov/portal/driver-licenses-identification-cards/',
-    label: 'California driver license or ID card — DMV',
-  },
-  coi: {
-    url: 'https://www.bsis.ca.gov/industries/security_guards.shtml',
-    label: 'BSIS security guard requirements — insurance info',
-  },
-  guardCard: {
-    url: 'https://www.bsis.ca.gov/industries/guard_card.shtml',
-    label: 'Apply for a BSIS guard card',
-  },
-  ptaUof: {
-    url: 'https://www.guardcardcourses.com/sc101.asp',
-    label: '8-hour PTA/UOF course — Guard Card Courses',
-  },
-  continuedEducation: {
-    url: 'https://www.guardcardcourses.com/pk102.asp',
-    label: '32-hour CE package — Guard Card Courses',
-  },
+  govId: [
+    {
+      url: 'https://www.dmv.ca.gov/portal/driver-licenses-identification-cards/',
+      label: 'California driver license or ID card — DMV',
+    },
+  ],
+  coi: [
+    {
+      url: 'https://www.bsis.ca.gov/industries/security_guards.shtml',
+      label: 'BSIS security guard requirements — insurance info',
+    },
+  ],
+  guardCard: [
+    {
+      url: 'https://www.bsis.ca.gov/industries/guard_card.shtml',
+      label: 'Apply for a BSIS guard card',
+    },
+  ],
+  ptaUof: [
+    {
+      url: 'https://www.guardcardcourses.com/sc101.asp',
+      label: 'Guard Card Courses',
+      price: '$49',
+    },
+  ],
+  continuedEducation: [
+    {
+      url: 'https://www.guardcardcourses.com/pk102.asp',
+      label: 'Guard Card Courses — 32-hour CE package',
+      price: '$120',
+    },
+  ],
 };
 
 const URL_PATTERN = /^https?:\/\/.+/i;
@@ -76,23 +92,44 @@ export function normalizeCredentialResourceUrl(url: string): string {
   return url.trim();
 }
 
+function parseLinkEntry(entry: unknown): CredentialResourceLink | null {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+  const url =
+    typeof (entry as { url?: unknown }).url === 'string'
+      ? normalizeCredentialResourceUrl((entry as { url: string }).url)
+      : '';
+  if (!isValidCredentialResourceUrl(url)) return null;
+  const label =
+    typeof (entry as { label?: unknown }).label === 'string'
+      ? (entry as { label: string }).label.trim()
+      : undefined;
+  const price =
+    typeof (entry as { price?: unknown }).price === 'string'
+      ? (entry as { price: string }).price.trim()
+      : undefined;
+  return {
+    url,
+    ...(label ? { label } : {}),
+    ...(price ? { price } : {}),
+  };
+}
+
+function parseLinkList(value: unknown): CredentialResourceLink[] {
+  if (Array.isArray(value)) {
+    return value.map(parseLinkEntry).filter((entry): entry is CredentialResourceLink => entry !== null);
+  }
+  const single = parseLinkEntry(value);
+  return single ? [single] : [];
+}
+
 export function parseCredentialResourceLinks(
   value: unknown
 ): CityCredentialResourceLinks | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const parsed: CityCredentialResourceLinks = {};
   for (const key of CREDENTIAL_LINK_KEYS) {
-    const entry = (value as Record<string, unknown>)[key];
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
-    const url = typeof (entry as { url?: unknown }).url === 'string'
-      ? normalizeCredentialResourceUrl((entry as { url: string }).url)
-      : '';
-    if (!isValidCredentialResourceUrl(url)) continue;
-    const label =
-      typeof (entry as { label?: unknown }).label === 'string'
-        ? (entry as { label: string }).label.trim()
-        : undefined;
-    parsed[key] = { url, label: label || undefined };
+    const entries = parseLinkList((value as Record<string, unknown>)[key]);
+    if (entries.length > 0) parsed[key] = entries;
   }
   return Object.keys(parsed).length > 0 ? parsed : undefined;
 }
@@ -103,12 +140,16 @@ export function serializeCredentialResourceLinks(
   if (!links) return {};
   const out: Record<string, unknown> = {};
   for (const key of CREDENTIAL_LINK_KEYS) {
-    const entry = links[key];
-    if (!entry?.url || !isValidCredentialResourceUrl(entry.url)) continue;
-    out[key] = {
-      url: normalizeCredentialResourceUrl(entry.url),
-      ...(entry.label?.trim() ? { label: entry.label.trim() } : {}),
-    };
+    const entries = links[key];
+    if (!entries?.length) continue;
+    const serialized = entries
+      .filter((entry) => entry.url && isValidCredentialResourceUrl(entry.url))
+      .map((entry) => ({
+        url: normalizeCredentialResourceUrl(entry.url),
+        ...(entry.label?.trim() ? { label: entry.label.trim() } : {}),
+        ...(entry.price?.trim() ? { price: entry.price.trim() } : {}),
+      }));
+    if (serialized.length > 0) out[key] = serialized;
   }
   return out;
 }
@@ -121,6 +162,12 @@ export function credentialLinksAreEqual(
     JSON.stringify(serializeCredentialResourceLinks(b));
 }
 
+export function formatCredentialLinkDisplay(link: CredentialResourceLink): string {
+  const label = link.label?.trim() || 'Resource';
+  if (link.price?.trim()) return `${label} — ${link.price.trim()}`;
+  return label;
+}
+
 export function resolveCredentialLinksForKey(
   key: CredentialLinkKey,
   city?: PlatformCity
@@ -128,30 +175,32 @@ export function resolveCredentialLinksForKey(
   const resolved: ResolvedCredentialLink[] = [];
   const seen = new Set<string>();
 
-  const cityLink = city?.credentialResourceLinks?.[key];
-  if (cityLink?.url && isValidCredentialResourceUrl(cityLink.url)) {
+  const cityLinks = city?.credentialResourceLinks?.[key] ?? [];
+  for (const cityLink of cityLinks) {
+    if (!cityLink?.url || !isValidCredentialResourceUrl(cityLink.url)) continue;
     const url = normalizeCredentialResourceUrl(cityLink.url);
-    if (!seen.has(url)) {
-      seen.add(url);
-      resolved.push({
-        url,
-        label: cityLink.label?.trim() || defaultLinkLabel(key, 'city'),
-        source: 'city',
-      });
-    }
+    if (seen.has(url)) continue;
+    seen.add(url);
+    resolved.push({
+      url,
+      label: cityLink.label?.trim() || defaultLinkLabel(key, 'city'),
+      price: cityLink.price?.trim() || undefined,
+      source: 'city',
+    });
   }
 
-  const platformLink = PLATFORM_DEFAULT_CREDENTIAL_LINKS[key];
-  if (platformLink?.url && isValidCredentialResourceUrl(platformLink.url)) {
+  const platformLinks = PLATFORM_DEFAULT_CREDENTIAL_LINKS[key] ?? [];
+  for (const platformLink of platformLinks) {
+    if (!platformLink?.url || !isValidCredentialResourceUrl(platformLink.url)) continue;
     const url = normalizeCredentialResourceUrl(platformLink.url);
-    if (!seen.has(url)) {
-      seen.add(url);
-      resolved.push({
-        url,
-        label: platformLink.label?.trim() || defaultLinkLabel(key, 'platform'),
-        source: 'platform',
-      });
-    }
+    if (seen.has(url)) continue;
+    seen.add(url);
+    resolved.push({
+      url,
+      label: platformLink.label?.trim() || defaultLinkLabel(key, 'platform'),
+      price: platformLink.price?.trim() || undefined,
+      source: 'platform',
+    });
   }
 
   return resolved;

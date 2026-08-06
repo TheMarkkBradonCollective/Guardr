@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link2 } from 'lucide-react';
+import { Link2, Plus, Trash2 } from 'lucide-react';
 import {
   CREDENTIAL_LINK_FIELD_LABELS,
   CREDENTIAL_LINK_KEYS,
@@ -9,6 +9,7 @@ import {
   normalizeCredentialResourceUrl,
   type CityCredentialResourceLinks,
   type CredentialLinkKey,
+  type CredentialResourceLink,
 } from '../../lib/cityCredentialLinks';
 
 interface CityCredentialLinksEditorProps {
@@ -18,20 +19,47 @@ interface CityCredentialLinksEditorProps {
   onSave: (links: CityCredentialResourceLinks | undefined) => Promise<void>;
 }
 
-function emptyDraft(): CityCredentialResourceLinks {
+type DraftLinks = Partial<Record<CredentialLinkKey, CredentialResourceLink[]>>;
+
+function emptyDraft(): DraftLinks {
   return {};
 }
 
-function draftFromLinks(links: CityCredentialResourceLinks | undefined): CityCredentialResourceLinks {
+function draftFromLinks(links: CityCredentialResourceLinks | undefined): DraftLinks {
   if (!links) return emptyDraft();
-  const draft: CityCredentialResourceLinks = {};
+  const draft: DraftLinks = {};
   for (const key of CREDENTIAL_LINK_KEYS) {
-    const entry = links[key];
-    if (entry?.url) {
-      draft[key] = { url: entry.url, label: entry.label };
+    const entries = links[key];
+    if (entries?.length) {
+      draft[key] = entries.map((entry) => ({
+        url: entry.url,
+        label: entry.label,
+        price: entry.price,
+      }));
     }
   }
   return draft;
+}
+
+function emptyLinkRow(): CredentialResourceLink {
+  return { url: '', label: '', price: '' };
+}
+
+function normalizeDraft(draft: DraftLinks): CityCredentialResourceLinks | undefined {
+  const normalized: CityCredentialResourceLinks = {};
+  for (const key of CREDENTIAL_LINK_KEYS) {
+    const entries = draft[key];
+    if (!entries?.length) continue;
+    const valid = entries
+      .filter((entry) => entry.url?.trim() && isValidCredentialResourceUrl(entry.url))
+      .map((entry) => ({
+        url: normalizeCredentialResourceUrl(entry.url),
+        label: entry.label?.trim() || undefined,
+        price: entry.price?.trim() || undefined,
+      }));
+    if (valid.length > 0) normalized[key] = valid;
+  }
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
 export function CityCredentialLinksEditor({
@@ -40,7 +68,7 @@ export function CityCredentialLinksEditor({
   busy,
   onSave,
 }: CityCredentialLinksEditorProps) {
-  const [draft, setDraft] = useState<CityCredentialResourceLinks>(() => draftFromLinks(links));
+  const [draft, setDraft] = useState<DraftLinks>(() => draftFromLinks(links));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,22 +77,47 @@ export function CityCredentialLinksEditor({
     setError('');
   }, [links, cityName]);
 
-  const hasChanges = !credentialLinksAreEqual(draft, links);
+  const hasChanges = !credentialLinksAreEqual(normalizeDraft(draft), links);
 
-  const updateField = (key: CredentialLinkKey, field: 'url' | 'label', value: string) => {
+  const updateRow = (
+    key: CredentialLinkKey,
+    index: number,
+    field: keyof CredentialResourceLink,
+    value: string
+  ) => {
     setDraft((prev) => {
       const next = { ...prev };
-      const current = next[key] ?? { url: '' };
-      if (field === 'url') {
-        const trimmed = value;
-        if (!trimmed.trim()) {
-          delete next[key];
-          return next;
-        }
-        next[key] = { ...current, url: trimmed };
-      } else {
-        next[key] = { ...current, label: value };
+      const rows = [...(next[key] ?? [])];
+      const row = { ...rows[index], [field]: value };
+      rows[index] = row;
+      if (field === 'url' && !value.trim() && !row.label?.trim() && !row.price?.trim()) {
+        rows.splice(index, 1);
       }
+      if (rows.length === 0) {
+        delete next[key];
+      } else {
+        next[key] = rows;
+      }
+      return next;
+    });
+    setError('');
+  };
+
+  const addRow = (key: CredentialLinkKey) => {
+    setDraft((prev) => ({
+      ...prev,
+      [key]: [...(prev[key] ?? []), emptyLinkRow()],
+    }));
+    setError('');
+  };
+
+  const removeRow = (key: CredentialLinkKey, index: number) => {
+    setDraft((prev) => {
+      const next = { ...prev };
+      const rows = [...(next[key] ?? [])];
+      rows.splice(index, 1);
+      if (rows.length === 0) delete next[key];
+      else next[key] = rows;
       return next;
     });
     setError('');
@@ -73,25 +126,16 @@ export function CityCredentialLinksEditor({
   const handleSave = async () => {
     setError('');
     for (const key of CREDENTIAL_LINK_KEYS) {
-      const entry = draft[key];
-      if (entry?.url?.trim() && !isValidCredentialResourceUrl(entry.url)) {
-        setError(`${CREDENTIAL_LINK_FIELD_LABELS[key]}: enter a valid http:// or https:// URL.`);
-        return;
+      const entries = draft[key] ?? [];
+      for (const entry of entries) {
+        if (entry.url?.trim() && !isValidCredentialResourceUrl(entry.url)) {
+          setError(`${CREDENTIAL_LINK_FIELD_LABELS[key]}: enter a valid http:// or https:// URL.`);
+          return;
+        }
       }
     }
 
-    const normalized: CityCredentialResourceLinks = {};
-    for (const key of CREDENTIAL_LINK_KEYS) {
-      const entry = draft[key];
-      if (entry?.url?.trim() && isValidCredentialResourceUrl(entry.url)) {
-        normalized[key] = {
-          url: normalizeCredentialResourceUrl(entry.url),
-          label: entry.label?.trim() || undefined,
-        };
-      }
-    }
-
-    const toSave = Object.keys(normalized).length > 0 ? normalized : undefined;
+    const toSave = normalizeDraft(draft);
     if (credentialLinksAreEqual(toSave, links)) return;
 
     setSaving(true);
@@ -128,53 +172,111 @@ export function CityCredentialLinksEditor({
           <h4 className="text-sm font-semibold text-brand-text">Marketplace credential links</h4>
         </div>
         <p className="text-xs text-brand-text-muted leading-relaxed">
-          City-specific links appear first for guards whose primary service area is {cityName}. Platform
-          defaults (Guard Card Courses, BSIS, DMV) show as secondary when no override is set.
+          Add multiple providers per credential for {cityName}. Guards see a dropdown when more than
+          one option is available. Include price when known (e.g. $49). City links appear before
+          platform defaults.
         </p>
       </div>
 
       <div className="space-y-4">
         {CREDENTIAL_LINK_KEYS.map((key) => {
-          const platformDefault = PLATFORM_DEFAULT_CREDENTIAL_LINKS[key];
-          const entry = draft[key];
+          const platformDefaults = PLATFORM_DEFAULT_CREDENTIAL_LINKS[key] ?? [];
+          const rows = draft[key] ?? [];
           return (
-            <div key={key} className="space-y-2 rounded-lg border border-brand-border bg-brand-bg-sec/40 p-3">
-              <p className="text-xs font-semibold text-brand-text">{CREDENTIAL_LINK_FIELD_LABELS[key]}</p>
-              {platformDefault && (
+            <div key={key} className="space-y-3 rounded-lg border border-brand-border bg-brand-bg-sec/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-brand-text">{CREDENTIAL_LINK_FIELD_LABELS[key]}</p>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => addRow(key)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-primary hover:underline disabled:opacity-50"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add link
+                </button>
+              </div>
+              {platformDefaults.length > 0 && (
                 <p className="text-[11px] text-brand-text-muted leading-relaxed">
-                  Platform default:{' '}
-                  <a
-                    href={platformDefault.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-brand-primary hover:underline"
-                  >
-                    {platformDefault.label || platformDefault.url}
-                  </a>
+                  Platform defaults:{' '}
+                  {platformDefaults.map((entry, index) => (
+                    <span key={entry.url}>
+                      {index > 0 ? ', ' : ''}
+                      <a
+                        href={entry.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-primary hover:underline"
+                      >
+                        {entry.label || entry.url}
+                        {entry.price ? ` (${entry.price})` : ''}
+                      </a>
+                    </span>
+                  ))}
                 </p>
               )}
-              <label className="block space-y-1">
-                <span className="uber-label text-[11px]">{cityName} link URL</span>
-                <input
-                  type="url"
-                  value={entry?.url ?? ''}
-                  disabled={disabled}
-                  placeholder={platformDefault?.url ?? 'https://…'}
-                  onChange={(e) => updateField(key, 'url', e.target.value)}
-                  className="uber-input w-full !text-sm"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="uber-label text-[11px]">Link label (optional)</span>
-                <input
-                  type="text"
-                  value={entry?.label ?? ''}
-                  disabled={disabled}
-                  placeholder={platformDefault?.label ?? 'Short label for guards'}
-                  onChange={(e) => updateField(key, 'label', e.target.value)}
-                  className="uber-input w-full !text-sm"
-                />
-              </label>
+              {rows.length === 0 ? (
+                <p className="text-[11px] text-brand-text-muted">No {cityName} overrides yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {rows.map((row, index) => (
+                    <div
+                      key={`${key}-${index}`}
+                      className="space-y-2 rounded-md border border-brand-border/70 bg-brand-bg p-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+                          Link {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => removeRow(key, index)}
+                          className="p-1 text-brand-text-muted hover:text-red-400 disabled:opacity-50"
+                          aria-label={`Remove link ${index + 1}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <label className="block space-y-1">
+                        <span className="uber-label text-[11px]">URL</span>
+                        <input
+                          type="url"
+                          value={row.url}
+                          disabled={disabled}
+                          placeholder="https://www.guardcardcourses.com/…"
+                          onChange={(e) => updateRow(key, index, 'url', e.target.value)}
+                          className="uber-input w-full !text-sm"
+                        />
+                      </label>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <label className="block space-y-1">
+                          <span className="uber-label text-[11px]">Label</span>
+                          <input
+                            type="text"
+                            value={row.label ?? ''}
+                            disabled={disabled}
+                            placeholder="Guard Card Courses"
+                            onChange={(e) => updateRow(key, index, 'label', e.target.value)}
+                            className="uber-input w-full !text-sm"
+                          />
+                        </label>
+                        <label className="block space-y-1">
+                          <span className="uber-label text-[11px]">Price (optional)</span>
+                          <input
+                            type="text"
+                            value={row.price ?? ''}
+                            disabled={disabled}
+                            placeholder="$49"
+                            onChange={(e) => updateRow(key, index, 'price', e.target.value)}
+                            className="uber-input w-full !text-sm"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
