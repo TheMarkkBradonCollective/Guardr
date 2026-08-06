@@ -12,6 +12,7 @@ import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { getStaffDisplayName, getStaffProfileSnippet } from '../../lib/staffProfile';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -164,15 +165,18 @@ export function StaffTeamPanel({
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           renderItem={(member, isActive, onSelect) => {
             const accountStatus = member.userStatus || 'active';
+            const displayName = getStaffDisplayName(member);
+            const snippet = getStaffProfileSnippet(member);
 
             return (
               <WfListCard
-                avatar={<ProfileAvatar src={member.avatar} name={member.badgeNumber || member.name} size="sm" rounded="lg" />}
-                title={member.badgeNumber || member.name}
-                subtitle={`${member.staffRole || 'Staff'} · ${member.email}`}
+                avatar={<ProfileAvatar src={member.avatar} name={displayName} size="sm" rounded="lg" />}
+                title={displayName}
+                subtitle={snippet}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
                     <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
+                    <span className="text-xs text-brand-text-muted">{member.badgeNumber}</span>
                     <span className="capitalize">{accountStatus}</span>
                   </div>
                 }
