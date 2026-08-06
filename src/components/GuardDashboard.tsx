@@ -31,7 +31,6 @@ import { MapBrowseDock } from './map/MapBrowseDock';
 import { guardMapBrowseItems } from '../lib/mapBrowseItems';
 import { GUARD_MAP_BROWSE_EMPTY_MESSAGE } from '../lib/mapEmptyMessages';
 import { getGuardNextShift } from '../lib/guardNextShift';
-import type { SecurityRequest } from '../types';
 import { isJobMissed } from '../lib/jobTallies';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';

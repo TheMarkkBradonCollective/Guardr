@@ -30,6 +30,7 @@ export type AuditAction =
   | 'staff_time_entry_adjusted'
   | 'staff_time_entry_created'
   | 'staff_time_entry_deleted'
+  | 'guard_shift_time_adjusted'
   | 'city_market_updated'
   | 'staff_city_access_updated'
   | 'bulk_action'

@@ -96,7 +96,7 @@ function TimesheetRow({
       ) : null}
       {canAdjust && entry.effectiveClockOut ? (
         <div className="pt-1">
-          <AppButton variant="secondary" size="sm" onClick={onEdit}>
+          <AppButton variant="outline" size="sm" onClick={onEdit}>
             <Pencil className="w-3.5 h-3.5" />
             Adjust time
           </AppButton>
@@ -165,24 +165,22 @@ export function GuardTimesheetPanel({
   if (entries.length === 0) {
     return (
       <AppEmptyState
-        icon={Clock}
+        icon={<Clock className="w-5 h-5" />}
         title="No shift time logged yet"
-        body="Clocked-in shifts will appear here for review."
-      />
+      >
+        Clocked-in shifts will appear here for review.
+      </AppEmptyState>
     );
   }
 
   return (
     <section className="space-y-4">
-      <WfSectionHeader
-        title="Timesheet"
-        subtitle={
-          canAdjust
-            ? 'Review shift clock times and adjust when needed for billing.'
-            : 'Your recorded shift clock-in and clock-out times.'
-        }
-        className="!px-0"
-      />
+      <WfSectionHeader title="Timesheet" className="!px-0" />
+      <p className="text-sm text-brand-text-muted -mt-2">
+        {canAdjust
+          ? 'Review shift clock times and adjust when needed for billing.'
+          : 'Your recorded shift clock-in and clock-out times.'}
+      </p>
 
       {editingEntry && editingRequest ? (
         <div className="rounded-xl border border-brand-primary/30 bg-brand-surface p-4 space-y-3">
@@ -221,7 +219,7 @@ export function GuardTimesheetPanel({
             <AppButton size="sm" onClick={saveEdit} disabled={busy}>
               Save adjustment
             </AppButton>
-            <AppButton size="sm" variant="secondary" onClick={cancelEdit} disabled={busy}>
+            <AppButton size="sm" variant="outline" onClick={cancelEdit} disabled={busy}>
               Cancel
             </AppButton>
           </div>

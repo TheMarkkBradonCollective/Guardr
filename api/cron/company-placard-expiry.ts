@@ -83,7 +83,7 @@ function resolveNotificationUrl(type, options = {}) {
     case "guard_application":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
     case "crew_lead_request":
-      return "/staff/crews";
+      return "/staff/jobs";
     case "guard_pending_approval":
       return options.guardId ? `/staff/applications?g=${encodeURIComponent(options.guardId)}` : "/staff/applications";
     case "client_pending_approval":
@@ -114,9 +114,9 @@ function resolveNotificationUrl(type, options = {}) {
     case "job_schedule_changed":
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "team_chat_message":
-      return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
+      return options.requestId ? `/staff/messages?jc=${encodeURIComponent(options.requestId)}` : "/staff/messages";
     case "standing_crew_invite":
-      return "/guard/crew";
+      return "/guard/jobs";
     case "company_placard_expiry":
       return "/staff/settings";
     case "pre_shift_briefing":
@@ -128,7 +128,7 @@ function resolveNotificationUrl(type, options = {}) {
   }
 }
 function resolveNotificationUrlForRole(type, role, options = {}) {
-  const isStaff = role === "moderator" || role === "administrator" || role === "manager" || role === "director" || role === "owner";
+  const isStaff = role === "support" || role === "moderator" || role === "administrator" || role === "manager" || role === "director" || role === "owner";
   switch (type) {
     case "guard_arrived":
     case "guard_en_route":
@@ -266,11 +266,11 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
     case "team_chat_message":
       if (role === "guard") {
-        return options.requestId ? `/guard/messages?tc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
+        return options.requestId ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
       }
-      return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
+      return options.requestId ? `/staff/messages?jc=${encodeURIComponent(options.requestId)}` : "/staff/messages";
     case "standing_crew_invite":
-      return "/guard/crew";
+      return "/guard/jobs";
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === "client") return "/client/home";

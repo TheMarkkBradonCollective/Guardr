@@ -24,6 +24,7 @@ import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
+import type { GuardProfileTab } from '../../lib/appNavigation';
 import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
 import type { SecurityRequest } from '../../types';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';

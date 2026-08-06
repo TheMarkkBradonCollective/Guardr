@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppRole } from '../lib/appNavigation';
+import type { AppRole } from '../../lib/appNavigation';
 
 interface PaymentsPageProps {
   role: AppRole;
