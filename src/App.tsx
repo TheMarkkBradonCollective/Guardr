@@ -612,6 +612,7 @@ import {
   type CityWaitlistAudience,
   type PlatformCity,
 } from './lib/platformCities';
+import type { CityCredentialResourceLinks } from './lib/cityCredentialLinks';
 import {
   companyPublicDocumentFromRow,
   companyPublicDocumentToDbRow,
@@ -5989,6 +5990,7 @@ export default function App() {
       status?: CityMarketStatus;
       waitlistAudience?: CityWaitlistAudience;
       recommendOpen?: boolean;
+      credentialResourceLinks?: CityCredentialResourceLinks;
     }
   ) => {
     if (!currentUser) throw new Error('Sign in required.');
@@ -5997,11 +5999,15 @@ export default function App() {
     const actor = guards.find((g) => g.id === currentUser.id && g.isStaff);
     const isStatusChange = patch.status !== undefined || patch.waitlistAudience !== undefined;
     const isRecommendChange = patch.recommendOpen !== undefined;
+    const isCredentialLinksChange = patch.credentialResourceLinks !== undefined;
     if (isStatusChange && !canManageCityMarkets(currentUser)) {
       throw new Error('Only Directors and Founders can change Service Areas status.');
     }
     if (isRecommendChange && !canRecommendCityMarket(currentUser)) {
       throw new Error('Only Managers can recommend cities.');
+    }
+    if (isCredentialLinksChange && !canManageCityMarkets(currentUser)) {
+      throw new Error('Only Directors and Founders can edit marketplace credential links.');
     }
     if (!staffCanManageCity(currentUser.role, actor?.managedCities, city.name)) {
       throw new Error('You are not assigned to manage this city.');
@@ -6012,6 +6018,10 @@ export default function App() {
       status: patch.status ?? city.status,
       waitlistAudience: patch.waitlistAudience ?? city.waitlistAudience,
       recommendOpen: patch.recommendOpen ?? city.recommendOpen,
+      credentialResourceLinks:
+        patch.credentialResourceLinks !== undefined
+          ? patch.credentialResourceLinks
+          : city.credentialResourceLinks,
       updatedAt: new Date().toISOString(),
       updatedBy: currentUser.id,
     };

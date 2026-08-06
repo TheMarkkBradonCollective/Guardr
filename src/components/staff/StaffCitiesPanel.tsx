@@ -34,7 +34,9 @@ import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { CityStaffAccessPicker } from './CityStaffAccessPicker';
+import { CityCredentialLinksEditor } from './CityCredentialLinksEditor';
 import { MapPin } from 'lucide-react';
+import type { CityCredentialResourceLinks } from '../../lib/cityCredentialLinks';
 
 interface StaffCitiesPanelProps {
   currentUser: SessionUser;
@@ -47,6 +49,7 @@ interface StaffCitiesPanelProps {
       status?: CityMarketStatus;
       waitlistAudience?: CityWaitlistAudience;
       recommendOpen?: boolean;
+      credentialResourceLinks?: CityCredentialResourceLinks;
     }
   ) => Promise<void>;
   onUpdateStaffCityAccess?: (
@@ -137,6 +140,7 @@ function CityDetailPanel({
     status?: CityMarketStatus;
     waitlistAudience?: CityWaitlistAudience;
     recommendOpen?: boolean;
+    credentialResourceLinks?: CityCredentialResourceLinks;
   }) => void;
   onUpdateStaffCityAccess?: (
     staffId: string,
@@ -208,6 +212,17 @@ function CityDetailPanel({
           As a Manager you can recommend cities for review. Directors and Founders control service area status.
         </p>
       )}
+
+      {canManageStatus ? (
+        <CityCredentialLinksEditor
+          cityName={city.name}
+          links={city.credentialResourceLinks}
+          busy={busy}
+          onSave={async (credentialResourceLinks) => {
+            onUpdate({ credentialResourceLinks });
+          }}
+        />
+      ) : null}
 
       {onUpdateStaffCityAccess && staffRoster.length > 0 ? (
         <div className="border-t border-brand-border pt-4">
@@ -320,6 +335,7 @@ export function StaffCitiesPanel({
       status?: CityMarketStatus;
       waitlistAudience?: CityWaitlistAudience;
       recommendOpen?: boolean;
+      credentialResourceLinks?: CityCredentialResourceLinks;
     }
   ) => {
     setError('');

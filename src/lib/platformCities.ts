@@ -1,4 +1,9 @@
 import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, formatCityLabel, isCaliforniaCity } from './californiaCities';
+import {
+  parseCredentialResourceLinks,
+  serializeCredentialResourceLinks,
+  type CityCredentialResourceLinks,
+} from './cityCredentialLinks';
 import type { PlatformRole } from '../types';
 
 export type CityMarketStatus = 'open' | 'closed' | 'waitlist';
@@ -12,6 +17,8 @@ export interface PlatformCity {
   waitlistAudience: CityWaitlistAudience;
   recommendOpen: boolean;
   sortOrder: number;
+  /** City-specific marketplace eligibility credential resource links (staff-configured). */
+  credentialResourceLinks?: CityCredentialResourceLinks;
   updatedAt?: string;
   updatedBy?: string;
 }
@@ -216,6 +223,7 @@ export function platformCityFromRow(row: Record<string, unknown>): PlatformCity 
         : 'both',
     recommendOpen: row.recommend_open === true,
     sortOrder: typeof row.sort_order === 'number' ? row.sort_order : 0,
+    credentialResourceLinks: parseCredentialResourceLinks(row.credential_resource_links),
     updatedAt: row.updated_at ? String(row.updated_at) : undefined,
     updatedBy: row.updated_by ? String(row.updated_by) : undefined,
   };
@@ -230,6 +238,7 @@ export function platformCityToDbRow(city: PlatformCity): Record<string, unknown>
     waitlist_audience: city.waitlistAudience,
     recommend_open: city.recommendOpen,
     sort_order: city.sortOrder,
+    credential_resource_links: serializeCredentialResourceLinks(city.credentialResourceLinks),
     updated_at: city.updatedAt ?? new Date().toISOString(),
     updated_by: city.updatedBy ?? null,
   };

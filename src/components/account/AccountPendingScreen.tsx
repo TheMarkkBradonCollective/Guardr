@@ -150,7 +150,7 @@ export function AccountPendingScreen({
 
         {applicationProgress && !revisionOpen && (
           <div className="mt-5 text-left space-y-4">
-            <GuardBsisRequirementsReference />
+            <GuardBsisRequirementsReference guard={guard} />
             <div>
               <div className="flex items-center justify-between gap-3 mb-2">
                 <span className="text-xs font-semibold text-brand-text-muted">

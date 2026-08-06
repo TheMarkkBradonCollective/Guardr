@@ -1015,9 +1015,12 @@ CREATE TABLE IF NOT EXISTS platform_cities (
     CHECK (waitlist_audience IN ('guard', 'client', 'both')),
   recommend_open BOOLEAN NOT NULL DEFAULT FALSE,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_by TEXT
 );
+
+ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 COMMENT ON TABLE platform_cities IS 'Director-controlled city rollout — open, closed, or waitlist with audience targeting.';
 COMMENT ON COLUMN platform_cities.status IS 'open = live; closed = deny applications; waitlist = accept but hold staff release';

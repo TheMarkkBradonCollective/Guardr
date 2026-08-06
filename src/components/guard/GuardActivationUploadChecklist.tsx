@@ -1,5 +1,5 @@
 import { Check, Plus } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved, isGuardAccountPending } from '../../lib/accountStatus';
 import { getGuardActivationChecklist, getGuardCardCertifications } from '../../lib/guardAccountActivation';
@@ -32,6 +32,11 @@ import {
 } from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
 import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
+import {
+  resolveCredentialLinksForGuard,
+  type CredentialLinkKey,
+  type ResolvedCredentialLink,
+} from '../../lib/cityCredentialLinks';
 import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
@@ -45,7 +50,7 @@ import { GuardCardPanel } from '../profile/GuardCardPanel';
 import { GuardPtaUofPanel } from './GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
-import { GuardBsisRequirementsReference } from './GuardBsisRequirementsReference';
+import { GuardCredentialResourceLinkList } from './GuardCredentialResourceLinkList';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
 type UploadKind = 'id' | 'coi' | 'guardCard' | 'mandatoryTraining' | 'ce' | 'optional';
@@ -68,12 +73,14 @@ function StepRow({
   detail,
   actionLabel,
   onAction,
+  resourceLinks,
 }: {
   done: boolean;
   label: string;
   detail?: string;
   actionLabel?: string;
   onAction?: () => void;
+  resourceLinks?: ResolvedCredentialLink[];
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -93,6 +100,9 @@ function StepRow({
           {label}
         </p>
         {detail && <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{detail}</p>}
+        {resourceLinks && resourceLinks.length > 0 && (
+          <GuardCredentialResourceLinkList links={resourceLinks} compact />
+        )}
         {actionLabel && onAction && (
           <button
             type="button"
@@ -168,15 +178,19 @@ export function GuardActivationUploadChecklist({
       ? `${optionalOnFile.length} on file — 8-hr refresher and extras. Not required for activation.`
       : '8-hr refresher, firearms, medical, FEMA, and more. Not required for activation.';
 
+  const credentialLinks = useMemo(() => resolveCredentialLinksForGuard(guard), [guard]);
+
+  const linksFor = (key: CredentialLinkKey): ResolvedCredentialLink[] => credentialLinks[key] ?? [];
+
   return (
     <>
       <div className="app-checklist-panel">
-        <GuardBsisRequirementsReference />
-        <div className="app-checklist-steps mt-4">
+        <div className="app-checklist-steps">
           <StepRow
             done={idDone}
             label="1. Government ID — required to work"
             detail={guardActivationIdStepDetail(guard)}
+            resourceLinks={linksFor('govId')}
             actionLabel={!guardHasVerifiedIdForWork(guard) && idCanUpload ? idAction : undefined}
             onAction={!guardHasVerifiedIdForWork(guard) && idCanUpload ? () => setOpenUpload('id') : undefined}
           />
@@ -184,6 +198,7 @@ export function GuardActivationUploadChecklist({
             done={coiDone}
             label="2. Certificate of Insurance (COI) — required for profile approval"
             detail={coi.detail}
+            resourceLinks={linksFor('coi')}
             actionLabel={!coi.done && coiCanUpload ? 'Add COI' : undefined}
             onAction={!coi.done && coiCanUpload ? () => setOpenUpload('coi') : undefined}
           />
@@ -191,6 +206,7 @@ export function GuardActivationUploadChecklist({
             done={guardCardDone}
             label="3. BSIS Guard Card — required to work"
             detail={guardActivationGuardCardStepDetail(guard)}
+            resourceLinks={linksFor('guardCard')}
             actionLabel={guardCardCanUpload ? (guardCardRejected ? 'Resubmit guard card' : 'Add guard card') : undefined}
             onAction={guardCardCanUpload ? () => setOpenUpload('guardCard') : undefined}
           />
@@ -198,6 +214,7 @@ export function GuardActivationUploadChecklist({
             done={mandatoryDone}
             label="4. Mandatory training (PTA/UOF) — required to work"
             detail={guardActivationMandatoryTrainingStepDetail(guard)}
+            resourceLinks={linksFor('ptaUof')}
             actionLabel={
               mandatoryCanUpload
                 ? mandatoryRejected
@@ -211,6 +228,7 @@ export function GuardActivationUploadChecklist({
             done={ceDone}
             label="5. Continued Education (32-hour BSIS CE package) — required to work"
             detail={guardActivationCeStepDetail(guard)}
+            resourceLinks={linksFor('continuedEducation')}
             actionLabel={
               ceCanUpload
                 ? ceRejected

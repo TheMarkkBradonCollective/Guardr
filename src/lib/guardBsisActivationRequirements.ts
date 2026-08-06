@@ -70,3 +70,46 @@ export const BSIS_TERMINOLOGY_NOTE =
 
 export const BSIS_EMPLOYER_CERT_NOTE =
   'Course completion certificates are kept by your employer on file — not submitted to BSIS. Upload each certificate here so Guardr staff can verify marketplace eligibility.';
+
+/** Why Guardr collects five activation credentials before marketplace access. */
+export const MARKETPLACE_ELIGIBILITY_WHY_TITLE = 'Why Guardr asks for all of this';
+
+export const MARKETPLACE_ELIGIBILITY_WHY_BODY =
+  'Clients hire independent security professionals through Guardr — not a traditional employer. That means you are responsible for your own compliance, insurance, and training records. We verify each item before activation so clients know every guard on the marketplace meets California BSIS requirements and carries proof of general liability coverage.';
+
+export const MARKETPLACE_ELIGIBILITY_WHY_POINTS: { title: string; detail: string }[] = [
+  {
+    title: 'Government ID',
+    detail:
+      'Confirms who you are before anyone can work under your profile. Staff match your ID to your guard card and training certificates.',
+  },
+  {
+    title: 'Certificate of Insurance (COI)',
+    detail:
+      'General liability insurance protects you and the client if something goes wrong on a job. A current COI is required for profile approval and marketplace work — most independent guards purchase their own policy.',
+  },
+  {
+    title: 'BSIS Guard Card',
+    detail:
+      'California law requires every security guard to hold an active BSIS guard registration card before working.',
+  },
+  {
+    title: 'Mandatory training (PTA / UOF)',
+    detail:
+      'BSIS requires every new guard to complete 8 hours of initial training — Power to Arrest and Appropriate Use of Force — before their first assignment.',
+  },
+  {
+    title: 'Continued Education (32-hour package)',
+    detail:
+      'The full first-year skills package (9 courses, 32 hours) is required before a guard can work independently in California.',
+  },
+];
+
+/** Maps activation requirement keys to credential link keys for external resource URLs. */
+export const REQUIREMENT_KEY_TO_CREDENTIAL_LINK_KEY: Record<string, string> = {
+  'gov-id': 'govId',
+  coi: 'coi',
+  'guard-card': 'guardCard',
+  'mandatory-training': 'ptaUof',
+  ce: 'continuedEducation',
+};
