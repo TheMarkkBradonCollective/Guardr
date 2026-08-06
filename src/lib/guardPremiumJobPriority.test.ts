@@ -53,11 +53,16 @@ function completedJob(overrides: Partial<SecurityRequest> = {}): SecurityRequest
   } as SecurityRequest;
 }
 
-test('isPremiumOpenJob detects high pay, multi-guard, and crew jobs', () => {
+test('isPremiumOpenJob detects high pay, multi-guard, and slotted jobs', () => {
   assert.equal(isPremiumOpenJob({ guardPay: 35, guardsNeeded: 1, type: 'event' }), true);
   assert.equal(isPremiumOpenJob({ guardPay: 20, guardsNeeded: 3, type: 'event' }), true);
   assert.equal(
-    isPremiumOpenJob({ guardPay: 25, guardsNeeded: 1, type: 'event' }),
+    isPremiumOpenJob({
+      guardPay: 25,
+      guardsNeeded: 2,
+      type: 'event',
+      guardSlots: [{ id: 'job-1-slot-1', jobId: 'job-1', slotIndex: 1, isLead: true, status: 'open' }],
+    }),
     true
   );
   assert.equal(isPremiumOpenJob({ guardPay: 25, guardsNeeded: 1, type: 'event' }), false);
