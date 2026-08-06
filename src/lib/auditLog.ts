@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { SessionUser } from '../types';
+import { shouldEmitStaffWorkAction, emitStaffWorkAction } from './staffWorkActivity';
 
 export type AuditAction =
   | 'sign_in'
@@ -26,6 +27,9 @@ export type AuditAction =
   | 'staff_compensation_payout_confirmed'
   | 'staff_compensation_base_paid'
   | 'staff_compensation_adjustments_confirmed'
+  | 'staff_time_entry_adjusted'
+  | 'staff_time_entry_created'
+  | 'staff_time_entry_deleted'
   | 'city_market_updated'
   | 'staff_city_access_updated'
   | 'bulk_action'
@@ -71,6 +75,11 @@ export async function writeAuditLog(
   details?: Record<string, unknown>
 ): Promise<void> {
   if (!actor) return;
+
+  if (shouldEmitStaffWorkAction(actor.role, action)) {
+    emitStaffWorkAction({ action, label: action });
+  }
+
   const entry: AuditLogEntry = {
     id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     actorId: actor.id,

@@ -22,8 +22,6 @@ import {
   persistStaffCompensationPayout,
 } from '../../lib/staffCompensationStorage';
 import {
-  closeStaffTimeEntry,
-  createStaffClockInEntry,
   elapsedActiveSessionSeconds,
   formatElapsedDuration,
   formatTrackedHours,
@@ -34,10 +32,11 @@ import {
 } from '../../lib/staffTimeTracking';
 import {
   loadStaffTimeEntries,
-  persistStaffTimeEntries,
 } from '../../lib/staffTimeTrackingStorage';
+import { STAFF_TIME_ENTRIES_CHANGED_EVENT } from '../../lib/staffActivityTime';
 import { PlatformSettings } from '../../lib/platformSettings';
 import {
+  canAdjustStaffTimeEntries,
   canConfirmStaffCompensationPayout,
   canManageStaffCompensation,
   canViewStaffCompensation,
@@ -49,14 +48,20 @@ import { GuardrButton } from '../baseui/GuardrButton';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffTimeAdjustmentsPanel } from './StaffTimeAdjustmentsPanel';
 import { useDevice } from '../../lib/platform';
 
-interface StaffCompensationPanelProps {
+interface StaffCompensationSectionProps {
   currentUser: SessionUser;
   guards: SecurityGuard[];
   requests: SecurityRequest[];
   platformSettings: PlatformSettings;
+  /** When true, renders as a section inside Payments (no page shell). */
+  embedded?: boolean;
 }
+
+/** @deprecated Use StaffCompensationSection — kept for imports during transition. */
+export type StaffCompensationPanelProps = StaffCompensationSectionProps;
 
 interface PayoutAdjustmentState {
   choice: StaffPayoutAdjustmentChoice;
@@ -68,16 +73,18 @@ function defaultAdjustmentState(): PayoutAdjustmentState {
   return { choice: 'none', includeHourlyPay: false, manualAdjustment: 0 };
 }
 
-export function StaffCompensationPanel({
+export function StaffCompensationSection({
   currentUser,
   guards,
   requests,
   platformSettings,
-}: StaffCompensationPanelProps) {
+  embedded = false,
+}: StaffCompensationSectionProps) {
   const { formFactor } = useDevice();
   const config = platformSettings.staffCompensation!;
   const canManage = canManageStaffCompensation(currentUser);
   const canConfirm = canConfirmStaffCompensationPayout(currentUser);
+  const canAdjustTime = canAdjustStaffTimeEntries(currentUser);
   const viewerStaffRole = platformRoleToStaffRole(currentUser.role);
   const currentStaffMember = guards.find((guard) => guard.id === currentUser.id && guard.isStaff);
 
@@ -86,8 +93,6 @@ export function StaffCompensationPanel({
   const [loading, setLoading] = useState(true);
   const [adjustmentState, setAdjustmentState] = useState<Record<string, PayoutAdjustmentState>>({});
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [clockBusy, setClockBusy] = useState(false);
-  const [nowTick, setNowTick] = useState(() => Date.now());
 
   const { periodStart, periodEnd } = useMemo(
     () => getCompensationPeriodBounds(config.cadence),
@@ -96,6 +101,11 @@ export function StaffCompensationPanel({
 
   useEffect(() => {
     let active = true;
+    const reload = () => {
+      void loadStaffTimeEntries().then((entryRows) => {
+        if (active) setTimeEntries(entryRows);
+      });
+    };
     void Promise.all([loadStaffCompensationPayouts(), loadStaffTimeEntries()]).then(([payoutRows, entryRows]) => {
       if (active) {
         setPayouts(payoutRows);
@@ -103,24 +113,21 @@ export function StaffCompensationPanel({
         setLoading(false);
       }
     });
+    window.addEventListener(STAFF_TIME_ENTRIES_CHANGED_EVENT, reload);
     return () => {
       active = false;
+      window.removeEventListener(STAFF_TIME_ENTRIES_CHANGED_EVENT, reload);
     };
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNowTick(Date.now()), 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
   const trackedHoursByStaffId = useMemo(() => {
     const map: Record<string, number> = {};
     for (const guard of guards) {
       if (!guard.isStaff) continue;
-      map[guard.id] = sumStaffHoursInPeriod(timeEntries, guard.id, periodStart, periodEnd, new Date(nowTick));
+      map[guard.id] = sumStaffHoursInPeriod(timeEntries, guard.id, periodStart, periodEnd);
     }
     return map;
-  }, [guards, timeEntries, periodStart, periodEnd, nowTick]);
+  }, [guards, timeEntries, periodStart, periodEnd]);
 
   const allPreviews = useMemo(
     () =>
@@ -195,33 +202,6 @@ export function StaffCompensationPanel({
       return computeStaffPayoutFinalAmount(payout.baseAmount, buildAdjustmentInput(preview));
     }
     return preview.cappedBaseAmount;
-  };
-
-  const handleClockIn = async () => {
-    if (!currentStaffMember || myActiveEntry || !canViewStaffCompensation(currentUser)) return;
-    setClockBusy(true);
-    try {
-      const entry = createStaffClockInEntry({
-        staffId: currentUser.id,
-        staffName: currentStaffMember.name,
-      });
-      const next = [entry, ...timeEntries];
-      setTimeEntries(await persistStaffTimeEntries(next));
-    } finally {
-      setClockBusy(false);
-    }
-  };
-
-  const handleClockOut = async () => {
-    if (!myActiveEntry) return;
-    setClockBusy(true);
-    try {
-      const closed = closeStaffTimeEntry(myActiveEntry);
-      const next = timeEntries.map((entry) => (entry.id === closed.id ? closed : entry));
-      setTimeEntries(await persistStaffTimeEntries(next));
-    } finally {
-      setClockBusy(false);
-    }
   };
 
   const handleConfirmAdjustments = async (preview: StaffCompensationPreview) => {
@@ -363,32 +343,24 @@ export function StaffCompensationPanel({
     );
   };
 
-  const timeTrackerBlock = currentStaffMember && (
+  const timeTrackerBlock = currentStaffMember && canViewStaffCompensation(currentUser) && (
     <div className="rounded-lg border border-brand-border p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-brand-text">Active time tracker</p>
+          <p className="text-sm font-semibold text-brand-text">Smart time tracking</p>
           <p className="text-xs text-brand-text/60">
-            Clock in when you start work and clock out when finished. Tracked hours can be added to pay by a
-            Director or Founder after your instant revenue-share payout.
+            Time starts when the app or site is open — no clock in needed. Navigation toward work and
+            real staff actions (approvals, payouts, messages, edits) count; passive page clicks do not.
+            Brief tab switches are included; closing the app ends the session.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {myActiveEntry ? (
-            <>
-              <span className="text-sm font-mono text-emerald-700 dark:text-emerald-300">
-                On duty · {formatElapsedDuration(elapsedActiveSessionSeconds(myActiveEntry, new Date(nowTick)))}
-              </span>
-              <GuardrButton kind="secondary" size="compact" disabled={clockBusy} onClick={() => void handleClockOut()}>
-                {clockBusy ? 'Clocking out…' : 'Clock out'}
-              </GuardrButton>
-            </>
-          ) : (
-            <GuardrButton kind="primary" size="compact" disabled={clockBusy} onClick={() => void handleClockIn()}>
-              {clockBusy ? 'Clocking in…' : 'Clock in'}
-            </GuardrButton>
-          )}
-        </div>
+        {myActiveEntry ? (
+          <span className="text-sm font-mono text-emerald-700 dark:text-emerald-300">
+            Active session · {formatElapsedDuration(elapsedActiveSessionSeconds(myActiveEntry))}
+          </span>
+        ) : (
+          <span className="text-xs text-brand-text/60">App closed — time starts when you open Guardr again</span>
+        )}
       </div>
       <p className="text-sm text-brand-text/75">
         Your tracked hours this period:{' '}
@@ -403,17 +375,28 @@ export function StaffCompensationPanel({
           </>
         ) : null}
       </p>
-      {canManage && activeStaffSessions.length > 0 && (
+      {canAdjustTime && activeStaffSessions.length > 0 && (
         <div className="text-xs text-brand-text/60 space-y-1">
-          <p className="font-semibold uppercase tracking-wide text-brand-text/65">Currently on duty</p>
+          <p className="font-semibold uppercase tracking-wide text-brand-text/65">Active sessions</p>
           {activeStaffSessions.map((entry) => (
             <p key={entry.id}>
-              {entry.staffName} · {formatElapsedDuration(elapsedActiveSessionSeconds(entry, new Date(nowTick)))}
+              {entry.staffName} · {formatElapsedDuration(elapsedActiveSessionSeconds(entry))}
             </p>
           ))}
         </div>
       )}
     </div>
+  );
+
+  const timeAdjustmentsBlock = canAdjustTime && (
+    <StaffTimeAdjustmentsPanel
+      currentUser={currentUser}
+      guards={guards}
+      timeEntries={timeEntries}
+      periodStart={periodStart}
+      periodEnd={periodEnd}
+      onEntriesChange={setTimeEntries}
+    />
   );
 
   const summaryBlock = (
@@ -438,11 +421,17 @@ export function StaffCompensationPanel({
         <p className="text-xs text-brand-text/60">
           After instant base pay, confirm adjustments per staff member: choose <strong>No adjustments</strong>, or
           apply tracked hourly pay and/or a manual bonus. Deductions are not permitted (Prop 22–ready add-only model).
+          Managers and above can correct tracked time below before confirming hourly pay.
+        </p>
+      ) : canAdjustTime ? (
+        <p className="text-xs text-brand-text/60">
+          Correct automatic sessions or add manual time entries for staff in this period. Hourly pay uses the
+          adjusted totals when Directors or Founders confirm payouts.
         </p>
       ) : (
         <p className="text-xs text-brand-text/60">
-          Your revenue share pays out instantly. Clock in/out above to track hours. Directors or Founders review
-          optional add-ons afterward.
+          Your revenue share pays out instantly. Time on the site is tracked automatically for optional
+          hourly add-ons reviewed by Directors or Founders.
         </p>
       )}
     </div>
@@ -578,15 +567,60 @@ export function StaffCompensationPanel({
   );
 
   const body = (
-    <div className="space-y-6">
-      {timeTrackerBlock ? <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection> : null}
-      <StaffMgmtSection title="Current period">{summaryBlock}</StaffMgmtSection>
-      <StaffMgmtSection title={canManage ? 'Staff payouts' : 'Your compensation'} fullWidth>
-        {payoutTable}
-      </StaffMgmtSection>
-      {historyTable ? <StaffMgmtSection title="Payout history">{historyTable}</StaffMgmtSection> : null}
+    <div className={`space-y-6${embedded ? ' staff-compensation-embedded' : ''}`}>
+      {timeTrackerBlock ? (
+        embedded ? (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-brand-text">Time tracker</h3>
+            {timeTrackerBlock}
+          </section>
+        ) : (
+          <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection>
+        )
+      ) : null}
+      {timeAdjustmentsBlock ? (
+        embedded ? (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-brand-text">Time adjustments</h3>
+            {timeAdjustmentsBlock}
+          </section>
+        ) : (
+          <StaffMgmtSection title="Time adjustments">{timeAdjustmentsBlock}</StaffMgmtSection>
+        )
+      ) : null}
+      {embedded ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-brand-text">Staff compensation</h3>
+          {summaryBlock}
+        </section>
+      ) : (
+        <StaffMgmtSection title="Current period">{summaryBlock}</StaffMgmtSection>
+      )}
+      {embedded ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-brand-text">
+            {canManage ? 'Staff payouts' : 'Your compensation'}
+          </h3>
+          {payoutTable}
+        </section>
+      ) : (
+        <StaffMgmtSection title={canManage ? 'Staff payouts' : 'Your compensation'} fullWidth>
+          {payoutTable}
+        </StaffMgmtSection>
+      )}
+      {historyTable ? (
+        embedded ? (
+          <section className="space-y-3">{historyTable}</section>
+        ) : (
+          <StaffMgmtSection title="Payout history">{historyTable}</StaffMgmtSection>
+        )
+      ) : null}
     </div>
   );
+
+  if (embedded) {
+    return body;
+  }
 
   if (formFactor === 'desktop') {
     return (
@@ -608,6 +642,9 @@ export function StaffCompensationPanel({
     <StaffOpsPageShell className="staff-compensation-panel staff-mgmt-panel">
       <div className="staff-payment-settings-scroll min-w-0 space-y-4">
         {timeTrackerBlock ? <AppFormSection title="Time tracker">{timeTrackerBlock}</AppFormSection> : null}
+        {timeAdjustmentsBlock ? (
+          <AppFormSection title="Time adjustments">{timeAdjustmentsBlock}</AppFormSection>
+        ) : null}
         <AppFormSection title="Current period">{summaryBlock}</AppFormSection>
         <AppFormSection title={canManage ? 'Staff payouts' : 'Your compensation'}>{payoutTable}</AppFormSection>
         {historyTable ? <AppFormSection title="Payout history">{historyTable}</AppFormSection> : null}
@@ -615,3 +652,6 @@ export function StaffCompensationPanel({
     </StaffOpsPageShell>
   );
 }
+
+/** @deprecated Use StaffCompensationSection */
+export const StaffCompensationPanel = StaffCompensationSection;

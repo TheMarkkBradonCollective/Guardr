@@ -2,6 +2,7 @@ import type { StaffSection } from './staffOps';
 
 export interface StaffNavAccessFlags {
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -14,12 +15,13 @@ export interface StaffNavAccessNotice {
 }
 
 const FINANCE_SECTIONS = new Set<StaffSection>([
-  'payments',
   'payment-settings',
   'agreements',
   'audit-log',
   'dev-updates',
 ]);
+
+const PAYMENTS_SECTIONS = new Set<StaffSection>(['payments']);
 
 const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
@@ -29,6 +31,12 @@ export function getStaffNavAccessNotice(
   section: StaffSection,
   flags: StaffNavAccessFlags,
 ): StaffNavAccessNotice | null {
+  if (PAYMENTS_SECTIONS.has(section) && !flags.showPayments) {
+    return {
+      title: 'Payments',
+      message: 'Payments are available to staff with finance permissions or active staff compensation access.',
+    };
+  }
   if (FINANCE_SECTIONS.has(section) && !flags.showFinance) {
     return {
       title: 'Finance access required',
@@ -66,6 +74,7 @@ export function isStaffNavSectionAccessible(section: StaffSection, flags: StaffN
 
 export interface StaffNavItemAccess {
   financeOnly?: boolean;
+  paymentsOnly?: boolean;
   settingsOnly?: boolean;
   permissionsOnly?: boolean;
   citiesOnly?: boolean;
@@ -78,6 +87,7 @@ export function isStaffNavItemVisible(
   flags: StaffNavAccessFlags,
 ): boolean {
   if (item.financeOnly && !flags.showFinance) return false;
+  if (item.paymentsOnly && !flags.showPayments) return false;
   if (item.settingsOnly && !flags.showSettings) return false;
   if (item.permissionsOnly && !flags.showPermissions) return false;
   if (item.citiesOnly && !flags.showCities) return false;
@@ -89,11 +99,7 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
   payments: {
     title: 'Payments',
     message:
-      'Financial controls require Manage payouts, Manage fees, View all financial data, or Access audit log. Ask your Director if you need access.',
-  },
-  'staff-pay': {
-    title: 'Staff pay',
-    message: 'Staff pay is available to active staff accounts.',
+      'Payments are available to staff with finance permissions or active staff compensation access.',
   },
   disputes: {
     title: 'Disputes',

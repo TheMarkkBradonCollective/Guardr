@@ -101,7 +101,6 @@ import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffLocationsPanel } from './staff/StaffLocationsPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
-import { StaffCompensationPanel } from './staff/StaffCompensationPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
@@ -558,6 +557,7 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
@@ -585,11 +585,11 @@ export function StaffDashboard({
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
-    const accessFlags = { showFinance, showSettings: true, showPermissions, showDisputes, showCities };
+    const accessFlags = { showFinance, showPayments, showSettings: true, showPermissions, showDisputes, showCities };
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showPermissions, showDisputes, showCities]);
+  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -929,14 +929,17 @@ export function StaffDashboard({
           />
         );
       case 'payments':
-        return showFinance ? (
+        return showPayments ? (
           <StaffPaymentsPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
             requests={requests}
             guards={guards}
             payments={payments}
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
             canManagePayments={showFinance}
+            showStaffCompensation={canViewStaffCompensation(currentUser)}
             paymentGates={clientPaymentGates(platformSettings)}
             onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onReleasePayout={onReleasePayout}
@@ -957,22 +960,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.payments!.message}
-            placeholders={['Pending payouts', 'Client payments', 'Guard payouts', 'Platform fees']}
-          />
-        );
-      case 'staff-pay':
-        return canViewStaffCompensation(currentUser) ? (
-          <StaffCompensationPanel
-            currentUser={currentUser}
-            guards={guards}
-            requests={requests}
-            platformSettings={platformSettings}
-          />
-        ) : (
-          <AppBlockedAccessScreen
-            title={STAFF_SECTION_ACCESS_MESSAGES['staff-pay']!.title}
-            message={STAFF_SECTION_ACCESS_MESSAGES['staff-pay']!.message}
-            placeholders={['Revenue share', 'Payout history']}
+            placeholders={['Guard payouts', 'Staff compensation', 'Platform fees']}
           />
         );
       case 'violations':

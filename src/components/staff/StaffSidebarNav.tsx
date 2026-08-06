@@ -9,6 +9,8 @@ export interface StaffNavItem {
   label: string;
   icon: typeof LayoutDashboard;
   badge?: number;
+  /** Visible to finance staff and all compensatable staff (Payments includes staff pay). */
+  paymentsOnly?: boolean;
   /** Visible only to Director and Founder (payments / fund handling) */
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
@@ -26,6 +28,7 @@ interface StaffSidebarNavProps {
   activeSection: StaffSection;
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -43,7 +46,7 @@ const OPERATIONS_IDS: StaffSection[] = [
   'team',
 ];
 const MESSAGES_IDS: StaffSection[] = ['messages', 'support'];
-const FINANCE_IDS: StaffSection[] = ['payments', 'staff-pay', 'payment-settings', 'agreements', 'audit-log'];
+const FINANCE_IDS: StaffSection[] = ['payments', 'payment-settings', 'agreements', 'audit-log'];
 const PEOPLE_IDS: StaffSection[] = ['incidents', 'violations', 'stats', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide', 'dev-updates'];
 const PLATFORM_IDS: StaffSection[] = ['cities', 'permissions', 'settings', 'integrations'];
@@ -112,12 +115,13 @@ export function StaffSidebarNav({
   activeSection,
   onNavigate,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
   showCities,
 }: StaffSidebarNavProps) {
-  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
+  const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
 
   return (
     <nav aria-label="Staff navigation">

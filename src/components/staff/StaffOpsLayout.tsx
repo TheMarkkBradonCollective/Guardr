@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -78,7 +78,6 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   'team-chat': 'Messages',
   'job-chats': 'Messages',
   payments: 'Payments',
-  'staff-pay': 'Staff pay',
   'payment-settings': 'Payment settings',
   agreements: 'Agreements',
   'audit-log': 'Audit log',
@@ -122,6 +121,7 @@ export function StaffOpsLayout({
   canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
@@ -139,8 +139,7 @@ export function StaffOpsLayout({
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
       { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
-      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
-      { id: 'staff-pay', label: 'Staff pay', icon: Users },
+      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, paymentsOnly: true },
       { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
       { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
@@ -180,6 +179,7 @@ export function StaffOpsLayout({
         screenTitle={screenTitle}
         navHighlight={navHighlight}
         showFinance={showFinance}
+        showPayments={showPayments}
         showSettings={true}
         showPermissions={showPermissions}
         showDisputes={showDisputes}
@@ -209,6 +209,7 @@ interface StaffOpsLayoutInnerProps
   screenTitle: string;
   navHighlight: StaffSection;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -228,6 +229,7 @@ function StaffOpsLayoutInner({
   screenTitle,
   navHighlight,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
@@ -267,6 +269,7 @@ function StaffOpsLayoutInner({
       screenTitle={screenTitle}
       navHighlight={navHighlight}
       showFinance={showFinance}
+      showPayments={showPayments}
       showSettings={showSettings}
       showPermissions={showPermissions}
       showDisputes={showDisputes}

@@ -24,6 +24,7 @@ interface StaffDesktopShellProps {
   screenTitle: string;
   navHighlight: StaffSection;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -48,6 +49,7 @@ export function StaffDesktopShell({
   screenTitle,
   navHighlight,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
@@ -100,6 +102,7 @@ export function StaffDesktopShell({
         activeSection={navHighlight}
         onNavigate={onNavigate}
         showFinance={showFinance}
+        showPayments={showPayments}
         showSettings={showSettings}
         showPermissions={showPermissions}
         showDisputes={showDisputes}

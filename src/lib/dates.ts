@@ -1,5 +1,9 @@
 /** Shared date/time helpers for shift scheduling */
 
+export function fromDatetimeLocal(local: string): string {
+  return new Date(local).toISOString();
+}
+
 export function toDatetimeLocal(isoOrDate: string | Date): string {
   const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
   const pad = (n: number) => String(n).padStart(2, '0');
