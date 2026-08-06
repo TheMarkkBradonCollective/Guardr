@@ -349,9 +349,9 @@ export function StaffCompensationSection({
         <div>
           <p className="text-sm font-semibold text-brand-text">Smart time tracking</p>
           <p className="text-xs text-brand-text/60">
-            Time starts when the app or site is open — no clock in needed. Navigation toward work and
-            real staff actions (approvals, payouts, messages, edits) count; passive page clicks do not.
-            Brief tab switches are included; closing the app ends the session.
+            Time starts when the app or site is open — no clock in needed. Navigation, forms, messages,
+            approvals, payouts, settings changes, and other staff actions all count. Closing the app ends
+            the session; brief tab switches are included.
           </p>
         </div>
         {myActiveEntry ? (

@@ -307,7 +307,7 @@ import {
 import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
-import { emitStaffTravelAction, emitStaffWorkAction } from './lib/staffWorkActivity';
+import { emitStaffTravelAction, trackStaffWorkActionForUser } from './lib/staffWorkActivity';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
@@ -1527,6 +1527,9 @@ export default function App() {
   };
 
   const setStaffCredentialItemId = (itemId: string | null) => {
+    if (currentUser && isStaffRole(currentUser.role) && itemId) {
+      emitStaffTravelAction({ section: 'credentials', label: `credential:${itemId}` });
+    }
     setStaffCredentialItemIdState(itemId);
     syncAppRoute(
       buildAppRoute({
@@ -1539,6 +1542,9 @@ export default function App() {
   };
 
   const setStaffTeamId = (teamId: string | null) => {
+    if (currentUser && isStaffRole(currentUser.role) && teamId) {
+      emitStaffTravelAction({ section: 'team', label: `team:${teamId}` });
+    }
     setStaffTeamIdState(teamId);
     syncAppRoute(
       buildAppRoute({
@@ -11943,6 +11949,10 @@ export default function App() {
       return next;
     });
     await persistGuardMessageToDb(message);
+    trackStaffWorkActionForUser(currentUser, {
+      action: 'guard_message_sent',
+      label: 'Guard message sent',
+    });
     void reportPushEvent(currentUser, {
       type: 'guard_message',
       body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
@@ -11987,6 +11997,10 @@ export default function App() {
       return next;
     });
     await persistClientMessageToDb(message);
+    trackStaffWorkActionForUser(currentUser, {
+      action: 'client_message_sent',
+      label: 'Client message sent',
+    });
     void reportPushEvent(currentUser, {
       type: 'client_message',
       body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
@@ -12088,6 +12102,10 @@ export default function App() {
       return;
     }
     await notifyJobChatParticipants(req, currentUser, body.trim());
+    trackStaffWorkActionForUser(currentUser, {
+      action: 'job_chat_message_sent',
+      label: 'Job chat message sent',
+    });
   };
 
   const handleSendStaffMessage = async (body: string) => {
@@ -12100,6 +12118,10 @@ export default function App() {
       return next;
     });
     await persistStaffMessageToDb(message);
+    trackStaffWorkActionForUser(currentUser, {
+      action: 'staff_message_sent',
+      label: 'Staff message sent',
+    });
     void reportPushEvent(currentUser, {
       type: 'staff_message',
       body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
@@ -12269,6 +12291,10 @@ export default function App() {
     if (!updated) return;
     await persistSupportTicketToDb(updated);
     await notifySupportParticipants(updated, currentUser, body.trim());
+    trackStaffWorkActionForUser(currentUser, {
+      action: 'support_message_sent',
+      label: 'Support message sent',
+    });
   };
 
   const handleDeleteSupportTicket = async (ticketId: string) => {

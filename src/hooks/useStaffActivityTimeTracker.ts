@@ -9,6 +9,7 @@ import {
 import {
   closeActiveStaffSession,
   finalizeIdleStaffSessions,
+  isStaffEngagementTarget,
   markStaffPresenceHidden,
   recordStaffTimeEvent,
   resumeStaffPresence,
@@ -20,6 +21,7 @@ import {
 
 const PERSIST_INTERVAL_MS = 30_000;
 const IDLE_CHECK_INTERVAL_MS = 60_000;
+const ENGAGEMENT_DEBOUNCE_MS = 8_000;
 
 export interface StaffActivityTrackerTarget {
   staffId: string;
@@ -40,14 +42,15 @@ function syncLocalStaffTimeEntries(entries: StaffTimeEntry[]): void {
 /**
  * Smart staff time tracking:
  * - Presence (app/tab open) starts time — not login
- * - Staff navigation counts as travel toward the next action
- * - Meaningful work actions extend time; passive page clicks do not
+ * - Staff navigation counts as travel toward work
+ * - Audit-logged ops, messages, forms, and interactive staff UI count as work
  * - App/tab close ends the session; brief switches resume within a grace window
  */
 export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget | null): void {
   const entriesRef = useRef<StaffTimeEntry[]>([]);
   const loadedRef = useRef(false);
   const persistTimerRef = useRef<number | null>(null);
+  const lastEngagementAtRef = useRef(0);
   const targetRef = useRef(target);
   const hiddenAtRef = useRef<number | null>(null);
   const graceTimerRef = useRef<number | null>(null);
@@ -168,6 +171,27 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
       applyEvent('travel');
     };
 
+    const onStaffEngagement = (force = false) => {
+      if (!appVisibleRef.current) return;
+      const nowMs = Date.now();
+      if (!force && nowMs - lastEngagementAtRef.current < ENGAGEMENT_DEBOUNCE_MS) return;
+      lastEngagementAtRef.current = nowMs;
+      applyEvent('work');
+    };
+
+    const onEngagementClick = (event: MouseEvent) => {
+      if (!isStaffEngagementTarget(event.target)) return;
+      onStaffEngagement(false);
+    };
+
+    const onEngagementInput = (event: Event) => {
+      if (!(event.target instanceof Element)) return;
+      if (!event.target.matches('input, select, textarea, [contenteditable="true"]')) return;
+      onStaffEngagement(false);
+    };
+
+    const onEngagementSubmit = () => onStaffEngagement(true);
+
     const onVisibility = () => {
       if (document.visibilityState === 'visible') onPresenceVisible();
       else onPresenceHidden();
@@ -176,6 +200,10 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener(STAFF_WORK_ACTION_EVENT, onWorkAction);
     window.addEventListener(STAFF_TRAVEL_ACTION_EVENT, onTravelAction);
+    document.addEventListener('click', onEngagementClick, true);
+    document.addEventListener('input', onEngagementInput, true);
+    document.addEventListener('change', onEngagementInput, true);
+    document.addEventListener('submit', onEngagementSubmit, true);
 
     let removeCapListener: (() => void) | undefined;
     void import('@capacitor/core').then(({ Capacitor }) => {
@@ -212,6 +240,10 @@ export function useStaffActivityTimeTracker(target: StaffActivityTrackerTarget |
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener(STAFF_WORK_ACTION_EVENT, onWorkAction);
       window.removeEventListener(STAFF_TRAVEL_ACTION_EVENT, onTravelAction);
+      document.removeEventListener('click', onEngagementClick, true);
+      document.removeEventListener('input', onEngagementInput, true);
+      document.removeEventListener('change', onEngagementInput, true);
+      document.removeEventListener('submit', onEngagementSubmit, true);
       removeCapListener?.();
       window.removeEventListener('pagehide', closeOpenSession);
       window.removeEventListener('beforeunload', closeOpenSession);

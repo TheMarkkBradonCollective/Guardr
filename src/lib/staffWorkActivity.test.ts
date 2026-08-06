@@ -86,9 +86,13 @@ test('finalizeIdleStaffSessions closes stale open sessions at last activity', ()
   assert.equal(result.entries[0]?.clockOutAt, '2026-08-05T10:45:00.000Z');
 });
 
-test('shouldEmitStaffWorkAction ignores sign in/out but counts approvals', () => {
+test('shouldEmitStaffWorkAction ignores sign in/out but counts all other staff audit actions', () => {
   assert.equal(shouldEmitStaffWorkAction('manager', 'sign_in'), false);
+  assert.equal(shouldEmitStaffWorkAction('manager', 'sign_out'), false);
   assert.equal(shouldEmitStaffWorkAction('manager', 'guard_approved'), true);
+  assert.equal(shouldEmitStaffWorkAction('owner', 'staff_compensation_payout_confirmed'), true);
+  assert.equal(shouldEmitStaffWorkAction('owner', 'staff_compensation_base_paid'), true);
+  assert.equal(shouldEmitStaffWorkAction('manager', 'settings_updated'), true);
   assert.equal(isStaffWorkAuditAction('job_approved'), true);
 });
 
