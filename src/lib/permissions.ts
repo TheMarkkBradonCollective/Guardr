@@ -328,6 +328,20 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
   return isFounder(user) || hasPermission(user, 'owner.platform_governance');
 }
 
+/** Director and Founder — staff revenue-share compensation settings and payout confirmation */
+export function canManageStaffCompensation(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirectorTierRole(user.role);
+}
+
+export function canConfirmStaffCompensationPayout(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirectorTierRole(user.role);
+}
+
+/** Any staff member can view their own revenue-share summary. */
+export function canViewStaffCompensation(user: Pick<SessionUser, 'role'>): boolean {
+  return isStaffRole(user.role);
+}
+
 /** Manager, Director, and Founder share executive payment and ops controls */
 export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
   return isExecutiveOpsRole(user.role);

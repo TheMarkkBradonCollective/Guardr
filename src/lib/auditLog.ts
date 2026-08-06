@@ -23,6 +23,7 @@ export type AuditAction =
   | 'payout_released'
   | 'trusted_status_changed'
   | 'settings_updated'
+  | 'staff_compensation_payout_confirmed'
   | 'city_market_updated'
   | 'staff_city_access_updated'
   | 'bulk_action'

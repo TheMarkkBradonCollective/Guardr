@@ -38,6 +38,7 @@ import {
   canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
+  canViewStaffCompensation,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
   canViewAnalytics,
@@ -107,6 +108,7 @@ import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffLocationsPanel } from './staff/StaffLocationsPanel';
 import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
+import { StaffCompensationPanel } from './staff/StaffCompensationPanel';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
@@ -1022,6 +1024,21 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.payments!.message}
             placeholders={['Pending payouts', 'Client payments', 'Guard payouts', 'Platform fees']}
+          />
+        );
+      case 'staff-pay':
+        return canViewStaffCompensation(currentUser) ? (
+          <StaffCompensationPanel
+            currentUser={currentUser}
+            guards={guards}
+            requests={requests}
+            platformSettings={platformSettings}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['staff-pay']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['staff-pay']!.message}
+            placeholders={['Revenue share', 'Payout history']}
           />
         );
       case 'violations':
