@@ -328,6 +328,11 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
   return isFounder(user) || hasPermission(user, 'owner.platform_governance');
 }
 
+/** Manager+ — edit automatically tracked staff time entries and add manual time. */
+export function canAdjustStaffTimeEntries(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
 /** Manager+ — per-role hourly pay rates for tracked staff time. */
 export function canEditStaffHourlyPayRates(user: Pick<SessionUser, 'role'>): boolean {
   return hasExecutivePaymentControls(user);

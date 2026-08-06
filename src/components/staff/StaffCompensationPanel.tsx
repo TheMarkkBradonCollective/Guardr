@@ -36,6 +36,7 @@ import {
 import { STAFF_TIME_ENTRIES_CHANGED_EVENT } from '../../lib/staffActivityTime';
 import { PlatformSettings } from '../../lib/platformSettings';
 import {
+  canAdjustStaffTimeEntries,
   canConfirmStaffCompensationPayout,
   canManageStaffCompensation,
   canViewStaffCompensation,
@@ -47,6 +48,7 @@ import { GuardrButton } from '../baseui/GuardrButton';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffTimeAdjustmentsPanel } from './StaffTimeAdjustmentsPanel';
 import { useDevice } from '../../lib/platform';
 
 interface StaffCompensationSectionProps {
@@ -82,6 +84,7 @@ export function StaffCompensationSection({
   const config = platformSettings.staffCompensation!;
   const canManage = canManageStaffCompensation(currentUser);
   const canConfirm = canConfirmStaffCompensationPayout(currentUser);
+  const canAdjustTime = canAdjustStaffTimeEntries(currentUser);
   const viewerStaffRole = platformRoleToStaffRole(currentUser.role);
   const currentStaffMember = guards.find((guard) => guard.id === currentUser.id && guard.isStaff);
 
@@ -372,7 +375,7 @@ export function StaffCompensationSection({
           </>
         ) : null}
       </p>
-      {canManage && activeStaffSessions.length > 0 && (
+      {canAdjustTime && activeStaffSessions.length > 0 && (
         <div className="text-xs text-brand-text/60 space-y-1">
           <p className="font-semibold uppercase tracking-wide text-brand-text/65">Active sessions</p>
           {activeStaffSessions.map((entry) => (
@@ -383,6 +386,17 @@ export function StaffCompensationSection({
         </div>
       )}
     </div>
+  );
+
+  const timeAdjustmentsBlock = canAdjustTime && (
+    <StaffTimeAdjustmentsPanel
+      currentUser={currentUser}
+      guards={guards}
+      timeEntries={timeEntries}
+      periodStart={periodStart}
+      periodEnd={periodEnd}
+      onEntriesChange={setTimeEntries}
+    />
   );
 
   const summaryBlock = (
@@ -407,6 +421,12 @@ export function StaffCompensationSection({
         <p className="text-xs text-brand-text/60">
           After instant base pay, confirm adjustments per staff member: choose <strong>No adjustments</strong>, or
           apply tracked hourly pay and/or a manual bonus. Deductions are not permitted (Prop 22–ready add-only model).
+          Managers and above can correct tracked time below before confirming hourly pay.
+        </p>
+      ) : canAdjustTime ? (
+        <p className="text-xs text-brand-text/60">
+          Correct automatic sessions or add manual time entries for staff in this period. Hourly pay uses the
+          adjusted totals when Directors or Founders confirm payouts.
         </p>
       ) : (
         <p className="text-xs text-brand-text/60">
@@ -558,6 +578,16 @@ export function StaffCompensationSection({
           <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection>
         )
       ) : null}
+      {timeAdjustmentsBlock ? (
+        embedded ? (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-brand-text">Time adjustments</h3>
+            {timeAdjustmentsBlock}
+          </section>
+        ) : (
+          <StaffMgmtSection title="Time adjustments">{timeAdjustmentsBlock}</StaffMgmtSection>
+        )
+      ) : null}
       {embedded ? (
         <section className="space-y-3">
           <h3 className="text-sm font-semibold text-brand-text">Staff compensation</h3>
@@ -612,6 +642,9 @@ export function StaffCompensationSection({
     <StaffOpsPageShell className="staff-compensation-panel staff-mgmt-panel">
       <div className="staff-payment-settings-scroll min-w-0 space-y-4">
         {timeTrackerBlock ? <AppFormSection title="Time tracker">{timeTrackerBlock}</AppFormSection> : null}
+        {timeAdjustmentsBlock ? (
+          <AppFormSection title="Time adjustments">{timeAdjustmentsBlock}</AppFormSection>
+        ) : null}
         <AppFormSection title="Current period">{summaryBlock}</AppFormSection>
         <AppFormSection title={canManage ? 'Staff payouts' : 'Your compensation'}>{payoutTable}</AppFormSection>
         {historyTable ? <AppFormSection title="Payout history">{historyTable}</AppFormSection> : null}

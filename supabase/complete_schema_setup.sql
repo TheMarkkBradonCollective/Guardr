@@ -1695,10 +1695,20 @@ CREATE TABLE IF NOT EXISTS staff_time_entries (
   clock_in_at TIMESTAMPTZ NOT NULL,
   last_activity_at TIMESTAMPTZ,
   clock_out_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL DEFAULT 'automatic' CHECK (source IN ('automatic', 'manual')),
+  adjusted_by_id TEXT,
+  adjusted_by_email TEXT,
+  adjusted_at TIMESTAMPTZ,
+  adjustment_note TEXT
 );
 
 ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'automatic';
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_id TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_email TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjustment_note TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(staff_id);
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
