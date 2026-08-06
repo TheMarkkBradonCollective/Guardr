@@ -1,3 +1,10 @@
+import { getCertCatalogEntry } from './certCatalog';
+import {
+  BSIS_PTA_UOF_COMBINED_ID,
+  LEGACY_PTA_ID,
+  LEGACY_UOF_ID,
+  THIRTY_TWO_HOUR_COURSE_IDS,
+} from './guardQualification';
 import {
   findPlatformCity,
   getPlatformCities,
@@ -6,13 +13,22 @@ import {
 } from './platformCities';
 import type { SecurityGuard } from '../types';
 
-/** Credential types that can have external resource links on marketplace eligibility. */
-export type CredentialLinkKey =
+/** Top-level activation checklist keys on marketplace eligibility. */
+export type CredentialActivationLinkKey =
   | 'govId'
   | 'coi'
   | 'guardCard'
   | 'ptaUof'
   | 'continuedEducation';
+
+/** Catalog IDs for individual or group training certificates. */
+export type CredentialCatalogLinkKey =
+  | typeof BSIS_PTA_UOF_COMBINED_ID
+  | typeof LEGACY_PTA_ID
+  | typeof LEGACY_UOF_ID
+  | (typeof THIRTY_TWO_HOUR_COURSE_IDS)[number];
+
+export type CredentialLinkKey = CredentialActivationLinkKey | CredentialCatalogLinkKey;
 
 export interface CredentialResourceLink {
   url: string;
@@ -21,15 +37,13 @@ export interface CredentialResourceLink {
   price?: string;
 }
 
-export type CityCredentialResourceLinks = Partial<
-  Record<CredentialLinkKey, CredentialResourceLink[]>
->;
+export type CityCredentialResourceLinks = Partial<Record<CredentialLinkKey, CredentialResourceLink[]>>;
 
 export interface ResolvedCredentialLink extends CredentialResourceLink {
   source: 'city' | 'platform';
 }
 
-export const CREDENTIAL_LINK_KEYS: CredentialLinkKey[] = [
+export const CREDENTIAL_ACTIVATION_LINK_KEYS: CredentialActivationLinkKey[] = [
   'govId',
   'coi',
   'guardCard',
@@ -37,13 +51,54 @@ export const CREDENTIAL_LINK_KEYS: CredentialLinkKey[] = [
   'continuedEducation',
 ];
 
-export const CREDENTIAL_LINK_FIELD_LABELS: Record<CredentialLinkKey, string> = {
+export const CREDENTIAL_CATALOG_LINK_KEYS: CredentialCatalogLinkKey[] = [
+  BSIS_PTA_UOF_COMBINED_ID,
+  LEGACY_PTA_ID,
+  LEGACY_UOF_ID,
+  ...THIRTY_TWO_HOUR_COURSE_IDS,
+];
+
+export const CREDENTIAL_LINK_KEYS: CredentialLinkKey[] = [
+  ...CREDENTIAL_ACTIVATION_LINK_KEYS,
+  ...CREDENTIAL_CATALOG_LINK_KEYS,
+];
+
+export const CREDENTIAL_LINK_FIELD_LABELS: Record<CredentialActivationLinkKey, string> = {
   govId: 'Government ID',
   coi: 'Certificate of Insurance (COI)',
   guardCard: 'BSIS Guard Card',
   ptaUof: 'Mandatory training (PTA / UOF)',
   continuedEducation: 'Continued Education (32-hour CE package)',
 };
+
+const PTA_UOF_RESOLVE_KEYS: CredentialLinkKey[] = [
+  'ptaUof',
+  BSIS_PTA_UOF_COMBINED_ID,
+  LEGACY_PTA_ID,
+  LEGACY_UOF_ID,
+];
+
+const CONTINUED_EDUCATION_RESOLVE_KEYS: CredentialLinkKey[] = [
+  'continuedEducation',
+  ...THIRTY_TWO_HOUR_COURSE_IDS,
+];
+
+export const ACTIVATION_STEP_LINK_KEYS: Record<CredentialActivationLinkKey, CredentialLinkKey[]> = {
+  govId: ['govId'],
+  coi: ['coi'],
+  guardCard: ['guardCard'],
+  ptaUof: PTA_UOF_RESOLVE_KEYS,
+  continuedEducation: CONTINUED_EDUCATION_RESOLVE_KEYS,
+};
+
+function catalogLinkLabel(catalogId: CredentialCatalogLinkKey): string {
+  const entry = getCertCatalogEntry(catalogId);
+  return entry?.name ?? catalogId;
+}
+
+export function credentialCatalogLinkLabel(key: CredentialCatalogLinkKey): string {
+  return catalogLinkLabel(key);
+}
 
 /** Platform-wide fallback links when a city has no override. */
 export const PLATFORM_DEFAULT_CREDENTIAL_LINKS: CityCredentialResourceLinks = {
@@ -68,20 +123,31 @@ export const PLATFORM_DEFAULT_CREDENTIAL_LINKS: CityCredentialResourceLinks = {
   ptaUof: [
     {
       url: 'https://www.guardcardcourses.com/sc101.asp',
-      label: 'Guard Card Courses',
+      label: 'Guard Card Courses — 8-hour PTA/UOF (group cert)',
+      price: '$49',
+    },
+  ],
+  [BSIS_PTA_UOF_COMBINED_ID]: [
+    {
+      url: 'https://www.guardcardcourses.com/sc101.asp',
+      label: 'Guard Card Courses — combined 8-hour PTA/UOF certificate',
       price: '$49',
     },
   ],
   continuedEducation: [
     {
       url: 'https://www.guardcardcourses.com/pk102.asp',
-      label: 'Guard Card Courses — 32-hour CE package',
-      price: '$120',
+      label: 'Guard Card Courses — 32-hour CE package (group)',
+      price: '$65',
     },
   ],
 };
 
 const URL_PATTERN = /^https?:\/\/.+/i;
+
+export function isKnownCredentialLinkKey(key: string): key is CredentialLinkKey {
+  return (CREDENTIAL_LINK_KEYS as string[]).includes(key);
+}
 
 export function isValidCredentialResourceUrl(url: string): boolean {
   const trimmed = url.trim();
@@ -127,8 +193,10 @@ export function parseCredentialResourceLinks(
 ): CityCredentialResourceLinks | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const parsed: CityCredentialResourceLinks = {};
-  for (const key of CREDENTIAL_LINK_KEYS) {
-    const entries = parseLinkList((value as Record<string, unknown>)[key]);
+  const raw = value as Record<string, unknown>;
+  for (const key of Object.keys(raw)) {
+    if (!isKnownCredentialLinkKey(key)) continue;
+    const entries = parseLinkList(raw[key]);
     if (entries.length > 0) parsed[key] = entries;
   }
   return Object.keys(parsed).length > 0 ? parsed : undefined;
@@ -166,6 +234,15 @@ export function formatCredentialLinkDisplay(link: CredentialResourceLink): strin
   const label = link.label?.trim() || 'Resource';
   if (link.price?.trim()) return `${label} — ${link.price.trim()}`;
   return label;
+}
+
+function defaultLinkLabel(key: CredentialLinkKey, source: 'city' | 'platform'): string {
+  if (isKnownCredentialLinkKey(key) && (CREDENTIAL_ACTIVATION_LINK_KEYS as string[]).includes(key)) {
+    const base = CREDENTIAL_LINK_FIELD_LABELS[key as CredentialActivationLinkKey];
+    return source === 'city' ? `${base} — local resource` : `${base} — Guardr resource`;
+  }
+  const catalogLabel = catalogLinkLabel(key as CredentialCatalogLinkKey);
+  return source === 'city' ? `${catalogLabel} — local resource` : `${catalogLabel} — Guardr resource`;
 }
 
 export function resolveCredentialLinksForKey(
@@ -206,19 +283,33 @@ export function resolveCredentialLinksForKey(
   return resolved;
 }
 
-function defaultLinkLabel(key: CredentialLinkKey, source: 'city' | 'platform'): string {
-  const base = CREDENTIAL_LINK_FIELD_LABELS[key];
-  return source === 'city' ? `${base} — local resource` : `${base} — Guardr resource`;
+/** Merge city + platform links for an activation step (includes group + individual catalog keys). */
+export function resolveCredentialLinksForActivationStep(
+  step: CredentialActivationLinkKey,
+  city?: PlatformCity
+): ResolvedCredentialLink[] {
+  const keys = ACTIVATION_STEP_LINK_KEYS[step];
+  const resolved: ResolvedCredentialLink[] = [];
+  const seen = new Set<string>();
+  for (const key of keys) {
+    for (const link of resolveCredentialLinksForKey(key, city)) {
+      const dedupeKey = `${link.url}::${link.label ?? ''}`;
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      resolved.push(link);
+    }
+  }
+  return resolved;
 }
 
 export function resolveCredentialLinksForCity(
   cityName: string | undefined,
   cities = getPlatformCities()
-): Record<CredentialLinkKey, ResolvedCredentialLink[]> {
+): Record<CredentialActivationLinkKey, ResolvedCredentialLink[]> {
   const city = findPlatformCity(cityName, cities);
-  const result = {} as Record<CredentialLinkKey, ResolvedCredentialLink[]>;
-  for (const key of CREDENTIAL_LINK_KEYS) {
-    result[key] = resolveCredentialLinksForKey(key, city);
+  const result = {} as Record<CredentialActivationLinkKey, ResolvedCredentialLink[]>;
+  for (const step of CREDENTIAL_ACTIVATION_LINK_KEYS) {
+    result[step] = resolveCredentialLinksForActivationStep(step, city);
   }
   return result;
 }
@@ -241,7 +332,7 @@ export function resolveGuardCredentialCityName(
 export function resolveCredentialLinksForGuard(
   guard: Pick<SecurityGuard, 'serviceAreas'>,
   cities = getPlatformCities()
-): Record<CredentialLinkKey, ResolvedCredentialLink[]> {
+): Record<CredentialActivationLinkKey, ResolvedCredentialLink[]> {
   const cityName = resolveGuardCredentialCityName(guard, cities);
   return resolveCredentialLinksForCity(cityName, cities);
 }

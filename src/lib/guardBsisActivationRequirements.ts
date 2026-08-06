@@ -105,8 +105,8 @@ export const MARKETPLACE_ELIGIBILITY_WHY_POINTS: { title: string; detail: string
   },
 ];
 
-/** Maps activation requirement keys to credential link keys for external resource URLs. */
-export const REQUIREMENT_KEY_TO_CREDENTIAL_LINK_KEY: Record<string, string> = {
+/** Maps activation requirement keys to checklist link resolution steps. */
+export const REQUIREMENT_KEY_TO_ACTIVATION_LINK_KEY: Record<string, string> = {
   'gov-id': 'govId',
   coi: 'coi',
   'guard-card': 'guardCard',

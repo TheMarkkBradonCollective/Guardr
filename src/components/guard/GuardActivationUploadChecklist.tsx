@@ -34,7 +34,7 @@ import { certImageIsLocked } from '../../lib/certImagePolicy';
 import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
 import {
   resolveCredentialLinksForGuard,
-  type CredentialLinkKey,
+  type CredentialActivationLinkKey,
   type ResolvedCredentialLink,
 } from '../../lib/cityCredentialLinks';
 import type {
@@ -180,7 +180,8 @@ export function GuardActivationUploadChecklist({
 
   const credentialLinks = useMemo(() => resolveCredentialLinksForGuard(guard), [guard]);
 
-  const linksFor = (key: CredentialLinkKey): ResolvedCredentialLink[] => credentialLinks[key] ?? [];
+  const linksFor = (key: CredentialActivationLinkKey): ResolvedCredentialLink[] =>
+    credentialLinks[key] ?? [];
 
   return (
     <>

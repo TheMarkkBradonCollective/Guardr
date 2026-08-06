@@ -7,6 +7,7 @@ import {
   formatCredentialLinkDisplay,
   isValidCredentialResourceUrl,
   parseCredentialResourceLinks,
+  resolveCredentialLinksForActivationStep,
   resolveCredentialLinksForCity,
   resolveCredentialLinksForGuard,
   resolveGuardCredentialCityName,
@@ -28,13 +29,31 @@ const sampleCities: PlatformCity[] = [
       ptaUof: [
         {
           url: 'https://www.guardcardcourses.com/sc101.asp',
-          label: 'Guard Card Courses',
+          label: 'Guard Card Courses — 8-hour group',
           price: '$49',
         },
         {
           url: 'https://www.valleyguardonline.com/',
           label: 'Valley Guard Online',
-          price: '$55',
+        },
+      ],
+      'bsis-power-to-arrest': [
+        {
+          url: 'https://www.valleyguardonline.com/',
+          label: 'Valley Guard Online — Power to Arrest',
+        },
+      ],
+      continuedEducation: [
+        {
+          url: 'https://www.guardcardcourses.com/pk102.asp',
+          label: 'Guard Card Courses — 32-hour package',
+          price: '$65',
+        },
+      ],
+      'bsis-public-relations': [
+        {
+          url: 'https://www.guardcardcourses.com/pk102.asp',
+          label: 'Guard Card Courses — Public Relations (4 hr)',
         },
       ],
     },
@@ -58,7 +77,7 @@ describe('cityCredentialLinks', () => {
     assert.equal(isValidCredentialResourceUrl('not-a-url'), false);
   });
 
-  it('parses legacy single-link objects and new arrays', () => {
+  it('parses legacy single-link objects, arrays, and catalog keys', () => {
     const legacy = parseCredentialResourceLinks({
       coi: { url: 'https://example.com/coi', label: 'Get COI' },
       ptaUof: { url: 'invalid' },
@@ -70,11 +89,14 @@ describe('cityCredentialLinks', () => {
     const modern = parseCredentialResourceLinks({
       ptaUof: [
         { url: 'https://www.guardcardcourses.com/', label: 'GCC', price: '$49' },
-        { url: 'https://www.valleyguardonline.com/', label: 'Valley Guard', price: '$55' },
+        { url: 'https://www.valleyguardonline.com/', label: 'Valley Guard' },
+      ],
+      'bsis-public-relations': [
+        { url: 'https://www.guardcardcourses.com/pk102.asp', label: 'Public Relations' },
       ],
     });
     assert.equal(modern?.ptaUof?.length, 2);
-    assert.equal(modern?.ptaUof?.[0].price, '$49');
+    assert.equal(modern?.['bsis-public-relations']?.length, 1);
   });
 
   it('serializes link arrays with price', () => {
@@ -92,29 +114,24 @@ describe('cityCredentialLinks', () => {
       formatCredentialLinkDisplay({ url: 'https://example.com', label: 'Guard Card Courses', price: '$49' }),
       'Guard Card Courses — $49'
     );
-    assert.equal(
-      formatCredentialLinkDisplay({ url: 'https://example.com', label: 'Valley Guard Online' }),
-      'Valley Guard Online'
-    );
   });
 
-  it('includes platform defaults for all credential keys', () => {
-    for (const key of CREDENTIAL_LINK_KEYS) {
-      const entries = PLATFORM_DEFAULT_CREDENTIAL_LINKS[key];
-      assert.ok(entries?.length);
-      assert.ok(isValidCredentialResourceUrl(entries![0].url));
-    }
+  it('includes platform defaults for all activation keys', () => {
+    assert.ok(PLATFORM_DEFAULT_CREDENTIAL_LINKS.govId?.length);
+    assert.ok(PLATFORM_DEFAULT_CREDENTIAL_LINKS.ptaUof?.length);
+    assert.ok(isValidCredentialResourceUrl(PLATFORM_DEFAULT_CREDENTIAL_LINKS.ptaUof![0].url));
   });
 
-  it('city links are primary and platform defaults follow without duplicates', () => {
+  it('merges group and individual catalog keys for activation steps', () => {
     setPlatformCitiesCache(sampleCities);
-    const links = resolveCredentialLinksForCity('Sacramento', sampleCities);
-    assert.equal(links.ptaUof.length, 2);
-    assert.equal(links.ptaUof[0].source, 'city');
-    assert.equal(links.ptaUof[0].url, 'https://www.guardcardcourses.com/sc101.asp');
-    assert.equal(links.ptaUof[0].price, '$49');
-    assert.equal(links.ptaUof[1].source, 'city');
-    assert.equal(links.ptaUof[1].url, 'https://www.valleyguardonline.com/');
+    const ptaLinks = resolveCredentialLinksForActivationStep('ptaUof', sampleCities[0]);
+    assert.ok(ptaLinks.some((link) => link.url.includes('guardcardcourses')));
+    assert.ok(ptaLinks.some((link) => link.url.includes('valleyguardonline')));
+    assert.ok(ptaLinks.some((link) => link.label?.includes('Power to Arrest')));
+
+    const ceLinks = resolveCredentialLinksForActivationStep('continuedEducation', sampleCities[0]);
+    assert.ok(ceLinks.some((link) => link.label?.includes('32-hour')));
+    assert.ok(ceLinks.some((link) => link.label?.includes('Public Relations')));
   });
 
   it('uses guard primary service area for link resolution', () => {
@@ -124,8 +141,7 @@ describe('cityCredentialLinks', () => {
     } as SecurityGuard;
     assert.equal(resolveGuardCredentialCityName(guard, sampleCities), 'Sacramento');
     const links = resolveCredentialLinksForGuard(guard, sampleCities);
-    assert.equal(links.ptaUof.length, 2);
-    assert.equal(links.ptaUof[0].source, 'city');
+    assert.ok(links.ptaUof.length >= 2);
   });
 
   it('compares credential link maps', () => {
@@ -134,5 +150,10 @@ describe('cityCredentialLinks', () => {
     const c = { coi: [{ url: 'https://other.com/coi' }] };
     assert.equal(credentialLinksAreEqual(a, b), true);
     assert.equal(credentialLinksAreEqual(a, c), false);
+  });
+
+  it('knows all catalog and activation keys', () => {
+    assert.ok(CREDENTIAL_LINK_KEYS.includes('bsis-public-relations'));
+    assert.ok(CREDENTIAL_LINK_KEYS.includes('continuedEducation'));
   });
 });

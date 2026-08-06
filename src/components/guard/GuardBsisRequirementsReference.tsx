@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { BookOpen, ChevronDown, ExternalLink, HelpCircle } from 'lucide-react';
 import {
+  credentialLinksForCityLabel,
+  resolveCredentialLinksForActivationStep,
+  resolveCredentialLinksForKey,
+  resolveGuardCredentialCityName,
+  type CredentialCatalogLinkKey,
+  type ResolvedCredentialLink,
+} from '../../lib/cityCredentialLinks';
+import { findPlatformCity, getPlatformCities } from '../../lib/platformCities';
+import {
   BSIS_EMPLOYER_CERT_NOTE,
   BSIS_OFFICIAL_TRAINING_URL,
   BSIS_TERMINOLOGY_NOTE,
@@ -8,16 +17,9 @@ import {
   MARKETPLACE_ELIGIBILITY_WHY_BODY,
   MARKETPLACE_ELIGIBILITY_WHY_POINTS,
   MARKETPLACE_ELIGIBILITY_WHY_TITLE,
-  REQUIREMENT_KEY_TO_CREDENTIAL_LINK_KEY,
+  REQUIREMENT_KEY_TO_ACTIVATION_LINK_KEY,
   getContinuingEducationPackageCourses,
 } from '../../lib/guardBsisActivationRequirements';
-import {
-  credentialLinksForCityLabel,
-  resolveCredentialLinksForGuard,
-  resolveGuardCredentialCityName,
-  type CredentialLinkKey,
-  type ResolvedCredentialLink,
-} from '../../lib/cityCredentialLinks';
 import type { SecurityGuard } from '../../types';
 import { GuardCredentialResourceLinkList } from './GuardCredentialResourceLinkList';
 
@@ -34,17 +36,22 @@ export function GuardBsisRequirementsReference({
   const [whyOpen, setWhyOpen] = useState(false);
   const ceCourses = getContinuingEducationPackageCourses();
 
-  const resolvedLinks = guard
-    ? resolveCredentialLinksForGuard(guard)
-    : null;
+  const city = guard
+    ? findPlatformCity(resolveGuardCredentialCityName(guard), getPlatformCities())
+    : undefined;
   const cityLabel = guard ? credentialLinksForCityLabel(resolveGuardCredentialCityName(guard)) : null;
 
   const linksForRequirement = (requirementKey: string): ResolvedCredentialLink[] => {
-    if (!resolvedLinks) return [];
-    const linkKey = REQUIREMENT_KEY_TO_CREDENTIAL_LINK_KEY[requirementKey] as CredentialLinkKey | undefined;
-    if (!linkKey) return [];
-    return resolvedLinks[linkKey] ?? [];
+    const step = REQUIREMENT_KEY_TO_ACTIVATION_LINK_KEY[requirementKey];
+    if (!step) return [];
+    return resolveCredentialLinksForActivationStep(
+      step as 'govId' | 'coi' | 'guardCard' | 'ptaUof' | 'continuedEducation',
+      city
+    );
   };
+
+  const linksForCeCourse = (catalogId: string): ResolvedCredentialLink[] =>
+    resolveCredentialLinksForKey(catalogId as CredentialCatalogLinkKey, city);
 
   return (
     <div className="space-y-3">
@@ -91,10 +98,11 @@ export function GuardBsisRequirementsReference({
         </button>
         {open && (
           <div className="px-4 pb-4 space-y-4 border-t border-brand-border pt-3">
-            {cityLabel && resolvedLinks && (
+            {cityLabel && (
               <p className="text-xs text-brand-text-muted leading-relaxed">
-                Resource links below are tailored to your primary service area ({cityLabel}). City-specific
-                links appear first; platform defaults are listed as alternates.
+                Resource links below are tailored to your primary service area ({cityLabel}). Tap
+                &ldquo;Where to get this&rdquo; when multiple providers are available — prices shown
+                when we have them. Group package links and individual course links are both listed.
               </p>
             )}
             <p className="text-xs text-brand-text-muted leading-relaxed">{BSIS_TERMINOLOGY_NOTE}</p>
@@ -117,12 +125,18 @@ export function GuardBsisRequirementsReference({
                 32-hour CE package courses (9 certificates)
               </p>
               <ul className="grid gap-1 sm:grid-cols-2">
-                {ceCourses.map((course) => (
-                  <li key={course.catalogId} className="text-xs text-brand-text-muted">
-                    <span className="text-brand-text">{course.name}</span>
-                    {course.hoursLabel ? ` — ${course.hoursLabel}` : ''}
-                  </li>
-                ))}
+                {ceCourses.map((course) => {
+                  const courseLinks = linksForCeCourse(course.catalogId);
+                  return (
+                    <li key={course.catalogId} className="text-xs text-brand-text-muted">
+                      <span className="text-brand-text">{course.name}</span>
+                      {course.hoursLabel ? ` — ${course.hoursLabel}` : ''}
+                      {courseLinks.length > 0 && (
+                        <GuardCredentialResourceLinkList links={courseLinks} compact className="!mt-1" />
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <p className="text-xs text-brand-text-muted leading-relaxed">{BSIS_EMPLOYER_CERT_NOTE}</p>
