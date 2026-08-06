@@ -51,12 +51,17 @@ import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 
-interface StaffCompensationPanelProps {
+interface StaffCompensationSectionProps {
   currentUser: SessionUser;
   guards: SecurityGuard[];
   requests: SecurityRequest[];
   platformSettings: PlatformSettings;
+  /** When true, renders as a section inside Payments (no page shell). */
+  embedded?: boolean;
 }
+
+/** @deprecated Use StaffCompensationSection — kept for imports during transition. */
+export type StaffCompensationPanelProps = StaffCompensationSectionProps;
 
 interface PayoutAdjustmentState {
   choice: StaffPayoutAdjustmentChoice;
@@ -68,12 +73,13 @@ function defaultAdjustmentState(): PayoutAdjustmentState {
   return { choice: 'none', includeHourlyPay: false, manualAdjustment: 0 };
 }
 
-export function StaffCompensationPanel({
+export function StaffCompensationSection({
   currentUser,
   guards,
   requests,
   platformSettings,
-}: StaffCompensationPanelProps) {
+  embedded = false,
+}: StaffCompensationSectionProps) {
   const { formFactor } = useDevice();
   const config = platformSettings.staffCompensation!;
   const canManage = canManageStaffCompensation(currentUser);
@@ -578,15 +584,50 @@ export function StaffCompensationPanel({
   );
 
   const body = (
-    <div className="space-y-6">
-      {timeTrackerBlock ? <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection> : null}
-      <StaffMgmtSection title="Current period">{summaryBlock}</StaffMgmtSection>
-      <StaffMgmtSection title={canManage ? 'Staff payouts' : 'Your compensation'} fullWidth>
-        {payoutTable}
-      </StaffMgmtSection>
-      {historyTable ? <StaffMgmtSection title="Payout history">{historyTable}</StaffMgmtSection> : null}
+    <div className={`space-y-6${embedded ? ' staff-compensation-embedded' : ''}`}>
+      {timeTrackerBlock ? (
+        embedded ? (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-brand-text">Time tracker</h3>
+            {timeTrackerBlock}
+          </section>
+        ) : (
+          <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection>
+        )
+      ) : null}
+      {embedded ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-brand-text">Staff compensation</h3>
+          {summaryBlock}
+        </section>
+      ) : (
+        <StaffMgmtSection title="Current period">{summaryBlock}</StaffMgmtSection>
+      )}
+      {embedded ? (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-brand-text">
+            {canManage ? 'Staff payouts' : 'Your compensation'}
+          </h3>
+          {payoutTable}
+        </section>
+      ) : (
+        <StaffMgmtSection title={canManage ? 'Staff payouts' : 'Your compensation'} fullWidth>
+          {payoutTable}
+        </StaffMgmtSection>
+      )}
+      {historyTable ? (
+        embedded ? (
+          <section className="space-y-3">{historyTable}</section>
+        ) : (
+          <StaffMgmtSection title="Payout history">{historyTable}</StaffMgmtSection>
+        )
+      ) : null}
     </div>
   );
+
+  if (embedded) {
+    return body;
+  }
 
   if (formFactor === 'desktop') {
     return (
@@ -615,3 +656,6 @@ export function StaffCompensationPanel({
     </StaffOpsPageShell>
   );
 }
+
+/** @deprecated Use StaffCompensationSection */
+export const StaffCompensationPanel = StaffCompensationSection;
