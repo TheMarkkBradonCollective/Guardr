@@ -22,7 +22,7 @@ const GROUPS: { title: string; ids: StaffSection[] }[] = [
   { title: 'Dashboard', ids: ['overview', 'map'] },
   {
     title: 'Operations',
-    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
+    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'clients', 'team'],
   },
   { title: 'Communications', ids: ['messages', 'support'] },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },

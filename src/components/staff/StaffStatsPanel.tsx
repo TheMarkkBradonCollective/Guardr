@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { BarChart3 } from 'lucide-react';
-import type { SecurityGuard, SecurityRequest, GuardCrewJoinRequest, GuardStandingCrewMember } from '../../types';
+import type { SecurityGuard, SecurityRequest } from '../../types';
 import { buildStaffShiftViolations } from '../../lib/staffOps';
 import {
   STAFF_GUARD_STAT_SORT_OPTIONS,
@@ -30,8 +30,6 @@ type StatsTab = 'overview' | 'guards' | 'compare' | 'violations';
 interface StaffStatsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
-  crewJoinRequests?: GuardCrewJoinRequest[];
   onOpenGuard?: (guardId: string) => void;
   onOpenViolations?: () => void;
 }
@@ -51,11 +49,11 @@ function EligibilityRecommendations({
         <div className="staff-stats-section-head">
           <h3 className="staff-stats-section-title">Staff action recommendations</h3>
           <p className="staff-stats-section-sub">
-            Trusted status and crew lead setup are staff-only. Eligible guards will appear here when
+            Trusted status recommendations are staff-only. Eligible guards will appear here when
             they meet performance and accountability thresholds.
           </p>
         </div>
-        <p className="staff-stats-empty-copy">No trusted or crew lead recommendations right now.</p>
+        <p className="staff-stats-empty-copy">No trusted recommendations right now.</p>
       </section>
     );
   }
@@ -65,7 +63,7 @@ function EligibilityRecommendations({
       <div className="staff-stats-section-head">
         <h3 className="staff-stats-section-title">Staff action recommendations</h3>
         <p className="staff-stats-section-sub">
-          Trusted status and crew lead are set by staff only. These guards meet the system thresholds
+          Trusted status is set by staff only. These guards meet the system thresholds
           for your review.
         </p>
       </div>
@@ -82,7 +80,7 @@ function EligibilityRecommendations({
                   className={
                     rec.kind === 'trusted'
                       ? 'staff-stats-eligibility-pill staff-stats-eligibility-pill--trusted'
-                      : 'staff-stats-eligibility-pill staff-stats-eligibility-pill--crew-lead'
+                      : 'staff-stats-eligibility-pill'
                   }
                 >
                   {staffGuardEligibilityKindLabel(rec.kind)}
@@ -323,8 +321,6 @@ function CompareTable({ rows }: { rows: StaffGuardStatRow[] }) {
 export function StaffStatsPanel({
   guards,
   requests,
-  standingCrewMembers = [],
-  crewJoinRequests = [],
   onOpenGuard,
   onOpenViolations,
 }: StaffStatsPanelProps) {
@@ -351,13 +347,8 @@ export function StaffStatsPanel({
   );
   const eligibilityRecommendations = useMemo(
     () =>
-      buildStaffGuardEligibilityRecommendations(
-        guards,
-        statRows,
-        standingCrewMembers,
-        crewJoinRequests
-      ),
-    [guards, statRows, standingCrewMembers, crewJoinRequests]
+      buildStaffGuardEligibilityRecommendations(guards, statRows),
+    [guards, statRows]
   );
 
   const toggleSelect = (guardId: string) => {

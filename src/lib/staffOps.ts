@@ -30,7 +30,6 @@ export type StaffSection =
   | 'map'
   | 'guards'
   | 'team'
-  | 'crews'
   | 'clients'
   | 'incidents'
   | 'messages'
@@ -77,6 +76,7 @@ export function isStaffOpsMapSection(section: StaffSection): boolean {
 export function normalizeStaffSection(section?: string): StaffSection | undefined {
   if (!section) return undefined;
   if (section === 'live-jobs') return 'jobs';
+  if (section === 'crews') return 'jobs';
   if (section === 'approvals') return 'applications';
   if (section === 'design-qa') return 'overview';
   if (section === 'messages' || section === 'team-chat' || section === 'job-chats') {
@@ -85,7 +85,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   if (section === 'support') return 'support';
   if (section === 'staff-pay') return 'payments';
   const valid: StaffSection[] = [
-    'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
+    'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'clients',
     'incidents', 'messages', 'support', 'payments', 'payment-settings', 'agreements', 'audit-log', 'disputes', 'violations', 'stats', 'analytics', 'settings', 'permissions', 'integrations', 'cities', 'locations', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;

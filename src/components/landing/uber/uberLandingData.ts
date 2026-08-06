@@ -48,8 +48,8 @@ export const EXPLORE_SERVICES: ExploreService[] = [
   },
   {
     id: 'teams',
-    title: 'Teams & crews',
-    body: 'Form standing crews, coordinate multi-guard posts, and manage field communications.',
+    title: 'Multi-guard jobs',
+    body: 'Post jobs that need more than one guard and approve guards into independent slots.',
     icon: Users,
   },
   {

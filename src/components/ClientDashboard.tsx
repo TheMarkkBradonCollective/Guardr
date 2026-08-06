@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, ClientMessage, GuardStandingCrewMember, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
+import { Client, ClientMessage, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -57,7 +57,6 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   platformRequests?: SecurityRequest[];
   guards: SecurityGuard[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   clientEmail: string;
   accountStatus?: Client['accountStatus'];
   approved?: boolean;
@@ -144,7 +143,6 @@ interface ClientDashboardProps {
   onMessagesDetailOpenChange?: (open: boolean) => void;
   onMessagesChromeChange?: (chrome: MessagesChrome) => void;
   messagesShellHeaderTrailing?: React.ReactNode;
-  onTeamDetailOpenChange?: (open: boolean) => void;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
@@ -157,7 +155,6 @@ export function ClientDashboard({
   requests,
   platformRequests = [],
   guards,
-  standingCrewMembers = [],
   clientEmail,
   accountStatus,
   approved,
@@ -230,7 +227,6 @@ export function ClientDashboard({
   onMessagesDetailOpenChange,
   onMessagesChromeChange,
   messagesShellHeaderTrailing,
-  onTeamDetailOpenChange,
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
@@ -501,9 +497,7 @@ export function ClientDashboard({
                 onToggleFavorite={onToggleFavoriteGuard}
                 clientId={clientId}
                 requests={requests}
-                standingCrewMembers={standingCrewMembers}
-                onRequestGuard={startDirectGuardRequest}
-                onTeamDetailOpenChange={onTeamDetailOpenChange}
+                        onRequestGuard={startDirectGuardRequest}
               />
             }
             detail={
@@ -563,9 +557,7 @@ export function ClientDashboard({
         onToggleFavorite={onToggleFavoriteGuard}
         clientId={clientId}
         requests={requests}
-        standingCrewMembers={standingCrewMembers}
         onRequestGuard={startDirectGuardRequest}
-        onTeamDetailOpenChange={onTeamDetailOpenChange}
       />
       </>,
       'client-guards'

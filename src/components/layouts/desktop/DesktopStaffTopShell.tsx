@@ -36,7 +36,6 @@ const PRIMARY_NAV: StaffSection[] = ['overview', 'map', 'jobs', 'guards', 'clien
 const SECONDARY_NAV: StaffSection[] = [
   'applications',
   'credentials',
-  'crews',
   'team',
   'payments',
   'incidents',

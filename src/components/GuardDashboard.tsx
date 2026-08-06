@@ -11,9 +11,6 @@ import {
   JobChatThread,
   JobChatMessage,
   GuardMessage,
-  TeamChatThread,
-  TeamChatMessage,
-  GuardStandingCrewMember,
 } from '../types';
 import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapViewportInsetsProvider } from '../lib/mapViewportInsets';
@@ -47,7 +44,6 @@ import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardStripeConnectSheet } from './guard/GuardStripeConnectSheet';
 import { GuardJobDetailView } from './guard/GuardJobDetailView';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
-import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardEndShiftCheckpointModal } from './guard/GuardEndShiftCheckpointModal';
 import { GuardBriefingAckGate } from './guard/GuardBriefingAckGate';
@@ -85,20 +81,11 @@ import {
   ShiftPhase,
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
-import { getCoordinatingCrewJobs } from '../lib/guardTeams';
-import {
-  getPendingStandingCrewIncoming,
-  guardIsInStandingCrew,
-  shouldOfferTeamCodeJoin,
-} from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
-import {
-  canRequestCrewLead,
-  shouldShowPendingCrewLeadRequest,
-} from '../lib/guardCrewJoinRequest';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
+import { guardParticipatesInJobChat } from '../lib/jobChat';
 import { isPreShiftBriefingWindowOpen, canGuardStartEnRoute, enRouteBlockedMessage } from '../lib/preShiftBriefing';
 import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
 import { guardMustAckBriefingOnSite } from '../lib/briefingAck';
@@ -183,24 +170,8 @@ interface GuardDashboardProps {
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
   onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
-  onUpdateCrewProfile?: (
-    requestId: string,
-    patch: { crewName: string; crewDescription: string }
-  ) => void | Promise<void>;
-  onUpdateStandingCrewProfile?: (patch: {
-    crewName: string;
-    crewDescription: string;
-  }) => void | Promise<void>;
-  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
-  standingCrewMembers?: GuardStandingCrewMember[];
-  onInviteStandingCrew?: (guardId: string) => void | Promise<void>;
-  onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
-  onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
-  onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
-  onRequestCrewLead?: () => void | Promise<void>;
-  crewJoinRequests?: import('../types').GuardCrewJoinRequest[];
   accountNotifications?: AccountMenuNotificationProps;
   feeConfig?: import('../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
@@ -245,10 +216,7 @@ interface GuardDashboardProps {
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
-  teamChatThreads?: TeamChatThread[];
-  teamChatMessages?: TeamChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
-  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   guardMessages?: GuardMessage[];
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
@@ -256,7 +224,6 @@ interface GuardDashboardProps {
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
   jobChatRequestId?: string | null;
-  initialTeamChatRequestId?: string | null;
   openJobChat?: boolean;
   /** Deep-link job selection without opening chat (notifications) */
   initialSelectedJobId?: string | null;
@@ -293,7 +260,7 @@ interface GuardDashboardProps {
   isDbConnected?: boolean;
 }
 
-export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew' | 'preferences' | 'performance' | 'availability' | 'vehicle';
+export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
 function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
@@ -309,7 +276,6 @@ function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
 const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'map',
   'myJobs',
-  'crew',
   'messages',
   'support',
   'availability',
@@ -330,7 +296,6 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   profile: 'Profile',
   settings: 'Settings',
   guide: 'Guide',
-  crew: 'Crew',
   preferences: 'Preferences',
   performance: 'Performance',
   availability: 'Availability',
@@ -359,18 +324,8 @@ export function GuardDashboard({
   onApplyAsTeamLead,
   onInviteTeamGuard,
   onRemoveTeamGuard,
-  onUpdateCrewProfile,
-  onUpdateStandingCrewProfile,
-  onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
-  standingCrewMembers = [],
-  onInviteStandingCrew,
-  onRemoveStandingCrew,
-  onAcceptStandingCrewInvite,
-  onDeclineStandingCrewInvite,
-  onRequestCrewLead,
-  crewJoinRequests = [],
   accountNotifications,
   feeConfig,
   onSubmitPriceOffer,
@@ -401,10 +356,7 @@ export function GuardDashboard({
   onSendSupportMessage,
   jobChatThreads = [],
   jobChatMessages = [],
-  teamChatThreads = [],
-  teamChatMessages = [],
   onSendJobChatMessage,
-  onSendTeamChatMessage,
   guardMessages = [],
   onSendGuardMessage,
   onRefreshGuardMessages,
@@ -412,7 +364,6 @@ export function GuardDashboard({
   onRequestCashPayout,
   onRequestStripePayout,
   jobChatRequestId = null,
-  initialTeamChatRequestId = null,
   openJobChat = false,
   initialSelectedJobId = null,
   onJobChatRequestIdChange,
@@ -484,7 +435,6 @@ export function GuardDashboard({
   );
   const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
   const [guardMessagesChrome, setGuardMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
-  const [crewJobDetailOpen, setCrewJobDetailOpen] = useState(false);
 
   useEffect(() => {
     if (tab !== 'messages' && tab !== 'support') {
@@ -531,11 +481,12 @@ export function GuardDashboard({
   );
 
   const upcomingForMessages = useMemo(() => {
-    const inProgress = requests.filter(
-      (r) => r.assignedGuardId === guard.id && r.status === 'in-progress'
+    return requests.filter(
+      (r) =>
+        (r.status === 'accepted' || r.status === 'in-progress') &&
+        guardParticipatesInJobChat(guard.id, r)
     );
-    return [...inProgress, ...browseJobLists.scheduled];
-  }, [requests, guard.id, browseJobLists.scheduled]);
+  }, [requests, guard.id]);
 
   const assignedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status !== 'completed' && r.status !== 'closed'),
@@ -747,46 +698,6 @@ export function GuardDashboard({
     [guardPayoutInvoices, guard.id]
   );
 
-  const trustedGuard = isGuardTrusted(guard);
-  const pendingStandingCrewInvites = useMemo(
-    () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
-    [standingCrewMembers, guard.id]
-  );
-  const pendingCrewLeadRequest = shouldShowPendingCrewLeadRequest(
-    guard,
-    standingCrewMembers,
-    crewJoinRequests
-  );
-  const canRequestLead = useMemo(
-    () => canRequestCrewLead(guard, standingCrewMembers, crewJoinRequests),
-    [guard, standingCrewMembers, crewJoinRequests]
-  );
-  const coordinatingCrewJobs = useMemo(
-    () => getCoordinatingCrewJobs(guard.id, requests),
-    [requests, guard.id]
-  );
-
-  const inStandingCrew = useMemo(
-    () => guardIsInStandingCrew(guard, standingCrewMembers),
-    [guard, standingCrewMembers]
-  );
-
-  const showCrewTab =
-    trustedGuard ||
-    inStandingCrew ||
-    pendingStandingCrewInvites.length > 0 ||
-    coordinatingCrewJobs.length > 0;
-
-  useEffect(() => {
-    if (tab === 'crew' && !showCrewTab) {
-      setTab('map');
-    }
-  }, [tab, showCrewTab, setTab]);
-
-  useEffect(() => {
-    if (tab !== 'crew') setCrewJobDetailOpen(false);
-  }, [tab]);
-
   useEffect(() => {
     return registerSystemBackHandler(() => {
       if (guardMessagesDetailOpen) {
@@ -815,26 +726,6 @@ export function GuardDashboard({
       setTab('messages');
     }
   }, [tab, openJobChat, jobChatRequestId, setTab]);
-
-  const [teamChatRequestId, setTeamChatRequestId] = useState<string | null>(initialTeamChatRequestId);
-
-  useEffect(() => {
-    if (initialTeamChatRequestId) {
-      setTeamChatRequestId(initialTeamChatRequestId);
-      setTab('messages');
-    }
-  }, [initialTeamChatRequestId, setTab]);
-
-  const openMessagesForTeam = useCallback(
-    (requestId: string) => {
-      setTab('messages');
-      setTeamChatRequestId(requestId);
-      onJobChatOpenChange?.(false);
-      onJobChatRequestIdChange?.(null);
-      onSupportTicketIdChange?.(null);
-    },
-    [setTab, onJobChatOpenChange, onJobChatRequestIdChange, onSupportTicketIdChange]
-  );
 
   const openMessagesForJob = useCallback(
     (requestId: string) => {
@@ -1397,7 +1288,6 @@ export function GuardDashboard({
   const GUARD_PRIMARY_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
-    ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
   const GUARD_MESSAGES_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -1602,9 +1492,7 @@ export function GuardDashboard({
                   : undefined
               }
               onUpdateCrewProfile={
-                onUpdateCrewProfile
-                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
-                  : undefined
+                undefined
               }
               onAcceptInvite={
                 onAcceptTeamInvite ? () => void onAcceptTeamInvite(selectedJob.id) : undefined
@@ -1682,7 +1570,7 @@ export function GuardDashboard({
                 onApplyAsLead={onApplyAsTeamLead}
                 onInviteGuard={onInviteTeamGuard}
                 onRemoveGuard={onRemoveTeamGuard}
-                onUpdateCrewProfile={onUpdateCrewProfile}
+                onUpdateCrewProfile={undefined}
                 onAcceptInvite={onAcceptTeamInvite}
                 onDeclineInvite={onDeclineTeamInvite}
                 feeConfig={feeConfig}
@@ -1694,37 +1582,6 @@ export function GuardDashboard({
             </div>
           )}
 
-          {tab === 'crew' && showCrewTab && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-crew">
-              <GuardCrewHubPanel
-                  guard={guard}
-                  coordinatingJobs={coordinatingCrewJobs}
-                  coworkerGuards={coworkerGuards}
-                  standingCrewMembers={standingCrewMembers}
-                  trusted={trustedGuard}
-                  scheduleRequests={requests}
-                  onInviteGuard={onInviteTeamGuard}
-                  onRemoveGuard={onRemoveTeamGuard}
-                  onUpdateCrewProfile={onUpdateCrewProfile}
-                  onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
-                  onAcceptInvite={onAcceptTeamInvite}
-                  onDeclineInvite={onDeclineTeamInvite}
-                  onInviteStandingCrew={onInviteStandingCrew}
-                  onRemoveStandingCrew={onRemoveStandingCrew}
-                  onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
-                  onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
-                  onRequestCrewLead={onRequestCrewLead}
-                  canRequestCrewLead={canRequestLead}
-                  pendingCrewLeadRequest={pendingCrewLeadRequest}
-                  onDetailOpenChange={setCrewJobDetailOpen}
-                  onJoinTeamWithCode={
-                    shouldOfferTeamCodeJoin(guard, standingCrewMembers)
-                      ? onJoinTeamWithCode
-                      : undefined
-                  }
-                />
-            </div>
-          )}
 
           {tab === 'messages' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-messages">
@@ -1733,22 +1590,17 @@ export function GuardDashboard({
                 upcomingJobs={upcomingForMessages}
                 pastJobs={browseJobLists.past}
                 guard={guard}
-                coworkerGuards={coworkerGuards}
                 currentUser={currentUser}
                 jobChatThreads={jobChatThreads}
                 jobChatMessages={jobChatMessages}
-                teamChatThreads={teamChatThreads}
-                teamChatMessages={teamChatMessages}
                 guardMessages={guardMessages}
                 supportTickets={supportTickets}
                 onSendJobChatMessage={onSendJobChatMessage}
-                onSendTeamChatMessage={onSendTeamChatMessage}
                 onSendGuardMessage={onSendGuardMessage}
                 onSendSupportMessage={onSendSupportMessage}
                 onRefreshGuardMessages={onRefreshGuardMessages}
                 initialJobChatRequestId={jobChatRequestId}
                 initialJobChatOpen={openJobChat}
-                initialTeamChatRequestId={teamChatRequestId}
                 onJobChatRequestIdChange={onJobChatRequestIdChange}
                 onJobChatOpenChange={onJobChatOpenChange}
                 onDetailOpenChange={setGuardMessagesDetailOpen}
@@ -1782,12 +1634,9 @@ export function GuardDashboard({
                   upcomingJobs={upcomingForMessages}
                   pastJobs={browseJobLists.past}
                   guard={guard}
-                  coworkerGuards={coworkerGuards}
                   currentUser={currentUser}
                   jobChatThreads={jobChatThreads}
                   jobChatMessages={jobChatMessages}
-                  teamChatThreads={teamChatThreads}
-                  teamChatMessages={teamChatMessages}
                   guardMessages={guardMessages}
                   supportTickets={supportTickets}
                   onSendSupportMessage={onSendSupportMessage}
@@ -2098,7 +1947,7 @@ export function GuardDashboard({
         ? userStatus === 'approved'
           ? 'Awaiting account activation'
           : 'Activation in review'
-        : trustedGuard
+        : isGuardTrusted(guard)
           ? 'Trusted Guardr professional'
           : 'Available for vetted jobs';
 
@@ -2114,7 +1963,7 @@ export function GuardDashboard({
   const shellHeaderExtension = messagesChromeActive ? guardMessagesChrome.extension : null;
 
   const shellHideHeader =
-    ((tab === 'myJobs' && !!guardSelectedJobId) || (tab === 'crew' && crewJobDetailOpen)) &&
+    (tab === 'myJobs' && !!guardSelectedJobId) &&
     !shellHeaderOverride;
 
   return (

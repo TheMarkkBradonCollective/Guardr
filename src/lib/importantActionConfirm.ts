@@ -16,28 +16,23 @@ function accountLabel(kind: AccountKind): string {
 export async function confirmMarkGuardTrusted(guardName: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Mark guard as trusted?',
-    message: `${guardName} will skip Guardr applicant review on Stripe jobs, may coordinate multi-guard crews, and cash jobs will still require staff confirmation.`,
+    message: `${guardName} will skip Guardr applicant review on Stripe jobs, and cash jobs will still require staff confirmation.`,
     confirmLabel: 'Mark trusted',
   });
 }
 
 export async function confirmRemoveGuardTrusted(
   guardName: string,
-  options?: { crewJobCount?: number; scheduledJobCount?: number }
+  options?: { scheduledJobCount?: number }
 ): Promise<boolean> {
-  const crewJobs = options?.crewJobCount ?? 0;
   const scheduledJobs = options?.scheduledJobCount ?? 0;
   const impact =
-    crewJobs > 0 || scheduledJobs > 0
-      ? ` Any coordinated crews they lead will be dissolved${
-          scheduledJobs > 0
-            ? ` and ${scheduledJobs} scheduled job${scheduledJobs === 1 ? '' : 's'} will be re-listed on the marketplace`
-            : ''
-        }.`
-      : ' Any coordinated crews they lead will be dissolved and scheduled jobs will be re-listed.';
+    scheduledJobs > 0
+      ? ` ${scheduledJobs} scheduled job${scheduledJobs === 1 ? '' : 's'} will be re-listed on the marketplace.`
+      : ' Scheduled jobs will be re-listed on the marketplace.';
   return showAppConfirm({
     title: 'Remove trusted status?',
-    message: `${guardName} will require Guardr applicant review on future job applications, cannot coordinate crews until marked trusted again, and will be removed from scheduled jobs.${impact}`,
+    message: `${guardName} will require Guardr applicant review on future job applications and will be removed from scheduled jobs.${impact}`,
     confirmLabel: 'Remove trusted',
     tone: 'danger',
   });
@@ -149,52 +144,18 @@ export async function confirmStaffRoleChange(memberName: string, newRole: string
   });
 }
 
-export async function confirmRemoveTeamMember(guardName: string, crewName: string): Promise<boolean> {
-  return showAppConfirm({
-    title: 'Remove from crew?',
-    message: `Remove ${guardName} from "${crewName}"? They will need a new invite or crew code to rejoin.`,
-    confirmLabel: 'Remove',
-    tone: 'danger',
-  });
-}
-
-export async function confirmApplyAsTeamLead(jobTitle: string): Promise<boolean> {
-  return showAppConfirm({
-    title: 'Apply as crew coordinator?',
-    message: `Apply to coordinate the crew for "${jobTitle}"? You will manage invites and crew chat for this job.`,
-    confirmLabel: 'Apply as coordinator',
-  });
-}
-
-export async function confirmDenyFullTeam(jobTitle: string, guardCount: number): Promise<boolean> {
-  return showAppConfirm({
-    title: 'Decline full crew?',
-    message: `Decline this coordinated crew of ${guardCount} guards for "${jobTitle}"? Independent guard options will remain available if staff sent any.`,
-    confirmLabel: 'Decline crew',
-    tone: 'danger',
-  });
-}
-
-export async function confirmApproveFullTeam(jobTitle: string, guardCount: number): Promise<boolean> {
-  return showAppConfirm({
-    title: 'Approve full crew?',
-    message: `Approve all ${guardCount} guards on the coordinated crew for "${jobTitle}"? This locks in the full team for this job.`,
-    confirmLabel: 'Approve full crew',
-  });
-}
-
 export async function confirmApproveTeamSlot(guardName: string, jobTitle: string): Promise<boolean> {
   return showAppConfirm({
-    title: 'Approve crew member?',
-    message: `Approve ${guardName} for "${jobTitle}"? They will be confirmed on your team roster.`,
+    title: 'Approve guard?',
+    message: `Approve ${guardName} for "${jobTitle}"? They will be confirmed on your roster.`,
     confirmLabel: 'Approve',
   });
 }
 
 export async function confirmDenyTeamSlot(guardName: string, jobTitle: string): Promise<boolean> {
   return showAppConfirm({
-    title: 'Decline crew member?',
-    message: `Decline ${guardName} for "${jobTitle}"? They will not join this crew.`,
+    title: 'Decline guard?',
+    message: `Decline ${guardName} for "${jobTitle}"? They will not join this job.`,
     confirmLabel: 'Decline',
     tone: 'danger',
   });

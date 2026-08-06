@@ -4,7 +4,6 @@ import {
   Certification,
   Experience,
   GuardEducation,
-  GuardStandingCrewMember,
   SecurityGuard,
   SecurityRequest,
 } from '../../types';
@@ -41,7 +40,6 @@ import {
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   canManage: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
@@ -67,7 +65,6 @@ interface StaffGuardsPanelProps {
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (guardId: string, trusted: boolean) => void | Promise<void>;
-  onMakeCrewLead?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,
@@ -127,7 +124,6 @@ function guardStatusTone(status: ReturnType<typeof getGuardUserStatus>): StatusT
 export function StaffGuardsPanel({
   guards,
   requests,
-  standingCrewMembers = [],
   canManage,
   canSuspend,
   onUpdateUserStatus,
@@ -145,7 +141,6 @@ export function StaffGuardsPanel({
   onApproveGuardAccount,
   onRejectGuardApplication,
   onSetGuardTrusted,
-  onMakeCrewLead,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -283,7 +278,6 @@ export function StaffGuardsPanel({
       onApproveGuardAccount,
       onRejectGuardApplication,
       onSetGuardTrusted: onSetGuardTrusted ? (trusted: boolean) => onSetGuardTrusted(guard.id, trusted) : undefined,
-      onMakeCrewLead: onMakeCrewLead ? () => onMakeCrewLead(guard.id) : undefined,
       onDeleteGuard,
       onSubmitIdentityVerification: onSubmitIdentityVerification
         ? (payload) => onSubmitIdentityVerification(guard.id, payload)
@@ -308,7 +302,6 @@ export function StaffGuardsPanel({
       onOpenJob,
       onOpenGuardApplication,
       onOpenGuardCredential,
-      standingCrewMembers,
     };
   }
 

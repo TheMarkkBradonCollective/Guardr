@@ -68,7 +68,7 @@ export interface JobTypePremiumPriorityProgress {
 
 export type PremiumOpenJob = Pick<
   SecurityRequest,
-  'guardPay' | 'guardsNeeded' | 'teamLeadId' | 'guardSlots' | 'type'
+  'guardPay' | 'guardsNeeded' | 'guardSlots' | 'type'
 >;
 
 /** Premium jobs get compressed notification waves and extra matching weight. */
@@ -76,7 +76,6 @@ export function isPremiumOpenJob(job: PremiumOpenJob): boolean {
   const guardPay = job.guardPay ?? 0;
   if (guardPay >= PREMIUM_GUARD_PAY_THRESHOLD) return true;
   if ((job.guardsNeeded ?? 1) > 1) return true;
-  if (job.teamLeadId) return true;
   if ((job.guardSlots?.length ?? 0) > 0) return true;
   return false;
 }
@@ -203,7 +202,7 @@ export function modalityRewardsInfoCopy(
 
   return {
     title: `Strong ${label.toLowerCase()} ratings help you get priority ${shiftKind}`,
-    body: `Hit and maintain all ${totalCount} ${label.toLowerCase()} targets and you'll move to the front of the line for premium ${shiftKind} — including shifts paying $${PREMIUM_GUARD_PAY_THRESHOLD}+/hr, multi-guard needs, and coordinated crew work.`,
+    body: `Hit and maintain all ${totalCount} ${label.toLowerCase()} targets and you'll move to the front of the line for premium ${shiftKind} — including shifts paying $${PREMIUM_GUARD_PAY_THRESHOLD}+/hr and multi-guard needs.`,
     ctaLabel: 'Done',
   };
 }

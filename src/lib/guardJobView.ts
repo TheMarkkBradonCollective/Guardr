@@ -1,5 +1,4 @@
 import { JobOperationalDetails, JobGuardSlot, Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
-import { effectiveGuardPayForJob } from './crewTeamBilling';
 import { computeGuardPay, computeGuardEarnings } from './payments';
 import type { PlatformSettings } from './platformSettings';
 import { guardCanViewJob } from './guardJobs';
@@ -33,10 +32,6 @@ export interface GuardJobView {
   armedRequired: boolean;
   guardsNeeded?: number;
   guardSlots?: JobGuardSlot[];
-  teamLeadId?: string | null;
-  teamCode?: string | null;
-  crewName?: string | null;
-  crewDescription?: string | null;
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
@@ -184,12 +179,9 @@ export function getShiftPayDisplay(
 /** Strip client billing and platform payment fields before data reaches guard UI */
 export function toGuardJobView(
   req: SecurityRequest,
-  guardId?: string,
-  crewSettings?: Pick<PlatformSettings, 'crewTeamPayBumpPerHour' | 'teamLeadBonusPerGuardPerHour'>
+  guardId?: string
 ): GuardJobView {
-  const guardPay = crewSettings
-    ? effectiveGuardPayForJob(req, guardId, crewSettings as PlatformSettings)
-    : req.guardPay ?? computeGuardPay(req.hourlyRate);
+  const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate);
   const canViewBriefing = guardId ? guardCanViewOperationalBriefing(guardId, req) : false;
   const sensitiveBriefingExists = jobHasSensitiveBriefing(req);
 
@@ -215,10 +207,6 @@ export function toGuardJobView(
     armedRequired: req.armedRequired,
     guardsNeeded: req.guardsNeeded,
     guardSlots: req.guardSlots,
-    teamLeadId: req.teamLeadId,
-    teamCode: req.teamCode,
-    crewName: req.crewName,
-    crewDescription: req.crewDescription,
     uniformRequirements: req.uniformRequirements,
     equipmentRequirements: req.equipmentRequirements,
     siteInstructions: canViewBriefing ? req.siteInstructions : undefined,
@@ -271,8 +259,7 @@ export function toGuardJobView(
 /** Guards only receive browseable open jobs plus their own assignments */
 export function getGuardVisibleJobs(
   guard: SecurityGuard,
-  requests: SecurityRequest[],
-  crewSettings?: Pick<PlatformSettings, 'crewTeamPayBumpPerHour' | 'teamLeadBonusPerGuardPerHour'>
+  requests: SecurityRequest[]
 ): GuardJobView[] {
   return requests
     .filter(
@@ -281,7 +268,7 @@ export function getGuardVisibleJobs(
         guardHasSlotOnJob(r, guard.id) ||
         guardCanViewJob(guard, r)
     )
-    .map((req) => toGuardJobView(req, guard.id, crewSettings));
+    .map((req) => toGuardJobView(req, guard.id));
 }
 
 function guardHasSlotOnJob(req: SecurityRequest, guardId: string): boolean {

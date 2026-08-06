@@ -39,14 +39,12 @@ import {
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import {
   isMultiGuardJob,
-  isFullCrewAwaitingClientApproval,
   isIndependentGuardPendingForClient,
   hasIndependentSlotsPendingClient,
 } from '../../lib/guardTeams';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
-import { CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppButton } from '../ui/AppButton';
@@ -183,7 +181,6 @@ export function ClientJobActionsPanel({
   const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isIndependentGuardPendingForClient(req);
-  const fullCrewAwaitingClient = isFullCrewAwaitingClientApproval(req);
   const independentSlotsPending = hasIndependentSlotsPendingClient(req);
 
   const [reviewRating, setReviewRating] = useState(0);
@@ -350,10 +347,6 @@ export function ClientJobActionsPanel({
   return (
     <>
       <div className="client-job-actions space-y-4 w-full">
-        {isMultiGuardJob(req) && billingSettings && fullCrewAwaitingClient && (
-          <CrewTeamUpcostNotice req={req} crewSettings={billingSettings} />
-        )}
-
         {independentSlotsPending && (
           <JobTeamRoster
             job={req}
@@ -363,17 +356,6 @@ export function ClientJobActionsPanel({
             slotFilter={(slot) => slot.status === 'pending_client' && !!slot.guardId}
             onApproveSlot={onApproveTeamSlot ? (slotId) => void onApproveTeamSlot(req.id, slotId) : undefined}
             onDenySlot={onDenyTeamSlot ? (slotId) => void onDenyTeamSlot(req.id, slotId) : undefined}
-          />
-        )}
-
-        {fullCrewAwaitingClient && (
-          <JobTeamRoster
-            job={req}
-            guards={guards}
-            variant="client"
-            showFullTeamActions={!!(onApproveFullTeam && onDenyFullTeam)}
-            onApproveFullTeam={onApproveFullTeam ? () => void onApproveFullTeam(req.id) : undefined}
-            onDenyFullTeam={onDenyFullTeam ? () => void onDenyFullTeam(req.id) : undefined}
           />
         )}
 

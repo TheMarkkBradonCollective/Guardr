@@ -26,7 +26,7 @@ Use it as the operating manual for the whole app:
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Pay**, **Profile**, and **Guide** remain blocked until **active**. |
-| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
+| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -576,7 +576,6 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Activation screen** | Shown automatically after sign-in until account is **active** | Upload credentials, track application progress, wait for staff activation |
 | **Map** | Bottom navigation (active guards only) | Full-screen map — tap pins for open jobs, direct requests, and active shifts |
 | **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
-| **Crew** | Bottom navigation (trusted guards only) | Standing team roster, job crews, team codes |
 | **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Sidebar **Messages** group (active guards only) | Job chats and team threads |
 | **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
@@ -657,41 +656,18 @@ Direct requests are assignments a client sent to you specifically.
 4. Use past jobs to review completed work, overtime prompts, ratings, and history.
 5. Open job chat from the job when you need assignment-specific communication.
 
-### 6. Coordinate crews (trusted guards only)
+### 6. Multi-guard jobs
 
-Trusted guards can build a **standing crew** — a reusable roster for multi-guard jobs.
+Some jobs need more than one guard. Each guard applies independently — there is no crew coordinator or standing team on Guardr.
 
-**Standing crew vs job crew:**
-
-| Term | What it is |
-|------|------------|
-| **Standing crew** | Your persistent team roster on the **Crew** page. Invite guards once; reuse them on future coordinated jobs. |
-| **Job crew** | Guards rostered on a specific multi-guard shift. Appears under **Crew → Active** while you are coordinating that job. |
-
-**Become a crew lead:**
-
-1. Open **Crew**.
-2. Under **Lead your own crew**, tap **Request crew lead approval**.
-3. Staff review the request in **Crews** and approve or decline.
-4. Once approved, name your crew and invite members from your standing roster.
-
-**Join another coordinator's crew:**
-
-1. Open **Crew**.
-2. Under **Join a crew**, enter the team code from the coordinator.
-3. You can only be on **one standing crew at a time** — leave your current crew before joining another.
-
-**On a multi-guard job:**
-
-1. Apply as **team lead** from the map on a job that needs multiple guards.
-2. Open **Crew → Active** to manage roster slots, share the team code, and invite your standing crew.
-3. Clients approve the full crew before the job is accepted.
+1. Open a multi-guard job from the map or **Jobs**.
+2. Tap **Apply** to request one roster slot.
+3. After Guardr staff review (when required), the client approves each guard individually.
+4. Once every slot is approved, the job can move forward as a coordinated shift.
 
 **If trusted status is removed:**
 
-- Your standing crew is dissolved.
-- Coordinated jobs you lead may be re-listed on the marketplace.
-- You can still work as a regular guard but cannot coordinate new crews until staff restore trusted status.
+- You can still work as a regular guard but future applications may require Guardr staff review again.
 
 ### 7. Performance, vehicle, and driving priority
 
@@ -941,7 +917,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 - Financial controls, **Payments**, **Dev notes**
 - Trusted status, job exception placement
-- **Payment settings** (fees, crew pay bump), **Marketplace agreements**, **Audit log**
+- **Payment settings** (fees), **Marketplace agreements**, **Audit log**
 
 ### Governance principles
 
@@ -997,7 +973,7 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Staff** (team roster) | — | — | ✓ | + Directors |
 | **Locations** (shared job sites) | — | QC / approve | ✓ | ✓ |
 | **Service Areas** (city markets) | — | — | ✓ | ✓ |
-| **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
+| **Payment settings** | — | — | ✓ edit platform fees | + payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |
 | **Permissions** | — | — | ✓ role capability toggles | ✓ |
@@ -1033,7 +1009,7 @@ Everything Moderators can do, plus:
 Everything Administrators can do, plus:
 
 - Full **Payments** pipeline — deposits, payouts, cash overrides, dispute holds
-- Edit platform fees and crew team pay bump in **Payment settings**
+- Edit platform fees in **Payment settings**
 - Review **Marketplace agreements** compliance and the **Audit log**
 - Manage Moderators and Administrators in **Staff**
 - Mark guards and clients as **trusted**
@@ -1326,7 +1302,6 @@ Every job follows the same payment path: the client pays, the job runs, then the
 
 - **Payment methods** — Card (Stripe) and optional cash (Founder edits methods; Directors view)
 - **Platform fees** — flat $/hr or percentage model for new jobs
-- **Crew team pay bump** — extra $/hr for guards rostered on coordinated crew jobs
 
 Platform fees are set globally in **Payment settings**. Open-contract jobs can override per agreement. Existing jobs keep their original fee.
 

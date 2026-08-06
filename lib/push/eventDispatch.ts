@@ -439,10 +439,10 @@ export async function buildEventDispatchPayloads(
           ...payload,
           userId,
           priority: event.priority ?? 'high',
-          title: event.title ?? 'Priority job for your crew',
+          title: event.title ?? 'New job on the map',
           body:
             event.body ??
-            'A new job matches your standing crew size — browse and apply early.',
+            'A new paid job is open on the map — browse and apply.',
         },
       ];
     }

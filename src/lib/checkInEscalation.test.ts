@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { SecurityGuard, SecurityRequest, GuardStandingCrewMember } from '../types';
+import type { SecurityGuard, SecurityRequest } from '../types';
 import {
   evaluateCheckInEscalation,
   getCheckInDueAtMs,

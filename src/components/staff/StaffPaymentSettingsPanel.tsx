@@ -116,10 +116,6 @@ export function StaffPaymentSettingsPanel({
   const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
-  const [crewPayBumpRate, setCrewPayBumpRate] = useState(
-    platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
-  );
-  const [savingCrewPayBump, setSavingCrewPayBump] = useState(false);
   const [compDraft, setCompDraft] = useState<StaffCompensationConfig>(
     normalizeStaffCompensationConfig(platformSettings.staffCompensation),
   );
@@ -132,16 +128,6 @@ export function StaffPaymentSettingsPanel({
   useEffect(() => {
     setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation));
   }, [platformSettings.staffCompensation]);
-
-  useEffect(() => {
-    setCrewPayBumpRate(
-      platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
-    );
-  }, [platformSettings.crewTeamPayBumpPerHour, platformSettings.teamLeadBonusPerGuardPerHour]);
-
-  const crewPayBumpDirty =
-    crewPayBumpRate !==
-    (platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1);
 
   const compDirty = useMemo(
     () => JSON.stringify(compDraft) !== JSON.stringify(normalizeStaffCompensationConfig(platformSettings.staffCompensation)),
@@ -164,24 +150,6 @@ export function StaffPaymentSettingsPanel({
       });
     } finally {
       setSavingFees(false);
-    }
-  };
-
-  const persistCrewPayBumpSettings = async () => {
-    if (!onUpdatePlatformSettings || !canEditFees) return;
-    setSavingCrewPayBump(true);
-    try {
-      const rate = Math.max(0, crewPayBumpRate);
-      await onUpdatePlatformSettings({
-        ...platformSettings,
-        crewTeamPayBumpPerHour: rate,
-        teamLeadBonusPerGuardPerHour: rate,
-        teamLeadBonusClientSharePercent: 100,
-        teamLeadBonusPlatformSharePercent: 0,
-        updatedAt: new Date().toISOString(),
-      });
-    } finally {
-      setSavingCrewPayBump(false);
     }
   };
 
@@ -511,53 +479,6 @@ export function StaffPaymentSettingsPanel({
     </div>
   );
 
-  const crewPayBumpBody = (
-    <div className="space-y-4 min-w-0">
-      <p className="text-sm text-brand-text/70 leading-relaxed">
-        Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour.
-        Independent applicants and guards on other jobs do not receive it.
-      </p>
-      <div className="grid grid-cols-1 gap-4 max-w-lg min-w-0">
-        <label className="block space-y-1 min-w-0">
-          <span className="uber-label">Extra pay per crew guard / hour</span>
-          <input
-            type="number"
-            min={0}
-            step={0.25}
-            value={crewPayBumpRate}
-            disabled={!canEditFees}
-            onChange={(e) => setCrewPayBumpRate(Number(e.target.value))}
-            className="uber-input w-full"
-          />
-        </label>
-      </div>
-      {canEditFees ? (
-        formFactor === 'desktop' ? (
-          <GuardrButton
-            kind="primary"
-            size="compact"
-            disabled={!crewPayBumpDirty || savingCrewPayBump}
-            onClick={() => void persistCrewPayBumpSettings()}
-          >
-            {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
-          </GuardrButton>
-        ) : (
-          <div className="staff-payment-settings-actions">
-            <MobileSaveButton
-              label="Save crew pay bump"
-              busyLabel="Saving…"
-              busy={savingCrewPayBump}
-              disabled={!crewPayBumpDirty}
-              onClick={() => void persistCrewPayBumpSettings()}
-            />
-          </div>
-        )
-      ) : (
-        <p className="text-xs text-brand-text/60">Only Directors and Founders can edit crew pay settings.</p>
-      )}
-    </div>
-  );
-
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell
@@ -565,7 +486,7 @@ export function StaffPaymentSettingsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Platform fees, staff compensation, and crew pay defaults."
+            subtitle="Platform fees and staff compensation defaults."
           />
         }
       >
@@ -575,9 +496,6 @@ export function StaffPaymentSettingsPanel({
           </DesktopSettingsCard>
           <DesktopSettingsCard title="Staff compensation" fullWidth>
             {staffCompensationBody}
-          </DesktopSettingsCard>
-          <DesktopSettingsCard title="Crew team pay bump" fullWidth>
-            {crewPayBumpBody}
           </DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
@@ -589,7 +507,6 @@ export function StaffPaymentSettingsPanel({
       <div className="staff-payment-settings-scroll min-w-0">
         <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
         <AppFormSection title="Staff compensation">{staffCompensationBody}</AppFormSection>
-        <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
       </div>
     </StaffOpsPageShell>
   );

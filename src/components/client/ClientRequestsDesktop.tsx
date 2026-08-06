@@ -315,8 +315,6 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
                   <JobBillingSummaryFromRequest
                     req={selectedRequest}
                     variant="client"
-                    crewSettings={billingSettings}
-                    hideCrewUpcostNotice
                   />
                 }
               />

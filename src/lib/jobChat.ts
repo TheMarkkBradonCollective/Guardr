@@ -4,11 +4,30 @@ import { isStaffRole } from './permissions';
 const STORAGE_THREADS = 'guardr_job_chat_threads';
 const STORAGE_MESSAGES = 'guardr_job_chat_messages';
 
-export function isJobChatEligible(req: Pick<SecurityRequest, 'status' | 'assignedGuardId'>): boolean {
-  return (
-    !!req.assignedGuardId &&
-    (req.status === 'accepted' || req.status === 'in-progress')
-  );
+/** Guards rostered on an accepted or in-progress job (approved slots + legacy assignee). */
+export function approvedJobGuardIds(
+  req: Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots'>
+): string[] {
+  const ids = new Set<string>();
+  if (req.assignedGuardId) ids.add(req.assignedGuardId);
+  for (const slot of req.guardSlots ?? []) {
+    if (slot.guardId && slot.status === 'approved') ids.add(slot.guardId);
+  }
+  return [...ids];
+}
+
+export function guardParticipatesInJobChat(
+  guardId: string,
+  req: Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots'>
+): boolean {
+  return approvedJobGuardIds(req).includes(guardId);
+}
+
+export function isJobChatEligible(
+  req: Pick<SecurityRequest, 'status' | 'assignedGuardId' | 'guardSlots'>
+): boolean {
+  if (req.status !== 'accepted' && req.status !== 'in-progress') return false;
+  return approvedJobGuardIds(req).length > 0;
 }
 
 export function isJobChatReadOnly(req: Pick<SecurityRequest, 'status'>): boolean {
@@ -17,13 +36,26 @@ export function isJobChatReadOnly(req: Pick<SecurityRequest, 'status'>): boolean
 
 export function canParticipateInJobChat(
   user: SessionUser,
-  req: Pick<SecurityRequest, 'clientId' | 'assignedGuardId' | 'status'>
+  req: Pick<SecurityRequest, 'clientId' | 'assignedGuardId' | 'guardSlots' | 'status'>
 ): boolean {
   if (isJobChatReadOnly(req)) return false;
   if (isStaffRole(user.role)) return true;
   if (user.role === 'client' && user.id === req.clientId) return true;
-  if (user.role === 'guard' && user.id === req.assignedGuardId) return true;
+  if (user.role === 'guard' && guardParticipatesInJobChat(user.id, req)) return true;
   return false;
+}
+
+export function formatJobChatGuardNames(
+  guardIds: string[],
+  guards: { id: string; name: string }[]
+): string {
+  const names = guardIds
+    .map((id) => guards.find((g) => g.id === id)?.name)
+    .filter((name): name is string => !!name);
+  if (names.length === 0) return 'Assigned guards';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} & ${names[1]}`;
+  return `${names[0]} + ${names.length - 1} more`;
 }
 
 export function loadJobChatThreadsFromStorage(): JobChatThread[] {
@@ -66,11 +98,12 @@ export function saveJobChatMessagesToStorage(messages: JobChatMessage[]): void {
 
 export function buildJobChatThread(req: SecurityRequest): JobChatThread {
   const now = new Date().toISOString();
+  const primaryGuardId = req.assignedGuardId ?? approvedJobGuardIds(req)[0] ?? '';
   return {
     id: `jchat-${req.id}`,
     requestId: req.id,
     clientId: req.clientId,
-    guardId: req.assignedGuardId!,
+    guardId: primaryGuardId,
     status: 'active',
     createdAt: now,
   };
@@ -103,7 +136,7 @@ export function threadForRequest(threads: JobChatThread[], requestId: string): J
 }
 
 export function canOpenJobChatForRequest(
-  req: Pick<SecurityRequest, 'id' | 'status' | 'assignedGuardId'>,
+  req: Pick<SecurityRequest, 'id' | 'status' | 'assignedGuardId' | 'guardSlots'>,
   jobChatThreads: JobChatThread[]
 ): boolean {
   return (
@@ -112,9 +145,10 @@ export function canOpenJobChatForRequest(
   );
 }
 
-export function jobChatActionLabel(req: Pick<SecurityRequest, 'status'>): string {
-  if (req.status === 'in-progress') return 'Message guard on shift';
-  if (req.status === 'accepted') return 'Message guard';
+export function jobChatActionLabel(req: Pick<SecurityRequest, 'status' | 'guardsNeeded'>): string {
+  const multi = (req.guardsNeeded ?? 1) > 1;
+  if (req.status === 'in-progress') return multi ? 'Message job team' : 'Message guard on shift';
+  if (req.status === 'accepted') return multi ? 'Message job team' : 'Message guard';
   return 'View job chat history';
 }
 
@@ -126,7 +160,7 @@ export function findMessageableRequestForGuard(
   jobChatThreads: JobChatThread[]
 ): SecurityRequest | null {
   const shared = requests.filter(
-    (r) => r.clientId === clientId && r.assignedGuardId === guardId
+    (r) => r.clientId === clientId && guardParticipatesInJobChat(guardId, r)
   );
 
   const live = shared.filter(isJobChatEligible);

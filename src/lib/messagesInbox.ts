@@ -5,16 +5,19 @@ import {
   SecurityRequest,
   SessionUser,
   SupportTicket,
-  TeamChatMessage,
-  TeamChatThread,
 } from '../types';
 import { guardForRequest } from './clientShift';
-import { isJobChatEligible, isJobChatReadOnly, threadForRequest, threadsForClient } from './jobChat';
-import { isTeamChatEligible, isTeamChatReadOnly, threadForTeamRequest } from './teamChat';
-import { guardHasJobTeamAssociation, getCrewDisplayName, isMultiGuardJob, teamRosterSummary } from './guardTeams';
+import {
+  formatJobChatGuardNames,
+  approvedJobGuardIds,
+  isJobChatEligible,
+  isJobChatReadOnly,
+  threadForRequest,
+  threadsForClient,
+} from './jobChat';
 import { supportStatusLabel, ticketsForUser } from './support';
 
-export type InboxChannelKind = 'job' | 'team-crew' | 'support' | 'report' | 'guard-community' | 'client-community' | 'staff-community';
+export type InboxChannelKind = 'job' | 'support' | 'report' | 'guard-community' | 'client-community' | 'staff-community';
 
 export type InboxRow = {
   id: string;
@@ -67,7 +70,11 @@ export function buildClientInboxRows({
   for (const thread of clientThreads) {
     const req = requestById.get(thread.requestId);
     if (!req) continue;
-    const guard = guardForRequest(guards, req);
+    const guardIds = approvedJobGuardIds(req);
+    const guardLabel =
+      guardIds.length > 1
+        ? formatJobChatGuardNames(guardIds, guards)
+        : (guardForRequest(guards, req)?.name ?? 'Assigned guard');
     const eligible = isJobChatEligible(req);
     const readOnly = isJobChatReadOnly(req) || thread.status === 'archived';
     const lastMessage = lastJobMessage(jobChatMessages, thread.id);
@@ -75,7 +82,7 @@ export function buildClientInboxRows({
       id: `job-${req.id}`,
       channel: 'job',
       title: req.title,
-      subtitle: `${guard?.name ?? 'Assigned guard'} · ${req.siteName || req.location}`,
+      subtitle: `${guardLabel} · ${req.siteName || req.location}`,
       preview: lastMessage?.body ?? 'Open conversation',
       updatedAt: lastMessage?.createdAt ?? thread.createdAt,
       badge: eligible ? 'Live' : readOnly ? 'Archived' : 'Active',
@@ -88,12 +95,16 @@ export function buildClientInboxRows({
     if (req.clientId !== currentUser.id) continue;
     if (!isJobChatEligible(req)) continue;
     if (threadForRequest(jobChatThreads, req.id)) continue;
-    const guard = guardForRequest(guards, req);
+    const guardIds = approvedJobGuardIds(req);
+    const guardLabel =
+      guardIds.length > 1
+        ? formatJobChatGuardNames(guardIds, guards)
+        : (guardForRequest(guards, req)?.name ?? 'Your guard');
     rows.push({
       id: `job-ready-${req.id}`,
       channel: 'job',
       title: req.title,
-      subtitle: `${guard?.name ?? 'Your guard'} is assigned`,
+      subtitle: `${guardLabel} · ${req.siteName || req.location}`,
       preview: 'Start conversation',
       updatedAt: req.startDate,
       badge: 'Live',
@@ -140,7 +151,7 @@ export function buildGuardJobInboxRows({
   jobChatThreads,
   jobChatMessages,
 }: {
-  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate' | 'assignedGuardId'>[];
+  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate' | 'assignedGuardId' | 'guardSlots'>[];
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
 }): InboxRow[] {
@@ -197,72 +208,11 @@ export function buildGuardSupportInboxRows({
   );
 }
 
-export function buildGuardTeamInboxRows({
-  jobs,
-  guardId,
-  guards = [],
-  teamChatThreads,
-  teamChatMessages,
-}: {
-  jobs: Pick<
-    SecurityRequest,
-    | 'id'
-    | 'title'
-    | 'siteName'
-    | 'location'
-    | 'status'
-    | 'startDate'
-    | 'guardsNeeded'
-    | 'guardSlots'
-    | 'teamLeadId'
-    | 'crewName'
-    | 'crewDescription'
-  >[];
-  guardId: string;
-  guards?: Pick<SecurityGuard, 'id' | 'name'>[];
-  teamChatThreads: TeamChatThread[];
-  teamChatMessages: TeamChatMessage[];
-}): InboxRow[] {
-  const rows: InboxRow[] = [];
-
-  for (const job of jobs) {
-    if (!isMultiGuardJob(job)) continue;
-    if (!guardHasJobTeamAssociation(job.guardSlots, guardId)) continue;
-    const eligible = isTeamChatEligible(job);
-    const readOnly = isTeamChatReadOnly(job);
-    if (!eligible && !readOnly) continue;
-
-    const thread = threadForTeamRequest(teamChatThreads, job.id);
-    const lastMessage = thread ? lastThreadMessage(teamChatMessages, thread.id) : null;
-    const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
-    const coordinator = job.teamLeadId ? guards.find((g) => g.id === job.teamLeadId) : undefined;
-    const crewTitle = getCrewDisplayName(job, coordinator?.name);
-    const descPreview = job.crewDescription?.trim();
-    rows.push({
-      id: `team-${job.id}`,
-      channel: 'team-crew',
-      title: crewTitle,
-      subtitle: `${job.siteName || job.location} · ${summary.filled}/${summary.total} crew`,
-      preview:
-        lastMessage?.body ??
-        (descPreview ? descPreview.slice(0, 120) : eligible ? 'Coordinate with your crew' : 'View team chat history'),
-      updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
-      badge: eligible ? 'Team' : readOnly ? 'Archived' : 'Active',
-      badgeTone: eligible ? 'primary' : readOnly ? 'default' : 'success',
-      requestId: job.id,
-    });
-  }
-
-  return rows;
-}
-
 export function buildStaffInboxRows({
   requests,
   guards,
   jobChatThreads,
   jobChatMessages,
-  teamChatThreads = [],
-  teamChatMessages = [],
   supportTickets,
   staffMessagesUpdatedAt,
   guardMessagesUpdatedAt,
@@ -272,8 +222,6 @@ export function buildStaffInboxRows({
   guards: SecurityGuard[];
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
-  teamChatThreads?: TeamChatThread[];
-  teamChatMessages?: TeamChatMessage[];
   supportTickets: SupportTicket[];
   staffMessagesUpdatedAt?: string;
   guardMessagesUpdatedAt?: string;
@@ -316,14 +264,14 @@ export function buildStaffInboxRows({
 
   const activeJobs = requests.filter(
     (r) =>
-      r.assignedGuardId &&
-      (r.status === 'accepted' || r.status === 'in-progress' || r.status === 'completed' || r.status === 'closed')
+      isJobChatEligible(r) ||
+      ((r.status === 'completed' || r.status === 'closed') && !!threadForRequest(jobChatThreads, r.id))
   );
 
   for (const job of activeJobs) {
     const thread = threadForRequest(jobChatThreads, job.id);
     if (!thread && job.status !== 'accepted' && job.status !== 'in-progress') continue;
-    const guard = guards.find((g) => g.id === job.assignedGuardId);
+    const guardLabel = formatJobChatGuardNames(approvedJobGuardIds(job), guards);
     const archived = job.status === 'completed' || job.status === 'closed';
     const lastMessage = thread ? lastJobMessage(jobChatMessages, thread.id) : null;
     const count = thread ? jobChatMessages.filter((m) => m.threadId === thread.id).length : 0;
@@ -331,37 +279,10 @@ export function buildStaffInboxRows({
       id: `job-${job.id}`,
       channel: 'job',
       title: job.title,
-      subtitle: `${job.clientName} ↔ ${guard?.name ?? 'Guard'}`,
+      subtitle: `${job.clientName} ↔ ${guardLabel}`,
       preview: lastMessage?.body ?? (count > 0 ? `${count} messages` : archived ? 'Archived job chat' : 'Live job chat'),
       updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
       badge: archived ? 'Archived' : 'Live',
-      badgeTone: archived ? 'default' : 'primary',
-      requestId: job.id,
-    });
-  }
-
-  const multiGuardJobs = requests.filter(
-    (r) =>
-      isMultiGuardJob(r) &&
-      (r.teamLeadId || (r.guardSlots ?? []).some((s) => s.guardId && s.status !== 'open')) &&
-      (r.status === 'open' || r.status === 'accepted' || r.status === 'in-progress' || r.status === 'completed' || r.status === 'closed')
-  );
-
-  for (const job of multiGuardJobs) {
-    const thread = threadForTeamRequest(teamChatThreads, job.id);
-    if (!thread && job.status !== 'accepted' && job.status !== 'in-progress' && job.status !== 'open') continue;
-    const archived = job.status === 'completed' || job.status === 'closed';
-    const lastMessage = thread ? lastThreadMessage(teamChatMessages, thread.id) : null;
-    const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
-    const count = thread ? teamChatMessages.filter((m) => m.threadId === thread.id).length : 0;
-    rows.push({
-      id: `team-${job.id}`,
-      channel: 'team-crew',
-      title: `${job.title} · Crew chat`,
-      subtitle: `${job.clientName} · ${summary.filled}/${summary.total} guards`,
-      preview: lastMessage?.body ?? (count > 0 ? `${count} messages` : archived ? 'Archived crew chat' : 'Live crew chat'),
-      updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
-      badge: archived ? 'Archived' : 'Crew',
       badgeTone: archived ? 'default' : 'primary',
       requestId: job.id,
     });

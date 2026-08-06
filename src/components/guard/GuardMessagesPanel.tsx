@@ -4,19 +4,14 @@ import {
   JobChatMessage,
   JobChatThread,
   SecurityGuard,
-  SecurityRequest,
   SessionUser,
   SupportTicket,
-  TeamChatMessage,
-  TeamChatThread,
 } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { threadForRequest } from '../../lib/jobChat';
-import { threadForTeamRequest, teamChatRosterLabel } from '../../lib/teamChat';
 import {
   buildGuardJobInboxRows,
   buildGuardSupportInboxRows,
-  buildGuardTeamInboxRows,
   InboxRow,
 } from '../../lib/messagesInbox';
 import {
@@ -27,7 +22,6 @@ import {
 } from '../../lib/support';
 import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
@@ -40,39 +34,33 @@ import {
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare, Users } from 'lucide-react';
+import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare } from 'lucide-react';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
 type ActiveView =
   | { kind: 'list' }
   | { kind: 'guard-channel' }
   | { kind: 'job'; requestId: string }
-  | { kind: 'team'; requestId: string }
   | { kind: 'support'; ticketId: string };
 
-type InboxTab = 'chats' | 'teams' | 'jobs' | 'support' | 'reports';
+type InboxTab = 'chats' | 'jobs' | 'support' | 'reports';
 
 interface GuardMessagesPanelProps {
   scope?: 'messages' | 'support';
   upcomingJobs: GuardJobView[];
   pastJobs: GuardJobView[];
   guard: SecurityGuard;
-  coworkerGuards?: SecurityGuard[];
   currentUser: SessionUser;
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
-  teamChatThreads?: TeamChatThread[];
-  teamChatMessages?: TeamChatMessage[];
   guardMessages: GuardMessage[];
   supportTickets: SupportTicket[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
-  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
   initialJobChatRequestId?: string | null;
   initialJobChatOpen?: boolean;
-  initialTeamChatRequestId?: string | null;
   onJobChatRequestIdChange?: (requestId: string | null) => void;
   onJobChatOpenChange?: (open: boolean) => void;
   initialSupportTicketId?: string | null;
@@ -97,22 +85,16 @@ export function GuardMessagesPanel({
   upcomingJobs,
   pastJobs,
   guard,
-  coworkerGuards = [],
   currentUser,
   jobChatThreads,
   jobChatMessages,
-  teamChatThreads = [],
-  teamChatMessages = [],
   guardMessages,
   supportTickets,
   onSendJobChatMessage,
-  onSendTeamChatMessage,
   onSendGuardMessage,
   onSendSupportMessage,
-  onRefreshGuardMessages,
   initialJobChatRequestId = null,
   initialJobChatOpen = false,
-  initialTeamChatRequestId = null,
   onJobChatRequestIdChange,
   onJobChatOpenChange,
   initialSupportTicketId = null,
@@ -127,9 +109,6 @@ export function GuardMessagesPanel({
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [activeView, setActiveView] = useState<ActiveView>(() => {
-    if (initialTeamChatRequestId) {
-      return { kind: 'team', requestId: initialTeamChatRequestId };
-    }
     if (initialJobChatOpen && initialJobChatRequestId) {
       return { kind: 'job', requestId: initialJobChatRequestId };
     }
@@ -143,16 +122,9 @@ export function GuardMessagesPanel({
 
   const [activeTab, setActiveTab] = useState<InboxTab>(() => {
     if (isSupportScope || initialSupportTicketId) return 'support';
-    if (initialTeamChatRequestId) return 'teams';
     if (initialJobChatOpen || initialJobChatRequestId) return 'jobs';
     return 'chats';
   });
-
-  useEffect(() => {
-    if (!initialTeamChatRequestId) return;
-    setActiveTab('teams');
-    setActiveView({ kind: 'team', requestId: initialTeamChatRequestId });
-  }, [initialTeamChatRequestId]);
 
   useEffect(() => {
     if (!initialJobChatRequestId) return;
@@ -196,18 +168,6 @@ export function GuardMessagesPanel({
     [allJobs, jobChatThreads, jobChatMessages]
   );
 
-  const teamRows = useMemo(
-    () =>
-      buildGuardTeamInboxRows({
-        jobs: allJobs,
-        guardId: guard.id,
-        guards: coworkerGuards,
-        teamChatThreads,
-        teamChatMessages,
-      }),
-    [allJobs, guard.id, coworkerGuards, teamChatThreads, teamChatMessages]
-  );
-
   const supportRows = useMemo(
     () => buildGuardSupportInboxRows({ currentUser, supportTickets }),
     [currentUser, supportTickets]
@@ -221,22 +181,15 @@ export function GuardMessagesPanel({
     }
     switch (activeTab) {
       case 'chats':   return [communityRow];
-      case 'teams':   return teamRows;
       case 'jobs':    return jobRows;
       case 'support': return supportRows;
+      default:        return [];
     }
-  }, [activeTab, communityRow, isSupportScope, teamRows, jobRows, supportRows]);
+  }, [activeTab, communityRow, isSupportScope, jobRows, supportRows]);
 
   const openRow = (row: InboxRow) => {
     if (row.channel === 'guard-community') {
       setActiveView({ kind: 'guard-channel' });
-      return;
-    }
-    if (row.requestId && row.channel === 'team-crew') {
-      setActiveView({ kind: 'team', requestId: row.requestId });
-      onJobChatOpenChange?.(false);
-      onJobChatRequestIdChange?.(null);
-      onSupportTicketIdChange?.(null);
       return;
     }
     if (row.requestId) {
@@ -264,7 +217,6 @@ export function GuardMessagesPanel({
   const isRowSelected = (row: InboxRow): boolean => {
     if (row.channel === 'guard-community' && activeView.kind === 'guard-channel') return true;
     if (row.requestId && activeView.kind === 'job' && activeView.requestId === row.requestId) return true;
-    if (row.requestId && activeView.kind === 'team' && activeView.requestId === row.requestId) return true;
     if (row.ticketId && activeView.kind === 'support' && activeView.ticketId === row.ticketId) return true;
     return false;
   };
@@ -276,7 +228,6 @@ export function GuardMessagesPanel({
     onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
   }, [formFactor, hasSelection, onDetailOpenChange]);
 
-  // ── Header: inbox tabs (title lives in AppScreenHeader) ──
   const header = isSupportScope ? (
     <MessagesInboxTabs
       activeTab={activeTab}
@@ -296,7 +247,6 @@ export function GuardMessagesPanel({
       onTabChange={(tabId) => setActiveTab(tabId as InboxTab)}
       tabs={[
         { id: 'chats', label: 'Chats', icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
-        { id: 'teams', label: 'Teams', icon: <Users className="w-3.5 h-3.5" strokeWidth={2} /> },
         { id: 'jobs', label: 'Jobs', icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
       ]}
     />
@@ -317,18 +267,6 @@ export function GuardMessagesPanel({
             trailing={shellHeaderTrailing}
           />
         );
-      } else if (activeView.kind === 'team') {
-        const job = jobById.get(activeView.requestId);
-        if (job) {
-          override = (
-            <AppChatHeader
-              title={`${job.title} · Team`}
-              subtitle={teamChatRosterLabel(job)}
-              onBack={backToList}
-              trailing={shellHeaderTrailing}
-            />
-          );
-        }
       } else if (activeView.kind === 'job') {
         const job = jobById.get(activeView.requestId);
         if (job) {
@@ -367,19 +305,17 @@ export function GuardMessagesPanel({
     onMessagesChromeChange,
     embedHeaderInShell,
     activeTab,
-    teamRows.length,
     jobRows.length,
     supportRows.length,
     activeView,
     jobById,
     myTickets,
     shellHeaderTrailing,
+    header,
   ]);
 
-  // ── List: filtered by active tab ─────────────────────────
   const list = (
     <>
-      {/* Quick actions shown on Support tab */}
       {(isSupportScope || activeTab === 'support') && (
         <MessagesQuickActions
           onContactSupport={onOpenSupportCompose}
@@ -396,9 +332,7 @@ export function GuardMessagesPanel({
               ? activeTab === 'reports'
                 ? 'No reports yet'
                 : 'No support conversations'
-              : activeTab === 'teams'
-                ? 'No team chats yet'
-                : activeTab === 'jobs'
+              : activeTab === 'jobs'
                   ? 'No job chats yet'
                   : activeTab === 'support'
                     ? 'No support conversations'
@@ -409,8 +343,6 @@ export function GuardMessagesPanel({
             ? activeTab === 'reports'
               ? 'Use the button above to file a report.'
               : 'Use the buttons above to contact support or file a report.'
-            : activeTab === 'teams'
-            ? 'Join a multi-guard crew to coordinate in team chat.'
             : activeTab === 'jobs'
               ? 'Job chats open once you are assigned to an active job.'
               : activeTab === 'support'
@@ -430,8 +362,6 @@ export function GuardMessagesPanel({
               leading={
                 row.channel === 'guard-community' ? (
                   <MessagesSquare className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'team-crew' ? (
-                  <Users className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'report' ? (
                   <FileText className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'support' ? (
@@ -451,7 +381,6 @@ export function GuardMessagesPanel({
 
   const canPostGuardChat = canPostToGuardChat(currentUser, guard);
 
-  // ── Detail view ──────────────────────────────────────────
   const detailView = (() => {
     if (activeView.kind === 'guard-channel') {
       return (
@@ -479,26 +408,6 @@ export function GuardMessagesPanel({
           </div>
         </div>
       );
-    }
-
-    if (activeView.kind === 'team' && onSendTeamChatMessage) {
-      const job = jobById.get(activeView.requestId);
-      if (job) {
-        return (
-          <div className="h-full flex flex-col min-h-0 app-full-page-screen">
-            <TeamChatPanel
-              request={job}
-              thread={threadForTeamRequest(teamChatThreads, job.id) ?? null}
-              messages={teamChatMessages}
-              currentUser={currentUser}
-              onSend={(body) => onSendTeamChatMessage(job.id, body)}
-              onBack={backToList}
-              hideBackOnDesktop
-              hideShellHeader={embedHeaderInShell}
-            />
-          </div>
-        );
-      }
     }
 
     if (activeView.kind === 'job' && onSendJobChatMessage) {
@@ -581,7 +490,7 @@ export function GuardMessagesPanel({
         emptyDetailHint={
           isSupportScope
             ? 'Select a support chat or report from the inbox'
-            : 'Select guard chat, a team crew, a job thread, or support from the inbox'
+            : 'Select guard chat or a job thread from the inbox'
         }
       />
     </div>

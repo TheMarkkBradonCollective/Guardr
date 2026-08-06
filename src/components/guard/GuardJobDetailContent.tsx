@@ -7,8 +7,6 @@ import {
 } from '../../lib/guardJobs';
 import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardHasApplied } from '../../lib/jobApplications';
-import { isMultiGuardJob } from '../../lib/guardTeams';
-import { GuardTeamPanel } from './GuardTeamPanel';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobListingProfile } from '../jobs/JobListingProfile';
@@ -25,6 +23,7 @@ interface GuardJobDetailContentProps {
   coworkerGuards?: SecurityGuard[];
   onAccept?: () => void;
   onDeclineDirectJob?: () => void;
+  /** @deprecated Crew coordination removed — kept for callers still passing these props */
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onRemoveGuard?: (guardId: string) => void | Promise<void>;
@@ -51,12 +50,6 @@ export function GuardJobDetailContent({
   coworkerGuards = [],
   onAccept,
   onDeclineDirectJob,
-  onApplyAsLead,
-  onInviteGuard,
-  onRemoveGuard,
-  onUpdateCrewProfile,
-  onAcceptInvite,
-  onDeclineInvite,
   scheduleRequests,
   onClose,
   feeConfig,
@@ -143,25 +136,10 @@ export function GuardJobDetailContent({
                 </p>
               )}
 
-              {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && !isMultiGuardJob(job) && (
+              {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
                   Application submitted. Guardr staff will review applicants and send the best fit for client approval.
                 </p>
-              )}
-
-              {isMultiGuardJob(job) && job.status === 'open' && (
-                <GuardTeamPanel
-                  job={job}
-                  guard={guard}
-                  coworkerGuards={coworkerGuards}
-                  onApplyAsLead={onApplyAsLead}
-                  onInviteGuard={onInviteGuard}
-                  onRemoveGuard={onRemoveGuard}
-                  onUpdateCrewProfile={onUpdateCrewProfile}
-                  onAcceptInvite={onAcceptInvite}
-                  onDeclineInvite={onDeclineInvite}
-                  scheduleRequests={scheduleRequests}
-                />
               )}
 
               {/* Direct request to this guard — confirm or decline */}
@@ -235,7 +213,7 @@ export function GuardJobDetailContent({
         />
       )}
 
-      {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && canApplyWithNegotiation && (
+      {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && canApplyWithNegotiation && (
         <SlideToConfirm
           label="Slide to apply for job"
           confirmedLabel="Applied"
