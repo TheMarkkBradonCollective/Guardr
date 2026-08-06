@@ -955,7 +955,6 @@ export function StaffDashboard({
               onSendClientMessage={onSendClientMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
-              onDeleteSupportTicket={onDeleteSupportTicket}
               selectedJobChatRequestId={selectedJobChatRequestId}
               onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
               selectedTeamChatRequestId={selectedTeamChatRequestId}
@@ -981,6 +980,7 @@ export function StaffDashboard({
               currentUser={currentUser}
               onSendMessage={onSendSupportMessage}
               onUpdateStatus={onUpdateSupportStatus}
+              onDeleteSupportTicket={onDeleteSupportTicket}
               selectedTicketId={selectedSupportTicketId}
               onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
               initialSelectedTicketId={selectedSupportTicketId}

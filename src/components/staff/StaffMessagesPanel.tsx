@@ -20,10 +20,9 @@ import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
   SUPPORT_STATUS_LABEL,
-  isDeletableResolvedSupportChat,
   supportStatusLabel,
 } from '../../lib/support';
-import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
+import { ROLE_LABELS } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { TeamChatPanel } from '../messaging/TeamChatPanel';
@@ -41,7 +40,6 @@ import {
   LifeBuoy,
   MessageCircle,
   MessagesSquare,
-  Trash2,
   Users,
 } from 'lucide-react';
 
@@ -73,7 +71,6 @@ interface StaffMessagesPanelProps {
   onSendClientMessage?: (body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
-  onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (requestId: string | null) => void;
   selectedTeamChatRequestId?: string | null;
@@ -116,7 +113,6 @@ export function StaffMessagesPanel({
   onSendClientMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
-  onDeleteSupportTicket,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
   selectedTeamChatRequestId,
