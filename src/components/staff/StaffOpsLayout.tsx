@@ -60,7 +60,6 @@ interface StaffOpsLayoutProps {
   canAddGuard?: boolean;
   canAddStaff?: boolean;
   canAddCredential?: boolean;
-  canCreateCrew?: boolean;
   canAddLocation?: boolean;
 }
 
@@ -72,7 +71,6 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   map: 'Map',
   guards: 'Guards',
   team: 'Staff',
-  crews: 'Crews',
   clients: 'Clients',
   incidents: 'Incidents',
   messages: 'Messages',
@@ -121,7 +119,6 @@ export function StaffOpsLayout({
   canAddGuard = false,
   canAddStaff = false,
   canAddCredential = false,
-  canCreateCrew = false,
   canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
@@ -138,7 +135,6 @@ export function StaffOpsLayout({
       { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
       { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
       { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
-      { id: 'crews', label: 'Crews', icon: UsersRound, badge: badges.crews },
       { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
@@ -199,7 +195,6 @@ export function StaffOpsLayout({
         canAddGuard={canAddGuard}
         canAddStaff={canAddStaff}
         canAddCredential={canAddCredential}
-        canCreateCrew={canCreateCrew}
         canAddLocation={canAddLocation}
       >
         {children}
@@ -248,7 +243,6 @@ function StaffOpsLayoutInner({
   canAddGuard = false,
   canAddStaff = false,
   canAddCredential = false,
-  canCreateCrew = false,
   canAddLocation = false,
 }: StaffOpsLayoutInnerProps) {
   const sidebarPrimaryActions = useStaffSidebarPrimaryActions(navHighlight, {
@@ -257,7 +251,6 @@ function StaffOpsLayoutInner({
     canAddGuard: (navHighlight === 'guards' || navHighlight === 'applications') && canAddGuard,
     canAddStaff: navHighlight === 'team' && canAddStaff,
     canAddCredential: navHighlight === 'credentials' && canAddCredential,
-    canCreateCrew: navHighlight === 'crews' && canCreateCrew,
     canAddLocation: navHighlight === 'locations' && canAddLocation,
   });
 

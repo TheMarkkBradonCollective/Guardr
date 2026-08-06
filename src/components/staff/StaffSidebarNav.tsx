@@ -39,7 +39,6 @@ const OPERATIONS_IDS: StaffSection[] = [
   'applications',
   'credentials',
   'guards',
-  'crews',
   'clients',
   'team',
 ];

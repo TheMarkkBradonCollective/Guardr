@@ -7,7 +7,14 @@ import {
   SupportTicket,
 } from '../types';
 import { guardForRequest } from './clientShift';
-import { isJobChatEligible, isJobChatReadOnly, threadForRequest, threadsForClient } from './jobChat';
+import {
+  formatJobChatGuardNames,
+  approvedJobGuardIds,
+  isJobChatEligible,
+  isJobChatReadOnly,
+  threadForRequest,
+  threadsForClient,
+} from './jobChat';
 import { supportStatusLabel, ticketsForUser } from './support';
 
 export type InboxChannelKind = 'job' | 'support' | 'report' | 'guard-community' | 'client-community' | 'staff-community';
@@ -63,7 +70,11 @@ export function buildClientInboxRows({
   for (const thread of clientThreads) {
     const req = requestById.get(thread.requestId);
     if (!req) continue;
-    const guard = guardForRequest(guards, req);
+    const guardIds = approvedJobGuardIds(req);
+    const guardLabel =
+      guardIds.length > 1
+        ? formatJobChatGuardNames(guardIds, guards)
+        : (guardForRequest(guards, req)?.name ?? 'Assigned guard');
     const eligible = isJobChatEligible(req);
     const readOnly = isJobChatReadOnly(req) || thread.status === 'archived';
     const lastMessage = lastJobMessage(jobChatMessages, thread.id);
@@ -71,7 +82,7 @@ export function buildClientInboxRows({
       id: `job-${req.id}`,
       channel: 'job',
       title: req.title,
-      subtitle: `${guard?.name ?? 'Assigned guard'} · ${req.siteName || req.location}`,
+      subtitle: `${guardLabel} · ${req.siteName || req.location}`,
       preview: lastMessage?.body ?? 'Open conversation',
       updatedAt: lastMessage?.createdAt ?? thread.createdAt,
       badge: eligible ? 'Live' : readOnly ? 'Archived' : 'Active',
@@ -84,12 +95,16 @@ export function buildClientInboxRows({
     if (req.clientId !== currentUser.id) continue;
     if (!isJobChatEligible(req)) continue;
     if (threadForRequest(jobChatThreads, req.id)) continue;
-    const guard = guardForRequest(guards, req);
+    const guardIds = approvedJobGuardIds(req);
+    const guardLabel =
+      guardIds.length > 1
+        ? formatJobChatGuardNames(guardIds, guards)
+        : (guardForRequest(guards, req)?.name ?? 'Your guard');
     rows.push({
       id: `job-ready-${req.id}`,
       channel: 'job',
       title: req.title,
-      subtitle: `${guard?.name ?? 'Your guard'} is assigned`,
+      subtitle: `${guardLabel} · ${req.siteName || req.location}`,
       preview: 'Start conversation',
       updatedAt: req.startDate,
       badge: 'Live',
@@ -136,7 +151,7 @@ export function buildGuardJobInboxRows({
   jobChatThreads,
   jobChatMessages,
 }: {
-  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate' | 'assignedGuardId'>[];
+  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate' | 'assignedGuardId' | 'guardSlots'>[];
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
 }): InboxRow[] {
@@ -249,14 +264,14 @@ export function buildStaffInboxRows({
 
   const activeJobs = requests.filter(
     (r) =>
-      r.assignedGuardId &&
-      (r.status === 'accepted' || r.status === 'in-progress' || r.status === 'completed' || r.status === 'closed')
+      isJobChatEligible(r) ||
+      ((r.status === 'completed' || r.status === 'closed') && !!threadForRequest(jobChatThreads, r.id))
   );
 
   for (const job of activeJobs) {
     const thread = threadForRequest(jobChatThreads, job.id);
     if (!thread && job.status !== 'accepted' && job.status !== 'in-progress') continue;
-    const guard = guards.find((g) => g.id === job.assignedGuardId);
+    const guardLabel = formatJobChatGuardNames(approvedJobGuardIds(job), guards);
     const archived = job.status === 'completed' || job.status === 'closed';
     const lastMessage = thread ? lastJobMessage(jobChatMessages, thread.id) : null;
     const count = thread ? jobChatMessages.filter((m) => m.threadId === thread.id).length : 0;
@@ -264,7 +279,7 @@ export function buildStaffInboxRows({
       id: `job-${job.id}`,
       channel: 'job',
       title: job.title,
-      subtitle: `${job.clientName} ↔ ${guard?.name ?? 'Guard'}`,
+      subtitle: `${job.clientName} ↔ ${guardLabel}`,
       preview: lastMessage?.body ?? (count > 0 ? `${count} messages` : archived ? 'Archived job chat' : 'Live job chat'),
       updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
       badge: archived ? 'Archived' : 'Live',

@@ -54,7 +54,7 @@ export function JobTeamRoster({
 
   const slots = job.guardSlots ?? [];
   const summary = teamRosterSummary(slots, guardsNeeded);
-  const heading = title ?? (variant === 'client' && showIndependentSlotActions ? 'Guard requests' : 'Team roster');
+  const heading = title ?? (variant === 'client' && showIndependentSlotActions ? 'Guard requests' : 'Guards on this job');
 
   const slotIndices = Array.from({ length: guardsNeeded }, (_, i) => i + 1).filter((slotIndex) => {
     const slot =

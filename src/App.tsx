@@ -323,8 +323,10 @@ import {
   saveSupportTicketsToStorage,
 } from './lib/support';
 import {
+  approvedJobGuardIds,
   buildJobChatMessage,
   buildJobChatThread,
+  guardParticipatesInJobChat,
   loadJobChatMessagesFromStorage,
   loadJobChatThreadsFromStorage,
   saveJobChatMessagesToStorage,
@@ -9801,12 +9803,12 @@ export default function App() {
           guardId: slot.guardId,
           requestId: job.id,
           location: job.location,
-          body: `Team confirmed for ${job.title}`,
+          body: `Roster confirmed for ${job.title}`,
         });
       }
     }
     await ensureJobChatThread({ ...acceptedJob, status: 'accepted', assignedGuardId: leadId });
-    appToast('Full team confirmed — job is locked in.', 'success');
+    appToast('All guards confirmed — job is locked in.', 'success');
   };
 
   const handleNotificationClick = async (notification: UserNotification) => {
@@ -11971,7 +11973,7 @@ export default function App() {
   };
 
   const ensureJobChatThread = async (req: SecurityRequest) => {
-    if (!req.assignedGuardId) return null;
+    if (approvedJobGuardIds(req).length === 0) return null;
     const existing = threadForRequest(jobChatThreads, req.id);
     if (existing) return existing;
 
@@ -12014,9 +12016,11 @@ export default function App() {
     body: string
   ) => {
     if (!currentUser) return;
-    const recipients: string[] = [];
-    if (sender.id !== req.clientId) recipients.push(req.clientId);
-    if (req.assignedGuardId && sender.id !== req.assignedGuardId) recipients.push(req.assignedGuardId);
+    const recipients = new Set<string>();
+    if (sender.id !== req.clientId) recipients.add(req.clientId);
+    for (const guardId of approvedJobGuardIds(req)) {
+      if (guardId !== sender.id) recipients.add(guardId);
+    }
 
     for (const recipientUserId of recipients) {
       void reportPushEvent(currentUser, {

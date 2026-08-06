@@ -85,6 +85,7 @@ import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
+import { guardParticipatesInJobChat } from '../lib/jobChat';
 import { isPreShiftBriefingWindowOpen, canGuardStartEnRoute, enRouteBlockedMessage } from '../lib/preShiftBriefing';
 import { jobRequiresPostOrdersAck } from '../lib/postOrdersAck';
 import { guardMustAckBriefingOnSite } from '../lib/briefingAck';
@@ -480,11 +481,12 @@ export function GuardDashboard({
   );
 
   const upcomingForMessages = useMemo(() => {
-    const inProgress = requests.filter(
-      (r) => r.assignedGuardId === guard.id && r.status === 'in-progress'
+    return requests.filter(
+      (r) =>
+        (r.status === 'accepted' || r.status === 'in-progress') &&
+        guardParticipatesInJobChat(guard.id, r)
     );
-    return [...inProgress, ...browseJobLists.scheduled];
-  }, [requests, guard.id, browseJobLists.scheduled]);
+  }, [requests, guard.id]);
 
   const assignedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status !== 'completed' && r.status !== 'closed'),

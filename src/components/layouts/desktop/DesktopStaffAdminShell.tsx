@@ -46,7 +46,7 @@ const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   { label: 'Dashboard', ids: ['overview', 'map'] },
   {
     label: 'Operations',
-    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
+    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'clients', 'team'],
   },
   { label: 'Communications', ids: ['messages', 'support'] },
   { label: 'Management', ids: ['payments', 'staff-pay', 'payment-settings', 'agreements', 'audit-log'] },
