@@ -155,7 +155,7 @@ function messageSenderLabel(
   if (clientChatLabels) {
     return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Client');
   }
-  return chatSenderLabelForViewer(viewerRole, msg.senderRole, msg.senderName);
+  return chatSenderLabelForViewer(viewerRole, msg.senderRole, msg.senderName, msg.senderId);
 }
 
 function messageSender(

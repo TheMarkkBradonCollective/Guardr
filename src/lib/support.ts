@@ -99,9 +99,15 @@ export const ACTIVATION_SUPPORT_SUBJECT = 'Activation help';
 
 export const GUARDR_SUPPORT_ACTOR = {
   id: 'guardr-support',
-  name: 'Guardr Support',
+  name: 'Guardr Staff',
   role: 'administrator' as const,
 };
+
+export function isGuardrSupportSender(senderId: string, senderName?: string): boolean {
+  if (senderId === GUARDR_SUPPORT_ACTOR.id) return true;
+  const normalized = senderName?.trim().toLowerCase();
+  return normalized === 'guardr staff' || normalized === 'guardr support';
+}
 
 export function guardNeedsActivationSupportChat(
   guard: Pick<SecurityGuard, 'id' | 'email' | 'isStaff' | 'userStatus' | 'certifications'>,
@@ -161,7 +167,7 @@ export function findActivationSupportChat(
 
 export function buildActivationSupportTicketForGuard(
   guard: Pick<SecurityGuard, 'id' | 'name' | 'email'>,
-  staff: Pick<SessionUser, 'id' | 'name' | 'role'>
+  staff: Pick<SessionUser, 'id' | 'name' | 'role'> = GUARDR_SUPPORT_ACTOR
 ): SupportTicket {
   const now = new Date().toISOString();
   const ticketId = `support-${Date.now()}`;
