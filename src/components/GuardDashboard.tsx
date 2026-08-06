@@ -11,6 +11,7 @@ import {
   JobChatThread,
   JobChatMessage,
   GuardMessage,
+  SecurityRequest,
 } from '../types';
 import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapViewportInsetsProvider } from '../lib/mapViewportInsets';
@@ -54,6 +55,7 @@ import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { AppOverlaySheet } from './ui/motion/AppMotion';
+import { PaymentsPage } from './payments/PaymentsPage';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
@@ -289,7 +291,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
   activation: 'Complete application',
   myJobs: 'Jobs',
-  earnings: 'Pay',
+  earnings: 'Payments',
   messages: 'Messages',
   guardChat: 'Messages',
   support: 'Support',
@@ -1300,7 +1302,7 @@ export function GuardDashboard({
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
     { id: 'performance', icon: BarChart3, label: 'Performance' },
     ...(showVehicleTab ? [{ id: 'vehicle' as const, icon: Car, label: 'Vehicle' }] : []),
-    { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'earnings', icon: DollarSign, label: 'Payments' },
   ];
 
   const accountMenu = {
@@ -1526,23 +1528,25 @@ export function GuardDashboard({
         <AppPageTransition motionKey={tab} className="absolute inset-0">
           {tab === 'earnings' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-earnings">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <GuardEarningsPanel
-                  breakdown={earningsBreakdown}
-                  completedJobs={completedJobs}
-                  stripeConnected={!!guard.stripeConnectAccountId}
-                  stripeReady={connectReady}
-                  connectPending={connectPending}
-                  onConnectStripe={handleConnectStripeClick}
-                  onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
-                  onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
-                  cashRequestPending={cashRequestPending}
-                  stripeRequestPending={stripeRequestPending}
-                  openCashInvoices={openCashInvoices}
-                  openStripeInvoices={openStripeInvoices}
-                  payments={payments}
-                />
-              </div>
+              <PaymentsPage role="guard">
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <GuardEarningsPanel
+                    breakdown={earningsBreakdown}
+                    completedJobs={completedJobs}
+                    stripeConnected={!!guard.stripeConnectAccountId}
+                    stripeReady={connectReady}
+                    connectPending={connectPending}
+                    onConnectStripe={handleConnectStripeClick}
+                    onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
+                    onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
+                    cashRequestPending={cashRequestPending}
+                    stripeRequestPending={stripeRequestPending}
+                    openCashInvoices={openCashInvoices}
+                    openStripeInvoices={openStripeInvoices}
+                    payments={payments}
+                  />
+                </div>
+              </PaymentsPage>
             </div>
           )}
 
@@ -1669,6 +1673,7 @@ export function GuardDashboard({
               <UserProfileScreen
                 currentUser={currentUser}
                 guard={guard}
+                requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}
                 onSave={onUpdateProfile}
                 onAddCertification={onAddCertification}
                 onDeleteCertification={onDeleteCertification}

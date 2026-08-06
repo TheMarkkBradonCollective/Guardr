@@ -56,6 +56,7 @@ import {
 } from '../../lib/guardAccountActivation';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
+import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 
 interface StaffGuardDetailPanelProps {
@@ -109,6 +110,11 @@ interface StaffGuardDetailPanelProps {
   onEditingChange?: (editing: boolean) => void;
   staffGuardTab?: StaffGuardDetailTab;
   onStaffGuardTabChange?: (tab: StaffGuardDetailTab) => void;
+  canAdjustShiftTimes?: boolean;
+  onAdjustGuardShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => void | Promise<void>;
   performanceFactorId?: PerformanceFactorId | null;
   onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   compact?: boolean;
@@ -152,6 +158,8 @@ export function StaffGuardDetailPanel({
   onEditingChange,
   staffGuardTab = 'profile',
   onStaffGuardTabChange,
+  canAdjustShiftTimes = false,
+  onAdjustGuardShiftTime,
   performanceFactorId = null,
   onPerformanceFactorChange,
   compact = false,
@@ -610,6 +618,7 @@ export function StaffGuardDetailPanel({
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
               { id: 'inventory', label: 'Inventory' },
+              { id: 'timesheet', label: 'Timesheet' },
               { id: 'performance', label: 'Guard status' },
             ]}
           />
@@ -626,6 +635,15 @@ export function StaffGuardDetailPanel({
             onOpenJob={onOpenJob}
           />
         </div>
+      ) : staffGuardTab === 'timesheet' && !guard.isStaff ? (
+        <section className="staff-detail-section space-y-3">
+          <GuardTimesheetPanel
+            guardId={guard.id}
+            requests={requests}
+            canAdjust={canAdjustShiftTimes}
+            onAdjustShiftTime={onAdjustGuardShiftTime}
+          />
+        </section>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
           <GuardCredentialsPanel
