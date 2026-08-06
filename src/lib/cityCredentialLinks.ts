@@ -123,15 +123,13 @@ export const PLATFORM_DEFAULT_CREDENTIAL_LINKS: CityCredentialResourceLinks = {
   ptaUof: [
     {
       url: 'https://www.guardcardcourses.com/sc101.asp',
-      label: 'Guard Card Courses — 8-hour PTA/UOF (group cert)',
-      price: '$49',
+      label: 'Guard Card Courses — 8-hour PTA/UOF (select location)',
     },
   ],
   [BSIS_PTA_UOF_COMBINED_ID]: [
     {
       url: 'https://www.guardcardcourses.com/sc101.asp',
       label: 'Guard Card Courses — combined 8-hour PTA/UOF certificate',
-      price: '$49',
     },
   ],
   continuedEducation: [
