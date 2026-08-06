@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
-import type { ClientPaymentGates } from '../../lib/platformSettings';
+import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import { openGuardPayoutInvoices, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import {
   PIPELINE_SECTION_META,
@@ -27,14 +27,18 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
 import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
+import { StaffCompensationSection } from './StaffCompensationPanel';
 
 interface StaffPaymentsPanelProps {
+  currentUser: SessionUser;
+  platformSettings: PlatformSettings;
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   payments: Payment[];
   payoutInvoices?: GuardPayoutInvoice[];
   isDirector: boolean;
   canManagePayments: boolean;
+  showStaffCompensation?: boolean;
   paymentGates: ClientPaymentGates;
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
@@ -203,12 +207,15 @@ function queueItemAmount(item: PaymentQueueItem): string {
 }
 
 export function StaffPaymentsPanel({
+  currentUser,
+  platformSettings,
   requests,
   guards,
   payments,
   payoutInvoices = [],
   isDirector,
   canManagePayments,
+  showStaffCompensation = true,
   paymentGates,
   onMakeGuardPayoutAvailable,
   onReleasePayout,
@@ -226,6 +233,7 @@ export function StaffPaymentsPanel({
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
   const { formFactor } = useDevice();
+  const showGuardPayments = canManagePayments;
   const summary = paymentPipelineSummary(requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const openInvoices = useMemo(() => openGuardPayoutInvoices(payoutInvoices), [payoutInvoices]);
@@ -337,7 +345,17 @@ export function StaffPaymentsPanel({
 
   const selectedItem = filteredQueue.find((item) => item.id === selectedId) ?? null;
 
-  const exportButton = canManagePayments ? (
+  const staffCompensationBlock = showStaffCompensation ? (
+    <StaffCompensationSection
+      embedded
+      currentUser={currentUser}
+      guards={guards}
+      requests={requests}
+      platformSettings={platformSettings}
+    />
+  ) : null;
+
+  const exportButton = showGuardPayments && canManagePayments ? (
     formFactor === 'desktop' ? (
       <GuardrButton
         kind="secondary"
@@ -380,6 +398,22 @@ export function StaffPaymentsPanel({
   );
 
   if (formFactor === 'desktop') {
+    if (!showGuardPayments) {
+      return (
+        <StaffOpsPageShell
+          className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
+          toolbar={
+            <WorkbenchToolbar
+              eyebrow="Finance"
+              subtitle="Staff compensation, time tracking, and payout adjustments."
+            />
+          }
+        >
+          {staffCompensationBlock}
+        </StaffOpsPageShell>
+      );
+    }
+
     const filterTabs: { id: PaymentsFilter; label: string; count?: number }[] = [
       { id: 'action', label: 'Needs action', count: actionCount },
       { id: 'all', label: 'All', count: allQueueItems.length },
@@ -400,13 +434,16 @@ export function StaffPaymentsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Payment pipeline — client billing through guard payout."
+            subtitle="Guard payouts, client billing, and staff compensation."
             actions={exportButton}
           />
         }
       >
         {allQueueItems.length === 0 ? (
-          <WorkbenchEmpty message="No payment activity yet. Jobs will appear here once clients post security requests." />
+          <>
+            <WorkbenchEmpty message="No guard payment activity yet. Jobs will appear here once clients post security requests." />
+            {staffCompensationBlock}
+          </>
         ) : (
           <>
             <StaffPaymentSummary summary={summary} financials={financials} variant="desktop" />
@@ -468,9 +505,20 @@ export function StaffPaymentsPanel({
                 }
               />
             )}
+            {staffCompensationBlock ? (
+              <div className="mt-8 pt-8 border-t border-brand-border">{staffCompensationBlock}</div>
+            ) : null}
           </>
         )}
       </StaffOpsPageShell>
+    );
+  }
+
+  if (!showGuardPayments) {
+    return (
+      <div className="animate-fade-in staff-payments-panel">
+        {staffCompensationBlock}
+      </div>
     );
   }
 
@@ -520,6 +568,13 @@ export function StaffPaymentsPanel({
         <PipelineSection stage="settled" items={summary.settled} {...sectionProps} readOnly limit={8} />
 
         {allQueueItems.length === 0 && emptyState}
+
+        {staffCompensationBlock ? (
+          <section className="space-y-3 mt-8 pt-6 border-t border-brand-border">
+            <WfSectionHeader title="Staff compensation" />
+            {staffCompensationBlock}
+          </section>
+        ) : null}
       </div>
     </div>
   );

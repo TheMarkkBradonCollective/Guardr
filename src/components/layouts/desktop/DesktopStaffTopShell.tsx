@@ -21,6 +21,7 @@ interface DesktopStaffTopShellProps {
   screenTitle: string;
   navHighlight: StaffSection;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -55,6 +56,7 @@ export function DesktopStaffTopShell({
   screenTitle,
   navHighlight,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
@@ -64,7 +66,7 @@ export function DesktopStaffTopShell({
   headerExtension,
   headerOverride,
 }: DesktopStaffTopShellProps) {
-  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities: false };
+  const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities: false };
   const isMap = isStaffOpsMapSection(activeSection);
 
   const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
