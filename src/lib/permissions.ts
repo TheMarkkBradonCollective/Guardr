@@ -613,14 +613,9 @@ export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boole
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
 }
 
-/** Administrators, Managers, Directors, and Founders may delete resolved support chat tickets */
+/** Staff with support inbox access may delete resolved support chat tickets */
 export function canDeleteResolvedSupportChat(user: Pick<SessionUser, 'role'>): boolean {
-  return (
-    user.role === 'administrator' ||
-    user.role === 'manager' ||
-    user.role === 'director' ||
-    user.role === 'owner'
-  );
+  return canAccessSupportInbox(user);
 }
 
 /** Director and Founder receive all staff job-management capabilities */

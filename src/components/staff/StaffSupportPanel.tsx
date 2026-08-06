@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SupportTicket, SupportTicketStatus, SessionUser } from '../../types';
 import {
   categoryLabel,
+  isDeletableResolvedSupportChat,
   priorityLabel,
   SUPPORT_STATUS_LABEL,
   supportStatusLabel,
 } from '../../lib/support';
-import { ROLE_LABELS } from '../../lib/permissions';
+import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
 import {
   AppChatHeader,
   AppEmptyState,
@@ -17,7 +18,7 @@ import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy } from 'lucide-react';
+import { FileText, LifeBuoy, Trash2 } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
@@ -29,6 +30,7 @@ interface StaffSupportPanelProps {
   currentUser: SessionUser;
   onSendMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   selectedTicketId?: string | null;
   onSelectedTicketIdChange?: (ticketId: string | null) => void;
   initialSelectedTicketId?: string | null;
@@ -50,6 +52,7 @@ export function StaffSupportPanel({
   currentUser,
   onSendMessage,
   onUpdateStatus,
+  onDeleteSupportTicket,
   selectedTicketId: controlledSelectedId,
   onSelectedTicketIdChange,
   initialSelectedTicketId = null,
@@ -122,6 +125,46 @@ export function StaffSupportPanel({
 
   const clearSelection = () => setSelectedId(null);
 
+  const supportTicketActions = (ticket: SupportTicket) => {
+    const canDelete =
+      Boolean(onDeleteSupportTicket) &&
+      canDeleteResolvedSupportChat(currentUser) &&
+      isDeletableResolvedSupportChat(ticket);
+
+    return (
+      <div className="flex items-center gap-1 shrink-0">
+        {canDelete ? (
+          <button
+            type="button"
+            onClick={() => void onDeleteSupportTicket?.(ticket.id)}
+            className="p-2 rounded-lg text-content-secondary hover:text-destructive hover:bg-surface-secondary transition-colors"
+            aria-label="Delete resolved conversation"
+            title="Delete resolved conversation"
+          >
+            <Trash2 className="w-4 h-4" strokeWidth={2} />
+          </button>
+        ) : null}
+        <select
+          value={ticket.status}
+          onChange={(e) => void onUpdateStatus(ticket.id, e.target.value as SupportTicketStatus)}
+          className="uber-input text-xs py-1.5 max-w-[8.5rem]"
+        >
+          {(Object.keys(
+            ticket.kind === 'report'
+              ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+              : SUPPORT_STATUS_LABEL
+          ) as SupportTicketStatus[]).map((s) => (
+            <option key={s} value={s}>
+              {ticket.kind === 'report'
+                ? supportStatusLabel({ kind: 'report', status: s })
+                : SUPPORT_STATUS_LABEL[s]}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
   const sectionTabs = (
     <MessagesInboxTabs
       activeTab={section}
@@ -165,25 +208,7 @@ export function StaffSupportPanel({
           subtitle={`${selected.userName} · ${ROLE_LABELS[selected.userRole]}`}
           onBack={clearSelection}
           backLabel="Support"
-          trailing={
-            <select
-              value={selected.status}
-              onChange={(e) => void onUpdateStatus(selected.id, e.target.value as SupportTicketStatus)}
-              className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-            >
-              {(Object.keys(
-                selected.kind === 'report'
-                  ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                  : SUPPORT_STATUS_LABEL
-              ) as SupportTicketStatus[]).map((s) => (
-                <option key={s} value={s}>
-                  {selected.kind === 'report'
-                    ? supportStatusLabel({ kind: 'report', status: s })
-                    : SUPPORT_STATUS_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          }
+          trailing={supportTicketActions(selected)}
         />
       );
     }
@@ -264,25 +289,7 @@ export function StaffSupportPanel({
           onBack={clearSelection}
           backLabel="Support"
           hideBackOnDesktop
-          trailing={
-            <select
-              value={selected.status}
-              onChange={(e) => void onUpdateStatus(selected.id, e.target.value as SupportTicketStatus)}
-              className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-            >
-              {(Object.keys(
-                selected.kind === 'report'
-                  ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                  : SUPPORT_STATUS_LABEL
-              ) as SupportTicketStatus[]).map((s) => (
-                <option key={s} value={s}>
-                  {selected.kind === 'report'
-                    ? supportStatusLabel({ kind: 'report', status: s })
-                    : SUPPORT_STATUS_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          }
+          trailing={supportTicketActions(selected)}
         />
       )}
       <div className="flex-1 min-h-0">
