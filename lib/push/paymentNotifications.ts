@@ -42,14 +42,13 @@ export async function notifyJobOpenToGuards(
     guardsNeeded?: number;
     hourlyRate?: number;
     guardPay?: number | null;
-    teamLeadId?: string | null;
     type: string;
     state?: string | null;
     startDate: string;
     endDate: string;
   }
 ): Promise<void> {
-  const { notifyOpenJobToGuards } = await import('./priorityCrewNotify');
+  const { notifyOpenJobToGuards } = await import('./openJobNotify');
   await notifyOpenJobToGuards(db, {
     requestId: options.requestId,
     title: options.title ?? 'job',
@@ -58,7 +57,6 @@ export async function notifyJobOpenToGuards(
     guardsNeeded: options.guardsNeeded,
     hourlyRate: options.hourlyRate,
     guardPay: options.guardPay,
-    teamLeadId: options.teamLeadId,
     type: options.type,
     state: options.state,
     startDate: options.startDate,

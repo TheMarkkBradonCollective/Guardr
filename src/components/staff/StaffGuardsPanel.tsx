@@ -4,7 +4,6 @@ import {
   Certification,
   Experience,
   GuardEducation,
-  GuardStandingCrewMember,
   SecurityGuard,
   SecurityRequest,
 } from '../../types';
@@ -41,7 +40,6 @@ import {
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   canManage: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
@@ -127,7 +125,6 @@ function guardStatusTone(status: ReturnType<typeof getGuardUserStatus>): StatusT
 export function StaffGuardsPanel({
   guards,
   requests,
-  standingCrewMembers = [],
   canManage,
   canSuspend,
   onUpdateUserStatus,
@@ -308,7 +305,6 @@ export function StaffGuardsPanel({
       onOpenJob,
       onOpenGuardApplication,
       onOpenGuardCredential,
-      standingCrewMembers,
     };
   }
 

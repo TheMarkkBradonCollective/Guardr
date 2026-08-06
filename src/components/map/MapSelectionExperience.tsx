@@ -70,8 +70,6 @@ export function MapSelectionExperience({
       <JobBillingSummaryFromRequest
         req={selected as SecurityRequest}
         variant={role === 'staff' ? 'staff' : 'client'}
-        crewSettings={role === 'client' ? crewSettings : undefined}
-        hideCrewUpcostNotice={role === 'client'}
       />
     );
 

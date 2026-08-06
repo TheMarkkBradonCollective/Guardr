@@ -12657,7 +12657,7 @@ export default function App() {
       );
     }
 
-    const guardJobs = getGuardVisibleJobs(activeGuard, displayRequests, platformSettings);
+    const guardJobs = getGuardVisibleJobs(activeGuard, displayRequests);
     const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
 
     return (
@@ -13016,7 +13016,6 @@ export default function App() {
               onMessagesDetailOpenChange={setClientMessagesDetailOpen}
               onMessagesChromeChange={setClientMessagesChrome}
               messagesShellHeaderTrailing={clientMessagesShellHeaderTrailing}
-              onTeamDetailOpenChange={setClientTeamDetailOpen}
               {...tutorialSettingsProps}
             />
           )}

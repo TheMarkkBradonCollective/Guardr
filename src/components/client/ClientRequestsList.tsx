@@ -330,8 +330,6 @@ export function ClientRequestsList({
             <JobBillingSummaryFromRequest
               req={req}
               variant="client"
-              crewSettings={billingSettings}
-              hideCrewUpcostNotice
             />
           }
         />

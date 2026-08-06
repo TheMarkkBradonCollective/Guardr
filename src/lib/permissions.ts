@@ -51,7 +51,6 @@ export type Permission =
   | 'admin.view_stats'
   | 'admin.manage_integrations'
   | 'admin.manage_locations'
-  | 'admin.manage_crews'
   | 'admin.view_staff_roster'
   // Director (+ all administrator)
   | 'director.manage_administrators'
@@ -125,7 +124,6 @@ const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   'admin.manage_platform_config',
   'admin.manage_integrations',
   'admin.manage_locations',
-  'admin.manage_crews',
   'admin.view_staff_roster',
 ];
 
@@ -213,7 +211,6 @@ export const STAFF_PERMISSION_CATALOG: {
   { permission: 'moderator.review_certifications', label: 'Verify credentials', group: 'Credentials' },
   { permission: 'moderator.review_job_requests', label: 'Review job postings', group: 'Jobs' },
   { permission: 'admin.manage_locations', label: 'Manage shared locations', group: 'Jobs' },
-  { permission: 'admin.manage_crews', label: 'Manage crews', group: 'Jobs' },
   { permission: 'moderator.handle_disputes', label: 'Handle disputes', group: 'Support' },
   { permission: 'moderator.suspend_users', label: 'Suspend users', group: 'User management' },
   { permission: 'moderator.issue_warnings', label: 'Issue warnings', group: 'User management' },
@@ -451,7 +448,7 @@ export function canManageLocations(user: Pick<SessionUser, 'role'>): boolean {
 }
 
 export function canManageCrews(user: Pick<SessionUser, 'role'>): boolean {
-  return hasPermission(user, 'admin.manage_crews') || canManageGuards(user);
+  return canManageGuards(user);
 }
 
 export function canViewStaffRoster(user: Pick<SessionUser, 'role'>): boolean {

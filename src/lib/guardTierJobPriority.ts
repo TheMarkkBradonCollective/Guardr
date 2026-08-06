@@ -45,7 +45,7 @@ const TIER_WAVE_ORDER: PerformanceTierId[] = ['elite', 'professional', 'rising',
 
 export type PremiumJob = Pick<
   SecurityRequest,
-  'hourlyRate' | 'guardPay' | 'guardsNeeded' | 'teamLeadId' | 'guardSlots'
+  'hourlyRate' | 'guardPay' | 'guardsNeeded' | 'guardSlots'
 >;
 
 export function performanceTierId(tier: PerformanceTier): PerformanceTierId {
@@ -58,12 +58,11 @@ export function effectiveGuardPayForPriority(job: PremiumJob): number {
   return job.guardPay ?? computeGuardPay(job.hourlyRate);
 }
 
-/** High pay, multi-guard, or coordinated crew jobs count as premium for priority routing. */
+/** High pay or multi-guard jobs count as premium for priority routing. */
 export function isPremiumJob(job: PremiumJob): boolean {
   const pay = effectiveGuardPayForPriority(job);
   if (pay >= PREMIUM_GUARD_PAY_PER_HOUR) return true;
   if (isMultiGuardJob(job)) return true;
-  if (job.teamLeadId) return true;
   if ((job.guardSlots ?? []).some((slot) => slot.guardId)) return true;
   return false;
 }

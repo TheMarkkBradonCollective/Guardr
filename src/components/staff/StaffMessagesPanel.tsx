@@ -10,13 +10,10 @@ import {
   StaffMessage,
   SupportTicket,
   SupportTicketStatus,
-  TeamChatMessage,
-  TeamChatThread,
 } from '../../types';
 import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
 import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMessenger';
 import { threadForRequest } from '../../lib/jobChat';
-import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
   SUPPORT_STATUS_LABEL,
@@ -26,7 +23,6 @@ import {
 import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
@@ -34,7 +30,6 @@ import { AppChatHeader, AppEmptyState, AppInboxList, AppInboxRow } from '../ui/a
 import { WfBadge } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
-import { teamChatRosterLabel } from '../../lib/teamChat';
 import {
   Briefcase,
   FileText,
@@ -50,7 +45,6 @@ type StaffMessageSelection =
   | { kind: 'guard-channel' }
   | { kind: 'client-channel' }
   | { kind: 'job'; requestId: string }
-  | { kind: 'team'; requestId: string };
 
 type InboxTab = 'team' | 'jobs';
 
@@ -59,15 +53,12 @@ interface StaffMessagesPanelProps {
   guards: SecurityGuard[];
   threads: JobChatThread[];
   messages: JobChatMessage[];
-  teamChatThreads?: TeamChatThread[];
-  teamChatMessages?: TeamChatMessage[];
   staffMessages: StaffMessage[];
   guardMessages?: GuardMessage[];
   clientMessages?: ClientMessage[];
   supportTickets: SupportTicket[];
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
-  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendStaffMessage: (body: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onSendClientMessage?: (body: string) => void | Promise<void>;
@@ -76,12 +67,9 @@ interface StaffMessagesPanelProps {
   onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (requestId: string | null) => void;
-  selectedTeamChatRequestId?: string | null;
-  onSelectedTeamChatRequestIdChange?: (requestId: string | null) => void;
   selectedSupportTicketId?: string | null;
   onSelectedSupportTicketIdChange?: (ticketId: string | null) => void;
   initialJobChatRequestId?: string | null;
-  initialTeamChatRequestId?: string | null;
   initialStaffMessagesTab?: 'team' | 'jobs' | null;
   initialSupportTicketId?: string | null;
   onDetailOpenChange?: (open: boolean) => void;
@@ -102,15 +90,12 @@ export function StaffMessagesPanel({
   guards,
   threads,
   messages,
-  teamChatThreads = [],
-  teamChatMessages = [],
   staffMessages,
   guardMessages = [],
   clientMessages = [],
   supportTickets,
   currentUser,
   onSendJobChat,
-  onSendTeamChatMessage,
   onSendStaffMessage,
   onSendGuardMessage,
   onSendClientMessage,
@@ -119,12 +104,9 @@ export function StaffMessagesPanel({
   onDeleteSupportTicket,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
-  selectedTeamChatRequestId,
-  onSelectedTeamChatRequestIdChange,
   selectedSupportTicketId,
   onSelectedSupportTicketIdChange,
   initialJobChatRequestId = null,
-  initialTeamChatRequestId = null,
   initialStaffMessagesTab = null,
   initialSupportTicketId = null,
   onDetailOpenChange,
@@ -133,7 +115,6 @@ export function StaffMessagesPanel({
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
-    if (initialTeamChatRequestId) return { kind: 'team', requestId: initialTeamChatRequestId };
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
     return null;
   });
@@ -144,20 +125,11 @@ export function StaffMessagesPanel({
   });
 
   useEffect(() => {
-    if (!initialTeamChatRequestId) return;
-    setActiveTab('team');
-    setSelection({ kind: 'team', requestId: initialTeamChatRequestId });
-    onSelectedTeamChatRequestIdChange?.(initialTeamChatRequestId);
-    onSelectedJobChatRequestIdChange?.(null);
-  }, [initialTeamChatRequestId, onSelectedTeamChatRequestIdChange, onSelectedJobChatRequestIdChange]);
-
-  useEffect(() => {
     if (!initialJobChatRequestId) return;
     setActiveTab('jobs');
     setSelection({ kind: 'job', requestId: initialJobChatRequestId });
     onSelectedJobChatRequestIdChange?.(initialJobChatRequestId);
-    onSelectedTeamChatRequestIdChange?.(null);
-  }, [initialJobChatRequestId, onSelectedJobChatRequestIdChange, onSelectedTeamChatRequestIdChange]);
+  }, [initialJobChatRequestId, onSelectedJobChatRequestIdChange]);
 
   const staffUpdatedAt = useMemo(() => {
     const sorted = sortedStaffMessages(staffMessages);
@@ -181,14 +153,12 @@ export function StaffMessagesPanel({
         guards,
         jobChatThreads: threads,
         jobChatMessages: messages,
-        teamChatThreads,
-        teamChatMessages,
         supportTickets,
         staffMessagesUpdatedAt: staffUpdatedAt,
         guardMessagesUpdatedAt: guardUpdatedAt,
         clientMessagesUpdatedAt: clientUpdatedAt,
       }),
-    [requests, guards, threads, messages, teamChatThreads, teamChatMessages, supportTickets, staffUpdatedAt, guardUpdatedAt, clientUpdatedAt]
+    [requests, guards, threads, messages, supportTickets, staffUpdatedAt, guardUpdatedAt, clientUpdatedAt]
   );
 
   const teamRows = useMemo(
@@ -196,8 +166,7 @@ export function StaffMessagesPanel({
       allRows.filter(
         (r) =>
           r.channel === 'staff-community' ||
-          r.channel === 'team-crew' ||
-          r.channel === 'guard-community' ||
+r.channel === 'guard-community' ||
           r.channel === 'client-community'
       ),
     [allRows]
@@ -227,11 +196,6 @@ export function StaffMessagesPanel({
       onSelectedJobChatRequestIdChange?.(null);
       return;
     }
-    if (row.requestId && row.channel === 'team-crew') {
-      setSelection({ kind: 'team', requestId: row.requestId });
-      onSelectedJobChatRequestIdChange?.(null);
-      return;
-    }
     if (row.requestId) {
       setSelection({ kind: 'job', requestId: row.requestId });
       onSelectedJobChatRequestIdChange?.(row.requestId);
@@ -243,15 +207,7 @@ export function StaffMessagesPanel({
     onSelectedJobChatRequestIdChange?.(null);
   };
 
-  const controlledTeamId =
-    selectedTeamChatRequestId ?? (selection?.kind === 'team' ? selection.requestId : null);
-  const controlledJobId =
-    selectedJobChatRequestId ?? (selection?.kind === 'job' ? selection.requestId : null);
-  const effectiveSelection: StaffMessageSelection | null = controlledTeamId
-    ? { kind: 'team', requestId: controlledTeamId }
-    : controlledJobId
-      ? { kind: 'job', requestId: controlledJobId }
-      : selection;
+  const effectiveSelection: StaffMessageSelection | null = selection;
 
   const hasSelection = !!effectiveSelection;
   const embedHeaderInShell = !splitView && hasSelection;
@@ -264,7 +220,6 @@ export function StaffMessagesPanel({
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
     if (row.channel === 'guard-community' && effectiveSelection?.kind === 'guard-channel') return true;
     if (row.channel === 'client-community' && effectiveSelection?.kind === 'client-channel') return true;
-    if (row.requestId && row.channel === 'team-crew' && effectiveSelection?.kind === 'team' && effectiveSelection.requestId === row.requestId) return true;
     if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
     return false;
   };
@@ -310,17 +265,6 @@ export function StaffMessagesPanel({
             />
           );
         }
-      } else if (effectiveSelection.kind === 'team') {
-        const request = requests.find((r) => r.id === effectiveSelection.requestId);
-        if (request) {
-          override = (
-            <AppChatHeader
-              title={`${request.title} · Team`}
-              subtitle={teamChatRosterLabel(request)}
-              onBack={clearSelection}
-            />
-          );
-        }
       }
     }
 
@@ -349,7 +293,7 @@ export function StaffMessagesPanel({
         >
           {activeTab === 'jobs'
             ? 'Job chats appear here when a guard is assigned to a booking.'
-            : 'Staff chat and multi-guard crew chats appear here.'}
+            : 'Staff chat and job threads appear here.'}
         </AppEmptyState>
       ) : (
         <AppInboxList>
@@ -368,8 +312,6 @@ export function StaffMessagesPanel({
                   <MessageCircle className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'client-community' ? (
                   <MessageCircle className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'team-crew' ? (
-                  <Users className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'job' ? (
                   <Briefcase className="w-5 h-5 text-brand-primary" />
                 ) : undefined
@@ -484,23 +426,6 @@ export function StaffMessagesPanel({
       );
     }
 
-    if (effectiveSelection.kind === 'team' && onSendTeamChatMessage) {
-      const request = requests.find((r) => r.id === effectiveSelection.requestId);
-      if (!request) return null;
-      return (
-        <TeamChatPanel
-          request={request}
-          thread={threadForTeamRequest(teamChatThreads, request.id) ?? null}
-          messages={teamChatMessages}
-          currentUser={currentUser}
-          onSend={(body) => onSendTeamChatMessage(request.id, body)}
-          onBack={clearSelection}
-          hideBackOnDesktop
-          hideShellHeader={embedHeaderInShell}
-        />
-      );
-    }
-
     return null;
   })();
 
@@ -512,7 +437,7 @@ export function StaffMessagesPanel({
       hasSelection={hasSelection && !!detailView}
       shellInboxHeader
       emptyDetailTitle="Select a conversation"
-      emptyDetailHint="Staff channel, crew chats, and job threads"
+      emptyDetailHint="Staff channel and job threads"
     />
   );
 }

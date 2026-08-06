@@ -57,7 +57,7 @@ test('isPremiumOpenJob detects high pay, multi-guard, and crew jobs', () => {
   assert.equal(isPremiumOpenJob({ guardPay: 35, guardsNeeded: 1, type: 'event' }), true);
   assert.equal(isPremiumOpenJob({ guardPay: 20, guardsNeeded: 3, type: 'event' }), true);
   assert.equal(
-    isPremiumOpenJob({ guardPay: 25, guardsNeeded: 1, teamLeadId: 'lead-1', type: 'event' }),
+    isPremiumOpenJob({ guardPay: 25, guardsNeeded: 1, type: 'event' }),
     true
   );
   assert.equal(isPremiumOpenJob({ guardPay: 25, guardsNeeded: 1, type: 'event' }), false);
