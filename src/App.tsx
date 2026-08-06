@@ -349,7 +349,7 @@ import {
 import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
-import { emitStaffTravelAction } from './lib/staffWorkActivity';
+import { emitStaffTravelAction, emitStaffWorkAction } from './lib/staffWorkActivity';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
