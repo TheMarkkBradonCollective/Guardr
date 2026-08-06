@@ -49,7 +49,7 @@ const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
     ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
   },
   { label: 'Communications', ids: ['messages', 'support'] },
-  { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
+  { label: 'Management', ids: ['payments', 'staff-pay', 'payment-settings', 'agreements', 'audit-log'] },
   { ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];

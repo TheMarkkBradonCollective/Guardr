@@ -4,6 +4,11 @@ import {
   type PlatformFeeConfig,
 } from '../../lib/platformFees';
 import type { StaffRolePermissionOverrides } from './permissions';
+import {
+  DEFAULT_STAFF_COMPENSATION_CONFIG,
+  normalizeStaffCompensationConfig,
+  type StaffCompensationConfig,
+} from './staffCompensation';
 
 export type {
   AgreementPlatformFeeConfig,
@@ -65,6 +70,8 @@ export interface PlatformSettings {
   teamLeadBonusClientSharePercent?: number;
   /** @deprecated No longer used. */
   teamLeadBonusPlatformSharePercent?: number;
+  /** Staff revenue-share compensation — % of collected platform fees per role. */
+  staffCompensation?: StaffCompensationConfig;
   updatedAt?: string;
 }
 
@@ -85,6 +92,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   teamLeadBonusPerGuardPerHour: 1,
   teamLeadBonusClientSharePercent: 100,
   teamLeadBonusPlatformSharePercent: 0,
+  staffCompensation: { ...DEFAULT_STAFF_COMPENSATION_CONFIG },
 };
 
 const STORAGE_KEY = 'guardr_platform_settings';
@@ -196,6 +204,9 @@ export function normalizePlatformSettings(
     teamLeadBonusPerGuardPerHour: bumpRate,
     teamLeadBonusClientSharePercent: 100,
     teamLeadBonusPlatformSharePercent: 0,
+    staffCompensation: normalizeStaffCompensationConfig(
+      input.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
+    ),
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   };
 }
@@ -250,6 +261,7 @@ export function platformSettingsFromDbRow(row: {
   insurance_verification_mode?: string | null;
   company_placard_public_enabled?: boolean | null;
   staff_role_permissions?: unknown;
+  staff_compensation_config?: unknown;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
@@ -284,6 +296,10 @@ export function platformSettingsFromDbRow(row: {
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
           : 1,
+      staffCompensation: normalizeStaffCompensationConfig(
+        (row.staff_compensation_config as StaffCompensationConfig | null | undefined) ??
+          DEFAULT_STAFF_COMPENSATION_CONFIG,
+      ),
       updatedAt: row.updated_at ?? undefined,
     }) ?? {
       ...DEFAULT_PLATFORM_SETTINGS,
@@ -313,6 +329,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     insurance_verification_mode: settings.insuranceVerificationMode ?? 'manual',
     company_placard_public_enabled: settings.companyPlacardPublicEnabled ?? true,
     staff_role_permissions: settings.staffRolePermissions ?? null,
+    staff_compensation_config: settings.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

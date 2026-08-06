@@ -1632,6 +1632,45 @@ COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_role_permissions JSONB;
 COMMENT ON COLUMN platform_settings.staff_role_permissions IS 'Custom staff-role permission lists — overrides built-in defaults when set.';
 
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config JSONB NOT NULL DEFAULT '{
+  "enabled": true,
+  "cadence": "weekly",
+  "roleRules": {
+    "Support": { "percentOfFees": 0.015, "floorPerPeriod": 0, "capPerPeriod": 400 },
+    "Moderator": { "percentOfFees": 0.02, "floorPerPeriod": 0, "capPerPeriod": 600 },
+    "Administrator": { "percentOfFees": 0.025, "floorPerPeriod": 0, "capPerPeriod": 800 },
+    "Manager": { "percentOfFees": 0.03, "floorPerPeriod": 0, "capPerPeriod": 1200 },
+    "Director": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 2000 },
+    "Founder": { "percentOfFees": 0.05, "floorPerPeriod": 0, "capPerPeriod": 3000 }
+  }
+}'::jsonb;
+COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence.';
+
+CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  staff_email TEXT NOT NULL,
+  staff_role TEXT NOT NULL CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
+  period_start TIMESTAMPTZ NOT NULL,
+  period_end TIMESTAMPTZ NOT NULL,
+  platform_fees_in_period NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  base_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  adjustment_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  final_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  confirmed_by_id TEXT NOT NULL,
+  confirmed_by_email TEXT NOT NULL,
+  confirmed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  note TEXT,
+  UNIQUE (staff_id, period_start, period_end)
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_staff ON staff_compensation_payouts(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_period ON staff_compensation_payouts(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_confirmed ON staff_compensation_payouts(confirmed_at DESC);
+
+COMMENT ON TABLE staff_compensation_payouts IS 'Confirmed staff revenue-share payouts — contractor-style, not W-2 payroll.';
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
   actor_id TEXT NOT NULL,
@@ -1828,6 +1867,7 @@ CREATE OR REPLACE FUNCTION public.is_authenticated_user() RETURNS BOOLEAN
 AS $$ SELECT auth.uid() IS NOT NULL; $$;
 
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_compensation_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability_date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_shift_templates ENABLE ROW LEVEL SECURITY;
@@ -1842,6 +1882,11 @@ CREATE POLICY audit_log_select ON audit_log FOR SELECT
 DROP POLICY IF EXISTS audit_log_insert ON audit_log;
 CREATE POLICY audit_log_insert ON audit_log FOR INSERT
   WITH CHECK (is_authenticated_user() OR true);
+
+DROP POLICY IF EXISTS staff_comp_payouts_all ON staff_compensation_payouts;
+CREATE POLICY staff_comp_payouts_all ON staff_compensation_payouts FOR ALL
+  USING (is_staff_user() OR NOT is_authenticated_user())
+  WITH CHECK (is_staff_user() OR NOT is_authenticated_user());
 
 DROP POLICY IF EXISTS guard_availability_select ON guard_availability;
 CREATE POLICY guard_availability_select ON guard_availability FOR SELECT

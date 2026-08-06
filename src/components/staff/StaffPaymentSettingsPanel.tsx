@@ -10,7 +10,16 @@ import {
 import {
   PlatformSettings,
 } from '../../lib/platformSettings';
-import { hasExecutivePaymentControls } from '../../lib/permissions';
+import { hasExecutivePaymentControls, canManageStaffCompensation } from '../../lib/permissions';
+import {
+  COMPENSATABLE_STAFF_ROLES,
+  formatCompensationPercent,
+  normalizeStaffCompensationConfig,
+  totalRolePercent,
+  type StaffCompensationCadence,
+  type StaffCompensationConfig,
+  type StaffRoleCompensationRule,
+} from '../../lib/staffCompensation';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
@@ -103,16 +112,25 @@ export function StaffPaymentSettingsPanel({
 }: StaffPaymentSettingsPanelProps) {
   const { formFactor } = useDevice();
   const canEditFees = hasExecutivePaymentControls(currentUser);
+  const canEditCompensation = canManageStaffCompensation(currentUser);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
   const [crewPayBumpRate, setCrewPayBumpRate] = useState(
     platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
   );
   const [savingCrewPayBump, setSavingCrewPayBump] = useState(false);
+  const [compDraft, setCompDraft] = useState<StaffCompensationConfig>(
+    normalizeStaffCompensationConfig(platformSettings.staffCompensation),
+  );
+  const [savingCompensation, setSavingCompensation] = useState(false);
 
   useEffect(() => {
     setFeeDraft(platformSettings.feeConfig);
   }, [platformSettings.feeConfig]);
+
+  useEffect(() => {
+    setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation));
+  }, [platformSettings.staffCompensation]);
 
   useEffect(() => {
     setCrewPayBumpRate(
@@ -123,6 +141,11 @@ export function StaffPaymentSettingsPanel({
   const crewPayBumpDirty =
     crewPayBumpRate !==
     (platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1);
+
+  const compDirty = useMemo(
+    () => JSON.stringify(compDraft) !== JSON.stringify(normalizeStaffCompensationConfig(platformSettings.staffCompensation)),
+    [compDraft, platformSettings.staffCompensation],
+  );
 
   const feeDirty = useMemo(
     () => JSON.stringify(feeDraft) !== JSON.stringify(platformSettings.feeConfig),
@@ -159,6 +182,30 @@ export function StaffPaymentSettingsPanel({
     } finally {
       setSavingCrewPayBump(false);
     }
+  };
+
+  const persistCompensationSettings = async () => {
+    if (!onUpdatePlatformSettings || !canEditCompensation) return;
+    setSavingCompensation(true);
+    try {
+      await onUpdatePlatformSettings({
+        ...platformSettings,
+        staffCompensation: normalizeStaffCompensationConfig(compDraft),
+        updatedAt: new Date().toISOString(),
+      });
+    } finally {
+      setSavingCompensation(false);
+    }
+  };
+
+  const updateRoleRule = (role: typeof COMPENSATABLE_STAFF_ROLES[number], patch: Partial<StaffRoleCompensationRule>) => {
+    setCompDraft((prev) => ({
+      ...prev,
+      roleRules: {
+        ...prev.roleRules,
+        [role]: { ...prev.roleRules[role], ...patch },
+      },
+    }));
   };
 
   const setFeeModel = (model: PlatformFeeModel) => {
@@ -285,6 +332,154 @@ export function StaffPaymentSettingsPanel({
     </div>
   );
 
+  const staffCompensationBody = (
+    <div className="space-y-4 min-w-0">
+      <p className="text-sm text-brand-text/70 leading-relaxed">
+        Staff revenue-share is paid from collected platform fees only (contractor-style, not W-2 payroll).
+        Each role receives a percentage of the fee pool for the period. Directors and Founders confirm
+        individual payouts in Staff pay.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+        <label className="block space-y-1">
+          <span className="uber-label">Compensation enabled</span>
+          <select
+            className="uber-input w-full"
+            value={compDraft.enabled ? 'yes' : 'no'}
+            disabled={!canEditCompensation}
+            onChange={(e) => setCompDraft((prev) => ({ ...prev, enabled: e.target.value === 'yes' }))}
+          >
+            <option value="yes">Enabled</option>
+            <option value="no">Disabled</option>
+          </select>
+        </label>
+        <label className="block space-y-1">
+          <span className="uber-label">Payout cadence</span>
+          <select
+            className="uber-input w-full"
+            value={compDraft.cadence}
+            disabled={!canEditCompensation}
+            onChange={(e) =>
+              setCompDraft((prev) => ({ ...prev, cadence: e.target.value as StaffCompensationCadence }))
+            }
+          >
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
+      </div>
+
+      <p className="text-xs text-brand-text/60">
+        Total role allocation: {formatCompensationPercent(totalRolePercent(compDraft))}
+      </p>
+
+      <div className="adm-table-wrap rounded-lg border border-brand-border overflow-x-auto">
+        <table className="adm-table w-full text-sm min-w-[36rem]">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>% of fees</th>
+              <th>Floor / period</th>
+              <th>Cap / period</th>
+            </tr>
+          </thead>
+          <tbody>
+            {COMPENSATABLE_STAFF_ROLES.map((role) => {
+              const rule = compDraft.roleRules[role];
+              return (
+                <tr key={role}>
+                  <td>{role}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={Math.round(rule.percentOfFees * 1000) / 10}
+                      onChange={(e) =>
+                        updateRoleRule(role, {
+                          percentOfFees: Math.min(1, Math.max(0, (parseFloat(e.target.value) || 0) / 100)),
+                        })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={rule.floorPerPeriod}
+                      onChange={(e) =>
+                        updateRoleRule(role, { floorPerPeriod: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={rule.capPerPeriod}
+                      onChange={(e) =>
+                        updateRoleRule(role, { capPerPeriod: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {canEditCompensation ? (
+        formFactor === 'desktop' ? (
+          <div className="staff-payment-settings-actions">
+            <GuardrButton
+              kind="primary"
+              size="compact"
+              disabled={!compDirty || savingCompensation}
+              onClick={() => void persistCompensationSettings()}
+            >
+              {savingCompensation ? 'Saving…' : 'Save staff compensation'}
+            </GuardrButton>
+            {compDirty && (
+              <GuardrButton
+                kind="secondary"
+                size="compact"
+                onClick={() =>
+                  setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation))
+                }
+              >
+                Discard changes
+              </GuardrButton>
+            )}
+          </div>
+        ) : (
+          <div className="staff-payment-settings-actions">
+            <MobileSaveButton
+              label="Save staff compensation"
+              busyLabel="Saving…"
+              busy={savingCompensation}
+              disabled={!compDirty}
+              onClick={() => void persistCompensationSettings()}
+            />
+          </div>
+        )
+      ) : (
+        <p className="text-xs text-brand-text/60">
+          Only Directors and Founders can edit staff compensation settings.
+        </p>
+      )}
+    </div>
+  );
+
   const crewPayBumpBody = (
     <div className="space-y-4 min-w-0">
       <p className="text-sm text-brand-text/70 leading-relaxed">
@@ -339,13 +534,16 @@ export function StaffPaymentSettingsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Platform fees and crew pay bump defaults."
+            subtitle="Platform fees, staff compensation, and crew pay defaults."
           />
         }
       >
         <div className="adm-payment-settings-grid adm-payment-settings-grid--split">
           <DesktopSettingsCard title="Platform fees">
             {platformFeesBody}
+          </DesktopSettingsCard>
+          <DesktopSettingsCard title="Staff compensation" fullWidth>
+            {staffCompensationBody}
           </DesktopSettingsCard>
           <DesktopSettingsCard title="Crew team pay bump" fullWidth>
             {crewPayBumpBody}
@@ -359,6 +557,7 @@ export function StaffPaymentSettingsPanel({
     <StaffOpsPageShell className="staff-payment-settings-panel staff-mgmt-panel staff-roster-panel">
       <div className="staff-payment-settings-scroll min-w-0">
         <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
+        <AppFormSection title="Staff compensation">{staffCompensationBody}</AppFormSection>
         <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
       </div>
     </StaffOpsPageShell>

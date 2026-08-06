@@ -91,6 +91,10 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     message:
       'Financial controls require Manage payouts, Manage fees, View all financial data, or Access audit log. Ask your Director if you need access.',
   },
+  'staff-pay': {
+    title: 'Staff pay',
+    message: 'Staff pay is available to active staff accounts.',
+  },
   disputes: {
     title: 'Disputes',
     message:

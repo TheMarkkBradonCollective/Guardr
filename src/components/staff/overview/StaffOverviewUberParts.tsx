@@ -58,6 +58,7 @@ export const QUICK_LINK_META: Record<
   'team-chat': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
   'job-chats': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
   payments: { label: 'Payments', icon: DollarSign, sub: 'Billing' },
+  'staff-pay': { label: 'Staff pay', icon: Users, sub: 'Revenue share' },
   'payment-settings': { label: 'Payment settings', icon: CreditCard, sub: 'Stripe' },
   agreements: { label: 'Agreements', icon: FileText, sub: 'Legal' },
   'audit-log': { label: 'Audit log', icon: ScrollText, sub: 'Activity' },

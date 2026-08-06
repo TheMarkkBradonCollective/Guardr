@@ -24,7 +24,7 @@ const GROUPS: { title: string; ids: StaffSection[] }[] = [
     ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
   },
   { title: 'Communications', ids: ['messages', 'support'] },
-  { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
+  { title: 'Finance', ids: ['payments', 'staff-pay', 'payment-settings', 'agreements', 'audit-log'] },
   { title: 'Support & insights', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { title: 'Platform', ids: ['permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
