@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { SessionUser } from '../types';
+import { shouldEmitStaffWorkAction, emitStaffWorkAction } from './staffWorkActivity';
 
 export type AuditAction =
   | 'sign_in'
@@ -74,6 +75,11 @@ export async function writeAuditLog(
   details?: Record<string, unknown>
 ): Promise<void> {
   if (!actor) return;
+
+  if (shouldEmitStaffWorkAction(actor.role, action)) {
+    emitStaffWorkAction({ action, label: action });
+  }
+
   const entry: AuditLogEntry = {
     id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     actorId: actor.id,

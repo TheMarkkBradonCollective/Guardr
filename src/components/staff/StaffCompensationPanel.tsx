@@ -347,11 +347,11 @@ export function StaffCompensationSection({
     <div className="rounded-lg border border-brand-border p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-brand-text">Automatic time tracking</p>
+          <p className="text-sm font-semibold text-brand-text">Smart time tracking</p>
           <p className="text-xs text-brand-text/60">
-            Time is recorded automatically while you work on the site — from your first action to your last
-            action in each session. Tracked hours can be added to pay by a Director or Founder after your
-            instant revenue-share payout.
+            Time starts when the app or site is open — no clock in needed. Navigation toward work and
+            real staff actions (approvals, payouts, messages, edits) count; passive page clicks do not.
+            Brief tab switches are included; closing the app ends the session.
           </p>
         </div>
         {myActiveEntry ? (
@@ -359,7 +359,7 @@ export function StaffCompensationSection({
             Active session · {formatElapsedDuration(elapsedActiveSessionSeconds(myActiveEntry))}
           </span>
         ) : (
-          <span className="text-xs text-brand-text/60">No active session — time starts on your next action</span>
+          <span className="text-xs text-brand-text/60">App closed — time starts when you open Guardr again</span>
         )}
       </div>
       <p className="text-sm text-brand-text/75">
