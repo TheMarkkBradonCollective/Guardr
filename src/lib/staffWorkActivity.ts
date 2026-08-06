@@ -1,5 +1,5 @@
 import type { AuditAction } from './auditLog';
-import type { PlatformRole } from '../types';
+import type { PlatformRole, SessionUser } from '../types';
 import { isStaffRole } from './permissions';
 import {
   closeStaffTimeEntry,
@@ -19,38 +19,11 @@ export const STAFF_ACTIVITY_IDLE_MS = 15 * 60 * 1000;
 export const STAFF_WORK_ACTION_EVENT = 'guardr-staff-work-action';
 export const STAFF_TRAVEL_ACTION_EVENT = 'guardr-staff-travel-action';
 
-const STAFF_WORK_AUDIT_ACTIONS = new Set<AuditAction>([
-  'job_posted',
-  'job_approved',
-  'job_denied',
-  'guard_approved',
-  'guard_activated',
-  'guard_application_revision_requested',
-  'guard_application_revoked',
-  'staff_approved',
-  'staff_rejected',
-  'client_approved',
-  'client_application_revision_requested',
-  'client_application_revoked',
-  'cert_verified',
-  'schedule_change_approved',
-  'schedule_change_rejected',
-  'payment_recorded',
-  'payout_released',
-  'trusted_status_changed',
-  'settings_updated',
-  'staff_compensation_adjustments_confirmed',
-  'staff_time_entry_adjusted',
-  'staff_time_entry_created',
-  'staff_time_entry_deleted',
-  'city_market_updated',
-  'staff_city_access_updated',
-  'bulk_action',
-  'compliance_alert_created',
-]);
+/** Session/auth events that should not count as billable staff work. */
+const STAFF_WORK_AUDIT_DENYLIST = new Set<AuditAction>(['sign_in', 'sign_out']);
 
 export function isStaffWorkAuditAction(action: AuditAction): boolean {
-  return STAFF_WORK_AUDIT_ACTIONS.has(action);
+  return !STAFF_WORK_AUDIT_DENYLIST.has(action);
 }
 
 export function shouldEmitStaffWorkAction(actorRole: PlatformRole, action: AuditAction): boolean {
@@ -60,6 +33,14 @@ export function shouldEmitStaffWorkAction(actorRole: PlatformRole, action: Audit
 export function emitStaffWorkAction(detail?: { action?: string; label?: string }): void {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(STAFF_WORK_ACTION_EVENT, { detail }));
+}
+
+export function trackStaffWorkActionForUser(
+  user: Pick<SessionUser, 'role'> | null | undefined,
+  detail?: { action?: string; label?: string },
+): void {
+  if (!user || !isStaffRole(user.role)) return;
+  emitStaffWorkAction(detail);
 }
 
 export function emitStaffTravelAction(detail?: { section?: string; label?: string }): void {
@@ -204,4 +185,12 @@ export function closeActiveStaffSession(
     entries: entries.map((entry) => (entry.id === closed.id ? closed : entry)),
     changed: true,
   };
+}
+
+export function isStaffEngagementTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const interactive = target.closest(
+    'button, a[href], input, select, textarea, label, [role="button"], [contenteditable="true"], [data-staff-work-action]',
+  );
+  return interactive != null;
 }
