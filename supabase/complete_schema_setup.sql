@@ -1636,12 +1636,12 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config
   "enabled": true,
   "cadence": "weekly",
   "roleRules": {
-    "Support": { "percentOfFees": 0.015, "floorPerPeriod": 0, "capPerPeriod": 400 },
-    "Moderator": { "percentOfFees": 0.02, "floorPerPeriod": 0, "capPerPeriod": 600 },
-    "Administrator": { "percentOfFees": 0.025, "floorPerPeriod": 0, "capPerPeriod": 800 },
-    "Manager": { "percentOfFees": 0.03, "floorPerPeriod": 0, "capPerPeriod": 1200 },
-    "Director": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 2000 },
-    "Founder": { "percentOfFees": 0.05, "floorPerPeriod": 0, "capPerPeriod": 3000 }
+    "Support": { "percentOfFees": 0.015, "floorPerPeriod": 0, "capPerPeriod": 400, "hourlyPayRate": 18 },
+    "Moderator": { "percentOfFees": 0.02, "floorPerPeriod": 0, "capPerPeriod": 600, "hourlyPayRate": 20 },
+    "Administrator": { "percentOfFees": 0.025, "floorPerPeriod": 0, "capPerPeriod": 800, "hourlyPayRate": 22 },
+    "Manager": { "percentOfFees": 0.03, "floorPerPeriod": 0, "capPerPeriod": 1200, "hourlyPayRate": 28 },
+    "Director": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 2000, "hourlyPayRate": 35 },
+    "Founder": { "percentOfFees": 0.05, "floorPerPeriod": 0, "capPerPeriod": 3000, "hourlyPayRate": 40 }
   }
 }'::jsonb;
 COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence.';
@@ -1670,6 +1670,35 @@ CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_period ON staff_compensation_p
 CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_confirmed ON staff_compensation_payouts(confirmed_at DESC);
 
 COMMENT ON TABLE staff_compensation_payouts IS 'Confirmed staff revenue-share payouts — contractor-style, not W-2 payroll.';
+
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_hours NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS manual_adjustment_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS include_hourly_pay BOOLEAN;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS payout_status TEXT
+  CHECK (payout_status IS NULL OR payout_status IN ('base_paid', 'finalized'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS base_paid_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustment_choice TEXT
+  CHECK (adjustment_choice IS NULL OR adjustment_choice IN ('none', 'custom'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_id TEXT;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_email TEXT;
+
+CREATE TABLE IF NOT EXISTS staff_time_entries (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  clock_in_at TIMESTAMPTZ NOT NULL,
+  clock_out_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_open ON staff_time_entries(staff_id) WHERE clock_out_at IS NULL;
+
+COMMENT ON TABLE staff_time_entries IS 'Staff active time tracker — clock in/out for hourly pay calculations.';
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
@@ -1868,6 +1897,7 @@ AS $$ SELECT auth.uid() IS NOT NULL; $$;
 
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_compensation_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_time_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability_date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_shift_templates ENABLE ROW LEVEL SECURITY;
@@ -1885,6 +1915,11 @@ CREATE POLICY audit_log_insert ON audit_log FOR INSERT
 
 DROP POLICY IF EXISTS staff_comp_payouts_all ON staff_compensation_payouts;
 CREATE POLICY staff_comp_payouts_all ON staff_compensation_payouts FOR ALL
+  USING (is_staff_user() OR NOT is_authenticated_user())
+  WITH CHECK (is_staff_user() OR NOT is_authenticated_user());
+
+DROP POLICY IF EXISTS staff_time_entries_all ON staff_time_entries;
+CREATE POLICY staff_time_entries_all ON staff_time_entries FOR ALL
   USING (is_staff_user() OR NOT is_authenticated_user())
   WITH CHECK (is_staff_user() OR NOT is_authenticated_user());
 

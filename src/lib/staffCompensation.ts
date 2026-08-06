@@ -14,6 +14,16 @@ export const COMPENSATABLE_STAFF_ROLES: StaffRole[] = [
 
 export type StaffCompensationCadence = 'weekly' | 'monthly';
 
+/** Director post-payout adjustment selection — deductions are never permitted. */
+export type StaffPayoutAdjustmentChoice = 'none' | 'custom';
+
+export type StaffCompensationPayoutStatus = 'base_paid' | 'finalized';
+
+export const STAFF_COMPENSATION_AUTO_ACTOR = {
+  id: 'system-auto',
+  email: 'auto-payout@guardr.app',
+} as const;
+
 export interface StaffRoleCompensationRule {
   /** Share of collected platform fees for this role (0–1, e.g. 0.02 = 2%). */
   percentOfFees: number;
@@ -21,6 +31,8 @@ export interface StaffRoleCompensationRule {
   floorPerPeriod: number;
   /** Maximum payout per person per period. */
   capPerPeriod: number;
+  /** Hourly pay rate for tracked active time (Manager+ editable). */
+  hourlyPayRate: number;
 }
 
 export interface StaffCompensationConfig {
@@ -39,8 +51,21 @@ export interface StaffCompensationPayout {
   periodEnd: string;
   platformFeesInPeriod: number;
   baseAmount: number;
+  /** @deprecated Use hourlyAmount + manualAdjustmentAmount — kept for legacy rows. */
   adjustmentAmount: number;
+  hourlyHours?: number;
+  hourlyRate?: number;
+  hourlyAmount?: number;
+  manualAdjustmentAmount?: number;
+  includeHourlyPay?: boolean;
   finalAmount: number;
+  /** Instant revenue-share deposit — finalized when adjustments are confirmed. */
+  payoutStatus?: StaffCompensationPayoutStatus;
+  basePaidAt?: string;
+  adjustmentChoice?: StaffPayoutAdjustmentChoice;
+  adjustmentsConfirmedAt?: string;
+  adjustmentsConfirmedById?: string;
+  adjustmentsConfirmedByEmail?: string;
   confirmedById: string;
   confirmedByEmail: string;
   confirmedAt: string;
@@ -63,18 +88,21 @@ export interface StaffCompensationPreview {
   pendingAmount: number;
   existingPayout?: StaffCompensationPayout;
   isActive: boolean;
+  trackedHours: number;
+  hourlyPayRate: number;
+  awaitingAdjustments: boolean;
 }
 
 export const DEFAULT_STAFF_COMPENSATION_CONFIG: StaffCompensationConfig = {
   enabled: true,
   cadence: 'weekly',
   roleRules: {
-    Support: { percentOfFees: 0.015, floorPerPeriod: 0, capPerPeriod: 400 },
-    Moderator: { percentOfFees: 0.02, floorPerPeriod: 0, capPerPeriod: 600 },
-    Administrator: { percentOfFees: 0.025, floorPerPeriod: 0, capPerPeriod: 800 },
-    Manager: { percentOfFees: 0.03, floorPerPeriod: 0, capPerPeriod: 1200 },
-    Director: { percentOfFees: 0.04, floorPerPeriod: 0, capPerPeriod: 2000 },
-    Founder: { percentOfFees: 0.05, floorPerPeriod: 0, capPerPeriod: 3000 },
+    Support: { percentOfFees: 0.015, floorPerPeriod: 0, capPerPeriod: 400, hourlyPayRate: 18 },
+    Moderator: { percentOfFees: 0.02, floorPerPeriod: 0, capPerPeriod: 600, hourlyPayRate: 20 },
+    Administrator: { percentOfFees: 0.025, floorPerPeriod: 0, capPerPeriod: 800, hourlyPayRate: 22 },
+    Manager: { percentOfFees: 0.03, floorPerPeriod: 0, capPerPeriod: 1200, hourlyPayRate: 28 },
+    Director: { percentOfFees: 0.04, floorPerPeriod: 0, capPerPeriod: 2000, hourlyPayRate: 35 },
+    Founder: { percentOfFees: 0.05, floorPerPeriod: 0, capPerPeriod: 3000, hourlyPayRate: 40 },
   },
 };
 
@@ -109,6 +137,7 @@ export function normalizeStaffCompensationConfig(
         percentOfFees: Math.min(1, Math.max(0, rule.percentOfFees ?? roleRules[role].percentOfFees)),
         floorPerPeriod: Math.max(0, rule.floorPerPeriod ?? roleRules[role].floorPerPeriod),
         capPerPeriod: Math.max(0, rule.capPerPeriod ?? roleRules[role].capPerPeriod),
+        hourlyPayRate: Math.max(0, rule.hourlyPayRate ?? roleRules[role].hourlyPayRate),
       };
     }
   }
@@ -181,6 +210,117 @@ function applyFloorAndCap(amount: number, floor: number, cap: number): number {
   return round2(value);
 }
 
+export function computeHourlyPayAmount(hours: number, hourlyRate: number): number {
+  return round2(Math.max(0, hours) * Math.max(0, hourlyRate));
+}
+
+export interface StaffPayoutAdjustmentInput {
+  choice: StaffPayoutAdjustmentChoice;
+  includeHourlyPay: boolean;
+  trackedHours: number;
+  hourlyRate: number;
+  manualAdjustment: number;
+}
+
+export function resolvePayoutStatus(payout: StaffCompensationPayout): StaffCompensationPayoutStatus {
+  if (payout.payoutStatus === 'base_paid' || payout.payoutStatus === 'finalized') {
+    return payout.payoutStatus;
+  }
+  return 'finalized';
+}
+
+export function isPayoutAwaitingAdjustments(payout: StaffCompensationPayout): boolean {
+  return resolvePayoutStatus(payout) === 'base_paid';
+}
+
+export function buildInstantBasePayout(params: {
+  preview: StaffCompensationPreview;
+  periodStart: string;
+  periodEnd: string;
+  paidAt?: string;
+}): StaffCompensationPayout {
+  const paidAt = params.paidAt ?? new Date().toISOString();
+  const baseAmount = params.preview.cappedBaseAmount;
+  return {
+    id: `scpay-base-${params.preview.staffId}-${Date.parse(params.periodStart)}`,
+    staffId: params.preview.staffId,
+    staffName: params.preview.staffName,
+    staffEmail: params.preview.staffEmail,
+    staffRole: params.preview.staffRole,
+    periodStart: params.periodStart,
+    periodEnd: params.periodEnd,
+    platformFeesInPeriod: params.preview.platformFeesInPeriod,
+    baseAmount,
+    adjustmentAmount: 0,
+    hourlyHours: 0,
+    hourlyRate: params.preview.hourlyPayRate,
+    hourlyAmount: 0,
+    manualAdjustmentAmount: 0,
+    includeHourlyPay: false,
+    finalAmount: baseAmount,
+    payoutStatus: 'base_paid',
+    basePaidAt: paidAt,
+    adjustmentChoice: 'none',
+    confirmedById: STAFF_COMPENSATION_AUTO_ACTOR.id,
+    confirmedByEmail: STAFF_COMPENSATION_AUTO_ACTOR.email,
+    confirmedAt: paidAt,
+  };
+}
+
+export function applyStaffPayoutAdjustments(
+  payout: StaffCompensationPayout,
+  input: StaffPayoutAdjustmentInput,
+  confirmedBy: { id: string; email: string },
+): StaffCompensationPayout {
+  const extras = computeStaffPayoutAdjustment(input);
+  const now = new Date().toISOString();
+  return {
+    ...payout,
+    adjustmentAmount: extras.totalAdjustment,
+    hourlyHours: extras.hourlyHours,
+    hourlyRate: input.hourlyRate,
+    hourlyAmount: extras.hourlyAmount,
+    manualAdjustmentAmount: extras.manualAdjustmentAmount,
+    includeHourlyPay: input.choice === 'custom' && input.includeHourlyPay,
+    adjustmentChoice: input.choice,
+    finalAmount: round2(payout.baseAmount + extras.totalAdjustment),
+    payoutStatus: 'finalized',
+    adjustmentsConfirmedAt: now,
+    adjustmentsConfirmedById: confirmedBy.id,
+    adjustmentsConfirmedByEmail: confirmedBy.email,
+  };
+}
+
+export function computeStaffPayoutAdjustment(input: StaffPayoutAdjustmentInput): {
+  hourlyHours: number;
+  hourlyAmount: number;
+  manualAdjustmentAmount: number;
+  totalAdjustment: number;
+} {
+  const manualAdjustmentAmount =
+    input.choice === 'custom' ? round2(Math.max(0, input.manualAdjustment)) : 0;
+  const hourlyHours =
+    input.choice === 'custom' && input.includeHourlyPay ? round2(Math.max(0, input.trackedHours)) : 0;
+  const hourlyAmount =
+    input.choice === 'custom' && input.includeHourlyPay
+      ? computeHourlyPayAmount(hourlyHours, input.hourlyRate)
+      : 0;
+  return {
+    hourlyHours,
+    hourlyAmount,
+    manualAdjustmentAmount,
+    totalAdjustment: round2(hourlyAmount + manualAdjustmentAmount),
+  };
+}
+
+export function computeStaffPayoutFinalAmount(
+  baseAmount: number,
+  adjustment: StaffPayoutAdjustmentInput,
+): number {
+  const extras = computeStaffPayoutAdjustment(adjustment);
+  return round2(baseAmount + extras.totalAdjustment);
+}
+
 export function buildStaffCompensationPreviews(params: {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
@@ -188,8 +328,9 @@ export function buildStaffCompensationPreviews(params: {
   payouts: StaffCompensationPayout[];
   periodStart: string;
   periodEnd: string;
+  trackedHoursByStaffId?: Record<string, number>;
 }): StaffCompensationPreview[] {
-  const { guards, requests, config, payouts, periodStart, periodEnd } = params;
+  const { guards, requests, config, payouts, periodStart, periodEnd, trackedHoursByStaffId = {} } = params;
   if (!config.enabled) return [];
 
   const platformFeesInPeriod = sumCollectedPlatformFeesInPeriod(requests, periodStart, periodEnd);
@@ -234,7 +375,10 @@ export function buildStaffCompensationPreviews(params: {
       alreadyPaidAmount,
       pendingAmount: existingPayout ? 0 : cappedBase,
       existingPayout,
+      awaitingAdjustments: existingPayout ? isPayoutAwaitingAdjustments(existingPayout) : false,
       isActive: member.userStatus === 'active' || member.userStatus === 'pending',
+      trackedHours: trackedHoursByStaffId[member.id] ?? 0,
+      hourlyPayRate: rule.hourlyPayRate,
     });
   }
 

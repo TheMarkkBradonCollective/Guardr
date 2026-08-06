@@ -10,7 +10,7 @@ import {
 import {
   PlatformSettings,
 } from '../../lib/platformSettings';
-import { hasExecutivePaymentControls, canManageStaffCompensation } from '../../lib/permissions';
+import { hasExecutivePaymentControls, canManageStaffCompensation, canEditStaffHourlyPayRates } from '../../lib/permissions';
 import {
   COMPENSATABLE_STAFF_ROLES,
   formatCompensationPercent,
@@ -113,6 +113,7 @@ export function StaffPaymentSettingsPanel({
   const { formFactor } = useDevice();
   const canEditFees = hasExecutivePaymentControls(currentUser);
   const canEditCompensation = canManageStaffCompensation(currentUser);
+  const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
   const [crewPayBumpRate, setCrewPayBumpRate] = useState(
@@ -185,12 +186,28 @@ export function StaffPaymentSettingsPanel({
   };
 
   const persistCompensationSettings = async () => {
-    if (!onUpdatePlatformSettings || !canEditCompensation) return;
+    if (!onUpdatePlatformSettings) return;
+    if (!canEditCompensation && !canEditHourlyRates) return;
     setSavingCompensation(true);
     try {
+      const current = normalizeStaffCompensationConfig(platformSettings.staffCompensation);
+      const nextConfig = canEditCompensation
+        ? normalizeStaffCompensationConfig(compDraft)
+        : normalizeStaffCompensationConfig({
+            ...current,
+            roleRules: Object.fromEntries(
+              COMPENSATABLE_STAFF_ROLES.map((role) => [
+                role,
+                {
+                  ...current.roleRules[role],
+                  hourlyPayRate: compDraft.roleRules[role].hourlyPayRate,
+                },
+              ]),
+            ) as StaffCompensationConfig['roleRules'],
+          });
       await onUpdatePlatformSettings({
         ...platformSettings,
-        staffCompensation: normalizeStaffCompensationConfig(compDraft),
+        staffCompensation: nextConfig,
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -336,8 +353,8 @@ export function StaffPaymentSettingsPanel({
     <div className="space-y-4 min-w-0">
       <p className="text-sm text-brand-text/70 leading-relaxed">
         Staff revenue-share is paid from collected platform fees only (contractor-style, not W-2 payroll).
-        Each role receives a percentage of the fee pool for the period. Directors and Founders confirm
-        individual payouts in Staff pay.
+        Revenue-share base pay is released instantly. Directors and Founders then confirm optional add-ons:
+        tracked hourly pay and manual bonuses (add-only). Hourly rates are editable by Manager and above.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
@@ -381,6 +398,7 @@ export function StaffPaymentSettingsPanel({
               <th>% of fees</th>
               <th>Floor / period</th>
               <th>Cap / period</th>
+              <th>Hourly pay</th>
             </tr>
           </thead>
           <tbody>
@@ -431,6 +449,19 @@ export function StaffPaymentSettingsPanel({
                       }
                     />
                   </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.25}
+                      className="uber-input w-24"
+                      disabled={!canEditHourlyRates}
+                      value={rule.hourlyPayRate}
+                      onChange={(e) =>
+                        updateRoleRule(role, { hourlyPayRate: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
                 </tr>
               );
             })}
@@ -438,7 +469,7 @@ export function StaffPaymentSettingsPanel({
         </table>
       </div>
 
-      {canEditCompensation ? (
+      {(canEditCompensation || canEditHourlyRates) ? (
         formFactor === 'desktop' ? (
           <div className="staff-payment-settings-actions">
             <GuardrButton
@@ -447,7 +478,7 @@ export function StaffPaymentSettingsPanel({
               disabled={!compDirty || savingCompensation}
               onClick={() => void persistCompensationSettings()}
             >
-              {savingCompensation ? 'Saving…' : 'Save staff compensation'}
+              {savingCompensation ? 'Saving…' : canEditCompensation ? 'Save staff compensation' : 'Save hourly pay rates'}
             </GuardrButton>
             {compDirty && (
               <GuardrButton
@@ -464,7 +495,7 @@ export function StaffPaymentSettingsPanel({
         ) : (
           <div className="staff-payment-settings-actions">
             <MobileSaveButton
-              label="Save staff compensation"
+              label={canEditCompensation ? 'Save staff compensation' : 'Save hourly pay rates'}
               busyLabel="Saving…"
               busy={savingCompensation}
               disabled={!compDirty}
@@ -474,7 +505,7 @@ export function StaffPaymentSettingsPanel({
         )
       ) : (
         <p className="text-xs text-brand-text/60">
-          Only Directors and Founders can edit staff compensation settings.
+          Revenue-share rules require Director or Founder. Hourly pay rates require Manager or above.
         </p>
       )}
     </div>

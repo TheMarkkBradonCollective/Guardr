@@ -328,6 +328,11 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
   return isFounder(user) || hasPermission(user, 'owner.platform_governance');
 }
 
+/** Manager+ — per-role hourly pay rates for tracked staff time. */
+export function canEditStaffHourlyPayRates(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
 /** Director and Founder — staff revenue-share compensation settings and payout confirmation */
 export function canManageStaffCompensation(user: Pick<SessionUser, 'role'>): boolean {
   return isDirectorTierRole(user.role);

@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  applyStaffPayoutAdjustments,
+  buildInstantBasePayout,
   buildStaffCompensationPreviews,
   DEFAULT_STAFF_COMPENSATION_CONFIG,
   getCompensationPeriodBounds,
+  isPayoutAwaitingAdjustments,
   sumCollectedPlatformFeesInPeriod,
 } from './staffCompensation';
 import type { SecurityGuard, SecurityRequest } from '../types';
@@ -119,4 +122,55 @@ test('buildStaffCompensationPreviews respects confirmed payout for period', () =
   });
   assert.equal(previews[0].pendingAmount, 0);
   assert.equal(previews[0].alreadyPaidAmount, 0.6);
+});
+
+test('buildInstantBasePayout creates base_paid record for instant revenue share', () => {
+  const { periodStart, periodEnd } = getCompensationPeriodBounds('weekly', new Date('2026-08-06T12:00:00.000Z'));
+  const previews = buildStaffCompensationPreviews({
+    guards: [makeStaff()],
+    requests: [makeRequest({ endDate: '2026-08-05T18:00:00.000Z' })],
+    config: DEFAULT_STAFF_COMPENSATION_CONFIG,
+    payouts: [],
+    periodStart,
+    periodEnd,
+  });
+  const payout = buildInstantBasePayout({ preview: previews[0], periodStart, periodEnd });
+  assert.equal(payout.payoutStatus, 'base_paid');
+  assert.equal(payout.finalAmount, payout.baseAmount);
+  assert.equal(isPayoutAwaitingAdjustments(payout), true);
+});
+
+test('applyStaffPayoutAdjustments finalizes with no adjustments', () => {
+  const { periodStart, periodEnd } = getCompensationPeriodBounds('weekly', new Date('2026-08-06T12:00:00.000Z'));
+  const base = buildInstantBasePayout({
+    preview: {
+      staffId: 'staff-1',
+      staffName: 'Alex',
+      staffEmail: 'alex@guardr.test',
+      staffRole: 'Support',
+      rolePercent: 0.015,
+      peersInRole: 1,
+      platformFeesInPeriod: 40,
+      baseAmount: 0.6,
+      floorAmount: 0,
+      capAmount: 400,
+      cappedBaseAmount: 0.6,
+      alreadyPaidAmount: 0,
+      pendingAmount: 0.6,
+      isActive: true,
+      trackedHours: 5,
+      hourlyPayRate: 18,
+      awaitingAdjustments: false,
+    },
+    periodStart,
+    periodEnd,
+  });
+  const finalized = applyStaffPayoutAdjustments(
+    base,
+    { choice: 'none', includeHourlyPay: false, trackedHours: 5, hourlyRate: 18, manualAdjustment: 0 },
+    { id: 'dir-1', email: 'dir@guardr.test' },
+  );
+  assert.equal(finalized.payoutStatus, 'finalized');
+  assert.equal(finalized.finalAmount, 0.6);
+  assert.equal(finalized.adjustmentChoice, 'none');
 });

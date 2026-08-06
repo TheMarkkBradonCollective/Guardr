@@ -24,6 +24,8 @@ export type AuditAction =
   | 'trusted_status_changed'
   | 'settings_updated'
   | 'staff_compensation_payout_confirmed'
+  | 'staff_compensation_base_paid'
+  | 'staff_compensation_adjustments_confirmed'
   | 'city_market_updated'
   | 'staff_city_access_updated'
   | 'bulk_action'
