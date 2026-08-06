@@ -39,6 +39,17 @@ describe('chatDisplay staff privacy', () => {
     );
   });
 
+  it('shows system activation messages as Guardr Staff', () => {
+    assert.equal(
+      chatSenderLabelForViewer('client', 'administrator', 'Guardr Staff', 'guardr-support'),
+      'Guardr Staff'
+    );
+    assert.equal(
+      chatSenderLabelForViewer('administrator', 'administrator', 'Guardr Staff', 'guardr-support'),
+      'Guardr Staff'
+    );
+  });
+
   it('masks quoted reply senders when they are staff', () => {
     const thread = [{ senderName: 'Jane Director', senderRole: 'director' as const }];
     assert.equal(maskReplySenderName('client', 'Jane Director', thread), 'Director');

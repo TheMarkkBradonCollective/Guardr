@@ -39,7 +39,7 @@ import {
   GuardCrewJoinRequest,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -353,13 +353,13 @@ import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
+  ACTIVATION_SUPPORT_SUBJECT,
   buildActivationSupportTicketForGuard,
   buildMissingActivationSupportTickets,
   buildNewTicket,
   findActivationSupportChat,
   guardNeedsActivationSupportChat,
   listGuardsNeedingActivationSupport,
-  GUARDR_SUPPORT_ACTOR,
   isDeletableResolvedSupportChat,
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
@@ -737,6 +737,7 @@ export default function App() {
   guardsRef.current = guards;
   const certImageHydrationRef = useRef(new Set<string>());
   const activationSupportBackfillRunningRef = useRef(false);
+  const activationSupportCreationInFlightRef = useRef(new Set<string>());
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -1267,22 +1268,40 @@ export default function App() {
     if (!currentUser) return null;
     const existing = findActivationSupportChat(supportTickets, { id: guard.id, email: guard.email });
     if (existing) return existing.id;
+    if (activationSupportCreationInFlightRef.current.has(guard.id)) return null;
 
-    const staffActor = isStaffRole(currentUser.role) && currentUser.id !== guard.id;
-    const ticket = buildActivationSupportTicketForGuard(
-      guard,
-      staffActor ? currentUser : GUARDR_SUPPORT_ACTOR
-    );
+    activationSupportCreationInFlightRef.current.add(guard.id);
+    try {
+      if (isDbConnected) {
+        const { data } = await supabase
+          .from('support_tickets')
+          .select('id')
+          .eq('user_id', guard.id)
+          .eq('subject', ACTIVATION_SUPPORT_SUBJECT)
+          .neq('status', 'resolved')
+          .limit(1)
+          .maybeSingle();
+        if (data?.id) return String(data.id);
+      }
 
-    beginLocalMutation();
-    setSupportTickets((prev) => {
-      const next = [ticket, ...prev];
-      saveSupportTicketsToStorage(next);
-      return next;
-    });
-    await persistSupportTicketToDb(ticket);
-    notifySupportTicketCreated(currentUser, ticket);
-    if (staffActor) {
+      const ticket = buildActivationSupportTicketForGuard(guard);
+      let resolvedId: string | null = null;
+      beginLocalMutation();
+      setSupportTickets((prev) => {
+        const already = findActivationSupportChat(prev, { id: guard.id, email: guard.email });
+        if (already) {
+          resolvedId = already.id;
+          return prev;
+        }
+        resolvedId = ticket.id;
+        const next = [ticket, ...prev];
+        saveSupportTicketsToStorage(next);
+        return next;
+      });
+      if (!resolvedId || resolvedId !== ticket.id) return resolvedId;
+
+      await persistSupportTicketToDb(ticket);
+      notifySupportTicketCreated(currentUser, ticket);
       void reportPushEvent(currentUser, {
         type: 'support_message',
         recipientUserId: guard.id,
@@ -1290,16 +1309,15 @@ export default function App() {
         title: 'Activation support',
         body: 'Guardr staff opened a support chat to help you complete activation.',
       });
+      return ticket.id;
+    } finally {
+      activationSupportCreationInFlightRef.current.delete(guard.id);
     }
-    return ticket.id;
   };
 
-  const backfillActivationSupportTickets = async (
-    guardsToBackfill: SecurityGuard[],
-    staff: SessionUser
-  ) => {
+  const backfillActivationSupportTickets = async (guardsToBackfill: SecurityGuard[]) => {
     if (guardsToBackfill.length === 0) return;
-    const newTickets = buildMissingActivationSupportTickets(guardsToBackfill, supportTickets, staff);
+    const newTickets = buildMissingActivationSupportTickets(guardsToBackfill, supportTickets);
     if (newTickets.length === 0) return;
 
     beginLocalMutation();
@@ -1311,14 +1329,16 @@ export default function App() {
 
     for (const ticket of newTickets) {
       await persistSupportTicketToDb(ticket);
-      notifySupportTicketCreated(staff, ticket);
-      void reportPushEvent(staff, {
-        type: 'support_message',
-        recipientUserId: ticket.userId,
-        ticketId: ticket.id,
-        title: 'Activation support',
-        body: 'Guardr staff opened a support chat to help you complete activation.',
-      });
+      if (currentUser) notifySupportTicketCreated(currentUser, ticket);
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'support_message',
+          recipientUserId: ticket.userId,
+          ticketId: ticket.id,
+          title: 'Activation support',
+          body: 'Guardr staff opened a support chat to help you complete activation.',
+        });
+      }
     }
   };
 
@@ -3597,10 +3617,11 @@ export default function App() {
     if (loading || !currentUser || activationSupportBackfillRunningRef.current) return;
 
     if (isStaffRole(currentUser.role)) {
+      if (!isExecutiveOpsRole(currentUser.role)) return;
       const missing = listGuardsNeedingActivationSupport(verifiedGuards, supportTickets);
       if (missing.length === 0) return;
       activationSupportBackfillRunningRef.current = true;
-      void backfillActivationSupportTickets(missing, currentUser).finally(() => {
+      void backfillActivationSupportTickets(missing).finally(() => {
         activationSupportBackfillRunningRef.current = false;
       });
       return;
@@ -6212,7 +6233,7 @@ export default function App() {
       'Application approved',
       'Your guard application is approved. Open Guardr to upload your activation credentials.'
     );
-    void ensureActivationSupportTicket(approvedGuard);
+    await ensureActivationSupportTicket(approvedGuard);
   };
 
   const handleRequestGuardApplicationRevision = async (guardId: string, reason?: string) => {

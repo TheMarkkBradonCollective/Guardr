@@ -1407,6 +1407,9 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_push_role ON push_subscriptions(push_role);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_site_id ON push_subscriptions(site_id);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_support_tickets_open_activation_help
+  ON support_tickets (user_id)
+  WHERE subject = 'Activation help' AND status <> 'resolved';
 CREATE INDEX IF NOT EXISTS support_tickets_status_idx ON support_tickets(status);
 CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
 
