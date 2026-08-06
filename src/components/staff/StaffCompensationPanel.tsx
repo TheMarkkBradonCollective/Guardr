@@ -22,8 +22,6 @@ import {
   persistStaffCompensationPayout,
 } from '../../lib/staffCompensationStorage';
 import {
-  closeStaffTimeEntry,
-  createStaffClockInEntry,
   elapsedActiveSessionSeconds,
   formatElapsedDuration,
   formatTrackedHours,
@@ -34,8 +32,8 @@ import {
 } from '../../lib/staffTimeTracking';
 import {
   loadStaffTimeEntries,
-  persistStaffTimeEntries,
 } from '../../lib/staffTimeTrackingStorage';
+import { STAFF_TIME_ENTRIES_CHANGED_EVENT } from '../../lib/staffActivityTime';
 import { PlatformSettings } from '../../lib/platformSettings';
 import {
   canConfirmStaffCompensationPayout,
@@ -92,8 +90,6 @@ export function StaffCompensationSection({
   const [loading, setLoading] = useState(true);
   const [adjustmentState, setAdjustmentState] = useState<Record<string, PayoutAdjustmentState>>({});
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [clockBusy, setClockBusy] = useState(false);
-  const [nowTick, setNowTick] = useState(() => Date.now());
 
   const { periodStart, periodEnd } = useMemo(
     () => getCompensationPeriodBounds(config.cadence),
@@ -102,6 +98,11 @@ export function StaffCompensationSection({
 
   useEffect(() => {
     let active = true;
+    const reload = () => {
+      void loadStaffTimeEntries().then((entryRows) => {
+        if (active) setTimeEntries(entryRows);
+      });
+    };
     void Promise.all([loadStaffCompensationPayouts(), loadStaffTimeEntries()]).then(([payoutRows, entryRows]) => {
       if (active) {
         setPayouts(payoutRows);
@@ -109,24 +110,21 @@ export function StaffCompensationSection({
         setLoading(false);
       }
     });
+    window.addEventListener(STAFF_TIME_ENTRIES_CHANGED_EVENT, reload);
     return () => {
       active = false;
+      window.removeEventListener(STAFF_TIME_ENTRIES_CHANGED_EVENT, reload);
     };
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNowTick(Date.now()), 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
   const trackedHoursByStaffId = useMemo(() => {
     const map: Record<string, number> = {};
     for (const guard of guards) {
       if (!guard.isStaff) continue;
-      map[guard.id] = sumStaffHoursInPeriod(timeEntries, guard.id, periodStart, periodEnd, new Date(nowTick));
+      map[guard.id] = sumStaffHoursInPeriod(timeEntries, guard.id, periodStart, periodEnd);
     }
     return map;
-  }, [guards, timeEntries, periodStart, periodEnd, nowTick]);
+  }, [guards, timeEntries, periodStart, periodEnd]);
 
   const allPreviews = useMemo(
     () =>
@@ -201,33 +199,6 @@ export function StaffCompensationSection({
       return computeStaffPayoutFinalAmount(payout.baseAmount, buildAdjustmentInput(preview));
     }
     return preview.cappedBaseAmount;
-  };
-
-  const handleClockIn = async () => {
-    if (!currentStaffMember || myActiveEntry || !canViewStaffCompensation(currentUser)) return;
-    setClockBusy(true);
-    try {
-      const entry = createStaffClockInEntry({
-        staffId: currentUser.id,
-        staffName: currentStaffMember.name,
-      });
-      const next = [entry, ...timeEntries];
-      setTimeEntries(await persistStaffTimeEntries(next));
-    } finally {
-      setClockBusy(false);
-    }
-  };
-
-  const handleClockOut = async () => {
-    if (!myActiveEntry) return;
-    setClockBusy(true);
-    try {
-      const closed = closeStaffTimeEntry(myActiveEntry);
-      const next = timeEntries.map((entry) => (entry.id === closed.id ? closed : entry));
-      setTimeEntries(await persistStaffTimeEntries(next));
-    } finally {
-      setClockBusy(false);
-    }
   };
 
   const handleConfirmAdjustments = async (preview: StaffCompensationPreview) => {
@@ -369,32 +340,24 @@ export function StaffCompensationSection({
     );
   };
 
-  const timeTrackerBlock = currentStaffMember && (
+  const timeTrackerBlock = currentStaffMember && canViewStaffCompensation(currentUser) && (
     <div className="rounded-lg border border-brand-border p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-brand-text">Active time tracker</p>
+          <p className="text-sm font-semibold text-brand-text">Automatic time tracking</p>
           <p className="text-xs text-brand-text/60">
-            Clock in when you start work and clock out when finished. Tracked hours can be added to pay by a
-            Director or Founder after your instant revenue-share payout.
+            Time is recorded automatically while you work on the site — from your first action to your last
+            action in each session. Tracked hours can be added to pay by a Director or Founder after your
+            instant revenue-share payout.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {myActiveEntry ? (
-            <>
-              <span className="text-sm font-mono text-emerald-700 dark:text-emerald-300">
-                On duty · {formatElapsedDuration(elapsedActiveSessionSeconds(myActiveEntry, new Date(nowTick)))}
-              </span>
-              <GuardrButton kind="secondary" size="compact" disabled={clockBusy} onClick={() => void handleClockOut()}>
-                {clockBusy ? 'Clocking out…' : 'Clock out'}
-              </GuardrButton>
-            </>
-          ) : (
-            <GuardrButton kind="primary" size="compact" disabled={clockBusy} onClick={() => void handleClockIn()}>
-              {clockBusy ? 'Clocking in…' : 'Clock in'}
-            </GuardrButton>
-          )}
-        </div>
+        {myActiveEntry ? (
+          <span className="text-sm font-mono text-emerald-700 dark:text-emerald-300">
+            Active session · {formatElapsedDuration(elapsedActiveSessionSeconds(myActiveEntry))}
+          </span>
+        ) : (
+          <span className="text-xs text-brand-text/60">No active session — time starts on your next action</span>
+        )}
       </div>
       <p className="text-sm text-brand-text/75">
         Your tracked hours this period:{' '}
@@ -411,10 +374,10 @@ export function StaffCompensationSection({
       </p>
       {canManage && activeStaffSessions.length > 0 && (
         <div className="text-xs text-brand-text/60 space-y-1">
-          <p className="font-semibold uppercase tracking-wide text-brand-text/65">Currently on duty</p>
+          <p className="font-semibold uppercase tracking-wide text-brand-text/65">Active sessions</p>
           {activeStaffSessions.map((entry) => (
             <p key={entry.id}>
-              {entry.staffName} · {formatElapsedDuration(elapsedActiveSessionSeconds(entry, new Date(nowTick)))}
+              {entry.staffName} · {formatElapsedDuration(elapsedActiveSessionSeconds(entry))}
             </p>
           ))}
         </div>
@@ -447,8 +410,8 @@ export function StaffCompensationSection({
         </p>
       ) : (
         <p className="text-xs text-brand-text/60">
-          Your revenue share pays out instantly. Clock in/out above to track hours. Directors or Founders review
-          optional add-ons afterward.
+          Your revenue share pays out instantly. Time on the site is tracked automatically for optional
+          hourly add-ons reviewed by Directors or Founders.
         </p>
       )}
     </div>

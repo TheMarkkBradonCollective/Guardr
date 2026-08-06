@@ -28,6 +28,7 @@ function rowToEntry(row: Record<string, unknown>): StaffTimeEntry {
     staffId: String(row.staff_id),
     staffName: String(row.staff_name),
     clockInAt: String(row.clock_in_at),
+    lastActivityAt: row.last_activity_at != null ? String(row.last_activity_at) : undefined,
     clockOutAt: row.clock_out_at != null ? String(row.clock_out_at) : undefined,
     createdAt: String(row.created_at),
   };
@@ -39,6 +40,7 @@ function entryToRow(entry: StaffTimeEntry) {
     staff_id: entry.staffId,
     staff_name: entry.staffName,
     clock_in_at: entry.clockInAt,
+    last_activity_at: entry.lastActivityAt ?? entry.clockInAt,
     clock_out_at: entry.clockOutAt ?? null,
     created_at: entry.createdAt,
   };
