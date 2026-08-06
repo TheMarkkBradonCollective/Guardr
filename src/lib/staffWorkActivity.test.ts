@@ -58,6 +58,46 @@ test('recordStaffTimeEvent counts meaningful work actions', () => {
   assert.equal(result.entries[0]?.lastActivityAt, '2026-08-05T10:20:00.000Z');
 });
 
+test('recordStaffTimeEvent extends work within the idle window', () => {
+  const open: StaffTimeEntry = {
+    id: '1',
+    staffId: 'staff-1',
+    staffName: 'Alex',
+    clockInAt: '2026-08-05T10:00:00.000Z',
+    lastActivityAt: '2026-08-05T10:00:00.000Z',
+    createdAt: '2026-08-05T10:00:00.000Z',
+  };
+  const result = recordStaffTimeEvent([open], {
+    staffId: 'staff-1',
+    staffName: 'Alex',
+    kind: 'work',
+    at: '2026-08-05T10:10:00.000Z',
+  });
+  assert.equal(result.entries[0]?.lastActivityAt, '2026-08-05T10:10:00.000Z');
+  assert.equal(result.entries[0]?.clockInAt, '2026-08-05T10:00:00.000Z');
+});
+
+test('recordStaffTimeEvent starts a new session after idle timeout', () => {
+  const open: StaffTimeEntry = {
+    id: '1',
+    staffId: 'staff-1',
+    staffName: 'Alex',
+    clockInAt: '2026-08-05T10:00:00.000Z',
+    lastActivityAt: '2026-08-05T10:00:00.000Z',
+    createdAt: '2026-08-05T10:00:00.000Z',
+  };
+  const idleAt = new Date(new Date('2026-08-05T10:00:00.000Z').getTime() + STAFF_ACTIVITY_IDLE_MS + 1_000).toISOString();
+  const result = recordStaffTimeEvent([open], {
+    staffId: 'staff-1',
+    staffName: 'Alex',
+    kind: 'work',
+    at: idleAt,
+  });
+  assert.equal(result.entries.length, 2);
+  assert.equal(result.entries[1]?.clockOutAt, '2026-08-05T10:00:00.000Z');
+  assert.equal(result.entries[0]?.clockInAt, idleAt);
+});
+
 test('markStaffPresenceHidden and resumeStaffPresence backfill brief app switches', () => {
   const open: StaffTimeEntry = {
     id: '1',
