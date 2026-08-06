@@ -32,10 +32,10 @@ test('recordStaffActivity extends last activity within idle window', () => {
   const result = recordStaffActivity([open], {
     staffId: 'staff-1',
     staffName: 'Alex',
-    at: '2026-08-05T10:30:00.000Z',
+    at: '2026-08-05T10:10:00.000Z',
   });
   assert.equal(result.changed, true);
-  assert.equal(result.entries[0]?.lastActivityAt, '2026-08-05T10:30:00.000Z');
+  assert.equal(result.entries[0]?.lastActivityAt, '2026-08-05T10:10:00.000Z');
   assert.equal(result.entries[0]?.clockInAt, '2026-08-05T10:00:00.000Z');
 });
 
