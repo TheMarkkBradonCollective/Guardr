@@ -349,7 +349,7 @@ import {
 import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
-import { emitStaffTravelAction } from './lib/staffWorkActivity';
+import { emitStaffTravelAction, emitStaffWorkAction } from './lib/staffWorkActivity';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
@@ -13172,6 +13172,7 @@ export default function App() {
       return next;
     });
     await persistStaffMessageToDb(message);
+    emitStaffWorkAction({ action: 'staff_message_sent', label: 'Staff message sent' });
     void reportPushEvent(currentUser, {
       type: 'staff_message',
       body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
