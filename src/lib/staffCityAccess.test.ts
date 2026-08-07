@@ -31,11 +31,34 @@ describe('staffCityAccess', () => {
     );
   });
 
-  it('limits managers and below to one city', () => {
+  it('allows managers and below to work multiple cities', () => {
     assert.equal(staffRequiresCityAssignment('Manager'), true);
     assert.deepEqual(
-      normalizeStaffManagedCitiesForRole('Administrator', ['Sacramento', 'Oakland'], cities),
-      ['Sacramento']
+      normalizeStaffManagedCitiesForRole(
+        'Administrator',
+        ['Sacramento', 'Oakland'],
+        [
+          {
+            id: 'sacramento',
+            name: 'Sacramento',
+            stateCode: 'CA',
+            status: 'open',
+            waitlistAudience: 'both',
+            recommendOpen: false,
+            sortOrder: 0,
+          },
+          {
+            id: 'oakland',
+            name: 'Oakland',
+            stateCode: 'CA',
+            status: 'open',
+            waitlistAudience: 'both',
+            recommendOpen: false,
+            sortOrder: 1,
+          },
+        ]
+      ),
+      ['Oakland', 'Sacramento']
     );
   });
 

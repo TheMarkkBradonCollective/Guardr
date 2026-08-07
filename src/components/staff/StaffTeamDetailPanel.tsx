@@ -580,15 +580,14 @@ export function StaffTeamDetailPanel({
         <section className="staff-detail-section space-y-3">
           <h3 className="text-sm font-semibold">City assignment</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Assign one city for this staff member. Directors and Founders set city managers in
-            Service Areas.
+            Assign the cities this staff member may work in. Directors and Founders set city
+            managers in Service Areas.
           </p>
           <StaffOperationsAccessPicker
             id={`staff-ops-access-${member.id}`}
             cityNames={assignableCityNames}
             selected={managedCities}
             onChange={setManagedCities}
-            mode="single"
           />
           {currentUserRole === 'owner' || currentUserRole === 'director' ? (
             <div className="space-y-2">

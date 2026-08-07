@@ -6,7 +6,7 @@ export function isExecutiveStaffRole(staffRole?: StaffRole | null): boolean {
   return staffRole === 'Founder' || staffRole === 'Director';
 }
 
-/** Directors and Founders run the full platform; all other staff are scoped to one city. */
+/** Directors and Founders run the full platform; all other staff are scoped to assigned cities. */
 export function staffRequiresCityAssignment(staffRole?: StaffRole | null): boolean {
   if (!staffRole) return false;
   return !isExecutiveStaffRole(staffRole);
@@ -18,7 +18,7 @@ export function normalizeStaffManagedCitiesForRole(
   available: PlatformCity[] = []
 ): string[] {
   if (!staffRole || isExecutiveStaffRole(staffRole)) return [];
-  return normalizeManagedCities(cities, available).slice(0, 1);
+  return normalizeManagedCities(cities, available);
 }
 
 export function validateStaffCityAssignment(
@@ -38,20 +38,18 @@ export function validateStaffCityAssignment(
     return;
   }
 
-  if (managedCities.length > 1) {
-    throw new Error('Staff below Director may only be assigned to one city.');
-  }
-
-  if (staffRole !== 'Manager' || managedCities.length !== 1 || !options?.platformCities) {
+  if (staffRole !== 'Manager' || managedCities.length === 0 || !options?.platformCities) {
     return;
   }
 
-  const cityName = formatCityLabel(managedCities[0]);
-  const city = options.platformCities.find(
-    (entry) => entry.name.toLowerCase() === cityName.toLowerCase()
-  );
-  if (city?.cityManagerId && city.cityManagerId !== options.staffId) {
-    throw new Error(`${city.name} already has a city manager assigned.`);
+  for (const cityName of managedCities) {
+    const label = formatCityLabel(cityName);
+    const city = options.platformCities.find(
+      (entry) => entry.name.toLowerCase() === label.toLowerCase()
+    );
+    if (city?.cityManagerId && city.cityManagerId !== options.staffId) {
+      throw new Error(`${city.name} already has a city manager assigned.`);
+    }
   }
 }
 
