@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 import { BottomNavItem } from './BottomNavBar';
-import { GuardrDrawerShell, type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
-import { useDevice } from '../../lib/platform';
+import { type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
+import { useSurface } from '../../surfaces/SurfaceProvider';
+import { SurfaceAppShell } from '../../surfaces/SurfaceAppShell';
+import type { SurfaceDestination } from '../../surfaces/surfaceNavigation';
 import { MobileDrawerIdentity } from './MobileDrawerIdentity';
 
 interface RoleAppShellProps {
@@ -19,7 +21,7 @@ interface RoleAppShellProps {
   headerRight?: React.ReactNode;
   fullBleed?: boolean;
   hideHeader?: boolean;
-  /** Hide mobile bottom nav (e.g. during an active job trip). */
+  /** Hide primary navigation (e.g. during an active job trip). */
   hideBottomNav?: boolean;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
@@ -30,8 +32,16 @@ interface RoleAppShellProps {
   headerContext?: React.ReactNode;
 }
 
-const MOBILE_BOTTOM_TAB_COUNT = 4;
-
+/**
+ * Guard and client entry point into the three surface applications.
+ *
+ * This component's only job is translating the role's navigation into a
+ * surface-agnostic destination list and handing it to `SurfaceAppShell`, which
+ * loads the mobile, tablet, or desktop application. It deliberately does not
+ * describe layout — the destination order carries the intent (`mobileRank` for
+ * thumb order, `tabletQuick` for mid-shift switching, `section` for grouping) and
+ * each surface arranges it its own way.
+ */
 export function RoleAppShell({
   title,
   accountMenu,
@@ -54,56 +64,50 @@ export function RoleAppShell({
   sidebarFooter,
   headerContext,
 }: RoleAppShellProps) {
-  const { formFactor } = useDevice();
+  const { surface } = useSurface();
   const isMapMode = variant === 'dark';
-  const isMobileShell = formFactor === 'mobile';
-  const isDesktopShell = formFactor === 'desktop';
 
-  const navGroups = useMemo(
-    () => [
-      { items: navItems },
-      ...(messagesNavItems.length > 0 ? [{ title: 'Messages', items: messagesNavItems }] : []),
-      ...(overflowNavItems.length > 0 ? [{ title: 'Management', items: overflowNavItems }] : []),
-    ],
-    [navItems, messagesNavItems, overflowNavItems],
-  );
+  const destinations = useMemo<SurfaceDestination[]>(() => {
+    const build = (
+      items: BottomNavItem[],
+      section: string,
+      options: { rankOffset?: number; quick?: boolean } = {},
+    ): SurfaceDestination[] =>
+      items.map((item, index) => ({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        badge: item.badge,
+        section,
+        mobileRank: options.rankOffset != null ? options.rankOffset + index : undefined,
+        tabletQuick: options.quick,
+      }));
 
-  const allNavItems = useMemo(
-    () => [...navItems, ...messagesNavItems, ...overflowNavItems],
-    [navItems, messagesNavItems, overflowNavItems],
-  );
-
-  const mobileBottomNavItems = useMemo(
-    () => (isMobileShell ? allNavItems.slice(0, MOBILE_BOTTOM_TAB_COUNT) : undefined),
-    [isMobileShell, allNavItems],
-  );
-
-  const mobileBottomNavOverflow = useMemo(() => {
-    if (!isMobileShell) return undefined;
-    const rest = allNavItems.slice(MOBILE_BOTTOM_TAB_COUNT);
-    return rest;
-  }, [isMobileShell, allNavItems]);
+    return [
+      // Primary items win the mobile tab slots and the tablet quick-switch row —
+      // these are the destinations a guard or client uses while on a job.
+      ...build(navItems, 'Work', { rankOffset: 1, quick: true }),
+      ...build(messagesNavItems, 'Messages', { rankOffset: 100 }),
+      ...build(overflowNavItems, 'Manage'),
+    ];
+  }, [navItems, messagesNavItems, overflowNavItems]);
 
   return (
-    <GuardrDrawerShell
-      workspaceLabel={workspaceLabel ?? 'Client workspace'}
+    <SurfaceAppShell
       title={title}
-      navGroups={navGroups}
-      activeNavId={activeNavId}
+      workspaceLabel={workspaceLabel ?? 'Client workspace'}
+      destinations={destinations}
+      activeId={activeNavId}
       onNavigate={onNavigate}
-      accountMenu={<AccountMenu {...accountMenu} triggerVariant={isDesktopShell ? 'uber-direct' : 'default'} />}
       notifications={notifications ?? headerRight}
-      hideHeader={hideHeader}
-      headerExtension={headerExtension}
-      headerOverride={headerOverride}
-      bleed={fullBleed || isMapMode}
-      variant={variant}
-      mobileBottomNavItems={hideBottomNav ? undefined : mobileBottomNavItems}
-      mobileBottomNavOverflow={hideBottomNav ? undefined : mobileBottomNavOverflow}
-      sidebarPrimaryAction={sidebarPrimaryAction}
-      sidebarFooter={sidebarFooter}
-      sidebarIdentity={
-        isMobileShell ? (
+      accountMenu={
+        <AccountMenu
+          {...accountMenu}
+          triggerVariant={surface === 'desktop' ? 'uber-direct' : 'default'}
+        />
+      }
+      identity={
+        surface === 'mobile' ? (
           <MobileDrawerIdentity
             userName={accountMenu.userName}
             avatarUrl={accountMenu.avatarUrl}
@@ -111,10 +115,17 @@ export function RoleAppShell({
           />
         ) : undefined
       }
-      headerContext={headerContext}
+      navFooter={sidebarFooter}
+      headerExtension={headerExtension}
+      headerOverride={headerOverride}
+      pageActions={headerContext}
+      primaryAction={sidebarPrimaryAction}
+      hideChrome={hideHeader}
+      hidePrimaryNav={hideBottomNav}
+      bleed={fullBleed || isMapMode}
     >
       {children}
-    </GuardrDrawerShell>
+    </SurfaceAppShell>
   );
 }
 

@@ -1,0 +1,177 @@
+/* ============================================================================
+   Surface foundation — the only thing the three applications share.
+   ============================================================================
+   Brand: colour, type family, status hues, focus treatment.
+   NOT here: any layout, spacing, sizing, navigation, or component structure.
+   Those live in surface-mobile.css / surface-tablet.css / surface-desktop.css,
+   each scoped so exactly one can ever apply.
+   ========================================================================= */
+
+:root {
+  /* Brand ink + paper. Guardr's monochrome base, shared by all three surfaces. */
+  --sf-ink: #000000;
+  --sf-ink-secondary: #5c5c5c;
+  --sf-ink-tertiary: #8a8a8a;
+  --sf-ink-inverse: #ffffff;
+
+  --sf-paper: #ffffff;
+  --sf-paper-raised: #ffffff;
+  --sf-paper-sunken: #f6f6f6;
+  --sf-paper-muted: #eeeeee;
+
+  --sf-line: #e2e2e2;
+  --sf-line-strong: #c9c9c9;
+
+  /* Status hues. Identical semantics across surfaces; usage differs. */
+  --sf-positive: #0e7a4a;
+  --sf-positive-soft: #e6f4ec;
+  --sf-warning: #9a5b00;
+  --sf-warning-soft: #fdf1e0;
+  --sf-critical: #b3261e;
+  --sf-critical-soft: #fbeae9;
+  --sf-info: #1a4fd1;
+  --sf-info-soft: #eaf0fe;
+
+  /* Accent — used for the single most important action on any screen. */
+  --sf-accent: #000000;
+  --sf-accent-ink: #ffffff;
+  --sf-accent-hover: #1f1f1f;
+
+  /* Type families. The scale is per surface; the family is brand. */
+  --sf-font: 'Uber Move Text', 'Guardr Sans', 'Inter Variable', Inter, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sf-font-display: 'Uber Move', 'Guardr Sans Display', 'Inter Variable', Inter, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  --sf-font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Focus ring. Same treatment everywhere so keyboard users learn it once. */
+  --sf-focus: #1a4fd1;
+  --sf-focus-ring: 0 0 0 2px var(--sf-paper), 0 0 0 4px var(--sf-focus);
+
+  /* Safe areas, normalised so each surface can offset chrome consistently. */
+  --sf-safe-top: max(0px, env(safe-area-inset-top, 0px));
+  --sf-safe-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  --sf-safe-left: max(0px, env(safe-area-inset-left, 0px));
+  --sf-safe-right: max(0px, env(safe-area-inset-right, 0px));
+}
+
+html.theme-dark,
+html[data-theme='dark'] {
+  --sf-ink: #ffffff;
+  --sf-ink-secondary: #a8a8a8;
+  --sf-ink-tertiary: #767676;
+  --sf-ink-inverse: #000000;
+
+  --sf-paper: #0a0a0a;
+  --sf-paper-raised: #161616;
+  --sf-paper-sunken: #000000;
+  --sf-paper-muted: #202020;
+
+  --sf-line: #2a2a2a;
+  --sf-line-strong: #3d3d3d;
+
+  --sf-positive: #4ade80;
+  --sf-positive-soft: #10281c;
+  --sf-warning: #fbbf24;
+  --sf-warning-soft: #2a1f08;
+  --sf-critical: #f87171;
+  --sf-critical-soft: #2c1212;
+  --sf-info: #7ea6ff;
+  --sf-info-soft: #101a33;
+
+  --sf-accent: #ffffff;
+  --sf-accent-ink: #000000;
+  --sf-accent-hover: #e4e4e4;
+
+  --sf-focus: #7ea6ff;
+  --sf-focus-ring: 0 0 0 2px var(--sf-paper), 0 0 0 4px var(--sf-focus);
+}
+
+/* ── Shell root ───────────────────────────────────────────────────────────
+   The one structural rule all three share: fill the viewport, own the
+   scrolling, and never let the document scroll behind the app.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sf-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  font-family: var(--sf-font);
+  font-size: var(--sf-type-body);
+  line-height: var(--sf-leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.sf-shell *,
+.sf-shell *::before,
+.sf-shell *::after {
+  box-sizing: border-box;
+}
+
+.sf-shell :focus-visible {
+  outline: none;
+  box-shadow: var(--sf-focus-ring);
+}
+
+/* Shared shimmer keyframes. Each surface styles its own skeleton geometry. */
+@keyframes sf-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.sfm-skel,
+.sft-skel,
+.sfd-skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--sf-paper-muted) 25%,
+    var(--sf-paper-sunken) 50%,
+    var(--sf-paper-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: sf-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-shell *,
+  .sf-shell *::before,
+  .sf-shell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .sfm-skel,
+  .sft-skel,
+  .sfd-skel {
+    animation: none;
+    background: var(--sf-paper-muted);
+  }
+}
+
+/* ── Cross-surface leak guard ─────────────────────────────────────────────
+   Each surface's components carry its own prefix (sfm-/sft-/sfd-). If a
+   component from the wrong surface ever renders, these rules make it obvious
+   in development instead of silently producing a hybrid layout.
+   ────────────────────────────────────────────────────────────────────────── */
+
+body[data-surface='mobile'] [class*='sft-shell'],
+body[data-surface='mobile'] [class*='sfd-shell'],
+body[data-surface='tablet'] [class*='sfm-shell'],
+body[data-surface='tablet'] [class*='sfd-shell'],
+body[data-surface='desktop'] [class*='sfm-shell'],
+body[data-surface='desktop'] [class*='sft-shell'] {
+  outline: 2px dashed var(--sf-critical);
+  outline-offset: -2px;
+}
