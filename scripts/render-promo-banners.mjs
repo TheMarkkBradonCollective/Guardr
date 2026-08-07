@@ -1,5 +1,6 @@
 /**
- * Render Guardr promo banners — unified layout (matches banner-clients).
+ * Render Guardr promo banners — unified guards-style layout.
+ * Black field · left copy + CTA · circular logo graphic on right.
  * Usage: node scripts/render-promo-banners.mjs
  */
 import { spawn } from 'node:child_process';
@@ -15,14 +16,12 @@ const LOGO64 = pathToFileURL(path.join(ROOT, 'public/logo-64.png')).href;
 const LOGO256 = pathToFileURL(path.join(ROOT, 'public/logo-256.png')).href;
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome-stable';
 
-/** Single layout shell — every banner uses the same chrome as banner-clients. */
 const SHARED_CSS = `
   :root {
-    --brand: #000000;
     --ink: #000000;
     --paper: #ffffff;
     --grey: #7a7a7a;
-    --grey-dark: #4a4a4a;
+    --grey-dark: #3a3a3a;
     --muted: #b8b8b8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,59 +57,14 @@ const SHARED_CSS = `
     height: 26px;
     filter: brightness(0);
   }
-  .corner-br {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 58%;
-    height: 72%;
-    background: linear-gradient(155deg, transparent 42%, var(--grey-dark) 42%, var(--grey) 100%);
-    z-index: 1;
-  }
-  .divider {
-    position: absolute;
-    top: -10%;
-    left: 54%;
-    width: 5.5%;
-    height: 120%;
-    background: var(--brand);
-    transform: rotate(17deg);
-    z-index: 3;
-  }
   .left {
     position: relative;
     z-index: 2;
-    width: 56%;
+    width: 62%;
     height: 100%;
-    padding: 48px 36px 36px 56px;
+    padding: 56px 32px 40px 72px;
     display: flex;
     flex-direction: column;
-  }
-  .right {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 44%;
-    height: 100%;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .logo-large {
-    width: 156px;
-    height: 156px;
-    margin-bottom: 14px;
-    filter: brightness(0);
-  }
-  .brand-name {
-    font-size: 58px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    color: var(--ink);
   }
   .eyebrow {
     font-size: 13px;
@@ -118,61 +72,55 @@ const SHARED_CSS = `
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
   .headline {
     line-height: 0.95;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
   }
   .headline-primary {
     display: block;
     font-size: 64px;
     font-weight: 900;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
   }
   .headline-secondary {
     display: block;
     margin-top: 4px;
     font-size: 52px;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
     color: var(--muted);
   }
   .subhead {
-    max-width: 480px;
-    margin-bottom: 20px;
-    font-size: 20px;
+    max-width: 500px;
+    margin-bottom: 28px;
+    font-size: 21px;
     line-height: 1.45;
     font-weight: 500;
     color: #e8e8e8;
   }
-  .services-intro {
-    margin-bottom: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .services {
-    list-style: none;
-    display: grid;
-    gap: 8px;
-    margin-bottom: 0;
-  }
-  .services li {
-    display: flex;
+  .cta {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 19px;
-    font-weight: 600;
-  }
-  .services li::before {
-    content: '';
-    width: 7px;
-    height: 7px;
+    justify-content: center;
     background: var(--paper);
-    flex-shrink: 0;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 16px 36px;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .tagline {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0;
+    max-width: 460px;
+    line-height: 1.4;
   }
   .website {
     margin-top: auto;
@@ -181,54 +129,74 @@ const SHARED_CSS = `
     gap: 10px;
     font-size: 18px;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: var(--muted);
   }
-  .website-icon {
-    width: 20px;
-    height: 20px;
-    display: grid;
-    place-items: center;
+  .website-dot {
+    width: 10px;
+    height: 10px;
     background: var(--paper);
-    color: var(--ink);
-    font-size: 11px;
-    font-weight: 800;
     flex-shrink: 0;
   }
+  .map-mark {
+    position: absolute;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 300px;
+    height: 300px;
+    border: 3px solid var(--grey);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-mark::before {
+    content: '';
+    position: absolute;
+    inset: 30px;
+    border: 2px solid var(--grey-dark);
+    border-radius: 50%;
+  }
+  .map-mark img {
+    width: 128px;
+    height: 128px;
+    filter: brightness(0) invert(1);
+    position: relative;
+    z-index: 1;
+  }
+  .pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: var(--paper);
+    border-radius: 50%;
+    z-index: 2;
+  }
+  .pin.a { top: 58px; left: 128px; }
+  .pin.b { bottom: 76px; right: 68px; }
+  .pin.c { top: 148px; right: 52px; }
 `;
 
-const CHROME_SHELL = `
-  <div class="corner-tl" aria-hidden="true"><img src="${LOGO64}" alt="" /></div>
-  <div class="corner-br" aria-hidden="true"></div>
-  <div class="divider" aria-hidden="true"></div>
-`;
-
-const RIGHT_PANEL = `
-  <div class="right">
-    <img class="logo-large" src="${LOGO256}" alt="" />
-    <div class="brand-name">Guardr</div>
+const MAP_MARK = `
+  <div class="map-mark" aria-hidden="true">
+    <span class="pin a"></span>
+    <span class="pin b"></span>
+    <span class="pin c"></span>
+    <img src="${LOGO256}" alt="" />
   </div>
+`;
+
+const CORNER = `
+  <div class="corner-tl" aria-hidden="true"><img src="${LOGO64}" alt="" /></div>
 `;
 
 const WEBSITE = `
   <div class="website">
-    <span class="website-icon" aria-hidden="true">W</span>
+    <span class="website-dot" aria-hidden="true"></span>
     <span>www.guardr.co</span>
   </div>
 `;
-
-const WEBSITE_CA = `
-  <div class="website">
-    <span class="website-icon" aria-hidden="true">W</span>
-    <span>www.guardr.co · California</span>
-  </div>
-`;
-
-function servicesBlock(intro, items) {
-  const lis = items.map((t) => `<li>${t}</li>`).join('');
-  return `<p class="services-intro">${intro}</p><ul class="services">${lis}</ul>`;
-}
 
 function page(leftInner) {
   return `<!DOCTYPE html>
@@ -242,13 +210,15 @@ function page(leftInner) {
 </head>
 <body>
 <article class="banner">
-  ${CHROME_SHELL}
+  ${CORNER}
   <div class="left">${leftInner}</div>
-  ${RIGHT_PANEL}
+  ${MAP_MARK}
 </article>
 </body>
 </html>`;
 }
+
+const TAGLINE = 'Anytime. Anywhere. Security, When You Need It.';
 
 const BANNERS = [
   {
@@ -260,7 +230,8 @@ const BANNERS = [
         <span class="headline-secondary">MARKETPLACE</span>
       </h1>
       <p class="subhead">Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one place.</p>
-      ${servicesBlock('Post coverage for:', ['Event security', 'Executive protection', 'Nightlife &amp; venues'])}
+      <div class="cta">Book now</div>
+      <p class="tagline">${TAGLINE}</p>
       ${WEBSITE}
     `),
   },
@@ -273,7 +244,8 @@ const BANNERS = [
         <span class="headline-secondary">PICK YOUR GUARD.</span>
       </h1>
       <p class="subhead">Licensed California guards apply on the map. You approve who works your site — then pay and track the shift in the app.</p>
-      ${servicesBlock('Post coverage for:', ['Event security', 'Executive protection', 'Nightlife &amp; venues'])}
+      <div class="cta">Book now</div>
+      <p class="tagline">${TAGLINE}</p>
       ${WEBSITE}
     `),
   },
@@ -286,7 +258,8 @@ const BANNERS = [
         <span class="headline-secondary">ON THE MAP.</span>
       </h1>
       <p class="subhead">Licensed CA guards browse jobs, apply to what fits, and get paid through the platform. You choose the shift — no forced dispatch.</p>
-      ${servicesBlock('How it works:', ['Browse open jobs near you', 'Apply to shifts you want', 'Get paid through the app'])}
+      <div class="cta">Sign up free</div>
+      <p class="tagline">${TAGLINE}</p>
       ${WEBSITE}
     `),
   },
@@ -299,8 +272,12 @@ const BANNERS = [
         <span class="headline-secondary">SECURITY, NEARBY.</span>
       </h1>
       <p class="subhead">Post coverage for your shop, venue, site, or private event. Verified guards apply — you pick who works your property.</p>
-      ${servicesBlock('Good for:', ['Shops &amp; retail', 'Venues &amp; events', 'Job sites &amp; offices'])}
-      ${WEBSITE_CA}
+      <div class="cta">Get started</div>
+      <p class="tagline">${TAGLINE}</p>
+      <div class="website">
+        <span class="website-dot" aria-hidden="true"></span>
+        <span>www.guardr.co · California</span>
+      </div>
     `),
   },
 ];
