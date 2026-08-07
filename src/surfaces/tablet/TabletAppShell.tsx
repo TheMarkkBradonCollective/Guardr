@@ -16,7 +16,8 @@ import type { SurfaceShellProps } from '../surfaceShellTypes';
  *
  * Title ownership differs per surface, and this is the tablet's rule: the *page*
  * owns its title, rendered large in the content area. The shell header carries
- * workspace context and global actions only. (Mobile puts the title in its
+ * workspace context and global actions only — not duplicate page CTAs like
+ * "+ Add client", which belong in the page title band. (Mobile puts the title in its
  * collapsing header band; desktop puts it in the top bar breadcrumb.) Keeping
  * this to one place per surface is what stops the two headers duplicating.
  *
@@ -34,7 +35,6 @@ export function TabletAppShell({
   navFooter,
   headerOverride,
   headerExtension,
-  primaryAction,
   pageActions,
   hideChrome = false,
   hidePrimaryNav = false,
@@ -135,12 +135,6 @@ export function TabletAppShell({
               </div>
               <div className="sft-shell-header-trail">
                 {pageActions}
-                {primaryAction ? (
-                  <button type="button" className="sft-shell-cta" onClick={primaryAction.onClick}>
-                    {primaryAction.icon}
-                    <span>{primaryAction.label}</span>
-                  </button>
-                ) : null}
                 {notifications}
                 {accountMenu}
               </div>
