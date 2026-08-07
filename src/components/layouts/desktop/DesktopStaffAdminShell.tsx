@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Block } from 'baseui/block';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
@@ -9,6 +10,7 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
+import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
 import type { SurfacePrimaryAction } from '../../../surfaces/surfaceShellTypes';
 import { useSurface } from '../../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../../surfaces/SurfaceAppShell';
@@ -39,11 +41,11 @@ interface DesktopStaffAdminShellProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
-  sidebarPrimaryAction?: SurfacePrimaryAction;
-  sidebarPrimaryActions?: SurfacePrimaryAction[];
+  sidebarPrimaryAction?: SurfacePrimaryAction | SidebarPrimaryAction;
+  sidebarPrimaryActions?: Array<SurfacePrimaryAction | SidebarPrimaryAction>;
 }
 
-/** Section groups. Mobile collapses these into its More sheet; tablet and desktop show them expanded. */
+/** Section groups for drawer / rail / sidebar. */
 const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   { label: 'Dashboard', ids: ['overview', 'map'] },
   {
@@ -56,23 +58,20 @@ const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
-/** Thumb-order tabs for the mobile staff app. Everything else lives in the More sheet. */
+/** Thumb-order tabs for the mobile staff app. Everything else lives in the drawer / More sheet. */
 const MOBILE_TAB_ORDER: StaffSection[] = ['overview', 'jobs', 'guards', 'messages'];
 
 /** Destinations pinned to the tablet quick-switch row — live ops, not admin. */
 const TABLET_QUICK: StaffSection[] = ['overview', 'map', 'jobs'];
 
+/** Pre-remaster staff bottom-nav order (drawer shell footer). */
+const STAFF_BOTTOM_NAV_IDS: StaffSection[] = ['overview', 'jobs', 'clients', 'guards', 'team'];
+
 /**
  * Staff entry point into the three surface applications.
  *
- * Staff have the widest destination list in the product (28 sections), which is
- * exactly why the three surfaces cannot share a layout: the desktop operations
- * centre shows all of them in a grouped sidebar with a command palette, the
- * tablet shows them on a scrollable labelled rail, and the mobile app shows four
- * tabs with the rest behind a sheet.
- *
- * The file name is historical — it now dispatches to all three surfaces rather
- * than only the desktop one.
+ * Mobile keeps the original drawer sidebar + bottom footer nav. Tablet and
+ * desktop use their own independent shells so they never share the phone layout.
  */
 export function DesktopStaffAdminShell({
   children,
@@ -102,13 +101,45 @@ export function DesktopStaffAdminShell({
   sidebarPrimaryActions,
 }: DesktopStaffAdminShellProps) {
   const { surface } = useSurface();
+  const isMobileShell = surface === 'mobile';
   const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
-  const destinations = useMemo<SurfaceDestination[]>(() => {
-    const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
+  const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 
+  const navGroups = useMemo(
+    () =>
+      MENU_GROUPS.map((group) => ({
+        title: group.label,
+        items: group.ids
+          .map((id) => navItems.find((n) => n.id === id))
+          .filter((item): item is StaffNavItem => !!item && visible(item))
+          .map((item) => ({
+            id: item.id,
+            label: item.label,
+            icon: item.icon,
+            badge: item.badge,
+          })),
+      })).filter((group) => group.items.length > 0),
+    [navItems, showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities],
+  );
+
+  const flatNavItems = useMemo(() => navGroups.flatMap((group) => group.items), [navGroups]);
+
+  const mobileBottomNavItems = useMemo(() => {
+    if (!isMobileShell) return undefined;
+    return STAFF_BOTTOM_NAV_IDS.map((id) => {
+      const item = flatNavItems.find((nav) => nav.id === id);
+      if (!item) return null;
+      return {
+        ...item,
+        label: id === 'guards' ? 'Guard' : item.label,
+      };
+    }).filter((item): item is NonNullable<typeof item> => item != null);
+  }, [isMobileShell, flatNavItems]);
+
+  const destinations = useMemo<SurfaceDestination[]>(() => {
     return MENU_GROUPS.flatMap((group) =>
       group.ids
         .map((id) => navItems.find((nav) => nav.id === id))
@@ -164,6 +195,54 @@ export function DesktopStaffAdminShell({
     />
   );
 
+  const sidebarFooter = (
+    <SidebarFooterLinks onOpenSettings={() => onNavigate('preferences')} onOpenLegal={onOpenLegal} />
+  );
+
+  if (isMobileShell) {
+    return (
+      <GuardrDrawerShell
+        forceLayout="mobile"
+        workspaceLabel="Staff workspace"
+        title={screenTitle}
+        navGroups={navGroups}
+        activeNavId={navHighlight}
+        onNavigate={handleNav}
+        accountMenu={accountMenu}
+        sidebarPrimaryAction={sidebarPrimaryAction}
+        sidebarPrimaryActions={sidebarPrimaryActions}
+        sidebarBrandExtra={
+          isDbConnected ? (
+            <Block
+              width="8px"
+              height="8px"
+              backgroundColor="positive"
+              overrides={{ Block: { style: { borderRadius: '50%', flexShrink: 0 } } }}
+              aria-label="Connected"
+            />
+          ) : null
+        }
+        sidebarFooter={sidebarFooter}
+        sidebarIdentity={
+          <MobileDrawerIdentity
+            userName={currentUser.name}
+            avatarUrl={currentUser.avatar}
+            onClick={() => onNavigate('profile')}
+          />
+        }
+        hideHeader={hideHeader}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+        bleed={bleed}
+        variant={isMap ? 'dark' : 'default'}
+        ariaLabel="Staff navigation"
+        mobileBottomNavItems={mobileBottomNavItems}
+      >
+        {children}
+      </GuardrDrawerShell>
+    );
+  }
+
   return (
     <SurfaceAppShell
       title={screenTitle}
@@ -172,18 +251,7 @@ export function DesktopStaffAdminShell({
       activeId={navHighlight}
       onNavigate={handleNav}
       accountMenu={accountMenu}
-      identity={
-        surface === 'mobile' ? (
-          <MobileDrawerIdentity
-            userName={currentUser.name}
-            avatarUrl={currentUser.avatar}
-            onClick={() => onNavigate('profile')}
-          />
-        ) : undefined
-      }
-      navFooter={
-        <SidebarFooterLinks onOpenSettings={() => onNavigate('preferences')} onOpenLegal={onOpenLegal} />
-      }
+      navFooter={sidebarFooter}
       primaryAction={sidebarPrimaryAction ?? sidebarPrimaryActions?.[0]}
       headerExtension={headerExtension}
       headerOverride={headerOverride}

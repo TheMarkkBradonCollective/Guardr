@@ -45,6 +45,17 @@ function applySurfaceToDocument(surface: SurfaceKind, forced: boolean): void {
   document.body.classList.toggle('sf-tablet', surface === 'tablet');
   document.body.classList.toggle('sf-desktop', surface === 'desktop');
 
+  // Classic mobile drawer CSS keys off data-view-surface. Keep that attribute in
+  // lockstep with the surface router (including ?ui= overrides on a wider viewport)
+  // so the restored phone chrome still gets its styles.
+  const existing = document.body.dataset.viewSurface;
+  if (existing) {
+    const shell = existing.split('-')[0] || 'browser';
+    const synced = `${shell}-${surface}`;
+    document.body.dataset.viewSurface = synced;
+    document.documentElement.dataset.viewSurface = synced;
+  }
+
   const style = document.documentElement.style;
   for (const [prop, value] of Object.entries(surfaceCssVars(surface))) {
     style.setProperty(prop, value);

@@ -106,8 +106,15 @@ body[data-surface='mobile'] {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--sf-paper);
+}
+
+.sfm-shell-canvas[data-bleed='true'] {
+  overflow: hidden;
 }
 
 /* The tab bar is fixed, so the canvas reserves its height rather than
