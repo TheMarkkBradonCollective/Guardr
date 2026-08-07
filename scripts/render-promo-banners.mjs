@@ -1,5 +1,5 @@
 /**
- * Render Guardr promo banners with Chrome headless (no npm deps).
+ * Render Guardr promo banners — unified layout (matches banner-clients).
  * Usage: node scripts/render-promo-banners.mjs
  */
 import { spawn } from 'node:child_process';
@@ -15,12 +15,14 @@ const LOGO64 = pathToFileURL(path.join(ROOT, 'public/logo-64.png')).href;
 const LOGO256 = pathToFileURL(path.join(ROOT, 'public/logo-256.png')).href;
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome-stable';
 
+/** Single layout shell — every banner uses the same chrome as banner-clients. */
 const SHARED_CSS = `
   :root {
+    --brand: #000000;
     --ink: #000000;
     --paper: #ffffff;
     --grey: #7a7a7a;
-    --grey-dark: #3a3a3a;
+    --grey-dark: #4a4a4a;
     --muted: #b8b8b8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +30,7 @@ const SHARED_CSS = `
     width: 1200px;
     height: 630px;
     overflow: hidden;
-    background: #000;
+    background: var(--ink);
     font-family: Inter, system-ui, -apple-system, sans-serif;
   }
   .banner {
@@ -40,108 +42,195 @@ const SHARED_CSS = `
     color: var(--paper);
   }
   .corner-tl {
-    position: absolute; top: 0; left: 0; width: 96px; height: 96px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 82px;
+    height: 82px;
     background: linear-gradient(135deg, var(--grey) 0%, var(--grey) 50%, transparent 50%);
     z-index: 4;
   }
   .corner-tl img {
-    position: absolute; top: 14px; left: 14px; width: 28px; height: 28px;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 26px;
+    height: 26px;
     filter: brightness(0);
   }
   .corner-br {
-    position: absolute; right: 0; bottom: 0; width: 52%; height: 78%;
-    background: linear-gradient(155deg, transparent 40%, var(--grey-dark) 40%, var(--grey) 100%);
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 58%;
+    height: 72%;
+    background: linear-gradient(155deg, transparent 42%, var(--grey-dark) 42%, var(--grey) 100%);
     z-index: 1;
   }
   .divider {
-    position: absolute; top: -12%; left: 56%; width: 56px; height: 124%;
-    background: var(--ink); transform: rotate(17deg); z-index: 3;
+    position: absolute;
+    top: -10%;
+    left: 54%;
+    width: 5.5%;
+    height: 120%;
+    background: var(--brand);
+    transform: rotate(17deg);
+    z-index: 3;
   }
   .left {
-    position: relative; z-index: 2; width: 58%; height: 100%;
-    padding: 64px 40px 48px 72px; display: flex; flex-direction: column;
+    position: relative;
+    z-index: 2;
+    width: 56%;
+    height: 100%;
+    padding: 48px 36px 36px 56px;
+    display: flex;
+    flex-direction: column;
   }
   .right {
-    position: absolute; right: 0; top: 0; width: 42%; height: 100%;
-    z-index: 2; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 18px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44%;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
   }
-  .logo-large { width: 168px; height: 168px; filter: brightness(0); }
+  .logo-large {
+    width: 156px;
+    height: 156px;
+    margin-bottom: 14px;
+    filter: brightness(0);
+  }
   .brand-name {
-    font-size: 64px; font-weight: 900; letter-spacing: -0.04em;
-    color: var(--ink); line-height: 1;
+    font-size: 58px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    color: var(--ink);
   }
   .eyebrow {
-    font-size: 14px; font-weight: 700; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
   }
-  .headline { display: flex; flex-direction: column; margin-bottom: 20px; }
+  .headline {
+    line-height: 0.95;
+    margin-bottom: 18px;
+  }
   .headline-primary {
-    font-size: 68px; font-weight: 900; letter-spacing: -0.045em; line-height: 0.95;
+    display: block;
+    font-size: 64px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
   }
   .headline-secondary {
-    font-size: 48px; font-weight: 800; letter-spacing: -0.03em;
-    line-height: 1.05; color: var(--muted);
+    display: block;
+    margin-top: 4px;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--muted);
   }
   .subhead {
-    font-size: 22px; font-weight: 500; line-height: 1.35;
-    color: #e8e8e8; max-width: 520px; margin-bottom: 24px;
+    max-width: 480px;
+    margin-bottom: 20px;
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 500;
+    color: #e8e8e8;
   }
   .services-intro {
-    font-size: 15px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
-  .services { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+  .services {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    margin-bottom: 0;
+  }
   .services li {
-    font-size: 20px; font-weight: 600; padding-left: 18px; position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+    font-weight: 600;
   }
   .services li::before {
-    content: ''; position: absolute; left: 0; top: 0.55em;
-    width: 8px; height: 8px; background: var(--paper);
-  }
-  .cta {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--paper); color: var(--ink); font-size: 18px; font-weight: 800;
-    letter-spacing: 0.02em; text-transform: uppercase; padding: 16px 32px;
-    margin-bottom: 18px; width: fit-content;
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: var(--paper);
+    flex-shrink: 0;
   }
   .website {
-    margin-top: auto; display: flex; align-items: center; gap: 10px;
-    font-size: 20px; font-weight: 600; color: var(--muted);
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
-  .website-dot { width: 10px; height: 10px; background: var(--paper); }
-  .tagline {
-    font-size: 18px; font-weight: 500; color: var(--muted);
-    margin-bottom: 16px; max-width: 480px; line-height: 1.4;
-  }
-  .variant-guards .corner-br, .variant-guards .divider, .variant-guards .right { display: none; }
-  .variant-guards .left { width: 62%; padding-right: 40px; }
-  .map-mark {
-    position: absolute; right: 72px; top: 50%; transform: translateY(-50%);
-    z-index: 2; width: 280px; height: 280px; border: 3px solid var(--grey);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  }
-  .map-mark::before {
-    content: ''; position: absolute; inset: 28px;
-    border: 2px solid var(--grey-dark); border-radius: 50%;
-  }
-  .map-mark img {
-    width: 120px; height: 120px; filter: brightness(0) invert(1); position: relative; z-index: 1;
-  }
-  .pin {
-    position: absolute; width: 14px; height: 14px; background: var(--paper);
-    border-radius: 50%; z-index: 2;
-  }
-  .pin.a { top: 56px; left: 120px; }
-  .pin.b { bottom: 72px; right: 64px; }
-  .pin.c { top: 140px; right: 48px; }
-  .accent-bar {
-    position: absolute; left: 0; bottom: 0; width: 100%; height: 12px;
-    background: var(--paper); z-index: 5;
+  .website-icon {
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
   }
 `;
 
-function page(bodyInner, extraClass = '') {
+const CHROME_SHELL = `
+  <div class="corner-tl" aria-hidden="true"><img src="${LOGO64}" alt="" /></div>
+  <div class="corner-br" aria-hidden="true"></div>
+  <div class="divider" aria-hidden="true"></div>
+`;
+
+const RIGHT_PANEL = `
+  <div class="right">
+    <img class="logo-large" src="${LOGO256}" alt="" />
+    <div class="brand-name">Guardr</div>
+  </div>
+`;
+
+const WEBSITE = `
+  <div class="website">
+    <span class="website-icon" aria-hidden="true">W</span>
+    <span>www.guardr.co</span>
+  </div>
+`;
+
+const WEBSITE_CA = `
+  <div class="website">
+    <span class="website-icon" aria-hidden="true">W</span>
+    <span>www.guardr.co · California</span>
+  </div>
+`;
+
+function servicesBlock(intro, items) {
+  const lis = items.map((t) => `<li>${t}</li>`).join('');
+  return `<p class="services-intro">${intro}</p><ul class="services">${lis}</ul>`;
+}
+
+function page(leftInner) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -152,114 +241,75 @@ function page(bodyInner, extraClass = '') {
 <style>${SHARED_CSS}</style>
 </head>
 <body>
-<article class="banner ${extraClass}">${bodyInner}</article>
+<article class="banner">
+  ${CHROME_SHELL}
+  <div class="left">${leftInner}</div>
+  ${RIGHT_PANEL}
+</article>
 </body>
 </html>`;
 }
-
-const corner = `
-  <div class="corner-tl" aria-hidden="true"><img src="${LOGO64}" alt="" /></div>
-  <div class="corner-br" aria-hidden="true"></div>
-  <div class="divider" aria-hidden="true"></div>`;
-
-const rightPanel = `
-  <div class="right">
-    <img class="logo-large" src="${LOGO256}" alt="" />
-    <div class="brand-name">Guardr</div>
-  </div>`;
 
 const BANNERS = [
   {
     file: 'banner-brand-og.png',
     html: page(`
-      ${corner}
-      <div class="left">
-        <p class="eyebrow">Guardr</p>
-        <h1 class="headline">
-          <span class="headline-primary">SECURITY</span>
-          <span class="headline-secondary">MARKETPLACE</span>
-        </h1>
-        <p class="subhead">Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one place.</p>
-        <div class="cta">Book now</div>
-        <div class="website"><span class="website-dot"></span><span>www.guardr.co</span></div>
-      </div>
-      ${rightPanel}
+      <p class="eyebrow">Guardr</p>
+      <h1 class="headline">
+        <span class="headline-primary">SECURITY</span>
+        <span class="headline-secondary">MARKETPLACE</span>
+      </h1>
+      <p class="subhead">Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one place.</p>
+      ${servicesBlock('Post coverage for:', ['Event security', 'Executive protection', 'Nightlife &amp; venues'])}
+      ${WEBSITE}
     `),
   },
   {
     file: 'banner-clients.png',
     html: page(`
-      ${corner}
-      <div class="left">
-        <p class="eyebrow">I need security</p>
-        <h1 class="headline">
-          <span class="headline-primary">POST A JOB.</span>
-          <span class="headline-secondary">PICK YOUR GUARD.</span>
-        </h1>
-        <p class="subhead">Licensed California guards apply on the map. You approve who works your site — then pay and track the shift in the app.</p>
-        <p class="services-intro">Post coverage for:</p>
-        <ul class="services">
-          <li>Event security</li>
-          <li>Executive protection</li>
-          <li>Nightlife &amp; venues</li>
-        </ul>
-        <div class="website"><span class="website-dot"></span><span>www.guardr.co</span></div>
-      </div>
-      ${rightPanel}
+      <p class="eyebrow">I need security</p>
+      <h1 class="headline">
+        <span class="headline-primary">POST A JOB.</span>
+        <span class="headline-secondary">PICK YOUR GUARD.</span>
+      </h1>
+      <p class="subhead">Licensed California guards apply on the map. You approve who works your site — then pay and track the shift in the app.</p>
+      ${servicesBlock('Post coverage for:', ['Event security', 'Executive protection', 'Nightlife &amp; venues'])}
+      ${WEBSITE}
     `),
   },
   {
     file: 'banner-guards.png',
-    html: page(
-      `
-      <div class="corner-tl" aria-hidden="true"><img src="${LOGO64}" alt="" /></div>
-      <div class="left">
-        <p class="eyebrow">I'm a guard</p>
-        <h1 class="headline">
-          <span class="headline-primary">OPEN SHIFTS</span>
-          <span class="headline-secondary">ON THE MAP.</span>
-        </h1>
-        <p class="subhead">Licensed CA guards browse jobs, apply to what fits, and get paid through the platform. You choose the shift — no forced dispatch.</p>
-        <div class="cta">Sign up free</div>
-        <p class="tagline">Anytime. Anywhere. Security, When You Need It.</p>
-        <div class="website"><span class="website-dot"></span><span>www.guardr.co</span></div>
-      </div>
-      <div class="map-mark" aria-hidden="true">
-        <span class="pin a"></span>
-        <span class="pin b"></span>
-        <span class="pin c"></span>
-        <img src="${LOGO256}" alt="" />
-      </div>
-    `,
-      'variant-guards',
-    ),
+    html: page(`
+      <p class="eyebrow">I'm a guard</p>
+      <h1 class="headline">
+        <span class="headline-primary">OPEN SHIFTS</span>
+        <span class="headline-secondary">ON THE MAP.</span>
+      </h1>
+      <p class="subhead">Licensed CA guards browse jobs, apply to what fits, and get paid through the platform. You choose the shift — no forced dispatch.</p>
+      ${servicesBlock('How it works:', ['Browse open jobs near you', 'Apply to shifts you want', 'Get paid through the app'])}
+      ${WEBSITE}
+    `),
   },
   {
     file: 'banner-nextdoor.png',
     html: page(`
-      ${corner}
-      <div class="accent-bar" aria-hidden="true"></div>
-      <div class="left">
-        <p class="eyebrow">For local businesses</p>
-        <h1 class="headline">
-          <span class="headline-primary">LICENSED</span>
-          <span class="headline-secondary">SECURITY, NEARBY.</span>
-        </h1>
-        <p class="subhead">Post coverage for your shop, venue, site, or private event. Verified guards apply — you pick who works your property.</p>
-        <div class="cta">Get started</div>
-        <div class="website"><span class="website-dot"></span><span>www.guardr.co · California</span></div>
-      </div>
-      ${rightPanel}
+      <p class="eyebrow">For local businesses</p>
+      <h1 class="headline">
+        <span class="headline-primary">LICENSED</span>
+        <span class="headline-secondary">SECURITY, NEARBY.</span>
+      </h1>
+      <p class="subhead">Post coverage for your shop, venue, site, or private event. Verified guards apply — you pick who works your property.</p>
+      ${servicesBlock('Good for:', ['Shops &amp; retail', 'Venues &amp; events', 'Job sites &amp; offices'])}
+      ${WEBSITE_CA}
     `),
   },
 ];
 
-async function waitForFile(filePath, timeoutMs = 20000) {
+async function waitForFile(filePath, timeoutMs = 25000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
       await access(filePath, fsConstants.R_OK);
-      // Give Chrome a moment to finish writing
       await new Promise((r) => setTimeout(r, 400));
       return;
     } catch {
@@ -294,7 +344,6 @@ async function screenshotHtml(html, outPng, index) {
       `--user-data-dir=${profileDir}`,
       '--window-size=1200,630',
       `--screenshot=${shotPath}`,
-      // Don't wait forever for network fonts — virtual time helps exit
       '--virtual-time-budget=5000',
       '--run-all-compositor-stages-before-draw',
       pathToFileURL(htmlPath).href,
@@ -302,28 +351,13 @@ async function screenshotHtml(html, outPng, index) {
     { stdio: ['ignore', 'ignore', 'pipe'] },
   );
 
-  let stderr = '';
-  child.stderr.on('data', (d) => {
-    stderr += d.toString();
-  });
-
   try {
     await Promise.race([
-      waitForFile(shotPath, 25000),
-      new Promise((_, reject) =>
-        child.on('error', reject),
-      ),
+      waitForFile(shotPath),
+      new Promise((_, reject) => child.on('error', reject)),
     ]);
   } finally {
-    if (!child.killed) {
-      child.kill('SIGKILL');
-      // Also kill any leftover chrome for this profile
-      try {
-        spawn('pkill', ['-f', profileDir], { stdio: 'ignore' });
-      } catch {
-        /* ignore */
-      }
-    }
+    if (!child.killed) child.kill('SIGKILL');
   }
 
   await copyFile(shotPath, outPng);
@@ -333,7 +367,6 @@ async function screenshotHtml(html, outPng, index) {
 
 async function main() {
   await mkdir(OUT, { recursive: true });
-  // Copy the first successful screenshot we already have if present
   for (let i = 0; i < BANNERS.length; i += 1) {
     const b = BANNERS[i];
     await screenshotHtml(b.html, path.join(OUT, b.file), i);
