@@ -277,7 +277,7 @@ interface StaffDashboardProps {
   onUpdateStaffRole: (
     staffId: string,
     staffRole: StaffRole
-  ) => Promise<void>;
+  ) => Promise<{ badgeNumber: string } | void>;
   onAddGuardProfile: (input: StaffAddGuardInput) => Promise<string>;
   onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;

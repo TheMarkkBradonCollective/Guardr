@@ -40,7 +40,7 @@ interface StaffTeamPanelProps {
   }) => Promise<string>;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
@@ -192,6 +192,7 @@ export function StaffTeamPanel({
           renderDetail={(member, options) => (
             <StaffTeamDetailPanel
               member={member}
+              roster={filtered}
               platformCities={platformCities}
               managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
               currentUserId={currentUserId}

@@ -56,6 +56,24 @@ export function nextStaffBadgeNumber(
   return formatStaffBadgeNumber(role, maxSequence + 1);
 }
 
+/** Next badge for a role change — excludes the member being reassigned. */
+export function nextStaffBadgeNumberForRoleChange(
+  role: StaffRole,
+  roster: Array<Pick<SecurityGuard, 'id' | 'badgeNumber' | 'isStaff'>>,
+  staffId: string
+): string {
+  const others = roster.filter((member) => member.isStaff && member.id !== staffId);
+  return nextStaffBadgeNumber(role, others);
+}
+
+export function staffBadgeNeedsRoleReassignment(
+  badgeNumber: string | undefined,
+  role: StaffRole
+): boolean {
+  if (!badgeNumber?.trim()) return true;
+  return !staffBadgeMatchesRole(badgeNumber, role);
+}
+
 export function validateStaffBadgeNumber(
   badgeNumber: string,
   role: StaffRole

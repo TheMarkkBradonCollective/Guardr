@@ -141,10 +141,17 @@ export async function confirmClearAuditViolations(guardName: string, count: numb
   });
 }
 
-export async function confirmStaffRoleChange(memberName: string, newRole: string): Promise<boolean> {
+export async function confirmStaffRoleChange(
+  memberName: string,
+  newRole: string,
+  newBadgeNumber?: string
+): Promise<boolean> {
+  const badgeNote = newBadgeNumber
+    ? ` Their staff ID will change to ${newBadgeNumber}.`
+    : '';
   return showAppConfirm({
     title: 'Change staff role?',
-    message: `Set ${memberName}'s platform role to ${newRole}? This changes their permissions immediately.`,
+    message: `Set ${memberName}'s platform role to ${newRole}? This changes their permissions immediately.${badgeNote}`,
     confirmLabel: 'Save role',
   });
 }

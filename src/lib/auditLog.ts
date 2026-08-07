@@ -13,6 +13,7 @@ export type AuditAction =
   | 'guard_application_revoked'
   | 'staff_approved'
   | 'staff_rejected'
+  | 'staff_role_updated'
   | 'client_approved'
   | 'client_application_revision_requested'
   | 'client_application_revoked'

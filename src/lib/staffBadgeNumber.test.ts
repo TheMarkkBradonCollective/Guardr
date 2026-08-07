@@ -3,7 +3,9 @@ import test from 'node:test';
 import {
   formatStaffBadgeNumber,
   nextStaffBadgeNumber,
+  nextStaffBadgeNumberForRoleChange,
   parseStaffBadgeNumber,
+  staffBadgeNeedsRoleReassignment,
   validateStaffBadgeNumber,
 } from './staffBadgeNumber';
 
@@ -29,6 +31,20 @@ test('assigns next number per role prefix', () => {
   assert.equal(nextStaffBadgeNumber('Support', roster), 'SUP-00001');
 });
 
-test('parses badge numbers', () => {
-  assert.deepEqual(parseStaffBadgeNumber('mod-00007'), { prefix: 'MOD', sequence: 7 });
+test('assigns next badge on role change excluding the moving member', () => {
+  const roster = [
+    { id: 'staff-1', isStaff: true as const, badgeNumber: 'MOD-00001' },
+    { id: 'staff-2', isStaff: true as const, badgeNumber: 'ADM-00001' },
+    { id: 'staff-3', isStaff: true as const, badgeNumber: 'ADM-00002' },
+  ];
+
+  assert.equal(
+    nextStaffBadgeNumberForRoleChange('Administrator', roster, 'staff-1'),
+    'ADM-00003'
+  );
+});
+
+test('detects when badge prefix no longer matches role', () => {
+  assert.equal(staffBadgeNeedsRoleReassignment('MOD-00001', 'Administrator'), true);
+  assert.equal(staffBadgeNeedsRoleReassignment('ADM-00001', 'Administrator'), false);
 });

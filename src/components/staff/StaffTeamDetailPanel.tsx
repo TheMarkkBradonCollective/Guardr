@@ -32,9 +32,14 @@ import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
 import { ArrowLeft, Mail, Phone } from 'lucide-react';
 import { getStaffDisplayName } from '../../lib/staffProfile';
+import {
+  nextStaffBadgeNumberForRoleChange,
+  STAFF_BADGE_PREFIX,
+} from '../../lib/staffBadgeNumber';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
+  roster?: SecurityGuard[];
   platformCities?: PlatformCity[];
   managerOptions?: SecurityGuard[];
   currentUserId: string;
@@ -45,7 +50,7 @@ interface StaffTeamDetailPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
@@ -75,6 +80,7 @@ function staffModerationBlockedReason(
 
 export function StaffTeamDetailPanel({
   member,
+  roster = [],
   platformCities = [],
   managerOptions = [],
   currentUserId,
@@ -149,13 +155,27 @@ export function StaffTeamDetailPanel({
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
-    if (!(await confirmStaffRoleChange(member.name, role))) return;
+    const pendingBadge =
+      role !== member.staffRole
+        ? nextStaffBadgeNumberForRoleChange(role, roster, member.id)
+        : member.badgeNumber;
+    if (!(await confirmStaffRoleChange(
+      getStaffDisplayName(member),
+      role,
+      role !== member.staffRole ? pendingBadge : undefined
+    ))) return;
     setRoleError('');
     setRoleMsg('');
     setSavingRole(true);
     try {
-      await onUpdateStaffRole(member.id, role);
-      setRoleMsg(`Role updated to ${role}.`);
+      const result = await onUpdateStaffRole(member.id, role);
+      const badgeNumber =
+        result && 'badgeNumber' in result ? result.badgeNumber : pendingBadge;
+      setRoleMsg(
+        badgeNumber !== member.badgeNumber
+          ? `Role updated to ${role}. Staff ID is now ${badgeNumber}.`
+          : `Role updated to ${role}.`
+      );
     } catch (err) {
       setRoleError(err instanceof Error ? err.message : 'Could not update role.');
     } finally {
@@ -309,6 +329,12 @@ export function StaffTeamDetailPanel({
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
+        {role !== member.staffRole && (
+          <p className="text-xs text-brand-primary leading-relaxed">
+            Staff ID will change to{' '}
+            {nextStaffBadgeNumberForRoleChange(role, roster, member.id)} ({STAFF_BADGE_PREFIX[role]} series).
+          </p>
+        )}
         {canModifyMember && onUpdateStaffRole ? (
           <div className="space-y-2 max-w-sm">
             <select
