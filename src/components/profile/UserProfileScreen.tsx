@@ -24,8 +24,10 @@ import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
-import type { GuardProfileTab } from '../../lib/appNavigation';
+import type { GuardProfileTab, StaffProfileTab } from '../../lib/appNavigation';
 import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
+import { StaffTimesheetsPanel } from '../staff/StaffTimesheetsPanel';
+import type { PlatformSettings } from '../../lib/platformSettings';
 import type { SecurityRequest } from '../../types';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
@@ -80,6 +82,7 @@ interface UserProfileScreenProps {
     policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
   ) => Promise<void>;
   requests?: SecurityRequest[];
+  platformSettings?: PlatformSettings;
 }
 
 export function UserProfileScreen({
@@ -97,10 +100,12 @@ export function UserProfileScreen({
   onSaveInsurance,
   onSaveVehicleInsurance,
   requests = [],
+  platformSettings,
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
   const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
+  const [staffProfileTab, setStaffProfileTab] = useState<StaffProfileTab>('profile');
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
@@ -343,6 +348,19 @@ export function UserProfileScreen({
           />
         </div>
       )}
+      {isStaffAccount && platformSettings && guard && (
+        <div className="guard-profile-tabs mb-4">
+          <ListFilterTabs
+            aria-label="Staff profile"
+            activeId={staffProfileTab}
+            onChange={(id) => setStaffProfileTab(id as StaffProfileTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'timesheets', label: 'Timesheets' },
+            ]}
+          />
+        </div>
+      )}
       {profileTab === 'certs' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
           <GuardCredentialsPanel
@@ -399,6 +417,10 @@ export function UserProfileScreen({
       ) : profileTab === 'timesheet' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
           <GuardTimesheetPanel guardId={guard.id} requests={requests} />
+        </section>
+      ) : staffProfileTab === 'timesheets' && isStaffAccount && platformSettings && guard ? (
+        <section className="border-b border-brand-border space-y-6">
+          <StaffTimesheetsPanel staffId={guard.id} platformSettings={platformSettings} />
         </section>
       ) : (
         <>
