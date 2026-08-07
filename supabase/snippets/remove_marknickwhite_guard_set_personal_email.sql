@@ -62,7 +62,9 @@ BEGIN
   END IF;
 
   UPDATE staff
-  SET personal_email = 'marknickwhite@gmail.com'
+  SET
+    personal_email = 'marknickwhite@gmail.com',
+    phone = '7164642826'
   WHERE badge_number = 'OWN-00001'
      OR email = 'm.white@signaturesecurityspecialist.com'
      OR id = 'staff-director';
@@ -73,11 +75,11 @@ BEGIN
     RAISE EXCEPTION 'Staff profile not found for m.white@signaturesecurityspecialist.com / OWN-00001';
   END IF;
 
-  RAISE NOTICE 'Set personal_email on % staff row(s).', v_staff_updated;
+  RAISE NOTICE 'Set personal_email and phone on % staff row(s).', v_staff_updated;
 END $$;
 
 -- Verify
-SELECT name, email AS work_email, personal_email, badge_number, staff_role
+SELECT name, email AS work_email, personal_email, phone, badge_number, staff_role
 FROM staff
 WHERE badge_number = 'OWN-00001'
    OR email = 'm.white@signaturesecurityspecialist.com';
