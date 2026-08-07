@@ -50,6 +50,7 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   hourlyRateRequirement?: number;
   avatar?: string;
   badgeNumber?: string;
+  personalEmail?: string;
 }
 
 interface UserProfileScreenProps {
@@ -115,6 +116,7 @@ export function UserProfileScreen({
   const [middleName, setMiddleName] = useState(initialName.middleName ?? '');
   const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
+  const [personalEmail, setPersonalEmail] = useState(guard?.personalEmail ?? '');
   const [bio, setBio] = useState(guard?.bio ?? '');
   const [staffProfile, setStaffProfile] = useState<StaffProfilePayload>({
     headline: guard?.headline ?? '',
@@ -153,6 +155,7 @@ export function UserProfileScreen({
     setMiddleName(resolved.middleName ?? '');
     setLastName(resolved.lastName);
     setPhone(guard?.phone ?? client?.phone ?? '');
+    setPersonalEmail(guard?.personalEmail ?? '');
     setBio(guard?.bio ?? '');
     setStaffProfile({
       headline: guard?.headline ?? '',
@@ -198,6 +201,7 @@ export function UserProfileScreen({
     if (isStaffAccount) {
       return {
         ...base,
+        personalEmail: personalEmail.trim(),
         headline: staffProfile.headline.trim(),
         summary: staffProfile.summary.trim(),
         about: staffProfile.about.trim(),
@@ -461,6 +465,23 @@ export function UserProfileScreen({
             onChange={setCompanyName}
             editing={applicationFieldsEditable}
           />
+        )}
+        {isStaffAccount && (
+          <>
+            <Field
+              label="Work email"
+              value={guard?.email ?? currentUser.email}
+              editing={false}
+              readOnly
+            />
+            <Field
+              label="Personal email"
+              value={personalEmail}
+              onChange={setPersonalEmail}
+              editing={editing}
+              type="email"
+            />
+          </>
         )}
         {isStaffAccount && (
           <Field label="Staff ID" value={staffBadgeId} editing={false} readOnly />

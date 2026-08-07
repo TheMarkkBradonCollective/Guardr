@@ -18,6 +18,7 @@ import { personNameFromPayload } from '../../lib/personName';
 
 export interface StaffAddStaffInput {
   email: string;
+  personalEmail?: string;
   badgeNumber: string;
   staffRole: StaffRole;
   firstName: string;
@@ -52,6 +53,7 @@ export function StaffAddStaffForm({
 }: StaffAddStaffFormProps) {
   const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('staff');
   const [email, setEmail] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -87,6 +89,7 @@ export function StaffAddStaffForm({
 
   const reset = () => {
     setEmail('');
+    setPersonalEmail('');
     setFirstName('');
     setMiddleName('');
     setLastName('');
@@ -126,6 +129,7 @@ export function StaffAddStaffForm({
     try {
       const staffId = await onAdd({
         email: email.trim(),
+        personalEmail: personalEmail.trim() || undefined,
         badgeNumber: badge.trim().toUpperCase(),
         staffRole: role,
         firstName: normalizedName.firstName,
@@ -207,15 +211,28 @@ export function StaffAddStaffForm({
               </p>
             </div>
             <div>
-              <label className="uber-label block mb-1">Email</label>
+              <label className="uber-label block mb-1">Work email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="uber-input w-full"
-                placeholder="staff@example.com"
+                placeholder="name@signaturesecurityspecialist.com"
                 required
               />
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Personal email</label>
+              <input
+                type="email"
+                value={personalEmail}
+                onChange={(e) => setPersonalEmail(e.target.value)}
+                className="uber-input w-full"
+                placeholder="personal@gmail.com"
+              />
+              <p className="text-xs text-brand-text-muted mt-1">
+                Optional contact email. Work email is used to sign in.
+              </p>
             </div>
             <div className="sm:col-span-2">
               <label className="uber-label block mb-1">Role</label>

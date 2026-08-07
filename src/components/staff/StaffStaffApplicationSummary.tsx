@@ -38,8 +38,9 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
       <div className="grid gap-4 sm:grid-cols-2">
         <DetailRow label="Full name" value={member.name} />
         <DetailRow label="Staff ID" value={member.badgeNumber} />
+        <DetailRow label="Work email" value={member.email} />
+        <DetailRow label="Personal email" value={member.personalEmail} />
         <DetailRow label="Phone" value={member.phone} />
-        <DetailRow label="Email" value={member.email} />
         <DetailRow label="Requested role" value={`${staffRole} — ${ROLE_LABELS[platformRole]}`} />
       </div>
 

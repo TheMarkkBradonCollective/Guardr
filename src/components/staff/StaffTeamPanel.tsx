@@ -30,6 +30,7 @@ interface StaffTeamPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
     email: string;
+    personalEmail?: string;
     badgeNumber: string;
     staffRole: StaffRole;
     firstName: string;
@@ -92,6 +93,7 @@ export function StaffTeamPanel({
       (g) =>
         g.name.toLowerCase().includes(search.toLowerCase()) ||
         g.email.toLowerCase().includes(search.toLowerCase()) ||
+        (g.personalEmail ?? '').toLowerCase().includes(search.toLowerCase()) ||
         (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
     )
     .filter((member) => matchesStaffTeamFilter(member, statusFilter))
