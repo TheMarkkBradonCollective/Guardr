@@ -19,7 +19,7 @@ test('prefers real names over badge ids', () => {
   const member = {
     name: 'ADM-00003',
     badgeNumber: 'ADM-00003',
-    firstName: 'Kenneth',
+    firstName: 'Khalid',
     lastName: 'Lovett',
     headline: 'Director of Platform Operations',
     summary: 'Keeps the command center moving.',
@@ -29,7 +29,7 @@ test('prefers real names over badge ids', () => {
     specialties: ['Payments & payouts'],
   };
 
-  assert.equal(getStaffDisplayName(member), 'Kenneth Lovett');
+  assert.equal(getStaffDisplayName(member), 'Khalid Lovett');
   assert.equal(getStaffDisplayHeadline(member), 'Director of Platform Operations');
   assert.equal(getStaffProfileSnippet(member), 'Keeps the command center moving.');
   assert.equal(staffProfileHasContent(member), true);
