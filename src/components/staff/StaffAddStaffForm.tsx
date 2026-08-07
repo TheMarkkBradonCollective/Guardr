@@ -259,8 +259,8 @@ export function StaffAddStaffForm({
               <label className="uber-label block">City assignment</label>
               <p className="text-xs text-brand-text-muted">
                 {role === 'Manager'
-                  ? 'Managers are usually assigned as city managers in Service Areas. You can also set a city here when onboarding.'
-                  : 'Assign one city for this staff member.'}
+                  ? 'Managers are usually assigned as city managers in Service Areas. You can also select cities here when onboarding.'
+                  : 'Assign the cities this staff member may work in.'}
               </p>
               <StaffOperationsAccessPicker
                 id="add-staff-operations-access"
@@ -268,7 +268,6 @@ export function StaffAddStaffForm({
                 selected={managedCities}
                 onChange={setManagedCities}
                 maxListHeightClassName="max-h-40"
-                mode="single"
               />
             </div>
           )}

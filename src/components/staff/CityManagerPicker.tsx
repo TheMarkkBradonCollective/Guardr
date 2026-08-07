@@ -48,8 +48,8 @@ export function CityManagerPicker({
       <div>
         <h4 className="text-sm font-semibold">City manager</h4>
         <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-          Assign one Manager to run {city.name}. Directors and Founders oversee all cities and are
-          not tied to a market.
+          Assign one Manager to run {city.name}. A manager may oversee multiple cities, but each
+          city still has only one manager. Directors and Founders oversee all cities automatically.
         </p>
       </div>
 

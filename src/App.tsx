@@ -590,7 +590,6 @@ import {
   canRecommendCityMarket,
 } from './lib/permissions';
 import {
-  findCityManagedByManager,
   normalizeStaffManagedCitiesForRole,
   validateStaffCityAssignment,
 } from './lib/staffCityAccess';
@@ -6171,26 +6170,14 @@ export default function App() {
         throw new Error('City manager must be a Manager staff account.');
       }
 
-      const otherCity = findCityManagedByManager(
-        platformCities.filter((entry) => entry.id !== cityId),
-        managerId
+      queueStaffCities(
+        managerId,
+        normalizeStaffManagedCitiesForRole(
+          'Manager',
+          [...(manager.managedCities ?? []), city.name],
+          platformCities
+        )
       );
-      if (otherCity) {
-        throw new Error(
-          `${manager.name} is already the city manager for ${otherCity.name}. Remove that assignment first.`
-        );
-      }
-
-      const conflictingCity = platformCities.find(
-        (entry) => entry.id !== cityId && entry.cityManagerId === managerId
-      );
-      if (conflictingCity) {
-        throw new Error(
-          `${manager.name} is already the city manager for ${conflictingCity.name}. Remove that assignment first.`
-        );
-      }
-
-      queueStaffCities(managerId, [city.name]);
     }
 
     const updatedCity: PlatformCity = {
