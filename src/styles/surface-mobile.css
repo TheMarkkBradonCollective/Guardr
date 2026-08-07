@@ -13,6 +13,32 @@ body[data-surface='mobile'] {
   overscroll-behavior-y: none;
 }
 
+/* A forced `?ui=mobile` override on a wide display would otherwise stretch a
+   one-handed layout across 1600px. The mobile app keeps its phone proportions and
+   centres itself instead; automatic resolution never reaches this width. */
+@media (min-width: 744px) {
+  body[data-surface='mobile'] {
+    background: var(--sf-paper-sunken);
+  }
+
+  body[data-surface='mobile'] .sfm-shell {
+    left: 50%;
+    right: auto;
+    width: 440px;
+    max-width: 100vw;
+    border-right: 1px solid var(--sf-line);
+    border-left: 1px solid var(--sf-line);
+    transform: translateX(-50%);
+  }
+
+  /* Fixed positioning resolves against the viewport, which would span the whole
+     screen; absolute keeps the bar inside the phone column. */
+  body[data-surface='mobile'] .sfm-tabbar,
+  body[data-surface='mobile'] .sfm-sheet-root {
+    position: absolute;
+  }
+}
+
 /* ── Shell ───────────────────────────────────────────────────────────────── */
 
 .sfm-shell {
@@ -174,6 +200,7 @@ body[data-surface='mobile'] {
 /* ── Screen ──────────────────────────────────────────────────────────────── */
 
 .sfm-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -238,8 +265,14 @@ body[data-surface='mobile'] {
   gap: 2px;
 }
 
+/* Follows the large title down, then pins under the header band. `top: -1px`
+   closes the sub-pixel gap that would otherwise show content sliding behind it. */
 .sfm-screen-toolbar {
-  padding: 0 var(--sf-gutter) 10px;
+  position: sticky;
+  top: -1px;
+  z-index: 15;
+  padding: 2px var(--sf-gutter) 10px;
+  background: var(--sf-paper);
 }
 
 .sfm-screen-scroll {
@@ -411,10 +444,12 @@ body[data-surface='mobile'] {
 
 /* ── Floating action button ──────────────────────────────────────────────── */
 
+/* Anchored to the screen, not the scroll container, so it stays put while the
+   list moves and clears the action bar when one is present. */
 .sfm-fab {
   position: absolute;
   right: var(--sf-gutter);
-  bottom: calc(var(--sf-gutter) + var(--sf-bottom-bar-h) + var(--sf-safe-bottom));
+  bottom: calc(var(--sf-gutter) + var(--sf-safe-bottom));
   z-index: 40;
   display: inline-flex;
   align-items: center;
@@ -435,6 +470,10 @@ body[data-surface='mobile'] {
 .sfm-fab[data-extended='true'] {
   width: auto;
   padding: 0 22px;
+}
+
+.sfm-screen[data-action-bar='true'] .sfm-fab {
+  bottom: calc(var(--sf-button-h) + var(--sf-gutter) + 22px + var(--sf-safe-bottom));
 }
 
 .sfm-fab:active {

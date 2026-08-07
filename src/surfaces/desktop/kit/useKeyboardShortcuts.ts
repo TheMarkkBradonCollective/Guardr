@@ -51,6 +51,9 @@ export function expandCombo(combo: string, isMac: boolean): string[] {
 export function formatCombo(combo: string, isMac: boolean): string {
   return combo
     .split('+')
+    // Lowercased first: hints authored as "Alt 3" by the navigation model would
+    // otherwise miss every modifier case below and render literally on macOS.
+    .map((raw) => raw.trim().toLowerCase())
     .map((part) => {
       if (part === 'mod') return isMac ? '⌘' : 'Ctrl';
       if (part === 'meta') return isMac ? '⌘' : 'Win';

@@ -37,6 +37,12 @@ export interface DesktopDataTableProps<Row> {
   /** Sticky footer summary, e.g. totals. */
   footer?: React.ReactNode;
   density?: 'compact' | 'default';
+  /**
+   * Width below which the table scrolls horizontally instead of squeezing
+   * columns. Without this, fractional columns collapse into unreadable stubs when
+   * the table sits in a narrowed panel.
+   */
+  minWidth?: number;
   ariaLabel: string;
 }
 
@@ -64,6 +70,7 @@ export function DesktopDataTable<Row>({
   defaultSort,
   footer,
   density = 'default',
+  minWidth,
   ariaLabel,
 }: DesktopDataTableProps<Row>) {
   const [sort, setSort] = useState<{ columnId: string; direction: SortDirection } | null>(
@@ -90,11 +97,27 @@ export function DesktopDataTable<Row>({
   const allChecked = sortedRows.length > 0 && sortedRows.every((row) => checked.has(rowKey(row)));
 
   const gridTemplate = useMemo(() => {
-    const parts = columns.map((column) => column.width ?? '1fr');
+    const parts = columns.map((column) => {
+      const width = column.width ?? '1fr';
+      return width.endsWith('fr') ? `minmax(0, ${width})` : width;
+    });
     if (selectable) parts.unshift('36px');
     if (rowActions) parts.push('auto');
     return parts.join(' ');
   }, [columns, selectable, rowActions]);
+
+  // Sum of the declared widths, so the table knows when to scroll rather than
+  // squeeze. Fractional columns contribute a readable floor instead of zero.
+  const resolvedMinWidth = useMemo(() => {
+    if (minWidth != null) return minWidth;
+    const columnFloor = columns.reduce((total, column) => {
+      const width = column.width ?? '1fr';
+      if (width.endsWith('px')) return total + Number.parseInt(width, 10);
+      const factor = Number.parseFloat(width) || 1;
+      return total + Math.round(factor * 130);
+    }, 0);
+    return columnFloor + (selectable ? 36 : 0) + (rowActions ? 72 : 0) + 20;
+  }, [columns, minWidth, selectable, rowActions]);
 
   const toggleSort = (column: DesktopColumn<Row>) => {
     if (!column.sortValue) return;
@@ -154,7 +177,13 @@ export function DesktopDataTable<Row>({
   }, [sortedRows.length]);
 
   return (
-    <div className="sfd-table" data-density={density} role="grid" aria-label={ariaLabel}>
+    <div
+      className="sfd-table"
+      data-density={density}
+      role="grid"
+      aria-label={ariaLabel}
+      style={{ ['--sfd-table-min' as string]: `${resolvedMinWidth}px` }}
+    >
       <div className="sfd-table-head" style={{ gridTemplateColumns: gridTemplate }} role="row">
         {selectable ? (
           <span className="sfd-table-cell sfd-table-cell--check">

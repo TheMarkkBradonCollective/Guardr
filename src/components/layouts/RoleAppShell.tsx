@@ -1,18 +1,34 @@
 import React, { useMemo } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
-import { BottomNavItem } from './BottomNavBar';
-import { type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
+import type { SurfacePrimaryAction } from '../../surfaces/surfaceShellTypes';
 import { useSurface } from '../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../surfaces/surfaceNavigation';
 import { MobileDrawerIdentity } from './MobileDrawerIdentity';
 
+/**
+ * A destination a role can reach.
+ *
+ * Position-free on purpose: this says nothing about tabs, sidebars, or rails, so
+ * each surface can arrange the same list its own way.
+ */
+export interface RoleNavItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: number;
+}
+
+/** @deprecated Name predates the three-surface split. Use `RoleNavItem`. */
+export type BottomNavItem = RoleNavItem;
+
 interface RoleAppShellProps {
   title: string;
   accountMenu: AccountMenuProps;
-  navItems: BottomNavItem[];
-  overflowNavItems?: BottomNavItem[];
-  messagesNavItems?: BottomNavItem[];
+  navItems: RoleNavItem[];
+  overflowNavItems?: RoleNavItem[];
+  messagesNavItems?: RoleNavItem[];
   activeNavId: string;
   onNavigate: (id: string) => void;
   children: React.ReactNode;
@@ -27,7 +43,7 @@ interface RoleAppShellProps {
   headerOverride?: React.ReactNode;
   variant?: 'default' | 'dark';
   workspaceLabel?: string;
-  sidebarPrimaryAction?: SidebarPrimaryAction;
+  sidebarPrimaryAction?: SurfacePrimaryAction;
   sidebarFooter?: React.ReactNode;
   headerContext?: React.ReactNode;
 }
@@ -69,7 +85,7 @@ export function RoleAppShell({
 
   const destinations = useMemo<SurfaceDestination[]>(() => {
     const build = (
-      items: BottomNavItem[],
+      items: RoleNavItem[],
       section: string,
       options: { rankOffset?: number; quick?: boolean } = {},
     ): SurfaceDestination[] =>
@@ -128,5 +144,3 @@ export function RoleAppShell({
     </SurfaceAppShell>
   );
 }
-
-export type { BottomNavItem };

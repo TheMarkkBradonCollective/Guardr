@@ -16,8 +16,8 @@ import { DesktopSkeletonTable } from './desktop/kit/DesktopSkeleton';
  * A feature declares *what* a page contains — a title, a toolbar, a list, a
  * detail, a primary action — and each surface decides the structure:
  *
- *   `SurfacePage`       mobile: collapsing header + single scroll column
- *                       tablet: persistent title row + toolbar band
+ *   `SurfacePage`       mobile: collapsing header title + single scroll column
+ *                       tablet: large page-owned title + toolbar band
  *                       desktop: toolbar band only (title lives in the top bar)
  *
  *   `SurfaceListDetail` mobile: pushes the detail over the list

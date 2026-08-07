@@ -37,6 +37,9 @@ function readStoredWidth(key: string | undefined, fallback: number): number {
  * visible at once for triage work, and a pointer to drag the divider. The tablet
  * uses a fixed two-column split and mobile pushes one screen at a time.
  */
+/** Space the secondary panel must keep, so the primary can never starve it. */
+const MIN_SECONDARY_WIDTH = 320;
+
 export function DesktopPanelGroup({
   primary,
   secondary,
@@ -48,13 +51,41 @@ export function DesktopPanelGroup({
   tertiaryWidth = 340,
 }: DesktopPanelGroupProps) {
   const [width, setWidth] = useState(() => readStoredWidth(storageKey, initialPrimaryWidth));
+  const [available, setAvailable] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const clamp = useCallback(
-    (value: number) => Math.max(minPrimaryWidth, Math.min(maxPrimaryWidth, value)),
-    [minPrimaryWidth, maxPrimaryWidth],
+    (value: number) => {
+      // The container ceiling matters as much as the configured maximum: a stored
+      // or configured width from a wider window would otherwise squeeze the
+      // detail panel to nothing on a smaller one.
+      const ceiling =
+        available != null
+          ? Math.max(
+              minPrimaryWidth,
+              available - MIN_SECONDARY_WIDTH - (tertiary ? tertiaryWidth : 0) - 5,
+            )
+          : maxPrimaryWidth;
+      return Math.max(minPrimaryWidth, Math.min(Math.min(maxPrimaryWidth, ceiling), value));
+    },
+    [available, maxPrimaryWidth, minPrimaryWidth, tertiary, tertiaryWidth],
   );
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const next = entries[0]?.contentRect.width;
+      if (next != null) setAvailable(next);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setWidth((value) => clamp(value));
+  }, [clamp]);
 
   useEffect(() => {
     if (!dragging) return;

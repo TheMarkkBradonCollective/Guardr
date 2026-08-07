@@ -1,0 +1,350 @@
+/* Dev harness styling. Shared by the three previews so the surfaces themselves
+   stay the only thing that differs between them. */
+
+/* Each surface previews inside its own device frame. Reviewing the forced tablet
+   app at 1600px would be reviewing a width it never ships at — the mobile frame is
+   handled by the production media query in surface-mobile.css. */
+.sfp-stage {
+  position: fixed;
+  inset: 0;
+}
+
+@media (min-width: 1180px) {
+  .sfp-stage[data-surface='tablet'] .sft-shell {
+    left: 50%;
+    right: auto;
+    width: min(1112px, 100vw);
+    border-right: 1px solid var(--sf-line);
+    border-left: 1px solid var(--sf-line);
+    transform: translateX(-50%);
+  }
+
+  /* Fixed overlays resolve against the viewport; absolute keeps them in frame. */
+  .sfp-stage[data-surface='tablet'] .sft-panel-root {
+    position: absolute;
+  }
+}
+
+/* Bottom-right so it clears the mobile tab bar, the mobile action bar, and the
+   desktop status bar rather than sitting on top of them. */
+.sfp-switcher {
+  position: fixed;
+  right: 16px;
+  bottom: 44px;
+  z-index: 5000;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--sf-line);
+  border-radius: 999px;
+  background: var(--sf-paper);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+}
+
+.sfp-switcher button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--sf-ink-secondary);
+  font-family: var(--sf-font);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sfp-switcher button[data-active='true'] {
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
+}
+
+/* ── Shared preview atoms ────────────────────────────────────────────────── */
+
+.sfp-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sfp-pill[data-tone='positive'] {
+  background: var(--sf-positive-soft);
+  color: var(--sf-positive);
+}
+
+.sfp-pill[data-tone='warning'] {
+  background: var(--sf-warning-soft);
+  color: var(--sf-warning);
+}
+
+.sfp-pill[data-tone='critical'] {
+  background: var(--sf-critical-soft);
+  color: var(--sf-critical);
+}
+
+.sfp-pill[data-tone='info'] {
+  background: var(--sf-info-soft);
+  color: var(--sf-info);
+}
+
+.sfp-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sfp-avatar--sm {
+  width: 22px;
+  height: 22px;
+  font-size: 9.5px;
+}
+
+.sfp-muted {
+  margin: 0 0 4px;
+  color: var(--sf-ink-secondary);
+  font-size: var(--sf-type-label);
+}
+
+.sfp-mono {
+  font-family: var(--sf-font-mono);
+  font-size: 11.5px;
+}
+
+.sfp-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sfp-account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sfp-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sfp-identity-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sfp-nav-footer {
+  margin: 0;
+  color: var(--sf-ink-tertiary);
+  font-size: 10.5px;
+}
+
+/* ── Mobile preview ─────────────────────────────────────────────────────── */
+
+.sfp-live-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.sfp-live-site {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.sfp-live-window {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.sfp-live-stats,
+.sfp-sheet-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 16px;
+}
+
+.sfp-sheet-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tablet preview ─────────────────────────────────────────────────────── */
+
+.sfp-tablet-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-section-gap);
+  padding: var(--sf-gutter);
+}
+
+.sfp-tablet-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sfp-tablet-detail-head h2 {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-heading);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sfp-tablet-detail-head p {
+  margin: 4px 0 0;
+  color: var(--sf-ink-secondary);
+  font-size: var(--sf-type-caption);
+}
+
+.sfp-panel-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sfp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sfp-field > span {
+  color: var(--sf-ink-secondary);
+  font-size: var(--sf-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sfp-field select,
+.sfp-field input {
+  height: var(--sf-input-h);
+  padding: 0 10px;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-control);
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  font-family: var(--sf-font);
+  font-size: var(--sf-type-body);
+}
+
+/* ── Desktop preview ────────────────────────────────────────────────────── */
+
+.sfp-desktop-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-section-gap);
+  height: 100%;
+  min-height: 0;
+}
+
+.sfp-desktop-panels {
+  flex: 1;
+  min-height: 380px;
+}
+
+.sfp-inspector-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-grid-gap);
+}
+
+.sfp-board-wrap {
+  position: relative;
+  height: 420px;
+  padding: 12px;
+}
+
+.sfp-board-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.sfp-board-meta {
+  margin: 3px 0 0;
+  color: var(--sf-ink-secondary);
+  font-size: 11px;
+}
+
+.sfp-kv {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.sfp-kv dt {
+  color: var(--sf-ink-tertiary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.sfp-kv dd {
+  margin: 2px 0 0;
+  font-size: var(--sf-type-body);
+  font-weight: 600;
+}
+
+.sfp-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sfp-timeline li {
+  display: flex;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--sf-line);
+  font-size: var(--sf-type-body);
+}
+
+.sfp-timeline li:last-child {
+  border-bottom: none;
+}
+
+.sfp-timeline span {
+  flex-shrink: 0;
+  width: 44px;
+  color: var(--sf-ink-tertiary);
+  font-family: var(--sf-font-mono);
+  font-size: 11px;
+}

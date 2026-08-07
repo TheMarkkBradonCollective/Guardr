@@ -457,7 +457,7 @@
 
 .sfd-panels {
   display: grid;
-  grid-template-columns: var(--sfd-primary-w, 400px) 5px 1fr;
+  grid-template-columns: minmax(0, var(--sfd-primary-w, 400px)) 5px minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -467,7 +467,9 @@
 }
 
 .sfd-panels[data-tertiary='true'] {
-  grid-template-columns: var(--sfd-primary-w, 400px) 5px 1fr var(--sfd-tertiary-w, 340px);
+  grid-template-columns:
+    minmax(0, var(--sfd-primary-w, 400px)) 5px minmax(0, 1fr)
+    minmax(0, var(--sfd-tertiary-w, 340px));
 }
 
 .sfd-panel {
@@ -527,22 +529,30 @@
 
 /* ── Data table ──────────────────────────────────────────────────────────── */
 
+/* Horizontal scroll lives on the table, so the header row scrolls in lockstep
+   with the body instead of drifting out of alignment. */
 .sfd-table {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--sf-line);
   border-radius: var(--sf-radius-card);
   background: var(--sf-paper);
+  scrollbar-width: thin;
 }
 
 .sfd-table-head {
   display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   flex-shrink: 0;
   align-items: center;
   height: 34px;
+  min-width: var(--sfd-table-min, 0px);
   padding: 0 10px;
   border-bottom: 1px solid var(--sf-line);
   background: var(--sf-paper-sunken);
@@ -555,8 +565,10 @@
 
 .sfd-table-body {
   flex: 1;
+  min-width: var(--sfd-table-min, 0px);
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
@@ -568,6 +580,7 @@
 .sfd-table-row {
   display: grid;
   align-items: center;
+  min-width: var(--sfd-table-min, 0px);
   min-height: var(--sf-row-h);
   padding: 0 10px;
   border-bottom: 1px solid var(--sf-line);
@@ -998,9 +1011,20 @@
 
 /* ── Hover card ──────────────────────────────────────────────────────────── */
 
+/* `min-width: 0` lets a hover-card trigger inside a table cell participate in the
+   grid's truncation instead of forcing the column wider than its track. */
 .sfd-hover-root {
   position: relative;
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sfd-hover-root > .sfp-truncate,
+.sfd-hover-root > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sfd-hover-card {

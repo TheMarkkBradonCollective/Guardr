@@ -110,15 +110,15 @@ function renderApp(children: React.ReactNode) {
   );
 }
 
-// Dev-only shell harness: `?ui-preview=1` renders the signed-in chrome with
-// static data so layout work can be reviewed without a live session.
+// Dev-only harness: `?ui-preview=1` renders all three surface applications with
+// static data so each can be reviewed without a live session.
 const wantsUiPreview =
   import.meta.env.DEV &&
   typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).has('ui-preview');
 
 if (wantsUiPreview) {
-  void import('./dev/UiPreview').then(({ default: UiPreview }) => renderApp(<UiPreview />));
+  void import('./dev/SurfacePreview').then(({ default: SurfacePreview }) => renderApp(<SurfacePreview />));
 } else {
   renderApp(<App />);
 }

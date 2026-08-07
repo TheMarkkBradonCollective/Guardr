@@ -2,6 +2,19 @@ import type React from 'react';
 import type { SurfaceCommand, SurfaceDestination } from './surfaceNavigation';
 
 /**
+ * The role's single most important action — create a job, post a shift.
+ *
+ * Each surface promotes it differently: the mobile app as a sticky bottom CTA or
+ * floating button, the tablet inline beside the page title, the desktop as a
+ * sidebar button plus a command palette entry.
+ */
+export interface SurfacePrimaryAction {
+  label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+}
+
+/**
  * The contract every surface shell implements.
  *
  * This is deliberately a description of *content and destinations*, not of
@@ -41,7 +54,7 @@ export interface SurfaceShellProps {
   /** Page-level actions for surfaces that have a place to put them. */
   pageActions?: React.ReactNode;
   /** Primary call to action, promoted differently per surface. */
-  primaryAction?: { label: string; onClick: () => void; icon?: React.ReactNode };
+  primaryAction?: SurfacePrimaryAction;
 
   /** Hides all chrome — used by full-screen flows. */
   hideChrome?: boolean;

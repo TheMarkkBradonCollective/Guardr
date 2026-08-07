@@ -1,10 +1,5 @@
-export { GuardrDrawerShell, type SidebarPrimaryAction } from './GuardrDrawerShell';
 export { UberDirectContextSelect } from './UberDirectContextSelect';
 export { UberDirectTopHeader } from './UberDirectTopHeader';
-export { resolveMobilityChrome, type MobilityChromeConfig, type MobilityLayout } from './mobilityChrome';
-export { GuardrSideNav, guardrNavItemsFlat, guardrNavItemsFromGroups } from './GuardrSideNav';
-export { GuardrBottomNav, type GuardrBottomNavItem } from './GuardrBottomNav';
-export { GuardrIconRail, type GuardrIconRailProps } from './GuardrIconRail';
 export { PublicPageChrome } from './PublicPageChrome';
 export {
   WorkbenchPage,

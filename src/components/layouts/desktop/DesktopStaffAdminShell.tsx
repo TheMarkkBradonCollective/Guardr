@@ -9,7 +9,7 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
-import type { SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
+import type { SurfacePrimaryAction } from '../../../surfaces/surfaceShellTypes';
 import { useSurface } from '../../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../../surfaces/surfaceNavigation';
@@ -39,8 +39,8 @@ interface DesktopStaffAdminShellProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
-  sidebarPrimaryAction?: SidebarPrimaryAction;
-  sidebarPrimaryActions?: SidebarPrimaryAction[];
+  sidebarPrimaryAction?: SurfacePrimaryAction;
+  sidebarPrimaryActions?: SurfacePrimaryAction[];
 }
 
 /** Section groups. Mobile collapses these into its More sheet; tablet and desktop show them expanded. */

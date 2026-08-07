@@ -14,6 +14,12 @@ import type { SurfaceShellProps } from '../surfaceShellTypes';
  * to keep navigation permanently visible, and hiding it behind a hamburger would
  * be borrowing the phone's constraint.
  *
+ * Title ownership differs per surface, and this is the tablet's rule: the *page*
+ * owns its title, rendered large in the content area. The shell header carries
+ * workspace context and global actions only. (Mobile puts the title in its
+ * collapsing header band; desktop puts it in the top bar breadcrumb.) Keeping
+ * this to one place per surface is what stops the two headers duplicating.
+ *
  * There is no bottom tab bar, no collapsing hero title, and no command palette.
  */
 export function TabletAppShell({
@@ -117,14 +123,15 @@ export function TabletAppShell({
           headerOverride ? (
             <div className="sft-shell-header sft-shell-header--custom">{headerOverride}</div>
           ) : (
-            <header className="sft-shell-header">
+            <header className="sft-shell-header" aria-label={title}>
               <div className="sft-shell-header-lead">
                 {onBack ? (
                   <button type="button" className="sft-icon-btn" onClick={onBack} aria-label="Back">
                     <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
                   </button>
                 ) : null}
-                <h1 className="sft-shell-title">{title}</h1>
+                {/* Context, not the page title — the page renders that itself. */}
+                <span className="sft-shell-context">{workspaceLabel ?? 'Workspace'}</span>
               </div>
               <div className="sft-shell-header-trail">
                 {pageActions}
