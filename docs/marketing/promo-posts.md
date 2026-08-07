@@ -13,20 +13,19 @@ Use the posts below on classified sites, social platforms, and local boards. Cop
 ## Table of contents
 
 1. [Facebook Marketplace](#facebook-marketplace)
-2. [Back Door (classified)](#back-door-classified)
+2. [Nextdoor](#nextdoor)
 3. [Craigslist](#craigslist)
 4. [OfferUp](#offerup)
-5. [Nextdoor](#nextdoor)
-6. [Facebook feed / Groups](#facebook-feed--groups)
-7. [Instagram](#instagram)
-8. [LinkedIn](#linkedin)
-9. [X (Twitter)](#x-twitter)
-10. [Reddit (local subreddits)](#reddit-local-subreddits)
-11. [Google Business Profile](#google-business-profile)
-12. [Yelp](#yelp)
-13. [Flyer / bulletin board (short)](#flyer--bulletin-board-short)
-14. [Email blast (clients)](#email-blast-clients)
-15. [Email blast (guards)](#email-blast-guards)
+5. [Facebook feed / Groups](#facebook-feed--groups)
+6. [Instagram](#instagram)
+7. [LinkedIn](#linkedin)
+8. [X (Twitter)](#x-twitter)
+9. [Reddit (local subreddits)](#reddit-local-subreddits)
+10. [Google Business Profile](#google-business-profile)
+11. [Yelp](#yelp)
+12. [Flyer / bulletin board (short)](#flyer--bulletin-board-short)
+13. [Email blast (clients)](#email-blast-clients)
+14. [Email blast (guards)](#email-blast-guards)
 
 ---
 
@@ -98,49 +97,81 @@ https://www.guardr.co | support@guardr.co
 
 ---
 
-## Back Door (classified)
+## Nextdoor
 
-*Use for Back Door–style classified boards, local event/venue listings, and nightlife/community ad sections.*
+*Nextdoor favors neighbor-to-neighbor tone — helpful, local, not salesy. Post in **For Sale & Free → Services** or as a neighborhood recommendation. Follow your neighborhood’s self-promotion rules.*
 
-### Ad — Clients
+### Post A — Clients (business owners & property managers)
 
-**HEADLINE:** SECURITY MARKETPLACE — POST COVERAGE, PICK YOUR GUARD
+**Title:** Licensed security for local businesses — post a job, choose your guard
 
-**BODY:**
+**Post:**
 
-Guardr — Anytime. Anywhere. Security, When You Need It.
+Hi neighbors — sharing something useful for anyone who runs a shop, venue, construction site, or hosts events in the area.
 
-Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one place.
+When you need **licensed security** for a shift or a one-night event, **Guardr** lets you post the coverage need online and **pick from verified guard profiles** — instead of waiting on a traditional agency dispatch.
 
-Post coverage for event security, nightlife & venues, executive protection, construction sites, retail, corporate campuses, and armed transport.
+**How it works:**
+1. Sign up at www.guardr.co → “I need security”
+2. Post your site address, schedule, pay rate, and any uniform requirements
+3. Licensed guards in the area apply on the map
+4. You review credentials and approve who works your property
+5. Pay in the app and track the shift (including check-in photos)
 
-- Post your site, schedule, and rate
-- Review guard profiles & verified credentials
-- Pay in the app; track the shift live
-- Direct-request a guard you already trust
+**Good for:** retail stores, restaurants & nightlife, private events, job sites, office buildings, and property management.
 
-Not a staffing agency — an independent-contractor technology marketplace operated by Signature Security Specialist, LLC.
+Guardr is a **technology marketplace** (not a staffing agency) — you and the guard work together directly for each job. Operated by Signature Security Specialist, LLC. California credential checks before guards go live.
 
-**WEB:** www.guardr.co  
-**EMAIL:** support@guardr.co  
-**CTA:** Book now — create a free client account today.
+Happy to answer questions in the comments.  
+www.guardr.co | support@guardr.co
 
 ---
 
-### Ad — Guards
+### Post B — Guards (local licensed professionals)
 
-**HEADLINE:** GUARDS — OPEN JOBS ON THE MAP. YOU PICK THE SHIFT.
+**Title:** Licensed security guards — browse open shifts near you on the map
 
-**BODY:**
+**Post:**
 
-Guardr is hiring *through the marketplace* — licensed CA guards browse open jobs, apply, and work on their own terms.
+Hey neighbors — if you’re a **licensed California security guard** looking for extra shifts on your own schedule, there’s a local marketplace called **Guardr** worth checking out.
 
-Map-first job board · in-app messaging · shift self-audit · Stripe payouts after job closeout.
+- Browse open jobs on a **map** near you
+- **Apply** to shifts you want (no forced assignments)
+- Message clients, clock in with a quick on-site self-audit, get paid through the app
 
-Upload guard card, ID, COI, and training — staff verifies before you go live.
+You’ll upload your guard card, ID, COI, and training — platform staff verifies everything before you can go live.
 
-Sign up: www.guardr.co → I’m a guard  
-support@guardr.co
+Sign up: www.guardr.co → “I’m a guard”  
+Questions: support@guardr.co
+
+Independent contractor marketplace — you choose which jobs to take.
+
+---
+
+### Post C — Short recommendation (either audience)
+
+**Title:** Guardr — security marketplace for our area
+
+**Post:**
+
+**Guardr** connects local businesses with licensed security pros. Clients post jobs; guards apply; you pick who works your site. Maps, messaging, and payments in one app.
+
+Anytime. Anywhere. Security, When You Need It.  
+www.guardr.co
+
+---
+
+### Post D — Business page / local listing blurb
+
+**Business name:** Guardr  
+**Category:** Security service · Business service
+
+**Description:**
+
+Map-first security marketplace for California businesses and licensed guards. Post coverage for events, venues, retail, and sites — or browse open guard shifts nearby. Credential verification, in-app pay, and live shift tracking. Technology platform by Signature Security Specialist, LLC — not a staffing agency.
+
+**Website:** www.guardr.co  
+**Email:** support@guardr.co
 
 ---
 
@@ -201,25 +232,6 @@ Event · venue · retail · site patrol · executive protection.
 
 www.guardr.co — free to sign up.  
 support@guardr.co
-
----
-
-## Nextdoor
-
-**Subject / title:** Local businesses — licensed security on demand (Guardr)
-
-**Post:**
-
-Neighbors who run a business, venue, or property — when you need licensed security for a shift or event, Guardr lets you post the job locally and choose from verified guard profiles.
-
-Guards apply; you approve. Pay and messaging stay in one app. Good for retail, construction sites, private events, and neighborhood-facing businesses.
-
-California-focused marketplace with credential verification before guards go live.
-
-Learn more: www.guardr.co  
-Questions: support@guardr.co
-
-*(Tone: community-friendly, not alarmist — emphasize licensed professionals and direct client choice.)*
 
 ---
 
