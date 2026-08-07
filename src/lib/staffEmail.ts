@@ -33,3 +33,23 @@ export function assertStaffPersonalEmailDistinctFromWork(
     throw new Error('Personal email must be different from your work email.');
   }
 }
+
+export function staffLoginEmailMatches(
+  member: { email: string; personalEmail?: string | null },
+  loginEmail: string
+): boolean {
+  const normalized = normalizeStaffEmail(loginEmail);
+  if (!normalized) return false;
+  if (normalizeStaffEmail(member.email) === normalized) return true;
+  const personal = member.personalEmail?.trim();
+  return Boolean(personal && normalizeStaffEmail(personal) === normalized);
+}
+
+/** Supabase Auth is linked to the work email even when signing in with personal. */
+export function staffWorkLoginEmail(member: { email: string }): string {
+  return normalizeStaffEmail(member.email);
+}
+
+export function staffLoginEmailOrFilter(emailLower: string): string {
+  return `email.eq.${emailLower},personal_email.eq.${emailLower}`;
+}

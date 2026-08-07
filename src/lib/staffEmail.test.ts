@@ -4,6 +4,7 @@ import {
   assertStaffPersonalEmailAvailable,
   assertStaffPersonalEmailDistinctFromWork,
   normalizeStaffEmail,
+  staffLoginEmailMatches,
 } from './staffEmail';
 
 test('normalizes staff emails', () => {
@@ -25,4 +26,14 @@ test('rejects personal email identical to work email', () => {
     () => assertStaffPersonalEmailDistinctFromWork('work@signaturesecurityspecialist.com', 'work@signaturesecurityspecialist.com'),
     /different from your work email/
   );
+});
+
+test('matches staff login on work or personal email', () => {
+  const member = {
+    email: 'r.brown@signaturesecurityspecialist.com',
+    personalEmail: 'brownrebekah211525@gmail.com',
+  };
+  assert.equal(staffLoginEmailMatches(member, 'r.brown@signaturesecurityspecialist.com'), true);
+  assert.equal(staffLoginEmailMatches(member, 'brownrebekah211525@gmail.com'), true);
+  assert.equal(staffLoginEmailMatches(member, 'other@example.com'), false);
 });
