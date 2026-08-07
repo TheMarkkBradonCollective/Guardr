@@ -10,6 +10,7 @@ export type StaffRow = {
   middle_name?: string | null;
   last_name?: string | null;
   email: string;
+  personal_email?: string | null;
   badge_number: string;
   avatar?: string | null;
   phone?: string | null;
@@ -42,6 +43,7 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     middleName: nameParts.middleName,
     lastName: nameParts.lastName,
     email: row.email,
+    personalEmail: row.personal_email?.trim() || undefined,
     badgeNumber: row.badge_number,
     avatar: row.avatar ?? '',
     phone: row.phone ?? '',

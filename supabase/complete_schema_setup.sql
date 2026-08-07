@@ -1034,6 +1034,9 @@ ALTER TABLE staff ADD COLUMN IF NOT EXISTS headline TEXT NOT NULL DEFAULT '';
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS summary TEXT NOT NULL DEFAULT '';
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS about TEXT NOT NULL DEFAULT '';
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS specialties JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS personal_email TEXT;
+
+COMMENT ON COLUMN staff.personal_email IS 'Optional personal contact email; staff.email remains work/login email';
 
 COMMENT ON COLUMN staff.headline IS 'Professional title shown on staff roster profiles';
 COMMENT ON COLUMN staff.summary IS 'Short intro shown on staff roster cards';

@@ -250,8 +250,20 @@ export function StaffTeamDetailPanel({
           <div className="staff-profile-contact-row mt-3">
             <a href={`mailto:${member.email}`} className="staff-profile-contact-link">
               <Mail className="w-3.5 h-3.5" aria-hidden />
-              {member.email}
+              <span>
+                <span className="text-brand-text-muted">Work · </span>
+                {member.email}
+              </span>
             </a>
+            {member.personalEmail?.trim() && (
+              <a href={`mailto:${member.personalEmail}`} className="staff-profile-contact-link">
+                <Mail className="w-3.5 h-3.5" aria-hidden />
+                <span>
+                  <span className="text-brand-text-muted">Personal · </span>
+                  {member.personalEmail}
+                </span>
+              </a>
+            )}
             {member.phone?.trim() && (
               <a href={`tel:${member.phone}`} className="staff-profile-contact-link">
                 <Phone className="w-3.5 h-3.5" aria-hidden />

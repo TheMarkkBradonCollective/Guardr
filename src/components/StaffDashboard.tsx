@@ -253,6 +253,7 @@ interface StaffDashboardProps {
   onAddStaffProfile: (
     input: {
       email: string;
+      personalEmail?: string;
       badgeNumber: string;
       staffRole: StaffRole;
       firstName: string;
