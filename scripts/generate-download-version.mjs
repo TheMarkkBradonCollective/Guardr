@@ -15,6 +15,7 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.114': 'Unified Payments page for guards, staff, and clients; guard profile Timesheet tab with staff shift time adjustments.',
   '1.0.113': 'Desktop workbench alignment across staff, client, and guard pages; Uber Freight-style table splits and credentials fix.',
 };
 

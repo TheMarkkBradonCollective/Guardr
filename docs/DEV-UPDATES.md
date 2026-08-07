@@ -1,13 +1,36 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Friday, July 31, 2026  
+**Last updated:** Friday, August 7, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.102**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.114**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Friday, August 7, 2026 — /update → v1.0.114
+
+**Shipped**
+- **Unified Payments** — guards, staff, and clients all use a **Payments** page with consistent nav and routes (`/guard/payments`, `/staff/payments`, `/client/payments`); legacy `/pay` and `/billing` aliases still work
+- **Guard timesheet tab** — guard profiles include a **Timesheet** tab with shift clock-in/out history and worked hours; Manager+ staff can adjust times with notes and audit logging
+- **Support chat delete** — staff can delete resolved support threads (PR #924)
+- **v1.0.114** (build **214**) web + PWA manifest aligned; APK rebuild via CI on merge
+- PWA service worker cache bust: `guardr-cache-v1-0-114-beta`
+
+**Release verification**
+- `npm run lint`, `npm test`, and `npm run build` pass
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **214**), and `public/sw.js` aligned on **1.0.114-beta**
+- Schema: `shift_time_adjustment` JSONB column on `security_requests` in `complete_schema_setup.sql`
+
+**Supabase:** run if not already applied:
+```sql
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_time_adjustment JSONB;
+```
+
+**APK note:** Binary refreshed via Android APK workflow on `main` push (FCM-enabled).
 
 ---
 
