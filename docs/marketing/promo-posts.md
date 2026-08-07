@@ -10,6 +10,21 @@ Use the posts below on classified sites, social platforms, and local boards. Cop
 
 ---
 
+## Promo banners (PNG)
+
+Ready-to-upload graphics (1200×630 @2x → 2400×1260). Source HTML + render script included.
+
+| File | Use |
+|------|-----|
+| [`assets/marketing/banners/banner-brand-og.png`](../../assets/marketing/banners/banner-brand-og.png) | Brand / social OG — SECURITY MARKETPLACE |
+| [`assets/marketing/banners/banner-clients.png`](../../assets/marketing/banners/banner-clients.png) | Facebook Marketplace / client ads — Post a job |
+| [`assets/marketing/banners/banner-guards.png`](../../assets/marketing/banners/banner-guards.png) | Guard recruitment — Open shifts on the map |
+| [`assets/marketing/banners/banner-nextdoor.png`](../../assets/marketing/banners/banner-nextdoor.png) | Nextdoor / local businesses — Licensed security nearby |
+
+Re-render: `node scripts/render-promo-banners.mjs`
+
+---
+
 ## Table of contents
 
 1. [Facebook Marketplace](#facebook-marketplace)
