@@ -10,6 +10,11 @@ import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppSnackbarProvider } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
+import { SurfaceProvider } from './surfaces/SurfaceProvider';
+import { preloadSurface } from './surfaces/SurfaceAppShell';
+import { currentSurfaceOverride, detectCoarsePointer, resolveSurfaceKind } from './surfaces/surfaceKind';
+import { getShellKind } from './lib/platform/shellKind';
+import { getViewportWidth } from './lib/platform/device';
 import { BaseUIProvider } from './components/baseui';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
 import { registerServiceWorker, initNativePushListeners } from './lib/push';
@@ -19,6 +24,12 @@ import { initSentry } from './lib/sentry';
 import './index.css';
 import './styles/uber-typography.css';
 import './styles/guardr-design-tokens.css';
+// Three independent surface layers. Each is scoped to body[data-surface="…"], so
+// exactly one applies at a time — see docs/SURFACES.md.
+import './styles/surface-foundation.css';
+import './styles/surface-mobile.css';
+import './styles/surface-tablet.css';
+import './styles/surface-desktop.css';
 import './styles/uber-tokens.css';
 import './styles/uber-surfaces.css';
 import './styles/uber-mobility.css';
@@ -39,6 +50,17 @@ import './styles/uber-text-case.css';
 import './styles/legal-accept.css';
 
 applyThemeToDocument(loadTheme());
+
+// Start fetching the surface chunk before React mounts so the shell is ready on
+// the first render instead of flashing a skeleton.
+preloadSurface(
+  resolveSurfaceKind({
+    viewportWidth: getViewportWidth(),
+    shellKind: getShellKind(),
+    touch: detectCoarsePointer(),
+    override: currentSurfaceOverride(),
+  }),
+);
 
 void initSentry();
 
@@ -72,29 +94,31 @@ function renderApp(children: React.ReactNode) {
   root.render(
     <StrictMode>
       <DeviceProvider>
-        <BaseUIProvider>
-          <AppMotionProvider>
-            <AppSnackbarProvider>
-              {children}
-              <OfflineBanner />
-              <AppConfirmHost />
-            </AppSnackbarProvider>
-          </AppMotionProvider>
-        </BaseUIProvider>
+        <SurfaceProvider>
+          <BaseUIProvider>
+            <AppMotionProvider>
+              <AppSnackbarProvider>
+                {children}
+                <OfflineBanner />
+                <AppConfirmHost />
+              </AppSnackbarProvider>
+            </AppMotionProvider>
+          </BaseUIProvider>
+        </SurfaceProvider>
       </DeviceProvider>
     </StrictMode>,
   );
 }
 
-// Dev-only shell harness: `?ui-preview=1` renders the signed-in chrome with
-// static data so layout work can be reviewed without a live session.
+// Dev-only harness: `?ui-preview=1` renders all three surface applications with
+// static data so each can be reviewed without a live session.
 const wantsUiPreview =
   import.meta.env.DEV &&
   typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).has('ui-preview');
 
 if (wantsUiPreview) {
-  void import('./dev/UiPreview').then(({ default: UiPreview }) => renderApp(<UiPreview />));
+  void import('./dev/SurfacePreview').then(({ default: SurfacePreview }) => renderApp(<SurfacePreview />));
 } else {
   renderApp(<App />);
 }

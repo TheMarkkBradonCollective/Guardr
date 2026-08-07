@@ -27,16 +27,31 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 
 ## Device Experience Matrix
 
-| Device | Primary users | UI behavior |
-|--------|---------------|-------------|
-| Phone | Guards, clients | Single column, bottom nav (`BottomNavBar` + `MoreMenuSheet`), big actions |
-| Tablet | Staff, guards, clients | **Merge shell** — persistent sidebar (~220px) + command bar + touch content (`GuardrDrawerShell` / `resolveMobilityChrome`) |
-| Desktop / Chromebook | Staff, clients, admin | Full dashboards, analytics, financial controls (`DesktopAdminShell`) |
-| PWA standalone | All | No browser chrome; safe-area padding; `app-pwa.css` styling |
-| Native APK | All | Capacitor shell; native safe areas; `app-native.css` styling |
+Guardr ships **three independent applications**, not one responsive layout. See
+[`docs/SURFACES.md`](./SURFACES.md) for the full architecture; this table is the summary.
 
-Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevice()` / `body[data-form-factor]`.
-Experience tiers (PWA Full/Lite, APK Full/Premium) are resolved in `src/lib/platform/experienceTier.ts` and exposed as `useDevice().experienceTier` / `body[data-experience-tier]`.
+| Device | Primary users | Application | UI behavior |
+|--------|---------------|-------------|-------------|
+| Phone | Guards, clients | `MobileAppShell` | Edge-to-edge canvas, fixed bottom tabs + More sheet, draggable bottom sheets, FAB, swipe rows, pull-to-refresh, 48px targets |
+| Tablet | Staff, guards, clients | `TabletAppShell` | Persistent labelled rail + quick-switch strip, master/detail split views, docked side panels, persistent inspector, 44px targets |
+| Desktop / Chromebook | Staff, clients, admin | `DesktopAppShell` | Permanent grouped sidebar, top bar breadcrumb, data tables, command palette (`Cmd/Ctrl+K`), `Alt+1..9` shortcuts, resizable panels, drag-and-drop, status bar, 32px targets |
+| PWA standalone | All | mobile or tablet | Never the desktop application — an installed shell is touch-first by definition |
+| Native APK | All | mobile or tablet | Capacitor shell; native safe areas; haptics |
+
+Which application loads is decided **only** in `src/surfaces/surfaceKind.ts` and
+published via `useSurface()` / `body[data-surface]`. Boundaries are 744px (mobile →
+tablet) and 1180px (tablet → desktop); installed PWA/APK shells and touch-only
+devices never resolve to desktop. Override with `?ui=mobile|tablet|desktop`.
+
+Each shell is a separate lazy chunk, so a phone never downloads the desktop data
+table or command palette.
+
+Form factor and shell kind remain available for finer-grained decisions:
+`src/lib/platform/device.ts` exposes `useDevice()` / `body[data-form-factor]`, and
+experience tiers (PWA Full/Lite, APK Full/Premium) resolve in
+`src/lib/platform/experienceTier.ts` / `body[data-experience-tier]`. Those adjust
+chrome, motion, and haptics **within** a surface; they never change which surface
+loads.
 
 ### View surface model (`/fix`)
 

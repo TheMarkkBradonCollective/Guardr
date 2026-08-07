@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { Plus } from 'lucide-react';
-import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
+import type { SurfacePrimaryAction as SidebarPrimaryAction } from '../../surfaces/surfaceShellTypes';
 import type { StaffSection } from '../../lib/staffOps';
 
 export type StaffCreateActionKey =

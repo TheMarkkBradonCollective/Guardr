@@ -61,12 +61,9 @@ export type { GuardrAvatarSize } from './GuardrAvatar';
 
 export { GuardrTooltip, PLACEMENT as TooltipPlacement } from './GuardrTooltip';
 
-// ─── App shell layouts ────────────────────────────────────────────────────────
-export { GuardrDrawerShell }  from './layout/GuardrDrawerShell';
-export { GuardrSideNav }      from './layout/GuardrSideNav';
-export { GuardrBottomNav } from './layout/GuardrBottomNav';
-export type { GuardrBottomNavItem } from './layout/GuardrBottomNav';
-export { GuardrIconRail, type GuardrIconRailProps } from './layout/GuardrIconRail';
+// ─── Page content primitives ──────────────────────────────────────────────────
+// App shells live in `src/surfaces/` — one per device type. Nothing here is a
+// shell: these are content components that render inside whichever shell loaded.
 export { UberDataTable, type UberTableColumn } from './UberDataTable';
 export { StatusChip, type StatusTone } from './StatusChip';
 

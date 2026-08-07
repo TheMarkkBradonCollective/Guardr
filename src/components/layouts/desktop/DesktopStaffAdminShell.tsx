@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Block } from 'baseui/block';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
@@ -10,8 +9,10 @@ import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
-import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
-import { useDevice } from '../../../lib/platform';
+import type { SurfacePrimaryAction } from '../../../surfaces/surfaceShellTypes';
+import { useSurface } from '../../../surfaces/SurfaceProvider';
+import { SurfaceAppShell } from '../../../surfaces/SurfaceAppShell';
+import type { SurfaceDestination } from '../../../surfaces/surfaceNavigation';
 import { MobileDrawerIdentity } from '../MobileDrawerIdentity';
 
 interface DesktopStaffAdminShellProps {
@@ -38,11 +39,11 @@ interface DesktopStaffAdminShellProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
-  sidebarPrimaryAction?: SidebarPrimaryAction;
-  sidebarPrimaryActions?: SidebarPrimaryAction[];
+  sidebarPrimaryAction?: SurfacePrimaryAction;
+  sidebarPrimaryActions?: SurfacePrimaryAction[];
 }
 
-/** Uber Direct sidebar groups — order matches staff nav list with section labels. */
+/** Section groups. Mobile collapses these into its More sheet; tablet and desktop show them expanded. */
 const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   { label: 'Dashboard', ids: ['overview', 'map'] },
   {
@@ -51,10 +52,28 @@ const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   },
   { label: 'Communications', ids: ['messages', 'support'] },
   { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
-  { ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
+  { label: 'Oversight', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
   { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
 ];
 
+/** Thumb-order tabs for the mobile staff app. Everything else lives in the More sheet. */
+const MOBILE_TAB_ORDER: StaffSection[] = ['overview', 'jobs', 'guards', 'messages'];
+
+/** Destinations pinned to the tablet quick-switch row — live ops, not admin. */
+const TABLET_QUICK: StaffSection[] = ['overview', 'map', 'jobs'];
+
+/**
+ * Staff entry point into the three surface applications.
+ *
+ * Staff have the widest destination list in the product (28 sections), which is
+ * exactly why the three surfaces cannot share a layout: the desktop operations
+ * centre shows all of them in a grouped sidebar with a command palette, the
+ * tablet shows them on a scrollable labelled rail, and the mobile app shows four
+ * tabs with the rest behind a sheet.
+ *
+ * The file name is historical — it now dispatches to all three surfaces rather
+ * than only the desktop one.
+ */
 export function DesktopStaffAdminShell({
   children,
   currentUser,
@@ -82,50 +101,41 @@ export function DesktopStaffAdminShell({
   sidebarPrimaryAction,
   sidebarPrimaryActions,
 }: DesktopStaffAdminShellProps) {
-  const { formFactor } = useDevice();
-  // Bottom nav is mobile-only — tablet uses persistent sidebar (merge shell), matching RoleAppShell.
-  const isMobileShell = formFactor === 'mobile';
+  const { surface } = useSurface();
   const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
-  const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
+  const destinations = useMemo<SurfaceDestination[]>(() => {
+    const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
 
-  const navGroups = useMemo(
-    () =>
-      MENU_GROUPS.map((group) => ({
-        title: group.label,
-        items: group.ids
-          .map((id) => navItems.find((n) => n.id === id))
-          .filter((item): item is StaffNavItem => !!item && visible(item))
-          .map((item) => ({
+    return MENU_GROUPS.flatMap((group) =>
+      group.ids
+        .map((id) => navItems.find((nav) => nav.id === id))
+        .filter((item): item is StaffNavItem => Boolean(item) && visible(item!))
+        .map<SurfaceDestination>((item) => {
+          const mobileIndex = MOBILE_TAB_ORDER.indexOf(item.id);
+          return {
             id: item.id,
             label: item.label,
             icon: item.icon,
             badge: item.badge,
-          })),
-      })).filter((group) => group.items.length > 0),
-    [navItems, showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities],
-  );
-
-  const flatNavItems = useMemo(
-    () => navGroups.flatMap((group) => group.items),
-    [navGroups],
-  );
-
-  const STAFF_BOTTOM_NAV_IDS: StaffSection[] = ['overview', 'jobs', 'clients', 'guards', 'team'];
-
-  const mobileBottomNavItems = useMemo(() => {
-    if (!isMobileShell) return undefined;
-    return STAFF_BOTTOM_NAV_IDS.map((id) => {
-      const item = flatNavItems.find((nav) => nav.id === id);
-      if (!item) return null;
-      return {
-        ...item,
-        label: id === 'guards' ? 'Guard' : item.label,
-      };
-    }).filter((item): item is NonNullable<typeof item> => item != null);
-  }, [isMobileShell, flatNavItems]);
+            section: group.label ?? 'Operations',
+            mobileRank: mobileIndex >= 0 ? mobileIndex + 1 : undefined,
+            tabletQuick: TABLET_QUICK.includes(item.id),
+            keywords: [group.label ?? '', item.id],
+          };
+        }),
+    );
+  }, [
+    navItems,
+    showFinance,
+    showPayments,
+    showSettings,
+    showPermissions,
+    showDisputes,
+    showCities,
+  ]);
 
   const handleNav = (id: string) => {
     const section = id as StaffSection;
@@ -149,40 +159,21 @@ export function DesktopStaffAdminShell({
       active={activeSection === 'profile' || activeSection === 'preferences'}
       themeMode={themeMode}
       onChangeTheme={onChangeTheme}
-      triggerVariant="uber-direct"
+      triggerVariant={surface === 'desktop' ? 'uber-direct' : 'default'}
       {...accountNotifications}
     />
   );
 
   return (
-    <GuardrDrawerShell
-      workspaceLabel="Staff workspace"
+    <SurfaceAppShell
       title={screenTitle}
-      navGroups={navGroups}
-      activeNavId={navHighlight}
+      workspaceLabel="Staff operations"
+      destinations={destinations}
+      activeId={navHighlight}
       onNavigate={handleNav}
       accountMenu={accountMenu}
-      sidebarPrimaryAction={sidebarPrimaryAction}
-      sidebarPrimaryActions={sidebarPrimaryActions}
-      sidebarBrandExtra={
-        isDbConnected ? (
-          <Block
-            width="8px"
-            height="8px"
-            backgroundColor="positive"
-            overrides={{ Block: { style: { borderRadius: '50%', flexShrink: 0 } } }}
-            aria-label="Connected"
-          />
-        ) : null
-      }
-      sidebarFooter={
-        <SidebarFooterLinks
-          onOpenSettings={() => onNavigate('preferences')}
-          onOpenLegal={onOpenLegal}
-        />
-      }
-      sidebarIdentity={
-        isMobileShell ? (
+      identity={
+        surface === 'mobile' ? (
           <MobileDrawerIdentity
             userName={currentUser.name}
             avatarUrl={currentUser.avatar}
@@ -190,15 +181,33 @@ export function DesktopStaffAdminShell({
           />
         ) : undefined
       }
-      hideHeader={hideHeader}
+      navFooter={
+        <SidebarFooterLinks onOpenSettings={() => onNavigate('preferences')} onOpenLegal={onOpenLegal} />
+      }
+      primaryAction={sidebarPrimaryAction ?? sidebarPrimaryActions?.[0]}
       headerExtension={headerExtension}
       headerOverride={headerOverride}
+      hideChrome={hideHeader}
       bleed={bleed}
-      variant={isMap ? 'dark' : 'default'}
-      ariaLabel="Staff navigation"
-      mobileBottomNavItems={mobileBottomNavItems}
+      commands={[
+        {
+          id: 'staff-db-status',
+          label: isDbConnected ? 'Database: connected' : 'Database: offline',
+          group: 'Status',
+          kind: 'action',
+          run: () => {
+            void showAppAlert({
+              title: isDbConnected ? 'Database connected' : 'Database offline',
+              message: isDbConnected
+                ? 'Live Supabase connection is healthy.'
+                : 'Running on cached data. Changes queue locally until the connection returns.',
+              tone: isDbConnected ? 'default' : 'warning',
+            });
+          },
+        },
+      ]}
     >
       {children}
-    </GuardrDrawerShell>
+    </SurfaceAppShell>
   );
 }
