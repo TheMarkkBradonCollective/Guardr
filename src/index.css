@@ -5241,6 +5241,84 @@ html.theme-light .staff-ops-btn-primary:hover {
   border-bottom: none;
 }
 
+.staff-profile-header .staff-profile-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+
+.staff-profile-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+  text-decoration: none;
+}
+
+.staff-profile-contact-link:hover {
+  color: var(--brand-primary);
+}
+
+.staff-profile-section {
+  padding-top: 0.25rem;
+}
+
+.staff-profile-headline {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--brand-text);
+}
+
+.staff-profile-summary {
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--brand-text-muted);
+}
+
+.staff-profile-about-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--brand-border);
+  border-radius: 0.75rem;
+  background: var(--brand-bg-sec);
+}
+
+.staff-profile-empty-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.875rem 1rem;
+  border: 1px dashed var(--brand-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--brand-bg-sec) 80%, transparent);
+}
+
+.staff-profile-focus-chip {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg);
+  color: var(--brand-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.staff-profile-focus-chip:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-text);
+}
+
+.staff-profile-focus-chip--active {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+  color: var(--brand-text);
+}
+
 .staff-detail-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));

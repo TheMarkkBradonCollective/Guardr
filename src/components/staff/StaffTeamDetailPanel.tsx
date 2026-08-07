@@ -24,15 +24,22 @@ import {
   normalizeManagedCities,
 } from '../../lib/platformCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { StaffProfileSection } from '../profile/StaffProfileSection';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail, Phone } from 'lucide-react';
+import { getStaffDisplayName } from '../../lib/staffProfile';
+import {
+  nextStaffBadgeNumberForRoleChange,
+  STAFF_BADGE_PREFIX,
+} from '../../lib/staffBadgeNumber';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
+  roster?: SecurityGuard[];
   platformCities?: PlatformCity[];
   managerOptions?: SecurityGuard[];
   currentUserId: string;
@@ -43,7 +50,7 @@ interface StaffTeamDetailPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
@@ -73,6 +80,7 @@ function staffModerationBlockedReason(
 
 export function StaffTeamDetailPanel({
   member,
+  roster = [],
   platformCities = [],
   managerOptions = [],
   currentUserId,
@@ -147,13 +155,27 @@ export function StaffTeamDetailPanel({
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
-    if (!(await confirmStaffRoleChange(member.name, role))) return;
+    const pendingBadge =
+      role !== member.staffRole
+        ? nextStaffBadgeNumberForRoleChange(role, roster, member.id)
+        : member.badgeNumber;
+    if (!(await confirmStaffRoleChange(
+      getStaffDisplayName(member),
+      role,
+      role !== member.staffRole ? pendingBadge : undefined
+    ))) return;
     setRoleError('');
     setRoleMsg('');
     setSavingRole(true);
     try {
-      await onUpdateStaffRole(member.id, role);
-      setRoleMsg(`Role updated to ${role}.`);
+      const result = await onUpdateStaffRole(member.id, role);
+      const badgeNumber =
+        result && 'badgeNumber' in result ? result.badgeNumber : pendingBadge;
+      setRoleMsg(
+        badgeNumber !== member.badgeNumber
+          ? `Role updated to ${role}. Staff ID is now ${badgeNumber}.`
+          : `Role updated to ${role}.`
+      );
     } catch (err) {
       setRoleError(err instanceof Error ? err.message : 'Could not update role.');
     } finally {
@@ -172,7 +194,8 @@ export function StaffTeamDetailPanel({
     onUpdateUserStatus(member.id, status);
   };
 
-  const displayName = member.badgeNumber || member.name;
+  const displayName = getStaffDisplayName(member);
+  const memberManagedCities = (member.managedCities ?? []).filter(Boolean);
 
   const handleApproveApplication = async () => {
     if (!onApproveStaffAccount) return;
@@ -215,16 +238,27 @@ export function StaffTeamDetailPanel({
         </div>
       )}
 
-      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
-        <ProfileAvatar src={member.avatar} name={member.name} size="lg" rounded="xl" />
+      <div className="staff-profile-header flex items-start gap-4 pb-5 border-b border-brand-border">
+        <ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-lg">{member.badgeNumber || member.name}</h2>
+            <h2 className="font-bold text-lg">{displayName}</h2>
             {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
             {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
           </div>
-          <p className="text-sm text-brand-text-muted mt-1">{member.email}</p>
+          <div className="staff-profile-contact-row mt-3">
+            <a href={`mailto:${member.email}`} className="staff-profile-contact-link">
+              <Mail className="w-3.5 h-3.5" aria-hidden />
+              {member.email}
+            </a>
+            {member.phone?.trim() && (
+              <a href={`tel:${member.phone}`} className="staff-profile-contact-link">
+                <Phone className="w-3.5 h-3.5" aria-hidden />
+                {member.phone}
+              </a>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-3">
             <div>
               <p className="wf-metric-label">Staff ID</p>
@@ -234,9 +268,21 @@ export function StaffTeamDetailPanel({
               <p className="wf-metric-label">Account</p>
               <p className="wf-metric-value capitalize">{accountStatus}</p>
             </div>
+            {memberManagedCities.length > 0 && (
+              <div className="col-span-2">
+                <p className="wf-metric-label">Service areas</p>
+                <p className="wf-metric-value">{memberManagedCities.join(', ')}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {!isPending && (
+        <section className="staff-detail-section">
+          <StaffProfileSection member={member} />
+        </section>
+      )}
 
       {isPending && (
         <>
@@ -283,6 +329,12 @@ export function StaffTeamDetailPanel({
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
+        {role !== member.staffRole && (
+          <p className="text-xs text-brand-primary leading-relaxed">
+            Staff ID will change to{' '}
+            {nextStaffBadgeNumberForRoleChange(role, roster, member.id)} ({STAFF_BADGE_PREFIX[role]} series).
+          </p>
+        )}
         {canModifyMember && onUpdateStaffRole ? (
           <div className="space-y-2 max-w-sm">
             <select
@@ -385,13 +437,6 @@ export function StaffTeamDetailPanel({
             <p className="text-xs text-brand-text-muted">{blockedReason}</p>
           </section>
         )
-      )}
-
-      {!isPending && member.bio && (
-        <section className="staff-detail-section">
-          <h3 className="text-sm font-semibold mb-2">Notes</h3>
-          <p className="text-sm text-brand-text-muted leading-relaxed">{member.bio}</p>
-        </section>
       )}
     </div>
   );

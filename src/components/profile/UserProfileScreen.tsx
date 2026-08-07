@@ -31,6 +31,8 @@ import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/Deskto
 import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
+import { StaffProfileSection, type StaffProfilePayload } from './StaffProfileSection';
+import { getStaffDisplayHeadline } from '../../lib/staffProfile';
 import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
@@ -114,6 +116,12 @@ export function UserProfileScreen({
   const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
   const [bio, setBio] = useState(guard?.bio ?? '');
+  const [staffProfile, setStaffProfile] = useState<StaffProfilePayload>({
+    headline: guard?.headline ?? '',
+    summary: guard?.summary ?? guard?.bio ?? '',
+    about: guard?.about ?? '',
+    specialties: guard?.specialties ?? [],
+  });
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
   const [hourlyRate, setHourlyRate] = useState(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
   const [resume, setResume] = useState<GuardResumeSavePayload>({
@@ -146,6 +154,12 @@ export function UserProfileScreen({
     setLastName(resolved.lastName);
     setPhone(guard?.phone ?? client?.phone ?? '');
     setBio(guard?.bio ?? '');
+    setStaffProfile({
+      headline: guard?.headline ?? '',
+      summary: guard?.summary ?? guard?.bio ?? '',
+      about: guard?.about ?? '',
+      specialties: guard?.specialties ?? [],
+    });
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
     setHourlyRate(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
     setResume({
@@ -182,7 +196,14 @@ export function UserProfileScreen({
       return { ...base, companyName: companyName.trim() };
     }
     if (isStaffAccount) {
-      return { ...base, bio: bio.trim() };
+      return {
+        ...base,
+        headline: staffProfile.headline.trim(),
+        summary: staffProfile.summary.trim(),
+        about: staffProfile.about.trim(),
+        specialties: staffProfile.specialties,
+        bio: staffProfile.summary.trim() || staffProfile.about.trim(),
+      };
     }
     if (isGuardAccount) {
       return {
@@ -253,6 +274,10 @@ export function UserProfileScreen({
   );
   const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
   const heroTitle = isStaffAccount && !displayName.trim() ? staffBadgeId || '—' : displayName;
+  const staffHeroSubtitle = isStaffAccount ? getStaffDisplayHeadline({
+    headline: staffProfile.headline,
+    staffRole: guard?.staffRole,
+  }) : undefined;
 
   const profileSidebar = (
     <ProfileHero
@@ -260,7 +285,10 @@ export function UserProfileScreen({
       title={heroTitle}
       subtitle={
         isStaffAccount ? (
-          <p className="text-sm text-brand-text-muted">Staff ID: {staffBadgeId || '—'}</p>
+          <>
+            <p className="text-sm text-brand-text-muted">{staffHeroSubtitle}</p>
+            <p className="text-xs text-brand-text-muted mt-1">Staff ID: {staffBadgeId || '—'}</p>
+          </>
         ) : undefined
       }
       email={currentUser.email}
@@ -445,7 +473,17 @@ export function UserProfileScreen({
           type="tel"
         />
         {isStaffAccount && (
-          <BioField label="Bio / notes" value={bio} onChange={setBio} editing={editing} />
+          <StaffProfileSection
+            member={{
+              ...staffProfile,
+              staffRole: guard?.staffRole,
+              bio: guard?.bio,
+            }}
+            editing={editing}
+            payload={staffProfile}
+            onChange={(patch) => setStaffProfile((current) => ({ ...current, ...patch }))}
+            className="pt-2"
+          />
         )}
         {isGuardAccount && (
           <Field
@@ -513,34 +551,6 @@ export function UserProfileScreen({
       {profileSidebar}
       {profileBody}
     </AppScreen>
-  );
-}
-
-function BioField({
-  label,
-  value,
-  onChange,
-  editing,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  editing: boolean;
-}) {
-  return (
-    <div>
-      <label className="uber-label">{label}</label>
-      {editing ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={4}
-          className="uber-input w-full mt-1 resize-y min-h-[5rem]"
-        />
-      ) : (
-        <p className="text-sm font-medium mt-1 whitespace-pre-wrap">{value || '—'}</p>
-      )}
-    </div>
   );
 }
 

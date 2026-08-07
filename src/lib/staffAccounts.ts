@@ -14,6 +14,10 @@ export type StaffRow = {
   avatar?: string | null;
   phone?: string | null;
   bio?: string | null;
+  headline?: string | null;
+  summary?: string | null;
+  about?: string | null;
+  specialties?: string[] | null;
   staff_role: StaffRole;
   user_status?: string | null;
   managed_cities?: string[] | null;
@@ -42,6 +46,10 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     avatar: row.avatar ?? '',
     phone: row.phone ?? '',
     bio: row.bio ?? '',
+    headline: row.headline ?? undefined,
+    summary: row.summary ?? undefined,
+    about: row.about ?? undefined,
+    specialties: Array.isArray(row.specialties) ? row.specialties : [],
     isArmed: false,
     backgroundChecked: true,
     verified: true,
