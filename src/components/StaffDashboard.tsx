@@ -43,6 +43,7 @@ import {
   canViewIncidents,
   canViewStats,
   canViewViolations,
+  canAdjustGuardShiftTimes,
   isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -92,6 +93,7 @@ import type { PlatformSettings } from '../lib/platformSettings';
 import { clientPaymentGates } from '../lib/platformSettings';
 import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
+import { PaymentsPage } from './payments/PaymentsPage';
 import { StaffAnalyticsInsightsPanel } from './staff/StaffAnalyticsInsightsPanel';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -205,6 +207,10 @@ interface StaffDashboardProps {
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
+  onAdjustGuardShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
@@ -394,6 +400,7 @@ export function StaffDashboard({
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
   onCompletePayoutInvoice,
+  onAdjustGuardShiftTime,
   isDbConnected,
   currentUser,
   platformSettings,
@@ -566,6 +573,7 @@ export function StaffDashboard({
   const canApproveGuardAccounts = canApproveGuards(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
+  const canAdjustShiftTimes = canAdjustGuardShiftTimes(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
@@ -808,6 +816,8 @@ export function StaffDashboard({
             onOpenGuardCredential={(guardId, credentialItemId) =>
               navigateSection('credentials', { guardId, credentialItemId })
             }
+            canAdjustShiftTimes={canAdjustShiftTimes}
+            onAdjustGuardShiftTime={onAdjustGuardShiftTime}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
           />
         );
@@ -930,32 +940,34 @@ export function StaffDashboard({
         );
       case 'payments':
         return showPayments ? (
-          <StaffPaymentsPanel
-            currentUser={currentUser}
-            platformSettings={platformSettings}
-            requests={requests}
-            guards={guards}
-            payments={payments}
-            payoutInvoices={guardPayoutInvoices}
-            isDirector={hasExecutivePaymentControls(currentUser)}
-            canManagePayments={showFinance}
-            showStaffCompensation={canViewStaffCompensation(currentUser)}
-            paymentGates={clientPaymentGates(platformSettings)}
-            onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
-            onReleasePayout={onReleasePayout}
-            onRefundPayment={onRefundPayment}
-            onMarkClientPaidCash={onMarkClientPaidCash}
-            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
-            onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
-            onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
-            onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
-            onApproveClientCashPayment={onApproveClientCashPayment}
-            onRejectClientCashPayment={onRejectClientCashPayment}
-            onMarkGuardPaidCash={onMarkGuardPaidCash}
-            onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
-            onMarkCashDepositManually={onMarkCashDepositManually}
-            onCompletePayoutInvoice={onCompletePayoutInvoice}
-          />
+          <PaymentsPage role="staff">
+            <StaffPaymentsPanel
+              currentUser={currentUser}
+              platformSettings={platformSettings}
+              requests={requests}
+              guards={guards}
+              payments={payments}
+              payoutInvoices={guardPayoutInvoices}
+              isDirector={hasExecutivePaymentControls(currentUser)}
+              canManagePayments={showFinance}
+              showStaffCompensation={canViewStaffCompensation(currentUser)}
+              paymentGates={clientPaymentGates(platformSettings)}
+              onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
+              onReleasePayout={onReleasePayout}
+              onRefundPayment={onRefundPayment}
+              onMarkClientPaidCash={onMarkClientPaidCash}
+              onMarkOvertimePaidCash={onMarkOvertimePaidCash}
+              onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
+              onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
+              onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
+              onApproveClientCashPayment={onApproveClientCashPayment}
+              onRejectClientCashPayment={onRejectClientCashPayment}
+              onMarkGuardPaidCash={onMarkGuardPaidCash}
+              onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
+              onMarkCashDepositManually={onMarkCashDepositManually}
+              onCompletePayoutInvoice={onCompletePayoutInvoice}
+            />
+          </PaymentsPage>
         ) : (
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}

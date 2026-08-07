@@ -330,6 +330,11 @@ export function canAdjustStaffTimeEntries(user: Pick<SessionUser, 'role'>): bool
   return hasExecutivePaymentControls(user);
 }
 
+/** Manager+ — adjust guard shift clock times on the guard profile timesheet. */
+export function canAdjustGuardShiftTimes(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
 /** Manager+ — per-role hourly pay rates for tracked staff time. */
 export function canEditStaffHourlyPayRates(user: Pick<SessionUser, 'role'>): boolean {
   return hasExecutivePaymentControls(user);

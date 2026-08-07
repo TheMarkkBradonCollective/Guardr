@@ -19,6 +19,7 @@ import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurity
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientInvoiceScreen } from './client/ClientInvoiceScreen';
+import { PaymentsPage } from './payments/PaymentsPage';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
@@ -678,15 +679,17 @@ export function ClientDashboard({
   if (view === 'invoices' && clientRecord) {
     return page(
       'invoices',
-      <ClientInvoiceScreen
-        client={clientRecord}
-        clientEmail={clientEmail}
-        requests={requests}
-        invoices={clientInvoices}
-        paymentGates={paymentGates}
-        selectedRequestId={invoiceRequestId}
-        onSelectRequestId={onInvoiceRequestIdChange}
-      />
+      <PaymentsPage role="client">
+        <ClientInvoiceScreen
+          client={clientRecord}
+          clientEmail={clientEmail}
+          requests={requests}
+          invoices={clientInvoices}
+          paymentGates={paymentGates}
+          selectedRequestId={invoiceRequestId}
+          onSelectRequestId={onInvoiceRequestIdChange}
+        />
+      </PaymentsPage>
     );
   }
 

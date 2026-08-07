@@ -51,7 +51,7 @@ interface ClientAppLayoutProps {
 }
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'invoices', label: 'Billing', icon: Receipt },
+  { id: 'invoices', label: 'Payments', icon: Receipt },
   { id: 'guards', label: 'Users', icon: Users },
   { id: 'locations', label: 'Locations', icon: MapPin },
   { id: 'reports', label: 'Reports', icon: FileText },
@@ -73,7 +73,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
-  invoices: 'Billing',
+  invoices: 'Payments',
   guide: 'Guide',
   messages: 'Messages',
   support: 'Support',

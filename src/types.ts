@@ -1421,6 +1421,15 @@ export interface SecurityRequest {
     /** Guard explicitly claimed overtime (stayed past end or set departure after scheduled end). */
     overtimeClaimed?: boolean;
   };
+  /** Staff-adjusted clock times for billing and payout review. */
+  shiftTimeAdjustment?: {
+    clockInAt?: string;
+    clockOutAt?: string;
+    adjustedAt?: string;
+    adjustedById?: string;
+    adjustedByEmail?: string;
+    note?: string;
+  };
   reports?: ShiftReport[];
 }
 

@@ -102,6 +102,11 @@ interface StaffGuardsPanelProps {
   onOpenJob?: (jobId: string) => void;
   onOpenGuardApplication?: (guardId: string) => void;
   onOpenGuardCredential?: (guardId: string, credentialItemId: string) => void;
+  canAdjustShiftTimes?: boolean;
+  onAdjustGuardShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => void | Promise<void>;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
 }
 
@@ -164,6 +169,8 @@ export function StaffGuardsPanel({
   onOpenJob,
   onOpenGuardApplication,
   onOpenGuardCredential,
+  canAdjustShiftTimes = false,
+  onAdjustGuardShiftTime,
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const { formFactor } = useDevice();
@@ -302,6 +309,8 @@ export function StaffGuardsPanel({
       onOpenJob,
       onOpenGuardApplication,
       onOpenGuardCredential,
+      canAdjustShiftTimes,
+      onAdjustGuardShiftTime,
     };
   }
 

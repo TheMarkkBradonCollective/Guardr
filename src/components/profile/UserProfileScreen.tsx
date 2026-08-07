@@ -25,6 +25,8 @@ import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimit
 import { AppButton } from '../ui/AppButton';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import type { GuardProfileTab } from '../../lib/appNavigation';
+import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
+import type { SecurityRequest } from '../../types';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
@@ -74,6 +76,7 @@ interface UserProfileScreenProps {
   onSaveVehicleInsurance?: (
     policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
   ) => Promise<void>;
+  requests?: SecurityRequest[];
 }
 
 export function UserProfileScreen({
@@ -90,6 +93,7 @@ export function UserProfileScreen({
   onSubmitIdentityVerification,
   onSaveInsurance,
   onSaveVehicleInsurance,
+  requests = [],
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
@@ -302,6 +306,7 @@ export function UserProfileScreen({
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
               { id: 'inventory', label: 'Inventory' },
+              { id: 'timesheet', label: 'Timesheet' },
             ]}
           />
         </div>
@@ -358,6 +363,10 @@ export function UserProfileScreen({
               });
             }}
           />
+        </section>
+      ) : profileTab === 'timesheet' && canBuildResume && guard ? (
+        <section className="border-b border-brand-border space-y-6">
+          <GuardTimesheetPanel guardId={guard.id} requests={requests} />
         </section>
       ) : (
         <>
