@@ -10,6 +10,73 @@ Use the posts below on classified sites, social platforms, and local boards. Cop
 
 ---
 
+## Free places to post (start here)
+
+**Nextdoor charges for business promotion** — skip paid Nextdoor ads unless you budget for it. Everything below is **free** at the listing/post level (no ad spend required).
+
+### Tier 1 — highest impact, do these first
+
+| Platform | Cost | Best for | What to post |
+|----------|------|----------|--------------|
+| [Google Business Profile](https://business.google.com) | Free | Clients finding you in Maps / “security near me” | Claim listing, add site, services, photos; post updates with link to guardr.co |
+| [Facebook Marketplace](https://www.facebook.com/marketplace) | Free | Clients + guard recruitment | Services listing — use **banner-clients** or **banner-guards** + copy from sections below |
+| **Facebook Groups** | Free | Local businesses, venues, events | Join city business / venue / nightlife groups; share helpful post (not spam) — see Facebook Groups section |
+| [Craigslist](https://www.craigslist.org) | Free* | Clients + guards | Services offered + gigs wanted — *some cities charge for job posts; services are usually free |
+| [LinkedIn](https://www.linkedin.com) | Free | B2B clients, corporate, venues | Company or personal post — marketplace announcement |
+| [Instagram](https://www.instagram.com) | Free | Venues, events, nightlife | Feed post + story with banner PNG; link in bio → guardr.co |
+
+### Tier 2 — solid free reach
+
+| Platform | Cost | Best for | Notes |
+|----------|------|----------|-------|
+| [OfferUp](https://www.offerup.com) | Free | Local services | Services listing |
+| [Reddit](https://www.reddit.com) | Free | Tech-aware clients, guards | City sub + r/smallbusiness — follow self-promo rules |
+| [X (Twitter)](https://x.com) | Free | Quick announcements | Short posts + banner image |
+| [Yelp](https://biz.yelp.com) | Free listing | Local discovery | Free business page — **ads cost extra** |
+| [Bing Places](https://www.bingplaces.com) | Free | Local search (Bing) | Mirror your Google Business info |
+| [Apple Business Connect](https://businessconnect.apple.com) | Free | Maps on iPhone | Same NAP as Google |
+| [Facebook Page](https://www.facebook.com/pages/create) | Free | Ongoing updates | Pin a post with client + guard CTAs |
+| [TikTok](https://www.tiktok.com) | Free | Guard recruitment, venues | Short “how Guardr works” clip or static banner as video |
+
+### Tier 3 — free classifieds & directories (lower traffic, still free)
+
+| Platform | Notes |
+|----------|-------|
+| [Locanto](https://www.locanto.com) | Free local classifieds — services + jobs |
+| [Oodle](https://www.oodle.com) | Free classified aggregator |
+| [ClassifiedAds.com](https://www.classifiedads.com) | Free service ads |
+| [Adpost](https://www.adpost.com) | Free classifieds |
+| [ListYourBusiness.us](https://listyourbusiness.us) | Free US directory listing |
+| [Poyst](https://www.poyst.com) | Free local business page |
+
+### In-person / community (free)
+
+- **Venue & promoter relationships** — ask to be mentioned in their existing FB/event posts (they post, you don’t pay)
+- **Chamber of commerce** — networking events (membership may cost; some have free community calendars)
+- **Flyer** — print the ASCII flyer section at shops, job fairs, guard training schools
+- **Email** — blast to your existing client/guard list (free if you have the list)
+
+### Usually costs money — skip unless you budget
+
+| Platform | Why |
+|----------|-----|
+| **Nextdoor** | Business ads / lead products cost money; organic neighbor posts for businesses are limited |
+| Thumbtack | Pay per lead |
+| Yelp Ads | Paid placement |
+| Facebook / Instagram **boosted** posts | Paid |
+| Google Ads | Paid |
+| Indeed / ZipRecruiter job posts | Often paid for employers |
+
+### Recommended weekly free routine (30 min)
+
+1. Post or refresh **Facebook Marketplace** (client listing + guard listing).
+2. Share once in **2–3 local Facebook Groups** (different copy each time).
+3. **Google Business Profile** — one update post with link.
+4. **Craigslist** — refresh services ad if your city allows (repost weekly in active markets).
+5. **Instagram** story** with banner PNG.
+
+---
+
 ## Promo banners (PNG)
 
 Ready-to-upload graphics (1200×630 @2x → 2400×1260). Source HTML + render script included.
@@ -19,7 +86,7 @@ Ready-to-upload graphics (1200×630 @2x → 2400×1260). Source HTML + render sc
 | [`assets/marketing/banners/banner-brand-og.png`](../../assets/marketing/banners/banner-brand-og.png) | Brand / social OG — SECURITY MARKETPLACE |
 | [`assets/marketing/banners/banner-clients.png`](../../assets/marketing/banners/banner-clients.png) | Facebook Marketplace / client ads — Post a job |
 | [`assets/marketing/banners/banner-guards.png`](../../assets/marketing/banners/banner-guards.png) | Guard recruitment — Open shifts on the map |
-| [`assets/marketing/banners/banner-nextdoor.png`](../../assets/marketing/banners/banner-nextdoor.png) | Nextdoor / local businesses — Licensed security nearby |
+| [`assets/marketing/banners/banner-nextdoor.png`](../../assets/marketing/banners/banner-nextdoor.png) | Local businesses — Licensed security nearby *(Nextdoor ads cost; use on free channels too)* |
 
 Re-render: `node scripts/render-promo-banners.mjs`
 
@@ -27,8 +94,9 @@ Re-render: `node scripts/render-promo-banners.mjs`
 
 ## Table of contents
 
+0. [Free places to post](#free-places-to-post-start-here)
 1. [Facebook Marketplace](#facebook-marketplace)
-2. [Nextdoor](#nextdoor)
+2. [Nextdoor](#nextdoor) *(paid ads — optional)*
 3. [Craigslist](#craigslist)
 4. [OfferUp](#offerup)
 5. [Facebook feed / Groups](#facebook-feed--groups)
@@ -114,7 +182,9 @@ https://www.guardr.co | support@guardr.co
 
 ## Nextdoor
 
-*Nextdoor favors neighbor-to-neighbor tone — helpful, local, not salesy. Post in **For Sale & Free → Services** or as a neighborhood recommendation. Follow your neighborhood’s self-promotion rules.*
+**Note:** Nextdoor **business promotion and ads cost money**. Organic neighbor recommendations can work if someone else recommends you, but don’t rely on Nextdoor as a free channel. Use the copy below only if you pay for ads or get invited to post in a free neighborhood business context.
+
+*If posting for free elsewhere, reuse this copy on Facebook Groups, Craigslist, or Google Business — same “local businesses” angle.*
 
 ### Post A — Clients (business owners & property managers)
 
