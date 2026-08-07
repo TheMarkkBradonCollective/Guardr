@@ -1017,11 +1017,16 @@ CREATE TABLE IF NOT EXISTS platform_cities (
   recommend_open BOOLEAN NOT NULL DEFAULT FALSE,
   sort_order INTEGER NOT NULL DEFAULT 0,
   credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb,
+  city_manager_id TEXT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_by TEXT
 );
 
 ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS city_manager_id TEXT;
+
+COMMENT ON COLUMN platform_cities.city_manager_id IS
+  'Manager staff ID responsible for this city market; at most one manager per city';
 
 COMMENT ON TABLE platform_cities IS 'Director-controlled city rollout — open, closed, or waitlist with audience targeting.';
 COMMENT ON COLUMN platform_cities.status IS 'open = live; closed = deny applications; waitlist = accept but hold staff release';
@@ -1030,6 +1035,18 @@ COMMENT ON COLUMN platform_cities.recommend_open IS 'Manager recommendation for 
 
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS managed_cities JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS assigned_manager_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS headline TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS summary TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS about TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS specialties JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS personal_email TEXT;
+
+COMMENT ON COLUMN staff.personal_email IS 'Optional personal contact email; staff.email remains work/login email';
+
+COMMENT ON COLUMN staff.headline IS 'Professional title shown on staff roster profiles';
+COMMENT ON COLUMN staff.summary IS 'Short intro shown on staff roster cards';
+COMMENT ON COLUMN staff.about IS 'Full background / about section for staff profiles';
+COMMENT ON COLUMN staff.specialties IS 'Platform focus areas (guard verification, payouts, etc.)';
 
 COMMENT ON COLUMN staff.managed_cities IS 'California cities this staff member may operate or manage';
 COMMENT ON COLUMN staff.assigned_manager_ids IS 'Manager staff IDs supervising this account (set by Director+)';
@@ -1530,6 +1547,7 @@ END $$;
 -- ── OPTIONAL: Founder and Director staff accounts ───────────────────────────────
 INSERT INTO staff (
   id, name, email, badge_number, avatar, phone, bio,
+  headline, summary, about, specialties,
   staff_role, user_status
 ) VALUES
   (
@@ -1539,21 +1557,33 @@ INSERT INTO staff (
     'OWN-00001',
     '', '',
     'Founder — Platform governance.',
+    'Founder & Platform Governance',
+    'Oversees Guardr strategy, staff governance, and the standards we hold every market to.',
+    'Markeith White founded Guardr to bring licensed security professionals and clients together on one accountable platform. He sets platform policy, approves executive staff, and keeps city rollouts aligned with how the field actually operates.',
+    '["Team leadership", "City markets", "Analytics & reporting"]'::jsonb,
     'Founder', 'active'
   ),
   (
     'staff-director-tyrone',
     'Tyrone Johnson',
     't.johnson@signaturesecurityspecialist.com',
-    'DIR-00002',
+    'DIR-00001',
     '', '',
     'Director — Platform operations.',
+    'Director of Platform Operations',
+    'Runs day-to-day operations — guard verification, job flow, payouts, and the command center the team works from.',
+    'Tyrone keeps Guardr moving: credential reviews, job approvals, disputes, and the financial rails guards and clients depend on. He is the escalation point when markets need a steady hand.',
+    '["Guard verification", "Job operations", "Payments & payouts", "Disputes & incidents"]'::jsonb,
     'Director', 'active'
   )
 ON CONFLICT (email) DO UPDATE SET
   name = EXCLUDED.name,
   badge_number = EXCLUDED.badge_number,
   staff_role = EXCLUDED.staff_role,
+  headline = EXCLUDED.headline,
+  summary = EXCLUDED.summary,
+  about = EXCLUDED.about,
+  specialties = EXCLUDED.specialties,
   user_status = 'active';
 
 INSERT INTO staff (

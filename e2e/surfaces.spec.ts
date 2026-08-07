@@ -25,6 +25,19 @@ async function waitForAppReady(page: Page) {
   await loading.waitFor({ state: 'detached', timeout: 30_000 }).catch(() => {});
 }
 
+/** SurfaceProvider publishes `data-surface` on first paint — wait for it explicitly. */
+async function waitForSurface(page: Page, expected?: string) {
+  await waitForAppReady(page);
+  await page.waitForFunction(
+    (surface) => {
+      const current = document.body.dataset.surface;
+      return surface ? current === surface : Boolean(current);
+    },
+    expected,
+    { timeout: 30_000 },
+  );
+}
+
 async function surfaceOf(page: Page): Promise<string | undefined> {
   return page.evaluate(() => document.body.dataset.surface);
 }
@@ -33,7 +46,7 @@ test.describe('surface resolution', () => {
   test('a phone viewport loads the mobile application', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'mobile');
     expect(await surfaceOf(page)).toBe('mobile');
     await expect(page.locator('body.sf-mobile')).toHaveCount(1);
     await expect(page.locator('body.sf-tablet, body.sf-desktop')).toHaveCount(0);
@@ -42,7 +55,7 @@ test.describe('surface resolution', () => {
   test('a tablet viewport loads the tablet application', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'tablet');
     expect(await surfaceOf(page)).toBe('tablet');
     await expect(page.locator('body.sf-tablet')).toHaveCount(1);
   });
@@ -50,7 +63,7 @@ test.describe('surface resolution', () => {
   test('a wide pointer viewport loads the desktop operations centre', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'desktop');
     expect(await surfaceOf(page)).toBe('desktop');
     await expect(page.locator('body.sf-desktop')).toHaveCount(1);
   });
@@ -58,12 +71,12 @@ test.describe('surface resolution', () => {
   test('the ?ui= override forces a surface and is marked as forced', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/?ui=mobile');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'mobile');
     expect(await surfaceOf(page)).toBe('mobile');
     expect(await page.evaluate(() => document.body.dataset.surfaceMode)).toBe('forced');
 
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'desktop');
     expect(await surfaceOf(page)).toBe('desktop');
     expect(await page.evaluate(() => document.body.dataset.surfaceMode)).toBe('auto');
   });
@@ -81,12 +94,12 @@ test.describe('surface resolution', () => {
 
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'mobile');
     const mobile = await read();
 
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'desktop');
     const desktop = await read();
 
     // Touch surfaces clear the 48px hit-area floor; the pointer surface trades
@@ -103,17 +116,17 @@ test.describe('surface resolution', () => {
     // status bar, and command palette. Neither may render the other's chrome.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'mobile');
     await expect(page.locator('.sfd-sidebar, .sfd-statusbar, .sfd-palette, .sft-rail')).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/?ui=desktop');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'desktop');
     await expect(page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split')).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/?ui=tablet');
-    await waitForAppReady(page);
+    await waitForSurface(page, 'tablet');
     await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar')).toHaveCount(0);
   });
 });

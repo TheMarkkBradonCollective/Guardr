@@ -7,6 +7,8 @@ interface StaffOperationsAccessPickerProps {
   selected: string[];
   onChange: (selected: string[]) => void;
   maxListHeightClassName?: string;
+  /** When single, staff may only be assigned to one city. */
+  mode?: 'single' | 'multiple';
 }
 
 function matchesOperationsCitySearch(cityName: string, query: string): boolean {
@@ -21,6 +23,7 @@ export function StaffOperationsAccessPicker({
   selected,
   onChange,
   maxListHeightClassName = 'max-h-48',
+  mode = 'multiple',
 }: StaffOperationsAccessPickerProps) {
   const [search, setSearch] = useState('');
   const selectedSet = useMemo(() => new Set(selected), [selected]);
@@ -31,6 +34,10 @@ export function StaffOperationsAccessPicker({
   );
 
   const toggle = (cityName: string) => {
+    if (mode === 'single') {
+      onChange(selectedSet.has(cityName) ? [] : [cityName]);
+      return;
+    }
     onChange(
       selectedSet.has(cityName)
         ? selected.filter((city) => city !== cityName)
@@ -43,8 +50,12 @@ export function StaffOperationsAccessPicker({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-brand-text-muted">
           {selected.length === 0
-            ? 'No Service Areas cities assigned'
-            : `${selected.length} cit${selected.length === 1 ? 'y' : 'ies'} assigned`}
+            ? mode === 'single'
+              ? 'No city assigned'
+              : 'No Service Areas cities assigned'
+            : mode === 'single'
+              ? selected[0]
+              : `${selected.length} cit${selected.length === 1 ? 'y' : 'ies'} assigned`}
         </p>
         {selected.length > 0 && (
           <button
@@ -81,7 +92,8 @@ export function StaffOperationsAccessPicker({
               >
                 <input
                   id={inputId}
-                  type="checkbox"
+                  type={mode === 'single' ? 'radio' : 'checkbox'}
+                  name={mode === 'single' ? `${id}-city` : undefined}
                   checked={checked}
                   onChange={() => toggle(cityName)}
                   className="rounded border-brand-border"

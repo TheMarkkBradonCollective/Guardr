@@ -32,6 +32,10 @@ export type StaffGuardDetailTab = 'profile' | 'certs' | 'inventory' | 'performan
 
 export type GuardProfileTab = 'profile' | 'certs' | 'inventory' | 'timesheet';
 
+export type StaffProfileTab = 'profile' | 'timesheets';
+
+export type StaffTeamDetailTab = 'profile' | 'timesheets';
+
 export interface AppRoute {
   role: AppRole;
   staffSection?: StaffSection;

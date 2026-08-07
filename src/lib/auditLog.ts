@@ -14,6 +14,7 @@ export type AuditAction =
   | 'guard_application_revoked'
   | 'staff_approved'
   | 'staff_rejected'
+  | 'staff_role_updated'
   | 'client_approved'
   | 'client_application_revision_requested'
   | 'client_application_revoked'
@@ -32,6 +33,7 @@ export type AuditAction =
   | 'staff_time_entry_deleted'
   | 'guard_shift_time_adjusted'
   | 'city_market_updated'
+  | 'city_manager_assigned'
   | 'staff_city_access_updated'
   | 'bulk_action'
   | 'password_changed'
@@ -141,6 +143,7 @@ export async function loadAuditLog(limit = 100): Promise<AuditLogEntry[]> {
 
 const AUDIT_ACTION_LABELS: Partial<Record<AuditAction, string>> = {
   city_market_updated: 'Service Areas updated',
+  city_manager_assigned: 'City manager assigned',
   staff_city_access_updated: 'Service Areas access updated',
 };
 

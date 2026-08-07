@@ -681,6 +681,8 @@ export interface SecurityGuard {
   middleName?: string;
   lastName?: string;
   email: string;
+  /** Staff-only personal contact email (not used for sign-in). */
+  personalEmail?: string;
   badgeNumber: string;
   avatar: string;
   phone: string;

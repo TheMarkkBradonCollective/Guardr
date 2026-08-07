@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StaffRole, PlatformRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
@@ -6,12 +6,25 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import type { PlatformCity } from '../../lib/platformCities';
 import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
+import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
+
+import {
+  nextStaffBadgeNumber,
+  staffBadgeMatchesRole,
+  validateStaffBadgeNumber,
+} from '../../lib/staffBadgeNumber';
+import { PersonNameFields } from '../profile/PersonNameFields';
+import { personNameFromPayload } from '../../lib/personName';
 
 export interface StaffAddStaffInput {
   email: string;
+  personalEmail?: string;
   badgeNumber: string;
   staffRole: StaffRole;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   managedCities?: string[];
   assignedManagerIds?: string[];
 }
@@ -23,6 +36,7 @@ interface StaffAddStaffFormProps {
   platformCities?: PlatformCity[];
   actorManagedCities?: string[];
   managerOptions?: Array<{ id: string; badgeNumber?: string; name: string }>;
+  roster: Array<{ badgeNumber: string; isStaff?: boolean }>;
   onAdd: (input: StaffAddStaffInput) => Promise<string | void>;
   onCreated?: (staffId: string) => void;
 }
@@ -34,11 +48,16 @@ export function StaffAddStaffForm({
   platformCities = [],
   actorManagedCities = [],
   managerOptions = [],
+  roster = [],
   onAdd,
   onCreated,
 }: StaffAddStaffFormProps) {
   const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('staff');
   const [email, setEmail] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [badge, setBadge] = useState('');
   const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
   const [managedCities, setManagedCities] = useState<string[]>([]);
@@ -52,8 +71,32 @@ export function StaffAddStaffForm({
     [actorManagedCities, actorRole, platformCities]
   );
 
+  const suggestedBadge = useMemo(
+    () => nextStaffBadgeNumber(role, roster.map((member) => ({ badgeNumber: member.badgeNumber, isStaff: true }))),
+    [role, roster]
+  );
+
+  const applySuggestedBadge = () => setBadge(suggestedBadge);
+
+  useEffect(() => {
+    if (!open) return;
+    setBadge((current) => {
+      if (!current.trim() || staffBadgeMatchesRole(current, role)) {
+        return suggestedBadge;
+      }
+      return current;
+    });
+    if (isExecutiveStaffRole(role)) {
+      setManagedCities([]);
+    }
+  }, [open, role, suggestedBadge]);
+
   const reset = () => {
     setEmail('');
+    setPersonalEmail('');
+    setFirstName('');
+    setMiddleName('');
+    setLastName('');
     setBadge('');
     setRole(assignableRoles[0] ?? 'Moderator');
     setManagedCities([]);
@@ -72,23 +115,37 @@ export function StaffAddStaffForm({
     e.preventDefault();
     setError('');
     setMsg('');
+    const normalizedName = personNameFromPayload({ firstName, middleName, lastName });
+    if (!normalizedName.firstName.trim() || !normalizedName.lastName.trim()) {
+      setError('First and last name are required.');
+      return;
+    }
     if (!email.trim() || !badge.trim()) {
       setError('Staff ID and email are required.');
+      return;
+    }
+    const badgeError = validateStaffBadgeNumber(badge, role);
+    if (badgeError) {
+      setError(badgeError);
       return;
     }
     setSaving(true);
     try {
       const staffId = await onAdd({
         email: email.trim(),
-        badgeNumber: badge.trim(),
+        personalEmail: personalEmail.trim() || undefined,
+        badgeNumber: badge.trim().toUpperCase(),
         staffRole: role,
+        firstName: normalizedName.firstName,
+        middleName: normalizedName.middleName,
+        lastName: normalizedName.lastName,
         managedCities: managedCities.length > 0 ? managedCities : undefined,
         assignedManagerIds: assignedManagerIds.length > 0 ? assignedManagerIds : undefined,
       });
       setMsg(
         requiresDirectorApproval
           ? `${badge.trim()} submitted for Director approval.`
-          : `${badge.trim()} added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+          : `${normalizedName.name} (${badge.trim()}) added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
       );
       reset();
       if (staffId) onCreated?.(staffId);
@@ -124,28 +181,62 @@ export function StaffAddStaffForm({
         }
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          <PersonNameFields
+            firstName={firstName}
+            middleName={middleName}
+            lastName={lastName}
+            onFirstNameChange={setFirstName}
+            onMiddleNameChange={setMiddleName}
+            onLastNameChange={setLastName}
+            editing
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="uber-label block mb-1">Staff ID</label>
-              <input
-                type="text"
-                value={badge}
-                onChange={(e) => setBadge(e.target.value)}
-                className="uber-input w-full"
-                placeholder="STF-00001"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={badge}
+                  onChange={(e) => setBadge(e.target.value.toUpperCase())}
+                  className="uber-input w-full"
+                  placeholder={suggestedBadge}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={applySuggestedBadge}
+                  className="app-button-outline !w-auto !h-10 !px-3 shrink-0"
+                >
+                  Use next
+                </button>
+              </div>
+              <p className="text-xs text-brand-text-muted mt-1">
+                Role prefix only — never STF. Next for {role}: {suggestedBadge}
+              </p>
             </div>
             <div>
-              <label className="uber-label block mb-1">Email</label>
+              <label className="uber-label block mb-1">Work email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="uber-input w-full"
-                placeholder="staff@example.com"
+                placeholder="name@signaturesecurityspecialist.com"
                 required
               />
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Personal email</label>
+              <input
+                type="email"
+                value={personalEmail}
+                onChange={(e) => setPersonalEmail(e.target.value)}
+                className="uber-input w-full"
+                placeholder="personal@gmail.com"
+              />
+              <p className="text-xs text-brand-text-muted mt-1">
+                Optional contact email. Work email is used to sign in.
+              </p>
             </div>
             <div className="sm:col-span-2">
               <label className="uber-label block mb-1">Role</label>
@@ -163,11 +254,13 @@ export function StaffAddStaffForm({
             </div>
           </div>
 
-          {assignableCityNames.length > 0 && (
+          {staffRequiresCityAssignment(role) && assignableCityNames.length > 0 && (
             <div className="space-y-2">
-              <label className="uber-label block">Service Areas access</label>
+              <label className="uber-label block">City assignment</label>
               <p className="text-xs text-brand-text-muted">
-                Assign which cities this staff member may manage in Service Areas.
+                {role === 'Manager'
+                  ? 'Managers are usually assigned as city managers in Service Areas. You can also select cities here when onboarding.'
+                  : 'Assign the cities this staff member may work in.'}
               </p>
               <StaffOperationsAccessPicker
                 id="add-staff-operations-access"

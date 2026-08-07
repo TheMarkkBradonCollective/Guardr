@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
+import type { PlatformSettings } from '../../lib/platformSettings';
+import type { StaffTeamDetailTab } from '../../lib/appNavigation';
 import {
   matchesStaffTeamFilter,
   staffRosterSortRank,
@@ -12,6 +14,8 @@ import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import type { ProfileSavePayload } from '../profile/UserProfileScreen';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -29,18 +33,24 @@ interface StaffTeamPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
     email: string;
+    personalEmail?: string;
     badgeNumber: string;
     staffRole: StaffRole;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
     managedCities?: string[];
     assignedManagerIds?: string[];
   }) => Promise<string>;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  onUpdateStaffProfile?: (staffId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  platformSettings?: PlatformSettings;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
@@ -62,12 +72,15 @@ export function StaffTeamPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  onUpdateStaffProfile,
+  platformSettings,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('pending');
+  const [staffTeamTab, setStaffTeamTab] = useState<StaffTeamDetailTab>('profile');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -75,6 +88,7 @@ export function StaffTeamPanel({
   const setSelectedId = (id: string | null) => {
     if (!isControlled) setInternalSelectedId(id);
     onSelectedIdChange?.(id);
+    if (id) setStaffTeamTab('profile');
   };
 
   useEffect(() => {
@@ -88,6 +102,7 @@ export function StaffTeamPanel({
       (g) =>
         g.name.toLowerCase().includes(search.toLowerCase()) ||
         g.email.toLowerCase().includes(search.toLowerCase()) ||
+        (g.personalEmail ?? '').toLowerCase().includes(search.toLowerCase()) ||
         (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
     )
     .filter((member) => matchesStaffTeamFilter(member, statusFilter))
@@ -111,6 +126,7 @@ export function StaffTeamPanel({
             platformCities={platformCities}
             actorManagedCities={actorManagedCities}
             managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
+            roster={guards.filter((g) => g.isStaff)}
             onAdd={onAddStaff}
             onCreated={(staffId) => {
               setSearch('');
@@ -164,15 +180,17 @@ export function StaffTeamPanel({
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           renderItem={(member, isActive, onSelect) => {
             const accountStatus = member.userStatus || 'active';
+            const displayName = getStaffDisplayName(member);
 
             return (
               <WfListCard
-                avatar={<ProfileAvatar src={member.avatar} name={member.badgeNumber || member.name} size="sm" rounded="lg" />}
-                title={member.badgeNumber || member.name}
-                subtitle={`${member.staffRole || 'Staff'} · ${member.email}`}
+                avatar={<ProfileAvatar src={member.avatar} name={displayName} size="sm" rounded="lg" />}
+                title={displayName}
+                subtitle={member.email}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
                     <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
+                    <span className="text-xs text-brand-text-muted">{member.badgeNumber}</span>
                     <span className="capitalize">{accountStatus}</span>
                   </div>
                 }
@@ -184,6 +202,7 @@ export function StaffTeamPanel({
           renderDetail={(member, options) => (
             <StaffTeamDetailPanel
               member={member}
+              roster={filtered}
               platformCities={platformCities}
               managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
               currentUserId={currentUserId}
@@ -196,6 +215,10 @@ export function StaffTeamPanel({
               onRejectStaffAccount={onRejectStaffAccount}
               onUpdateStaffRole={onUpdateStaffRole}
               onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+              onUpdateStaffProfile={onUpdateStaffProfile}
+              platformSettings={platformSettings}
+              staffTeamTab={staffTeamTab}
+              onStaffTeamTabChange={setStaffTeamTab}
               onBack={options?.onBack}
             />
           )}

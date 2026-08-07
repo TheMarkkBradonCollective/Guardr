@@ -15,6 +15,7 @@ import {
   getAssignableStaffRoles,
   canModerateStaffMember,
   canAssignStaffCityAccess,
+  canEditStaffProfile,
   platformStaffRank,
   staffRoleRank,
 } from '../../lib/permissions';
@@ -23,16 +24,29 @@ import {
   getAssignableCityNamesForStaffAccess,
   normalizeManagedCities,
 } from '../../lib/platformCities';
+import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { StaffProfileSection, type StaffProfilePayload } from '../profile/StaffProfileSection';
+import type { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail, Phone } from 'lucide-react';
+import { getStaffDisplayName } from '../../lib/staffProfile';
+import {
+  nextStaffBadgeNumberForRoleChange,
+  STAFF_BADGE_PREFIX,
+} from '../../lib/staffBadgeNumber';
+import type { PlatformSettings } from '../../lib/platformSettings';
+import type { StaffTeamDetailTab } from '../../lib/appNavigation';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffTimesheetsPanel } from './StaffTimesheetsPanel';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
+  roster?: SecurityGuard[];
   platformCities?: PlatformCity[];
   managerOptions?: SecurityGuard[];
   currentUserId: string;
@@ -43,11 +57,15 @@ interface StaffTeamDetailPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  onUpdateStaffProfile?: (staffId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  platformSettings?: PlatformSettings;
+  staffTeamTab?: StaffTeamDetailTab;
+  onStaffTeamTabChange?: (tab: StaffTeamDetailTab) => void;
   onBack?: () => void;
 }
 
@@ -73,6 +91,7 @@ function staffModerationBlockedReason(
 
 export function StaffTeamDetailPanel({
   member,
+  roster = [],
   platformCities = [],
   managerOptions = [],
   currentUserId,
@@ -85,6 +104,10 @@ export function StaffTeamDetailPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  onUpdateStaffProfile,
+  platformSettings,
+  staffTeamTab = 'profile',
+  onStaffTeamTabChange,
   onBack,
 }: StaffTeamDetailPanelProps) {
   const accountStatus = member.userStatus || 'active';
@@ -101,8 +124,31 @@ export function StaffTeamDetailPanel({
   const [cityError, setCityError] = useState('');
   const [savingCities, setSavingCities] = useState(false);
   const [reviewPending, setReviewPending] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileMsg, setProfileMsg] = useState('');
+  const [phone, setPhone] = useState(member.phone ?? '');
+  const [personalEmail, setPersonalEmail] = useState(member.personalEmail ?? '');
+  const [staffProfile, setStaffProfile] = useState<StaffProfilePayload>({
+    headline: member.headline ?? '',
+    summary: member.summary ?? '',
+    about: member.about ?? member.bio ?? '',
+    specialties: member.specialties ?? [],
+  });
 
   useEffect(() => {
+    setEditingProfile(false);
+    setProfileError('');
+    setProfileMsg('');
+    setPhone(member.phone ?? '');
+    setPersonalEmail(member.personalEmail ?? '');
+    setStaffProfile({
+      headline: member.headline ?? '',
+      summary: member.summary ?? '',
+      about: member.about ?? member.bio ?? '',
+      specialties: member.specialties ?? [],
+    });
     setRole(member.staffRole || 'Moderator');
     setRoleMsg('');
     setRoleError('');
@@ -110,22 +156,70 @@ export function StaffTeamDetailPanel({
     setAssignedManagerIds(member.assignedManagerIds ?? []);
     setCityMsg('');
     setCityError('');
-  }, [member.id, member.staffRole, member.managedCities, member.assignedManagerIds]);
+  }, [
+    member.id,
+    member.staffRole,
+    member.managedCities,
+    member.assignedManagerIds,
+    member.headline,
+    member.summary,
+    member.about,
+    member.bio,
+    member.specialties,
+    member.phone,
+    member.personalEmail,
+  ]);
 
   const platformRole = staffRoleToPlatformRole(role);
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
   const canModifyMember =
     canManageStaff && canModerateStaffMember(currentUserRole, currentUserId, member);
   const blockedReason = staffModerationBlockedReason(currentUserRole, currentUserId, member);
-  const canEditCityAccess =
+  const canEditProfile =
+    Boolean(onUpdateStaffProfile) &&
+    canEditStaffProfile(currentUserRole, currentUserId, member);
+  const memberRequiresCity = staffRequiresCityAssignment(member.staffRole);
+  const memberIsExecutive = isExecutiveStaffRole(member.staffRole);
+  const memberIsManager = member.staffRole === 'Manager';
+  const canEditMemberCityAccess =
     canModifyMember &&
     canAssignStaffCityAccess({ role: currentUserRole }) &&
+    memberRequiresCity &&
+    !memberIsManager &&
     Boolean(onUpdateStaffCityAccess);
   const assignableCityNames = getAssignableCityNamesForStaffAccess(
     platformCities,
     currentUserRole,
     actorManagedCities
   );
+
+  const handleProfileSave = async () => {
+    if (!onUpdateStaffProfile) return;
+    setProfileError('');
+    setProfileMsg('');
+    setProfileSaving(true);
+    try {
+      await onUpdateStaffProfile(member.id, {
+        name: member.name,
+        firstName: member.firstName ?? member.name.split(' ')[0] ?? '',
+        middleName: member.middleName,
+        lastName: member.lastName ?? member.name.split(' ').slice(-1)[0] ?? '',
+        phone: phone.trim(),
+        personalEmail: personalEmail.trim(),
+        bio: staffProfile.about,
+        headline: staffProfile.headline,
+        summary: staffProfile.summary,
+        about: staffProfile.about,
+        specialties: staffProfile.specialties,
+      });
+      setProfileMsg('Profile updated.');
+      setEditingProfile(false);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Could not update profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const handleCityAccessSave = async () => {
     if (!onUpdateStaffCityAccess) return;
@@ -147,13 +241,27 @@ export function StaffTeamDetailPanel({
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
-    if (!(await confirmStaffRoleChange(member.name, role))) return;
+    const pendingBadge =
+      role !== member.staffRole
+        ? nextStaffBadgeNumberForRoleChange(role, roster, member.id)
+        : member.badgeNumber;
+    if (!(await confirmStaffRoleChange(
+      getStaffDisplayName(member),
+      role,
+      role !== member.staffRole ? pendingBadge : undefined
+    ))) return;
     setRoleError('');
     setRoleMsg('');
     setSavingRole(true);
     try {
-      await onUpdateStaffRole(member.id, role);
-      setRoleMsg(`Role updated to ${role}.`);
+      const result = await onUpdateStaffRole(member.id, role);
+      const badgeNumber =
+        result && 'badgeNumber' in result ? result.badgeNumber : pendingBadge;
+      setRoleMsg(
+        badgeNumber !== member.badgeNumber
+          ? `Role updated to ${role}. Staff ID is now ${badgeNumber}.`
+          : `Role updated to ${role}.`
+      );
     } catch (err) {
       setRoleError(err instanceof Error ? err.message : 'Could not update role.');
     } finally {
@@ -172,7 +280,8 @@ export function StaffTeamDetailPanel({
     onUpdateUserStatus(member.id, status);
   };
 
-  const displayName = member.badgeNumber || member.name;
+  const displayName = getStaffDisplayName(member);
+  const memberManagedCities = (member.managedCities ?? []).filter(Boolean);
 
   const handleApproveApplication = async () => {
     if (!onApproveStaffAccount) return;
@@ -215,16 +324,39 @@ export function StaffTeamDetailPanel({
         </div>
       )}
 
-      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
-        <ProfileAvatar src={member.avatar} name={member.name} size="lg" rounded="xl" />
+      <div className="staff-profile-header flex items-start gap-4 pb-5 border-b border-brand-border">
+        <ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-lg">{member.badgeNumber || member.name}</h2>
+            <h2 className="font-bold text-lg">{displayName}</h2>
             {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
             {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
           </div>
-          <p className="text-sm text-brand-text-muted mt-1">{member.email}</p>
+          <div className="staff-profile-contact-row mt-3">
+            <a href={`mailto:${member.email}`} className="staff-profile-contact-link">
+              <Mail className="w-3.5 h-3.5" aria-hidden />
+              <span>
+                <span className="text-brand-text-muted">Work · </span>
+                {member.email}
+              </span>
+            </a>
+            {member.personalEmail?.trim() && (
+              <a href={`mailto:${member.personalEmail}`} className="staff-profile-contact-link">
+                <Mail className="w-3.5 h-3.5" aria-hidden />
+                <span>
+                  <span className="text-brand-text-muted">Personal · </span>
+                  {member.personalEmail}
+                </span>
+              </a>
+            )}
+            {member.phone?.trim() && (
+              <a href={`tel:${member.phone}`} className="staff-profile-contact-link">
+                <Phone className="w-3.5 h-3.5" aria-hidden />
+                {member.phone}
+              </a>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-3">
             <div>
               <p className="wf-metric-label">Staff ID</p>
@@ -234,9 +366,117 @@ export function StaffTeamDetailPanel({
               <p className="wf-metric-label">Account</p>
               <p className="wf-metric-value capitalize">{accountStatus}</p>
             </div>
+            {memberManagedCities.length > 0 && (
+              <div className="col-span-2">
+                <p className="wf-metric-label">Service areas</p>
+                <p className="wf-metric-value">{memberManagedCities.join(', ')}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {platformSettings && onStaffTeamTabChange ? (
+        <div className="staff-guard-detail-tabs">
+          <StaffListFilterTabs
+            aria-label="Staff detail"
+            activeId={staffTeamTab}
+            onChange={(id) => onStaffTeamTabChange(id as StaffTeamDetailTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'timesheets', label: 'Timesheets' },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {staffTeamTab === 'timesheets' && platformSettings ? (
+        <section className="staff-detail-section space-y-3">
+          <StaffTimesheetsPanel
+            staffId={member.id}
+            platformSettings={platformSettings}
+            showManagerHint
+          />
+        </section>
+      ) : (
+        <>
+      {!isPending && (
+        <section className="staff-detail-section space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Team profile</h3>
+            {canEditProfile && !editingProfile && (
+              <AppButton variant="outline" size="sm" onClick={() => setEditingProfile(true)}>
+                Edit profile
+              </AppButton>
+            )}
+          </div>
+          {editingProfile ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block space-y-1 sm:col-span-2">
+                  <span className="uber-label">Phone</span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="uber-input w-full"
+                  />
+                </label>
+                <label className="block space-y-1 sm:col-span-2">
+                  <span className="uber-label">Personal email</span>
+                  <input
+                    type="email"
+                    value={personalEmail}
+                    onChange={(e) => setPersonalEmail(e.target.value)}
+                    className="uber-input w-full"
+                  />
+                </label>
+              </div>
+              <StaffProfileSection
+                member={member}
+                editing
+                payload={staffProfile}
+                onChange={(patch) => setStaffProfile((prev) => ({ ...prev, ...patch }))}
+              />
+              <div className="flex flex-wrap gap-2">
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  onClick={() => void handleProfileSave()}
+                  disabled={profileSaving}
+                >
+                  {profileSaving ? 'Saving…' : 'Save profile'}
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingProfile(false);
+                    setProfileError('');
+                    setPhone(member.phone ?? '');
+                    setPersonalEmail(member.personalEmail ?? '');
+                    setStaffProfile({
+                      headline: member.headline ?? '',
+                      summary: member.summary ?? '',
+                      about: member.about ?? member.bio ?? '',
+                      specialties: member.specialties ?? [],
+                    });
+                  }}
+                  disabled={profileSaving}
+                >
+                  Cancel
+                </AppButton>
+              </div>
+              {profileError && <p className="text-sm text-red-400">{profileError}</p>}
+            </>
+          ) : (
+            <StaffProfileSection member={member} />
+          )}
+          {profileMsg && !editingProfile && (
+            <p className="text-sm text-brand-primary">{profileMsg}</p>
+          )}
+        </section>
+      )}
 
       {isPending && (
         <>
@@ -283,6 +523,12 @@ export function StaffTeamDetailPanel({
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
+        {role !== member.staffRole && (
+          <p className="text-xs text-brand-primary leading-relaxed">
+            Staff ID will change to{' '}
+            {nextStaffBadgeNumberForRoleChange(role, roster, member.id)} ({STAFF_BADGE_PREFIX[role]} series).
+          </p>
+        )}
         {canModifyMember && onUpdateStaffRole ? (
           <div className="space-y-2 max-w-sm">
             <select
@@ -309,12 +555,33 @@ export function StaffTeamDetailPanel({
         )}
       </section>
 
-      {canEditCityAccess && assignableCityNames.length > 0 && (
-        <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">Service Areas access</h3>
+      {memberIsExecutive && (
+        <section className="staff-detail-section space-y-2">
+          <h3 className="text-sm font-semibold">Service areas</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Choose which cities this staff member may manage in Service Areas. Directors control
-            manager assignments; managers may assign cities within their own scope.
+            Directors and Founders run the full platform and are not assigned to a single city.
+          </p>
+        </section>
+      )}
+
+      {memberIsManager && memberRequiresCity && (
+        <section className="staff-detail-section space-y-2">
+          <h3 className="text-sm font-semibold">City assignment</h3>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            City managers are assigned in Service Areas. Only one Manager may run each city.
+          </p>
+          <p className="text-sm">
+            {memberManagedCities.length > 0 ? memberManagedCities.join(', ') : 'No city assigned yet'}
+          </p>
+        </section>
+      )}
+
+      {canEditMemberCityAccess && assignableCityNames.length > 0 && (
+        <section className="staff-detail-section space-y-3">
+          <h3 className="text-sm font-semibold">City assignment</h3>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Assign the cities this staff member may work in. Directors and Founders set city
+            managers in Service Areas.
           </p>
           <StaffOperationsAccessPicker
             id={`staff-ops-access-${member.id}`}
@@ -386,12 +653,7 @@ export function StaffTeamDetailPanel({
           </section>
         )
       )}
-
-      {!isPending && member.bio && (
-        <section className="staff-detail-section">
-          <h3 className="text-sm font-semibold mb-2">Notes</h3>
-          <p className="text-sm text-brand-text-muted leading-relaxed">{member.bio}</p>
-        </section>
+        </>
       )}
     </div>
   );

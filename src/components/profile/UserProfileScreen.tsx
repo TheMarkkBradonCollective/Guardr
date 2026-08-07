@@ -24,13 +24,17 @@ import { Experience, GuardEducation } from '../../types';
 import { AppFormSection, AppScreen, AppDashboardZone } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
-import type { GuardProfileTab } from '../../lib/appNavigation';
+import type { GuardProfileTab, StaffProfileTab } from '../../lib/appNavigation';
 import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
+import { StaffTimesheetsPanel } from '../staff/StaffTimesheetsPanel';
+import type { PlatformSettings } from '../../lib/platformSettings';
 import type { SecurityRequest } from '../../types';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
+import { StaffProfileSection, type StaffProfilePayload } from './StaffProfileSection';
+import { getStaffDisplayHeadline } from '../../lib/staffProfile';
 import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
@@ -48,6 +52,7 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   hourlyRateRequirement?: number;
   avatar?: string;
   badgeNumber?: string;
+  personalEmail?: string;
 }
 
 interface UserProfileScreenProps {
@@ -77,6 +82,7 @@ interface UserProfileScreenProps {
     policy: Partial<import('../../types').GuardVehicleInsurancePolicy> & { guardId: string }
   ) => Promise<void>;
   requests?: SecurityRequest[];
+  platformSettings?: PlatformSettings;
 }
 
 export function UserProfileScreen({
@@ -94,10 +100,12 @@ export function UserProfileScreen({
   onSaveInsurance,
   onSaveVehicleInsurance,
   requests = [],
+  platformSettings,
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
   const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
+  const [staffProfileTab, setStaffProfileTab] = useState<StaffProfileTab>('profile');
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
@@ -113,7 +121,14 @@ export function UserProfileScreen({
   const [middleName, setMiddleName] = useState(initialName.middleName ?? '');
   const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
+  const [personalEmail, setPersonalEmail] = useState(guard?.personalEmail ?? '');
   const [bio, setBio] = useState(guard?.bio ?? '');
+  const [staffProfile, setStaffProfile] = useState<StaffProfilePayload>({
+    headline: guard?.headline ?? '',
+    summary: guard?.summary ?? guard?.bio ?? '',
+    about: guard?.about ?? '',
+    specialties: guard?.specialties ?? [],
+  });
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
   const [hourlyRate, setHourlyRate] = useState(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
   const [resume, setResume] = useState<GuardResumeSavePayload>({
@@ -145,7 +160,14 @@ export function UserProfileScreen({
     setMiddleName(resolved.middleName ?? '');
     setLastName(resolved.lastName);
     setPhone(guard?.phone ?? client?.phone ?? '');
+    setPersonalEmail(guard?.personalEmail ?? '');
     setBio(guard?.bio ?? '');
+    setStaffProfile({
+      headline: guard?.headline ?? '',
+      summary: guard?.summary ?? guard?.bio ?? '',
+      about: guard?.about ?? '',
+      specialties: guard?.specialties ?? [],
+    });
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
     setHourlyRate(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
     setResume({
@@ -182,7 +204,15 @@ export function UserProfileScreen({
       return { ...base, companyName: companyName.trim() };
     }
     if (isStaffAccount) {
-      return { ...base, bio: bio.trim() };
+      return {
+        ...base,
+        personalEmail: personalEmail.trim(),
+        headline: staffProfile.headline.trim(),
+        summary: staffProfile.summary.trim(),
+        about: staffProfile.about.trim(),
+        specialties: staffProfile.specialties,
+        bio: staffProfile.summary.trim() || staffProfile.about.trim(),
+      };
     }
     if (isGuardAccount) {
       return {
@@ -253,6 +283,10 @@ export function UserProfileScreen({
   );
   const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
   const heroTitle = isStaffAccount && !displayName.trim() ? staffBadgeId || '—' : displayName;
+  const staffHeroSubtitle = isStaffAccount ? getStaffDisplayHeadline({
+    headline: staffProfile.headline,
+    staffRole: guard?.staffRole,
+  }) : undefined;
 
   const profileSidebar = (
     <ProfileHero
@@ -260,7 +294,10 @@ export function UserProfileScreen({
       title={heroTitle}
       subtitle={
         isStaffAccount ? (
-          <p className="text-sm text-brand-text-muted">Staff ID: {staffBadgeId || '—'}</p>
+          <>
+            <p className="text-sm text-brand-text-muted">{staffHeroSubtitle}</p>
+            <p className="text-xs text-brand-text-muted mt-1">Staff ID: {staffBadgeId || '—'}</p>
+          </>
         ) : undefined
       }
       email={currentUser.email}
@@ -307,6 +344,19 @@ export function UserProfileScreen({
               { id: 'certs', label: 'Credentials' },
               { id: 'inventory', label: 'Inventory' },
               { id: 'timesheet', label: 'Timesheet' },
+            ]}
+          />
+        </div>
+      )}
+      {isStaffAccount && platformSettings && guard && (
+        <div className="guard-profile-tabs mb-4">
+          <ListFilterTabs
+            aria-label="Staff profile"
+            activeId={staffProfileTab}
+            onChange={(id) => setStaffProfileTab(id as StaffProfileTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'timesheets', label: 'Timesheets' },
             ]}
           />
         </div>
@@ -367,6 +417,10 @@ export function UserProfileScreen({
       ) : profileTab === 'timesheet' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
           <GuardTimesheetPanel guardId={guard.id} requests={requests} />
+        </section>
+      ) : staffProfileTab === 'timesheets' && isStaffAccount && platformSettings && guard ? (
+        <section className="border-b border-brand-border space-y-6">
+          <StaffTimesheetsPanel staffId={guard.id} platformSettings={platformSettings} />
         </section>
       ) : (
         <>
@@ -435,6 +489,23 @@ export function UserProfileScreen({
           />
         )}
         {isStaffAccount && (
+          <>
+            <Field
+              label="Work email"
+              value={guard?.email ?? currentUser.email}
+              editing={false}
+              readOnly
+            />
+            <Field
+              label="Personal email"
+              value={personalEmail}
+              onChange={setPersonalEmail}
+              editing={editing}
+              type="email"
+            />
+          </>
+        )}
+        {isStaffAccount && (
           <Field label="Staff ID" value={staffBadgeId} editing={false} readOnly />
         )}
         <Field
@@ -445,7 +516,17 @@ export function UserProfileScreen({
           type="tel"
         />
         {isStaffAccount && (
-          <BioField label="Bio / notes" value={bio} onChange={setBio} editing={editing} />
+          <StaffProfileSection
+            member={{
+              ...staffProfile,
+              staffRole: guard?.staffRole,
+              bio: guard?.bio,
+            }}
+            editing={editing}
+            payload={staffProfile}
+            onChange={(patch) => setStaffProfile((current) => ({ ...current, ...patch }))}
+            className="pt-2"
+          />
         )}
         {isGuardAccount && (
           <Field
@@ -513,34 +594,6 @@ export function UserProfileScreen({
       {profileSidebar}
       {profileBody}
     </AppScreen>
-  );
-}
-
-function BioField({
-  label,
-  value,
-  onChange,
-  editing,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  editing: boolean;
-}) {
-  return (
-    <div>
-      <label className="uber-label">{label}</label>
-      {editing ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={4}
-          className="uber-input w-full mt-1 resize-y min-h-[5rem]"
-        />
-      ) : (
-        <p className="text-sm font-medium mt-1 whitespace-pre-wrap">{value || '—'}</p>
-      )}
-    </div>
   );
 }
 

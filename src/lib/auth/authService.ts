@@ -9,6 +9,7 @@ import type { Client, PlatformRole, SecurityGuard, SessionUser, StaffRole } from
 import { resolvePlatformRole, isStaffRole } from '../permissions';
 import { resolvePersonNameParts } from '../personName';
 import { getGuardUserStatus } from '../accountStatus';
+import { staffLoginEmailMatches, staffLoginEmailOrFilter, staffWorkLoginEmail } from '../staffEmail';
 
 export type AuthRole = 'guard' | 'client' | 'staff';
 
@@ -130,6 +131,10 @@ function guardFromRow(row: Record<string, unknown>, isStaff = false): SecurityGu
     middleName: nameParts.middleName,
     lastName: nameParts.lastName,
     email: String(row.email ?? ''),
+    personalEmail:
+      typeof row.personal_email === 'string' && row.personal_email.trim()
+        ? row.personal_email.trim()
+        : undefined,
     badgeNumber: typeof row.badge_number === 'string' ? row.badge_number : '',
     avatar: typeof row.avatar === 'string' ? row.avatar : '',
     phone: typeof row.phone === 'string' ? row.phone : '',
@@ -194,7 +199,9 @@ function findClientProfile(emailLower: string, clients: Client[]): AuthProfile |
 }
 
 function findGuardProfile(emailLower: string, guards: SecurityGuard[]): AuthProfile | null {
-  const guard = guards.find((g) => g.email.trim().toLowerCase() === emailLower);
+  const guard = guards.find((g) =>
+    g.isStaff ? staffLoginEmailMatches(g, emailLower) : g.email.trim().toLowerCase() === emailLower
+  );
   if (!guard) return null;
   return profileFromGuard(guard);
 }
@@ -218,7 +225,7 @@ async function fetchGuardProfileFromDb(emailLower: string): Promise<AuthProfile 
   const { data: staffRow, error: staffError } = await supabase
     .from('staff')
     .select('*')
-    .eq('email', emailLower)
+    .or(staffLoginEmailOrFilter(emailLower))
     .maybeSingle();
   if (!staffError && staffRow) {
     return profileFromGuard(guardFromRow(staffRow as Record<string, unknown>, true));
@@ -311,7 +318,10 @@ export async function signInWithCredentials(
   }
 
   if (profile.authUserId) {
-    const ok = await trySupabaseSignIn(emailLower, password);
+    const supabaseEmail = profile.guard?.isStaff
+      ? staffWorkLoginEmail(profile.guard)
+      : emailLower;
+    const ok = await trySupabaseSignIn(supabaseEmail, password);
     if (ok) {
       return {
         status: 'ok',
