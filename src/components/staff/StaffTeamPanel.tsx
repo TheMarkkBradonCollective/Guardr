@@ -12,7 +12,7 @@ import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
-import { getStaffDisplayName, getStaffProfileSnippet } from '../../lib/staffProfile';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -172,13 +172,12 @@ export function StaffTeamPanel({
           renderItem={(member, isActive, onSelect) => {
             const accountStatus = member.userStatus || 'active';
             const displayName = getStaffDisplayName(member);
-            const snippet = getStaffProfileSnippet(member);
 
             return (
               <WfListCard
                 avatar={<ProfileAvatar src={member.avatar} name={displayName} size="sm" rounded="lg" />}
                 title={displayName}
-                subtitle={snippet}
+                subtitle={member.email}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
                     <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
