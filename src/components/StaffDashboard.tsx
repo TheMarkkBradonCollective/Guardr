@@ -6,7 +6,6 @@ import {
   Experience,
   GuardEducation,
   GuardPayoutInvoice,
-  GuardStandingCrewMember,
   Payment,
   SecurityGuard,
   SecurityRequest,
@@ -17,8 +16,6 @@ import {
   JobChatThread,
   JobChatMessage,
   StaffMessage,
-  TeamChatThread,
-  TeamChatMessage,
 } from '../types';
 import {
   canAccessFinancialControls,
@@ -38,6 +35,7 @@ import {
   canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
+  canViewStaffCompensation,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
   canViewAnalytics,
@@ -45,7 +43,7 @@ import {
   canViewIncidents,
   canViewStats,
   canViewViolations,
-  canManageCrews as roleCanManageCrews,
+  canAdjustGuardShiftTimes,
   isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -80,7 +78,6 @@ import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
 import type { StaffAddClientInput } from './staff/StaffAddClientForm';
 import { StaffTeamPanel } from './staff/StaffTeamPanel';
-import { StaffGuardCrewsPanel } from './staff/StaffGuardCrewsPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
@@ -91,13 +88,12 @@ import { StaffSupportPanel } from './staff/StaffSupportPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
-import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
-import { countPendingCrewLeadRequests } from '../lib/guardCrewJoinRequest';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { clientPaymentGates } from '../lib/platformSettings';
 import type { PlatformCity } from '../lib/platformCities';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
+import { PaymentsPage } from './payments/PaymentsPage';
 import { StaffAnalyticsInsightsPanel } from './staff/StaffAnalyticsInsightsPanel';
 import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -130,13 +126,9 @@ interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
   requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
-  crewJoinRequests?: import('../types').GuardCrewJoinRequest[];
   supportTickets?: SupportTicket[];
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
-  teamChatThreads?: TeamChatThread[];
-  teamChatMessages?: TeamChatMessage[];
   staffMessages?: StaffMessage[];
   guardMessages?: import('../types').GuardMessage[];
   clientMessages?: import('../types').ClientMessage[];
@@ -187,12 +179,6 @@ interface StaffDashboardProps {
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
-  onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
-  onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveCrewLeadRequest?: (requestId: string) => void | Promise<void>;
-  onDeclineCrewLeadRequest?: (requestId: string) => void | Promise<void>;
-  onMakeGuardCrewLead?: (guardId: string) => void | Promise<void>;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -221,6 +207,10 @@ interface StaffDashboardProps {
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
+  onAdjustGuardShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
@@ -312,7 +302,6 @@ interface StaffDashboardProps {
   onSendClientMessage?: (body: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
-  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   initialSection?: StaffSection;
   /** Controlled section — when set, parent owns navigation state (URL sync). */
@@ -340,8 +329,6 @@ interface StaffDashboardProps {
   onSelectedSupportTicketIdChange?: (id: string | null) => void;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
-  selectedTeamChatRequestId?: string | null;
-  onSelectedTeamChatRequestIdChange?: (id: string | null) => void;
   initialStaffMessagesTab?: 'team' | 'jobs' | null;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   onOpenDownload?: () => void;
@@ -362,13 +349,9 @@ export function StaffDashboard({
   guards,
   clients,
   requests,
-  standingCrewMembers = [],
-  crewJoinRequests = [],
   supportTickets = [],
   jobChatThreads = [],
   jobChatMessages = [],
-  teamChatThreads = [],
-  teamChatMessages = [],
   staffMessages = [],
   guardMessages = [],
   clientMessages = [],
@@ -405,12 +388,6 @@ export function StaffDashboard({
   onRejectCert,
   onApproveGuardApplication,
   onDenyGuardApplication,
-  onApproveCrewMember,
-  onDenyCrewMember,
-  onRemoveCrewMember,
-  onApproveCrewLeadRequest,
-  onDeclineCrewLeadRequest,
-  onMakeGuardCrewLead,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onMakeGuardPayoutAvailable,
@@ -429,6 +406,7 @@ export function StaffDashboard({
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
   onCompletePayoutInvoice,
+  onAdjustGuardShiftTime,
   isDbConnected,
   currentUser,
   platformSettings,
@@ -469,7 +447,6 @@ export function StaffDashboard({
   onSendClientMessage,
   onRefreshStaffMessages,
   onSendJobChat,
-  onSendTeamChatMessage,
   initialSection = 'overview',
   section: controlledSection,
   onSectionChange,
@@ -493,8 +470,6 @@ export function StaffDashboard({
   onSelectedSupportTicketIdChange,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
-  selectedTeamChatRequestId,
-  onSelectedTeamChatRequestIdChange,
   initialStaffMessagesTab = null,
   onOpenLegal,
   onOpenDownload,
@@ -516,7 +491,6 @@ export function StaffDashboard({
   const [internalJobId, setInternalJobId] = useState<string | null>(null);
   const [internalTeamId, setInternalTeamId] = useState<string | null>(null);
   const [internalCredentialItemId, setInternalCredentialItemId] = useState<string | null>(null);
-  const [internalCrewJobId, setInternalCrewJobId] = useState<string | null>(null);
   const [staffMessagesChrome, setStaffMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
 
   useEffect(() => {
@@ -586,7 +560,6 @@ export function StaffDashboard({
     setSelectedClientId(nextClientId ?? null);
     setSelectedJobId(nextJobId ?? null);
     setSelectedCredentialItemId(nextCredentialItemId ?? null);
-    if (next !== 'crews') setInternalCrewJobId(null);
     onSectionChange?.(next, {
       guardId: next === 'credentials' ? nextCredentialGuardId ?? null : nextGuardId ?? null,
       teamId: nextTeamId ?? null,
@@ -597,6 +570,7 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
@@ -605,10 +579,10 @@ export function StaffDashboard({
   const canApproveGuardAccounts = canApproveGuards(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
+  const canAdjustShiftTimes = canAdjustGuardShiftTimes(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
-  const canManageCrews = roleCanManageCrews(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
@@ -625,11 +599,11 @@ export function StaffDashboard({
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
-    const accessFlags = { showFinance, showSettings: true, showPermissions, showDisputes, showCities };
+    const accessFlags = { showFinance, showPayments, showSettings: true, showPermissions, showDisputes, showCities };
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showPermissions, showDisputes, showCities]);
+  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -663,9 +637,8 @@ export function StaffDashboard({
       support: openTicketCount(supportTickets),
       messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
-      crews: countStaffCrewsNeedingReview(requests) + countPendingCrewLeadRequests(crewJoinRequests),
     }),
-    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, crewJoinRequests, jobLocations]
+    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, jobLocations]
   );
 
   const renderSection = () => {
@@ -807,7 +780,6 @@ export function StaffDashboard({
           <StaffGuardsPanel
             guards={guards}
             requests={requests}
-            standingCrewMembers={standingCrewMembers}
             canManage={canManageGuardAccounts}
             canSuspend={canSuspend}
             onUpdateUserStatus={onUpdateGuardUserStatus}
@@ -826,7 +798,6 @@ export function StaffDashboard({
               canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined
             }
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
-            onMakeCrewLead={canManageGuardAccounts ? onMakeGuardCrewLead : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
             onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
@@ -851,6 +822,8 @@ export function StaffDashboard({
             onOpenGuardCredential={(guardId, credentialItemId) =>
               navigateSection('credentials', { guardId, credentialItemId })
             }
+            canAdjustShiftTimes={canAdjustShiftTimes}
+            onAdjustGuardShiftTime={onAdjustGuardShiftTime}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
           />
         );
@@ -879,26 +852,6 @@ export function StaffDashboard({
             selectedId={selectedTeamId}
             onSelectedIdChange={setSelectedTeamId}
             initialSelectedId={selectedTeamId}
-          />
-        );
-      case 'crews':
-        return (
-          <StaffGuardCrewsPanel
-            requests={requests}
-            guards={guards}
-            standingCrewMembers={standingCrewMembers}
-            crewJoinRequests={crewJoinRequests}
-            canManage={canManageCrews}
-            selectedJobId={internalCrewJobId}
-            onSelectedJobIdChange={setInternalCrewJobId}
-            onOpenJob={openJob}
-            onOpenMessages={() => navigateSection('messages')}
-            onApproveCrewMember={canReviewJobs ? onApproveCrewMember : undefined}
-            onDenyCrewMember={canReviewJobs ? onDenyCrewMember : undefined}
-            onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
-            onApproveCrewLeadRequest={canManageCrews ? onApproveCrewLeadRequest : undefined}
-            onDeclineCrewLeadRequest={canManageCrews ? onDeclineCrewLeadRequest : undefined}
-            onCreateCrew={canManageGuardAccounts ? onMakeGuardCrewLead : undefined}
           />
         );
       case 'clients':
@@ -934,34 +887,26 @@ export function StaffDashboard({
       case 'messages':
       case 'team-chat':
       case 'job-chats':
-        return showMessages && onSendStaffMessage && onSendJobChat && onSendTeamChatMessage ? (
+        return showMessages && onSendStaffMessage && onSendJobChat ? (
           <div data-tour="staff-messages" className="app-messages-hub h-full min-h-0">
             <StaffMessagesPanel
               requests={requests}
               guards={guards}
               threads={jobChatThreads}
               messages={jobChatMessages}
-              teamChatThreads={teamChatThreads}
-              teamChatMessages={teamChatMessages}
               staffMessages={staffMessages}
               guardMessages={guardMessages}
               clientMessages={clientMessages}
               supportTickets={supportTickets}
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
-              onSendTeamChatMessage={onSendTeamChatMessage}
               onSendStaffMessage={onSendStaffMessage}
               onSendGuardMessage={onSendGuardMessage}
               onSendClientMessage={onSendClientMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
-              onDeleteSupportTicket={onDeleteSupportTicket}
               selectedJobChatRequestId={selectedJobChatRequestId}
               onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
-              selectedTeamChatRequestId={selectedTeamChatRequestId}
-              onSelectedTeamChatRequestIdChange={onSelectedTeamChatRequestIdChange}
-              initialJobChatRequestId={selectedJobChatRequestId}
-              initialTeamChatRequestId={selectedTeamChatRequestId}
               initialStaffMessagesTab={initialStaffMessagesTab}
               onMessagesChromeChange={setStaffMessagesChrome}
             />
@@ -981,6 +926,7 @@ export function StaffDashboard({
               currentUser={currentUser}
               onSendMessage={onSendSupportMessage}
               onUpdateStatus={onUpdateSupportStatus}
+              onDeleteSupportTicket={onDeleteSupportTicket}
               selectedTicketId={selectedSupportTicketId}
               onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
               initialSelectedTicketId={selectedSupportTicketId}
@@ -995,35 +941,40 @@ export function StaffDashboard({
           />
         );
       case 'payments':
-        return showFinance ? (
-          <StaffPaymentsPanel
-            requests={requests}
-            guards={guards}
-            payments={payments}
-            payoutInvoices={guardPayoutInvoices}
-            isDirector={hasExecutivePaymentControls(currentUser)}
-            canManagePayments={showFinance}
-            paymentGates={clientPaymentGates(platformSettings)}
-            onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
-            onReleasePayout={onReleasePayout}
-            onRefundPayment={onRefundPayment}
-            onMarkClientPaidCash={onMarkClientPaidCash}
-            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
-            onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
-            onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
-            onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
-            onApproveClientCashPayment={onApproveClientCashPayment}
-            onRejectClientCashPayment={onRejectClientCashPayment}
-            onMarkGuardPaidCash={onMarkGuardPaidCash}
-            onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
-            onMarkCashDepositManually={onMarkCashDepositManually}
-            onCompletePayoutInvoice={onCompletePayoutInvoice}
-          />
+        return showPayments ? (
+          <PaymentsPage role="staff">
+            <StaffPaymentsPanel
+              currentUser={currentUser}
+              platformSettings={platformSettings}
+              requests={requests}
+              guards={guards}
+              payments={payments}
+              payoutInvoices={guardPayoutInvoices}
+              isDirector={hasExecutivePaymentControls(currentUser)}
+              canManagePayments={showFinance}
+              showStaffCompensation={canViewStaffCompensation(currentUser)}
+              paymentGates={clientPaymentGates(platformSettings)}
+              onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
+              onReleasePayout={onReleasePayout}
+              onRefundPayment={onRefundPayment}
+              onMarkClientPaidCash={onMarkClientPaidCash}
+              onMarkOvertimePaidCash={onMarkOvertimePaidCash}
+              onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
+              onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
+              onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
+              onApproveClientCashPayment={onApproveClientCashPayment}
+              onRejectClientCashPayment={onRejectClientCashPayment}
+              onMarkGuardPaidCash={onMarkGuardPaidCash}
+              onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
+              onMarkCashDepositManually={onMarkCashDepositManually}
+              onCompletePayoutInvoice={onCompletePayoutInvoice}
+            />
+          </PaymentsPage>
         ) : (
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.payments!.message}
-            placeholders={['Pending payouts', 'Client payments', 'Guard payouts', 'Platform fees']}
+            placeholders={['Guard payouts', 'Staff compensation', 'Platform fees']}
           />
         );
       case 'violations':
@@ -1045,8 +996,6 @@ export function StaffDashboard({
           <StaffStatsPanel
             guards={guards}
             requests={requests}
-            standingCrewMembers={standingCrewMembers}
-            crewJoinRequests={crewJoinRequests}
             onOpenGuard={(guardId) => {
               onStaffGuardTabChange?.('performance');
               navigateSection('guards', { guardId });
@@ -1122,7 +1071,7 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.message}
-            placeholders={['Platform fees', 'Crew pay rules']}
+            placeholders={['Platform fees']}
           />
         );
       case 'agreements':
@@ -1263,7 +1212,6 @@ export function StaffDashboard({
       canAddGuard={canManageGuardAccounts}
       canAddStaff={canProposeStaff}
       canAddCredential={canManageGuardAccounts}
-      canCreateCrew={canManageGuardAccounts}
       canAddLocation={canReviewJobs}
     >
       <AppPageTransition motionKey={section} className="min-h-0">

@@ -785,41 +785,12 @@ export interface SecurityGuard {
   credentialExpiryRestricted?: boolean;
   /**
    * Explicitly trusted by a Director or Founder.
-   * Trusted guards skip Guardr applicant review on Stripe jobs and may coordinate crews.
+   * Trusted guards skip Guardr applicant review on Stripe jobs.
    * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */
   trusted?: boolean;
-  /** Public team name clients see in the Teams directory (trusted guards). */
-  standingCrewName?: string;
-  /** Public team description clients can read in the Teams directory. */
-  standingCrewDescription?: string;
   /** General liability COI — required for marketplace applications */
   insurancePolicy?: GuardInsurancePolicy;
-}
-
-export type StandingCrewMemberStatus = 'pending' | 'active' | 'declined' | 'removed';
-
-/** Persistent roster a trusted guard maintains across jobs. */
-export interface GuardStandingCrewMember {
-  id: string;
-  leadGuardId: string;
-  memberGuardId: string;
-  status: StandingCrewMemberStatus;
-  invitedAt: string;
-  respondedAt?: string;
-}
-
-export type GuardCrewJoinRequestStatus = 'pending' | 'approved' | 'declined';
-
-/** Trusted guard asking staff to approve them as a standing crew lead. */
-export interface GuardCrewJoinRequest {
-  id: string;
-  guardId: string;
-  status: GuardCrewJoinRequestStatus;
-  message?: string;
-  requestedAt: string;
-  resolvedAt?: string;
-  resolvedByStaffId?: string;
 }
 
 /** In-app notification inbox row — unread until read/clicked. */
@@ -1111,7 +1082,7 @@ export type JobGuardSlotStatus =
   | 'open'
   | 'invited'
   | 'pending_staff'
-  /** Guard confirmed on crew internally — waiting for full roster before client review. */
+  /** Legacy coordinated-crew status — normalized to pending_client on read. */
   | 'crew_confirmed'
   | 'pending_client'
   | 'approved'
@@ -1267,14 +1238,6 @@ export interface SecurityRequest {
   pendingGuardId?: string | null;
   staffApprovedGuardAt?: string;
   assignedGuardId: string | null;
-  /** Crew coordinator for multi-guard team jobs */
-  teamLeadId?: string | null;
-  /** Shareable code for crew self-join (multi-guard jobs with a coordinator) */
-  teamCode?: string | null;
-  /** Client-visible crew display name (coordinator-editable) */
-  crewName?: string | null;
-  /** Client-visible crew pitch / capabilities summary */
-  crewDescription?: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;
   /** Client-requested schedule change awaiting staff approval */
@@ -1458,6 +1421,15 @@ export interface SecurityRequest {
     /** Guard explicitly claimed overtime (stayed past end or set departure after scheduled end). */
     overtimeClaimed?: boolean;
   };
+  /** Staff-adjusted clock times for billing and payout review. */
+  shiftTimeAdjustment?: {
+    clockInAt?: string;
+    clockOutAt?: string;
+    adjustedAt?: string;
+    adjustedById?: string;
+    adjustedByEmail?: string;
+    note?: string;
+  };
   reports?: ShiftReport[];
 }
 
@@ -1490,18 +1462,6 @@ export interface JobChatMessage {
   body: string;
   createdAt: string;
 }
-
-export interface TeamChatThread {
-  id: string;
-  requestId: string;
-  teamLeadId: string;
-  status: JobChatThreadStatus;
-  createdAt: string;
-  archivedAt?: string;
-}
-
-/** Crew chat message — same shape as job chat messages. */
-export type TeamChatMessage = JobChatMessage;
 
 export interface StaffMessage {
   id: string;
@@ -1562,9 +1522,6 @@ export interface NotificationPreferences {
   jobRelisted: boolean;
   jobScheduleChanged: boolean;
   preShiftBriefing: boolean;
-  standingCrewInvite: boolean;
-  crewLeadRequest: boolean;
-  teamChatMessage: boolean;
   companyPlacardExpiry: boolean;
   updatedAt: string;
 }

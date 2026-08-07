@@ -28,9 +28,9 @@ export type AppRole = 'staff' | 'guard' | 'client';
 export type AuthViewMode = 'sign-in' | 'sign-up';
 export type AuthViewRole = 'guard' | 'client' | 'staff';
 
-export type StaffGuardDetailTab = 'profile' | 'certs' | 'inventory' | 'performance';
+export type StaffGuardDetailTab = 'profile' | 'certs' | 'inventory' | 'performance' | 'timesheet';
 
-export type GuardProfileTab = 'profile' | 'certs' | 'inventory';
+export type GuardProfileTab = 'profile' | 'certs' | 'inventory' | 'timesheet';
 
 export interface AppRoute {
   role: AppRole;
@@ -96,14 +96,13 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   jobs: 'myJobs',
   earnings: 'earnings',
   pay: 'earnings',
+  payments: 'earnings',
   'guard-chat': 'messages',
   messages: 'messages',
   support: 'support',
   profile: 'profile',
   settings: 'settings',
   guide: 'guide',
-  crew: 'crew',
-  team: 'crew',
   preferences: 'preferences',
   performance: 'performance',
   availability: 'availability',
@@ -114,14 +113,13 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   map: 'map',
   activation: 'activation',
   myJobs: 'my-jobs',
-  earnings: 'earnings',
+  earnings: 'payments',
   guardChat: 'messages',
   messages: 'messages',
   support: 'support',
   profile: 'profile',
   settings: 'settings',
   guide: 'guide',
-  crew: 'crew',
   preferences: 'preferences',
   performance: 'performance',
   availability: 'availability',
@@ -169,6 +167,8 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   messages: 'messages',
   reports: 'reports',
   invoices: 'invoices',
+  payments: 'invoices',
+  billing: 'invoices',
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
@@ -187,7 +187,7 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   'direct-request': 'direct-request',
   messages: 'messages',
   reports: 'reports',
-  invoices: 'invoices',
+  invoices: 'payments',
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
@@ -246,7 +246,8 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
     staffGuardTab === 'profile' ||
     staffGuardTab === 'certs' ||
     staffGuardTab === 'inventory' ||
-    staffGuardTab === 'performance'
+    staffGuardTab === 'performance' ||
+    staffGuardTab === 'timesheet'
   ) {
     nested.staffGuardTab = staffGuardTab;
   }

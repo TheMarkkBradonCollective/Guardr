@@ -9,7 +9,6 @@ export type StaffCreateActionKey =
   | 'guard'
   | 'staff'
   | 'credential'
-  | 'crew'
   | 'location';
 
 export function staffSectionCreateAction(section: StaffSection): StaffCreateActionKey | null {
@@ -22,8 +21,6 @@ export function staffSectionCreateAction(section: StaffSection): StaffCreateActi
       return 'guard';
     case 'team':
       return 'staff';
-    case 'crews':
-      return 'crew';
     case 'locations':
       return 'location';
     default:
@@ -37,7 +34,6 @@ export const STAFF_CREATE_ACTION_LABELS: Record<StaffCreateActionKey, string> = 
   guard: '+ Add guard',
   staff: '+ Add staff',
   credential: '+ Add credential',
-  crew: '+ Create crew',
   location: '+ Add location',
 };
 
@@ -110,7 +106,6 @@ export function useStaffSidebarPrimaryActions(
     canAddGuard?: boolean;
     canAddStaff?: boolean;
     canAddCredential?: boolean;
-    canCreateCrew?: boolean;
     canAddLocation?: boolean;
   },
 ): SidebarPrimaryAction[] {
@@ -154,7 +149,6 @@ export function useStaffSidebarPrimaryActions(
       (section === 'clients' && options.canAddClient) ||
       (section === 'guards' && options.canAddGuard) ||
       (section === 'team' && options.canAddStaff) ||
-      (section === 'crews' && options.canCreateCrew) ||
       (section === 'locations' && options.canAddLocation);
 
     if (!enabled) return [];
@@ -171,7 +165,6 @@ export function useStaffSidebarPrimaryActions(
     options.canAddClient,
     options.canAddCredential,
     options.canAddLocation,
-    options.canCreateCrew,
     options.canAddGuard,
     options.canCreateJob,
     options.canAddStaff,

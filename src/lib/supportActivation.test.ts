@@ -7,6 +7,7 @@ import {
   buildMissingActivationSupportTickets,
   findActivationSupportChat,
   guardNeedsActivationSupportChat,
+  GUARDR_SUPPORT_ACTOR,
   listGuardsNeedingActivationSupport,
 } from './support.ts';
 
@@ -27,16 +28,14 @@ function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
 }
 
 describe('activation support chat', () => {
-  it('builds a staff-owned activation ticket for the guard', () => {
-    const ticket = buildActivationSupportTicketForGuard(guard(), {
-      id: 'staff-1',
-      name: 'Staff Admin',
-      role: 'administrator',
-    });
+  it('builds a system-owned activation ticket for the guard', () => {
+    const ticket = buildActivationSupportTicketForGuard(guard());
 
     assert.equal(ticket.userId, 'g1');
     assert.equal(ticket.userRole, 'guard');
     assert.equal(ticket.subject, ACTIVATION_SUPPORT_SUBJECT);
+    assert.equal(ticket.messages[0]?.senderId, GUARDR_SUPPORT_ACTOR.id);
+    assert.equal(ticket.messages[0]?.senderName, GUARDR_SUPPORT_ACTOR.name);
     assert.equal(ticket.messages[0]?.senderRole, 'administrator');
     assert.match(ticket.messages[0]?.body ?? '', /approved/i);
   });
@@ -98,13 +97,13 @@ describe('activation support chat', () => {
   it('builds missing activation support tickets in batch', () => {
     const tickets = buildMissingActivationSupportTickets(
       [guard(), guard({ id: 'g2', email: 'two@test.com', name: 'Blake' })],
-      [],
-      { id: 'staff-1', name: 'Staff Admin', role: 'administrator' }
+      []
     );
 
     assert.equal(tickets.length, 2);
     assert.equal(tickets[0]?.userId, 'g1');
     assert.equal(tickets[1]?.userId, 'g2');
-    assert.equal(tickets[0]?.messages[0]?.senderRole, 'administrator');
+    assert.equal(tickets[0]?.messages[0]?.senderId, GUARDR_SUPPORT_ACTOR.id);
+    assert.equal(tickets[0]?.messages[0]?.senderName, GUARDR_SUPPORT_ACTOR.name);
   });
 });

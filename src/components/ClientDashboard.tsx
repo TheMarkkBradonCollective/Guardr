@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, ClientMessage, GuardStandingCrewMember, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
+import { Client, ClientMessage, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -19,6 +19,7 @@ import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurity
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientInvoiceScreen } from './client/ClientInvoiceScreen';
+import { PaymentsPage } from './payments/PaymentsPage';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
@@ -57,7 +58,6 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   platformRequests?: SecurityRequest[];
   guards: SecurityGuard[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   clientEmail: string;
   accountStatus?: Client['accountStatus'];
   approved?: boolean;
@@ -144,7 +144,6 @@ interface ClientDashboardProps {
   onMessagesDetailOpenChange?: (open: boolean) => void;
   onMessagesChromeChange?: (chrome: MessagesChrome) => void;
   messagesShellHeaderTrailing?: React.ReactNode;
-  onTeamDetailOpenChange?: (open: boolean) => void;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
@@ -157,7 +156,6 @@ export function ClientDashboard({
   requests,
   platformRequests = [],
   guards,
-  standingCrewMembers = [],
   clientEmail,
   accountStatus,
   approved,
@@ -230,7 +228,6 @@ export function ClientDashboard({
   onMessagesDetailOpenChange,
   onMessagesChromeChange,
   messagesShellHeaderTrailing,
-  onTeamDetailOpenChange,
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
@@ -501,9 +498,7 @@ export function ClientDashboard({
                 onToggleFavorite={onToggleFavoriteGuard}
                 clientId={clientId}
                 requests={requests}
-                standingCrewMembers={standingCrewMembers}
-                onRequestGuard={startDirectGuardRequest}
-                onTeamDetailOpenChange={onTeamDetailOpenChange}
+                        onRequestGuard={startDirectGuardRequest}
               />
             }
             detail={
@@ -563,9 +558,7 @@ export function ClientDashboard({
         onToggleFavorite={onToggleFavoriteGuard}
         clientId={clientId}
         requests={requests}
-        standingCrewMembers={standingCrewMembers}
         onRequestGuard={startDirectGuardRequest}
-        onTeamDetailOpenChange={onTeamDetailOpenChange}
       />
       </>,
       'client-guards'
@@ -686,15 +679,17 @@ export function ClientDashboard({
   if (view === 'invoices' && clientRecord) {
     return page(
       'invoices',
-      <ClientInvoiceScreen
-        client={clientRecord}
-        clientEmail={clientEmail}
-        requests={requests}
-        invoices={clientInvoices}
-        paymentGates={paymentGates}
-        selectedRequestId={invoiceRequestId}
-        onSelectRequestId={onInvoiceRequestIdChange}
-      />
+      <PaymentsPage role="client">
+        <ClientInvoiceScreen
+          client={clientRecord}
+          clientEmail={clientEmail}
+          requests={requests}
+          invoices={clientInvoices}
+          paymentGates={paymentGates}
+          selectedRequestId={invoiceRequestId}
+          onSelectRequestId={onInvoiceRequestIdChange}
+        />
+      </PaymentsPage>
     );
   }
 

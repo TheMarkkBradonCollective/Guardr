@@ -85,7 +85,7 @@ export const PLATFORM_HIGHLIGHTS: { icon: LucideIcon; title: string; body: strin
   {
     icon: Users,
     title: 'Team coordination',
-    body: 'Form standing crews, coordinate multi-guard posts, and manage team communications.',
+    body: 'Post multi-guard jobs and manage guard slot approvals in one place.',
   },
   {
     icon: Zap,

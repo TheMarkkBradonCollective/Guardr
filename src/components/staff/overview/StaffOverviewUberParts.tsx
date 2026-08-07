@@ -49,7 +49,6 @@ export const QUICK_LINK_META: Record<
   guards: { label: 'Guards', icon: Shield, sub: 'Field roster' },
   team: { label: 'Staff', icon: Users, sub: 'Platform team' },
   clients: { label: 'Clients', icon: Building2, sub: 'Accounts' },
-  crews: { label: 'Crews', icon: UsersRound, sub: 'Teams' },
   incidents: { label: 'Incidents', icon: AlertTriangle, sub: 'Follow-up' },
   violations: { label: 'Violations', icon: ShieldAlert, sub: 'Shift issues' },
   stats: { label: 'Stats', icon: BarChart3, sub: 'Reporting' },
@@ -57,7 +56,7 @@ export const QUICK_LINK_META: Record<
   support: { label: 'Support', icon: LifeBuoy, sub: 'Tickets' },
   'team-chat': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
   'job-chats': { label: 'Messages', icon: MessagesSquare, sub: 'Inbox' },
-  payments: { label: 'Payments', icon: DollarSign, sub: 'Billing' },
+  payments: { label: 'Payments', icon: DollarSign, sub: 'Guards & staff' },
   'payment-settings': { label: 'Payment settings', icon: CreditCard, sub: 'Stripe' },
   agreements: { label: 'Agreements', icon: FileText, sub: 'Legal' },
   'audit-log': { label: 'Audit log', icon: ScrollText, sub: 'Activity' },
@@ -151,11 +150,6 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     title: 'Audit log',
     description: 'Staff actions and platform activity',
     iconTone: 'orange',
-  },
-  crews: {
-    title: 'Crews',
-    description: 'Guard teams and crew assignments',
-    iconTone: 'green',
   },
   violations: {
     title: 'Violations',

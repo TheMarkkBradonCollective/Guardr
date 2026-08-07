@@ -23,10 +23,10 @@ Use it as the operating manual for the whole app:
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Invoices**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
+| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Payments**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
-| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Pay**, **Profile**, and **Guide** remain blocked until **active**. |
-| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
+| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Payments**, **Profile**, and **Guide** remain blocked until **active**. |
+| **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -121,7 +121,7 @@ This section walks through Guardr from first sign-up to final payout — the sam
 1. Guard uploads credentials while pending →  credentials attached to application
 2. Moderator+ approves application     →  `pending` → `approved`
 3. Administrator+ verifies each cred   →  ID, COI, guard card, mandatory training, CE
-4. Account activates automatically     →  guard gets Map / Jobs / Pay
+4. Account activates automatically     →  guard gets Map / Jobs / Payments
 ```
 
 Guards stay on the **activation screen** until activation. The progress bar tracks all five required credentials from sign-up.
@@ -167,14 +167,14 @@ Staff monitor from **Map** and **Jobs**. Incidents appear in **Incidents**.
 
 1. Client paid at checkout (Stripe) before or when the job ran.
 2. Platform auto-releases guard payout to Stripe Connect ~48 hours after completion.
-3. Guard opens **Pay** → **Send to my bank** when available.
+3. Guard opens **Payments** → **Send to my bank** when available.
 4. If overtime is disputed, payout may be held — Director/Founder resolve in **Payments** / **Disputes**.
 
 ### Phase 7 — Close the loop
 
 - Client rates the guard from **Jobs**.
 - Client reviews reports from **Home → Reports**.
-- Guard reviews earnings in **Pay**.
+- Guard reviews earnings in **Payments**.
 - Anyone can open **Messages → Support** for help tickets and reports.
 
 ### Your cheat sheet — "who acts next?"
@@ -207,7 +207,7 @@ Every job offer moves through these statuses:
 | **Open** | Staff approved the listing; guards can apply, or payment/assignment can continue | Client **Jobs** page; guard **Map**; staff **Jobs** |
 | **Accepted** | A guard is assigned and confirmed | Client **Jobs** / live job; guard **Map** / **Jobs**; staff **Jobs** / **Map** |
 | **In progress** | Guard arrived, started the job, and completed or skipped self-audit | Client live job / **Jobs**; guard **Map** (full-screen active job); staff **Map** / **Jobs** |
-| **Completed** | Guard ended the shift | Client **Jobs**; guard **Jobs** / **Pay**; staff **Payments** |
+| **Completed** | Guard ended the shift | Client **Jobs**; guard **Jobs** / **Payments**; staff **Payments** |
 | **Closed** | Job is archived, cancelled, or no longer active | Staff **Jobs** and historical views |
 
 ### Standard marketplace sequence
@@ -284,7 +284,7 @@ CLIENT                         GUARD                         STAFF
   | Confirm audit / message      |                             |
   |                              | End shift                    |
   |<-----------------------------|---------------------------->|
-  | Review completed job         | Pay tab                      | Payments closeout
+  | Review completed job         | Payments tab                 | Payments closeout
 ```
 
 #### Payment and payout chart
@@ -300,9 +300,9 @@ CLIENT PAYMENT
 GUARD PAYOUT
   |
   |-- Stripe Connect (automatic)
-        -> Guard Pay page: Connect bank account
+        -> Guard Payments page: Connect bank account
         -> Platform auto-releases payout ~48h after shift completion
-        -> Guard Pay page: Send to my bank when available
+        -> Guard Payments page: Send to my bank when available
         -> Staff Payments: manual release ONLY when payout is on dispute hold
 ```
 
@@ -330,7 +330,7 @@ GUARD (approved, all verified)        PLATFORM
   |------------------------------------>|
   |                                     | Manually activate account
   | Full app unlocks (active)           |
-  | Map / Jobs / Pay / Messages         |
+  | Map / Jobs / Payments / Messages  |
 ```
 
 #### Exception and escalation chart
@@ -375,7 +375,7 @@ Issue or exception
 | **Support** | Sidebar **Messages** group | Contact support, file a report, view ticket threads |
 | **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
 | **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
-| **Invoices** | Sidebar → **Invoices** (Account group on phone) | View job invoices, download PDF, pay when staff mark invoice ready |
+| **Payments** | Sidebar → **Payments** (Account group on phone) | View job invoices, download PDF, pay when staff mark invoice ready |
 | **Profile** | Account menu | Company/contact profile details |
 | **Guide** | Account menu | This guide |
 
@@ -552,18 +552,18 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 5. Use the job detail rating action to rate the guard when available.
 6. Guard payout auto-releases to Stripe Connect after the platform delay unless a dispute holds it.
 
-### 12. Invoices
+### 12. Payments
 
 After staff approve a completed job for billing, clients can view and pay formal invoices.
 
-1. Open **Invoices** from the sidebar (under Account on phone).
+1. Open **Payments** from the sidebar (under Account on phone).
 2. Each row shows the job, invoice number, amount, and status (**Draft**, **Payment due**, **Paid**).
 3. Tap an invoice to open details — review line items, dates, and totals.
 4. Use **Download PDF** to save or share the invoice.
 5. When status is **Payment due**, pay with **Pay by card** (Stripe) or Square if enabled.
 6. You receive a push notification when an invoice is ready (if push is enabled in **Settings**).
 
-Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show payment on the job card first; the invoice page is the record for approved billing.
+Payments complements the in-app **Jobs → Pay Now** flow — some jobs may show payment on the job card first; the Payments page is the record for approved billing.
 
 ---
 
@@ -576,11 +576,10 @@ Invoices complement the in-app **Jobs → Pay Now** flow — some jobs may show 
 | **Activation screen** | Shown automatically after sign-in until account is **active** | Upload credentials, track application progress, wait for staff activation |
 | **Map** | Bottom navigation (active guards only) | Full-screen map — tap pins for open jobs, direct requests, and active shifts |
 | **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
-| **Crew** | Bottom navigation (trusted guards only) | Standing team roster, job crews, team codes |
-| **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
+| **Payments** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Sidebar **Messages** group (active guards only) | Job chats and team threads |
 | **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
-| **Profile** | Account menu (active guards only) | Personal profile, resume, experience; **Credentials** tab for uploads; **Inventory** tab for equipment and uniforms |
+| **Profile** | Account menu (active guards only) | Personal profile, resume, experience; **Credentials** tab for uploads; **Inventory** tab for equipment and uniforms; **Timesheet** tab for shift clock times |
 | **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
 | **Settings** | Account menu | Appearance, push notifications, app update / install options, notification sound (APK), legal pages, sign out — available on activation screen too |
 | **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
@@ -657,41 +656,18 @@ Direct requests are assignments a client sent to you specifically.
 4. Use past jobs to review completed work, overtime prompts, ratings, and history.
 5. Open job chat from the job when you need assignment-specific communication.
 
-### 6. Coordinate crews (trusted guards only)
+### 6. Multi-guard jobs
 
-Trusted guards can build a **standing crew** — a reusable roster for multi-guard jobs.
+Some jobs need more than one guard. Each guard applies independently — there is no crew coordinator or standing team on Guardr.
 
-**Standing crew vs job crew:**
-
-| Term | What it is |
-|------|------------|
-| **Standing crew** | Your persistent team roster on the **Crew** page. Invite guards once; reuse them on future coordinated jobs. |
-| **Job crew** | Guards rostered on a specific multi-guard shift. Appears under **Crew → Active** while you are coordinating that job. |
-
-**Become a crew lead:**
-
-1. Open **Crew**.
-2. Under **Lead your own crew**, tap **Request crew lead approval**.
-3. Staff review the request in **Crews** and approve or decline.
-4. Once approved, name your crew and invite members from your standing roster.
-
-**Join another coordinator's crew:**
-
-1. Open **Crew**.
-2. Under **Join a crew**, enter the team code from the coordinator.
-3. You can only be on **one standing crew at a time** — leave your current crew before joining another.
-
-**On a multi-guard job:**
-
-1. Apply as **team lead** from the map on a job that needs multiple guards.
-2. Open **Crew → Active** to manage roster slots, share the team code, and invite your standing crew.
-3. Clients approve the full crew before the job is accepted.
+1. Open a multi-guard job from the map or **Jobs**.
+2. Tap **Apply** to request one roster slot.
+3. After Guardr staff review (when required), the client approves each guard individually.
+4. Once every slot is approved, the job can move forward as a coordinated shift.
 
 **If trusted status is removed:**
 
-- Your standing crew is dissolved.
-- Coordinated jobs you lead may be re-listed on the marketplace.
-- You can still work as a regular guard but cannot coordinate new crews until staff restore trusted status.
+- You can still work as a regular guard but future applications may require Guardr staff review again.
 
 ### 7. Performance, vehicle, and driving priority
 
@@ -941,7 +917,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 - Financial controls, **Payments**, **Dev notes**
 - Trusted status, job exception placement
-- **Payment settings** (fees, crew pay bump), **Marketplace agreements**, **Audit log**
+- **Payment settings** (fees), **Marketplace agreements**, **Audit log**
 
 ### Governance principles
 
@@ -997,7 +973,7 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Staff** (team roster) | — | — | ✓ | + Directors |
 | **Locations** (shared job sites) | — | QC / approve | ✓ | ✓ |
 | **Service Areas** (city markets) | — | — | ✓ | ✓ |
-| **Payment settings** | — | — | ✓ edit fees & crew bump | + payment methods |
+| **Payment settings** | — | — | ✓ edit platform fees | + payment methods |
 | **Marketplace agreements** | — | — | ✓ | ✓ |
 | **Audit log** | — | — | ✓ | ✓ |
 | **Permissions** | — | — | ✓ role capability toggles | ✓ |
@@ -1033,7 +1009,7 @@ Everything Moderators can do, plus:
 Everything Administrators can do, plus:
 
 - Full **Payments** pipeline — deposits, payouts, cash overrides, dispute holds
-- Edit platform fees and crew team pay bump in **Payment settings**
+- Edit platform fees in **Payment settings**
 - Review **Marketplace agreements** compliance and the **Audit log**
 - Manage Moderators and Administrators in **Staff**
 - Mark guards and clients as **trusted**
@@ -1128,7 +1104,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 - **Before active:** Activation screen (inline uploads on the same page).
 - **After active:** Account menu → **Profile** → **Credentials** tab (upload permits and training) or **Inventory** tab (equipment and uniforms).
 
-Staff can open **Credentials** or **Inventory** from **Guards → guard detail** to review what the guard carries and verify uploads.
+Staff can open **Credentials**, **Inventory**, or **Timesheet** from **Guards → guard detail** to review what the guard carries, verify uploads, and adjust shift clock times (Manager+).
 
 | Section | What it is |
 |---------|------------|
@@ -1326,7 +1302,6 @@ Every job follows the same payment path: the client pays, the job runs, then the
 
 - **Payment methods** — Card (Stripe) and optional cash (Founder edits methods; Directors view)
 - **Platform fees** — flat $/hr or percentage model for new jobs
-- **Crew team pay bump** — extra $/hr for guards rostered on coordinated crew jobs
 
 Platform fees are set globally in **Payment settings**. Open-contract jobs can override per agreement. Existing jobs keep their original fee.
 

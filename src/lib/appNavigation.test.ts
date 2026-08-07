@@ -228,3 +228,26 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('settings', undefined), 'settings');
   });
 });
+
+describe('unified payments routes', () => {
+  it('parses payments routes for guard and client', () => {
+    assert.deepEqual(parseAppRoute('/guard/payments'), {
+      role: 'guard',
+      guardTab: 'earnings',
+    });
+    assert.deepEqual(parseAppRoute('/client/payments'), {
+      role: 'client',
+      clientView: 'invoices',
+    });
+  });
+
+  it('parses staff guard timesheet tab', () => {
+    assert.deepEqual(parseAppRoute('/staff/guards?g=g1&gtab=timesheet'), {
+      role: 'staff',
+      staffSection: 'guards',
+      staffGuardId: 'g1',
+      staffGuardTab: 'timesheet',
+      staffMessageTab: undefined,
+    });
+  });
+});

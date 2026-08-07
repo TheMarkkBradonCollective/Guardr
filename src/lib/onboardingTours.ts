@@ -126,9 +126,9 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
     {
       id: 'my-jobs-detail',
       title: 'My Jobs — shift detail',
-      body: 'Selecting a row opens site instructions, crew info, chat, and check-in tools.',
+      body: 'Selecting a row opens site instructions, roster details, chat, and check-in tools.',
       detail:
-        'The detail view is the command center for a single assignment. You will see gate codes, parking notes, uniform requirements, the assigned crew roster, and buttons to message the client or open the job briefing. When a shift is active, check-in, en-route, and clock-out actions appear here — these timestamps feed payroll and client visibility on the map.',
+        'The detail view is the command center for a single assignment. You will see gate codes, parking notes, uniform requirements, the guard roster for multi-guard jobs, and buttons to message the client or open the job briefing. When a shift is active, check-in, en-route, and clock-out actions appear here — these timestamps feed payroll and client visibility on the map.',
       tips: [
         'Read the briefing before arriving on site — clients often add last-minute notes.',
         'Use job chat for arrival updates instead of texting personal numbers.',
@@ -138,23 +138,9 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
       targetSelector: '[data-tour="guard-my-jobs"]',
     },
     {
-      id: 'crew-intro',
-      title: 'Crew — standing teams',
-      body: 'Trusted guards can build a standing crew for recurring multi-guard work.',
-      detail:
-        'Crew is for guards who work together regularly — event teams, venue details, or client accounts that always want the same roster. You can request crew-lead status, generate an invite code for members, or join another guard’s crew with their code. You may only belong to one standing crew at a time; leaving requires crew-lead approval or staff help.',
-      tips: [
-        'Crew membership is optional — solo guards can ignore this tab entirely.',
-        'Crew leads assign roles and may receive multi-guard job notifications first.',
-        'Open Crew from the sidebar when your account shows the trusted badge.',
-      ],
-      navigate: { guardTab: 'crew' },
-      targetSelector: '[data-tour="guard-crew"]',
-    },
-    {
       id: 'messages-intro',
       title: 'Messages — job threads',
-      body: 'Job chats, crew threads, and coordination with clients live under Messages.',
+      body: 'Job chats and coordination with clients live under Messages.',
       detail:
         'Each active job can have its own thread shared with assigned guards and the client contact. Unread badges appear on the sidebar tab and bottom navigation. Messages support text and photo attachments for incident documentation or gate updates. Push notifications (when enabled) alert you to new messages even when the app is in the background.',
       tips: [
@@ -562,11 +548,11 @@ export const STAFF_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Guards — roster & account actions',
       body: 'Search every guard account, view standing, and take moderation actions.',
       detail:
-        'Open a guard profile to see credentials, job history, client reviews, Stripe status, and flags. Staff can activate or suspend accounts, reset credentials, or assign trusted status. Changes here affect whether the guard can see armed postings or join crews.',
+        'Open a guard profile to see credentials, job history, client reviews, Stripe status, and flags. Staff can activate or suspend accounts, reset credentials, or assign trusted status. Changes here affect whether the guard can see armed postings.',
       tips: [
         'Search by email or guard ID when handling support tickets.',
         'Suspension immediately blocks new applications.',
-        'Trusted status unlocks crew features — grant it deliberately.',
+        'Trusted status speeds up applicant review — grant it deliberately.',
       ],
       navigate: { staffSection: 'guards' },
       targetSelector: '[data-tour="staff-jobs"]',

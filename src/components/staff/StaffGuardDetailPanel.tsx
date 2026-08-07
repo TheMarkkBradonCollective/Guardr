@@ -13,16 +13,9 @@ import {
   Certification,
   Experience,
   GuardEducation,
-  GuardStandingCrewMember,
   SecurityGuard,
   SecurityRequest,
 } from '../../types';
-import {
-  getActiveStandingCrewMembers,
-  getPendingStandingCrewOutgoing,
-  guardLeadsOwnStandingCrew,
-} from '../../lib/guardStandingCrew';
-import { staffMakeCrewLeadBlocker } from '../../lib/staffGuardEligibility';
 import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
@@ -63,12 +56,12 @@ import {
 } from '../../lib/guardAccountActivation';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
+import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
-  standingCrewMembers?: GuardStandingCrewMember[];
   canManage: boolean;
   canVerifyCredentials?: boolean;
   canSuspend: boolean;
@@ -90,7 +83,6 @@ interface StaffGuardDetailPanelProps {
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onSetGuardTrusted?: (trusted: boolean) => void | Promise<void>;
-  onMakeCrewLead?: () => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -118,6 +110,11 @@ interface StaffGuardDetailPanelProps {
   onEditingChange?: (editing: boolean) => void;
   staffGuardTab?: StaffGuardDetailTab;
   onStaffGuardTabChange?: (tab: StaffGuardDetailTab) => void;
+  canAdjustShiftTimes?: boolean;
+  onAdjustGuardShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => void | Promise<void>;
   performanceFactorId?: PerformanceFactorId | null;
   onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   compact?: boolean;
@@ -126,7 +123,6 @@ interface StaffGuardDetailPanelProps {
 export function StaffGuardDetailPanel({
   guard,
   requests,
-  standingCrewMembers = [],
   canManage,
   canVerifyCredentials = false,
   canSuspend,
@@ -145,7 +141,6 @@ export function StaffGuardDetailPanel({
   onApproveGuardAccount,
   onRejectGuardApplication,
   onSetGuardTrusted,
-  onMakeCrewLead,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -163,6 +158,8 @@ export function StaffGuardDetailPanel({
   onEditingChange,
   staffGuardTab = 'profile',
   onStaffGuardTabChange,
+  canAdjustShiftTimes = false,
+  onAdjustGuardShiftTime,
   performanceFactorId = null,
   onPerformanceFactorChange,
   compact = false,
@@ -235,8 +232,6 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const guardAccountStatus = getGuardUserStatus(guard);
-  const makeCrewLeadBlocker = staffMakeCrewLeadBlocker(guard, standingCrewMembers);
-  const alreadyCrewLead = guardLeadsOwnStandingCrew(guard, standingCrewMembers);
   const progress = getQualificationProgress(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
@@ -326,22 +321,11 @@ export function StaffGuardDetailPanel({
       : [];
     const confirmed = guard.trusted
       ? await confirmRemoveGuardTrusted(guard.name, {
-          crewJobCount: affectedJobs.filter((j) => j.teamLeadId === guard.id).length,
           scheduledJobCount: affectedJobs.filter((j) => j.status === 'accepted').length,
         })
       : await confirmMarkGuardTrusted(guard.name);
     if (!confirmed) return;
     await onSetGuardTrusted(!guard.trusted);
-  };
-
-  const handleMakeCrewLead = async () => {
-    if (!onMakeCrewLead) return;
-    const blocker = staffMakeCrewLeadBlocker(guard, standingCrewMembers);
-    if (blocker) {
-      showAppToast(blocker, { tone: 'error' });
-      return;
-    }
-    await onMakeCrewLead();
   };
 
   const handleUpdateUserStatus = async (status: 'active' | 'suspended' | 'blocked') => {
@@ -465,18 +449,6 @@ export function StaffGuardDetailPanel({
             title="Guard must be approved and active before they can be marked as trusted."
           >
             Mark as trusted
-          </AppButton>
-        )}
-        {showAdminActions && onMakeCrewLead && !alreadyCrewLead && (
-          <AppButton
-            variant="primary"
-            size="sm"
-            className="staff-action-btn--ok"
-            disabled={Boolean(makeCrewLeadBlocker)}
-            onClick={() => void handleMakeCrewLead()}
-            title={makeCrewLeadBlocker ?? 'Initialize this guard as a standing crew lead'}
-          >
-            Make crew lead
           </AppButton>
         )}
         </StaffGuardAccountControls>
@@ -646,6 +618,7 @@ export function StaffGuardDetailPanel({
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
               { id: 'inventory', label: 'Inventory' },
+              { id: 'timesheet', label: 'Timesheet' },
               { id: 'performance', label: 'Guard status' },
             ]}
           />
@@ -662,6 +635,15 @@ export function StaffGuardDetailPanel({
             onOpenJob={onOpenJob}
           />
         </div>
+      ) : staffGuardTab === 'timesheet' && !guard.isStaff ? (
+        <section className="staff-detail-section space-y-3">
+          <GuardTimesheetPanel
+            guardId={guard.id}
+            requests={requests}
+            canAdjust={canAdjustShiftTimes}
+            onAdjustShiftTime={onAdjustGuardShiftTime}
+          />
+        </section>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
           <GuardCredentialsPanel
@@ -834,65 +816,6 @@ export function StaffGuardDetailPanel({
                 hideCredentials
                 hideGear
               />
-            </section>
-          )}
-
-          {/* Standing crew section — shown for trusted guards */}
-          {guard.trusted && !editing && (
-            <section className="staff-detail-section space-y-3">
-              <WfSectionHeader title="Standing crew" className="!px-0 !mb-0" />
-              {guard.standingCrewName ? (
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-sm text-brand-text">{guard.standingCrewName}</p>
-                      <WfBadge tone="primary">Trusted lead</WfBadge>
-                    </div>
-                    {guard.standingCrewDescription && (
-                      <p className="text-xs text-brand-text-muted leading-relaxed">
-                        {guard.standingCrewDescription}
-                      </p>
-                    )}
-                  </div>
-                  {(() => {
-                    const activeMembers = getActiveStandingCrewMembers(standingCrewMembers, guard.id);
-                    const pendingMembers = getPendingStandingCrewOutgoing(standingCrewMembers, guard.id);
-                    const allMembers = [...activeMembers, ...pendingMembers];
-                    return allMembers.length === 0 ? (
-                      <p className="text-xs text-brand-text-muted">No crew members yet.</p>
-                    ) : (
-                      <div className="divide-y divide-brand-border border-t border-brand-border">
-                        {allMembers.map((m) => {
-                          // memberGuardId refers to a guard in the platform; we only have
-                          // this guard's own data here, so show ID if not resolvable
-                          const displayName = m.memberGuardId;
-                          return (
-                            <div key={m.id} className="flex items-center gap-3 py-2.5">
-                              <div className="w-7 h-7 rounded-full bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0">
-                                <User className="w-3.5 h-3.5 text-brand-text-muted" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-brand-text truncate">
-                                  {displayName}
-                                </p>
-                              </div>
-                              <WfBadge tone={m.status === 'active' ? 'success' : 'warning'}>
-                                {m.status === 'active' ? 'Active' : 'Pending'}
-                              </WfBadge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <p className="text-sm text-brand-text-muted">
-                  <Users className="w-4 h-4 inline mr-1.5 opacity-60" />
-                  Trusted guard — no crew profile set yet. They can configure their team name and
-                  invite members from their Crew hub.
-                </p>
-              )}
             </section>
           )}
 

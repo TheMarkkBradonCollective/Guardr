@@ -10,7 +10,16 @@ import {
 import {
   PlatformSettings,
 } from '../../lib/platformSettings';
-import { hasExecutivePaymentControls } from '../../lib/permissions';
+import { hasExecutivePaymentControls, canManageStaffCompensation, canEditStaffHourlyPayRates } from '../../lib/permissions';
+import {
+  COMPENSATABLE_STAFF_ROLES,
+  formatCompensationPercent,
+  normalizeStaffCompensationConfig,
+  totalRolePercent,
+  type StaffCompensationCadence,
+  type StaffCompensationConfig,
+  type StaffRoleCompensationRule,
+} from '../../lib/staffCompensation';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
@@ -103,26 +112,27 @@ export function StaffPaymentSettingsPanel({
 }: StaffPaymentSettingsPanelProps) {
   const { formFactor } = useDevice();
   const canEditFees = hasExecutivePaymentControls(currentUser);
+  const canEditCompensation = canManageStaffCompensation(currentUser);
+  const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
-  const [crewPayBumpRate, setCrewPayBumpRate] = useState(
-    platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
+  const [compDraft, setCompDraft] = useState<StaffCompensationConfig>(
+    normalizeStaffCompensationConfig(platformSettings.staffCompensation),
   );
-  const [savingCrewPayBump, setSavingCrewPayBump] = useState(false);
+  const [savingCompensation, setSavingCompensation] = useState(false);
 
   useEffect(() => {
     setFeeDraft(platformSettings.feeConfig);
   }, [platformSettings.feeConfig]);
 
   useEffect(() => {
-    setCrewPayBumpRate(
-      platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1
-    );
-  }, [platformSettings.crewTeamPayBumpPerHour, platformSettings.teamLeadBonusPerGuardPerHour]);
+    setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation));
+  }, [platformSettings.staffCompensation]);
 
-  const crewPayBumpDirty =
-    crewPayBumpRate !==
-    (platformSettings.crewTeamPayBumpPerHour ?? platformSettings.teamLeadBonusPerGuardPerHour ?? 1);
+  const compDirty = useMemo(
+    () => JSON.stringify(compDraft) !== JSON.stringify(normalizeStaffCompensationConfig(platformSettings.staffCompensation)),
+    [compDraft, platformSettings.staffCompensation],
+  );
 
   const feeDirty = useMemo(
     () => JSON.stringify(feeDraft) !== JSON.stringify(platformSettings.feeConfig),
@@ -143,22 +153,44 @@ export function StaffPaymentSettingsPanel({
     }
   };
 
-  const persistCrewPayBumpSettings = async () => {
-    if (!onUpdatePlatformSettings || !canEditFees) return;
-    setSavingCrewPayBump(true);
+  const persistCompensationSettings = async () => {
+    if (!onUpdatePlatformSettings) return;
+    if (!canEditCompensation && !canEditHourlyRates) return;
+    setSavingCompensation(true);
     try {
-      const rate = Math.max(0, crewPayBumpRate);
+      const current = normalizeStaffCompensationConfig(platformSettings.staffCompensation);
+      const nextConfig = canEditCompensation
+        ? normalizeStaffCompensationConfig(compDraft)
+        : normalizeStaffCompensationConfig({
+            ...current,
+            roleRules: Object.fromEntries(
+              COMPENSATABLE_STAFF_ROLES.map((role) => [
+                role,
+                {
+                  ...current.roleRules[role],
+                  hourlyPayRate: compDraft.roleRules[role].hourlyPayRate,
+                },
+              ]),
+            ) as StaffCompensationConfig['roleRules'],
+          });
       await onUpdatePlatformSettings({
         ...platformSettings,
-        crewTeamPayBumpPerHour: rate,
-        teamLeadBonusPerGuardPerHour: rate,
-        teamLeadBonusClientSharePercent: 100,
-        teamLeadBonusPlatformSharePercent: 0,
+        staffCompensation: nextConfig,
         updatedAt: new Date().toISOString(),
       });
     } finally {
-      setSavingCrewPayBump(false);
+      setSavingCompensation(false);
     }
+  };
+
+  const updateRoleRule = (role: typeof COMPENSATABLE_STAFF_ROLES[number], patch: Partial<StaffRoleCompensationRule>) => {
+    setCompDraft((prev) => ({
+      ...prev,
+      roleRules: {
+        ...prev.roleRules,
+        [role]: { ...prev.roleRules[role], ...patch },
+      },
+    }));
   };
 
   const setFeeModel = (model: PlatformFeeModel) => {
@@ -285,49 +317,164 @@ export function StaffPaymentSettingsPanel({
     </div>
   );
 
-  const crewPayBumpBody = (
+  const staffCompensationBody = (
     <div className="space-y-4 min-w-0">
       <p className="text-sm text-brand-text/70 leading-relaxed">
-        Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour.
-        Independent applicants and guards on other jobs do not receive it.
+        Staff revenue-share is paid from collected platform fees only (contractor-style, not W-2 payroll).
+        Revenue-share base pay is released instantly. Directors and Founders then confirm optional add-ons:
+        tracked hourly pay and manual bonuses (add-only). Hourly rates are editable by Manager and above.
       </p>
-      <div className="grid grid-cols-1 gap-4 max-w-lg min-w-0">
-        <label className="block space-y-1 min-w-0">
-          <span className="uber-label">Extra pay per crew guard / hour</span>
-          <input
-            type="number"
-            min={0}
-            step={0.25}
-            value={crewPayBumpRate}
-            disabled={!canEditFees}
-            onChange={(e) => setCrewPayBumpRate(Number(e.target.value))}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+        <label className="block space-y-1">
+          <span className="uber-label">Compensation enabled</span>
+          <select
             className="uber-input w-full"
-          />
+            value={compDraft.enabled ? 'yes' : 'no'}
+            disabled={!canEditCompensation}
+            onChange={(e) => setCompDraft((prev) => ({ ...prev, enabled: e.target.value === 'yes' }))}
+          >
+            <option value="yes">Enabled</option>
+            <option value="no">Disabled</option>
+          </select>
+        </label>
+        <label className="block space-y-1">
+          <span className="uber-label">Payout cadence</span>
+          <select
+            className="uber-input w-full"
+            value={compDraft.cadence}
+            disabled={!canEditCompensation}
+            onChange={(e) =>
+              setCompDraft((prev) => ({ ...prev, cadence: e.target.value as StaffCompensationCadence }))
+            }
+          >
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
         </label>
       </div>
-      {canEditFees ? (
+
+      <p className="text-xs text-brand-text/60">
+        Total role allocation: {formatCompensationPercent(totalRolePercent(compDraft))}
+      </p>
+
+      <div className="adm-table-wrap rounded-lg border border-brand-border overflow-x-auto">
+        <table className="adm-table w-full text-sm min-w-[36rem]">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>% of fees</th>
+              <th>Floor / period</th>
+              <th>Cap / period</th>
+              <th>Hourly pay</th>
+            </tr>
+          </thead>
+          <tbody>
+            {COMPENSATABLE_STAFF_ROLES.map((role) => {
+              const rule = compDraft.roleRules[role];
+              return (
+                <tr key={role}>
+                  <td>{role}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={Math.round(rule.percentOfFees * 1000) / 10}
+                      onChange={(e) =>
+                        updateRoleRule(role, {
+                          percentOfFees: Math.min(1, Math.max(0, (parseFloat(e.target.value) || 0) / 100)),
+                        })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={rule.floorPerPeriod}
+                      onChange={(e) =>
+                        updateRoleRule(role, { floorPerPeriod: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="uber-input w-24"
+                      disabled={!canEditCompensation}
+                      value={rule.capPerPeriod}
+                      onChange={(e) =>
+                        updateRoleRule(role, { capPerPeriod: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.25}
+                      className="uber-input w-24"
+                      disabled={!canEditHourlyRates}
+                      value={rule.hourlyPayRate}
+                      onChange={(e) =>
+                        updateRoleRule(role, { hourlyPayRate: Math.max(0, parseFloat(e.target.value) || 0) })
+                      }
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {(canEditCompensation || canEditHourlyRates) ? (
         formFactor === 'desktop' ? (
-          <GuardrButton
-            kind="primary"
-            size="compact"
-            disabled={!crewPayBumpDirty || savingCrewPayBump}
-            onClick={() => void persistCrewPayBumpSettings()}
-          >
-            {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
-          </GuardrButton>
+          <div className="staff-payment-settings-actions">
+            <GuardrButton
+              kind="primary"
+              size="compact"
+              disabled={!compDirty || savingCompensation}
+              onClick={() => void persistCompensationSettings()}
+            >
+              {savingCompensation ? 'Saving…' : canEditCompensation ? 'Save staff compensation' : 'Save hourly pay rates'}
+            </GuardrButton>
+            {compDirty && (
+              <GuardrButton
+                kind="secondary"
+                size="compact"
+                onClick={() =>
+                  setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation))
+                }
+              >
+                Discard changes
+              </GuardrButton>
+            )}
+          </div>
         ) : (
           <div className="staff-payment-settings-actions">
             <MobileSaveButton
-              label="Save crew pay bump"
+              label={canEditCompensation ? 'Save staff compensation' : 'Save hourly pay rates'}
               busyLabel="Saving…"
-              busy={savingCrewPayBump}
-              disabled={!crewPayBumpDirty}
-              onClick={() => void persistCrewPayBumpSettings()}
+              busy={savingCompensation}
+              disabled={!compDirty}
+              onClick={() => void persistCompensationSettings()}
             />
           </div>
         )
       ) : (
-        <p className="text-xs text-brand-text/60">Only Directors and Founders can edit crew pay settings.</p>
+        <p className="text-xs text-brand-text/60">
+          Revenue-share rules require Director or Founder. Hourly pay rates require Manager or above.
+        </p>
       )}
     </div>
   );
@@ -339,7 +486,7 @@ export function StaffPaymentSettingsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Platform fees and crew pay bump defaults."
+            subtitle="Platform fees and staff compensation defaults."
           />
         }
       >
@@ -347,8 +494,8 @@ export function StaffPaymentSettingsPanel({
           <DesktopSettingsCard title="Platform fees">
             {platformFeesBody}
           </DesktopSettingsCard>
-          <DesktopSettingsCard title="Crew team pay bump" fullWidth>
-            {crewPayBumpBody}
+          <DesktopSettingsCard title="Staff compensation" fullWidth>
+            {staffCompensationBody}
           </DesktopSettingsCard>
         </div>
       </StaffOpsPageShell>
@@ -359,7 +506,7 @@ export function StaffPaymentSettingsPanel({
     <StaffOpsPageShell className="staff-payment-settings-panel staff-mgmt-panel staff-roster-panel">
       <div className="staff-payment-settings-scroll min-w-0">
         <AppFormSection title="Platform fees">{platformFeesBody}</AppFormSection>
-        <AppFormSection title="Crew team pay bump">{crewPayBumpBody}</AppFormSection>
+        <AppFormSection title="Staff compensation">{staffCompensationBody}</AppFormSection>
       </div>
     </StaffOpsPageShell>
   );

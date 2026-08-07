@@ -9,7 +9,7 @@ import { ChatThreadPanel } from './ChatThreadPanel';
 import { AppChatHeader } from '../ui/app/AppPrimitives';
 
 interface JobChatPanelProps {
-  request: Pick<SecurityRequest, 'id' | 'status' | 'clientId' | 'assignedGuardId' | 'title' | 'siteName' | 'location'>;
+  request: Pick<SecurityRequest, 'id' | 'status' | 'clientId' | 'assignedGuardId' | 'guardSlots' | 'title' | 'siteName' | 'location' | 'guardsNeeded'>;
   thread: JobChatThread | null;
   messages: JobChatMessage[];
   currentUser: SessionUser;
@@ -38,7 +38,7 @@ export function JobChatPanel({
   if (!canChat && !readOnly) {
     return (
       <p className="text-sm text-brand-text-muted text-center py-8 px-4">
-        Job chat opens once a guard is assigned and the job is active.
+        Job chat opens once guards are confirmed and the job is active.
       </p>
     );
   }

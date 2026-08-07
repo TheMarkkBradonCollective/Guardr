@@ -25,6 +25,7 @@ interface DesktopStaffAdminShellProps {
   screenTitle: string;
   navHighlight: StaffSection;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -46,7 +47,7 @@ const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
   { label: 'Dashboard', ids: ['overview', 'map'] },
   {
     label: 'Operations',
-    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
+    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'clients', 'team'],
   },
   { label: 'Communications', ids: ['messages', 'support'] },
   { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
@@ -65,6 +66,7 @@ export function DesktopStaffAdminShell({
   screenTitle,
   navHighlight,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
@@ -83,7 +85,7 @@ export function DesktopStaffAdminShell({
   const { formFactor } = useDevice();
   // Bottom nav is mobile-only — tablet uses persistent sidebar (merge shell), matching RoleAppShell.
   const isMobileShell = formFactor === 'mobile';
-  const accessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities };
+  const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
@@ -103,7 +105,7 @@ export function DesktopStaffAdminShell({
             badge: item.badge,
           })),
       })).filter((group) => group.items.length > 0),
-    [navItems, showFinance, showSettings, showPermissions, showDisputes, showCities],
+    [navItems, showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities],
   );
 
   const flatNavItems = useMemo(

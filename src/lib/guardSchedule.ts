@@ -14,7 +14,6 @@ export type ScheduleJob = Pick<
   | 'applicants'
   | 'guardSlots'
   | 'guardsNeeded'
-  | 'teamLeadId'
 >;
 
 const ACTIVE_STATUSES = new Set<SecurityRequest['status']>(['open', 'accepted', 'in-progress']);

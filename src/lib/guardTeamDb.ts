@@ -12,21 +12,17 @@ export async function persistJobGuardSlots(
   if (error) throw error;
 }
 
-export async function persistJobTeamMeta(
+export async function persistJobSlotMeta(
   supabase: { from: (table: string) => any },
   jobId: string,
   patch: Partial<
     Pick<
       SecurityRequest,
-      'teamLeadId' | 'teamCode' | 'crewName' | 'crewDescription' | 'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'
+      'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'
     >
   >
 ): Promise<void> {
   const dbPatch: Record<string, unknown> = {};
-  if (patch.teamLeadId !== undefined) dbPatch.team_lead_id = patch.teamLeadId;
-  if (patch.teamCode !== undefined) dbPatch.team_code = patch.teamCode;
-  if (patch.crewName !== undefined) dbPatch.crew_name = patch.crewName;
-  if (patch.crewDescription !== undefined) dbPatch.crew_description = patch.crewDescription;
   if (patch.pendingGuardId !== undefined) dbPatch.pending_guard_id = patch.pendingGuardId;
   if (patch.staffApprovedGuardAt !== undefined) dbPatch.staff_approved_guard_at = patch.staffApprovedGuardAt;
   if (patch.applicants !== undefined) dbPatch.applicants = patch.applicants;
@@ -36,6 +32,9 @@ export async function persistJobTeamMeta(
   const { error } = await supabase.from('security_requests').update(dbPatch).eq('id', jobId);
   if (error) throw error;
 }
+
+/** @deprecated Use persistJobSlotMeta */
+export const persistJobTeamMeta = persistJobSlotMeta;
 
 export function teamJobReadyForAcceptance(
   job: SecurityRequest,

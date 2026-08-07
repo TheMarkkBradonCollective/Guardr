@@ -1,8 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
-import { teamRosterSummary, getCrewDisplayName } from '../../lib/guardTeams';
-import { CrewDetailsEditor } from '../guard/CrewDetailsEditor';
-import { confirmApproveFullTeam, confirmApproveTeamSlot, confirmDenyFullTeam, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
+import { teamRosterSummary } from '../../lib/guardTeams';
+import { confirmApproveTeamSlot, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
@@ -12,7 +11,7 @@ const SLOT_STATUS_LABEL: Record<JobGuardSlot['status'], string> = {
   open: 'Open slot',
   invited: 'Invited — awaiting response',
   pending_staff: 'Awaiting Guardr review',
-  crew_confirmed: 'Confirmed on crew — waiting for full roster',
+  crew_confirmed: 'Confirmed — waiting for roster',
   pending_client: 'Awaiting client approval',
   approved: 'Approved',
   declined: 'Declined',
@@ -27,13 +26,10 @@ interface JobTeamRosterProps {
   currentGuardId?: string;
   onApproveSlot?: (slotId: string) => void | Promise<void>;
   onDenySlot?: (slotId: string) => void | Promise<void>;
-  showFullTeamActions?: boolean;
   showIndependentSlotActions?: boolean;
-  onApproveFullTeam?: () => void | Promise<void>;
-  onDenyFullTeam?: () => void | Promise<void>;
   onStaffApproveSlot?: (guardId: string) => void | Promise<void>;
   onStaffDenySlot?: (guardId: string) => void | Promise<void>;
-  onStaffRemoveFromCrew?: (guardId: string) => void | Promise<void>;
+  onStaffRemoveFromSlot?: (guardId: string) => void | Promise<void>;
   /** When set, only render these slot indices (for independent pending view). */
   slotFilter?: (slot: JobGuardSlot) => boolean;
   title?: string;
@@ -46,13 +42,10 @@ export function JobTeamRoster({
   currentGuardId,
   onApproveSlot,
   onDenySlot,
-  showFullTeamActions = false,
   showIndependentSlotActions = false,
-  onApproveFullTeam,
-  onDenyFullTeam,
   onStaffApproveSlot,
   onStaffDenySlot,
-  onStaffRemoveFromCrew,
+  onStaffRemoveFromSlot,
   slotFilter,
   title,
 }: JobTeamRosterProps) {
@@ -61,13 +54,7 @@ export function JobTeamRoster({
 
   const slots = job.guardSlots ?? [];
   const summary = teamRosterSummary(slots, guardsNeeded);
-  const heading =
-    title ??
-    (variant === 'client' && showFullTeamActions
-      ? 'Full crew request'
-      : variant === 'client' && showIndependentSlotActions
-        ? 'Independent guard requests'
-        : 'Team roster');
+  const heading = title ?? (variant === 'client' && showIndependentSlotActions ? 'Guard requests' : 'Guards on this job');
 
   const slotIndices = Array.from({ length: guardsNeeded }, (_, i) => i + 1).filter((slotIndex) => {
     const slot =
@@ -78,26 +65,10 @@ export function JobTeamRoster({
 
   if (slotIndices.length === 0) return null;
 
-  const coordinator = guards.find((g) => g.id === job.teamLeadId);
-  const crewTitle = getCrewDisplayName(job, coordinator?.name);
-
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface-elevated/40 px-3 py-3 space-y-3">
-      {(job.crewName?.trim() || job.crewDescription?.trim()) && (
-        <CrewDetailsEditor
-          jobTitle={job.title}
-          coordinatorName={coordinator?.name ?? 'Crew coordinator'}
-          crewName={job.crewName}
-          crewDescription={job.crewDescription}
-        />
-      )}
-      {variant === 'client' && showFullTeamActions && !job.crewName?.trim() && !job.crewDescription?.trim() && (
-        <p className="text-sm font-semibold text-brand-text">{crewTitle}</p>
-      )}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-brand-text">
-          {title ?? (variant === 'client' && showFullTeamActions ? 'Full crew request' : heading)}
-        </p>
+        <p className="text-sm font-semibold text-brand-text">{heading}</p>
         {!slotFilter && (
           <WfBadge tone={summary.open > 0 ? 'warning' : 'primary'}>
             {summary.filled}/{summary.total} filled
@@ -106,15 +77,9 @@ export function JobTeamRoster({
         )}
       </div>
 
-      {variant === 'client' && showFullTeamActions && (
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Every guard on this coordinated crew has confirmed. Approve or decline the full team as one request.
-        </p>
-      )}
-
       {variant === 'client' && showIndependentSlotActions && (
         <p className="text-xs text-brand-text-muted leading-relaxed">
-          Approve guards individually to build your roster, or choose a full coordinated crew if one is also ready.
+          Approve guards individually to build your roster for this multi-guard job.
         </p>
       )}
 
@@ -145,9 +110,8 @@ export function JobTeamRoster({
           const showStaffRemoveAction =
             variant === 'staff' &&
             !!guard &&
-            !!onStaffRemoveFromCrew &&
+            !!onStaffRemoveFromSlot &&
             ['invited', 'pending_staff', 'crew_confirmed'].includes(slot.status) &&
-            slot.guardId !== job.teamLeadId &&
             !slot.isLead;
 
           return (
@@ -174,8 +138,8 @@ export function JobTeamRoster({
                       Open slot — needs a guard
                     </span>
                   )}
-                  {slot.isLead && guard && showFullTeamActions && (
-                    <WfBadge tone="primary">Coordinator</WfBadge>
+                  {slot.isLead && guard && (
+                    <WfBadge tone="primary">Lead slot</WfBadge>
                   )}
                 </div>
                 <p className="text-xs text-brand-text-muted">{SLOT_STATUS_LABEL[slot.status]}</p>
@@ -226,7 +190,7 @@ export function JobTeamRoster({
                       size="sm"
                       onClick={() => void onStaffApproveSlot!(guard!.id)}
                     >
-                      Approve for crew
+                      Approve guard
                     </AppButton>
                     <AppButton
                       variant="danger"
@@ -242,9 +206,9 @@ export function JobTeamRoster({
                     <AppButton
                       variant="danger"
                       size="sm"
-                      onClick={() => void onStaffRemoveFromCrew!(guard!.id)}
+                      onClick={() => void onStaffRemoveFromSlot!(guard!.id)}
                     >
-                      Remove from crew
+                      Remove from slot
                     </AppButton>
                   </div>
                 )}
@@ -253,35 +217,6 @@ export function JobTeamRoster({
           );
         })}
       </div>
-
-      {showFullTeamActions && onApproveFullTeam && onDenyFullTeam && (
-        <div className="flex flex-wrap gap-2 pt-1 border-t border-brand-border">
-          <AppButton
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              void (async () => {
-                if (!(await confirmApproveFullTeam(job.title, guardsNeeded))) return;
-                await onApproveFullTeam();
-              })();
-            }}
-          >
-            Approve full crew
-          </AppButton>
-          <AppButton
-            variant="danger"
-            size="sm"
-            onClick={() => {
-              void (async () => {
-                if (!(await confirmDenyFullTeam(job.title, guardsNeeded))) return;
-                await onDenyFullTeam();
-              })();
-            }}
-          >
-            Decline full crew
-          </AppButton>
-        </div>
-      )}
     </div>
   );
 }

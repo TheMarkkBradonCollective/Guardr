@@ -351,8 +351,8 @@ const EXPLORE_CARDS = [
   },
   {
     icon: Users,
-    title: 'Teams and standing crews',
-    body: 'Form permanent crews, coordinate multi-guard posts, and manage team communications easily.',
+    title: 'Multi-guard jobs',
+    body: 'Request several guards for one post and approve each slot independently.',
   },
   {
     icon: CreditCard,

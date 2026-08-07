@@ -10,6 +10,7 @@ interface StaffDesktopNavProps {
   activeSection: StaffSection;
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -21,7 +22,7 @@ const GROUPS: { title: string; ids: StaffSection[] }[] = [
   { title: 'Dashboard', ids: ['overview', 'map'] },
   {
     title: 'Operations',
-    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'crews', 'clients', 'team'],
+    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'clients', 'team'],
   },
   { title: 'Communications', ids: ['messages', 'support'] },
   { title: 'Finance', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
@@ -34,13 +35,14 @@ export function StaffDesktopNav({
   activeSection,
   onNavigate,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
   footer,
   brandingTrailing,
 }: StaffDesktopNavProps) {
-  const accessFlags: StaffNavAccessFlags = { showFinance, showSettings, showPermissions, showDisputes, showCities: false };
+  const accessFlags: StaffNavAccessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities: false };
 
   const handleSelect = (id: StaffSection) => {
     const notice = getStaffNavAccessNotice(id, accessFlags);

@@ -51,7 +51,6 @@ export type Permission =
   | 'admin.view_stats'
   | 'admin.manage_integrations'
   | 'admin.manage_locations'
-  | 'admin.manage_crews'
   | 'admin.view_staff_roster'
   // Director (+ all administrator)
   | 'director.manage_administrators'
@@ -125,7 +124,6 @@ const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   'admin.manage_platform_config',
   'admin.manage_integrations',
   'admin.manage_locations',
-  'admin.manage_crews',
   'admin.view_staff_roster',
 ];
 
@@ -213,7 +211,6 @@ export const STAFF_PERMISSION_CATALOG: {
   { permission: 'moderator.review_certifications', label: 'Verify credentials', group: 'Credentials' },
   { permission: 'moderator.review_job_requests', label: 'Review job postings', group: 'Jobs' },
   { permission: 'admin.manage_locations', label: 'Manage shared locations', group: 'Jobs' },
-  { permission: 'admin.manage_crews', label: 'Manage crews', group: 'Jobs' },
   { permission: 'moderator.handle_disputes', label: 'Handle disputes', group: 'Support' },
   { permission: 'moderator.suspend_users', label: 'Suspend users', group: 'User management' },
   { permission: 'moderator.issue_warnings', label: 'Issue warnings', group: 'User management' },
@@ -328,6 +325,35 @@ export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): bool
   return isFounder(user) || hasPermission(user, 'owner.platform_governance');
 }
 
+/** Manager+ — edit automatically tracked staff time entries and add manual time. */
+export function canAdjustStaffTimeEntries(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
+/** Manager+ — adjust guard shift clock times on the guard profile timesheet. */
+export function canAdjustGuardShiftTimes(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
+/** Manager+ — per-role hourly pay rates for tracked staff time. */
+export function canEditStaffHourlyPayRates(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
+/** Director and Founder — staff revenue-share compensation settings and payout confirmation */
+export function canManageStaffCompensation(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirectorTierRole(user.role);
+}
+
+export function canConfirmStaffCompensationPayout(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirectorTierRole(user.role);
+}
+
+/** Any staff member can view their own revenue-share summary. */
+export function canViewStaffCompensation(user: Pick<SessionUser, 'role'>): boolean {
+  return isStaffRole(user.role);
+}
+
 /** Manager, Director, and Founder share executive payment and ops controls */
 export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
   return isExecutiveOpsRole(user.role);
@@ -432,7 +458,7 @@ export function canManageLocations(user: Pick<SessionUser, 'role'>): boolean {
 }
 
 export function canManageCrews(user: Pick<SessionUser, 'role'>): boolean {
-  return hasPermission(user, 'admin.manage_crews') || canManageGuards(user);
+  return canManageGuards(user);
 }
 
 export function canViewStaffRoster(user: Pick<SessionUser, 'role'>): boolean {
@@ -592,14 +618,9 @@ export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boole
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
 }
 
-/** Administrators, Managers, Directors, and Founders may delete resolved support chat tickets */
+/** Staff with support inbox access may delete resolved support chat tickets */
 export function canDeleteResolvedSupportChat(user: Pick<SessionUser, 'role'>): boolean {
-  return (
-    user.role === 'administrator' ||
-    user.role === 'manager' ||
-    user.role === 'director' ||
-    user.role === 'owner'
-  );
+  return canAccessSupportInbox(user);
 }
 
 /** Director and Founder receive all staff job-management capabilities */

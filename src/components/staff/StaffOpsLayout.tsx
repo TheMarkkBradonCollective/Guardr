@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -60,7 +60,6 @@ interface StaffOpsLayoutProps {
   canAddGuard?: boolean;
   canAddStaff?: boolean;
   canAddCredential?: boolean;
-  canCreateCrew?: boolean;
   canAddLocation?: boolean;
 }
 
@@ -72,7 +71,6 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   map: 'Map',
   guards: 'Guards',
   team: 'Staff',
-  crews: 'Crews',
   clients: 'Clients',
   incidents: 'Incidents',
   messages: 'Messages',
@@ -120,10 +118,10 @@ export function StaffOpsLayout({
   canAddGuard = false,
   canAddStaff = false,
   canAddCredential = false,
-  canCreateCrew = false,
   canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
@@ -137,12 +135,11 @@ export function StaffOpsLayout({
       { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
       { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
       { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
-      { id: 'crews', label: 'Crews', icon: UsersRound, badge: badges.crews },
       { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
       { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
-      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
+      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, paymentsOnly: true },
       { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
       { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
@@ -182,6 +179,7 @@ export function StaffOpsLayout({
         screenTitle={screenTitle}
         navHighlight={navHighlight}
         showFinance={showFinance}
+        showPayments={showPayments}
         showSettings={true}
         showPermissions={showPermissions}
         showDisputes={showDisputes}
@@ -197,7 +195,6 @@ export function StaffOpsLayout({
         canAddGuard={canAddGuard}
         canAddStaff={canAddStaff}
         canAddCredential={canAddCredential}
-        canCreateCrew={canCreateCrew}
         canAddLocation={canAddLocation}
       >
         {children}
@@ -212,6 +209,7 @@ interface StaffOpsLayoutInnerProps
   screenTitle: string;
   navHighlight: StaffSection;
   showFinance: boolean;
+  showPayments: boolean;
   showSettings: boolean;
   showPermissions: boolean;
   showDisputes: boolean;
@@ -231,6 +229,7 @@ function StaffOpsLayoutInner({
   screenTitle,
   navHighlight,
   showFinance,
+  showPayments,
   showSettings,
   showPermissions,
   showDisputes,
@@ -246,7 +245,6 @@ function StaffOpsLayoutInner({
   canAddGuard = false,
   canAddStaff = false,
   canAddCredential = false,
-  canCreateCrew = false,
   canAddLocation = false,
 }: StaffOpsLayoutInnerProps) {
   const sidebarPrimaryActions = useStaffSidebarPrimaryActions(navHighlight, {
@@ -255,7 +253,6 @@ function StaffOpsLayoutInner({
     canAddGuard: (navHighlight === 'guards' || navHighlight === 'applications') && canAddGuard,
     canAddStaff: navHighlight === 'team' && canAddStaff,
     canAddCredential: navHighlight === 'credentials' && canAddCredential,
-    canCreateCrew: navHighlight === 'crews' && canCreateCrew,
     canAddLocation: navHighlight === 'locations' && canAddLocation,
   });
 
@@ -272,6 +269,7 @@ function StaffOpsLayoutInner({
       screenTitle={screenTitle}
       navHighlight={navHighlight}
       showFinance={showFinance}
+      showPayments={showPayments}
       showSettings={showSettings}
       showPermissions={showPermissions}
       showDisputes={showDisputes}

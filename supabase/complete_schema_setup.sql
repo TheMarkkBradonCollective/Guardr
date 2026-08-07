@@ -416,6 +416,7 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS replacement_request JSONB
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS no_show BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_violation_reports JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_out_audit JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_time_adjustment JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_name TEXT;
@@ -1416,6 +1417,9 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_push_role ON push_subscriptions(push_role);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_site_id ON push_subscriptions(site_id);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_support_tickets_open_activation_help
+  ON support_tickets (user_id)
+  WHERE subject = 'Activation help' AND status <> 'resolved';
 CREATE INDEX IF NOT EXISTS support_tickets_status_idx ON support_tickets(status);
 CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
 
@@ -1654,6 +1658,87 @@ COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_role_permissions JSONB;
 COMMENT ON COLUMN platform_settings.staff_role_permissions IS 'Custom staff-role permission lists — overrides built-in defaults when set.';
 
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config JSONB NOT NULL DEFAULT '{
+  "enabled": true,
+  "cadence": "weekly",
+  "roleRules": {
+    "Support": { "percentOfFees": 0.015, "floorPerPeriod": 0, "capPerPeriod": 400, "hourlyPayRate": 18 },
+    "Moderator": { "percentOfFees": 0.02, "floorPerPeriod": 0, "capPerPeriod": 600, "hourlyPayRate": 20 },
+    "Administrator": { "percentOfFees": 0.025, "floorPerPeriod": 0, "capPerPeriod": 800, "hourlyPayRate": 22 },
+    "Manager": { "percentOfFees": 0.03, "floorPerPeriod": 0, "capPerPeriod": 1200, "hourlyPayRate": 28 },
+    "Director": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 2000, "hourlyPayRate": 35 },
+    "Founder": { "percentOfFees": 0.05, "floorPerPeriod": 0, "capPerPeriod": 3000, "hourlyPayRate": 40 }
+  }
+}'::jsonb;
+COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence.';
+
+CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  staff_email TEXT NOT NULL,
+  staff_role TEXT NOT NULL CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
+  period_start TIMESTAMPTZ NOT NULL,
+  period_end TIMESTAMPTZ NOT NULL,
+  platform_fees_in_period NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  base_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  adjustment_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  final_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  confirmed_by_id TEXT NOT NULL,
+  confirmed_by_email TEXT NOT NULL,
+  confirmed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  note TEXT,
+  UNIQUE (staff_id, period_start, period_end)
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_staff ON staff_compensation_payouts(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_period ON staff_compensation_payouts(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_confirmed ON staff_compensation_payouts(confirmed_at DESC);
+
+COMMENT ON TABLE staff_compensation_payouts IS 'Confirmed staff revenue-share payouts — contractor-style, not W-2 payroll.';
+
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_hours NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS manual_adjustment_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS include_hourly_pay BOOLEAN;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS payout_status TEXT
+  CHECK (payout_status IS NULL OR payout_status IN ('base_paid', 'finalized'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS base_paid_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustment_choice TEXT
+  CHECK (adjustment_choice IS NULL OR adjustment_choice IN ('none', 'custom'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_id TEXT;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_email TEXT;
+
+CREATE TABLE IF NOT EXISTS staff_time_entries (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  clock_in_at TIMESTAMPTZ NOT NULL,
+  last_activity_at TIMESTAMPTZ,
+  clock_out_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL DEFAULT 'automatic' CHECK (source IN ('automatic', 'manual')),
+  adjusted_by_id TEXT,
+  adjusted_by_email TEXT,
+  adjusted_at TIMESTAMPTZ,
+  adjustment_note TEXT
+);
+
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'automatic';
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_id TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_email TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjustment_note TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_open ON staff_time_entries(staff_id) WHERE clock_out_at IS NULL;
+
+COMMENT ON TABLE staff_time_entries IS 'Staff automatic time tracker — first to last website action per session.';
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
   actor_id TEXT NOT NULL,
@@ -1850,6 +1935,8 @@ CREATE OR REPLACE FUNCTION public.is_authenticated_user() RETURNS BOOLEAN
 AS $$ SELECT auth.uid() IS NOT NULL; $$;
 
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_compensation_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_time_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_availability_date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_shift_templates ENABLE ROW LEVEL SECURITY;
@@ -1864,6 +1951,16 @@ CREATE POLICY audit_log_select ON audit_log FOR SELECT
 DROP POLICY IF EXISTS audit_log_insert ON audit_log;
 CREATE POLICY audit_log_insert ON audit_log FOR INSERT
   WITH CHECK (is_authenticated_user() OR true);
+
+DROP POLICY IF EXISTS staff_comp_payouts_all ON staff_compensation_payouts;
+CREATE POLICY staff_comp_payouts_all ON staff_compensation_payouts FOR ALL
+  USING (is_staff_user() OR NOT is_authenticated_user())
+  WITH CHECK (is_staff_user() OR NOT is_authenticated_user());
+
+DROP POLICY IF EXISTS staff_time_entries_all ON staff_time_entries;
+CREATE POLICY staff_time_entries_all ON staff_time_entries FOR ALL
+  USING (is_staff_user() OR NOT is_authenticated_user())
+  WITH CHECK (is_staff_user() OR NOT is_authenticated_user());
 
 DROP POLICY IF EXISTS guard_availability_select ON guard_availability;
 CREATE POLICY guard_availability_select ON guard_availability FOR SELECT

@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.113-beta",
+  "webVersion": "1.0.114-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.113",
-    "versionCode": 213,
+    "version": "1.0.114",
+    "versionCode": 214,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.113.apk",
+    "downloadName": "guardr-v1.0.114.apk",
     "fileSize": 8378011,
     "sha256": "2ce1a727f7fdebf2e06c6e788b0761f721b05f0a71e0c29e7e9deecb651e0896",
-    "releaseNotes": "Desktop workbench alignment across staff, client, and guard pages; Uber Freight-style table splits and credentials fix."
+    "releaseNotes": "Unified Payments page for guards, staff, and clients; guard profile Timesheet tab with staff shift time adjustments."
   },
-  "updatedAt": "2026-08-01T11:30:03.494Z"
+  "updatedAt": "2026-08-07T00:03:26.850Z"
 }

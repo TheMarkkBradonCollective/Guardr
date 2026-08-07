@@ -1,5 +1,6 @@
 import type { PlatformRole } from '../types';
 import { isStaffRole, ROLE_LABELS } from './permissions';
+import { isGuardrSupportSender } from './support';
 
 export function shouldMaskStaffIdentity(viewerRole: PlatformRole): boolean {
   return viewerRole === 'client' || viewerRole === 'guard';
@@ -41,8 +42,12 @@ export function communityChatSenderLabel(
 export function chatSenderLabelForViewer(
   viewerRole: PlatformRole,
   senderRole: PlatformRole,
-  senderName: string
+  senderName: string,
+  senderId?: string
 ): string {
+  if (isGuardrSupportSender(senderId ?? '', senderName)) {
+    return 'Guardr Staff';
+  }
   if (shouldMaskStaffIdentity(viewerRole) && isStaffRole(senderRole)) {
     return staffRoleLabel(senderRole);
   }
