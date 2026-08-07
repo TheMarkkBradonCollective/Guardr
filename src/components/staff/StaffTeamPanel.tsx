@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
+import type { PlatformSettings } from '../../lib/platformSettings';
+import type { StaffTeamDetailTab } from '../../lib/appNavigation';
 import {
   matchesStaffTeamFilter,
   staffRosterSortRank,
@@ -46,6 +48,7 @@ interface StaffTeamPanelProps {
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  platformSettings?: PlatformSettings;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
@@ -67,12 +70,14 @@ export function StaffTeamPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  platformSettings,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('pending');
+  const [staffTeamTab, setStaffTeamTab] = useState<StaffTeamDetailTab>('profile');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -80,6 +85,7 @@ export function StaffTeamPanel({
   const setSelectedId = (id: string | null) => {
     if (!isControlled) setInternalSelectedId(id);
     onSelectedIdChange?.(id);
+    if (id) setStaffTeamTab('profile');
   };
 
   useEffect(() => {
@@ -206,6 +212,9 @@ export function StaffTeamPanel({
               onRejectStaffAccount={onRejectStaffAccount}
               onUpdateStaffRole={onUpdateStaffRole}
               onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+              platformSettings={platformSettings}
+              staffTeamTab={staffTeamTab}
+              onStaffTeamTabChange={setStaffTeamTab}
               onBack={options?.onBack}
             />
           )}

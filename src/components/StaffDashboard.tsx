@@ -833,6 +833,7 @@ export function StaffDashboard({
           <StaffTeamPanel
             guards={guards}
             platformCities={platformCities}
+            platformSettings={platformSettings}
             currentUserId={currentUser.id}
             currentUserRole={currentUser.role}
             actorManagedCities={actorStaffProfile?.managedCities}
@@ -1173,6 +1174,7 @@ export function StaffDashboard({
           <UserProfileScreen
             currentUser={currentUser}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
+            platformSettings={platformSettings}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
           />
         );

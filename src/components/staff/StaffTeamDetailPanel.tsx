@@ -36,6 +36,10 @@ import {
   nextStaffBadgeNumberForRoleChange,
   STAFF_BADGE_PREFIX,
 } from '../../lib/staffBadgeNumber';
+import type { PlatformSettings } from '../../lib/platformSettings';
+import type { StaffTeamDetailTab } from '../../lib/appNavigation';
+import { StaffListFilterTabs } from './StaffListFilterTabs';
+import { StaffTimesheetsPanel } from './StaffTimesheetsPanel';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
@@ -55,6 +59,9 @@ interface StaffTeamDetailPanelProps {
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  platformSettings?: PlatformSettings;
+  staffTeamTab?: StaffTeamDetailTab;
+  onStaffTeamTabChange?: (tab: StaffTeamDetailTab) => void;
   onBack?: () => void;
 }
 
@@ -93,6 +100,9 @@ export function StaffTeamDetailPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  platformSettings,
+  staffTeamTab = 'profile',
+  onStaffTeamTabChange,
   onBack,
 }: StaffTeamDetailPanelProps) {
   const accountStatus = member.userStatus || 'active';
@@ -290,6 +300,30 @@ export function StaffTeamDetailPanel({
         </div>
       </div>
 
+      {platformSettings && onStaffTeamTabChange ? (
+        <div className="staff-guard-detail-tabs">
+          <StaffListFilterTabs
+            aria-label="Staff detail"
+            activeId={staffTeamTab}
+            onChange={(id) => onStaffTeamTabChange(id as StaffTeamDetailTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'timesheets', label: 'Timesheets' },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {staffTeamTab === 'timesheets' && platformSettings ? (
+        <section className="staff-detail-section space-y-3">
+          <StaffTimesheetsPanel
+            staffId={member.id}
+            platformSettings={platformSettings}
+            showManagerHint
+          />
+        </section>
+      ) : (
+        <>
       {!isPending && (
         <section className="staff-detail-section">
           <StaffProfileSection member={member} />
@@ -449,6 +483,8 @@ export function StaffTeamDetailPanel({
             <p className="text-xs text-brand-text-muted">{blockedReason}</p>
           </section>
         )
+      )}
+        </>
       )}
     </div>
   );
