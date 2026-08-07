@@ -1,5 +1,7 @@
 import type { SecurityGuard, StaffRole } from '../types';
 import { ROLE_LABELS, staffRoleToPlatformRole } from './permissions';
+import { formatPersonName, resolvePersonNameParts } from './personName';
+import { looksLikeStaffBadge } from './staffBadgeNumber';
 
 /** Platform operations areas staff can highlight on their profile. */
 export const STAFF_FOCUS_OPTIONS = [
@@ -29,9 +31,23 @@ export function defaultStaffHeadline(staffRole?: StaffRole): string {
   return `${staffRole} — ${ROLE_LABELS[platformRole]}`;
 }
 
-export function getStaffDisplayName(member: Pick<SecurityGuard, 'name' | 'badgeNumber'>): string {
+export function getStaffDisplayName(
+  member: Pick<SecurityGuard, 'name' | 'badgeNumber' | 'firstName' | 'middleName' | 'lastName'>
+): string {
+  const resolved = resolvePersonNameParts({
+    firstName: member.firstName,
+    middleName: member.middleName,
+    lastName: member.lastName,
+    name: member.name,
+  });
+  const formatted = formatPersonName(resolved);
+  if (formatted.trim() && !looksLikeStaffBadge(formatted) && formatted !== member.badgeNumber) {
+    return formatted;
+  }
   const name = member.name?.trim();
-  if (name) return name;
+  if (name && !looksLikeStaffBadge(name) && name !== member.badgeNumber) {
+    return name;
+  }
   return member.badgeNumber || 'Staff member';
 }
 

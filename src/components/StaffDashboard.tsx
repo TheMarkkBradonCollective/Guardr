@@ -261,10 +261,16 @@ interface StaffDashboardProps {
   ) => void | Promise<void>;
   onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
   onAddStaffProfile: (
-    email: string,
-    badgeNumber: string,
-    staffRole: StaffRole,
-    options?: { managedCities?: string[]; assignedManagerIds?: string[] }
+    input: {
+      email: string;
+      badgeNumber: string;
+      staffRole: StaffRole;
+      firstName: string;
+      middleName?: string;
+      lastName: string;
+      managedCities?: string[];
+      assignedManagerIds?: string[];
+    }
   ) => Promise<string>;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
@@ -863,11 +869,7 @@ export function StaffDashboard({
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onAddStaff={
               canProposeStaff
-                ? (input) =>
-                    onAddStaffProfile(input.email, input.badgeNumber, input.staffRole, {
-                      managedCities: input.managedCities,
-                      assignedManagerIds: input.assignedManagerIds,
-                    })
+                ? (input) => onAddStaffProfile(input)
                 : undefined
             }
             onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}

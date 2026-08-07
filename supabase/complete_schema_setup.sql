@@ -1555,7 +1555,7 @@ INSERT INTO staff (
     'staff-director-tyrone',
     'Tyrone Johnson',
     't.johnson@signaturesecurityspecialist.com',
-    'DIR-00002',
+    'DIR-00001',
     '', '',
     'Director — Platform operations.',
     'Director of Platform Operations',

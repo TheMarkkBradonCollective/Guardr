@@ -32,6 +32,9 @@ interface StaffTeamPanelProps {
     email: string;
     badgeNumber: string;
     staffRole: StaffRole;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
     managedCities?: string[];
     assignedManagerIds?: string[];
   }) => Promise<string>;
@@ -112,6 +115,7 @@ export function StaffTeamPanel({
             platformCities={platformCities}
             actorManagedCities={actorManagedCities}
             managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
+            roster={guards.filter((g) => g.isStaff)}
             onAdd={onAddStaff}
             onCreated={(staffId) => {
               setSearch('');
