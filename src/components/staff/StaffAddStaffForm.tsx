@@ -6,6 +6,7 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import type { PlatformCity } from '../../lib/platformCities';
 import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
+import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 
 import {
@@ -85,6 +86,9 @@ export function StaffAddStaffForm({
       }
       return current;
     });
+    if (isExecutiveStaffRole(role)) {
+      setManagedCities([]);
+    }
   }, [open, role, suggestedBadge]);
 
   const reset = () => {
@@ -250,11 +254,13 @@ export function StaffAddStaffForm({
             </div>
           </div>
 
-          {assignableCityNames.length > 0 && (
+          {staffRequiresCityAssignment(role) && assignableCityNames.length > 0 && (
             <div className="space-y-2">
-              <label className="uber-label block">Service Areas access</label>
+              <label className="uber-label block">City assignment</label>
               <p className="text-xs text-brand-text-muted">
-                Assign which cities this staff member may manage in Service Areas.
+                {role === 'Manager'
+                  ? 'Managers are usually assigned as city managers in Service Areas. You can also set a city here when onboarding.'
+                  : 'Assign one city for this staff member.'}
               </p>
               <StaffOperationsAccessPicker
                 id="add-staff-operations-access"
@@ -262,6 +268,7 @@ export function StaffAddStaffForm({
                 selected={managedCities}
                 onChange={setManagedCities}
                 maxListHeightClassName="max-h-40"
+                mode="single"
               />
             </div>
           )}

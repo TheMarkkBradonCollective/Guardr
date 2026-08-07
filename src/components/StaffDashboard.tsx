@@ -230,6 +230,7 @@ interface StaffDashboardProps {
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  onAssignCityManager?: (cityId: string, managerId: string | null) => Promise<void>;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   onUpdatePublicInformation?: (
     patch: Pick<
@@ -417,6 +418,7 @@ export function StaffDashboard({
   onSaveJobLocation,
   onUpdatePlatformCity,
   onUpdateStaffCityAccess,
+  onAssignCityManager,
   onUpdatePlatformSettings,
   onUpdatePublicInformation,
   onUpdateStaffIntegrations,
@@ -851,6 +853,7 @@ export function StaffDashboard({
             onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
             onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
             onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+            onUpdateStaffProfile={onUpdateGuardProfile}
             selectedId={selectedTeamId}
             onSelectedIdChange={setSelectedTeamId}
             initialSelectedId={selectedTeamId}
@@ -1108,7 +1111,7 @@ export function StaffDashboard({
             actorManagedCities={actorStaffProfile?.managedCities}
             staffRoster={guards.filter((guard) => guard.isStaff)}
             onUpdateCity={onUpdatePlatformCity}
-            onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+            onAssignCityManager={onAssignCityManager}
           />
         ) : (
           <AppBlockedAccessScreen

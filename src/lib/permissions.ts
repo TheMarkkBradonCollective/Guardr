@@ -608,9 +608,24 @@ export function canRecommendCityMarket(user: Pick<SessionUser, 'role'>): boolean
   return user.role === 'manager';
 }
 
-/** Director+ assign which cities managers and lower staff may manage */
+/** Director+ assign city managers and city scope for staff below Director */
 export function canAssignStaffCityAccess(user: Pick<SessionUser, 'role'>): boolean {
-  return canManageCityMarkets(user) || user.role === 'manager';
+  return canManageCityMarkets(user);
+}
+
+/** Director+ assign the single Manager responsible for a city market */
+export function canAssignCityManager(user: Pick<SessionUser, 'role'>): boolean {
+  return canManageCityMarkets(user);
+}
+
+/** Staff may edit their own profile; higher tiers may edit profiles below them */
+export function canEditStaffProfile(
+  actorRole: PlatformRole,
+  actorId: string,
+  member: { id: string; staffRole?: StaffRole }
+): boolean {
+  if (member.id === actorId) return true;
+  return canModerateStaffMember(actorRole, actorId, member);
 }
 
 /** Director and Founder may edit job listings (any non-closed job) */

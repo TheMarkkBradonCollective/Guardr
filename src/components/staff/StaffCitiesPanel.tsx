@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import {
-  canAssignStaffCityAccess,
+  canAssignCityManager,
   canManageCityMarkets,
   canRecommendCityMarket,
   canViewCityMarkets,
@@ -33,7 +33,7 @@ import {
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { CityStaffAccessPicker } from './CityStaffAccessPicker';
+import { CityManagerPicker } from './CityManagerPicker';
 import { CityCredentialLinksEditor } from './CityCredentialLinksEditor';
 import { MapPin } from 'lucide-react';
 import type { CityCredentialResourceLinks } from '../../lib/cityCredentialLinks';
@@ -52,10 +52,7 @@ interface StaffCitiesPanelProps {
       credentialResourceLinks?: CityCredentialResourceLinks;
     }
   ) => Promise<void>;
-  onUpdateStaffCityAccess?: (
-    staffId: string,
-    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
-  ) => Promise<void>;
+  onAssignCityManager?: (cityId: string, managerId: string | null) => Promise<void>;
 }
 
 const STATUS_TONES: Record<CityMarketStatus, 'success' | 'danger' | 'warning'> = {
@@ -126,7 +123,7 @@ function CityDetailPanel({
   platformCities,
   currentUser,
   onUpdate,
-  onUpdateStaffCityAccess,
+  onAssignCityManager,
 }: {
   city: PlatformCity;
   busy: boolean;
@@ -142,10 +139,7 @@ function CityDetailPanel({
     recommendOpen?: boolean;
     credentialResourceLinks?: CityCredentialResourceLinks;
   }) => void;
-  onUpdateStaffCityAccess?: (
-    staffId: string,
-    patch: { managedCities?: string[]; assignedManagerIds?: string[] }
-  ) => Promise<void>;
+  onAssignCityManager?: (cityId: string, managerId: string | null) => Promise<void>;
 }) {
   const directorValue = getDirectorActionValue(city);
   const managerValue = getManagerActionValue(city);
@@ -224,18 +218,14 @@ function CityDetailPanel({
         />
       ) : null}
 
-      {onUpdateStaffCityAccess && staffRoster.length > 0 ? (
+      {onAssignCityManager && staffRoster.length > 0 ? (
         <div className="border-t border-brand-border pt-4">
-          <CityStaffAccessPicker
-            cityName={city.name}
+          <CityManagerPicker
+            city={city}
             staffRoster={staffRoster}
-            platformCities={platformCities}
-            currentUserId={currentUser.id}
-            currentUserRole={currentUser.role as PlatformRole}
             canEdit={canEditStaffAccess}
-            onUpdateStaffCityAccess={async (staffId, patch) => {
-              await onUpdateStaffCityAccess(staffId, patch);
-            }}
+            busy={busy}
+            onAssignCityManager={onAssignCityManager}
           />
         </div>
       ) : null}
@@ -249,7 +239,7 @@ export function StaffCitiesPanel({
   actorManagedCities = [],
   staffRoster = [],
   onUpdateCity,
-  onUpdateStaffCityAccess,
+  onAssignCityManager,
 }: StaffCitiesPanelProps) {
   const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
@@ -325,8 +315,8 @@ export function StaffCitiesPanel({
   const selectedCity = filtered.find((city) => city.id === selectedId) ?? null;
 
   const canEditStaffAccessForCity = (cityName: string) =>
-    Boolean(onUpdateStaffCityAccess) &&
-    canAssignStaffCityAccess(currentUser) &&
+    Boolean(onAssignCityManager) &&
+    canAssignCityManager(currentUser) &&
     staffCanManageCity(currentUser.role as PlatformRole, actorManagedCities, cityName);
 
   const applyUpdate = async (
@@ -448,7 +438,7 @@ export function StaffCitiesPanel({
                   platformCities={cities}
                   currentUser={currentUser}
                   onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
-                  onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+                  onAssignCityManager={onAssignCityManager}
                 />
               ) : (
                 <WorkbenchEmpty icon={MapPin} message="Select a city to manage" variant="detail" />
@@ -481,7 +471,7 @@ export function StaffCitiesPanel({
               platformCities={cities}
               currentUser={currentUser}
               onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
-              onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+              onAssignCityManager={onAssignCityManager}
             />
           </div>
         </div>
