@@ -1017,11 +1017,16 @@ CREATE TABLE IF NOT EXISTS platform_cities (
   recommend_open BOOLEAN NOT NULL DEFAULT FALSE,
   sort_order INTEGER NOT NULL DEFAULT 0,
   credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb,
+  city_manager_id TEXT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_by TEXT
 );
 
 ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS city_manager_id TEXT;
+
+COMMENT ON COLUMN platform_cities.city_manager_id IS
+  'Manager staff ID responsible for this city market; at most one manager per city';
 
 COMMENT ON TABLE platform_cities IS 'Director-controlled city rollout — open, closed, or waitlist with audience targeting.';
 COMMENT ON COLUMN platform_cities.status IS 'open = live; closed = deny applications; waitlist = accept but hold staff release';

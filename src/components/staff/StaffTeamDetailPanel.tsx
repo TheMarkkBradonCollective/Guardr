@@ -15,6 +15,7 @@ import {
   getAssignableStaffRoles,
   canModerateStaffMember,
   canAssignStaffCityAccess,
+  canEditStaffProfile,
   platformStaffRank,
   staffRoleRank,
 } from '../../lib/permissions';
@@ -23,8 +24,10 @@ import {
   getAssignableCityNamesForStaffAccess,
   normalizeManagedCities,
 } from '../../lib/platformCities';
+import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { StaffProfileSection } from '../profile/StaffProfileSection';
+import { StaffProfileSection, type StaffProfilePayload } from '../profile/StaffProfileSection';
+import type { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
@@ -59,6 +62,7 @@ interface StaffTeamDetailPanelProps {
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  onUpdateStaffProfile?: (staffId: string, payload: ProfileSavePayload) => void | Promise<void>;
   platformSettings?: PlatformSettings;
   staffTeamTab?: StaffTeamDetailTab;
   onStaffTeamTabChange?: (tab: StaffTeamDetailTab) => void;
@@ -100,6 +104,7 @@ export function StaffTeamDetailPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  onUpdateStaffProfile,
   platformSettings,
   staffTeamTab = 'profile',
   onStaffTeamTabChange,
@@ -119,8 +124,31 @@ export function StaffTeamDetailPanel({
   const [cityError, setCityError] = useState('');
   const [savingCities, setSavingCities] = useState(false);
   const [reviewPending, setReviewPending] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileMsg, setProfileMsg] = useState('');
+  const [phone, setPhone] = useState(member.phone ?? '');
+  const [personalEmail, setPersonalEmail] = useState(member.personalEmail ?? '');
+  const [staffProfile, setStaffProfile] = useState<StaffProfilePayload>({
+    headline: member.headline ?? '',
+    summary: member.summary ?? '',
+    about: member.about ?? member.bio ?? '',
+    specialties: member.specialties ?? [],
+  });
 
   useEffect(() => {
+    setEditingProfile(false);
+    setProfileError('');
+    setProfileMsg('');
+    setPhone(member.phone ?? '');
+    setPersonalEmail(member.personalEmail ?? '');
+    setStaffProfile({
+      headline: member.headline ?? '',
+      summary: member.summary ?? '',
+      about: member.about ?? member.bio ?? '',
+      specialties: member.specialties ?? [],
+    });
     setRole(member.staffRole || 'Moderator');
     setRoleMsg('');
     setRoleError('');
@@ -128,22 +156,70 @@ export function StaffTeamDetailPanel({
     setAssignedManagerIds(member.assignedManagerIds ?? []);
     setCityMsg('');
     setCityError('');
-  }, [member.id, member.staffRole, member.managedCities, member.assignedManagerIds]);
+  }, [
+    member.id,
+    member.staffRole,
+    member.managedCities,
+    member.assignedManagerIds,
+    member.headline,
+    member.summary,
+    member.about,
+    member.bio,
+    member.specialties,
+    member.phone,
+    member.personalEmail,
+  ]);
 
   const platformRole = staffRoleToPlatformRole(role);
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
   const canModifyMember =
     canManageStaff && canModerateStaffMember(currentUserRole, currentUserId, member);
   const blockedReason = staffModerationBlockedReason(currentUserRole, currentUserId, member);
-  const canEditCityAccess =
+  const canEditProfile =
+    Boolean(onUpdateStaffProfile) &&
+    canEditStaffProfile(currentUserRole, currentUserId, member);
+  const memberRequiresCity = staffRequiresCityAssignment(member.staffRole);
+  const memberIsExecutive = isExecutiveStaffRole(member.staffRole);
+  const memberIsManager = member.staffRole === 'Manager';
+  const canEditMemberCityAccess =
     canModifyMember &&
     canAssignStaffCityAccess({ role: currentUserRole }) &&
+    memberRequiresCity &&
+    !memberIsManager &&
     Boolean(onUpdateStaffCityAccess);
   const assignableCityNames = getAssignableCityNamesForStaffAccess(
     platformCities,
     currentUserRole,
     actorManagedCities
   );
+
+  const handleProfileSave = async () => {
+    if (!onUpdateStaffProfile) return;
+    setProfileError('');
+    setProfileMsg('');
+    setProfileSaving(true);
+    try {
+      await onUpdateStaffProfile(member.id, {
+        name: member.name,
+        firstName: member.firstName ?? member.name.split(' ')[0] ?? '',
+        middleName: member.middleName,
+        lastName: member.lastName ?? member.name.split(' ').slice(-1)[0] ?? '',
+        phone: phone.trim(),
+        personalEmail: personalEmail.trim(),
+        bio: staffProfile.about,
+        headline: staffProfile.headline,
+        summary: staffProfile.summary,
+        about: staffProfile.about,
+        specialties: staffProfile.specialties,
+      });
+      setProfileMsg('Profile updated.');
+      setEditingProfile(false);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Could not update profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const handleCityAccessSave = async () => {
     if (!onUpdateStaffCityAccess) return;
@@ -325,8 +401,80 @@ export function StaffTeamDetailPanel({
       ) : (
         <>
       {!isPending && (
-        <section className="staff-detail-section">
-          <StaffProfileSection member={member} />
+        <section className="staff-detail-section space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Team profile</h3>
+            {canEditProfile && !editingProfile && (
+              <AppButton variant="outline" size="sm" onClick={() => setEditingProfile(true)}>
+                Edit profile
+              </AppButton>
+            )}
+          </div>
+          {editingProfile ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block space-y-1 sm:col-span-2">
+                  <span className="uber-label">Phone</span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="uber-input w-full"
+                  />
+                </label>
+                <label className="block space-y-1 sm:col-span-2">
+                  <span className="uber-label">Personal email</span>
+                  <input
+                    type="email"
+                    value={personalEmail}
+                    onChange={(e) => setPersonalEmail(e.target.value)}
+                    className="uber-input w-full"
+                  />
+                </label>
+              </div>
+              <StaffProfileSection
+                member={member}
+                editing
+                payload={staffProfile}
+                onChange={(patch) => setStaffProfile((prev) => ({ ...prev, ...patch }))}
+              />
+              <div className="flex flex-wrap gap-2">
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  onClick={() => void handleProfileSave()}
+                  disabled={profileSaving}
+                >
+                  {profileSaving ? 'Saving…' : 'Save profile'}
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingProfile(false);
+                    setProfileError('');
+                    setPhone(member.phone ?? '');
+                    setPersonalEmail(member.personalEmail ?? '');
+                    setStaffProfile({
+                      headline: member.headline ?? '',
+                      summary: member.summary ?? '',
+                      about: member.about ?? member.bio ?? '',
+                      specialties: member.specialties ?? [],
+                    });
+                  }}
+                  disabled={profileSaving}
+                >
+                  Cancel
+                </AppButton>
+              </div>
+              {profileError && <p className="text-sm text-red-400">{profileError}</p>}
+            </>
+          ) : (
+            <StaffProfileSection member={member} />
+          )}
+          {profileMsg && !editingProfile && (
+            <p className="text-sm text-brand-primary">{profileMsg}</p>
+          )}
         </section>
       )}
 
@@ -407,18 +555,40 @@ export function StaffTeamDetailPanel({
         )}
       </section>
 
-      {canEditCityAccess && assignableCityNames.length > 0 && (
-        <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">Service Areas access</h3>
+      {memberIsExecutive && (
+        <section className="staff-detail-section space-y-2">
+          <h3 className="text-sm font-semibold">Service areas</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Choose which cities this staff member may manage in Service Areas. Directors control
-            manager assignments; managers may assign cities within their own scope.
+            Directors and Founders run the full platform and are not assigned to a single city.
+          </p>
+        </section>
+      )}
+
+      {memberIsManager && memberRequiresCity && (
+        <section className="staff-detail-section space-y-2">
+          <h3 className="text-sm font-semibold">City assignment</h3>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            City managers are assigned in Service Areas. Only one Manager may run each city.
+          </p>
+          <p className="text-sm">
+            {memberManagedCities.length > 0 ? memberManagedCities.join(', ') : 'No city assigned yet'}
+          </p>
+        </section>
+      )}
+
+      {canEditMemberCityAccess && assignableCityNames.length > 0 && (
+        <section className="staff-detail-section space-y-3">
+          <h3 className="text-sm font-semibold">City assignment</h3>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Assign one city for this staff member. Directors and Founders set city managers in
+            Service Areas.
           </p>
           <StaffOperationsAccessPicker
             id={`staff-ops-access-${member.id}`}
             cityNames={assignableCityNames}
             selected={managedCities}
             onChange={setManagedCities}
+            mode="single"
           />
           {currentUserRole === 'owner' || currentUserRole === 'director' ? (
             <div className="space-y-2">

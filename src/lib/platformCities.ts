@@ -17,6 +17,8 @@ export interface PlatformCity {
   waitlistAudience: CityWaitlistAudience;
   recommendOpen: boolean;
   sortOrder: number;
+  /** Manager staff ID responsible for this city; at most one manager per city. */
+  cityManagerId?: string | null;
   /** City-specific marketplace eligibility credential resource links (staff-configured). */
   credentialResourceLinks?: CityCredentialResourceLinks;
   updatedAt?: string;
@@ -223,6 +225,10 @@ export function platformCityFromRow(row: Record<string, unknown>): PlatformCity 
         : 'both',
     recommendOpen: row.recommend_open === true,
     sortOrder: typeof row.sort_order === 'number' ? row.sort_order : 0,
+    cityManagerId:
+      typeof row.city_manager_id === 'string' && row.city_manager_id.trim()
+        ? row.city_manager_id
+        : null,
     credentialResourceLinks: parseCredentialResourceLinks(row.credential_resource_links),
     updatedAt: row.updated_at ? String(row.updated_at) : undefined,
     updatedBy: row.updated_by ? String(row.updated_by) : undefined,
@@ -238,6 +244,7 @@ export function platformCityToDbRow(city: PlatformCity): Record<string, unknown>
     waitlist_audience: city.waitlistAudience,
     recommend_open: city.recommendOpen,
     sort_order: city.sortOrder,
+    city_manager_id: city.cityManagerId ?? null,
     credential_resource_links: serializeCredentialResourceLinks(city.credentialResourceLinks),
     updated_at: city.updatedAt ?? new Date().toISOString(),
     updated_by: city.updatedBy ?? null,

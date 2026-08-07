@@ -14,6 +14,7 @@ import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import type { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
@@ -48,6 +49,7 @@ interface StaffTeamPanelProps {
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
   ) => Promise<void>;
+  onUpdateStaffProfile?: (staffId: string, payload: ProfileSavePayload) => void | Promise<void>;
   platformSettings?: PlatformSettings;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
@@ -70,6 +72,7 @@ export function StaffTeamPanel({
   onRejectStaffAccount,
   onUpdateStaffRole,
   onUpdateStaffCityAccess,
+  onUpdateStaffProfile,
   platformSettings,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
@@ -212,6 +215,7 @@ export function StaffTeamPanel({
               onRejectStaffAccount={onRejectStaffAccount}
               onUpdateStaffRole={onUpdateStaffRole}
               onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+              onUpdateStaffProfile={onUpdateStaffProfile}
               platformSettings={platformSettings}
               staffTeamTab={staffTeamTab}
               onStaffTeamTabChange={setStaffTeamTab}
