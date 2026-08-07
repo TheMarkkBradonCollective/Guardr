@@ -32,7 +32,7 @@ Guardr ships **three independent applications**, not one responsive layout. See
 
 | Device | Primary users | Application | UI behavior |
 |--------|---------------|-------------|-------------|
-| Phone | Guards, clients | `MobileAppShell` | Edge-to-edge canvas, fixed bottom tabs + More sheet, draggable bottom sheets, FAB, swipe rows, pull-to-refresh, 48px targets |
+| Phone | Guards, clients | Classic mobile shell (`GuardrDrawerShell`) | Hamburger drawer sidebar + sticky bottom footer tabs + More sheet; scrollable content pane |
 | Tablet | Staff, guards, clients | `TabletAppShell` | Persistent labelled rail + quick-switch strip, master/detail split views, docked side panels, persistent inspector, 44px targets |
 | Desktop / Chromebook | Staff, clients, admin | `DesktopAppShell` | Permanent grouped sidebar, top bar breadcrumb, data tables, command palette (`Cmd/Ctrl+K`), `Alt+1..9` shortcuts, resizable panels, drag-and-drop, status bar, 32px targets |
 | PWA standalone | All | mobile or tablet | Never the desktop application — an installed shell is touch-first by definition |

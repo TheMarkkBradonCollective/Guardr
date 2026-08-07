@@ -84,14 +84,14 @@ nobody can quietly collapse them into a single scale with a factor.
 
 | | Mobile | Tablet | Desktop |
 |---|---|---|---|
-| Navigation | bottom tabs | side rail | sidebar + top bar |
-| Overlay | bottom sheet | docked side panel | centred dialog |
+| Navigation | drawer sidebar + bottom footer tabs | side rail | sidebar + top bar |
+| Overlay | sheet / modal (existing) | docked side panel | centred dialog |
 | Detail view | push over list | two-column split | resizable multi-panel |
 | Minimum target | 48px | 44px | 32px |
 | Body type | 16px | 15px | 14px |
 | Row height | 68px | 60px | 40px |
 | Page transition | slide-over 300ms | panel-fade 260ms | cross-fade 160ms |
-| Title lives in | collapsing header band | page body | top bar breadcrumb |
+| Title lives in | header band (hamburger + title) | page body | top bar breadcrumb |
 | Hover carries meaning | no | no | yes |
 | Keyboard shortcuts | no | no | yes |
 | Gesture navigation | yes | yes | no |
@@ -103,8 +103,20 @@ leaking into one another.
 
 **Title ownership** is worth calling out because getting it wrong produces visible
 duplication: exactly one place per surface renders the page title. Mobile uses its
-collapsing header band, tablet uses the page body, desktop uses the top bar
-breadcrumb. The tablet shell header therefore shows workspace context, not a title.
+header band (hamburger + title + account), tablet uses the page body, desktop uses
+the top bar breadcrumb. The tablet shell header therefore shows workspace context,
+not a title.
+
+## Mobile is intentionally the classic shell
+
+The mobile surface keeps the pre-remaster Uber-style application: hamburger drawer
+sidebar (identity + full nav + footer links) and sticky bottom footer tabs with a
+More sheet. Tablet and desktop do **not** reuse that shell — they load independent
+`TabletAppShell` / `DesktopAppShell` chunks. The surface router exists so those
+wider layouts stop piggybacking off the phone, not so the phone itself is rebuilt.
+
+Production mobile mounts `GuardrDrawerShell` with `forceLayout="mobile"`. The newer
+`MobileAppShell` kit remains available for the `?ui-preview=1` harness.
 
 ## The three navigation models
 

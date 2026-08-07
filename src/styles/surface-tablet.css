@@ -87,8 +87,15 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--sf-paper-sunken);
+}
+
+.sft-shell-canvas[data-bleed='true'] {
+  overflow: hidden;
 }
 
 /* ── Navigation rail ─────────────────────────────────────────────────────── */

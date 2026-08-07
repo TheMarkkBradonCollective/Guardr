@@ -112,8 +112,8 @@ test.describe('surface resolution', () => {
   });
 
   test('surface chrome never leaks across device types', async ({ page }) => {
-    // The mobile app owns bottom tabs and sheets; the desktop owns the sidebar,
-    // status bar, and command palette. Neither may render the other's chrome.
+    // Mobile keeps the classic drawer + bottom nav; tablet owns the rail;
+    // desktop owns the sidebar, status bar, and command palette.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
@@ -122,11 +122,46 @@ test.describe('surface resolution', () => {
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/?ui=desktop');
     await waitForSurface(page, 'desktop');
-    await expect(page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split')).toHaveCount(0);
+    await expect(
+      page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split, .uber-bottom-nav, .mobility-drawer'),
+    ).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/?ui=tablet');
     await waitForSurface(page, 'tablet');
-    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar')).toHaveCount(0);
+    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav')).toHaveCount(0);
+  });
+
+  test('shell canvases are scrollable when content overflows', async ({ page }) => {
+    // The remaster initially set overflow:hidden on every canvas and forgot to
+    // wrap feature pages — nothing scrolled. Inject the canvas class under the
+    // active surface and assert CSS restores overflow scrolling.
+    const measure = (className: string) =>
+      page.evaluate((cls) => {
+        const el = document.createElement('main');
+        el.className = cls;
+        el.setAttribute('data-bleed', 'false');
+        document.body.appendChild(el);
+        const overflowY = getComputedStyle(el).overflowY;
+        el.remove();
+        return overflowY;
+      }, className);
+
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/?ui=tablet');
+    await waitForSurface(page, 'tablet');
+    expect(await measure('sft-shell-canvas')).toMatch(/auto|scroll/);
+
+    await page.setViewportSize(VIEWPORTS.desktop);
+    await page.goto('/?ui=desktop');
+    await waitForSurface(page, 'desktop');
+    expect(await measure('sfd-shell-canvas')).toMatch(/auto|scroll/);
+
+    await page.setViewportSize(VIEWPORTS.phone);
+    await page.goto('/?ui=mobile');
+    await waitForSurface(page, 'mobile');
+    // Preview/mobile kit path; classic GuardrDrawerShell uses inline overflow:auto
+    // on .mobility-content-inner once a signed-in role shell mounts.
+    expect(await measure('sfm-shell-canvas')).toMatch(/auto|scroll/);
   });
 });

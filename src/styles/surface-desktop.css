@@ -37,8 +37,14 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--sf-paper-sunken);
+}
+
+.sfd-shell-canvas[data-bleed='true'] {
+  overflow: hidden;
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
