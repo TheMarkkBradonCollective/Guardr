@@ -153,7 +153,7 @@ export function StaffCompensationSection({
 
   useEffect(() => {
     if (!config.enabled || loading) return;
-    const pending = allPreviews.filter((preview) => preview.pendingAmount > 0);
+    const pending = allPreviews.filter((preview) => preview.needsPeriodPayout);
     if (pending.length === 0) return;
 
     let cancelled = false;
@@ -411,6 +411,9 @@ export function StaffCompensationSection({
       </p>
       <p>
         Current {config.cadence} period: <strong className="text-brand-text">{periodLabel}</strong>
+        {' · '}
+        A payout record is opened for each staff member every period — even at $0 platform fees — so
+        tracked hours stay tied to the week and pack-pay rules can be added later.
       </p>
       <p>
         Platform fees this period: <strong className="text-brand-text">{formatCompensationMoney(periodFees)}</strong>

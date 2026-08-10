@@ -91,6 +91,26 @@ test('buildStaffCompensationPreviews splits role pool across peers', () => {
   assert.equal(previews[0].platformFeesInPeriod, 40);
   assert.equal(previews[0].pendingAmount, 0.3);
   assert.equal(previews[1].pendingAmount, 0.3);
+  assert.equal(previews[0].needsPeriodPayout, true);
+});
+
+test('buildStaffCompensationPreviews opens period payout when platform fees are zero', () => {
+  const { periodStart, periodEnd } = getCompensationPeriodBounds('weekly', new Date('2026-08-06T12:00:00.000Z'));
+  const previews = buildStaffCompensationPreviews({
+    guards: [makeStaff()],
+    requests: [],
+    config: DEFAULT_STAFF_COMPENSATION_CONFIG,
+    payouts: [],
+    periodStart,
+    periodEnd,
+    trackedHoursByStaffId: { 'staff-1': 12.5 },
+  });
+  assert.equal(previews.length, 1);
+  assert.equal(previews[0].platformFeesInPeriod, 0);
+  assert.equal(previews[0].cappedBaseAmount, 0);
+  assert.equal(previews[0].pendingAmount, 0);
+  assert.equal(previews[0].needsPeriodPayout, true);
+  assert.equal(previews[0].trackedHours, 12.5);
 });
 
 test('buildStaffCompensationPreviews respects confirmed payout for period', () => {
@@ -121,6 +141,7 @@ test('buildStaffCompensationPreviews respects confirmed payout for period', () =
     periodEnd,
   });
   assert.equal(previews[0].pendingAmount, 0);
+  assert.equal(previews[0].needsPeriodPayout, false);
   assert.equal(previews[0].alreadyPaidAmount, 0.6);
 });
 
@@ -137,6 +158,23 @@ test('buildInstantBasePayout creates base_paid record for instant revenue share'
   const payout = buildInstantBasePayout({ preview: previews[0], periodStart, periodEnd });
   assert.equal(payout.payoutStatus, 'base_paid');
   assert.equal(payout.finalAmount, payout.baseAmount);
+  assert.equal(isPayoutAwaitingAdjustments(payout), true);
+});
+
+test('buildInstantBasePayout creates zero-dollar period anchor when fees are zero', () => {
+  const { periodStart, periodEnd } = getCompensationPeriodBounds('weekly', new Date('2026-08-06T12:00:00.000Z'));
+  const previews = buildStaffCompensationPreviews({
+    guards: [makeStaff()],
+    requests: [],
+    config: DEFAULT_STAFF_COMPENSATION_CONFIG,
+    payouts: [],
+    periodStart,
+    periodEnd,
+  });
+  const payout = buildInstantBasePayout({ preview: previews[0], periodStart, periodEnd });
+  assert.equal(payout.baseAmount, 0);
+  assert.equal(payout.finalAmount, 0);
+  assert.equal(payout.payoutStatus, 'base_paid');
   assert.equal(isPayoutAwaitingAdjustments(payout), true);
 });
 
@@ -157,6 +195,7 @@ test('applyStaffPayoutAdjustments finalizes with no adjustments', () => {
       cappedBaseAmount: 0.6,
       alreadyPaidAmount: 0,
       pendingAmount: 0.6,
+      needsPeriodPayout: false,
       isActive: true,
       trackedHours: 5,
       hourlyPayRate: 18,
