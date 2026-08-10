@@ -34,7 +34,7 @@ export function getStaffNavAccessNotice(
   if (PAYMENTS_SECTIONS.has(section) && !flags.showPayments) {
     return {
       title: 'Payments',
-      message: 'Payments are available to staff with finance permissions or active staff compensation access.',
+      message: 'Payments are available to staff with finance permissions.',
     };
   }
   if (FINANCE_SECTIONS.has(section) && !flags.showFinance) {
@@ -98,8 +98,7 @@ export function isStaffNavItemVisible(
 export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNavAccessNotice>> = {
   payments: {
     title: 'Payments',
-    message:
-      'Payments are available to staff with finance permissions or active staff compensation access.',
+    message: 'Payments are available to staff with finance permissions.',
   },
   disputes: {
     title: 'Disputes',
