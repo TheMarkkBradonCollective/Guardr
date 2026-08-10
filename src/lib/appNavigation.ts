@@ -88,6 +88,8 @@ export interface AppRoute {
   guardJobsTab?: GuardJobsBrowseTab;
   /** Guard jobs list — selected job detail */
   guardJobId?: string;
+  /** Guard profile screen — active tab */
+  guardProfileTab?: GuardProfileTab;
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
@@ -237,6 +239,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const clientJobId = searchParams.get('cj');
   const guardJobsTab = parseGuardJobsTab(searchParams.get('bt'));
   const guardJobId = searchParams.get('gj');
+  const guardProfileTab = searchParams.get('ptab');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
 
@@ -291,6 +294,14 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (clientJobId) nested.clientJobId = clientJobId;
   if (guardJobsTab) nested.guardJobsTab = guardJobsTab;
   if (guardJobId) nested.guardJobId = guardJobId;
+  if (
+    guardProfileTab === 'profile' ||
+    guardProfileTab === 'certs' ||
+    guardProfileTab === 'inventory' ||
+    guardProfileTab === 'timesheet'
+  ) {
+    nested.guardProfileTab = guardProfileTab;
+  }
   const isRoleChoice = searchParams.get('pick') === 'role';
   if (!isRoleChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
@@ -323,6 +334,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.clientJobId) params.set('cj', route.clientJobId);
   if (route.guardJobsTab) params.set('bt', route.guardJobsTab);
   if (route.guardJobId) params.set('gj', route.guardJobId);
+  if (route.guardProfileTab) params.set('ptab', route.guardProfileTab);
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
   return params;

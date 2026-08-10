@@ -51,7 +51,6 @@ interface ClientAppLayoutProps {
 }
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'invoices', label: 'Payments', icon: Receipt },
   { id: 'guards', label: 'Users', icon: Users },
   { id: 'locations', label: 'Locations', icon: MapPin },
   { id: 'reports', label: 'Reports', icon: FileText },
@@ -155,8 +154,14 @@ export function ClientAppLayout({
         ],
       },
       { id: 'map', label: 'Map', icon: Map },
+      {
+        id: 'invoices',
+        label: 'Payments',
+        icon: Receipt,
+        badge: invoicesBadge > 0 ? invoicesBadge : undefined,
+      },
     ],
-    [],
+    [invoicesBadge],
   );
 
   const messagesNavItems = useMemo(
@@ -177,13 +182,7 @@ export function ClientAppLayout({
     [messagesBadge, supportBadge],
   );
 
-  const overflowNavItems = useMemo(
-    () =>
-      OVERFLOW_NAV.map((item) =>
-        item.id === 'invoices' && invoicesBadge > 0 ? { ...item, badge: invoicesBadge } : item,
-      ),
-    [invoicesBadge],
-  );
+  const overflowNavItems = useMemo(() => OVERFLOW_NAV, []);
 
   const sidebarFooter = (
     <SidebarFooterLinks

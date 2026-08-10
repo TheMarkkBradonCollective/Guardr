@@ -83,6 +83,13 @@ interface UserProfileScreenProps {
   ) => Promise<void>;
   requests?: SecurityRequest[];
   platformSettings?: PlatformSettings;
+  canAdjustShiftTimes?: boolean;
+  onAdjustShiftTime?: (
+    requestId: string,
+    payload: { clockInAt: string; clockOutAt: string; note?: string },
+  ) => void | Promise<void>;
+  guardProfileTab?: GuardProfileTab;
+  onGuardProfileTabChange?: (tab: GuardProfileTab) => void;
 }
 
 export function UserProfileScreen({
@@ -101,10 +108,14 @@ export function UserProfileScreen({
   onSaveVehicleInsurance,
   requests = [],
   platformSettings,
+  canAdjustShiftTimes = false,
+  onAdjustShiftTime,
+  guardProfileTab: controlledProfileTab,
+  onGuardProfileTabChange,
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
-  const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
+  const [profileTab, setProfileTab] = useState<GuardProfileTab>(controlledProfileTab ?? 'profile');
   const [staffProfileTab, setStaffProfileTab] = useState<StaffProfileTab>('profile');
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
@@ -185,6 +196,20 @@ export function UserProfileScreen({
       listedEquipmentGear: guard?.listedEquipmentGear ?? [],
     });
   }, [currentUser, guard, client]);
+
+  useEffect(() => {
+    if (controlledProfileTab) {
+      setProfileTab(controlledProfileTab);
+    }
+  }, [controlledProfileTab]);
+
+  const activeProfileTab = controlledProfileTab ?? profileTab;
+  const handleProfileTabChange = (tab: GuardProfileTab) => {
+    if (!controlledProfileTab) {
+      setProfileTab(tab);
+    }
+    onGuardProfileTabChange?.(tab);
+  };
 
   const roleLabel = ROLE_LABELS[currentUser.role as PlatformRole] ?? currentUser.role;
   const displayName = formatPersonName({ firstName, middleName, lastName });
@@ -337,8 +362,8 @@ export function UserProfileScreen({
         <div className="guard-profile-tabs mb-4">
           <ListFilterTabs
             aria-label="Guard profile"
-            activeId={profileTab}
-            onChange={(id) => setProfileTab(id as GuardProfileTab)}
+            activeId={activeProfileTab}
+            onChange={(id) => handleProfileTabChange(id as GuardProfileTab)}
             tabs={[
               { id: 'profile', label: 'Profile' },
               { id: 'certs', label: 'Credentials' },
@@ -361,7 +386,7 @@ export function UserProfileScreen({
           />
         </div>
       )}
-      {profileTab === 'certs' && canBuildResume && guard ? (
+      {activeProfileTab === 'certs' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
           <GuardCredentialsPanel
             guard={guard}
@@ -376,7 +401,7 @@ export function UserProfileScreen({
             certOverlayNav={!editing ? { onEditFullPage: () => setEditing(true) } : undefined}
           />
         </section>
-      ) : profileTab === 'inventory' && canBuildResume && guard ? (
+      ) : activeProfileTab === 'inventory' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
           <GuardInventoryPanel
             guard={guard}
@@ -414,9 +439,14 @@ export function UserProfileScreen({
             }}
           />
         </section>
-      ) : profileTab === 'timesheet' && canBuildResume && guard ? (
+      ) : activeProfileTab === 'timesheet' && canBuildResume && guard ? (
         <section className="border-b border-brand-border space-y-6">
-          <GuardTimesheetPanel guardId={guard.id} requests={requests} />
+          <GuardTimesheetPanel
+            guardId={guard.id}
+            requests={requests}
+            canAdjust={canAdjustShiftTimes}
+            onAdjustShiftTime={onAdjustShiftTime}
+          />
         </section>
       ) : staffProfileTab === 'timesheets' && isStaffAccount && platformSettings && guard ? (
         <section className="border-b border-brand-border space-y-6">

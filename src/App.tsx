@@ -467,6 +467,7 @@ import {
   type AppRoute,
   type ClientJobsTab,
   type StaffGuardDetailTab,
+  type GuardProfileTab,
   type AuthViewMode,
   type AuthViewRole,
 } from './lib/appNavigation';
@@ -783,6 +784,9 @@ export default function App() {
   const [staffGuardTab, setStaffGuardTabState] = useState<StaffGuardDetailTab>(
     () => initialRoute?.staffGuardTab ?? 'profile'
   );
+  const [guardProfileTab, setGuardProfileTabState] = useState<GuardProfileTab>(
+    () => initialRoute?.guardProfileTab ?? 'profile'
+  );
   const [performanceFactorId, setPerformanceFactorIdState] = useState<PerformanceFactorId | null>(
     () => initialRoute?.performanceFactorId ?? null
   );
@@ -892,6 +896,8 @@ export default function App() {
         guardTab === 'myJobs' || guardTab === 'map'
           ? guardSelectedJobId ?? undefined
           : undefined,
+      guardProfileTab:
+        guardTab === 'profile' && guardProfileTab !== 'profile' ? guardProfileTab : undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
     };
@@ -943,6 +949,11 @@ export default function App() {
     }
     if (route.guardJobsTab) {
       setGuardBrowseTabState(route.guardJobsTab);
+    }
+    if (route.guardProfileTab) {
+      setGuardProfileTabState(route.guardProfileTab);
+    } else if (route.guardTab && route.guardTab !== 'profile') {
+      setGuardProfileTabState('profile');
     }
     if (route.role === 'guard') {
       setGuardSelectedJobIdState(route.guardJobId ?? null);
@@ -1112,8 +1123,12 @@ export default function App() {
       setSupportSectionState('support');
     }
     const keepsPerformance = normalizedTab === 'performance';
+    const keepsProfile = normalizedTab === 'profile';
     if (!keepsPerformance) {
       setPerformanceFactorIdState(null);
+    }
+    if (!keepsProfile) {
+      setGuardProfileTabState('profile');
     }
     syncAppRoute(
       buildAppRoute({
@@ -1127,6 +1142,24 @@ export default function App() {
         supportSection: keepsMessages || keepsSupport ? supportSection : undefined,
         supportMode: keepsSupport ? supportMode ?? undefined : keepsMessages ? supportMode ?? undefined : undefined,
         performanceFactorId: keepsPerformance ? performanceFactorId ?? undefined : undefined,
+        guardProfileTab:
+          keepsProfile && guardProfileTab !== 'profile' ? guardProfileTab : undefined,
+      })
+    );
+  };
+
+  const setGuardProfileTab = (tab: GuardProfileTab) => {
+    setGuardProfileTabState(tab);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'profile',
+        guardProfileTab: tab !== 'profile' ? tab : undefined,
+        jobChatRequestId: jobChatRequestId ?? undefined,
+        openJobChat: openJobChat || undefined,
+        supportTicketId: supportTicketId ?? undefined,
+        supportSection: supportSection,
+        supportMode: supportMode ?? undefined,
       })
     );
   };
@@ -13127,6 +13160,8 @@ export default function App() {
           onCloseSupportForm={closeGuardSupportForm}
           performanceFactorId={performanceFactorId}
           onPerformanceFactorChange={setPerformanceFactorId}
+          guardProfileTab={guardProfileTab}
+          onGuardProfileTabChange={setGuardProfileTab}
           onSubmitIncidentReport={handleSubmitIncidentReport}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
