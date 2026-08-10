@@ -35,6 +35,7 @@ import {
   canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
+  canViewStaffCompensation,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
   canViewAnalytics,
@@ -572,7 +573,7 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
-  const showPayments = showFinance;
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
@@ -948,12 +949,15 @@ export function StaffDashboard({
         return showPayments ? (
           <PaymentsPage role="staff">
             <StaffPaymentsPanel
+              currentUser={currentUser}
+              platformSettings={platformSettings}
               requests={requests}
               guards={guards}
               payments={payments}
               payoutInvoices={guardPayoutInvoices}
               isDirector={hasExecutivePaymentControls(currentUser)}
               canManagePayments={showFinance}
+              showStaffCompensation={canViewStaffCompensation(currentUser)}
               paymentGates={clientPaymentGates(platformSettings)}
               onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
               onReleasePayout={onReleasePayout}

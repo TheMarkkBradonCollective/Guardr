@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -121,7 +121,7 @@ export function StaffOpsLayout({
   canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
-  const showPayments = showFinance;
+  const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
