@@ -6,9 +6,9 @@
     "versionCode": 216,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.116.apk",
-    "fileSize": 15571677,
-    "sha256": "ff29708891c3fce94af77a75e8c8b09411ee045815756ffcfc737da0962a7409",
+    "fileSize": 23230139,
+    "sha256": "410232335d57ddba06c6263b230d701d9ba072fa59d43c788f682aa5a6dc09f0",
     "releaseNotes": "Print-ready PDF user manuals downloadable on website and in-app (Guide, Settings, pending screens); /manuals/*.pdf."
   },
-  "updatedAt": "2026-08-11T02:43:56.051Z"
+  "updatedAt": "2026-08-11T02:49:44.832Z"
 }
