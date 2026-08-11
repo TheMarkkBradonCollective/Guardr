@@ -24,7 +24,7 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 
 | Audience | How to open it | Page title |
 |----------|----------------|------------|
-| **Public** | **guardr.co/guide** or **Guide** / **Manuals** on the homepage | **Guide** (in-app) · PDF manuals at **/manuals** |
+| **Public** | **guardr.co/guide** or **Guide** on the homepage · **Download** / **Manuals** in nav and footer | **Guide** (in-app) · PDF manuals at **/manuals** · install at **/download** |
 | **Client** | Account menu → **Guide** or **Settings → User manuals** | **Guide** + PDF downloads |
 | **Guard** | Account menu → **Guide** (also while pending) or **Settings → User manuals** | **Guide** + PDF downloads |
 | **Staff** | Left sidebar → **Guide** — filter by role · **Settings → User manuals** | **Guide** + PDF downloads |
