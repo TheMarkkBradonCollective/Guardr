@@ -241,9 +241,9 @@ function DesktopHero({
     },
     guard: {
       heading: <>Get in the field<br />and get paid</>,
-      sub: 'Browse open security shifts near you, apply directly, and receive payment through the platform.',
-      cta: 'Sign up to work',
-      link: 'Learn more about finding guard work',
+      sub: 'Browse open security shifts near you as an independent contractor — not Guardr employment.',
+      cta: 'Join the marketplace',
+      link: 'Learn more about guard marketplace work',
       cards: [
         { icon: Clock,      title: 'Flexible hours', body: 'Choose your own shifts. Work when you want around your schedule.' },
         { icon: CreditCard, title: 'Direct pay',      body: 'Complete shifts and receive earnings straight to your account.' },

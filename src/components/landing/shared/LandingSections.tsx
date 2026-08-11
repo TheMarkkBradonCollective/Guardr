@@ -28,6 +28,7 @@ import { LEGAL_DISCLAIMER_SHORT } from '../../../lib/legalContent';
 import { LegalEntityName } from '../../SignatureSecurityBrand';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
+import type { AuthViewRole } from '../../../lib/appNavigation';
 import {
   CLIENT_FEATURES,
   COVERAGE_TYPES,
@@ -41,7 +42,7 @@ export interface LandingSectionsProps {
   formFactor: FormFactor;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
+  onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
   onOpenLegal: (page: LegalPageId) => void;
   onOpenGuide?: () => void;
   ownerMessage?: string;
@@ -352,7 +353,7 @@ export function LandingBodySections({
               Ready when you are
             </HeadingMedium>
             <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary">
-              Choose your path — each experience is purpose-built for how you use Guardr.
+              Marketplace accounts for guards and clients — or apply to work at Guardr as platform staff.
             </ParagraphMedium>
             <Block
               display="flex"
@@ -360,8 +361,12 @@ export function LandingBodySections({
               justifyContent="center"
               gridGap="scale400"
               marginBottom="scale600"
+              overrides={{ Block: { style: { flexWrap: 'wrap' } } }}
             >
-              <AppButton variant="primary" onClick={() => onNavigateToAuth('client', 'sign-up')}>
+              <AppButton variant="primary" onClick={() => onNavigateToAuth('staff', 'sign-up')}>
+                Apply at Guardr (staff)
+              </AppButton>
+              <AppButton variant="outline" onClick={() => onNavigateToAuth('client', 'sign-up')}>
                 I need security
               </AppButton>
               <AppButton variant="outline" onClick={() => onNavigateToAuth('guard', 'sign-up')}>
@@ -578,7 +583,7 @@ export function LandingFooter({
 export function LandingMobileCtaBar({
   onNavigateToAuth,
 }: {
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
+  onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
 }) {
   return (
     <Block
