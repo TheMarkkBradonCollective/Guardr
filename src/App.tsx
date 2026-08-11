@@ -35,7 +35,7 @@ import {
   DifferentialPayRates,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, canAdjustGuardShiftTimes, setStaffRolePermissionOverrides } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -608,7 +608,6 @@ import {
   validateDisputeClaimedClockOut,
   type OvertimeDisputeInput,
 } from './lib/shiftBilling';
-import { applyGuardShiftTimeAdjustment } from './lib/guardTimesheet';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -2658,7 +2657,6 @@ export default function App() {
           breakPaid: r.break_paid !== false,
           shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
           checkOutAudit: r.check_out_audit ?? undefined,
-          shiftTimeAdjustment: r.shift_time_adjustment ?? undefined,
           serviceAgreement: parseJobServiceAgreement(r.service_agreement),
           autoPayoutScheduledAt: r.auto_payout_scheduled_at ?? undefined,
         })),
@@ -11142,45 +11140,6 @@ export default function App() {
     return true;
   };
 
-  const handleAdjustGuardShiftTime = async (
-    requestId: string,
-    payload: { clockInAt: string; clockOutAt: string; note?: string },
-  ) => {
-    if (!currentUser || !canAdjustGuardShiftTimes(currentUser)) {
-      appToast('You do not have permission to adjust guard shift times.', 'error');
-      throw new Error('Forbidden');
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req) {
-      throw new Error('Shift not found.');
-    }
-
-    const updated = applyGuardShiftTimeAdjustment(req, payload, {
-      id: currentUser.id,
-      email: currentUser.email,
-    });
-
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? updated : r)));
-
-    if (isDbConnected) {
-      const { error } = await supabase
-        .from('security_requests')
-        .update({ shift_time_adjustment: updated.shiftTimeAdjustment })
-        .eq('id', requestId);
-      if (error) {
-        setRequests((prev) => prev.map((r) => (r.id === requestId ? req : r)));
-        throw new Error('Could not save shift time adjustment.');
-      }
-    }
-
-    void writeAuditLog(currentUser, 'guard_shift_time_adjusted', 'security_request', requestId, {
-      guardId: req.assignedGuardId,
-      clockInAt: payload.clockInAt,
-      clockOutAt: payload.clockOutAt,
-      note: payload.note,
-    });
-  };
-
   const handleStartEnRoute = async (requestId: string) => {
     const req = requests.find((r) => r.id === requestId);
     if (!req || req.assignedGuardId !== activeGuardId) return;
@@ -13470,7 +13429,6 @@ export default function App() {
           onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
           onMarkCashDepositManually={handleMarkCashDepositManually}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
-          onAdjustGuardShiftTime={handleAdjustGuardShiftTime}
           platformSettings={platformSettings}
           platformCities={platformCities}
           jobLocations={jobLocations}

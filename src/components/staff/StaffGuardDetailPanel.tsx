@@ -110,11 +110,6 @@ interface StaffGuardDetailPanelProps {
   onEditingChange?: (editing: boolean) => void;
   staffGuardTab?: StaffGuardDetailTab;
   onStaffGuardTabChange?: (tab: StaffGuardDetailTab) => void;
-  canAdjustShiftTimes?: boolean;
-  onAdjustGuardShiftTime?: (
-    requestId: string,
-    payload: { clockInAt: string; clockOutAt: string; note?: string },
-  ) => void | Promise<void>;
   performanceFactorId?: PerformanceFactorId | null;
   onPerformanceFactorChange?: (factorId: PerformanceFactorId | null) => void;
   compact?: boolean;
@@ -158,8 +153,6 @@ export function StaffGuardDetailPanel({
   onEditingChange,
   staffGuardTab = 'profile',
   onStaffGuardTabChange,
-  canAdjustShiftTimes = false,
-  onAdjustGuardShiftTime,
   performanceFactorId = null,
   onPerformanceFactorChange,
   compact = false,
@@ -637,12 +630,7 @@ export function StaffGuardDetailPanel({
         </div>
       ) : staffGuardTab === 'timesheet' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
-          <GuardTimesheetPanel
-            guardId={guard.id}
-            requests={requests}
-            canAdjust={canAdjustShiftTimes}
-            onAdjustShiftTime={onAdjustGuardShiftTime}
-          />
+          <GuardTimesheetPanel guardId={guard.id} requests={requests} />
         </section>
       ) : staffGuardTab === 'certs' && !guard.isStaff ? (
         <section className="staff-detail-section space-y-3">
