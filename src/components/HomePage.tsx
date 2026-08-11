@@ -7,8 +7,10 @@ import { DesktopLandingPage } from './landing/desktop/DesktopLandingPage';
 import { MobileLandingPage } from './landing/mobile/MobileLandingPage';
 import { TabletLandingPage } from './landing/tablet/TabletLandingPage';
 
+import type { AuthViewRole } from '../lib/appNavigation';
+
 interface HomePageProps {
-  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
+  onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onOpenLegal: (page: LegalPageId) => void;

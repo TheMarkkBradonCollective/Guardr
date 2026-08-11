@@ -34,6 +34,7 @@ import { AppErrorBanner, AppSubScreenHeader } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
+import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -324,6 +325,11 @@ export function AuthPage({
     initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client'
   );
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const switchToStaffSignup = () => {
+    setRole('staff');
+    onAuthRoleChange?.('staff');
+    setErrorMsg('');
+  };
   const [showPassword, setShowPassword] = useState(false);
 
   const [email, setEmail] = useState('');
@@ -928,7 +934,7 @@ export function AuthPage({
 
               {isSignUp && role === 'staff' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">
-                  <p className="uber-label">Staff application</p>
+                  <p className="uber-label">Apply to work at Guardr</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     New staff start as Support. Sign in after submitting to upload government ID and connect
                     Stripe payouts while a Director reviews your application.
@@ -1005,11 +1011,12 @@ export function AuthPage({
 
               {isSignUp && role === 'guard' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">
-                  <p className="uber-label">Guard application</p>
+                  <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} />
+                  <p className="uber-label">Guard marketplace application</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
-                    A short application so staff can review your fit. After approval, upload five
-                    credentials (ID, COI, guard card, PTA/UOF, and the 32-hour BSIS CE package) on the
-                    activation screen — see the in-app BSIS requirements guide for the full list.
+                    For licensed independent contractors — not Guardr employment. After approval,
+                    upload five credentials (ID, COI, guard card, PTA/UOF, and 32-hour BSIS CE) on the
+                    activation screen.
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -1213,9 +1220,14 @@ export function AuthPage({
 
               {isSignUp && role === 'client' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">
+                  <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
 
                   {/* ── Contact & Business ── */}
-                  <p className="uber-label">Business &amp; contact</p>
+                  <p className="uber-label">Client marketplace account</p>
+                  <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
+                    For businesses and sites that hire guards on the platform — not a job application to
+                    Guardr.
+                  </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="uber-label block mb-2">Phone <span className="font-normal">(optional)</span></label>
