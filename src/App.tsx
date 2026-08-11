@@ -13032,7 +13032,12 @@ export default function App() {
     }
     const inactiveGuard = isInactiveGuardSession(currentUser, verifiedGuards);
 
-    if (inactiveGuard && resolvedGuardTab !== 'settings' && resolvedGuardTab !== 'support') {
+    if (
+      inactiveGuard &&
+      resolvedGuardTab !== 'settings' &&
+      resolvedGuardTab !== 'support' &&
+      resolvedGuardTab !== 'guide'
+    ) {
       return (
         <>
           {marketplaceLegalGate}

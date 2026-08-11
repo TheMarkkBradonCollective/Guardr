@@ -29,6 +29,7 @@ import { LegalEntityName } from '../../SignatureSecurityBrand';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { AuthViewRole } from '../../../lib/appNavigation';
+import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
 import {
   CLIENT_FEATURES,
   COVERAGE_TYPES,
@@ -570,9 +571,11 @@ export function LandingFooter({
               size="sm"
               {...({
                 $as: 'a',
-                href: '/manuals/Guardr-User-Manuals-Combined.pdf',
+                href: resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF),
                 download: 'Guardr-User-Manuals-Combined.pdf',
                 type: 'application/pdf',
+                target: '_blank',
+                rel: 'noopener noreferrer',
               } as Record<string, unknown>)}
             >
               Manuals (PDF)

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
   USER_MANUALS,
   manualsForAudience,
+  manualsForPlatformRole,
   resolveManualAudience,
+  resolveManualPdfUrl,
 } from './userManuals.ts';
 
 describe('userManuals', () => {
@@ -12,6 +14,11 @@ describe('userManuals', () => {
       assert.match(manual.href, /^\/manuals\/.+\.pdf$/);
       assert.equal(manual.href.endsWith(manual.fileName), true);
     }
+  });
+
+  it('resolves PDF URLs for download (web-relative path)', () => {
+    const url = resolveManualPdfUrl('/manuals/Guardr-Quick-Start.pdf');
+    assert.match(url, /\/manuals\/Guardr-Quick-Start\.pdf$/);
   });
 
   it('filters manuals by audience', () => {
@@ -32,5 +39,6 @@ describe('userManuals', () => {
     assert.equal(resolveManualAudience('moderator'), 'staff');
     assert.equal(resolveManualAudience('owner'), 'staff');
     assert.equal(resolveManualAudience(undefined), 'all');
+    assert.ok(manualsForPlatformRole('guard').some((m) => m.id === 'guard'));
   });
 });

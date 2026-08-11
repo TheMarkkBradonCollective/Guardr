@@ -3,13 +3,14 @@ import { Download, FileText } from 'lucide-react';
 import {
   manualsForAudience,
   resolveManualAudience,
+  resolveManualPdfUrl,
   type UserManualFile,
 } from '../../lib/userManuals';
 
 interface UserManualDownloadsProps {
   /** Guide filter tab id or platform role string */
   audienceFilter?: string;
-  variant?: 'mobile' | 'desktop';
+  variant?: 'mobile' | 'desktop' | 'embedded';
 }
 
 function ManualDownloadRow({
@@ -19,11 +20,15 @@ function ManualDownloadRow({
   manual: UserManualFile;
   isDesktop: boolean;
 }) {
+  const href = resolveManualPdfUrl(manual.href);
+
   return (
     <a
-      href={manual.href}
+      href={href}
       download={manual.fileName}
       type="application/pdf"
+      target="_blank"
+      rel="noopener noreferrer"
       className={
         isDesktop
           ? 'adm-guide-manual-row'
@@ -68,17 +73,45 @@ function ManualDownloadRow({
   );
 }
 
-/** PDF file downloads for the Guide hub (web + app). Links are .pdf only. */
+/** PDF file downloads — Guide, Settings, pending screens (web + app). */
 export function UserManualDownloads({
   audienceFilter = 'all',
   variant = 'mobile',
 }: UserManualDownloadsProps) {
   const isDesktop = variant === 'desktop';
+  const isEmbedded = variant === 'embedded';
   const audience = resolveManualAudience(audienceFilter);
   const manuals = manualsForAudience(audience);
 
+  const list = (
+    <div className={isDesktop ? 'adm-guide-manual-list' : 'space-y-2'}>
+      {manuals.map((manual) => (
+        <ManualDownloadRow key={manual.id} manual={manual} isDesktop={isDesktop} />
+      ))}
+    </div>
+  );
+
+  if (isEmbedded) {
+    return (
+      <div className="space-y-3" data-tour="user-manual-downloads">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
+            Download PDF manuals
+          </p>
+          <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
+            Open or save these PDF files on your phone or computer.
+          </p>
+        </div>
+        {list}
+      </div>
+    );
+  }
+
   return (
-    <div className={isDesktop ? 'adm-guide-manuals' : 'px-4 pt-2 pb-4 border-b border-brand-border'}>
+    <div
+      className={isDesktop ? 'adm-guide-manuals' : 'px-4 pt-2 pb-4 border-b border-brand-border'}
+      data-tour="user-manual-downloads"
+    >
       <div
         className={
           isDesktop
@@ -91,15 +124,10 @@ export function UserManualDownloads({
             Download PDF manuals
           </p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-            Real PDF files (US Letter). Tap to download and print or keep offline.
+            Real PDF files for the website and app. Tap to open or download.
           </p>
         </div>
-
-        <div className={isDesktop ? 'adm-guide-manual-list' : 'space-y-2'}>
-          {manuals.map((manual) => (
-            <ManualDownloadRow key={manual.id} manual={manual} isDesktop={isDesktop} />
-          ))}
-        </div>
+        {list}
       </div>
     </div>
   );

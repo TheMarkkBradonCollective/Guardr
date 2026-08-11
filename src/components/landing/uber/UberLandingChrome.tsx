@@ -4,6 +4,7 @@ import { LabelMedium, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import { ChevronDown, MapPin, Menu, Navigation, Shield, X } from 'lucide-react';
 import type { ThemeMode } from '../../../lib/platform/theme';
+import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { FONT_DISPLAY } from '../../../theme/typography';
@@ -86,6 +87,16 @@ export function UberLandingNav({
               {onOpenGuide ? (
                 <button type="button" className="uber-landing-nav-link" onClick={onOpenGuide}>Help</button>
               ) : null}
+              <a
+                className="uber-landing-nav-link"
+                href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+                download="Guardr-User-Manuals-Combined.pdf"
+                type="application/pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Manuals
+              </a>
             </Block>
           ) : null}
         </Block>
@@ -144,6 +155,17 @@ export function UberLandingNav({
               Help
             </button>
           ) : null}
+          <a
+            className="uber-landing-mobile-menu-item"
+            href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+            download="Guardr-User-Manuals-Combined.pdf"
+            type="application/pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+          >
+            Manuals (PDF)
+          </a>
         </Block>
       ) : null}
     </Block>

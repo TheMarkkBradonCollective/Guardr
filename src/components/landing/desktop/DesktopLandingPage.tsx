@@ -37,6 +37,7 @@ import type { LegalPageId } from '../../../lib/legalContent';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
+import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
 
 interface DesktopLandingPageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -110,6 +111,16 @@ function DesktopNav({
                 Help
               </button>
             ) : null}
+            <a
+              className="dsk-landing-nav-link"
+              href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+              download="Guardr-User-Manuals-Combined.pdf"
+              type="application/pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Manuals
+            </a>
             <div className="dsk-landing-nav-more-wrap" ref={moreWrapRef}>
               <button
                 type="button"
@@ -156,6 +167,18 @@ function DesktopNav({
                       Product guide
                     </button>
                   ) : null}
+                  <a
+                    role="menuitem"
+                    className="dsk-landing-nav-dropdown-item"
+                    href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+                    download="Guardr-User-Manuals-Combined.pdf"
+                    type="application/pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    Manuals (PDF)
+                  </a>
                 </div>
               ) : null}
             </div>

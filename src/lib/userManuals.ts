@@ -1,3 +1,5 @@
+import { apiUrl } from './siteConfig';
+
 /** Public print-ready PDF manuals served from /manuals/*.pdf */
 
 export type UserManualAudience = 'client' | 'guard' | 'staff' | 'all';
@@ -14,7 +16,7 @@ export interface UserManualFile {
   title: string;
   description: string;
   fileName: string;
-  /** Site-root path — same on web, PWA, and APK */
+  /** Site-root path (web). Use {@link resolveManualPdfUrl} for APK/PWA. */
   href: string;
   /** Who the manual is primarily for */
   forAudiences: UserManualAudience[];
@@ -68,6 +70,17 @@ export const USER_MANUALS: UserManualFile[] = [
 /** Combined binder — used when a single PDF link is needed (e.g. landing). */
 export const USER_MANUALS_COMBINED_HREF = `${USER_MANUALS_BASE_PATH}/Guardr-User-Manuals-Combined.pdf`;
 
+/**
+ * Absolute PDF URL on web and native.
+ * Capacitor WebView origin is not guardr.co — must use the live site host.
+ */
+export function resolveManualPdfUrl(hrefOrFileName: string): string {
+  const path = hrefOrFileName.startsWith('/')
+    ? hrefOrFileName
+    : `${USER_MANUALS_BASE_PATH}/${hrefOrFileName.replace(/^\/+/, '')}`;
+  return apiUrl(path);
+}
+
 /** Map Guide filter tabs / platform roles onto manual audiences. */
 export function resolveManualAudience(
   filter?: string | null,
@@ -93,4 +106,9 @@ export function resolveManualAudience(
 
 export function manualsForAudience(audience: UserManualAudience): UserManualFile[] {
   return USER_MANUALS.filter((manual) => manual.forAudiences.includes(audience));
+}
+
+/** Audience for the signed-in platform role. */
+export function manualsForPlatformRole(role?: string | null): UserManualFile[] {
+  return manualsForAudience(resolveManualAudience(role));
 }

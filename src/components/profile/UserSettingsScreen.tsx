@@ -11,6 +11,7 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { useDevice } from '../../lib/platform';
 import { AppUpdatePanel } from '../app/AppUpdatePanel';
+import { UserManualDownloads } from '../docs/UserManualDownloads';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
@@ -48,6 +49,11 @@ export function UserSettingsScreen({
 
       <AppUpdatePanel onOpenDownload={onOpenDownload} />
 
+      <AppSettingsHead>User manuals</AppSettingsHead>
+      <AppSettingsSection>
+        <UserManualDownloads audienceFilter={currentUser.role} variant="embedded" />
+      </AppSettingsSection>
+
       {onOpenLegal && (
         <>
           <AppSettingsHead>Legal</AppSettingsHead>
@@ -71,7 +77,7 @@ export function UserSettingsScreen({
     <ResponsivePage screenClassName="guard-settings-screen">
       <ResponsiveFormPage
         title="Settings"
-        subtitle="Notifications, updates, and legal"
+        subtitle="Notifications, manuals, updates, and legal"
         className="guard-settings-screen"
       >
         {formContent}

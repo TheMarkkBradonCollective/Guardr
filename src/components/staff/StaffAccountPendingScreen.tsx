@@ -14,6 +14,7 @@ import {
 import { GuardStripeConnectSheet } from '../guard/GuardStripeConnectSheet';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../../lib/stripeApi';
 import { WfBadge } from '../ui/wireframe';
+import { UserManualDownloads } from '../docs/UserManualDownloads';
 
 interface StaffActivationUploadChecklistProps {
   member: SecurityGuard;
@@ -201,6 +202,11 @@ export function StaffAccountPendingScreen({
           onSubmitIdentityVerification={onSubmitIdentityVerification}
           onUpdateStripeAccount={onUpdateStripeAccount}
         />
+      </div>
+      <div className="px-5 pb-8">
+        <div className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4">
+          <UserManualDownloads audienceFilter="staff" variant="embedded" />
+        </div>
       </div>
     </div>
   );
