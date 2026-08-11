@@ -1,9 +1,9 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Friday, August 7, 2026  
+**Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.114**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.115**
 
 ---
 
@@ -11,11 +11,45 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 ---
 
+## Tuesday, August 11, 2026 — /update → v1.0.115
+
+**PR cleanup (merged to `main`)**
+- **#936** — Staff pay on **Payments** (Prop 22 hourly add-ons, weekly period rows including $0)
+- **#937** — Remove guard shift time adjustment (contractors use clock audit only)
+- **#938** — Staff onboarding: application intake, government ID, Stripe Connect payouts
+- **#939** — Signup clarity: **Work at Guardr** (staff hiring) vs marketplace guard/client signup
+- **#934** — Closed (promo marketing; not shipping)
+
+**Shipped**
+- **Staff compensation** — Directors confirm weekly revenue-share payouts on **Payments**; Prop 22 hourly add-ons and manual bonuses (add-only); $0 period rows allowed
+- **Staff time tracking** — clock in/out on **Profile → Timesheets** (employees), not on Payments
+- **Staff onboarding** — pending staff can sign in; upload gov ID (front/back/selfie); connect Stripe for payouts; `pending → approved → active` when Director approves and checklist complete
+- **Staff signup** — homepage and auth flows separate **Work at Guardr** (staff jobs) from guard/client marketplace signup
+- **Guard timesheet** — **Profile → Timesheet** tab is read-only shift clock history from job audit (no staff overrides)
+- **v1.0.115** (build **215**) web + PWA manifest aligned; APK rebuild via CI on merge
+- PWA service worker cache bust: `guardr-cache-v1-0-115-beta`
+
+**Release verification**
+- `npm run lint`, `npm test`, and `npm run build` pass
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **215**), and `public/sw.js` aligned on **1.0.115-beta**
+- Schema: staff onboarding columns + staff compensation tables in `complete_schema_setup.sql`; guard `shift_time_adjustment` removed
+
+**Supabase:** run in order if not already applied:
+1. `supabase/migrations/20260811000000_payments_timesheet_staff_comp.sql` — staff comp + time entries
+2. `supabase/migrations/20260811010000_staff_onboarding.sql` — staff ID + Stripe columns
+3. `supabase/migrations/20260811004500_drop_guard_shift_time_adjustment.sql` — drop guard shift override column (run even if you accidentally ADDed it earlier)
+
+**APK note:** Binary refreshed via Android APK workflow on `main` push (FCM-enabled). Download: [guardr.co/download](https://www.guardr.co/download)
+
+**Known follow-ups (not in this release):** `staff_pending_approval` push type, staff gov ID in main Credentials queue, staff application revision flow, stale AuthPage copy for pending staff.
+
+---
+
 ## Friday, August 7, 2026 — /update → v1.0.114
 
 **Shipped**
 - **Unified Payments** — guards, staff, and clients all use a **Payments** page with consistent nav and routes (`/guard/payments`, `/staff/payments`, `/client/payments`); legacy `/pay` and `/billing` aliases still work
-- **Guard timesheet tab** — guard profiles include a **Timesheet** tab with shift clock-in/out history and worked hours; Manager+ staff can adjust times with notes and audit logging
+- **Guard timesheet tab** — guard profiles include a **Timesheet** tab with shift clock-in/out history and worked hours (read-only from clock audit)
 - **Support chat delete** — staff can delete resolved support threads (PR #924)
 - **v1.0.114** (build **214**) web + PWA manifest aligned; APK rebuild via CI on merge
 - PWA service worker cache bust: `guardr-cache-v1-0-114-beta`
@@ -23,12 +57,8 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 **Release verification**
 - `npm run lint`, `npm test`, and `npm run build` pass
 - Version parity: `package.json`, `version.json`, `build.gradle` (code **214**), and `public/sw.js` aligned on **1.0.114-beta**
-- Schema: `shift_time_adjustment` JSONB column on `security_requests` in `complete_schema_setup.sql`
 
-**Supabase:** run if not already applied:
-```sql
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_time_adjustment JSONB;
-```
+**Note (superseded in v1.0.115):** An early draft mentioned `shift_time_adjustment` on `security_requests`. That column was **never shipped to production intent** — PR #937 removed it. Do **not** ADD it; run the DROP migration instead.
 
 **APK note:** Binary refreshed via Android APK workflow on `main` push (FCM-enabled).
 

@@ -8,7 +8,17 @@ Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
 - **Guards** upload required credentials on the **activation screen** while their application is under review, become **active** after staff approve and verify credentials, then apply for work, head to jobs, complete self-audits, submit reports, and collect pay.
-- **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below.
+- **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below. Staff are **employees** of the platform operator (not independent contractors like guards).
+
+### Signup paths (important)
+
+| Path | Who it's for | How to start |
+|------|--------------|--------------|
+| **Marketplace — Guard** | Licensed security professionals seeking field work | Homepage → **Become a guard** or auth → guard signup |
+| **Marketplace — Client** | Businesses or individuals needing coverage | Homepage → **Post a job** / **Client signup** |
+| **Work at Guardr — Staff** | Platform operations jobs (Moderator through Founder) | Homepage → **Work at Guardr** or auth → staff signup |
+
+Do **not** use guard or client signup if you are applying for a staff job — use **Work at Guardr** instead.
 
 ### Where to open this guide
 
@@ -28,6 +38,8 @@ Use it as the operating manual for the whole app:
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Payments**, **Profile**, and **Guide** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
+| **Staff (pending)** | **Onboarding checklist** — upload government ID, connect Stripe for payouts; **Settings** (sign out). Ops pages blocked until **active**. |
+| **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile → Timesheets** for clock in/out; Directors/Founders also use **Payments** for staff compensation |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
 | **Founder** | Everything Directors can do plus platform governance settings (payment modes, homepage messages, top-tier staff management) |
@@ -579,7 +591,7 @@ Payments complements the in-app **Jobs → Pay Now** flow — some jobs may show
 | **Payments** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
 | **Messages** | Sidebar **Messages** group (active guards only) | Job chats and team threads |
 | **Support** | Sidebar **Messages** group (active guards only) | Contact support, file a report, view ticket threads |
-| **Profile** | Account menu (active guards only) | Personal profile, resume, experience; **Credentials** tab for uploads; **Inventory** tab for equipment and uniforms; **Timesheet** tab for shift clock times |
+| **Profile** | Account menu (active guards only) | Personal profile, resume, experience; **Credentials** tab for uploads; **Inventory** tab for equipment and uniforms; **Timesheet** tab for read-only shift clock history from job audit |
 | **Notifications** | Account menu | Inbox — tap to open list; unread badge on avatar; mark all read |
 | **Settings** | Account menu | Appearance, push notifications, app update / install options, notification sound (APK), legal pages, sign out — available on activation screen too |
 | **Performance** | Account menu (active guards) | Overall, Standing, and Driving priority tabs; tier breakdown and rewards |
@@ -1104,7 +1116,7 @@ Guards who are **pending** see **Application under review** and can upload the f
 - **Before active:** Activation screen (inline uploads on the same page).
 - **After active:** Account menu → **Profile** → **Credentials** tab (upload permits and training) or **Inventory** tab (equipment and uniforms).
 
-Staff can open **Credentials**, **Inventory**, or **Timesheet** from **Guards → guard detail** to review what the guard carries, verify uploads, and adjust shift clock times (Manager+).
+Staff can open **Credentials**, **Inventory**, or **Timesheet** from **Guards → guard detail** to review what the guard carries and verify uploads. Guard timesheet entries are **read-only** — derived from shift clock-in/out audit on completed jobs (guards are independent contractors; staff do not override worked hours).
 
 | Section | What it is |
 |---------|------------|
@@ -1197,6 +1209,24 @@ Open **Pay** and use **Connect bank account** to link Stripe Connect for bank tr
 
 ---
 
+### Staff onboarding (pending applicants)
+
+**Where:** Shown automatically after staff sign-in until account status is **active**
+
+Staff who apply via **Work at Guardr** can **sign in while pending** and complete onboarding before Director approval.
+
+| Step | What to do |
+|------|------------|
+| **Application** | Submit role, experience, availability, and contact details at signup |
+| **Director review** | Application moves `pending` → `approved` when a Director/Founder accepts the hire |
+| **Government ID** | Upload front, back, and selfie (same flow as guard ID verification) |
+| **Stripe payouts** | Connect bank account via Stripe Connect for employee compensation |
+| **Activation** | Account becomes **active** when ID is verified and Stripe payouts are enabled |
+
+While **pending** or **approved** (checklist incomplete), only the onboarding checklist and **Settings** are available — not ops panels (**Jobs**, **Guards**, etc.).
+
+---
+
 ### Incident reports
 
 **What they are:** Filed by guards during active shifts or at clock-out when something notable happened. Each report covers who was involved, what happened, when and where, why, and how the guard responded.
@@ -1270,7 +1300,7 @@ The Applications section holds account intake and job-offer review queues. Open 
 | **Job offers** | Submitted job listings waiting for staff approval before going live. |
 | **Guard accounts** | New guard sign-ups — Moderator+ **approve application** (`pending` → `approved`). Guards can upload credentials while pending. |
 | **Client accounts** | New client sign-ups waiting for staff approval. |
-| **Staff accounts** | Staff-provisioned accounts awaiting review (Director/Founder). |
+| **Staff accounts** | Staff job applicants via **Work at Guardr** — Director/Founder **approve application** (`pending` → `approved`). Applicant uploads government ID and connects Stripe while pending; account **activates** when checklist is complete. |
 
 When Administrator+ verifies all five activation credentials, guard accounts **auto-activate** (`approved` → `active`).
 
@@ -1290,13 +1320,20 @@ _Note: Guards apply directly to clients for marketplace jobs._
 
 **Where:** Staff sidebar → **Payments** (Directors and Founders)
 
-Every job follows the same payment path: the client pays, the job runs, then the guard collects pay from their Pay screen. Jobs in Payments are grouped by what needs to happen next.
+**Guard/client job billing** — every marketplace job follows the same payment path: the client pays, the job runs, then the guard collects pay from their Pay screen. Jobs in Payments are grouped by what needs to happen next.
 
 | Stage | Description |
 |-------|-------------|
 | **Awaiting client payment** | Client has not paid yet — job ready for Stripe checkout. |
 | **Awaiting guard payout** | Job complete — auto Stripe release scheduled; guard collects from **Pay**. |
 | **Dispute hold** | Payout blocked by overtime dispute — staff resolve in **Disputes**, then release if needed. |
+
+**Staff employee compensation** (same **Payments** page, staff comp section):
+
+- Weekly revenue-share payout rows per staff member (including **$0** periods)
+- **Prop 22 add-ons** — hourly hours × rate and manual bonuses (add-only; no deductions)
+- Directors confirm base payout, then finalize after optional adjustments
+- Staff clock time is tracked on **Profile → Timesheets**, not on Payments
 
 **Payment settings** (Directors and Founders — sidebar → **Platform**):
 
@@ -1349,7 +1386,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.102**, build **202**).
+Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.115**, build **215**).
 
 | Surface | How to install |
 |---------|----------------|
