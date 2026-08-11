@@ -568,7 +568,12 @@ export function LandingFooter({
             <AppButton
               variant="ghost"
               size="sm"
-              {...({ $as: 'a', href: '/manuals/', target: '_blank', rel: 'noopener noreferrer' } as Record<string, unknown>)}
+              {...({
+                $as: 'a',
+                href: '/manuals/Guardr-User-Manuals-Combined.pdf',
+                download: 'Guardr-User-Manuals-Combined.pdf',
+                type: 'application/pdf',
+              } as Record<string, unknown>)}
             >
               Manuals (PDF)
             </AppButton>

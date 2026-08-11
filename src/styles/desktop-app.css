@@ -1495,19 +1495,6 @@ body[data-form-factor="desktop"] .adm-guide-manual-action {
   flex-shrink: 0;
 }
 
-body[data-form-factor="desktop"] .adm-guide-manuals-index {
-  display: inline-flex;
-  margin-top: 0.65rem;
-  font-size: 0.72rem;
-  font-weight: 650;
-  color: var(--adm-primary, #000);
-  text-decoration: none;
-}
-
-body[data-form-factor="desktop"] .adm-guide-manuals-index:hover {
-  text-decoration: underline;
-}
-
 body[data-form-factor="desktop"] .adm-guide-filter-tabs {
   padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--adm-border);

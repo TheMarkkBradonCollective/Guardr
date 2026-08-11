@@ -65,7 +65,8 @@ export const USER_MANUALS: UserManualFile[] = [
   },
 ];
 
-export const USER_MANUALS_INDEX_HREF = `${USER_MANUALS_BASE_PATH}/`;
+/** Combined binder — used when a single PDF link is needed (e.g. landing). */
+export const USER_MANUALS_COMBINED_HREF = `${USER_MANUALS_BASE_PATH}/Guardr-User-Manuals-Combined.pdf`;
 
 /** Map Guide filter tabs / platform roles onto manual audiences. */
 export function resolveManualAudience(

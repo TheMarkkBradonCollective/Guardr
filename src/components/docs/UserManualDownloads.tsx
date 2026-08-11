@@ -3,7 +3,6 @@ import { Download, FileText } from 'lucide-react';
 import {
   manualsForAudience,
   resolveManualAudience,
-  USER_MANUALS_INDEX_HREF,
   type UserManualFile,
 } from '../../lib/userManuals';
 
@@ -24,8 +23,7 @@ function ManualDownloadRow({
     <a
       href={manual.href}
       download={manual.fileName}
-      target="_blank"
-      rel="noopener noreferrer"
+      type="application/pdf"
       className={
         isDesktop
           ? 'adm-guide-manual-row'
@@ -70,7 +68,7 @@ function ManualDownloadRow({
   );
 }
 
-/** Print-ready PDF downloads for the Guide hub (web + app). */
+/** PDF file downloads for the Guide hub (web + app). Links are .pdf only. */
 export function UserManualDownloads({
   audienceFilter = 'all',
   variant = 'mobile',
@@ -90,10 +88,10 @@ export function UserManualDownloads({
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
-            Download manuals
+            Download PDF manuals
           </p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-            Print-ready US Letter PDFs. Open in the browser or save for offline training.
+            Real PDF files (US Letter). Tap to download and print or keep offline.
           </p>
         </div>
 
@@ -102,19 +100,6 @@ export function UserManualDownloads({
             <ManualDownloadRow key={manual.id} manual={manual} isDesktop={isDesktop} />
           ))}
         </div>
-
-        <a
-          href={USER_MANUALS_INDEX_HREF}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={
-            isDesktop
-              ? 'adm-guide-manuals-index'
-              : 'inline-flex text-xs font-semibold text-brand-primary'
-          }
-        >
-          All manuals on guardr.co/manuals
-        </a>
       </div>
     </div>
   );

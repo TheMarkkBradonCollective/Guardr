@@ -43,6 +43,18 @@
       "maxDuration": 30
     }
   },
+  "redirects": [
+    {
+      "source": "/manuals",
+      "destination": "/manuals/Guardr-User-Manuals-Combined.pdf",
+      "permanent": false
+    },
+    {
+      "source": "/manuals/",
+      "destination": "/manuals/Guardr-User-Manuals-Combined.pdf",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/((?!api/|marketing/|download/|manuals/|guardr\\.apk|version\\.json).*)", "destination": "/index.html" }
   ],
@@ -76,7 +88,7 @@
       "source": "/manuals/(.*)\\.pdf",
       "headers": [
         { "key": "Content-Type", "value": "application/pdf" },
-        { "key": "Content-Disposition", "value": "inline" },
+        { "key": "Content-Disposition", "value": "attachment" },
         { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
