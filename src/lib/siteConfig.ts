@@ -6,6 +6,13 @@ export const SITE_URL =
   'https://www.guardr.co';
 export const SITE_NAME = 'Guardr';
 
+/** Public install / APK download page */
+export const APP_DOWNLOAD_PAGE_PATH = '/download';
+
+export function resolveAppDownloadPageUrl(): string {
+  return apiUrl(APP_DOWNLOAD_PAGE_PATH);
+}
+
 /** Resolve API paths for Capacitor (bundled WebView origin is not guardr.co). */
 export function apiUrl(path: string): string {
   const normalized = path.startsWith('/') ? path : `/${path}`;

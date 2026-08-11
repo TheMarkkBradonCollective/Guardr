@@ -14,6 +14,8 @@ import { UberLandingNav, UberLandingHero } from './UberLandingChrome';
 import { UberExploreGrid, UberLoginBand } from './UberExploreGrid';
 import { UberLandingHeroVisual, UberLandingLoginVisual } from './UberLandingVisuals';
 import type { LandingSectionsProps } from '../shared/LandingSections';
+import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 
 type UberFormFactor = 'mobile' | 'tablet' | 'desktop';
 
@@ -161,7 +163,29 @@ export function UberStyleLandingPage({
           <ParagraphMedium margin={0} color="contentSecondary" $style={{ fontSize: '13px' }}>
             © {new Date().getFullYear()} <LegalEntityName />
           </ParagraphMedium>
-          <LegalFooterLinks onOpenLegal={onOpenLegal} />
+          <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gridGap="scale400">
+            <a
+              className="uber-landing-nav-link"
+              href={resolveAppDownloadPageUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit' }}
+            >
+              Download
+            </a>
+            <a
+              className="uber-landing-nav-link"
+              href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+              download="Guardr-User-Manuals-Combined.pdf"
+              type="application/pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit' }}
+            >
+              Manuals
+            </a>
+            <LegalFooterLinks onOpenLegal={onOpenLegal} />
+          </Block>
         </Block>
       </Block>
     </Block>

@@ -5,6 +5,7 @@ import { useStyletron } from 'baseui';
 import { ChevronDown, MapPin, Menu, Navigation, Shield, X } from 'lucide-react';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { FONT_DISPLAY } from '../../../theme/typography';
@@ -89,6 +90,14 @@ export function UberLandingNav({
               ) : null}
               <a
                 className="uber-landing-nav-link"
+                href={resolveAppDownloadPageUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download
+              </a>
+              <a
+                className="uber-landing-nav-link"
                 href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
                 download="Guardr-User-Manuals-Combined.pdf"
                 type="application/pdf"
@@ -155,6 +164,15 @@ export function UberLandingNav({
               Help
             </button>
           ) : null}
+          <a
+            className="uber-landing-mobile-menu-item"
+            href={resolveAppDownloadPageUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+          >
+            Download app
+          </a>
           <a
             className="uber-landing-mobile-menu-item"
             href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
