@@ -3,11 +3,38 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.115**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.116**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.116
+
+**PR cleanup (merged to `main`)**
+- **#943** — Print-ready PDF user manuals + website/app downloads
+
+**Shipped**
+- **PDF user manuals** — Quick Start, Client, Guard, Staff Ops, and combined binder as real `.pdf` files under `/manuals/`
+- **Website access** — landing **Manuals** nav/footer; `/manuals` redirects to the combined PDF
+- **In-app access** — **Guide → Download PDF manuals**, **Settings → User manuals**, and pending activation screens (client/guard/staff)
+- **APK/PWA** — PDF links resolve via `apiUrl()` to `www.guardr.co` so native WebView can open downloads
+- **v1.0.116** (build **216**) web + PWA + APK version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-116-beta`
+
+**Release verification**
+- `npm run lint`, `npm test`, and `npm run build` pass
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **216**), and `public/sw.js` aligned on **1.0.116-beta**
+- No new Supabase migrations in this release (staff onboarding SQL from v1.0.115 still applies if not run)
+
+**Supabase:** if not already applied from v1.0.115, run in order:
+1. `supabase/migrations/20260811000000_payments_timesheet_staff_comp.sql`
+2. `supabase/migrations/20260811010000_staff_onboarding.sql`
+3. `supabase/migrations/20260811004500_drop_guard_shift_time_adjustment.sql`
+
+**APK note:** Binary refreshed via Android APK workflow (FCM-enabled). Download: [guardr.co/download](https://www.guardr.co/download)
 
 ---
 
