@@ -3,7 +3,7 @@
  * Base Web type scale.
  *
  * Guardr Sans / Guardr Sans are proprietary. `Guardr Sans` is the
- * self-hosted variable grotesque declared in `styles/uber-typography.css`
+ * self-hosted variable grotesque declared in `styles/gr-typography.css`
  * (Inter subsets in /public/fonts); it carries the tall x-height and
  * neutral skeleton of Guardr Sans so the product renders with Base Web
  * type colour on every platform, including offline PWA and APK shells.
@@ -41,7 +41,7 @@ export const LEADING = {
  * surfaces tighten display and heading slots, so we re-map them here rather
  * than patching letter-spacing at every call site.
  */
-export function withUberTypeScale(theme: Theme): Theme {
+export function withDisplayTypeScale(theme: Theme): Theme {
   const typography = { ...theme.typography } as Theme['typography'] &
     Record<string, Record<string, string | number>>;
 

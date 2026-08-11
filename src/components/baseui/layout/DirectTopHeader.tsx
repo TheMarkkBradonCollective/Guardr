@@ -5,7 +5,7 @@ import { Logo } from '../../Logo';
  * desktop ops workspace global bar — product wordmark on the left, the active
  * workspace context centred, account/notification actions on the right.
  */
-export function UberDirectTopHeader({
+export function DirectTopHeader({
   trailing,
   onBrandClick,
   className = '',

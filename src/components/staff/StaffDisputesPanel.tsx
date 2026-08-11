@@ -6,7 +6,7 @@ import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StatusChip } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
@@ -85,7 +85,7 @@ export function StaffDisputesPanel({
     }
   }, [formFactor, openDisputes, selectedId]);
 
-  const disputeColumns: UberTableColumn<OpsDispute>[] = [
+  const disputeColumns: GuardrTableColumn<OpsDispute>[] = [
     {
       id: 'job',
       header: 'Job',
@@ -389,7 +389,7 @@ export function StaffDisputesPanel({
         {tabBar}
         <WorkbenchSplit
           list={
-            <UberDataTable
+            <GuardrDataTable
               columns={disputeColumns}
               rows={openDisputes}
               rowKey={(d) => d.id}

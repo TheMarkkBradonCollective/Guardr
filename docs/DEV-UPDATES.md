@@ -11,6 +11,15 @@ This is my running log of what shipped on Guardr. I'm building the on-demand sec
 
 ---
 
+## Tuesday, August 11, 2026 — rename uber filenames
+
+**Shipped**
+- Renamed 26 source files that contained `uber` in the filename (CSS `gr-*`, mobility landing, `GuardrDataTable`, `DirectTopHeader`, etc.)
+- Removed redundant `uberBaseTheme.ts` shim; tests use `guardrBaseTheme.ts` directly
+- Updated imports/exports across the codebase; CSS class tokens (`.uber-*`) unchanged
+
+---
+
 ## Tuesday, August 11, 2026 — /update → v1.0.118
 
 **Shipped**
@@ -1101,9 +1110,9 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 ## Friday, July 17, 2026 (morning) — /updateit → v1.0.72
 
 **/platform-ui UI migration (phases 3–6, #629)**
-- **Stock Base Web Web theme** — `LightTheme` / `DarkTheme` via `uberBaseTheme.ts`; sage brand deferred to later pass
+- **Stock Base Web Web theme** — `LightTheme` / `DarkTheme` via `guardrBaseTheme.ts`; sage brand deferred to later pass
 - **Phase 3** — shared primitives: `AppButton`, `AppPrimitives`, wireframe kit, field styles
-- **Phase 4** — dashboard kit (`DashboardHero`, `MetricCell`, `QuickActionTile`, `UberThemeVars`); hub screens: client home, staff overview, guard earnings, user profile
+- **Phase 4** — dashboard kit (`DashboardHero`, `MetricCell`, `QuickActionTile`, `GuardrThemeVars`); hub screens: client home, staff overview, guard earnings, user profile
 - **Phase 5** — overlay gates (`LegalAcceptanceModal`, onboarding, briefing, lightbox); `AppFormSheet` Base Web rebuild; removed dead `GuardBottomSheet`
 - **Phase 6** — design-preview parity (`/design-preview.html`); `ComponentShowcase`; staff live QA at `/staff/design-qa`
 
@@ -1137,7 +1146,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 ## Friday, July 17, 2026 (midday) — /updateit → v1.0.74
 
 **/platform-ui Phase 2 — home + auth (#635)**
-- **Home page** — `PublicLandingHeader`, `LandingUberPrimitives`, `GuardrCard`/`GuardrTag`/`AppButton` sections; desktop landing rebuilt with Base Web `Block` layout
+- **Home page** — `PublicLandingHeader`, `LandingPrimitives`, `GuardrCard`/`GuardrTag`/`AppButton` sections; desktop landing rebuilt with Base Web `Block` layout
 - **Sign-in / sign-up** — `AuthFormChrome` (segmented control, role picker), `AppButton` submit, `GuardrSheet` for PWA auth sheet
 - **Auth hero** — accent gradient via `--uber-accent` (`.auth-experience--uber`)
 - **`GuardrCard`** — optional `onClick` for interactive public cards

@@ -7,7 +7,7 @@ import { formatShiftRange } from '../../lib/dates';
 import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
 import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrButton } from '../baseui/GuardrButton';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchCardTitle,
   WorkbenchGrid,
@@ -51,7 +51,7 @@ export function GuardEarningsDesktop({
   const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
   const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
 
-  const earningsColumns: UberTableColumn<GuardJobView>[] = [
+  const earningsColumns: GuardrTableColumn<GuardJobView>[] = [
     {
       id: 'shift',
       header: 'Shift',
@@ -173,7 +173,7 @@ export function GuardEarningsDesktop({
                 Completed shifts and payouts will appear here.
               </ParagraphMedium>
             ) : (
-              <UberDataTable
+              <GuardrDataTable
                 columns={earningsColumns}
                 rows={sortedShifts}
                 rowKey={(job) => job.id}

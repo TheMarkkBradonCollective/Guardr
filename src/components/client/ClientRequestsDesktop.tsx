@@ -16,7 +16,7 @@ import {
 } from '../baseui/layout/WorkbenchLayout';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { StatusChip } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
 import {
   isJobScheduleLocked,
@@ -88,7 +88,7 @@ const TAB_OPTIONS: { id: JobTab; label: string }[] = [
   { id: 'missed', label: JOB_TALLY_LABELS.missed },
 ];
 
-const REQUEST_COLUMNS: UberTableColumn<SecurityRequest>[] = [
+const REQUEST_COLUMNS: GuardrTableColumn<SecurityRequest>[] = [
   {
     id: 'job',
     header: 'Job',
@@ -286,7 +286,7 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
               }
             />
           ) : (
-            <UberDataTable
+            <GuardrDataTable
               columns={REQUEST_COLUMNS}
               rows={listJobs}
               rowKey={(job) => job.id}

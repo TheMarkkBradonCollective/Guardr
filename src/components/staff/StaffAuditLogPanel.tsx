@@ -4,7 +4,7 @@ import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../
 import { useAuditLogRealtime } from '../../lib/useAuditLogRealtime';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -82,7 +82,7 @@ export function StaffAuditLogPanel() {
       </button>
     );
 
-  const auditColumns: UberTableColumn<(typeof entries)[number]>[] = [
+  const auditColumns: GuardrTableColumn<(typeof entries)[number]>[] = [
     {
       id: 'time',
       header: 'Time',
@@ -119,7 +119,7 @@ export function StaffAuditLogPanel() {
 
   const desktopTable = (
     <div className="adm-finance-audit-table">
-      <UberDataTable
+      <GuardrDataTable
         columns={auditColumns}
         rows={entries}
         rowKey={(e) => e.id}

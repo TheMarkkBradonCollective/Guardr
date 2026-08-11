@@ -13,7 +13,7 @@
 import { createLightTheme, createDarkTheme, LightTheme, DarkTheme } from 'baseui';
 import type { Theme } from 'baseui';
 import type { ThemeMode } from '../lib/platform/theme';
-import { FONT_TEXT, withUberTypeScale } from './typography';
+import { FONT_TEXT, withDisplayTypeScale } from './typography';
 
 // ─── Guardr / accent ramps ─────────────────────────────────────────────
 // Using near-black charcoal as the "accent" so Base Web accent slots
@@ -45,7 +45,7 @@ export const GUARDR_ACCENT_DARK = {
 const FONT_FAMILY = FONT_TEXT;
 
 // ─── Light theme ──────────────────────────────────────────────────────────────
-export const guardrLightTheme: Theme = withUberTypeScale(createLightTheme({
+export const guardrLightTheme: Theme = withDisplayTypeScale(createLightTheme({
   primaryFontFamily: FONT_FAMILY,
   colors: {
     ...GUARDR_ACCENT_LIGHT,
@@ -69,7 +69,7 @@ export const guardrLightTheme: Theme = withUberTypeScale(createLightTheme({
 }));
 
 // ─── Dark theme ───────────────────────────────────────────────────────────────
-export const guardrDarkTheme: Theme = withUberTypeScale(createDarkTheme({
+export const guardrDarkTheme: Theme = withDisplayTypeScale(createDarkTheme({
   primaryFontFamily: FONT_FAMILY,
   colors: {
     ...GUARDR_ACCENT_DARK,
@@ -93,8 +93,3 @@ export const guardrDarkTheme: Theme = withUberTypeScale(createDarkTheme({
 export function guardrThemeForMode(mode: ThemeMode): Theme {
   return mode === 'dark' ? guardrDarkTheme : guardrLightTheme;
 }
-
-// Backward compat
-export const uberLightTheme  = guardrLightTheme;
-export const uberDarkTheme   = guardrDarkTheme;
-export const uberThemeForMode = guardrThemeForMode;

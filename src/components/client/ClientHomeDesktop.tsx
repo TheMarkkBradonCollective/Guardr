@@ -16,7 +16,7 @@ import { OverviewLineChart, OverviewSegmentBar } from '../staff/overview/Overvie
 import { AppEmptyState, AppStatusBanner } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { GuardrCard } from '../baseui/GuardrCard';
-import { UberDirectHubCard } from '../baseui/dashboard';
+import { DirectHubCard } from '../baseui/dashboard';
 import {
   WorkbenchPage,
   WorkbenchPanel,
@@ -196,21 +196,21 @@ export function ClientHomeDesktop({
       ) : null}
 
       <div className="uber-direct-home-hub" data-tour="client-home-cta">
-        <UberDirectHubCard
+        <DirectHubCard
           title="Jobs"
           description="Create and manage jobs for your locations"
           icon={Briefcase}
           iconTone="yellow"
           onClick={() => run('requests')}
         />
-        <UberDirectHubCard
+        <DirectHubCard
           title="Billing"
           description="View statements, download docs and manage payments"
           icon={CreditCard}
           iconTone="green"
           onClick={() => run('invoices')}
         />
-        <UberDirectHubCard
+        <DirectHubCard
           title="Guards"
           description="Browse licensed guards and rehire trusted coverage"
           icon={Users}

@@ -33,7 +33,7 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -366,7 +366,7 @@ export function StaffApplications({
     if (!stillVisible) setSelection(visibleEntries[0]);
   }, [statusFilter, kindFilter, visibleEntries, activeItemKey, formFactor]);
 
-  const applicationColumns: UberTableColumn<ApplicationListEntry>[] = useMemo(
+  const applicationColumns: GuardrTableColumn<ApplicationListEntry>[] = useMemo(
     () => [
       {
         id: 'type',
@@ -637,7 +637,7 @@ export function StaffApplications({
                   message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
                 />
               ) : (
-                <UberDataTable
+                <GuardrDataTable
                   columns={applicationColumns}
                   rows={visibleEntries}
                   rowKey={applicationListKey}

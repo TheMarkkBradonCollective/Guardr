@@ -5,7 +5,7 @@
  * PWA:     full | lite  (lite = battery/bandwidth-friendly)
  * APK:     full | premium (premium = richest native polish)
  *
- * Spec: docs/guardedesign.md §8–9 · docs/CROSS_PLATFORM.md · .cursor/commands/uberplatforms.md
+ * Spec: docs/guardedesign.md §8–9 · docs/CROSS_PLATFORM.md · .cursor/commands/platforms.md
  */
 
 import type { FormFactor } from './device';

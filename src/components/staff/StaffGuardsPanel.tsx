@@ -28,7 +28,7 @@ import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
 import { useDevice } from '../../lib/platform';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import {
   WorkbenchEmpty,
@@ -210,7 +210,7 @@ export function StaffGuardsPanel({
     if (!stillVisible) setSelectedId(filtered[0].id);
   }, [statusFilter, filtered, selectedId, formFactor]);
 
-  const guardColumns: UberTableColumn<SecurityGuard>[] = useMemo(
+  const guardColumns: GuardrTableColumn<SecurityGuard>[] = useMemo(
     () => [
       {
         id: 'guard',
@@ -351,7 +351,7 @@ export function StaffGuardsPanel({
                   message={search ? 'No guards match your search' : 'No guards on the roster'}
                 />
               ) : (
-                <UberDataTable
+                <GuardrDataTable
                   columns={guardColumns}
                   rows={filtered}
                   rowKey={(guard) => guard.id}

@@ -21,7 +21,7 @@ import {
   LandingHighlightCard,
   LandingHowCard,
   LandingSectionHead,
-} from '../LandingUberPrimitives';
+} from '../LandingPrimitives';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import type { LegalPageId } from '../../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../../lib/legalContent';

@@ -9,7 +9,7 @@ import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import { Briefcase, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -118,7 +118,7 @@ export function GuardMyJobsDesktop({
 
   const listJobs = jobsByTab[activeTab];
 
-  const shiftColumns: UberTableColumn<GuardJobView>[] = [
+  const shiftColumns: GuardrTableColumn<GuardJobView>[] = [
     {
       id: 'shift',
       header: 'Shift',
@@ -235,7 +235,7 @@ export function GuardMyJobsDesktop({
           listJobs.length === 0 ? (
             <WorkbenchEmpty icon={Map} message={`No ${JOB_TALLY_LABELS[activeTab].toLowerCase()} shifts`} />
           ) : (
-            <UberDataTable
+            <GuardrDataTable
               columns={shiftColumns}
               rows={listJobs}
               rowKey={(job) => job.id}

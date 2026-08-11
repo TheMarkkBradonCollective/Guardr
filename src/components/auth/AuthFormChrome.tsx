@@ -3,7 +3,7 @@ import { Block } from 'baseui/block';
 import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
-import { LandingBadge } from '../landing/LandingUberPrimitives';
+import { LandingBadge } from '../landing/LandingPrimitives';
 
 export function AuthFormHeader({
   role,

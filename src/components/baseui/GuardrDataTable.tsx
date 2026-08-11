@@ -24,7 +24,7 @@ function useContainerWidth<T extends HTMLElement>(): [React.RefObject<T | null>,
   return [ref, width];
 }
 
-export interface UberTableColumn<T> {
+export interface GuardrTableColumn<T> {
   id: string;
   header: React.ReactNode;
   render: (row: T) => React.ReactNode;
@@ -40,8 +40,8 @@ export interface UberTableColumn<T> {
   hideOnNarrow?: boolean;
 }
 
-export interface UberDataTableProps<T> {
-  columns: UberTableColumn<T>[];
+export interface GuardrDataTableProps<T> {
+  columns: GuardrTableColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
@@ -73,7 +73,7 @@ type SortState = { columnId: string; direction: 'asc' | 'desc' } | null;
  * financials and load boards: quiet header row, hairline row rules, tabular
  * figures, right-aligned amounts, whole-row hover and keyboard activation.
  */
-export function UberDataTable<T>({
+export function GuardrDataTable<T>({
   columns,
   rows,
   rowKey,
@@ -85,7 +85,7 @@ export function UberDataTable<T>({
   className = '',
   cardLayout,
   layout = 'auto',
-}: UberDataTableProps<T>) {
+}: GuardrDataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
   const { formFactor } = useDevice();
   const [measureRef, containerWidth] = useContainerWidth<HTMLElement>();
@@ -126,7 +126,7 @@ export function UberDataTable<T>({
     const trailingColumn =
       byId(cardLayout?.trailing) ?? (columns.length > 1 ? columns[columns.length - 1] : undefined);
     const metaColumns = cardLayout?.meta
-      ? cardLayout.meta.map((id) => byId(id)).filter(Boolean as unknown as (c?: UberTableColumn<T>) => c is UberTableColumn<T>)
+      ? cardLayout.meta.map((id) => byId(id)).filter(Boolean as unknown as (c?: GuardrTableColumn<T>) => c is GuardrTableColumn<T>)
       : columns.filter(
           (c) => c !== titleColumn && c !== subtitleColumn && c !== trailingColumn,
         );

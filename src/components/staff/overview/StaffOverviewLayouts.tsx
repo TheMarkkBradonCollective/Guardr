@@ -15,7 +15,7 @@ import {
   OverviewSegmentBar,
   OverviewWeekChart,
 } from './OverviewCharts';
-import { StaffOverviewSectionHeader } from './StaffOverviewUberParts';
+import { StaffOverviewSectionHeader } from './StaffOverviewShellParts';
 
 export interface StaffOverviewLayoutProps {
   config: StaffOverviewConfig;

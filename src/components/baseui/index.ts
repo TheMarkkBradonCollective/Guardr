@@ -64,7 +64,7 @@ export { GuardrTooltip, PLACEMENT as TooltipPlacement } from './GuardrTooltip';
 // ─── Page content primitives ──────────────────────────────────────────────────
 // App shells live in `src/surfaces/` — one per device type. Nothing here is a
 // shell: these are content components that render inside whichever shell loaded.
-export { UberDataTable, type UberTableColumn } from './UberDataTable';
+export { GuardrDataTable, type GuardrTableColumn } from './GuardrDataTable';
 export { StatusChip, type StatusTone } from './StatusChip';
 
 // ─── Overlays ─────────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ export { DashboardZone }      from './dashboard/DashboardZone';
 export { MetricCell, MetricStrip } from './dashboard/MetricCell';
 export type { MetricTrend } from './dashboard/MetricCell';
 export { QuickActionTile }    from './dashboard/QuickActionTile';
-export { UberThemeVars }      from './dashboard/themeVars';
+export { GuardrThemeVars }      from './dashboard/themeVars';
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 export { inputOverrides, textareaOverrides, formControlOverrides } from './primitives/fieldStyles';

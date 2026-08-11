@@ -202,7 +202,7 @@ Central files:
 
 ```
 src/components/baseui/layout/WorkbenchLayout.tsx  — WorkbenchPage, Split, StatChips, Grid
-src/styles/uber-workbench.css                     — Base Web workbench layout CSS
+src/styles/gr-workbench.css                     — Base Web workbench layout CSS
 src/components/staff/StaffOverviewDesktop.tsx     — staff command center (desktop)
 src/components/guard/GuardMyJobsDesktop.tsx       — guard shifts workbench
 src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
@@ -210,7 +210,7 @@ src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 
 ## Theme System
 
-- **Presentation layer:** Base Web tokens via `guardrBaseTheme.ts` / `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
+- **Presentation layer:** Base Web tokens via `guardrBaseTheme.ts` / `guardrBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
 - **Themes:** Light (default web/PWA), Dark (default APK) — black/white primary CTAs, monochrome accent system
 - **Experience tiers:** PWA Full/Lite and APK Full/Premium adjust chrome, motion, and haptics without changing feature set
 - **Typography:** Guardr Sans / Guardr Sans stack
@@ -220,15 +220,15 @@ src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 ### design system files (`/platforms` complete)
 
 ```
-src/styles/uber-tokens.css      — canonical --uber-* tokens + --brand-* bridge
-src/styles/uber-global.css      — global presentation overrides (buttons, cards, inputs, tables)
-src/styles/uber-mobility.css    — per-viewSurface shell chrome
-src/styles/uber-surfaces.css    — legacy adm-*/app-* bridge inside .uber-app-shell
-src/styles/uber-landing.css     — public marketing (mobility homepage pattern)
+src/styles/gr-tokens.css      — canonical --uber-* tokens + --brand-* bridge
+src/styles/gr-global.css      — global presentation overrides (buttons, cards, inputs, tables)
+src/styles/gr-mobility.css    — per-viewSurface shell chrome
+src/styles/gr-surfaces.css    — legacy adm-*/app-* bridge inside .uber-app-shell
+src/styles/gr-landing.css     — public marketing (mobility homepage pattern)
 src/styles/app-pwa.css          — PWA glass chrome, safe areas
 src/styles/app-native.css       — APK native touch targets, safe areas
 src/components/baseui/          — Base Web adapters (GuardrButton, GuardrCard, etc.)
-src/components/landing/uber/      — UberStyleLandingPage (mobile / tablet / desktop)
+src/components/landing/mobility/      — MobilityStyleLandingPage (mobile / tablet / desktop)
 ```
 
 ## Offline + Field Mode (Phase 2)

@@ -7,7 +7,7 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import type { AccountMenuNotificationProps } from './AccountMenu';
 import type { ThemeMode } from '../../lib/platform/theme';
-import { UberDirectContextSelect } from '../baseui/layout/UberDirectContextSelect';
+import { DirectContextSelect } from '../baseui/layout/DirectContextSelect';
 import {
   MessagesSquare,
   Home,
@@ -208,7 +208,7 @@ export function ClientAppLayout({
   };
 
   const headerContext = (
-    <UberDirectContextSelect
+    <DirectContextSelect
       value={companyName}
       options={[{ id: companyName, label: companyName }]}
       aria-label="Organization"

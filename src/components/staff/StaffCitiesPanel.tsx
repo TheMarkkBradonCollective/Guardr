@@ -23,7 +23,7 @@ import {
 } from '../../lib/platformCities';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
@@ -273,7 +273,7 @@ export function StaffCitiesPanel({
     [visibleCities, search, statusFilter, sort]
   );
 
-  const cityColumns: UberTableColumn<(typeof filtered)[number]>[] = [
+  const cityColumns: GuardrTableColumn<(typeof filtered)[number]>[] = [
     {
       id: 'city',
       header: 'City',
@@ -416,7 +416,7 @@ export function StaffCitiesPanel({
           <WorkbenchSplit
             className="adm-finance-split"
             list={
-              <UberDataTable
+              <GuardrDataTable
                 columns={cityColumns}
                 rows={filtered}
                 rowKey={(city) => city.id}

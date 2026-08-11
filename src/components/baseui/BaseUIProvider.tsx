@@ -13,7 +13,7 @@ import { Provider as StyletronProvider } from 'styletron-react';
 import { BaseProvider } from 'baseui';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { guardrThemeForMode } from '../../theme/guardrBaseTheme';
-import { UberThemeVars } from './dashboard/themeVars';
+import { GuardrThemeVars } from './dashboard/themeVars';
 import { withAppBreakpoints } from './layout/shellStyles';
 
 // Singleton atomic engine — created once, reused across re-renders
@@ -36,7 +36,7 @@ function getStyletronEngine(): StyletronAtomic | StyletronServer {
  * Stack (per https://baseweb.design/getting-started/setup/):
  *   StyletronProvider (atomic engine)
  *   └─ BaseProvider (Guardr theme — black/white on LightTheme/DarkTheme)
- *      └─ UberThemeVars (sync tokens → CSS custom properties)
+ *      └─ GuardrThemeVars (sync tokens → CSS custom properties)
  *         └─ {children}
  */
 export function BaseUIProvider({ children }: { children: React.ReactNode }) {
@@ -47,7 +47,7 @@ export function BaseUIProvider({ children }: { children: React.ReactNode }) {
   return (
     <StyletronProvider value={engine}>
       <BaseProvider theme={theme}>
-        <UberThemeVars />
+        <GuardrThemeVars />
         {children}
       </BaseProvider>
     </StyletronProvider>
