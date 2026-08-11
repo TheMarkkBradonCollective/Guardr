@@ -99,7 +99,7 @@ export function UserManualDownloads({
             Download PDF manuals
           </p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-            Open or save these PDF files on your phone or computer.
+            Each role has its own standalone printable PDF. The combined binder merges those same files in order.
           </p>
         </div>
         {list}
@@ -124,7 +124,7 @@ export function UserManualDownloads({
             Download PDF manuals
           </p>
           <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-            Real PDF files for the website and app. Tap to open or download.
+            Each role has its own standalone printable PDF. The combined binder merges those same files in order.
           </p>
         </div>
         {list}

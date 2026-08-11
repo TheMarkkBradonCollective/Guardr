@@ -2,6 +2,9 @@
 /**
  * Build print-ready Letter PDFs for docs/user-manuals/*.md
  *
+ * Each role manual is a standalone printable PDF (cover + body + document control).
+ * The combined binder merges those exact PDFs in order so content always matches.
+ *
  * Usage: node scripts/build-user-manual-pdfs.mjs
  * Output:
  *   docs/user-manuals/pdf/*.pdf  (repo docs)
@@ -13,6 +16,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import { chromium } from 'playwright';
+import { PDFDocument } from 'pdf-lib';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -25,36 +29,39 @@ const BUILD_DATE = new Date().toLocaleDateString('en-US', {
   day: 'numeric',
 });
 
+/** Standalone manuals — order is the combined binder order. */
 const MANUALS = [
   {
     file: 'quick-start.md',
     pdf: 'Guardr-Quick-Start.pdf',
     title: 'Quick Start',
-    subtitle: 'Get started as a client, guard, or Guardr staff member',
+    subtitle: 'Three doors — client, guard, or Apply to work at Guardr',
     audience: 'New users',
   },
   {
     file: 'client-user-manual.md',
     pdf: 'Guardr-Client-User-Manual.pdf',
     title: 'Client User Manual',
-    subtitle: 'Post jobs, hire licensed guards, pay, and confirm coverage',
+    subtitle: 'Hire independent contractors, post jobs, pay, and confirm coverage',
     audience: 'Businesses & property owners',
   },
   {
     file: 'guard-user-manual.md',
     pdf: 'Guardr-Guard-User-Manual.pdf',
     title: 'Guard User Manual',
-    subtitle: 'Credentials, marketplace jobs, shifts, and payouts',
+    subtitle: 'Independent contractor credentials, shifts, earnings, and payouts',
     audience: 'Licensed independent contractors',
   },
   {
     file: 'staff-ops-manual.md',
     pdf: 'Guardr-Staff-Ops-Manual.pdf',
     title: 'Staff Ops Manual',
-    subtitle: 'Support through Founder — onboarding, verification, and operations',
-    audience: 'Platform staff',
+    subtitle: 'Guardr employee ops, governance, marketplace payments, and staff pay',
+    audience: 'Platform staff (Support through Founder)',
   },
 ];
+
+const COMBINED_PDF = 'Guardr-User-Manuals-Combined.pdf';
 
 const PRINT_CSS = `
   :root {
@@ -151,8 +158,17 @@ const PRINT_CSS = `
     max-width: 6in;
   }
 
+  .cover ol {
+    margin: 0.15in 0 0;
+    padding-left: 0.28in;
+    font-size: 10.5pt;
+    color: var(--ink);
+  }
+
+  .cover li { margin: 0.06in 0; }
+
   .doc-body h1 {
-    display: none; /* title lives on cover */
+    display: none;
   }
 
   .doc-body h2 {
@@ -168,7 +184,6 @@ const PRINT_CSS = `
     margin-top: 0;
   }
 
-  /* Major staff-manual parts start on a new page (except the first) */
   .doc-body h2.part-break {
     page-break-before: always;
   }
@@ -274,7 +289,6 @@ function stripFirstH1(markdown) {
   return markdown.replace(/^#\s+.+\n+/, '');
 }
 
-/** Mark major "Part …" H2s so print CSS can start them on a new page. */
 function markPartHeadings(html) {
   let seenPart = false;
   return html.replace(/<h2>(\s*Part\s+[A-Z0-9]+[\s\S]*?)<\/h2>/gi, (_, inner) => {
@@ -284,12 +298,17 @@ function markPartHeadings(html) {
   });
 }
 
-function renderHtml({ title, subtitle, audience, bodyHtml }) {
+async function markdownToBodyHtml(fileName) {
+  const markdown = await readFile(path.join(MANUALS_DIR, fileName), 'utf8');
+  return markPartHeadings(marked.parse(stripFirstH1(markdown), { async: false }));
+}
+
+function renderStandaloneHtml(manual, bodyHtml) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Guardr — ${title}</title>
+  <title>Guardr — ${manual.title}</title>
   <style>${PRINT_CSS}</style>
 </head>
 <body>
@@ -298,14 +317,19 @@ function renderHtml({ title, subtitle, audience, bodyHtml }) {
       <p class="cover-brand">Guardr</p>
       <p class="cover-tag">Anytime. Anywhere. Security, When You Need It.</p>
       <hr class="cover-rule" />
-      <h1>${title}</h1>
-      <p class="subtitle">${subtitle}</p>
+      <h1>${manual.title}</h1>
+      <p class="subtitle">${manual.subtitle}</p>
+      <p class="cover-legal" style="margin-top:0.25in;font-size:9pt;">
+        Standalone printable manual — print this PDF alone or use the combined binder
+        (<strong>${COMBINED_PDF}</strong>) which contains this file unchanged.
+      </p>
     </div>
     <div class="cover-meta">
       <dl>
-        <dt>Audience</dt><dd>${audience}</dd>
+        <dt>Audience</dt><dd>${manual.audience}</dd>
         <dt>Document date</dt><dd>${BUILD_DATE}</dd>
-        <dt>Format</dt><dd>US Letter · print-ready PDF</dd>
+        <dt>Format</dt><dd>US Letter · standalone print PDF</dd>
+        <dt>File</dt><dd>${manual.pdf}</dd>
         <dt>Operator</dt><dd>Signature Security Specialist, LLC</dd>
         <dt>Product</dt><dd>guardr.co</dd>
       </dl>
@@ -324,15 +348,56 @@ function renderHtml({ title, subtitle, audience, bodyHtml }) {
     <table>
       <thead><tr><th>Field</th><th>Value</th></tr></thead>
       <tbody>
-        <tr><td>Title</td><td>Guardr — ${title}</td></tr>
-        <tr><td>Audience</td><td>${audience}</td></tr>
+        <tr><td>Title</td><td>Guardr — ${manual.title}</td></tr>
+        <tr><td>File</td><td>${manual.pdf}</td></tr>
+        <tr><td>Audience</td><td>${manual.audience}</td></tr>
         <tr><td>Printed</td><td>${BUILD_DATE}</td></tr>
-        <tr><td>Source</td><td>docs/user-manuals (repository)</td></tr>
+        <tr><td>Source</td><td>docs/user-manuals/${manual.file}</td></tr>
+        <tr><td>Combined binder</td><td>${COMBINED_PDF} (this manual included in order)</td></tr>
         <tr><td>Support</td><td>support@guardr.co · In-app Support</td></tr>
         <tr><td>Legal</td><td>guardr.co/legal/terms · guardr.co/legal/privacy</td></tr>
       </tbody>
     </table>
     <p>© Signature Security Specialist, LLC. For authorized internal and user distribution.</p>
+  </section>
+</body>
+</html>`;
+}
+
+function renderBinderCoverHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Guardr — User Manuals (Combined Binder)</title>
+  <style>${PRINT_CSS}</style>
+</head>
+<body>
+  <section class="cover">
+    <div>
+      <p class="cover-brand">Guardr</p>
+      <p class="cover-tag">Anytime. Anywhere. Security, When You Need It.</p>
+      <hr class="cover-rule" />
+      <h1>User Manuals</h1>
+      <p class="subtitle">Combined print binder — assembled from the standalone role PDFs below (same content, same order).</p>
+      <ol>
+        ${MANUALS.map((m, i) => `<li><strong>${m.title}</strong> — ${m.audience}<br /><span style="color:var(--muted);font-size:9pt;">File: ${m.pdf}</span></li>`).join('')}
+      </ol>
+      <p class="cover-legal" style="margin-top:0.3in;">
+        To print one role only, download its standalone PDF. Each section in this binder matches its standalone file page-for-page (after this cover).
+      </p>
+    </div>
+    <div class="cover-meta">
+      <dl>
+        <dt>Document date</dt><dd>${BUILD_DATE}</dd>
+        <dt>Format</dt><dd>US Letter · combined binder PDF</dd>
+        <dt>File</dt><dd>${COMBINED_PDF}</dd>
+        <dt>Operator</dt><dd>Signature Security Specialist, LLC</dd>
+      </dl>
+      <p class="cover-legal">
+        Guardr is a technology marketplace platform. Not a PPO, employer, or staffing agency.
+      </p>
+    </div>
   </section>
 </body>
 </html>`;
@@ -372,88 +437,47 @@ async function printHtmlToPdf(browser, html, pdfPath, headerTitle) {
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
-  return { pdfPath };
+  return pdfPath;
 }
 
-async function buildOne(browser, manual) {
-  const mdPath = path.join(MANUALS_DIR, manual.file);
-  const markdown = await readFile(mdPath, 'utf8');
-  const bodyHtml = markPartHeadings(
-    marked.parse(stripFirstH1(markdown), { async: false }),
-  );
-  const html = renderHtml({
-    title: manual.title,
-    subtitle: manual.subtitle,
-    audience: manual.audience,
-    bodyHtml,
-  });
+async function buildStandalone(browser, manual) {
+  const bodyHtml = await markdownToBodyHtml(manual.file);
+  const html = renderStandaloneHtml(manual, bodyHtml);
   const pdfPath = path.join(OUT_DIR, manual.pdf);
-  return printHtmlToPdf(browser, html, pdfPath, manual.title);
+  await printHtmlToPdf(browser, html, pdfPath, manual.title);
+  return pdfPath;
 }
 
-async function buildCombined(browser) {
-  const sections = [];
-  for (const manual of MANUALS) {
-    const markdown = await readFile(path.join(MANUALS_DIR, manual.file), 'utf8');
-    const bodyHtml = markPartHeadings(
-      marked.parse(stripFirstH1(markdown), { async: false }),
-    );
-    sections.push(`
-      <section class="cover">
-        <div>
-          <p class="cover-brand">Guardr</p>
-          <p class="cover-tag">User Manuals · Combined print edition</p>
-          <hr class="cover-rule" />
-          <h1>${manual.title}</h1>
-          <p class="subtitle">${manual.subtitle}</p>
-        </div>
-        <div class="cover-meta">
-          <dl>
-            <dt>Audience</dt><dd>${manual.audience}</dd>
-            <dt>Document date</dt><dd>${BUILD_DATE}</dd>
-          </dl>
-        </div>
-      </section>
-      <main class="doc-body">${bodyHtml}</main>
-    `);
+async function buildBinderCover(browser) {
+  const pdfPath = path.join(OUT_DIR, '.binder-cover-temp.pdf');
+  await printHtmlToPdf(browser, renderBinderCoverHtml(), pdfPath, 'User Manuals (Combined)');
+  return pdfPath;
+}
+
+async function mergePdfFiles(outputPath, inputPaths) {
+  const merged = await PDFDocument.create();
+  for (const inputPath of inputPaths) {
+    const bytes = await readFile(inputPath);
+    const doc = await PDFDocument.load(bytes);
+    const pages = await merged.copyPages(doc, doc.getPageIndices());
+    for (const page of pages) {
+      merged.addPage(page);
+    }
   }
+  const saved = await merged.save();
+  await writeFile(outputPath, saved);
+  return outputPath;
+}
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Guardr — User Manuals (Combined)</title>
-  <style>${PRINT_CSS}</style>
-</head>
-<body>
-  <section class="cover">
-    <div>
-      <p class="cover-brand">Guardr</p>
-      <p class="cover-tag">Anytime. Anywhere. Security, When You Need It.</p>
-      <hr class="cover-rule" />
-      <h1>User Manuals</h1>
-      <p class="subtitle">Combined print edition — Quick Start, Client, Guard, and Staff Ops.</p>
-      <ol>
-        ${MANUALS.map((m) => `<li><strong>${m.title}</strong> — ${m.audience}</li>`).join('')}
-      </ol>
-    </div>
-    <div class="cover-meta">
-      <dl>
-        <dt>Document date</dt><dd>${BUILD_DATE}</dd>
-        <dt>Format</dt><dd>US Letter · print-ready PDF</dd>
-        <dt>Operator</dt><dd>Signature Security Specialist, LLC</dd>
-      </dl>
-      <p class="cover-legal">
-        Guardr is a technology marketplace platform. Not a PPO, employer, or staffing agency.
-      </p>
-    </div>
-  </section>
-  ${sections.join('\n')}
-</body>
-</html>`;
-
-  const pdfPath = path.join(OUT_DIR, 'Guardr-User-Manuals-Combined.pdf');
-  return printHtmlToPdf(browser, html, pdfPath, 'User Manuals (Combined)');
+async function buildCombined(browser, standalonePaths) {
+  const binderCoverPath = await buildBinderCover(browser);
+  const combinedPath = path.join(OUT_DIR, COMBINED_PDF);
+  try {
+    await mergePdfFiles(combinedPath, [binderCoverPath, ...standalonePaths]);
+  } finally {
+    await rm(binderCoverPath, { force: true });
+  }
+  return combinedPath;
 }
 
 async function syncPublicDownloads(pdfPaths) {
@@ -475,29 +499,32 @@ async function main() {
   });
 
   try {
-    const results = [];
+    const standalonePaths = [];
     for (const manual of MANUALS) {
-      const built = await buildOne(browser, manual);
-      results.push(built);
-      console.log('Wrote', path.relative(ROOT, built.pdfPath));
+      const pdfPath = await buildStandalone(browser, manual);
+      standalonePaths.push(pdfPath);
+      console.log('Wrote standalone', path.relative(ROOT, pdfPath));
     }
-    const combined = await buildCombined(browser);
-    results.push(combined);
-    console.log('Wrote', path.relative(ROOT, combined.pdfPath));
 
-    await syncPublicDownloads(results.map((r) => r.pdfPath));
+    const combinedPath = await buildCombined(browser, standalonePaths);
+    console.log('Wrote combined (merged standalone PDFs)', path.relative(ROOT, combinedPath));
+
+    const allPaths = [...standalonePaths, combinedPath];
+    await syncPublicDownloads(allPaths);
 
     const index = [
       '# Print-ready PDFs',
       '',
       `Generated ${BUILD_DATE}. US Letter, with cover page, running headers/footers, and page numbers.`,
       '',
-      'Public downloads (website/app): `/manuals/*.pdf` and [guardr.co/manuals](https://guardr.co/manuals).',
+      'Each role manual is a **standalone printable PDF**. The combined binder merges those exact files in order (plus a binder cover page).',
       '',
-      '| Manual | PDF |',
-      '|--------|-----|',
-      ...MANUALS.map((m) => `| ${m.title} | [${m.pdf}](./${m.pdf}) |`),
-      `| Combined (all) | [Guardr-User-Manuals-Combined.pdf](./Guardr-User-Manuals-Combined.pdf) |`,
+      'Public downloads (website/app): `/manuals/*.pdf` and [guardr.co/manuals](https://www.guardr.co/manuals).',
+      '',
+      '| Manual | Standalone PDF | In combined binder |',
+      '|--------|----------------|-------------------|',
+      ...MANUALS.map((m) => `| ${m.title} | [${m.pdf}](./${m.pdf}) | Yes (same file) |`),
+      `| Combined binder | [${COMBINED_PDF}](./${COMBINED_PDF}) | All standalone PDFs merged |`,
       '',
       'Regenerate:',
       '',
