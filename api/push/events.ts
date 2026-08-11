@@ -1452,20 +1452,23 @@ function resolvePlatformRole(input) {
   return "guard";
 }
 async function verifyStaffSession(db, userId, email) {
-  let { data, error } = await db.from("staff").select("id, email, staff_role").eq("id", userId).maybeSingle();
+  const emailLower = email.trim().toLowerCase();
+  let { data, error } = await db.from("staff").select("id, email, personal_email, staff_role").eq("id", userId).maybeSingle();
   if (!data && !error) {
-    const byEmail = await db.from("staff").select("id, email, staff_role").eq("email", email).maybeSingle();
+    const byEmail = await db.from("staff").select("id, email, personal_email, staff_role").or(`email.eq.${emailLower},personal_email.eq.${emailLower}`).maybeSingle();
     data = byEmail.data ?? null;
     error = byEmail.error ?? null;
   }
   if (!data && error?.code === "42P01") return null;
-  if (!data || data.email?.toLowerCase() !== email) return null;
+  const matchesWork = data?.email?.toLowerCase() === emailLower;
+  const matchesPersonal = data?.personal_email?.toLowerCase() === emailLower;
+  if (!data || !matchesWork && !matchesPersonal) return null;
   const platformRole = resolvePlatformRole({
     isStaff: true,
     staffRole: data.staff_role ?? void 0,
     legacyRole: "staff"
   });
-  return { userId: data.id, email, role: platformRole, platformRole };
+  return { userId: data.id, email: emailLower, role: platformRole, platformRole };
 }
 async function verifyFieldGuardSession(db, userId, email, credentialsRole) {
   let { data, error } = await db.from("guards").select("id, email, is_staff, staff_role, migrated_to_staff_at").eq("id", userId).maybeSingle();

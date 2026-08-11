@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.114-beta",
+  "webVersion": "1.0.115-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.114",
-    "versionCode": 214,
+    "version": "1.0.115",
+    "versionCode": 215,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.114.apk",
+    "downloadName": "guardr-v1.0.115.apk",
     "fileSize": 8378011,
     "sha256": "2ce1a727f7fdebf2e06c6e788b0761f721b05f0a71e0c29e7e9deecb651e0896",
-    "releaseNotes": "Unified Payments page for guards, staff, and clients; guard profile Timesheet tab with staff shift time adjustments."
+    "releaseNotes": "Staff onboarding (application, gov ID, Stripe payouts), staff pay on Payments (Prop 22 add-ons), signup clarity (Work at Guardr vs marketplace), guard timesheet read-only from clock audit."
   },
-  "updatedAt": "2026-08-07T00:40:12.405Z"
+  "updatedAt": "2026-08-11T01:40:56.851Z"
 }
