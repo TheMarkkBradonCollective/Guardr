@@ -3,11 +3,31 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.116**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.117**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.117
+
+**PR cleanup (merged to `main`)**
+- **#945** — Homepage **Download** and **Manuals** links in nav and footer
+
+**Shipped**
+- **Homepage nav** — **Download** → `/download` (APK + PWA install) and **Manuals** → combined PDF on desktop, mobile, and tablet landing
+- **Footers** — same links on desktop, Uber, and shared landing footer
+- **v1.0.117** (build **217**) web + PWA + APK version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-117-beta`
+
+**Release verification**
+- `npm run lint`, `npm test`, and `npm run build` pass
+- Version parity: `package.json`, `version.json`, `build.gradle` (code **217**), and `public/sw.js` aligned on **1.0.117-beta**
+- No new Supabase migrations
+
+**APK note:** Binary refreshed via Android APK workflow (FCM-enabled). Download: [guardr.co/download](https://www.guardr.co/download)
 
 ---
 

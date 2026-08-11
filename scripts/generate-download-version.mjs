@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.117':
+    'Homepage Download and Manuals links in nav and footer; PDF manuals on /manuals.',
   '1.0.116':
     'Print-ready PDF user manuals downloadable on website and in-app (Guide, Settings, pending screens); /manuals/*.pdf.',
   '1.0.115':
