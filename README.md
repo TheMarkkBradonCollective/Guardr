@@ -38,11 +38,7 @@ Built on Uber's [Base design system](https://baseweb.design) — see **[docs/ube
 
 User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is, how it works, getting started)
 
-Role user manuals: **[docs/user-manuals/](docs/user-manuals/)** (Quick Start, Client, Guard, Staff Ops)
-
-Print-ready PDFs (US Letter): **[docs/user-manuals/pdf/](docs/user-manuals/pdf/)** — regenerate with `npm run docs:manuals-pdf`
-
-Public downloads: **[/manuals](https://guardr.co/manuals)** (also in-app **Guide → Download manuals**)
+User manuals (print-ready PDF): **[/manuals](https://guardr.co/manuals)** — also in-app **Guide → Download manuals**
 
 ## Deploy to guardr.co
 
