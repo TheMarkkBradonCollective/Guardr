@@ -6,9 +6,9 @@
     "versionCode": 217,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.117.apk",
-    "fileSize": 23230139,
-    "sha256": "410232335d57ddba06c6263b230d701d9ba072fa59d43c788f682aa5a6dc09f0",
+    "fileSize": 30890730,
+    "sha256": "561b6e847e5fc50c1b2393a8ba4d407f464aed6664e2edc3703fec564fa7d080",
     "releaseNotes": "Homepage Download and Manuals links in nav and footer; PDF manuals on /manuals."
   },
-  "updatedAt": "2026-08-11T03:23:16.144Z"
+  "updatedAt": "2026-08-11T03:29:28.483Z"
 }
