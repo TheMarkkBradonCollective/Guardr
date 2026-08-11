@@ -6,9 +6,9 @@
     "versionCode": 220,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.120.apk",
-    "fileSize": 46221004,
-    "sha256": "8bd033583443fb164586099c4b05d8948c85070866140e240aad99383b36ac6b",
+    "fileSize": 53960344,
+    "sha256": "743d8f938291869bb1abf339e07bf11e32e5f5866bba1a9367af5b78ce184c10",
     "releaseNotes": "Expanded user manuals: pay/payouts for guards, client costs, staff compensation, and contractor vs employee legal positioning."
   },
-  "updatedAt": "2026-08-11T06:44:38.511Z"
+  "updatedAt": "2026-08-11T06:51:25.804Z"
 }
