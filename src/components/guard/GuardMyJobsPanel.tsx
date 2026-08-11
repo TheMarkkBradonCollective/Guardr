@@ -362,7 +362,7 @@ export function GuardMyJobsPanel({
         />
       </div>
 
-      {/* Job list — Uber ride-selection style */}
+      {/* Job list — job-selection style */}
       <div className="uber-jobs-list">
         {activeJobs.length === 0 ? (
           <div className="uber-jobs-empty">

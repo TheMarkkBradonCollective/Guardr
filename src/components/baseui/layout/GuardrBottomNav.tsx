@@ -16,7 +16,7 @@ interface GuardrBottomNavProps {
   centerItemId?: string;
 }
 
-/** Individual tab — exact Uber driver/rider tab bar */
+/** Individual tab — exact guard field app/rider tab bar */
 function BottomNavTab({
   label,
   icon: Icon,
@@ -50,7 +50,7 @@ function BottomNavTab({
   );
 }
 
-/** Guardr bottom navigation — exact Uber tab bar */
+/** Guardr bottom navigation — exact bottom tab bar */
 export function GuardrBottomNav({
   items,
   activeId,

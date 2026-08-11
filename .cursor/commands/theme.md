@@ -72,4 +72,4 @@ body[data-theme]                 — theme attribute
 
 - `/design` — full page redesign (layout + visual language)
 - `/fix` — scope-aware UI/UX optimization across surfaces
-- `/uber` or `/uberplatforms` — Uber Base Web presentation-layer migration
+- `/design` or `/platforms` — Base Web presentation-layer migration

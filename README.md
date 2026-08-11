@@ -2,7 +2,7 @@
 
 **Anytime. Anywhere. Security, When You Need It.**
 
-Guardr is an independent contractor marketplace connecting licensed security professionals with clients who need security services. Think Uber for security — clients post requests, guards browse and accept available work.
+Guardr is an independent contractor marketplace connecting licensed security professionals with clients who need security services. On-demand marketplace — clients post requests, guards browse and accept available work.
 
 **Legal positioning:** Guardr is operated by **Signature Security Specialist, LLC** as a technology platform only. We are not a private patrol operator, security guard employer, or staffing agency. Guards and clients contract directly for each job. See in-app Terms of Service and Privacy Policy at `/legal/terms` and `/legal/privacy`.
 
@@ -17,11 +17,11 @@ Guardr is **not** an employer, staffing agency, or licensed security services pr
 
 ## Design
 
-Built on Uber's [Base design system](https://baseweb.design) — see **[docs/uber-patterns.md](docs/uber-patterns.md)**.
+Built on the [Base Web design system](https://baseweb.design) — see **[docs/design-patterns.md](docs/design-patterns.md)**.
 
 - Monochrome palette: black primary actions on white / `#F6F6F6` surfaces, inverted in dark mode
-- Uber Move type scale, self-hosted so it renders offline in the PWA and APK
-- Purpose-built chrome per surface: Uber Freight workspace on desktop (icon rail, page band, ops tables), labelled sidebar on tablet, tab bar and record cards on phones
+- Guardr Sans type scale, self-hosted so it renders offline in the PWA and APK
+- Purpose-built chrome per surface: desktop workspace on desktop (icon rail, page band, ops tables), labelled sidebar on tablet, tab bar and record cards on phones
 - Two themes: Light and Dark, plus PWA Full/Lite and APK Full/Premium experience tiers
 
 ## Tech Stack

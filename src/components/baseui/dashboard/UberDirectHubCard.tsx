@@ -2,7 +2,7 @@ import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
 
-/** Uber Direct home hub card — title with arrow, description, circular accent icon. */
+/** Guardr Direct home hub card — title with arrow, description, circular accent icon. */
 export function UberDirectHubCard({
   title,
   description,

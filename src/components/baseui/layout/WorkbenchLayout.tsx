@@ -171,7 +171,7 @@ export function WorkbenchCardTitle({ children }: { children: React.ReactNode }) 
   );
 }
 
-/** White panel on gray canvas — Uber Direct content card. */
+/** White panel on gray canvas — Guardr Direct content card. */
 export function WorkbenchPanel({
   children,
   className = '',
@@ -190,7 +190,7 @@ export function WorkbenchPanel({
   );
 }
 
-/** Uber Direct search + filter toolbar row. */
+/** Guardr Direct search + filter toolbar row. */
 export function WorkbenchSearchRow({
   searchValue,
   onSearchChange,

@@ -12,7 +12,7 @@ export function UberThemeVars() {
     const root = document.documentElement;
     const { colors } = theme;
 
-    // Accent (black in light, white in dark — real Uber)
+    // Accent (black in light, white in dark)
     root.style.setProperty('--uber-accent', colors.accent);
     root.style.setProperty('--uber-accent-hover', colors.accent600 ?? colors.accent);
     root.style.setProperty('--uber-accent-50', colors.accent50);

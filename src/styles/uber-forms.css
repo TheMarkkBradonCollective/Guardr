@@ -38,7 +38,7 @@
   color: var(--uber-text-muted, #767676) !important;
 }
 
-/* Uber keeps section eyebrows uppercase — labels are the exception. */
+/* Guardr keeps section eyebrows uppercase — labels are the exception. */
 .uber-overline,
 .uber-section-eyebrow {
   text-transform: uppercase;

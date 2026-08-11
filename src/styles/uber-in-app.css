@@ -23,7 +23,7 @@
   overflow: hidden;
 }
 
-/* ─── Section titles — Uber bold page header ─────────────────────────────── */
+/* ─── Section titles — bold page header ─────────────────────────────── */
 
 .app-screen-title {
   font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -65,7 +65,7 @@ html.theme-dark .app-screen-title { color: #fff; }
 
 html.theme-dark .app-dashboard-hero-title { color: #fff; }
 
-/* ─── Section heads — Uber minimal section labels ────────────────────────── */
+/* ─── Section heads — minimal section labels ────────────────────────── */
 
 .app-section-head {
   display: flex;
@@ -107,7 +107,7 @@ html.theme-dark .app-section-head h2 { color: #fff; }
 
 .app-section-body { padding: 0; }
 
-/* ─── List rows — Uber separator-only style (no card borders) ────────────── */
+/* ─── List rows — Base Web separator-only style (no card borders) ────────────── */
 
 .app-list {
   background: var(--uber-bg, #fff);
@@ -225,7 +225,7 @@ a.app-item-card:active,
   border-bottom: 1px solid var(--uber-border, #eeeeee);
 }
 
-/* ─── Search bar — Uber booking/search style ─────────────────────────────── */
+/* ─── Search bar — Guardr booking/search style ─────────────────────────────── */
 
 .app-search-inline {
   display: flex;
@@ -263,7 +263,7 @@ html.theme-dark .app-search-inline:focus-within { background: var(--uber-elevate
 
 .app-search-inline input::placeholder { color: var(--uber-text-muted, #767676); }
 
-/* ─── Uber stat grid — "3 sites active" style ────────────────────────────── */
+/* ─── Base Web stat grid — "3 sites active" style ────────────────────────────── */
 
 .uber-stat-row {
   display: grid;
@@ -306,7 +306,7 @@ html.theme-dark .uber-stat-value { color: #fff; }
   letter-spacing: 0.05em;
 }
 
-/* ─── Quick-action grid — Uber's home service tiles ─────────────────────── */
+/* ─── Quick-action grid — Base Web home service tiles ─────────────────────── */
 
 .uber-quick-grid {
   display: grid;
@@ -361,7 +361,7 @@ html.theme-dark .uber-quick-tile-icon { background: var(--uber-elevated, #2b2b2b
 
 html.theme-dark .uber-quick-tile-label { color: #fff; }
 
-/* ─── Live/active card — Uber "ride in progress" card ────────────────────── */
+/* ─── Live/active card — Base Web "ride in progress" card ────────────────────── */
 
 .uber-live-card {
   margin: 12px 20px;
@@ -465,7 +465,7 @@ html.theme-dark .uber-live-card { background: #1a1a1a; border: 1px solid #2b2b2b
   flex-shrink: 0;
 }
 
-/* ─── Profile/guard rows — Uber driver profile card ─────────────────────── */
+/* ─── Profile/guard rows — guard field app profile card ─────────────────────── */
 
 .uber-profile-row {
   display: flex;
@@ -605,7 +605,7 @@ html.theme-dark .uber-map-bottom-sheet { background: var(--uber-bg, #000); }
 
 html.theme-dark .uber-map-bottom-sheet-title { color: #fff; }
 
-/* ─── Earnings banner — Uber driver earnings summary ─────────────────────── */
+/* ─── Earnings banner — guard field app earnings summary ─────────────────────── */
 
 .uber-earnings-banner {
   display: flex;
@@ -635,7 +635,7 @@ html.theme-dark .uber-earnings-amount { color: #fff; }
   margin: 4px 0 0;
 }
 
-/* ─── Empty state — Uber minimal empty state ─────────────────────────────── */
+/* ─── Empty state — minimal empty state ─────────────────────────────── */
 
 .app-empty-state {
   display: flex;
@@ -652,7 +652,7 @@ html.theme-dark .uber-earnings-amount { color: #fff; }
 html.theme-dark .app-empty-state-title { color: #fff; }
 .app-empty-state-body { font-size: 14px; color: var(--uber-text-muted, #767676); margin: 0 0 24px; line-height: 1.5; max-width: 260px; }
 
-/* ─── Form fields — Uber gray-fill inputs ────────────────────────────────── */
+/* ─── Form fields — neutral gray-fill inputs ────────────────────────────────── */
 
 .app-form-field {
   margin-bottom: 16px;
@@ -691,7 +691,7 @@ html.theme-dark .app-empty-state-title { color: #fff; }
 html.theme-dark .app-form-input { background: var(--uber-surface, #1a1a1a); color: #fff; }
 html.theme-dark .app-form-input:focus { background: var(--uber-elevated, #2b2b2b); }
 
-/* ─── Desktop workspace — Uber desktop app layout ────────────────────────── */
+/* ─── Desktop workspace — Guardr desktop app layout ────────────────────────── */
 
 body[data-form-factor="desktop"] .app-item-card,
 body[data-form-factor="desktop"] .wf-list-card {
@@ -735,7 +735,7 @@ html.theme-dark .app-item-card-stack { background: var(--uber-surface, #1a1a1a);
 html.theme-dark .app-dashboard-hero { background: var(--uber-bg, #000); }
 html.theme-dark .app-list { background: var(--uber-surface, #1a1a1a); }
 
-/* ─── Status badges — Uber pill style ───────────────────────────────────── */
+/* ─── Status badges — pill style ───────────────────────────────────── */
 
 .uber-status-badge {
   display: inline-flex;
@@ -961,7 +961,7 @@ html.theme-dark .client-home-empty-live { background: var(--uber-surface, #1a1a1
 
 html.theme-dark .client-home-empty-live-icon { background: var(--uber-elevated, #2b2b2b); color: #fff; }
 
-/* Glance tiles — Uber gray stat card */
+/* Glance tiles — neutral gray stat card */
 .client-home-glance-tile {
   display: flex;
   flex-direction: column;
@@ -995,7 +995,7 @@ html.theme-dark .client-home-glance-value { color: #fff; }
   color: var(--uber-text-muted, #767676);
 }
 
-/* Quick action grid — Uber home grid tiles */
+/* Quick action grid — Guardr home grid tiles */
 .client-home-quick-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -1284,7 +1284,7 @@ html.theme-dark .uber-feed-row-title { color: #fff; }
   padding: 20px;
 }
 
-/* ─── Metric strips — Uber horizontal stat row ───────────────────────────── */
+/* ─── Metric strips — horizontal stat row ───────────────────────────── */
 
 .app-metric-strip {
   display: grid;
@@ -1303,7 +1303,7 @@ html.theme-dark .uber-feed-row-title { color: #fff; }
 
 .app-metric-strip .app-metric-cell:last-child { border-right: none; }
 
-/* ─── Segmented control — Uber tab-pill style ────────────────────────────── */
+/* ─── Segmented control — Base Web tab-pill style ────────────────────────────── */
 
 .app-segmented-control {
   display: flex;
@@ -1341,7 +1341,7 @@ html.theme-dark .app-segmented-option--active {
   color: var(--uber-bg, #000);
 }
 
-/* ─── Map browse dock — Uber bottom sheet style ──────────────────────────── */
+/* ─── Map browse dock — bottom sheet style ──────────────────────────── */
 
 .map-browse-dock {
   background: var(--uber-bg, #fff);
@@ -1431,7 +1431,7 @@ html.theme-dark .uber-tab-btn[data-active="true"] { color: #fff; }
   font-weight: 700;
 }
 
-/* Tiny active dot under icon — Uber's subtle active indicator */
+/* Tiny active dot under icon — Base Web subtle active indicator */
 .uber-tab-active-dot {
   position: absolute;
   bottom: 2px;
@@ -1471,7 +1471,7 @@ html.theme-dark .uber-tab-badge {
    UBER MAP BOTTOM SHEET — job list that slides up over the full-screen map
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* The white bottom sheet panel — exactly like Uber's ride-selection sheet */
+/* The white bottom sheet panel — exactly like Base Web ride-selection sheet */
 .map-offer-card,
 .map-jobs-browse-card,
 .uber-map-sheet {
@@ -1533,7 +1533,7 @@ html.theme-dark .map-offer-card-close {
   color: #fff;
 }
 
-/* ─── Uber ride-selection row (job row on map sheet) ──────────────────────── */
+/* ─── job-selection row (job row on map sheet) ──────────────────────── */
 
 .uber-job-row {
   display: flex;
@@ -1576,7 +1576,7 @@ html.theme-dark .uber-job-row:hover {
   background: var(--uber-bg, #000);
 }
 
-/* Left icon — like Uber's car thumbnail */
+/* Left icon — like Base Web car thumbnail */
 .uber-job-row-icon {
   width: 56px;
   height: 40px;
@@ -1617,7 +1617,7 @@ html.theme-dark .uber-job-row-title { color: #fff; }
   text-overflow: ellipsis;
 }
 
-/* Right side — price like Uber */
+/* Right side — price like mobility apps */
 .uber-job-row-right {
   display: flex;
   flex-direction: column;
@@ -1665,7 +1665,7 @@ html.theme-dark .uber-job-row-price { color: #fff; }
   50% { box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.18); }
 }
 
-/* Section header — like Uber's "Economy" / "Premium" dividers */
+/* Section header — like Base Web "Economy" / "Premium" dividers */
 .uber-section-header {
   padding: 20px 20px 8px;
   font-size: 20px;
@@ -1677,7 +1677,7 @@ html.theme-dark .uber-job-row-price { color: #fff; }
 
 html.theme-dark .uber-section-header { color: #fff; background: #111; }
 
-/* Bottom CTA bar — like Uber's "Choose UberX" black button bar */
+/* Bottom CTA bar — like Base Web "Choose UberX" black button bar */
 .uber-sheet-cta-bar {
   padding: 12px 20px;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
@@ -1711,7 +1711,7 @@ html.theme-dark .uber-sheet-cta-primary {
   color: #000;
 }
 
-/* Payment row at bottom of sheet — like Uber's "Visa ···1059" row */
+/* Payment row at bottom of sheet — like Base Web "Visa ···1059" row */
 .uber-payment-row {
   display: flex;
   align-items: center;
@@ -1775,7 +1775,7 @@ html.theme-dark .app-page-lead-title { color: #fff; }
 
 .app-page-lead-sub { font-size: 14px; color: var(--uber-text-muted, #767676); margin: 6px 0 0; }
 
-/* ─── Status banners — Uber notification card ───────────────────────────── */
+/* ─── Status banners — notification card ───────────────────────────── */
 
 .app-status-banner {
   display: flex;
@@ -1936,7 +1936,7 @@ html.theme-dark .uber-jobs-empty-title { color: #fff; }
   max-width: 100%;
 }
 
-/* App section body has no padding override needed — uber-in-app already set it */
+/* App section body has no padding override needed — Base Web-in-app already set it */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    GLOBAL EMPTY STATE RESET — no boxes, no borders, no backgrounds
@@ -2008,7 +2008,7 @@ html.theme-dark .guard-performance-stat-label { color: #888; }
 html.theme-dark .guard-performance-stat-value { color: #fff; }
 html.theme-dark .guard-factors-heading { color: #fff; }
 
-/* ─── Filter pills — Uber tab/chip style ─────────────────────────────────── */
+/* ─── Filter pills — Base Web tab/chip style ─────────────────────────────────── */
 
 .staff-filter-pill {
   display: inline-flex;

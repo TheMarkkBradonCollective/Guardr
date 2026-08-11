@@ -2,7 +2,7 @@
  * GuardrSelect — Base Web Select wrapper.
  * https://baseweb.design/components/select/
  *
- * Uber pattern: gray-fill dropdown, no heavy borders.
+ * Base Web pattern: gray-fill dropdown, no heavy borders.
  */
 
 import React from 'react';

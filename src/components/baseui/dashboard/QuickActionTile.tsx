@@ -5,8 +5,8 @@ import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
 
 /**
- * Guardr quick-action tile — Uber home grid style.
- * Gray square icon + label below (like Uber's Food / Reserve / 2-Wheels tiles).
+ * Guardr quick-action tile — Guardr home grid style.
+ * Gray square icon + label below (like Base Web Food / Reserve / 2-Wheels tiles).
  * Primary variant: black background, white text.
  */
 export function QuickActionTile({

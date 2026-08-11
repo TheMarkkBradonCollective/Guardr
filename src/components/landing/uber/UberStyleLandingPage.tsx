@@ -79,7 +79,7 @@ interface UberStyleLandingProps extends LandingSectionsProps {
 }
 
 /**
- * Guardr landing — Uber homepage pattern.
+ * Guardr landing — mobility homepage pattern.
  * Black nav · booking hero · trust strip · explore grid · login band · footer.
  * Platform-specific layout: mobile | tablet | desktop.
  */

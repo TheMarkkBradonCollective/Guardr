@@ -1,8 +1,8 @@
 /**
- * Guardr Base Web Theme — real Uber app visual language.
+ * Guardr Base Web Theme — real Guardr app visual language.
  *
  * Black primary actions on white/light-gray surfaces.
- * Matches the actual Uber mobile product aesthetic from the UI kit:
+ * Matches the actual Guardr mobile product aesthetic from the UI kit:
  *   - Black (#000) CTAs, nav, map pins
  *   - White (#FFF) cards, sheets, backgrounds
  *   - #F6F6F6 secondary surfaces and inputs
@@ -15,9 +15,9 @@ import type { Theme } from 'baseui';
 import type { ThemeMode } from '../lib/platform/theme';
 import { FONT_TEXT, withUberTypeScale } from './typography';
 
-// ─── Guardr / Uber accent ramps ─────────────────────────────────────────────
+// ─── Guardr / accent ramps ─────────────────────────────────────────────
 // Using near-black charcoal as the "accent" so Base Web accent slots
-// render with the same Uber look instead of blue.
+// render with the same Base Web look instead of blue.
 export const GUARDR_ACCENT_LIGHT = {
   accent:   '#000000',   // primary CTAs, active states, links
   accent50: '#F6F6F6',   // very light tinted background

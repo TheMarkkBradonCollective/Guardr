@@ -5,7 +5,7 @@ export interface GeoPosition {
   lng: number;
 }
 
-/** Device location for map routing — optional live watch (Uber-style). */
+/** Device location for map routing — optional live watch (Guardr-style). */
 export function useUserLocation(watch = false): GeoPosition | null {
   const [position, setPosition] = useState<GeoPosition | null>(null);
 

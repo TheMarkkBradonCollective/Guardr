@@ -2,7 +2,7 @@
  * GuardrAvatar — Base Web Avatar wrapper.
  * https://baseweb.design/components/avatar/
  *
- * Uber pattern: circular photo or monogram initials on gray bg.
+ * Base Web pattern: circular photo or monogram initials on gray bg.
  */
 
 import React from 'react';

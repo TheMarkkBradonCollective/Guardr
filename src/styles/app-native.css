@@ -7,7 +7,7 @@ body.shell-native {
   overscroll-behavior-y: none;
 }
 
-/* Native APK — Uber premium touch chrome */
+/* Native APK — Base Web premium touch chrome */
 
 body[data-shell="native"] .uber-app-shell.mobility-shell,
 body.shell-native .uber-app-shell.mobility-shell {
@@ -96,7 +96,7 @@ body.shell-native .auth-sheet-panel {
   padding-bottom: max(0.75rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
-/* APK Premium — keep dock flush with Uber welcome restyle */
+/* APK Premium — keep dock flush with Base Web welcome restyle */
 body[data-apk-mode="premium"] .app-welcome-dock,
 body[data-experience-tier="apk-premium"] .app-welcome-dock {
   border-radius: 0;

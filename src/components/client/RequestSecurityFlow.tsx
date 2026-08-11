@@ -319,7 +319,7 @@ export function RequestSecurityFlow({
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-brand-text-muted mb-2">
             Step {step} of 9 &mdash; {STEP_LABELS[step - 1]}
           </p>
-          {/* Single thick progress bar: Uber-style */}
+          {/* Single thick progress bar: Guardr-style */}
           <div className="h-1.5 w-full rounded-full overflow-hidden bg-brand-border">
             <div
               className="h-full rounded-full bg-brand-primary transition-all duration-300"

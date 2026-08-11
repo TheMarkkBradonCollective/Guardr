@@ -1,4 +1,4 @@
-/* /uberit — Uber token bridge for legacy adm-*, app-*, and wireframe surfaces inside the shell */
+/* /uberit — Base Web token bridge for legacy adm-*, app-*, and wireframe surfaces inside the shell */
 
 .uber-app-shell {
   --adm-accent: var(--uber-accent, #000000);

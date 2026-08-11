@@ -31,8 +31,8 @@ Cursor slash commands for Guardr development. Invoke as `/commandname` in Cursor
 | `/design` | Redesign selected page(s); preserve functionality |
 | `/theme` | Light / Dark / Grey theme audit and fixes |
 | `/mobile` | Mobile web, PWA, and APK optimization only |
-| `/uber` | Uber Base Web presentation-layer redesign |
-| `/uberplatforms` | Per-platform Uber Base Web redesign (mandatory independent layouts) |
+| `/design` | Base Web presentation-layer redesign |
+| `/platforms` | Per-platform Base Web redesign (mandatory independent layouts) |
 | `/optimize` | Cross-cutting optimization pass |
 
 ## Audit and test
@@ -92,5 +92,5 @@ Pre-release hardening: /fullaudit or /run
 - `docs/guardr-general-guide.md` — product and technical guide
 - `docs/CROSS_PLATFORM.md` — surface model (desktop / tablet / mobile / PWA / APK)
 - `docs/guardedesign.md` — design language
-- `docs/uber-patterns.md` — Uber Base Web patterns
+- `docs/design-patterns.md` — Base Web patterns
 - `docs/DEV-UPDATES.md` — release changelog

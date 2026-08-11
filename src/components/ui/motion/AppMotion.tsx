@@ -15,7 +15,7 @@ export function AppMotionProvider({ children }: { children: React.ReactNode }) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }
 
-/** Uber-style snappy decelerate easing — confident, not bouncy */
+/** Guardr-style snappy decelerate easing — confident, not bouncy */
 export const APP_MOTION_EASE = [0.16, 1, 0.3, 1] as const;
 export const APP_MOTION_EASE_EXIT = [0.4, 0, 1, 1] as const;
 

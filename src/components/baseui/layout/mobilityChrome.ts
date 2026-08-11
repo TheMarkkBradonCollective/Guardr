@@ -31,14 +31,14 @@ export interface MobilityChromeConfig {
   touchTargetPx: number;
   contentMaxWidth?: string;
   contentDensity: 'compact' | 'comfortable' | 'spacious';
-  /** Uber Freight TMS black icon rail — desktop workspaces only. */
+  /** desktop ops workspace black icon rail — desktop workspaces only. */
   showIconRail: boolean;
   iconRailWidth: string;
-  /** Uber Freight TMS page title band (breadcrumb + large title + actions). */
+  /** desktop ops workspace page title band (breadcrumb + large title + actions). */
   showPageTitleBand: boolean;
 }
 
-/** Per-platform Uber mobility chrome — independent layouts, not scaled desktop. */
+/** Per-platform Base Web mobility chrome — independent layouts, not scaled desktop. */
 export function resolveMobilityChrome(
   viewSurface: ViewSurface,
   experienceTier?: ExperienceTier,
@@ -108,7 +108,7 @@ export function resolveMobilityChrome(
     experienceTier: tier,
     sidebarWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
     drawerWidth: premiumChrome ? '288px' : shellKind === 'browser' ? '280px' : '272px',
-    // Uber Freight TMS: labelled panel open by default; icon rail appears when collapsed.
+    // desktop ops workspace: labelled panel open by default; icon rail appears when collapsed.
     defaultSidebarOpen: true,
     collapsibleSidebar: true,
     headerGlass: false,

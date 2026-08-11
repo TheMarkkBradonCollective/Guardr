@@ -1,10 +1,10 @@
-# /uber — Reusable UI patterns
+# /design — Reusable UI patterns
 
-Patterns for the platform redesign using **stock Uber Base Web**. See `.cursor/commands/uber.md`.
+Patterns for the platform redesign using **stock Base Web**. See `.cursor/commands/design-system.md`.
 
 ## Theme
 
-Production uses **Guardr-branded Base Web themes** — monochrome accent on stock Uber Base infrastructure:
+Production uses **Guardr-branded Base Web themes** — monochrome accent on stock Base Web infrastructure:
 
 ```ts
 import { guardrThemeForMode } from '../theme/guardrBaseTheme';
@@ -22,13 +22,13 @@ const theme = withAppBreakpoints(guardrThemeForMode(useThemeMode()));
 
 ## Typography
 
-`src/theme/typography.ts` is the single source for font stacks and Uber's tracking scale — never inline a font stack.
+`src/theme/typography.ts` is the single source for font stacks and Base Web's tracking scale — never inline a font stack.
 
 ```ts
 import { FONT_DISPLAY, FONT_TEXT, TRACKING } from '../theme/typography';
 ```
 
-- Uber Move / Uber Move Text are proprietary. `styles/uber-typography.css` declares **`Guardr Sans`** from `/public/fonts` (latin + latin-ext variable subsets) as the loaded stand-in, so stacks read `"Uber Move Text", "Guardr Sans", …` and render Uber's type colour even without Uber Move installed.
+- Guardr Sans is the proprietary stand-in. `styles/uber-typography.css` declares **`Guardr Sans`** from `/public/fonts` (latin + latin-ext variable subsets) as the loaded stand-in, so stacks read `"Guardr Sans", …` and render Base Web's type colour even when display fonts are unavailable.
 - `withUberTypeScale()` retightens the Base Web display and heading slots (`-0.04em` display, `-0.02em` heading, `-0.01em` title); body and label slots stay at zero.
 - The service worker precaches the two normal-weight subsets, so an installed PWA never cold-starts in Arial.
 - Ops numerals use `.uber-tabular` / `font-variant-numeric: tabular-nums` so columns align.
@@ -64,7 +64,7 @@ import { FONT_DISPLAY, FONT_TEXT, TRACKING } from '../theme/typography';
 | `GuardrCard` | `Card` | Dashboard widgets — border, no default shadow |
 | `GuardrInput` | `Input` | Forms — 44px touch target |
 | `GuardrTag` | `Tag` | Chips, filters, status pills |
-| `GuardrSkeleton` | `Block` | Loading — Uber-blue shimmer |
+| `GuardrSkeleton` | `Block` | Loading — accent-blue shimmer |
 | `AppCarousel` | `motion` + snap scroll | Hero, stats, galleries |
 
 ### Active nav states
@@ -112,11 +112,11 @@ Global overlays live in `src/components/baseui/overlays/`:
 
 `src/components/baseui/layout/`:
 
-- `GuardrDrawerShell` — Uber-style shell: persistent sidebar (desktop), drawer (mobile/tablet), compact top bar
+- `GuardrDrawerShell` — Guardr-style shell: persistent sidebar (desktop), drawer (mobile/tablet), compact top bar
 - `GuardrSideNav`, `GuardrBottomNav`, `GuardrIconRail`
 - `PublicPageChrome`
 
-### Desktop workspace — Uber Freight TMS
+### Desktop workspace — desktop ops workspace
 
 `resolveMobilityChrome()` turns these on for `*-desktop` surfaces only; nothing is passed per screen:
 
@@ -155,7 +155,7 @@ Legacy `.uber-workbench-table` markup follows the same conventions, so existing 
 
 **Platform optimizations:** `src/styles/platform-optimizations.css` — purpose-built CSS for Website · PWA Full/Lite · APK Full/Premium.
 
-**Public landing (browser):** `UberStyleLandingPage` — Uber.com homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
+**Public landing (browser):** `UberStyleLandingPage` — mobility homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
 
 ## Dashboard building blocks (Phase 4)
 
@@ -182,7 +182,7 @@ Used by `AppInput`, `AppTextarea`, `AppFormField` in `AppPrimitives.tsx`.
 
 ## Post-login experience (signed-in shell)
 
-Reference targets: **Uber Direct** (desktop web) and **Uber rider/driver app** (mobile PWA/APK).
+Reference targets: **Guardr Direct** (desktop web) and **mobile app** (mobile PWA/APK).
 
 | Surface | Pattern | Implementation |
 |---------|---------|----------------|
@@ -200,6 +200,6 @@ Reference targets: **Uber Direct** (desktop web) and **Uber rider/driver app** (
 ### Next migration targets (content inside shell)
 
 1. Client / guard home hubs → `DashboardHero` + `MetricStrip` + white cards on gray canvas
-2. List screens → workbench tables with search row (Uber Direct Users/Billing pattern)
-3. Map + active shift → Uber bottom-sheet overlays (`uber-in-app.css`)
+2. List screens → workbench tables with search row (Guardr Direct Users/Billing pattern)
+3. Map + active shift → Base Web bottom-sheet overlays (`uber-in-app.css`)
 4. Remove legacy `adm-*` / `text-brand-*` from high-traffic panels

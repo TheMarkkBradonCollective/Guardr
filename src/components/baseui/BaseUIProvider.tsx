@@ -1,5 +1,5 @@
 /**
- * Base Web (Uber) provider — wraps the entire Guardr app.
+ * Base Web (Base Web) provider — wraps the entire Guardr app.
  *
  * Uses styletron-engine-atomic for client rendering (recommended by Base Web
  * docs: https://baseweb.design/getting-started/setup/).

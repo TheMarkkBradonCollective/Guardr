@@ -40,7 +40,7 @@ function plainStyleObject(
 }
 
 /**
- * Guardr button — real Uber app style.
+ * Guardr button — Production Guardr app style.
  * Primary: solid black (#000) → full-width rounded rectangle, 48px min.
  * Secondary: outlined, pill shape.
  * Tertiary: ghost, no border.

@@ -35,7 +35,7 @@ interface StaffOpsMapScreenProps {
   onApproveScheduleChangeBilling?: (requestId: string) => void | Promise<void>;
 }
 
-/** Platform ops map — Uber-style filters, browse dock, and job detail sheet. */
+/** Platform ops map — Guardr-style filters, browse dock, and job detail sheet. */
 export function StaffOpsMapScreen({
   requests,
   guards,

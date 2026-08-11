@@ -16,7 +16,7 @@ export interface ExploreService {
   role?: 'client' | 'guard';
 }
 
-/** Uber-style "Explore what you can do" cards — adapted for Guardr. */
+/** Guardr-style "Explore what you can do" cards — adapted for Guardr. */
 export const EXPLORE_SERVICES: ExploreService[] = [
   {
     id: 'post',

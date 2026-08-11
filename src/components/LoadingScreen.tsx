@@ -1,8 +1,8 @@
 /**
- * LoadingScreen — Uber Base Web pattern.
+ * LoadingScreen — Base Web pattern.
  *
  * Uses Base Web Spinner as the loading indicator.
- * Clean black/white — matches Uber's app launch screen aesthetic.
+ * Clean black/white — matches Base Web app launch screen aesthetic.
  */
 
 import React, { useEffect } from 'react';

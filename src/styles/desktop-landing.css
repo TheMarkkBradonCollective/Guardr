@@ -57,7 +57,7 @@
   white-space: nowrap;
 }
 
-/* Logo on black nav — white in all themes (see uber-global.css .dsk-landing-logo-svg) */
+/* Logo on black nav — white in all themes (see Base Web-global.css .dsk-landing-logo-svg) */
 
 .dsk-landing-nav-links {
   display: flex;
@@ -130,7 +130,7 @@
   gap: 4px;
 }
 
-/* Pill sign-up button — like Uber's "Sign up" pill in nav */
+/* Pill sign-up button — like Base Web "Sign up" pill in nav */
 .dsk-landing-signup-btn {
   appearance: none;
   background: #fff;

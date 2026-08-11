@@ -55,7 +55,7 @@ const MOBILE_BOTTOM_TAB_COUNT = 4;
 /**
  * Guard and client entry point into the three surface applications.
  *
- * Mobile keeps the original Uber-style drawer sidebar + bottom footer nav.
+ * Mobile keeps the original Guardr-style drawer sidebar + bottom footer nav.
  * Tablet and desktop load their own independent shells via `SurfaceAppShell`
  * so they never piggyback off the phone layout (or vice versa).
  */

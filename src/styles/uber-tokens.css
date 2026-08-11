@@ -12,7 +12,7 @@ html.theme-light {
   --uber-font-text:    "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --uber-font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
-  /* ─── Color system — Uber black/white/gray ─── */
+  /* ─── Color system — Guardr black/white/gray ─── */
   --uber-accent:       #000000;   /* primary CTAs, active nav, links */
   --uber-accent-hover: #333333;
   --uber-accent-50:    #F6F6F6;   /* chip/tab tint */
@@ -27,7 +27,7 @@ html.theme-light {
 
   /* ─── Text ─── */
   --uber-text:         #000000;
-  --uber-text-muted:   #767676;  /* Uber uses #767676 for secondary text */
+  --uber-text-muted:   #767676;  /* Guardr uses #767676 for secondary text */
   --uber-text-placeholder: #AAAAAA;
 
   /* ─── Borders ─── */
@@ -40,7 +40,7 @@ html.theme-light {
   --uber-warning:      #FFC043;
   --uber-info:         #276EF1;  /* kept for info badges only */
 
-  /* ─── CTA / Uber black ─── */
+  /* ─── CTA / Guardr black ─── */
   --uber-black:        #000000;
   --uber-black-hover:  #333333;
 

@@ -33,7 +33,7 @@ interface StaffCredentialReviewDetailProps {
   ariaLabel: string;
 }
 
-/** Uber-style staff credential review — flat on-page detail + history list. */
+/** Guardr-style staff credential review — flat on-page detail + history list. */
 export function StaffCredentialReviewDetail({
   guardName,
   feedItem,

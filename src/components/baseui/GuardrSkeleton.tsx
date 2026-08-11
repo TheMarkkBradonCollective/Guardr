@@ -2,7 +2,7 @@
  * GuardrSkeleton — Base Web Skeleton wrapper.
  * https://baseweb.design/components/skeleton/
  *
- * Uber pattern: gray shimmer on #f6f6f6, no colored shimmer.
+ * Base Web pattern: gray shimmer on #f6f6f6, no colored shimmer.
  */
 
 import React from 'react';

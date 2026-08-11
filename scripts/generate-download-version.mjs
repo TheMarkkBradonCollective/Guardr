@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.118':
+    'Removed third-party brand mentions from docs and comments; renamed design docs to design-patterns.md.',
   '1.0.117':
     'Homepage Download and Manuals links in nav and footer; PDF manuals on /manuals.',
   '1.0.116':
@@ -23,7 +25,7 @@ const RELEASE_NOTES = {
     'Staff onboarding (application, gov ID, Stripe payouts), staff pay on Payments (Prop 22 add-ons), signup clarity (Work at Guardr vs marketplace), guard timesheet read-only from clock audit.',
   '1.0.114':
     'Unified Payments page for guards, staff, and clients; guard profile Timesheet tab (read-only shift clock history).',
-  '1.0.113': 'Desktop workbench alignment across staff, client, and guard pages; Uber Freight-style table splits and credentials fix.',
+  '1.0.113': 'Desktop workbench alignment across staff, client, and guard pages; desktop workspace table splits and credentials fix.',
 };
 
 async function fileExists(relPath) {

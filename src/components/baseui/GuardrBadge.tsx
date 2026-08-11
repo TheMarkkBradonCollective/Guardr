@@ -2,7 +2,7 @@
  * GuardrBadge — Base Web Badge + Notification count wrapper.
  * https://baseweb.design/components/badge/
  *
- * Uber pattern: small black counter badge on icons/avatars.
+ * Base Web pattern: small black counter badge on icons/avatars.
  */
 
 import React from 'react';
@@ -17,7 +17,7 @@ interface GuardrBadgeProps {
   hidden?: boolean;
 }
 
-/** Wraps a child element with a notification count badge (Uber notification bell style). */
+/** Wraps a child element with a notification count badge (notification bell style). */
 export function GuardrBadge({
   count,
   children,
@@ -60,7 +60,7 @@ export function GuardrBadge({
   );
 }
 
-/** Inline status dot badge (like Uber's live indicator) */
+/** Inline status dot badge (like Base Web live indicator) */
 export function GuardrStatusDot({
   status,
   size = 8,

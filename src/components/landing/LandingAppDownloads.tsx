@@ -23,7 +23,7 @@ interface LandingAppDownloadsProps {
 }
 
 /**
- * "It's easier in the app" — mirrors the Uber.com app section:
+ * "It's easier in the app" — mirrors the mobility homepage app section:
  * heading + two panels (native app + home screen) each with a store action
  * and a scan-to-download visual.
  */

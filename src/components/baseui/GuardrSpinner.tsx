@@ -2,7 +2,7 @@
  * GuardrSpinner — Base Web Spinner wrapper.
  * https://baseweb.design/components/spinner/
  *
- * Uber pattern: minimal black ring spinner.
+ * Base Web pattern: minimal black ring spinner.
  */
 
 import React from 'react';

@@ -26,7 +26,7 @@ interface StaffOverviewProps {
   staffRole: PlatformRole;
 }
 
-/** Staff overview — responsive Uber Direct (desktop) + Uber mobile (PWA/APK). */
+/** Staff overview — responsive Guardr Direct (desktop) + Guardr mobile (PWA/APK). */
 export function StaffOverview(props: StaffOverviewProps) {
   return (
     <StaffOverviewDesktop

@@ -6,7 +6,7 @@ body.shell-pwa {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ─── PWA standalone — Uber glass chrome ─────────────────────────────────── */
+/* ─── PWA standalone — Base Web glass chrome ─────────────────────────────────── */
 
 body[data-shell="pwa"] .uber-app-shell.mobility-shell .mobility-header--glass,
 body.shell-pwa .uber-app-shell.mobility-shell .mobility-header--glass {

@@ -2,9 +2,9 @@
 
 Official visual and interaction specification for Guardr across **Website** (mobile · tablet · desktop), **PWA** (Full · Lite), and **Android APK** (Full · Premium).
 
-**Design system:** [Uber Base Web](https://github.com/uber/baseweb) + [Base Design Docs](https://github.com/uber/base-design-docs) — Guardr-branded themes (sage green accent `#4A6B4E` light / `#7AAE7F` dark) on top of `LightTheme` / `DarkTheme`, Uber Move typography, black primary CTAs.
+**Design system:** [Base Web](https://baseweb.design) + [Base Design Docs](https://baseweb.design) — Guardr-branded themes (sage green accent `#4A6B4E` light / `#7AAE7F` dark) on top of `LightTheme` / `DarkTheme`, Guardr Sans typography, black primary CTAs.
 
-**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`uber-patterns.md`](./uber-patterns.md) · [`.cursor/commands/uber.md`](../.cursor/commands/uber.md)
+**Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`design-patterns.md`](./design-patterns.md) · [`.cursor/commands/design-system.md`](../.cursor/commands/design-system.md)
 
 **Implementation:** Guardr Base Web custom themes (`src/theme/guardrBaseTheme.ts`) with sage-green accent applied across all production surfaces. Styletron CSS-in-JS engine syncs tokens to CSS custom properties via `UberThemeVars`.
 
@@ -23,13 +23,13 @@ A **professional operating system** for security marketplace work — not a mark
 
 ### What we are *not* copying
 
-Do **not** reproduce Uber (or any third party) branding:
+Do **not** reproduce Base Web (or any third party) branding:
 
 | Do not copy | Use instead |
 |-------------|-------------|
-| Uber logos, wordmarks, fonts | Guardr logo + IBM Plex Sans / Plus Jakarta Sans |
-| Uber blue accent system | Guardr sage green (`--brand-primary`) |
-| Uber-specific iconography | Lucide icons + Guardr patterns |
+| Base Web logos, wordmarks, fonts | Guardr logo + IBM Plex Sans / Plus Jakarta Sans |
+| accent blue system | Guardr sage green (`--brand-primary`) |
+| Base Web-specific iconography | Lucide icons + Guardr patterns |
 | “Driver app” copy or metaphors | Security marketplace language (jobs, shifts, coverage, credentials) |
 | Literal layout clones | Same *philosophy* (cards, rail nav, bottom nav) with Guardr structure |
 
@@ -56,11 +56,11 @@ Green is always the **brand accent** (buttons, active nav, charts, focus rings, 
 
 ### Inspiration, not imitation
 
-[Uber Base](https://base.uber.com/) is one of the most refined enterprise design systems in production — consistency, accessibility, typography, spacing, color, motion, and reusable components at scale. Guardr treats Base as **inspiration and a quality bar**, not a template to clone.
+[Base Web](https://baseweb.design) is one of the most refined enterprise design systems in production — consistency, accessibility, typography, spacing, color, motion, and reusable components at scale. Guardr treats Base as **inspiration and a quality bar**, not a template to clone.
 
-| Adopt from Base philosophy | Do not copy from Uber |
+| Adopt from Base philosophy | Do not copy from Base Web |
 |----------------------------|------------------------|
-| Grid layouts + generous whitespace | Uber blue, Uber Move, logos |
+| Grid layouts + generous whitespace | accent blue, Guardr Sans, logos |
 | Token-driven theming | Driver/rider product language |
 | Component-first screens | Literal Base Figma specs |
 | Purposeful motion + strong a11y | SSO-only internal token pages |
@@ -92,10 +92,10 @@ These are the principles we actively adopt — translated to Guardr’s sage-gre
 
 All colors, radii, shadows, and spacing tokens live in:
 
-**Brand accent:** Uber blue (`--uber-accent` / `#276EF1` light, `#335BA3` dark) via stock Base Web themes.
+**Brand accent:** accent blue (`--uber-accent` / `#276EF1` light, `#335BA3` dark) via stock Base Web themes.
 
 ```
-src/styles/uber-tokens.css   — Canonical Uber Base tokens + --brand-* bridge
+src/styles/uber-tokens.css   — Canonical Base Web Base tokens + --brand-* bridge
 src/theme/uberBaseTheme.ts   — Stock LightTheme / DarkTheme
 src/index.css                — Legacy layout CSS (migrating to Base Web)
 src/lib/platform/theme.ts    — Light / Dark mode apply + persistence
@@ -470,7 +470,7 @@ Use **one consistent component family** across surfaces. Prefer existing primiti
 
 | Persona | Product feel | Key screens |
 |---------|--------------|-------------|
-| **Guard** | Uber Driver × security compliance | Map, Jobs, Pay, Messages, Credentials, Self-audit |
+| **Guard** | guard field app × security compliance | Map, Jobs, Pay, Messages, Credentials, Self-audit |
 | **Client** | Airbnb host × SaaS billing | Home, Post job, Live coverage, Guards, Invoices |
 | **Staff / Admin** | Stripe Dashboard × ops center | Approvals, Payments, Compliance, Messages, Live jobs map |
 
@@ -509,7 +509,7 @@ When building or redesigning a screen (`/design`, `/fix`, `/theme`):
 - [ ] Focus visible for keyboard users
 - [ ] Maps and charts respect active theme
 - [ ] Role permissions unchanged — design only
-- [ ] No Uber / third-party branding leaked in
+- [ ] No third-party / third-party branding leaked in
 
 ### Key files to touch
 
@@ -531,7 +531,7 @@ public/manifest.json
 | Avoid | Why |
 |-------|-----|
 | Hardcoded black/white bypassing theme | Breaks Light mode and PWA icon sync |
-| Blue accent “because SaaS” | Off-brand; reads as Uber clone |
+| Blue accent “because SaaS” | Off-brand; reads as generic clone |
 | Flat full-width tables on mobile | Use cards or horizontal scroll sections |
 | More than 3 levels of nested cards | Flattens hierarchy |
 | Spinners on every refetch | Use skeleton or inline subtle pulse |
@@ -542,7 +542,7 @@ public/manifest.json
 
 ## 15. Evolution notes
 
-This spec supersedes informal “Uber redesign” references in dev logs. The **Uber layout philosophy** (card grid, driver-style mobile chrome) stays; **Uber visual identity** does not.
+This spec supersedes informal “platform redesign” references in dev logs. The **mobility layout philosophy** (card grid, driver-style mobile chrome) stays; **third-party visual identity** does not.
 
 Future token work may introduce **deep green-tinted dark chrome** (`color-mix` of `--brand-primary` into `--brand-bg`) for stronger brand presence in Dark mode. Until tokens are updated in `index.css`, treat black canvas as canonical Dark and green as accent only.
 
@@ -550,7 +550,7 @@ Future token work may introduce **deep green-tinted dark chrome** (`color-mix` o
 
 ## 16. Universal design rules
 
-Every Guardr screen must satisfy these rules — same bar Uber Base enforces, with Guardr branding:
+Every Guardr screen must satisfy these rules — same bar Base Web enforces, with Guardr branding:
 
 | Rule | Requirement |
 |------|-------------|
@@ -570,15 +570,15 @@ Every Guardr screen must satisfy these rules — same bar Uber Base enforces, wi
 
 Guardr should feel like **enterprise-grade security marketplace software** — modular, breathable, and confident — with **sage green** as the unmistakable thread through charts, navigation, and focus states, on either a **white** or **black** canvas chosen by the user. The same language ships on web, PWA, and APK; only density, motion, and native integrations change per surface.
 
-**Quality reference:** Uber Base-level polish. **Identity:** unmistakably Guardr. **Ecosystem path:** Markk Design System (Appendix B).
+**Quality reference:** Base Web-level polish. **Identity:** unmistakably Guardr. **Ecosystem path:** Markk Design System (Appendix B).
 
 ---
 
-## Appendix A — Uber Base design guidelines (from base.uber.com)
+## Appendix A — Base Web design guidelines (from baseweb.design)
 
-This appendix summarizes the **design language documented on [base.uber.com](https://base.uber.com/)** — Uber’s official Base styleguide (v05.13.26 as of scrape). It captures *how Uber defines UI design*, not their React codebase. Every section below is translated for **Guardr** (sage green accent, white/black themes, security marketplace identity).
+This appendix summarizes the **design language documented on [baseweb.design](https://baseweb.design)** — Base Web’s official Base styleguide (v05.13.26 as of scrape). It captures *how Base Web defines UI design*, not their React codebase. Every section below is translated for **Guardr** (sage green accent, white/black themes, security marketplace identity).
 
-> *“The Base design system defines the foundations of user interfaces across Uber's ecosystem of products & services. It brings all Uber experiences together under a single, unified framework.”* — [Welcome to Base](https://base.uber.com/6d2425e9f/p/93825b-welcome-to-base)
+> *“The Base design system defines the foundations of user interfaces across Base Web ecosystem of products & services. It brings all product experiences together under a single, unified framework.”* — [Welcome to Base](https://baseweb.design)
 
 ### A.1 How Base is organized
 
@@ -593,11 +593,11 @@ The styleguide has four top-level areas:
 
 **Foundation pillars** (from Welcome): Design tokens · Color · Typography · Icons · Dimensions · Layout grids · Corner radius · Elevation · Motion · Content · Equity · Accessibility
 
-### A.2 Core philosophy (Uber → Guardr)
+### A.2 Core philosophy (Base → Guardr)
 
-From Uber’s public design platform writing and Base onboarding:
+From Base Web’s public design platform writing and Base onboarding:
 
-| Uber Base idea | Meaning | Guardr application |
+| Base Web idea | Meaning | Guardr application |
 |----------------|---------|---------------------|
 | **Dead simple** | Four font categories, three main colors (white, black, accent), five core sizes on a 4px grid | Light/dark canvas + sage accent; limited type scale; 4px-aligned spacing |
 | **LEGO bricks** | Basic components combine into many layouts; customize via overrides, not one-offs | Modular `.app-card` widgets; variant props, not per-page CSS |
@@ -605,11 +605,11 @@ From Uber’s public design platform writing and Base onboarding:
 | **Single source of truth** | Documentation lives in design tools (Figma), not stale websites | `guardedesign.md` + tokens in `index.css` |
 | **Inclusive by default** | Product inclusion principles inform every decision | WCAG AA, reduced motion, readable type in sunlight |
 
-Uber describes Base as: *reliable, accessible, extensively customizable*. Guardr matches that bar on web, PWA, and APK.
+Base Web describes Base as: *reliable, accessible, extensively customizable*. Guardr matches that bar on web, PWA, and APK.
 
 ### A.3 Design tokens
 
-Source: [Design tokens](https://base.uber.com/6d2425e9f/p/33fa5e-design-tokens)
+Source: [Design tokens](https://baseweb.design)
 
 **Definition:** Tokens are foundational design decisions as reusable data — shared across iOS, Android, and Web — controlling the entire visual system.
 
@@ -623,7 +623,7 @@ Source: [Design tokens](https://base.uber.com/6d2425e9f/p/33fa5e-design-tokens)
 | **Semantic** | Usage-based names (`backgroundPrimary`, `contentAccent`) | `--brand-bg`, `--brand-text`, `--brand-primary` |
 | **Component** | Self-contained per-component tokens | Button heights, nav rail width, card padding |
 
-**Principles Uber teaches:**
+**Principles Base Web teaches:**
 
 - **Shared language** between design and engineering
 - **Consistency** — fast to build, slow to break; tokens cement the “feel”
@@ -636,11 +636,11 @@ Source: [Design tokens](https://base.uber.com/6d2425e9f/p/33fa5e-design-tokens)
 
 ### A.4 Typography
 
-Source: [Typography](https://base.uber.com/6d2425e9f/p/976582-typography)
+Source: [Typography](https://baseweb.design)
 
 #### Principles
 
-| Principle | Uber says | Guardr says |
+| Principle | Base Web says | Guardr says |
 |-----------|-----------|-------------|
 | **Go big** | Prioritize larger sizes; legibility and accessibility first | KPI numbers large (~44px); don’t shrink field-critical labels |
 | **Less is more** | Fewer style options — no decision paralysis | Four roles × four sizes max in product UI |
@@ -659,7 +659,7 @@ Four type **roles**: **Display**, **Heading**, **Label**, **Paragraph** — each
 
 #### Fonts
 
-- Uber: **Uber Move** (Display, Text, Mono) — Display for large titles only, not body/buttons
+- Base Web: **Guardr Sans** (Display, Text, Mono) — Display for large titles only, not body/buttons
 - Guardr: **Plus Jakarta Sans** (UI) + **IBM Plex Sans** (admin density) — same role split
 
 #### Mono ramp
@@ -679,7 +679,7 @@ Use monospace ramp **only** for isolated numbers (earnings, rates, balances) —
 
 ### A.5 Layout grids
 
-Source: [Layout grids](https://base.uber.com/6d2425e9f/p/785d5f-layout-grids)
+Source: [Layout grids](https://baseweb.design)
 
 **Anatomy:** Columns (content aligns here) · Gutters (fixed between columns) · Margins (outer edge padding)
 
@@ -708,7 +708,7 @@ Source: [Layout grids](https://base.uber.com/6d2425e9f/p/785d5f-layout-grids)
 
 ### A.6 Corner radius
 
-Source: [Corner radius](https://base.uber.com/6d2425e9f/p/652959-corner-radius)
+Source: [Corner radius](https://baseweb.design)
 
 Radius follows **component footprint** — larger containers get larger radius:
 
@@ -725,7 +725,7 @@ Nested 12px parent → child can drop to **8px** for visual balance.
 
 ### A.7 Elevation
 
-Source: [Elevation](https://base.uber.com/6d2425e9f/p/595594-elevation)
+Source: [Elevation](https://baseweb.design)
 
 Elevation = **depth cue via shadow**, not border substitute.
 
@@ -735,7 +735,7 @@ Elevation = **depth cue via shadow**, not border substitute.
 
 **Do not** use shadow only to separate adjacent cards on the same plane — use **border or background color** instead.
 
-| Shadow type | Uber use | Guardr use |
+| Shadow type | Base Web use | Guardr use |
 |-------------|----------|------------|
 | **Shallow above** | Sheet header, full-screen modal, overflow button dock | Sticky header, bottom nav backdrop |
 | **Shallow below** | Dialog, menu, popover, date picker | `NavMenuPopover`, map peek |
@@ -747,7 +747,7 @@ Elevation = **depth cue via shadow**, not border substitute.
 
 ### A.8 Motion
 
-Source: [Motion](https://base.uber.com/6d2425e9f/p/116184-motion)
+Source: [Motion](https://baseweb.design)
 
 #### Motion principles
 
@@ -784,7 +784,7 @@ Source: [Motion](https://base.uber.com/6d2425e9f/p/116184-motion)
 
 ### A.9 Cards (dashboard widgets)
 
-Source: [Card](https://base.uber.com/6d2425e9f/p/02338d-card)
+Source: [Card](https://baseweb.design)
 
 The reference dashboard mockup is essentially a **card grid**. Base defines cards as:
 
@@ -820,7 +820,7 @@ The reference dashboard mockup is essentially a **card grid**. Base defines card
 
 #### Bottom navigation
 
-Source: [Bottom navigation](https://base.uber.com/6d2425e9f/p/1413a0-bottom-navigation)
+Source: [Bottom navigation](https://baseweb.design)
 
 - **3–5 equally sized tabs** — global, persistent, thumb-reachable
 - Independent sections with **preserved scroll state**
@@ -834,7 +834,7 @@ Source: [Bottom navigation](https://base.uber.com/6d2425e9f/p/1413a0-bottom-navi
 
 #### Side navigation
 
-Source: [Side navigation](https://base.uber.com/6d2425e9f/p/917574-side-navigation)
+Source: [Side navigation](https://baseweb.design)
 
 - Column of links for categories / subsections
 - Combines with top nav + breadcrumbs, or stands alone
@@ -844,7 +844,7 @@ Source: [Side navigation](https://base.uber.com/6d2425e9f/p/917574-side-navigati
 
 ### A.11 Charts
 
-Source: [Charts](https://base.uber.com/6d2425e9f/p/61b6c1-charts)
+Source: [Charts](https://baseweb.design)
 
 - Modular parts: gridlines, axes, labels, legend — swap per context
 - Labels must not overlap; show on interaction if space is tight
@@ -855,7 +855,7 @@ Source: [Charts](https://base.uber.com/6d2425e9f/p/61b6c1-charts)
 
 ### A.12 Product inclusion principles
 
-Source: [Principles](https://base.uber.com/6d2425e9f/p/434f39-principles) (Product inclusion)
+Source: [Principles](https://baseweb.design) (Product inclusion)
 
 1. **Recognize how your identity informs your perspective**
 2. **Consider multiple perspectives** — design *with*, not *for*
@@ -865,19 +865,19 @@ Guardr relevance: guards, clients, and staff have different contexts (field, des
 
 ### A.13 Guardr translation cheat sheet
 
-| Uber Base | Guardr |
+| Base Web | Guardr |
 |-----------|--------|
 | White + black + blue accent | White or black canvas + **sage green** accent |
-| Uber Move / Move Mono | Plus Jakarta Sans / IBM Plex Sans; tabular nums for money |
+| Guardr Sans / Move Mono | Plus Jakarta Sans / IBM Plex Sans; tabular nums for money |
 | `brandDefault` blue charts | `--brand-primary` charts + soft green glow on live peaks |
 | Driver / rider copy | Guard / client / staff marketplace language |
-| Uber maps patterns | Guardr `Map*` components, job pins, route layer |
+| Base Web maps patterns | Guardr `Map*` components, job pins, route layer |
 | Base 1.0 light-only card shadows | Theme-aware `--shadow-card`; no shadow on flat dashboard cards |
 | SSO-locked internal pages | Public Guardr spec in this doc + `index.css` tokens |
 
 ### A.14 What we do not copy
 
-Uber logos · Uber Move font · Uber blue · “Professional driver” product framing · Literal Base component pixel specs · Private SSO-only Base pages (Color 1.0 token values, some patterns).
+Base Web logos · Guardr Sans font · accent blue · “Professional driver” product framing · Literal Base component pixel specs · Private SSO-only Base pages (Color 1.0 token values, some patterns).
 
 ### A.15 Adoption order for Guardr `/design`
 
@@ -893,7 +893,7 @@ Uber logos · Uber Move font · Uber blue · “Professional driver” product f
 
 ## Appendix B — Markk Design System (MDS) ecosystem vision
 
-Build **your own** design system with Base-level discipline — not Uber’s skin. Applies to the broader product family (Guardr, Friendr, BuyNothing, YouVerse, etc.).
+Build **your own** design system with Base-level discipline — not third-party’s skin. Applies to the broader product family (Guardr, Friendr, BuyNothing, YouVerse, etc.).
 
 ### What MDS is
 

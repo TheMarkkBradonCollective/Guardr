@@ -11,7 +11,7 @@ body[data-form-factor="desktop"] .desktop-workspace {
   background: var(--uber-surface, #f6f6f6);
 }
 
-/* No ambient orbs — Uber is flat/clean */
+/* No ambient orbs — Guardr is flat/clean */
 body[data-form-factor="desktop"] .desktop-workspace-ambient { display: none; }
 
 body[data-form-factor="desktop"] .desktop-workspace-main {
@@ -24,7 +24,7 @@ body[data-form-factor="desktop"] .desktop-workspace-main {
   background: var(--uber-surface, #f6f6f6);
 }
 
-/* ─── Left navigation rail — Uber clean white sidebar ─────────────────── */
+/* ─── Left navigation rail — Base Web clean white sidebar ─────────────────── */
 
 body[data-form-factor="desktop"] .desktop-nav-rail {
   display: flex;

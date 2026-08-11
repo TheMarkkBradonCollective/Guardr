@@ -2,7 +2,7 @@
  * AppSwitch — uses Base Web Checkbox (STYLE_TYPE.toggle_round).
  * https://baseweb.design/components/checkbox/
  *
- * Uber pattern: black track when on, accessible, 44px touch target.
+ * Base Web pattern: black track when on, accessible, 44px touch target.
  * `ariaLabel` is for screen readers only — pass `label` for visible text.
  */
 

@@ -2,7 +2,7 @@
  * GuardrTabs — Base Web Tabs (motion) wrapper.
  * https://baseweb.design/components/tabs-motion/
  *
- * Uber pattern: underline active tab on white background.
+ * Base Web pattern: underline active tab on white background.
  */
 
 import React from 'react';

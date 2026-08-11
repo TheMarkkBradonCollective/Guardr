@@ -19,7 +19,7 @@ export function DashboardZone({
 
   return (
     <section className={`app-dashboard-zone ${className}`.trim()} aria-label={title}>
-      {/* Uber-style section header */}
+      {/* Guardr-style section header */}
       <div className="app-section-head">
         <h2 style={{
           fontFamily: FONT_DISPLAY,

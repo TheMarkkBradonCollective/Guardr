@@ -11,7 +11,7 @@ export type GuardrNavItem = {
   icon?: LucideIcon;
   badge?: number;
   disabled?: boolean;
-  /** Uber Direct nested nav (e.g. Jobs → Today / Future / Past). */
+  /** Guardr Direct nested nav (e.g. Jobs → Today / Future / Past). */
   children?: GuardrNavSubItem[];
 };
 

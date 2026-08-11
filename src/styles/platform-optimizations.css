@@ -288,7 +288,7 @@ body[data-view-surface="native-tablet"][data-apk-mode="premium"] {
 
 /* ─── Touch target floor (all touch surfaces) ──────────────────────────── */
 
-/* Text links render at their type size, which leaves an 18px tap target. Uber
+/* Text links render at their type size, which leaves an 18px tap target. Base Web
    gives them a real 44px band on touch rather than an invisible overlay, so the
    target matches what the finger sees. */
 body[data-view-surface$="-mobile"] .legal-footer-link,

@@ -163,7 +163,7 @@ html.theme-dark .uber-stat-chip--active {
   font-size: 0.875rem;
 }
 
-/* Uber's ops tables label columns in sentence case, not admin micro-caps. */
+/* Base Web ops tables label columns in sentence case, not admin micro-caps. */
 .uber-workbench-table th {
   text-align: left;
   font-weight: 600;
@@ -386,7 +386,7 @@ html.theme-dark .uber-workbench-tab--active {
   background: var(--uber-bg, #fff);
 }
 
-/* Uber Direct search + filter row */
+/* Guardr Direct search + filter row */
 .uber-workbench-search-row {
   display: flex;
   align-items: center;

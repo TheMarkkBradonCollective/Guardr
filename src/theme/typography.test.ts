@@ -17,7 +17,7 @@ const baseTheme = {
 describe('withUberTypeScale', () => {
   it('ships a font stack that names a family the app actually loads', () => {
     // "Guardr Sans" is declared in styles/uber-typography.css from
-    // /public/fonts, so the stack resolves without Uber Move installed.
+    // /public/fonts, so the stack resolves without Guardr Sans installed.
     for (const stack of [FONT_TEXT, FONT_DISPLAY]) {
       assert.ok(stack.includes('Uber Move'), 'keeps Uber Move first when present');
       assert.ok(stack.includes('Guardr Sans'), 'falls back to the self-hosted family');

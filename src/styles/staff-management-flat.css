@@ -18,7 +18,7 @@ html.theme-dark body[data-form-factor="desktop"] {
   --adm-card: var(--uber-bg, #000000);
 }
 
-/* Alias ops page body class (TSX uses uber-*, legacy CSS used adm-*) */
+/* Alias ops page body class (TSX uses Base Web-*, legacy CSS used adm-*) */
 body[data-form-factor="desktop"] .uber-ops-page {
   height: 100%;
   min-height: 0;

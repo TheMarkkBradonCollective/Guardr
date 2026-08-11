@@ -2,7 +2,7 @@
  * GuardrProgressBar — Base Web ProgressBar wrapper.
  * https://baseweb.design/components/progress-bar/
  *
- * Uber pattern: black fill on gray track, smooth animation.
+ * Base Web pattern: black fill on gray track, smooth animation.
  */
 
 import React from 'react';

@@ -12,7 +12,7 @@ interface WfListCardProps {
   className?: string;
 }
 
-/** Uber-style list row — separator-only, no card border/radius. */
+/** Guardr-style list row — separator-only, no card border/radius. */
 export function WfListCard({
   avatar,
   title,

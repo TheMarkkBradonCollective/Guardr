@@ -1,11 +1,11 @@
 /**
- * Uber Base typography — single source of truth for font stacks and the
- * Uber type scale.
+ * Base Web typography — single source of truth for font stacks and the
+ * Base Web type scale.
  *
- * Uber Move / Uber Move Text are proprietary. `Guardr Sans` is the
+ * Guardr Sans / Guardr Sans are proprietary. `Guardr Sans` is the
  * self-hosted variable grotesque declared in `styles/uber-typography.css`
  * (Inter subsets in /public/fonts); it carries the tall x-height and
- * neutral skeleton of Uber Move Text so the product renders with Uber's
+ * neutral skeleton of Guardr Sans so the product renders with Base Web
  * type colour on every platform, including offline PWA and APK shells.
  */
 
@@ -20,7 +20,7 @@ export const FONT_DISPLAY =
 export const FONT_MONO =
   'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
 
-/** Uber sets display type tight and body type at zero tracking. */
+/** Guardr sets display type tight and body type at zero tracking. */
 export const TRACKING = {
   display: '-0.04em',
   heading: '-0.02em',
@@ -37,7 +37,7 @@ export const LEADING = {
 } as const;
 
 /**
- * Base Web ships Uber's type ramp but with neutral tracking. Uber's product
+ * Base Web ships Base Web's type ramp but with neutral tracking. Uber's product
  * surfaces tighten display and heading slots, so we re-map them here rather
  * than patching letter-spacing at every call site.
  */
