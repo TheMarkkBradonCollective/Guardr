@@ -86,6 +86,8 @@ export interface StaffCompensationPreview {
   cappedBaseAmount: number;
   alreadyPaidAmount: number;
   pendingAmount: number;
+  /** True when no payout row exists yet for this staff member in the period. */
+  needsPeriodPayout: boolean;
   existingPayout?: StaffCompensationPayout;
   isActive: boolean;
   trackedHours: number;
@@ -374,6 +376,7 @@ export function buildStaffCompensationPreviews(params: {
       cappedBaseAmount: cappedBase,
       alreadyPaidAmount,
       pendingAmount: existingPayout ? 0 : cappedBase,
+      needsPeriodPayout: !existingPayout,
       existingPayout,
       awaitingAdjustments: existingPayout ? isPayoutAwaitingAdjustments(existingPayout) : false,
       isActive: member.userStatus === 'active' || member.userStatus === 'pending',

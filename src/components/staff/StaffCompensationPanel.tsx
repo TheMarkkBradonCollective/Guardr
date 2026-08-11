@@ -58,6 +58,8 @@ interface StaffCompensationSectionProps {
   platformSettings: PlatformSettings;
   /** When true, renders as a section inside Payments (no page shell). */
   embedded?: boolean;
+  /** Hide time tracker and time-entry editor — use Profile → Timesheets instead. */
+  hideTimeSections?: boolean;
 }
 
 /** @deprecated Use StaffCompensationSection — kept for imports during transition. */
@@ -79,6 +81,7 @@ export function StaffCompensationSection({
   requests,
   platformSettings,
   embedded = false,
+  hideTimeSections = false,
 }: StaffCompensationSectionProps) {
   const { formFactor } = useDevice();
   const config = platformSettings.staffCompensation!;
@@ -150,7 +153,7 @@ export function StaffCompensationSection({
 
   useEffect(() => {
     if (!config.enabled || loading) return;
-    const pending = allPreviews.filter((preview) => preview.pendingAmount > 0);
+    const pending = allPreviews.filter((preview) => preview.needsPeriodPayout);
     if (pending.length === 0) return;
 
     let cancelled = false;
@@ -408,6 +411,9 @@ export function StaffCompensationSection({
       </p>
       <p>
         Current {config.cadence} period: <strong className="text-brand-text">{periodLabel}</strong>
+        {' · '}
+        A payout record is opened for each staff member every period — even at $0 platform fees — so
+        tracked hours stay tied to the week and pack-pay rules can be added later.
       </p>
       <p>
         Platform fees this period: <strong className="text-brand-text">{formatCompensationMoney(periodFees)}</strong>
@@ -421,9 +427,11 @@ export function StaffCompensationSection({
         <p className="text-xs text-brand-text/60">
           After instant base pay, confirm adjustments per staff member: choose <strong>No adjustments</strong>, or
           apply tracked hourly pay and/or a manual bonus. Deductions are not permitted (Prop 22–ready add-only model).
-          Managers and above can correct tracked time below before confirming hourly pay.
+          {hideTimeSections
+            ? ' Correct tracked time on Profile → Timesheets before confirming hourly pay.'
+            : ' Managers and above can correct tracked time below before confirming hourly pay.'}
         </p>
-      ) : canAdjustTime ? (
+      ) : canAdjustTime && !hideTimeSections ? (
         <p className="text-xs text-brand-text/60">
           Correct automatic sessions or add manual time entries for staff in this period. Hourly pay uses the
           adjusted totals when Directors or Founders confirm payouts.
@@ -568,7 +576,7 @@ export function StaffCompensationSection({
 
   const body = (
     <div className={`space-y-6${embedded ? ' staff-compensation-embedded' : ''}`}>
-      {timeTrackerBlock ? (
+      {!hideTimeSections && timeTrackerBlock ? (
         embedded ? (
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-brand-text">Time tracker</h3>
@@ -578,7 +586,7 @@ export function StaffCompensationSection({
           <StaffMgmtSection title="Time tracker">{timeTrackerBlock}</StaffMgmtSection>
         )
       ) : null}
-      {timeAdjustmentsBlock ? (
+      {!hideTimeSections && timeAdjustmentsBlock ? (
         embedded ? (
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-brand-text">Time adjustments</h3>
@@ -590,7 +598,9 @@ export function StaffCompensationSection({
       ) : null}
       {embedded ? (
         <section className="space-y-3">
-          <h3 className="text-sm font-semibold text-brand-text">Staff compensation</h3>
+          <h3 className="text-sm font-semibold text-brand-text">
+            {hideTimeSections ? 'Staff pay adjustments' : 'Staff compensation'}
+          </h3>
           {summaryBlock}
         </section>
       ) : (

@@ -345,9 +345,10 @@ export function StaffPaymentsPanel({
 
   const selectedItem = filteredQueue.find((item) => item.id === selectedId) ?? null;
 
-  const staffCompensationBlock = showStaffCompensation ? (
+  const staffPayAdjustmentsBlock = showStaffCompensation ? (
     <StaffCompensationSection
       embedded
+      hideTimeSections
       currentUser={currentUser}
       guards={guards}
       requests={requests}
@@ -405,11 +406,11 @@ export function StaffPaymentsPanel({
           toolbar={
             <WorkbenchToolbar
               eyebrow="Finance"
-              subtitle="Staff compensation, time tracking, and payout adjustments."
+              subtitle="Revenue-share payouts and Prop 22–ready pay adjustments."
             />
           }
         >
-          {staffCompensationBlock}
+          {staffPayAdjustmentsBlock}
         </StaffOpsPageShell>
       );
     }
@@ -442,7 +443,7 @@ export function StaffPaymentsPanel({
         {allQueueItems.length === 0 ? (
           <>
             <WorkbenchEmpty message="No guard payment activity yet. Jobs will appear here once clients post security requests." />
-            {staffCompensationBlock}
+            {staffPayAdjustmentsBlock}
           </>
         ) : (
           <>
@@ -505,8 +506,8 @@ export function StaffPaymentsPanel({
                 }
               />
             )}
-            {staffCompensationBlock ? (
-              <div className="mt-8 pt-8 border-t border-brand-border">{staffCompensationBlock}</div>
+            {staffPayAdjustmentsBlock ? (
+              <div className="mt-8 pt-8 border-t border-brand-border">{staffPayAdjustmentsBlock}</div>
             ) : null}
           </>
         )}
@@ -517,7 +518,7 @@ export function StaffPaymentsPanel({
   if (!showGuardPayments) {
     return (
       <div className="animate-fade-in staff-payments-panel">
-        {staffCompensationBlock}
+        {staffPayAdjustmentsBlock}
       </div>
     );
   }
@@ -569,10 +570,9 @@ export function StaffPaymentsPanel({
 
         {allQueueItems.length === 0 && emptyState}
 
-        {staffCompensationBlock ? (
+        {staffPayAdjustmentsBlock ? (
           <section className="space-y-3 mt-8 pt-6 border-t border-brand-border">
-            <WfSectionHeader title="Staff compensation" />
-            {staffCompensationBlock}
+            {staffPayAdjustmentsBlock}
           </section>
         ) : null}
       </div>

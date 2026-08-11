@@ -29,6 +29,7 @@ import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
+import { JobPaymentShiftDetails } from './JobPaymentShiftDetails';
 
 const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {
   paid: 'text-emerald-400',
@@ -195,6 +196,8 @@ export function JobPaymentRow({
           </ul>
         </div>
       </div>
+
+      <JobPaymentShiftDetails req={req} />
 
       {payoutBlockedReason && !readOnly && (
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-700 dark:text-amber-300 leading-relaxed">

@@ -3,6 +3,13 @@ import { Banknote, CreditCard } from 'lucide-react';
 import { GuardPayoutInvoice, SecurityGuard, SecurityRequest } from '../../types';
 import { payoutInvoiceLabel, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import { WfBadge } from '../ui/wireframe';
+import {
+  computeWorkedHours,
+  formatGuardWorkedHours,
+  getEffectiveClockIn,
+  getEffectiveClockOut,
+  guardHasTimesheetActivity,
+} from '../../lib/guardTimesheet';
 
 interface StaffPayoutInvoiceRowProps {
   invoice: GuardPayoutInvoice;
@@ -60,6 +67,12 @@ export function StaffPayoutInvoiceRow({
         {lines.map((line) => {
           const job = requests.find((r) => r.id === line.jobId);
           const paid = job?.paymentStatus === 'released';
+          const workedHours =
+            job && job.assignedGuardId && guardHasTimesheetActivity(job, job.assignedGuardId)
+              ? formatGuardWorkedHours(
+                  computeWorkedHours(getEffectiveClockIn(job), getEffectiveClockOut(job)),
+                )
+              : null;
           return (
             <li key={line.jobId} className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -67,6 +80,9 @@ export function StaffPayoutInvoiceRow({
                 <p className="text-xs text-brand-text-muted mt-0.5">
                   {line.clientName} · {line.schedule}
                 </p>
+                {workedHours ? (
+                  <p className="text-xs text-brand-text-muted mt-0.5">{workedHours} worked</p>
+                ) : null}
                 <p className={`text-xs mt-0.5 ${paid ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {paid ? 'Paid' : 'Awaiting payout'}
                 </p>
