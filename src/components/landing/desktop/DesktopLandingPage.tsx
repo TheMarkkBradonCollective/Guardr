@@ -38,6 +38,7 @@ import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 
 interface DesktopLandingPageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -113,6 +114,14 @@ function DesktopNav({
             ) : null}
             <a
               className="dsk-landing-nav-link"
+              href={resolveAppDownloadPageUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Download
+            </a>
+            <a
+              className="dsk-landing-nav-link"
               href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
               download="Guardr-User-Manuals-Combined.pdf"
               type="application/pdf"
@@ -167,6 +176,16 @@ function DesktopNav({
                       Product guide
                     </button>
                   ) : null}
+                  <a
+                    role="menuitem"
+                    className="dsk-landing-nav-dropdown-item"
+                    href={resolveAppDownloadPageUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    Download app
+                  </a>
                   <a
                     role="menuitem"
                     className="dsk-landing-nav-dropdown-item"
@@ -481,6 +500,24 @@ function DesktopFooter({ onOpenLegal }: { onOpenLegal: (page: LegalPageId) => vo
           <span className="dsk-footer-wordmark">Guardr</span>
         </div>
         <div className="dsk-footer-links">
+          <a
+            className="dsk-landing-nav-link"
+            href={resolveAppDownloadPageUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download
+          </a>
+          <a
+            className="dsk-landing-nav-link"
+            href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}
+            download="Guardr-User-Manuals-Combined.pdf"
+            type="application/pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Manuals
+          </a>
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
         </div>
         <p className="dsk-footer-copy">

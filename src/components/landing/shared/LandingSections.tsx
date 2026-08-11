@@ -30,6 +30,7 @@ import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { AuthViewRole } from '../../../lib/appNavigation';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 import {
   CLIENT_FEATURES,
   COVERAGE_TYPES,
@@ -566,6 +567,18 @@ export function LandingFooter({
                 Guide
               </AppButton>
             ) : null}
+            <AppButton
+              variant="ghost"
+              size="sm"
+              {...({
+                $as: 'a',
+                href: resolveAppDownloadPageUrl(),
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              } as Record<string, unknown>)}
+            >
+              Download
+            </AppButton>
             <AppButton
               variant="ghost"
               size="sm"
