@@ -1331,9 +1331,11 @@ _Note: Guards apply directly to clients for marketplace jobs._
 **Staff employee compensation** (same **Payments** page, staff comp section):
 
 - Weekly revenue-share payout rows per staff member (including **$0** periods)
+- Default pool is about **50% of collected platform fees**, split by role (Support lowest → Founder highest; Mod/Admin and Manager/Director sit close)
 - **Prop 22 add-ons** — hourly hours × rate and manual bonuses (add-only; no deductions)
 - Directors confirm base payout, then finalize after optional adjustments
 - Staff clock time is tracked on **Profile → Timesheets**, not on Payments
+- Role percents are editable in **Payment settings** (Directors/Founders)
 
 **Payment settings** (Directors and Founders — sidebar → **Platform**):
 
