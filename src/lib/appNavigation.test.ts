@@ -250,12 +250,4 @@ describe('unified payments routes', () => {
       staffMessageTab: undefined,
     });
   });
-
-  it('parses guard profile timesheet tab', () => {
-    assert.deepEqual(parseAppRoute('/guard/profile?ptab=timesheet'), {
-      role: 'guard',
-      guardTab: 'profile',
-      guardProfileTab: 'timesheet',
-    });
-  });
 });

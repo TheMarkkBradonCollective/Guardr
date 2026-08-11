@@ -252,8 +252,6 @@ interface GuardDashboardProps {
   onSelectedJobIdChange?: (jobId: string | null) => void;
   browseTab?: GuardJobsBrowseTab;
   onBrowseTabChange?: (tab: GuardJobsBrowseTab) => void;
-  guardProfileTab?: import('../lib/appNavigation').GuardProfileTab;
-  onGuardProfileTabChange?: (tab: import('../lib/appNavigation').GuardProfileTab) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   onOpenDownload?: () => void;
   tutorialAvailable?: boolean;
@@ -390,8 +388,6 @@ export function GuardDashboard({
   onSelectedJobIdChange,
   browseTab: controlledBrowseTab,
   onBrowseTabChange,
-  guardProfileTab,
-  onGuardProfileTabChange,
   onOpenLegal,
   onOpenDownload,
   tutorialAvailable,
@@ -1293,7 +1289,6 @@ export function GuardDashboard({
   const GUARD_PRIMARY_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
-    { id: 'earnings', icon: DollarSign, label: 'Payments' },
   ];
 
   const GUARD_MESSAGES_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -1306,6 +1301,7 @@ export function GuardDashboard({
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
     { id: 'performance', icon: BarChart3, label: 'Performance' },
     ...(showVehicleTab ? [{ id: 'vehicle' as const, icon: Car, label: 'Vehicle' }] : []),
+    { id: 'earnings', icon: DollarSign, label: 'Payments' },
   ];
 
   const accountMenu = {
@@ -1677,8 +1673,6 @@ export function GuardDashboard({
                 currentUser={currentUser}
                 guard={guard}
                 requests={allRequests.length ? allRequests : (requests as SecurityRequest[])}
-                guardProfileTab={guardProfileTab}
-                onGuardProfileTabChange={onGuardProfileTabChange}
                 onSave={onUpdateProfile}
                 onAddCertification={onAddCertification}
                 onDeleteCertification={onDeleteCertification}

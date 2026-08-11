@@ -1,28 +1,9 @@
--- Payments, guard timesheets, staff Prop 22 pay adjustments, and smart time tracking.
+-- Staff pay: Prop 22 adjustments, weekly period payout rows ($0 OK), smart time tracking.
+-- Guards/client billing unchanged — run only staff compensation + time entry DDL here.
 -- Safe to re-run (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS).
 
 -- ---------------------------------------------------------------------------
--- 1) Guard shift time adjustments (staff edits clock in/out on guard jobs)
---    Stored on security_requests.shift_time_adjustment JSONB
--- ---------------------------------------------------------------------------
-ALTER TABLE security_requests
-  ADD COLUMN IF NOT EXISTS shift_time_adjustment JSONB;
-
-COMMENT ON COLUMN security_requests.shift_time_adjustment IS
-  'Staff-adjusted guard shift clock times. Shape: { clockInAt, clockOutAt, adjustedAt, adjustedById, adjustedByEmail, note }';
-
--- Example payload written by the app:
--- {
---   "clockInAt": "2026-08-05T14:05:00.000Z",
---   "clockOutAt": "2026-08-05T22:10:00.000Z",
---   "adjustedAt": "2026-08-06T20:00:00.000Z",
---   "adjustedById": "staff-uuid",
---   "adjustedByEmail": "manager@example.com",
---   "note": "Guard forgot to clock out"
--- }
-
--- ---------------------------------------------------------------------------
--- 2) Staff compensation config (revenue-share + hourly rates per role)
+-- 1) Staff compensation config (revenue-share + hourly rates per role)
 -- ---------------------------------------------------------------------------
 ALTER TABLE platform_settings
   ADD COLUMN IF NOT EXISTS staff_compensation_config JSONB NOT NULL DEFAULT '{
@@ -42,7 +23,7 @@ COMMENT ON COLUMN platform_settings.staff_compensation_config IS
   'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence, hourlyPayRate for Prop 22 add-ons.';
 
 -- ---------------------------------------------------------------------------
--- 3) Staff compensation payouts (weekly/monthly period rows — including $0)
+-- 2) Staff compensation payouts (weekly/monthly period rows — including $0)
 --    One row per staff member per period (UNIQUE staff_id + period bounds).
 --    payout_status: base_paid → awaiting Director adjustments → finalized
 -- ---------------------------------------------------------------------------
@@ -96,7 +77,7 @@ COMMENT ON TABLE staff_compensation_payouts IS
   'Staff period payout ledger — instant revenue-share base (may be $0) plus Prop 22 add-only adjustments. Pack-pay can extend this table later.';
 
 -- ---------------------------------------------------------------------------
--- 4) Staff time entries (automatic sessions + manager manual/adjusted rows)
+-- 3) Staff time entries (automatic sessions + manager manual/adjusted rows)
 --    Hours roll up into Payments adjustments via hourly_hours on payouts.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS staff_time_entries (
@@ -126,7 +107,7 @@ COMMENT ON TABLE staff_time_entries IS
   'Staff smart time tracking — automatic app sessions plus manager corrections (Profile → Timesheets).';
 
 -- ---------------------------------------------------------------------------
--- 5) Row level security (staff-only; anon allowed for local/dev parity with app)
+-- 4) Row level security (staff-only; anon allowed for local/dev parity with app)
 -- ---------------------------------------------------------------------------
 ALTER TABLE staff_compensation_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_time_entries ENABLE ROW LEVEL SECURITY;
