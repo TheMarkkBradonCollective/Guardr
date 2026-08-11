@@ -43,7 +43,6 @@ import {
   canViewIncidents,
   canViewStats,
   canViewViolations,
-  canAdjustGuardShiftTimes,
   isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -207,10 +206,6 @@ interface StaffDashboardProps {
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
-  onAdjustGuardShiftTime?: (
-    requestId: string,
-    payload: { clockInAt: string; clockOutAt: string; note?: string },
-  ) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
@@ -408,7 +403,6 @@ export function StaffDashboard({
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
   onCompletePayoutInvoice,
-  onAdjustGuardShiftTime,
   isDbConnected,
   currentUser,
   platformSettings,
@@ -582,7 +576,6 @@ export function StaffDashboard({
   const canApproveGuardAccounts = canApproveGuards(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
-  const canAdjustShiftTimes = canAdjustGuardShiftTimes(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
@@ -825,8 +818,6 @@ export function StaffDashboard({
             onOpenGuardCredential={(guardId, credentialItemId) =>
               navigateSection('credentials', { guardId, credentialItemId })
             }
-            canAdjustShiftTimes={canAdjustShiftTimes}
-            onAdjustGuardShiftTime={onAdjustGuardShiftTime}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
           />
         );

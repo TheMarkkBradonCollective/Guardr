@@ -14,8 +14,6 @@ export interface GuardTimesheetEntry {
   effectiveClockIn: string;
   effectiveClockOut?: string;
   workedHours: number;
-  adjusted: boolean;
-  adjustmentNote?: string;
 }
 
 function round2(n: number): number {
@@ -30,12 +28,14 @@ export function getRecordedClockOut(req: SecurityRequest): string | undefined {
   return req.checkOutAudit?.checkedAt;
 }
 
+/** Guard clock-in from check-in audit, or scheduled start if not yet clocked in. */
 export function getEffectiveClockIn(req: SecurityRequest): string {
-  return req.shiftTimeAdjustment?.clockInAt ?? getRecordedClockIn(req) ?? req.startDate;
+  return getRecordedClockIn(req) ?? req.startDate;
 }
 
+/** Guard clock-out from check-out audit only (contractor-reported times). */
 export function getEffectiveClockOut(req: SecurityRequest): string | undefined {
-  return req.shiftTimeAdjustment?.clockOutAt ?? getRecordedClockOut(req);
+  return getRecordedClockOut(req);
 }
 
 export function computeWorkedHours(clockInAt: string, clockOutAt?: string, now: Date = new Date()): number {
@@ -50,8 +50,7 @@ export function guardHasTimesheetActivity(req: SecurityRequest, guardId: string)
   return (
     req.status === 'in-progress' ||
     req.status === 'completed' ||
-    Boolean(req.checkInAudit?.checkedAt) ||
-    Boolean(req.shiftTimeAdjustment?.clockInAt)
+    Boolean(req.checkInAudit?.checkedAt)
   );
 }
 
@@ -66,9 +65,6 @@ export function listGuardTimesheetEntries(
       const recordedClockOut = getRecordedClockOut(req);
       const effectiveClockIn = getEffectiveClockIn(req);
       const effectiveClockOut = getEffectiveClockOut(req);
-      const adjusted = Boolean(
-        req.shiftTimeAdjustment?.clockInAt || req.shiftTimeAdjustment?.clockOutAt,
-      );
       return {
         requestId: req.id,
         title: req.title,
@@ -82,45 +78,11 @@ export function listGuardTimesheetEntries(
         effectiveClockIn,
         effectiveClockOut,
         workedHours: computeWorkedHours(effectiveClockIn, effectiveClockOut),
-        adjusted,
-        adjustmentNote: req.shiftTimeAdjustment?.note,
       };
     })
     .sort(
       (a, b) => new Date(b.scheduledStart).getTime() - new Date(a.scheduledStart).getTime(),
     );
-}
-
-export function validateGuardShiftTimeRange(
-  clockInAt: string,
-  clockOutAt: string,
-): string | null {
-  const start = new Date(clockInAt).getTime();
-  const end = new Date(clockOutAt).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end)) return 'Enter valid clock-in and clock-out times.';
-  if (end <= start) return 'Clock-out must be after clock-in.';
-  return null;
-}
-
-export function applyGuardShiftTimeAdjustment(
-  req: SecurityRequest,
-  payload: { clockInAt: string; clockOutAt: string; note?: string },
-  actor: { id: string; email?: string },
-): SecurityRequest {
-  const validationError = validateGuardShiftTimeRange(payload.clockInAt, payload.clockOutAt);
-  if (validationError) throw new Error(validationError);
-
-  return {
-    ...req,
-    shiftTimeAdjustment: {
-      clockInAt: payload.clockInAt,
-      clockOutAt: payload.clockOutAt,
-      adjustedAt: new Date().toISOString(),
-      adjustedById: actor.id,
-      adjustedByEmail: actor.email,
-      note: payload.note?.trim() || undefined,
-    },
-  };
 }
 
 export function formatGuardWorkedHours(hours: number): string {

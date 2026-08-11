@@ -2,12 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { SecurityRequest } from '../types';
 import {
-  applyGuardShiftTimeAdjustment,
   computeWorkedHours,
   getEffectiveClockIn,
   getEffectiveClockOut,
   listGuardTimesheetEntries,
-  validateGuardShiftTimeRange,
 } from './guardTimesheet';
 
 function sampleRequest(overrides: Partial<SecurityRequest> = {}): SecurityRequest {
@@ -34,50 +32,25 @@ function sampleRequest(overrides: Partial<SecurityRequest> = {}): SecurityReques
 }
 
 describe('guardTimesheet', () => {
-  it('uses recorded clock times by default', () => {
+  it('uses recorded clock times from check-in/out audit', () => {
     const req = sampleRequest();
     assert.equal(getEffectiveClockIn(req), '2026-08-01T19:55:00.000Z');
     assert.equal(getEffectiveClockOut(req), '2026-08-02T04:10:00.000Z');
   });
 
-  it('prefers staff adjustments over recorded times', () => {
+  it('falls back to scheduled start when guard has not clocked in', () => {
     const req = sampleRequest({
-      shiftTimeAdjustment: {
-        clockInAt: '2026-08-01T20:00:00.000Z',
-        clockOutAt: '2026-08-02T04:00:00.000Z',
-        adjustedAt: '2026-08-03T12:00:00.000Z',
-        adjustedById: 'staff-1',
-      },
+      checkInAudit: undefined,
+      checkOutAudit: undefined,
+      status: 'in-progress',
     });
     assert.equal(getEffectiveClockIn(req), '2026-08-01T20:00:00.000Z');
-    assert.equal(getEffectiveClockOut(req), '2026-08-02T04:00:00.000Z');
+    assert.equal(getEffectiveClockOut(req), undefined);
   });
 
   it('lists guard shifts with worked hours', () => {
     const entries = listGuardTimesheetEntries([sampleRequest()], 'guard-1');
     assert.equal(entries.length, 1);
     assert.equal(entries[0].workedHours, computeWorkedHours('2026-08-01T19:55:00.000Z', '2026-08-02T04:10:00.000Z'));
-    assert.equal(entries[0].adjusted, false);
-  });
-
-  it('validates clock-out after clock-in', () => {
-    assert.equal(
-      validateGuardShiftTimeRange('2026-08-02T04:00:00.000Z', '2026-08-01T20:00:00.000Z'),
-      'Clock-out must be after clock-in.',
-    );
-  });
-
-  it('applies staff shift time adjustments', () => {
-    const updated = applyGuardShiftTimeAdjustment(
-      sampleRequest(),
-      {
-        clockInAt: '2026-08-01T20:00:00.000Z',
-        clockOutAt: '2026-08-02T04:00:00.000Z',
-        note: 'Rounded to schedule',
-      },
-      { id: 'staff-1', email: 'ops@guardr.test' },
-    );
-    assert.equal(updated.shiftTimeAdjustment?.clockInAt, '2026-08-01T20:00:00.000Z');
-    assert.equal(updated.shiftTimeAdjustment?.note, 'Rounded to schedule');
   });
 });

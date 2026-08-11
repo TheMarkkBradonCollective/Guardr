@@ -416,7 +416,6 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS replacement_request JSONB
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS no_show BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_violation_reports JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_out_audit JSONB;
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_time_adjustment JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_name TEXT;
