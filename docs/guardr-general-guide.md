@@ -24,10 +24,10 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 
 | Audience | How to open it | Page title |
 |----------|----------------|------------|
-| **Public** | **guardr.co/guide** or **Guide** on the homepage | **Guide** |
-| **Client** | Account menu → **Guide** | **Guide** |
-| **Guard** | Account menu → **Guide** (available after account is **active**) | **Guide** |
-| **Staff** | Left sidebar → **Guide** — filter by role | **Guide** |
+| **Public** | **guardr.co/guide** or **Guide** / **Manuals** on the homepage | **Guide** (in-app) · PDF manuals at **/manuals** |
+| **Client** | Account menu → **Guide** or **Settings → User manuals** | **Guide** + PDF downloads |
+| **Guard** | Account menu → **Guide** (also while pending) or **Settings → User manuals** | **Guide** + PDF downloads |
+| **Staff** | Left sidebar → **Guide** — filter by role · **Settings → User manuals** | **Guide** + PDF downloads |
 
 ### Main navigation by role
 
@@ -35,7 +35,7 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Payments**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
-| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff. **Map**, **Jobs**, **Payments**, **Profile**, and **Guide** remain blocked until **active**. |
+| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Staff (pending)** | **Onboarding checklist** — upload government ID, connect Stripe for payouts; **Settings** (sign out). Ops pages blocked until **active**. |
@@ -598,7 +598,7 @@ Payments complements the in-app **Jobs → Pay Now** flow — some jobs may show
 | **Vehicle** | Account menu (active guards, when driving jobs apply) | Vehicle profile, insurance link, staff approval for driving priority |
 | **Preferences** | Account menu (active guards) | Job type and work-style preferences |
 | **Availability** | Account menu (active guards) | Schedule and availability windows |
-| **Guide** | Account menu (active guards only) | This guide |
+| **Guide** | Account menu (including while pending) | This guide + **Download PDF manuals** |
 
 ### 1. Sign up, get approved, upload credentials, and become active
 
@@ -1455,3 +1455,4 @@ Press back repeatedly to step out of nested views (for example: guard profile �
 - **Guards:** Open **Support** for **Contact support** or **File a report**. Use **Messages** for job chats. During a shift, use **Message client** for the active job chat.
 - **Staff:** Open **Messages** for job/staff chat and **Support** for the ticket inbox. Use **Incidents** and **Disputes** for escalations. Filter this guide by your role: **Moderator**, **Administrator**, **Director**, or **Founder**.
 - **This guide:** Clients and guards open the account menu and select **Guide**. Staff select **Guide** in the left sidebar.
+- **PDF manuals (print-ready):** Website **Manuals** / [guardr.co/manuals](https://www.guardr.co/manuals) · in-app **Guide → Download PDF manuals** or **Settings → User manuals** · also on pending activation screens. Files: Quick Start, Client, Guard, Staff Ops, and combined binder.
