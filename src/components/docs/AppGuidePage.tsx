@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
+import { UserManualDownloads } from './UserManualDownloads';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
@@ -431,6 +432,8 @@ function GuideHub({
     </div>
   );
 
+  const manualsPanel = <UserManualDownloads audienceFilter={audience} variant={variant} />;
+
   const sectionList = (
     <div className={isDesktop ? 'adm-guide-section-list' : undefined}>
       {visible.map((section) => (
@@ -455,6 +458,7 @@ function GuideHub({
           tutorialActive={tutorialActive}
           onStartTutorial={onStartTutorial}
         />
+        {manualsPanel}
         {filterTabs}
         {sectionList}
       </div>
@@ -476,6 +480,7 @@ function GuideHub({
         onStartTutorial={onStartTutorial}
       />
 
+      {manualsPanel}
       {filterTabs}
       {sectionList}
     </AppScreen>

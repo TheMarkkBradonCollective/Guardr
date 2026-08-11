@@ -1425,6 +1425,76 @@ body[data-form-factor="desktop"] .adm-guide-tutorial-actions {
   margin-top: 0.75rem;
 }
 
+body[data-form-factor="desktop"] .adm-guide-manuals {
+  padding: 0.65rem 0.85rem 0;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manuals-card {
+  padding: 0.85rem 1rem;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--adm-surface, #fff);
+  transition: background 120ms ease;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-row:hover {
+  background: var(--adm-surface-hover, #f6f6f6);
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: var(--adm-bg-sec, #f0f0f0);
+  flex-shrink: 0;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-title {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-desc {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--adm-muted, #767676);
+  line-height: 1.35;
+}
+
+body[data-form-factor="desktop"] .adm-guide-manual-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--adm-primary, #000);
+  flex-shrink: 0;
+}
+
 body[data-form-factor="desktop"] .adm-guide-filter-tabs {
   padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--adm-border);

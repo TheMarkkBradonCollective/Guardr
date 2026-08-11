@@ -265,7 +265,7 @@ export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages'
 export type GuardSupportMode = 'compose' | 'report';
 
 function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
-  const tabs: GuardTab[] = ['settings'];
+  const tabs: GuardTab[] = ['settings', 'guide'];
   if (guard.applicationRevisionRequestedAt) {
     tabs.push('profile');
   }
@@ -1316,16 +1316,14 @@ export function GuardDashboard({
     onChangeTheme: (mode: 'dark' | 'light') => onChangeTheme(mode),
     hideProfile: accountNeedsActivation && !revisionOpen,
     active: activeTab === 'profile' || activeTab === 'settings' || activeTab === 'preferences' || activeTab === 'performance' || activeTab === 'availability',
-    extraLinks: accountNeedsActivation
-      ? []
-      : [
-          {
-            label: 'Guide',
-            icon: BookOpen,
-            onClick: () => setTab('guide'),
-            active: tab === 'guide',
-          },
-        ],
+    extraLinks: [
+      {
+        label: 'Guide',
+        icon: BookOpen,
+        onClick: () => setTab('guide'),
+        active: tab === 'guide',
+      },
+    ],
     ...accountNotifications,
   };
 

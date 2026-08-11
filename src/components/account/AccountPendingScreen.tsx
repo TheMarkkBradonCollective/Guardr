@@ -19,6 +19,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
+import { UserManualDownloads } from '../docs/UserManualDownloads';
 
 interface AccountPendingScreenProps {
   role: 'guard' | 'client';
@@ -233,6 +234,12 @@ export function AccountPendingScreen({
           </button>
         </div>
       )}
+
+      <div className="px-5 pb-8">
+        <div className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4">
+          <UserManualDownloads audienceFilter={isGuard ? 'guard' : 'client'} variant="embedded" />
+        </div>
+      </div>
     </ResponsivePage>
   );
 }
