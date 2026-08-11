@@ -38,6 +38,8 @@ Built on Uber's [Base design system](https://baseweb.design) — see **[docs/ube
 
 User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is, how it works, getting started)
 
+Role user manuals: **[docs/user-manuals/](docs/user-manuals/)** (Quick Start, Client, Guard, Staff Ops)
+
 ## Deploy to guardr.co
 
 Full step-by-step: **[docs/DEPLOYMENT-GUARDR-CO.md](docs/DEPLOYMENT-GUARDR-CO.md)** (Vercel + GoDaddy DNS + Supabase + Stripe)
