@@ -1703,7 +1703,7 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config
     "Founder": { "percentOfFees": 0.1389, "floorPerPeriod": 0, "capPerPeriod": 8300, "hourlyPayRate": 40 }
   }
 }'::jsonb;
-COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence.';
+COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — ~50% of collected platform fees across roles, caps/floors, cadence.';
 
 CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
   id TEXT PRIMARY KEY,
