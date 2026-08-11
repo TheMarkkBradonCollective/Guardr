@@ -3,11 +3,28 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.118**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.119**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.119
+
+**PR cleanup (merged to `main`)**
+- **#948** — Rename all files containing `uber` in their names
+
+**Shipped**
+- **File renames** — 26 files: `uber-*.css` → `gr-*.css`, `landing/uber/` → `landing/mobility/`, `UberDataTable` → `GuardrDataTable`, `DirectTopHeader`, etc.
+- Removed redundant `uberBaseTheme.ts`; tests use `guardrBaseTheme.ts` directly
+- **v1.0.119** (build **219**) web + PWA + APK version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-119-beta`
+
+**Release verification**
+- Lint, test (582), build green
+- No open PRs after merge
 
 ---
 

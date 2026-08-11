@@ -1,3 +1,3 @@
 // Guardr service worker entry — push + offline shell (see sw.js for implementation)
-// Bust import cache on each release: v218
-importScripts('/sw.js?v=218');
+// Bust import cache on each release: v219
+importScripts('/sw.js?v=219');
