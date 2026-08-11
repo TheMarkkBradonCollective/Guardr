@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.121':
+    'Staff revenue-share raised to ~50% of platform fees with a tighter role ladder (Director ~11.1%, Founder ~11.9%).',
   '1.0.120':
     'Expanded user manuals: pay/payouts for guards, client costs, staff compensation, and contractor vs employee legal positioning.',
   '1.0.119':

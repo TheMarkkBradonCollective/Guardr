@@ -8,6 +8,7 @@ import {
   getCompensationPeriodBounds,
   isPayoutAwaitingAdjustments,
   sumCollectedPlatformFeesInPeriod,
+  totalRolePercent,
 } from './staffCompensation';
 import type { SecurityGuard, SecurityRequest } from '../types';
 
@@ -89,9 +90,19 @@ test('buildStaffCompensationPreviews splits role pool across peers', () => {
   });
   assert.equal(previews.length, 2);
   assert.equal(previews[0].platformFeesInPeriod, 40);
-  assert.equal(previews[0].pendingAmount, 0.3);
-  assert.equal(previews[1].pendingAmount, 0.3);
+  // Support pool = round2(40 * 4%) = 1.6, split across 2 peers → 0.8 each
+  assert.equal(previews[0].pendingAmount, 0.8);
+  assert.equal(previews[1].pendingAmount, 0.8);
   assert.equal(previews[0].needsPeriodPayout, true);
+});
+
+test('default staff compensation allocates 50% of platform fees across roles', () => {
+  assert.equal(totalRolePercent(DEFAULT_STAFF_COMPENSATION_CONFIG), 0.5);
+  assert.equal(DEFAULT_STAFF_COMPENSATION_CONFIG.roleRules.Founder.percentOfFees, 0.119);
+  assert.equal(DEFAULT_STAFF_COMPENSATION_CONFIG.roleRules.Director.percentOfFees, 0.111);
+  assert.equal(DEFAULT_STAFF_COMPENSATION_CONFIG.roleRules.Manager.percentOfFees, 0.1);
+  assert.equal(DEFAULT_STAFF_COMPENSATION_CONFIG.roleRules.Administrator.percentOfFees, 0.07);
+  assert.equal(DEFAULT_STAFF_COMPENSATION_CONFIG.roleRules.Moderator.percentOfFees, 0.06);
 });
 
 test('buildStaffCompensationPreviews opens period payout when platform fees are zero', () => {
@@ -186,15 +197,15 @@ test('applyStaffPayoutAdjustments finalizes with no adjustments', () => {
       staffName: 'Alex',
       staffEmail: 'alex@guardr.test',
       staffRole: 'Support',
-      rolePercent: 0.015,
+      rolePercent: 0.04,
       peersInRole: 1,
       platformFeesInPeriod: 40,
-      baseAmount: 0.6,
+      baseAmount: 1.6,
       floorAmount: 0,
-      capAmount: 400,
-      cappedBaseAmount: 0.6,
+      capAmount: 1100,
+      cappedBaseAmount: 1.6,
       alreadyPaidAmount: 0,
-      pendingAmount: 0.6,
+      pendingAmount: 1.6,
       needsPeriodPayout: false,
       isActive: true,
       trackedHours: 5,
@@ -210,6 +221,6 @@ test('applyStaffPayoutAdjustments finalizes with no adjustments', () => {
     { id: 'dir-1', email: 'dir@guardr.test' },
   );
   assert.equal(finalized.payoutStatus, 'finalized');
-  assert.equal(finalized.finalAmount, 0.6);
+  assert.equal(finalized.finalAmount, 1.6);
   assert.equal(finalized.adjustmentChoice, 'none');
 });

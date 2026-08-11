@@ -10,12 +10,12 @@ ALTER TABLE platform_settings
     "enabled": true,
     "cadence": "weekly",
     "roleRules": {
-      "Support": { "percentOfFees": 0.015, "floorPerPeriod": 0, "capPerPeriod": 400, "hourlyPayRate": 18 },
-      "Moderator": { "percentOfFees": 0.02, "floorPerPeriod": 0, "capPerPeriod": 600, "hourlyPayRate": 20 },
-      "Administrator": { "percentOfFees": 0.025, "floorPerPeriod": 0, "capPerPeriod": 800, "hourlyPayRate": 22 },
-      "Manager": { "percentOfFees": 0.03, "floorPerPeriod": 0, "capPerPeriod": 1200, "hourlyPayRate": 28 },
-      "Director": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 2000, "hourlyPayRate": 35 },
-      "Founder": { "percentOfFees": 0.05, "floorPerPeriod": 0, "capPerPeriod": 3000, "hourlyPayRate": 40 }
+      "Support": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 1100, "hourlyPayRate": 18 },
+      "Moderator": { "percentOfFees": 0.06, "floorPerPeriod": 0, "capPerPeriod": 1700, "hourlyPayRate": 20 },
+      "Administrator": { "percentOfFees": 0.07, "floorPerPeriod": 0, "capPerPeriod": 2200, "hourlyPayRate": 22 },
+      "Manager": { "percentOfFees": 0.1, "floorPerPeriod": 0, "capPerPeriod": 3300, "hourlyPayRate": 28 },
+      "Director": { "percentOfFees": 0.111, "floorPerPeriod": 0, "capPerPeriod": 5600, "hourlyPayRate": 35 },
+      "Founder": { "percentOfFees": 0.119, "floorPerPeriod": 0, "capPerPeriod": 8300, "hourlyPayRate": 40 }
     }
   }'::jsonb;
 
