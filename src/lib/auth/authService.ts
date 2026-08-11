@@ -302,10 +302,6 @@ export async function signInWithCredentials(
     return { status: 'blocked' };
   }
 
-  if (profile.guard?.isStaff && profile.guard.userStatus === 'pending') {
-    return { status: 'pending_approval' };
-  }
-
   const passwordOk = await verifyStoredPassword(profile.password, profile.passwordHash ?? undefined, password);
   if (!passwordOk) return { status: 'invalid_password' };
 

@@ -444,6 +444,23 @@ export function AuthPage({
           setErrorMsg('Phone number is required for staff applications.');
           return;
         }
+        const years = parseInt(guardYearsExperience, 10);
+        if (!Number.isFinite(years) || years < 0 || years > 60) {
+          setErrorMsg('Enter your years of operations or security experience (0–60).');
+          return;
+        }
+        if (!guardPrimaryCity) {
+          setErrorMsg('Select your primary work city.');
+          return;
+        }
+        if (guardSummary.trim().length < 20) {
+          setErrorMsg('Describe your relevant work history (at least a few sentences).');
+          return;
+        }
+        if (guardAvailabilityNotes.trim().length < 10) {
+          setErrorMsg('Share your general availability (days, times, or schedule).');
+          return;
+        }
         const normalized = personNameFromPayload({
           firstName: firstName.trim(),
           middleName: middleName.trim(),
@@ -460,7 +477,12 @@ export function AuthPage({
           badgeNumber: `STF-${Math.floor(10000 + Math.random() * 90000)}`,
           avatar: '',
           phone: phone.trim(),
-          bio: 'Support — Platform operations.',
+          bio: guardSummary.trim(),
+          summary: guardSummary.trim(),
+          yearsExperience: years,
+          availabilityNotes: guardAvailabilityNotes.trim(),
+          managedCities: [guardPrimaryCity],
+          referredBy: referredByText.trim() || undefined,
           isArmed: false,
           backgroundChecked: false,
           verified: false,
@@ -472,6 +494,7 @@ export function AuthPage({
           isStaff: true,
           staffRole: 'Support',
           userStatus: 'pending',
+          idVerificationStatus: 'not_submitted',
         };
         try {
           await onSignUp(staffProfile, 'staff', password);
@@ -482,7 +505,7 @@ export function AuthPage({
         setIsSignUp(false);
         onAuthModeChange?.('sign-in');
         setPassword('');
-        setErrorMsg('Staff application submitted. A Director will review your account before you can sign in.');
+        setErrorMsg('Application submitted. Sign in anytime to upload your ID and connect Stripe while a Director reviews.');
         return;
       }
 
@@ -907,7 +930,8 @@ export function AuthPage({
                 <div className="space-y-5 pt-4 border-t border-brand-border">
                   <p className="uber-label">Staff application</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
-                    New staff start as Support. A Director reviews your application before you can sign in.
+                    New staff start as Support. Sign in after submitting to upload government ID and connect
+                    Stripe payouts while a Director reviews your application.
                   </p>
                   <div>
                     <label className="uber-label block mb-2">Phone</label>
@@ -922,6 +946,59 @@ export function AuthPage({
                         className="uber-input pl-10"
                       />
                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Years of experience</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={60}
+                        required
+                        placeholder="e.g. 3"
+                        value={guardYearsExperience}
+                        onChange={(e) => setGuardYearsExperience(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Primary city</label>
+                      <select
+                        required
+                        value={guardPrimaryCity}
+                        onChange={(e) => setGuardPrimaryCity(e.target.value)}
+                        className="uber-input"
+                      >
+                        <option value="">Select city</option>
+                        {signupCities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Work history</label>
+                    <textarea
+                      required
+                      rows={4}
+                      placeholder="Recent roles, employers, and operations experience…"
+                      value={guardSummary}
+                      onChange={(e) => setGuardSummary(e.target.value)}
+                      className="uber-input min-h-[96px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Availability</label>
+                    <textarea
+                      required
+                      rows={2}
+                      placeholder="Days, hours, or schedule you can work…"
+                      value={guardAvailabilityNotes}
+                      onChange={(e) => setGuardAvailabilityNotes(e.target.value)}
+                      className="uber-input min-h-[72px]"
+                    />
                   </div>
                 </div>
               )}

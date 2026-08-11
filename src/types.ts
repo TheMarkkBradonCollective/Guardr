@@ -728,6 +728,8 @@ export interface SecurityGuard {
   guardCardStatus?: GuardCardStatus;
   /** Self-reported at application */
   hasReliableTransportation?: boolean;
+  /** How the applicant heard about Guardr (staff/client intake). */
+  referredBy?: string;
   isStaff?: boolean;
   staffRole?: StaffRole;
   /** Cities this staff member may manage or operate in */

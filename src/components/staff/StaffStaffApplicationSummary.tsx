@@ -1,6 +1,8 @@
 import React from 'react';
 import type { SecurityGuard } from '../../types';
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
+import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
+import { getStaffActivationChecklist } from '../../lib/staffAccountActivation';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
@@ -41,6 +43,9 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
         <DetailRow label="Work email" value={member.email} />
         <DetailRow label="Personal email" value={member.personalEmail} />
         <DetailRow label="Phone" value={member.phone} />
+        <DetailRow label="Years of experience" value={member.yearsExperience?.toString()} />
+        <DetailRow label="Availability" value={member.availabilityNotes} />
+        <DetailRow label="Referred by" value={member.referredBy} />
         <DetailRow label="Requested role" value={`${staffRole} — ${ROLE_LABELS[platformRole]}`} />
       </div>
 
@@ -63,6 +68,22 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
       )}
 
       <DetailRow label="Notes" value={member.bio} />
+
+      <div>
+        <p className="uber-label text-xs">Onboarding checklist</p>
+        <ul className="mt-2 space-y-1">
+          {getStaffActivationChecklist(member).map((step) => (
+            <li key={step.id} className="text-sm text-brand-text">
+              {step.complete ? '✓' : '○'} {step.label}
+              {step.detail ? ` — ${step.detail}` : ''}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-brand-text-muted mt-2">
+          Government ID: {getGuardIdVerificationStatus(member)} · Stripe:{' '}
+          {member.stripeConnectAccountId ? 'connected' : 'not connected'}
+        </p>
+      </div>
 
       {!hasIntake && (
         <AppNoticeChip

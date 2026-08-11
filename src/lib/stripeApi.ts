@@ -101,7 +101,8 @@ export async function createTipCheckoutSession(params: {
 }
 
 export async function createConnectAccount(params: {
-  guardId: string;
+  guardId?: string;
+  staffId?: string;
   email: string;
   name?: string;
 }): Promise<{ accountId: string }> {

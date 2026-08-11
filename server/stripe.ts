@@ -319,34 +319,39 @@ export function registerStripeRoutes(app: Express) {
       return res.status(503).json({ error: 'Stripe is not configured' });
     }
 
-    const { guardId, email, name } = req.body as {
+    const { guardId, staffId, email, name } = req.body as {
       guardId?: string;
+      staffId?: string;
       email?: string;
       name?: string;
     };
 
-    if (!guardId || !email) {
-      return res.status(400).json({ error: 'guardId and email are required' });
+    const subjectId = staffId ?? guardId;
+    if (!subjectId || !email) {
+      return res.status(400).json({ error: 'guardId or staffId, plus email, are required' });
     }
+
+    const table = staffId ? 'staff' : 'guards';
+    const metadataKey = staffId ? 'staff_id' : 'guard_id';
 
     try {
       const db = getSupabaseAdmin();
       let accountId: string | null = null;
 
       if (db) {
-        const { data: guard } = await db
-          .from('guards')
+        const { data: row } = await db
+          .from(table)
           .select('stripe_connect_account_id')
-          .eq('id', guardId)
+          .eq('id', subjectId)
           .maybeSingle();
-        accountId = guard?.stripe_connect_account_id ?? null;
+        accountId = row?.stripe_connect_account_id ?? null;
       }
 
       if (!accountId) {
         const account = await stripe.accounts.create({
           type: 'express',
           email,
-          metadata: { guard_id: guardId },
+          metadata: { [metadataKey]: subjectId },
           capabilities: {
             transfers: { requested: true },
           },
@@ -356,10 +361,7 @@ export function registerStripeRoutes(app: Express) {
         accountId = account.id;
 
         if (db) {
-          await db
-            .from('guards')
-            .update({ stripe_connect_account_id: accountId })
-            .eq('id', guardId);
+          await db.from(table).update({ stripe_connect_account_id: accountId }).eq('id', subjectId);
         }
       }
 

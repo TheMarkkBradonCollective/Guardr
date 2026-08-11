@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   getGuardUserStatus,
+  isStaffAccountApproved,
   isStaffAccountPending,
+  isStaffAccountPreActive,
   isStaffUserStatusActive,
 } from './accountStatus';
 import {
@@ -25,6 +27,12 @@ test('active staff accounts are not pending', () => {
   const activeStaff = { isStaff: true as const, userStatus: 'active' as const };
   assert.equal(isStaffAccountPending(activeStaff), false);
   assert.equal(isStaffUserStatusActive(activeStaff), true);
+});
+
+test('approved staff accounts stay pre-active until activation completes', () => {
+  const approvedStaff = { isStaff: true as const, userStatus: 'approved' as const };
+  assert.equal(getGuardUserStatus(approvedStaff), 'approved');
+  assert.equal(isStaffUserStatusActive(approvedStaff), false);
 });
 
 test('administrator can propose staff but not approve', () => {

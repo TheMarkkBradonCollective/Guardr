@@ -19,10 +19,16 @@ export function isClientAccountActive(client: Pick<Client, 'accountStatus' | 'ap
 export function getGuardUserStatus(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): GuardUserStatus {
   if (guard.isStaff) {
     const normalized = normalizeGuardUserStatus(guard.userStatus);
-    if (normalized === 'suspended' || normalized === 'blocked' || normalized === 'pending') {
+    if (
+      normalized === 'suspended' ||
+      normalized === 'blocked' ||
+      normalized === 'pending' ||
+      normalized === 'approved' ||
+      normalized === 'active'
+    ) {
       return normalized;
     }
-    return 'active';
+    return 'pending';
   }
   const normalized = normalizeGuardUserStatus(guard.userStatus);
   if (normalized) return normalized;
@@ -31,6 +37,16 @@ export function getGuardUserStatus(guard: Pick<SecurityGuard, 'userStatus' | 'is
 
 export function isStaffAccountPending(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
   return Boolean(guard.isStaff && getGuardUserStatus(guard) === 'pending');
+}
+
+export function isStaffAccountApproved(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  return Boolean(guard.isStaff && getGuardUserStatus(guard) === 'approved');
+}
+
+/** Pending or approved — onboarding in progress, ops workspace locked. */
+export function isStaffAccountPreActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  const status = getGuardUserStatus(guard);
+  return Boolean(guard.isStaff && (status === 'pending' || status === 'approved'));
 }
 
 export function isStaffUserStatusActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
