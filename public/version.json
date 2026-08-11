@@ -6,9 +6,9 @@
     "versionCode": 215,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.115.apk",
-    "fileSize": 8378011,
-    "sha256": "2ce1a727f7fdebf2e06c6e788b0761f721b05f0a71e0c29e7e9deecb651e0896",
+    "fileSize": 15571677,
+    "sha256": "ff29708891c3fce94af77a75e8c8b09411ee045815756ffcfc737da0962a7409",
     "releaseNotes": "Staff onboarding (application, gov ID, Stripe payouts), staff pay on Payments (Prop 22 add-ons), signup clarity (Work at Guardr vs marketplace), guard timesheet read-only from clock audit."
   },
-  "updatedAt": "2026-08-11T01:40:56.851Z"
+  "updatedAt": "2026-08-11T01:49:24.314Z"
 }
