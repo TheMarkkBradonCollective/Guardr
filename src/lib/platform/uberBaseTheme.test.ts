@@ -5,7 +5,7 @@ import { motionDuration, prefersReducedMotion, MOTION_DURATION } from '../../the
 
 describe('uberBaseTheme', () => {
   it('uses Uber black (#000) as accent in light theme', () => {
-    // Real Uber app: black primary CTA
+    // Real Guardr app: black primary CTA
     const accent = uberLightTheme.colors.accent.toUpperCase().replace('#', '');
     assert.ok(
       accent === '000000' || accent === '000',

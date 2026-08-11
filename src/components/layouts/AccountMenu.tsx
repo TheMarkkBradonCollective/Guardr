@@ -44,7 +44,7 @@ export interface AccountMenuProps {
   onMarkAllNotificationsRead?: () => void | Promise<void>;
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
-  /** Uber Direct desktop — black circle avatar only, no chevron. */
+  /** Guardr Direct desktop — black circle avatar only, no chevron. */
   triggerVariant?: 'default' | 'uber-direct';
 }
 

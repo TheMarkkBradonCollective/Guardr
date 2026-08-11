@@ -44,7 +44,7 @@
     U+FEFF, U+FFFD;
 }
 
-/* ── Uber type scale ───────────────────────────────────────────
+/* ── Base Web type scale ───────────────────────────────────────────
    Uber Base sets display type tight (-0.02 → -0.04em) and body
    type at 0. These tokens are the single source for both Base Web
    overrides (theme/typography.ts) and legacy CSS.
@@ -82,7 +82,7 @@
   --uber-weight-label: 500;
 }
 
-/* Headings inherit Uber's display treatment app-wide. */
+/* Headings inherit Base Web display treatment app-wide. */
 h1,
 h2,
 h3,
@@ -102,7 +102,7 @@ h1,
   line-height: var(--uber-leading-display);
 }
 
-/* Uber renders numerals in tables/metrics with tabular figures so
+/* Guardr renders numerals in tables/metrics with tabular figures so
    columns stay optically aligned. */
 .uber-tabular,
 .uber-metric-value,
@@ -121,7 +121,7 @@ h1,
   color: var(--uber-text-muted, #767676);
 }
 
-/* Uber Move has a lower optical weight than Inter at the same
+/* Guardr Sans has a lower optical weight than Inter at the same
    numeric weight — nudge rendering so headlines read the same. */
 html {
   -webkit-font-smoothing: antialiased;

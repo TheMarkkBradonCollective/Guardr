@@ -1,5 +1,5 @@
 /**
- * Guardr unified motion language — Uber Base motion principles.
+ * Guardr unified motion language — Base Web motion principles.
  * §6 of guardedesign.md: purposeful, 150–300ms, respects prefers-reduced-motion.
  * PWA Lite shortens motion; APK Premium allows slightly richer springs.
  */

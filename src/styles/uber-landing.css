@@ -87,7 +87,7 @@ html.theme-dark .uber-landing-nav { background: #000 !important; }
 .uber-landing-mobile-menu-item:last-child { border-bottom: none; }
 .uber-landing-mobile-menu-item:hover { opacity: 0.75; }
 
-/* Logo on black nav — white in all themes (see uber-global.css .uber-landing-logo) */
+/* Logo on black nav — white in all themes (see Base Web-global.css .uber-landing-logo) */
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 
@@ -136,7 +136,7 @@ html.theme-dark .uber-landing-text-link { color: #fff; text-decoration-color: rg
 html.theme-dark .uber-landing-time-pill { background: #1a1a1a; color: #fff; }
 html.theme-dark .uber-landing-time-pill:hover { background: #2b2b2b; }
 
-/* Location inputs — exact Uber booking bar */
+/* Location inputs — exact Guardr booking bar */
 .uber-landing-input-stack { position: relative; }
 
 .uber-landing-input-row {

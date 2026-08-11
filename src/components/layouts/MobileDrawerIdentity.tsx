@@ -6,7 +6,7 @@ interface MobileDrawerIdentityProps {
   onClick?: () => void;
 }
 
-/** Uber-style drawer header — avatar + display name. */
+/** Guardr-style drawer header — avatar + display name. */
 export function MobileDrawerIdentity({ userName, avatarUrl, onClick }: MobileDrawerIdentityProps) {
   const content = (
     <>

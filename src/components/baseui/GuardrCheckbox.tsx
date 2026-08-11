@@ -2,7 +2,7 @@
  * GuardrCheckbox — Base Web Checkbox wrapper.
  * https://baseweb.design/components/checkbox/
  *
- * Uber pattern: black checkmark, minimal styling.
+ * Base Web pattern: black checkmark, minimal styling.
  */
 
 import React from 'react';

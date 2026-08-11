@@ -28,7 +28,7 @@ export interface UberTableColumn<T> {
   id: string;
   header: React.ReactNode;
   render: (row: T) => React.ReactNode;
-  /** Tabular figures + numeric alignment (Uber aligns amounts and IDs). */
+  /** Tabular figures + numeric alignment (Base Web aligns amounts and IDs). */
   numeric?: boolean;
   align?: 'left' | 'right';
   /** Column takes the remaining width. */
@@ -48,11 +48,11 @@ export interface UberDataTableProps<T> {
   selectedKey?: string;
   caption?: string;
   emptyMessage?: string;
-  /** Row density — Uber uses compact for dense ops tables. */
+  /** Row density — Guardr uses compact for dense ops tables. */
   density?: 'compact' | 'default';
   className?: string;
   /**
-   * Phone layout. Uber never scrolls a table sideways on a phone — rows become
+   * Phone layout. Base Web never scrolls a table sideways on a phone — rows become
    * stacked cards. Column ids map onto the card slots; omitted ids fall back to
    * first column as the title, last as the trailing state.
    */
@@ -69,7 +69,7 @@ export interface UberDataTableProps<T> {
 type SortState = { columnId: string; direction: 'asc' | 'desc' } | null;
 
 /**
- * Uber operations table — the dense list pattern from Uber Freight's
+ * Base Web operations table — the dense list pattern from desktop workspace's
  * financials and load boards: quiet header row, hairline row rules, tabular
  * figures, right-aligned amounts, whole-row hover and keyboard activation.
  */

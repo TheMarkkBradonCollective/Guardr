@@ -6,7 +6,7 @@ import { FONT_DISPLAY } from '../../../theme/typography';
 export type MetricTrend = 'up' | 'down' | 'neutral';
 
 /**
- * Horizontal stat row strip — like Uber's "3 active · 7 on duty" bar.
+ * Horizontal stat row strip — like Base Web "3 active · 7 on duty" bar.
  */
 export function MetricStrip({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -17,7 +17,7 @@ export function MetricStrip({ children, className = '' }: { children: React.Reac
 }
 
 /**
- * Individual stat cell inside MetricStrip — Uber stat cell style.
+ * Individual stat cell inside MetricStrip — Base Web stat cell style.
  */
 export function MetricCell({
   label,

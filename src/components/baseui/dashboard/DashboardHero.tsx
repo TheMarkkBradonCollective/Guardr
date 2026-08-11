@@ -37,7 +37,7 @@ export function MutedIcon({
   return <Icon size={size} strokeWidth={strokeWidth} color={theme.colors.contentSecondary} className={className} />;
 }
 
-/** Dashboard screen header — real Uber style: large bold title + optional status pill */
+/** Dashboard screen header — real Base Web style: large bold title + optional status pill */
 export function DashboardHero({
   kicker,
   title,

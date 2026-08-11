@@ -11,7 +11,7 @@ interface UberExploreGridProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
 }
 
-/** Uber-style "Explore" section — gray tile grid like Uber home (Food, Reserve, etc.) */
+/** Guardr-style "Explore" section — gray tile grid like Guardr home (Food, Reserve, etc.) */
 export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGridProps) {
   const [, theme] = useStyletron();
   const isMobile = formFactor === 'mobile';
@@ -138,7 +138,7 @@ interface UberLoginBandProps {
   visual?: React.ReactNode;
 }
 
-/** Login / account band — matches Uber's "Log in to see your account" section */
+/** Login / account band — matches Base Web "Log in to see your account" section */
 export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLoginBandProps) {
   const [, theme] = useStyletron();
   const isMobile = formFactor === 'mobile';

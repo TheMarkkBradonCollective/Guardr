@@ -13,7 +13,7 @@ interface UberDirectContextSelectProps {
   'aria-label'?: string;
 }
 
-/** Compact org/location selector for Uber Direct page header (right of title). */
+/** Compact org/location selector for Guardr Direct page header (right of title). */
 export function UberDirectContextSelect({
   value,
   options,

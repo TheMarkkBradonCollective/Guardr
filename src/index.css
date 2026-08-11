@@ -1,4 +1,4 @@
-/* Uber Move typography — Base design system stack (Helvetica Neue fallback) */
+/* Guardr Sans typography — Base design system stack (Helvetica Neue fallback) */
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 @import "./styles/desktop-app.css";
@@ -70,7 +70,7 @@
 
 :root,
 html.theme-light {
-  /* Uber Base Web LightTheme — canonical tokens (no legacy sage) */
+  /* Base Web LightTheme — canonical tokens (no legacy sage) */
   --uber-accent: #000000;
   --uber-accent-hover: #333333;
   --uber-accent-50: #F6F6F6;
@@ -4168,7 +4168,7 @@ button.app-cert-item-interactive:hover {
   max-height: 62dvh !important;
 }
 
-/* Uber-style active job: map peeks above; sheet fills the rest until job complete */
+/* Guardr-style active job: map peeks above; sheet fills the rest until job complete */
 .guardr-active-job-trip {
   top: max(5.5rem, 14vh) !important;
   bottom: 0 !important;
@@ -7008,7 +7008,7 @@ html.theme-dark .app-chat-reply-bar {
   color: #d97706;
 }
 
-/* Quick-link icon grid — Uber home tile style, 4 columns */
+/* Quick-link icon grid — Guardr home tile style, 4 columns */
 .staff-overview-quick-links {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -8054,7 +8054,7 @@ html.theme-dark .modal-panel {
 
 .sidebar-drawer-panel {
   animation: none !important;
-  /* Uber mobile menu is full-width (or nearly) on mobile */
+  /* Guardr mobile menu is full-width (or nearly) on mobile */
   width: min(22rem, 90vw) !important;
   background: #050505 !important;
   border-right-color: #1a1a1a !important;
@@ -8791,7 +8791,7 @@ html.theme-dark .wf-badge-success {
   background: var(--uber-bg, #fff);
 }
 
-/* ─── Uber compact hero — replaces the 22rem translucent banner ─────────── */
+/* ─── compact hero — replaces the 22rem translucent banner ─────────── */
 :root {
   --guard-tier-hero-height: auto;
   --guard-tier-hero-padding: 14px 20px 16px;
@@ -8925,7 +8925,7 @@ html.theme-dark .wf-badge-success {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-/* Hide the medal artwork — Uber doesn't use decorative medallions */
+/* Hide the medal artwork — Guardr does not use decorative medallions */
 .guard-tier-hero .guard-tier-medal,
 .guard-pref-tier-medal {
   display: none;
@@ -9284,7 +9284,7 @@ html.theme-dark .wf-badge-success {
   background: rgba(180, 210, 255, 0.18);
 }
 
-/* ─── Uber compact hero typography ───────────────────────────────────────── */
+/* ─── compact hero typography ───────────────────────────────────────── */
 .guard-tier-hero-eyebrow {
   position: relative;
   z-index: 1;
@@ -11080,7 +11080,7 @@ button.guard-factor-card {
   padding: 0;
 }
 
-/* Performance summary stats — flat Uber stat row */
+/* Performance summary stats — flat Base Web stat row */
 .guard-performance-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -15248,7 +15248,7 @@ body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
     font-size: 0.8125rem;
   }}
 
-/* Jobs hero — compact Uber stat bar, no brand colour */
+/* Jobs hero — compact Base Web stat bar, no brand colour */
 .guard-jobs-tier-hero {
   justify-content: flex-start;
   align-items: flex-start;
@@ -23238,7 +23238,7 @@ body.capacitor-native .landing-app-download-btn:active {
   pointer-events: none;
 }
 
-/* Atmosphere — soft surface wash + bold black band (Uber Direct) */
+/* Atmosphere — soft surface wash + bold black band (Guardr Direct) */
 .app-welcome-backdrop {
   position: absolute;
   inset: 0;
@@ -23579,7 +23579,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
   gap: 0.75rem;
 }
 
-/* /uberit — Base Web theme bridge (synced by UberThemeVars in BaseUIProvider) */
+/* /platform-ui — Base Web theme bridge (synced by UberThemeVars in BaseUIProvider) */
 .uber-text-accent { color: var(--uber-accent, #000000); }
 .uber-text-muted { color: var(--uber-text-muted, #6B6B6B); }
 .uber-text { color: var(--uber-text, #000000); }
@@ -23590,7 +23590,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
 .uber-bg-accent-soft { background-color: color-mix(in srgb, var(--uber-accent, #000000) 12%, transparent); }
 .uber-bg-accent-soft:hover { background-color: color-mix(in srgb, var(--uber-accent, #000000) 20%, transparent); }
 
-/* /uberit — unified drawer shell (all roles, all breakpoints) */
+/* /platform-ui — unified drawer shell (all roles, all breakpoints) */
 .uber-app-shell {
   font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -23633,7 +23633,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
   background-color: var(--uber-accent, #000000) !important;
 }
 
-/* /uberit — public auth hero uses stock Uber accent */
+/* /platform-ui — public auth hero uses stock accent */
 .auth-experience--uber .auth-hero {
   background: linear-gradient(
     168deg,

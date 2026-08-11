@@ -17,7 +17,7 @@ import { MoreMenuSheet } from '../../layouts/MoreMenuSheet';
 import type { BottomNavItem } from '../../layouts/BottomNavBar';
 import { FONT_DISPLAY } from '../../../theme/typography';
 
-/** Uber Freight's rail tops out around a dozen icons before it needs scrolling. */
+/** desktop workspace's rail tops out around a dozen icons before it needs scrolling. */
 const RAIL_MAX_ITEMS = 12;
 
 export interface SidebarPrimaryAction {
@@ -39,7 +39,7 @@ export interface GuardrDrawerShellProps {
   /** When set, renders stacked sidebar CTAs (e.g. Applications: add guard + add client). */
   sidebarPrimaryActions?: SidebarPrimaryAction[];
   sidebarFooter?: React.ReactNode;
-  /** Uber-style mobile drawer header — avatar + name instead of logo. */
+  /** Guardr-style mobile drawer header — avatar + name instead of logo. */
   sidebarIdentity?: React.ReactNode;
   hideHeader?: boolean;
   headerOverride?: React.ReactNode;
@@ -48,16 +48,16 @@ export interface GuardrDrawerShellProps {
   variant?: 'default' | 'dark';
   children: React.ReactNode;
   ariaLabel?: string;
-  /** Force the Uber Freight page title band on surfaces that opt out by default. */
+  /** Force the desktop workspace page title band on surfaces that opt out by default. */
   showTitleBand?: boolean;
   /** Breadcrumb parent rendered before the page title, e.g. "Jobs". */
   pageBreadcrumb?: string;
   /** Actions rendered on the right of the page title band. */
   pageActions?: React.ReactNode;
-  /** Primary tabs for Uber-style bottom nav on mobile/PWA/APK. */
+  /** Primary tabs for Guardr-style bottom nav on mobile/PWA/APK. */
   mobileBottomNavItems?: GuardrNavItem[];
   mobileBottomNavOverflow?: GuardrNavItem[];
-  /** Org/location selector shown in desktop page header (Uber Direct). */
+  /** Org/location selector shown in desktop page header (Guardr Direct). */
   headerContext?: React.ReactNode;
   /**
    * Pin chrome to one layout regardless of viewport form factor.
@@ -135,11 +135,11 @@ export function GuardrDrawerShell({
 
   // The rail is navigation, not chrome: it stays put on full-bleed map and
   // active-shift screens that suppress the page header.
-  // Desktop: icon rail only when the labelled panel is collapsed (Uber Freight TMS).
+  // Desktop: icon rail only when the labelled panel is collapsed (desktop ops workspace).
   const showIconRail = chrome.showIconRail && (!isDesktopWorkspace || !sidebarOpen);
   const showHeaderSidebarToggle = isDesktopWorkspace && chrome.collapsibleSidebar && sidebarOpen;
 
-  // Uber Freight TMS puts every workspace destination on the rail, so it stays
+  // desktop ops workspace puts every workspace destination on the rail, so it stays
   // usable with the labelled panel collapsed. Taking only the first nav group
   // left the rail with two icons beside a full-width text drawer.
   const railItems = useMemo(() => {
@@ -206,7 +206,7 @@ export function GuardrDrawerShell({
     minWidth: `${iconSize}px`,
     minHeight: `${iconSize}px`,
     borderRadius: chrome.nativeChrome || chrome.premiumChrome ? '12px' : '10px',
-    // Uber's app headers use a ghost icon button; the outlined chip only
+    // Base Web app headers use a ghost icon button; the outlined chip only
     // appears when the header floats over a map.
     border: isMapMode ? `1px solid ${theme.colors.borderOpaque}` : 'none',
     backgroundColor: isMapMode ? theme.colors.backgroundPrimary : 'transparent',
@@ -285,7 +285,7 @@ export function GuardrDrawerShell({
         },
       }}
     >
-      {/* Sidebar brand — hidden on Uber Direct desktop (logo lives in global top bar) */}
+      {/* Sidebar brand — hidden on Guardr Direct desktop (logo lives in global top bar) */}
       {!isDesktopWorkspace ? (
       <Block
         className={isDesktopWorkspace ? 'uber-direct-sidebar-brand' : 'mobility-drawer-brand'}

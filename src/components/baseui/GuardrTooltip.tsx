@@ -2,7 +2,7 @@
  * GuardrTooltip — Base Web Tooltip wrapper.
  * https://baseweb.design/components/tooltip/
  *
- * Uber pattern: dark background tooltip with white text.
+ * Base Web pattern: dark background tooltip with white text.
  */
 
 import React from 'react';

@@ -3,11 +3,24 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.117**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.118**
 
 ---
 
-This is my running log of what shipped on Guardr. I'm building the Uber-for-security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.118
+
+**Shipped**
+- **Docs & comments** — removed all third-party brand mentions from README, dev docs, and code comments; code identifiers unchanged (`uber-*` CSS, component names, file paths)
+- Renamed `docs/uber-patterns.md` → `docs/design-patterns.md`; cursor commands `/design` and `/platforms`
+- **v1.0.118** (build **218**) web + PWA + APK version alignment
+
+**Release verification**
+- Lint, test (588), build green
+- No open PRs after merge
 
 ---
 
@@ -18,7 +31,7 @@ This is my running log of what shipped on Guardr. I'm building the Uber-for-secu
 
 **Shipped**
 - **Homepage nav** — **Download** → `/download` (APK + PWA install) and **Manuals** → combined PDF on desktop, mobile, and tablet landing
-- **Footers** — same links on desktop, Uber, and shared landing footer
+- **Footers** — same links on desktop, mobile, and shared landing footer
 - **v1.0.117** (build **217**) web + PWA + APK version alignment
 - PWA service worker cache bust: `guardr-cache-v1-0-117-beta`
 
@@ -344,7 +357,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]
 ## Wednesday, July 22, 2026 — /mergeit + /updateit → v1.0.91
 
 **Downloads page (brand match)**
-- Restyled [guardr.co/download](https://www.guardr.co/download) from sage-on-black cards to Uber-style black/white Guardr chrome (sticky black nav, flat panels, black CTAs)
+- Restyled [guardr.co/download](https://www.guardr.co/download) from sage-on-black cards to Guardr-style black/white Guardr chrome (sticky black nav, flat panels, black CTAs)
 - In-app install screen CTAs/highlights no longer use emerald leftovers — black primary to match landing
 
 **Icons / permissions / chrome (already on main, CI fixed)**
@@ -368,7 +381,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]
 - Sign-in/sign-up **Back** returns to role picker (not home)
 - Android/browser system back follows auth trail: home → role picker → sign-in form
 - Refresh keeps the same auth screen via URL state
-- Sign-in/sign-up forms match Uber-style role picker layout
+- Sign-in/sign-up forms match Guardr-style role picker layout
 
 **Staff management / insights**
 - Management, platform, and insight pages use flat ops canvas (no grey card boxes in dark mode)
@@ -442,7 +455,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]
 - Cities / markets page renamed **Service Areas** (Operations nav group kept)
 - New **Locations** tab for shared job-site QC — reusable across jobs/clients when the address matches
 - Solid brand black/white surfaces on staff list pages (no grey tab/search/inbox washes)
-- Welcome splash: Sign in / Sign up spacing; Uber Direct restyle earlier in the day
+- Welcome splash: Sign in / Sign up spacing; Guardr Direct restyle earlier in the day
 
 **Staff roles / permissions**
 - New **Support** role under Moderator
@@ -499,7 +512,7 @@ Also already reflected in `supabase/complete_schema_setup.sql`. Realtime publica
 
 **Map & Next Job**
 - Empty map dock shows **Next Job** with live countdown inside 24h; tap → briefing + slide to start heading
-- Full-screen Uber-style active job from en route through complete
+- Full-screen Guardr-style active job from en route through complete
 - Map browse: guards see available + claimed + flashing direct requests; clients see own upcoming; staff sees site-wide active/upcoming; past/canceled/missed stay on **Jobs** only
 
 **Staff UX**
@@ -552,7 +565,7 @@ Also already reflected in `supabase/complete_schema_setup.sql`.
 ## The big picture (what mattered most)
 
 1. **Jun 6** — Kicked the project off. Guardr brand, Supabase, staff roles, self-audit foundation.
-2. **Jun 7** — Uber-style redesign, Stripe in, PWA + cross-platform base.
+2. **Jun 7** — Guardr-style redesign, Stripe in, PWA + cross-platform base.
 3. **Jun 8** — **guardr.co** live on Vercel.
 4. **Jun 9** — Sidebar nav, BSIS compliance engine, payments pipeline, realtime sync.
 5. **Jun 10** — Job applications, self-audit and spot-check flows.
@@ -583,20 +596,20 @@ First real day on the build. 15 commits, 4 PR merges. Got Guardr named, wired Su
 | 4:47 PM | Mock data cleaned up; migrations hardened |
 | 5:05 PM | Premium branding — "Guardr by Signature Security Specialist"; logo; manifest |
 | 5:14 PM | Footer + hero URL fixes |
-| 6:32–7:42 PM | Merged 4 PRs: Uber-style design, guard/client split, redesign, auth routing |
+| 6:32–7:42 PM | Merged 4 PRs: Guardr-style design, guard/client split, redesign, auth routing |
 
 ---
 
 ## Sunday, June 7, 2026 — MVP day
 
-Big build day — 30 commits. Uber-inspired look, guard/client split, Stripe, PWA foundation.
+Big build day — 30 commits. refined look, guard/client split, Stripe, PWA foundation.
 
 | Time | What shipped |
 |------|----------------|
-| Early AM | Uber Base styling; shift scheduling |
+| Early AM | Base Web styling; shift scheduling |
 | Early AM | Guard and client as separate full-screen apps |
-| Early AM | Full Uber redesign (sage green); Dark / Light / Grey themes |
-| 11:04 AM | MVP to spec; Uber Driver-style guard map |
+| Early AM | Full platform redesign (sage green); Dark / Light / Grey themes |
+| 11:04 AM | MVP to spec; field-app guard map |
 | 11:13 AM | Roles + permission gates on workflows |
 | 11:14 AM | Removed all AI/Gemini stuff |
 | 11:18 AM | Client ops dashboard rebuilt |
@@ -620,7 +633,7 @@ Got it on the real domain. 21 commits.
 
 | Time | What shipped |
 |------|----------------|
-| 5:03 AM | Uber driver UI; theme app-wide |
+| 5:03 AM | field-app UI; theme app-wide |
 | 5:55 AM | **guardr.co** production domain |
 | 6:15 AM | Vercel config + setup guide |
 | 6:56–7:19 AM | Vercel API fixes — serverless routes, lazy Stripe/Supabase |
@@ -687,7 +700,7 @@ Got it on the real domain. 21 commits.
 | 12:13 AM | Job offers need staff approval before client pays |
 | 12:45 AM | Guard job applications + staff approval |
 | 12:54 AM | Pro job listing details |
-| 12:56 AM | Uber-style map routing + offer cards |
+| 12:56 AM | Guardr-style map routing + offer cards |
 | 12:58 AM | Map tiles follow theme |
 | 1:05 AM | Job details flattened |
 | 1:19 AM | Rehire only guards who worked job before |
@@ -754,7 +767,7 @@ Staff-provisioned accounts get default password `#Qwerty12345` with change promp
 | 6:40 AM | Message threads open separate |
 | 6:40 AM | Staff approvals → hub/queue/detail |
 | 6:40 AM | Legal terms, privacy, marketplace copy |
-| 6:40 AM | Full audit + Uber design system |
+| 6:40 AM | Full audit + design system |
 | 6:40 AM | Push API Vercel bundling |
 | 6:40 AM | Flat edges, list rows, sage on black |
 | 6:40 AM | Messages live sync |
@@ -787,7 +800,7 @@ Staff-provisioned accounts get default password `#Qwerty12345` with change promp
 
 ## Tuesday, June 23, 2026 — Responsive + messenger
 
-227 commits — biggest day on the repo. Uber mirror overhaul, overtime, messenger v2.
+227 commits — biggest day on the repo. design mirror overhaul, overtime, messenger v2.
 
 | Time | What shipped |
 |------|----------------|
@@ -803,7 +816,7 @@ Staff-provisioned accounts get default password `#Qwerty12345` with change promp
 | 12:24 AM | Grace-period guards can claim |
 | 12:24 AM | Staff-then-client guard approval |
 | 12:24 AM | In-app workflow guide |
-| 12:24 AM | **Uber design mirror** — mobile/tablet/desktop Waves 1–3 |
+| 12:24 AM | **design mirror** — mobile/tablet/desktop Waves 1–3 |
 | 12:24 AM | Sidebar theme switcher |
 | 12:24 AM | Cash flows refined |
 | 12:24 AM | On-duty timer from clock-in |
@@ -927,7 +940,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | Date | Commits | What happened |
 |------|---------|---------------|
 | **Jun 6** | 15 | App born — Guardr, Supabase, self-audit, themes |
-| **Jun 7** | 30 | Uber redesign, Stripe, PWA, certs |
+| **Jun 7** | 30 | platform redesign, Stripe, PWA, certs |
 | **Jun 8** | 21 | guardr.co live |
 | **Jun 9** | 127 | Sidebar, BSIS, payments, wireframe UI |
 | **Jun 10** | 33 | Job apps, self-audit, map routing |
@@ -1087,15 +1100,15 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (morning) — /updateit → v1.0.72
 
-**/uberit UI migration (phases 3–6, #629)**
-- **Stock Uber Base Web theme** — `LightTheme` / `DarkTheme` via `uberBaseTheme.ts`; sage brand deferred to later pass
+**/platform-ui UI migration (phases 3–6, #629)**
+- **Stock Base Web Web theme** — `LightTheme` / `DarkTheme` via `uberBaseTheme.ts`; sage brand deferred to later pass
 - **Phase 3** — shared primitives: `AppButton`, `AppPrimitives`, wireframe kit, field styles
 - **Phase 4** — dashboard kit (`DashboardHero`, `MetricCell`, `QuickActionTile`, `UberThemeVars`); hub screens: client home, staff overview, guard earnings, user profile
 - **Phase 5** — overlay gates (`LegalAcceptanceModal`, onboarding, briefing, lightbox); `AppFormSheet` Base Web rebuild; removed dead `GuardBottomSheet`
 - **Phase 6** — design-preview parity (`/design-preview.html`); `ComponentShowcase`; staff live QA at `/staff/design-qa`
 
 **PR cleanup**
-- Merged uberit stack via **#629**; closed **#623–#628** (superseded or landed)
+- Merged platform UI stack via **#629**; closed **#623–#628** (superseded or landed)
 
 **Release:** **v1.0.72** (build **172**) — web + PWA cache bust (`guardr-cache-v1-0-72`) + CI FCM APK
 
@@ -1123,14 +1136,14 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (midday) — /updateit → v1.0.74
 
-**/uberit Phase 2 — home + auth (#635)**
+**/platform-ui Phase 2 — home + auth (#635)**
 - **Home page** — `PublicLandingHeader`, `LandingUberPrimitives`, `GuardrCard`/`GuardrTag`/`AppButton` sections; desktop landing rebuilt with Base Web `Block` layout
 - **Sign-in / sign-up** — `AuthFormChrome` (segmented control, role picker), `AppButton` submit, `GuardrSheet` for PWA auth sheet
-- **Auth hero** — Uber accent gradient via `--uber-accent` (`.auth-experience--uber`)
+- **Auth hero** — accent gradient via `--uber-accent` (`.auth-experience--uber`)
 - **`GuardrCard`** — optional `onClick` for interactive public cards
 
 **PR cleanup**
-- Merged **#635** (uberit home/auth); no open PRs at release
+- Merged **#635** (platform UI home/auth); no open PRs at release
 
 **Release:** **v1.0.74** (build **174**) — web + PWA cache bust (`guardr-cache-v1-0-74`) + CI FCM APK
 
@@ -1140,7 +1153,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (late morning) — /updateit → v1.0.75
 
-**/uberitplatforms Phase 1 — PWA/APK welcome + auth (#637)**
+**/platform-uiplatforms Phase 1 — PWA/APK welcome + auth (#637)**
 - **App welcome** — `AppWelcomeChrome` with shell-specific hero copy, `GuardrCard` role dock, `AppButton` CTAs for `pwa-mobile/tablet` and `native-mobile/tablet`
 - **Auth sheet** — `auth-sheet--{viewSurface}` + `auth-sheet-panel--{shellKind}` for PWA glass vs APK safe-area chrome
 - **CSS** — `app-pwa.css` / `app-native.css` use `--uber-*` tokens for welcome dock and auth sheet
@@ -1148,7 +1161,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 - **Docs** — `CROSS_PLATFORM.md` pre-auth surface matrix
 
 **PR cleanup**
-- Merged **#637** (uberitplatforms); no open PRs at release
+- Merged **#637** (platform UIplatforms); no open PRs at release
 
 **Release:** **v1.0.75** (build **175**) — web + PWA cache bust (`guardr-cache-v1-0-75`) + CI FCM APK
 
@@ -1158,10 +1171,10 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (afternoon) — /updateit → v1.0.76
 
-**/uberit — unified drawer sidebar + Uber app body (#639, merged via #640)**
+**/platform-ui — unified drawer sidebar + app shell body (#639, merged via #640)**
 - **`GuardrDrawerShell`** — Base Web drawer sidebar with `GuardrSideNav` for client, guard, and staff on **all breakpoints** (replaces mobile bottom nav and tablet icon rail)
 - **`RoleAppShell` / `StaffOpsLayout`** — single shell path; map bleed, header overrides, and nav permission gates preserved
-- **Body chrome** — Uber `backgroundPrimary` content pane; `.uber-app-shell` CSS bridge maps legacy `bg-brand-*` / `text-brand-*` to `--uber-*` tokens inside the shell
+- **Body chrome** — Guardr `backgroundPrimary` content pane; `.uber-app-shell` CSS bridge maps legacy `bg-brand-*` / `text-brand-*` to `--uber-*` tokens inside the shell
 - **Design preview** — mobile/tablet/desktop all use drawer sidebar
 
 **PR cleanup**
@@ -1177,11 +1190,11 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (late afternoon) — /updateit → v1.0.77
 
-**/uberit — complete Uber surface finish (#642, merged via #643)**
-- **`GuardrDrawerShell`** — Uber-style persistent desktop sidebar, drawer on mobile/tablet/PWA/APK, compact top bar with inline title, gray content canvas
+**/platform-ui — complete surface finish (#642, merged via #643)**
+- **`GuardrDrawerShell`** — Guardr-style persistent desktop sidebar, drawer on mobile/tablet/PWA/APK, compact top bar with inline title, gray content canvas
 - **`uber-surfaces.css`** — remaps legacy `adm-*`, `app-*`, and `bg-brand-*` inside `.uber-app-shell` to `--uber-*` tokens on all breakpoints
 - **`AppPrimitives`** — Base Web `AppEmptyState`, `AppScreen`, `AppSection`, `AppHeroBand`, `AppStatusBanner`
-- **Docs** — `uberit-patterns.md` surface bridge notes
+- **Docs** — `platform UI-patterns.md` surface bridge notes
 
 **PR cleanup**
 - Merged **#642** and **#643**; no open PRs at release
@@ -1196,7 +1209,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (evening) — /updateit → v1.0.78
 
-**/runit — Uberit shell audit + surface bridge (#645)**
+**/runit — Platform UI shell audit + surface bridge (#645)**
 - **Mobile layout fix** — drawer sidebar no longer reserves 260px in flex row on phone/tablet
 - **Accessibility** — Escape closes drawer; `prefers-reduced-motion` for sidebar transition
 - **`uber-surfaces.css`** — stat cards, quick links, charts, role badges on all breakpoints inside shell
@@ -1214,8 +1227,8 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Friday, July 17, 2026 (night) — /updateit → v1.0.79
 
-**Uber Base Web redesign — Phases 1–5 (#651, merged from #650)**
-- **Phase 1:** Global Uber tokens, `uber-global.css`, black CTAs, sage-green removal
+**Base Web Web redesign — Phases 1–5 (#651, merged from #650)**
+- **Phase 1:** Global design tokens, `uber-global.css`, black CTAs, sage-green removal
 - **Phase 2:** High-traffic workbenches (`StaffOverviewDesktop`, `GuardMyJobsDesktop`, `ClientRequestsDesktop`)
 - **Phase 3:** Remaining role dashboards → `WorkbenchLayout` adapters (`WorkbenchSplit`, `WorkbenchTabBar`, `WorkbenchFlatSplit`)
 - **Phase 4:** Dashboard kit (`DashboardHero`, `MetricStrip`, `MetricCell`) on staff finance + client hubs
@@ -1234,7 +1247,7 @@ No new PRs to merge (#570 / #572 superseded — close on GitHub).
 
 ## Sunday, July 19, 2026 — /updateit → v1.0.83
 
-**Uber-style mobile polish (#708–#709)**
+**Guardr-style mobile polish (#708–#709)**
 - **#708** — Staff cert review: flat on-page latest info, full-screen image viewer, history for prior uploads only, no title ellipsis
 - **#709** — Global subscreen headers wrap titles (never `...`); auth mobile/PWA safe-area padding matches role-choice page; staff credential/application inbox rows wrap full titles
 

@@ -2,7 +2,7 @@ import type { JobStatus } from '../types';
 import type { StatusTone } from '../components/baseui/StatusChip';
 
 /**
- * Uber's operations surfaces tint a row's state by what it means for the work:
+ * Base Web operations surfaces tint a row's state by what it means for the work:
  * live work reads as info, finished work as positive, anything waiting on a
  * person as warning, and a failed booking as negative.
  */
@@ -36,7 +36,7 @@ const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   closed: 'Closed',
 };
 
-/** Sentence-case label — Uber never shows a raw slug like `in-progress`. */
+/** Sentence-case label — Base Web never shows a raw slug like `in-progress`. */
 export function jobStatusLabel(status: JobStatus): string {
   return JOB_STATUS_LABELS[status] ?? status;
 }

@@ -7,7 +7,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] {
   background: var(--uber-bg, #ffffff);
 }
 
-/* ─── Icon rail (Uber Freight TMS) ────────────────────────────────────────────
+/* ─── Icon rail (desktop ops workspace) ────────────────────────────────────────────
    Black column pinned to the left edge of the workspace: app menu toggle on
    top, primary destinations below. The labelled panel beside it keeps every
    group, so the rail never hides a destination.
@@ -138,7 +138,7 @@ html.theme-dark .uber-rail-btn[data-active='true'] {
   color: #ffffff;
 }
 
-/* Hover label — Uber shows the destination name beside the rail. */
+/* Hover label — Guardr shows the destination name beside the rail. */
 .uber-rail-tip {
   position: absolute;
   left: calc(100% + 8px);
@@ -177,7 +177,7 @@ html.theme-dark .uber-rail-tip {
   }
 }
 
-/* ─── Page title band (Uber Freight TMS) ──────────────────────────────────── */
+/* ─── Page title band (desktop ops workspace) ──────────────────────────────────── */
 
 .uber-page-band {
   display: flex;
@@ -471,7 +471,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   font-size: 12px;
 }
 
-/* Side nav — Uber Direct pills + section labels */
+/* Side nav — Guardr Direct pills + section labels */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav [data-baseweb="side-nav"] {
   padding: 0 12px;
 }
@@ -1008,7 +1008,7 @@ body[data-view-surface$="-desktop"] .mobility-drawer-footer .uber-direct-sidebar
   width: 120px;
 }
 
-/* ─── Global Uber Direct top header (auth + signed-in desktop) ─────────────── */
+/* ─── Global Guardr Direct top header (auth + signed-in desktop) ─────────────── */
 
 .uber-direct-top-header {
   flex-shrink: 0;
@@ -1019,7 +1019,7 @@ body[data-view-surface$="-desktop"] .mobility-drawer-footer .uber-direct-sidebar
   z-index: 30;
 }
 
-/* Signed-in desktop — Uber Freight black product bar */
+/* Signed-in desktop — desktop workspace black product bar */
 body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header {
   background: #000000;
   border-bottom-color: #000000;
@@ -1100,7 +1100,7 @@ html.theme-dark .uber-direct-page-cta {
   min-width: 0;
 }
 
-/* Centred workspace context — "Bev's Beverages Operations" in Uber Freight. */
+/* Centred workspace context — "Bev's Beverages Operations" in desktop workspace. */
 .uber-direct-top-header-context {
   margin: 0;
   grid-column: 2;

@@ -1,8 +1,8 @@
-# /uber — Complete platform UI/UX redesign (Uber Base Web)
+# /design — Complete platform UI/UX redesign (Base Web)
 
-Completely redesign every user-facing surface using **Uber Base Web** and the **Uber Base Design System** while preserving 100% of existing functionality.
+Completely redesign every user-facing surface using **Base Web** and the **Base Web Design System** while preserving 100% of existing functionality.
 
-> **Current migration policy:** Use **stock Uber Base Web themes** (`LightTheme` / `DarkTheme`). Do **not** apply Guardr sage-green or custom `--brand-*` overrides in Base Web components during migration. Brand colors return in a later pass.
+> **Current migration policy:** Use **stock Base Web themes** (`LightTheme` / `DarkTheme`). Do **not** apply Guardr sage-green or custom `--brand-*` overrides in Base Web components during migration. Brand colors return in a later pass.
 
 ---
 
@@ -10,11 +10,11 @@ Completely redesign every user-facing surface using **Uber Base Web** and the **
 
 Study before any work:
 
-- https://github.com/uber/baseweb
-- https://github.com/uber/base-design-docs
-- https://github.com/adrianhajdin/uber
-- Internal patterns: `docs/uber-patterns.md`
-- `docs/guardedesign.md` · `.cursor/commands/uberplatforms.md` (per-platform specs)
+- https://baseweb.design
+- https://baseweb.design
+- 
+- Internal patterns: `docs/design-patterns.md`
+- `docs/guardedesign.md` · `.cursor/commands/platforms.md` (per-platform specs)
 
 Implement design philosophy, component architecture, accessibility, layout, spacing, typography, motion, interaction patterns, and responsive guidelines from these resources.
 
@@ -70,7 +70,7 @@ Each surface gets a **dedicated design** — not a scaled copy.
 
 | Layer | Location |
 |-------|----------|
-| **Stock Uber theme** | `src/theme/uberBaseTheme.ts` (`LightTheme` / `DarkTheme`) |
+| **Stock Base Web theme** | `src/theme/uberBaseTheme.ts` (`LightTheme` / `DarkTheme`) |
 | Motion tokens | `src/theme/motionTokens.ts` |
 | Provider | `src/components/baseui/BaseUIProvider.tsx` |
 | Adapters | `src/components/baseui/Guardr*.tsx` |
@@ -99,7 +99,7 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 ## Migration phases
 
 ### Phase 0 — Foundation
-- Stock Uber `LightTheme` / `DarkTheme` via `BaseUIProvider`
+- Stock Base Web `LightTheme` / `DarkTheme` via `BaseUIProvider`
 - Shared adapters: Button, Card, Input, Tag, Skeleton
 - Motion tokens + `AppCarousel`
 - Design-preview uses same provider stack
@@ -114,7 +114,7 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - `RoleAppShell`, `DesktopAdminShell`, `TabletAdminShell`
 - `StaffOpsLayout`, `ClientAppLayout`
 - Public: `HomePage`, `AuthPage`, `AppHomeScreen`
-- Nav active states use `accent` / `accent50` (Uber blue)
+- Nav active states use `accent` / `accent50` (accent blue)
 
 ### Phase 3 — Shared primitives
 - `AppPrimitives.tsx` form/list exports
@@ -180,7 +180,7 @@ Button press, hover elevation, focus rings, validation transitions, modal/drawer
 
 ## Component standards
 
-Use Uber Base Web components wherever practical. Consistent language for buttons, cards, forms, typography, inputs, menus, drawers, tables, lists, dialogs, tags, notifications, tabs, accordions.
+Use Base Web components wherever practical. Consistent language for buttons, cards, forms, typography, inputs, menus, drawers, tables, lists, dialogs, tags, notifications, tabs, accordions.
 
 ---
 
@@ -200,7 +200,7 @@ Use Uber Base Web components wherever practical. Consistent language for buttons
 - [ ] Typography hierarchy correct
 - [ ] 4px/8px spacing scale
 - [ ] WCAG AA contrast, keyboard focus, reduced motion
-- [ ] Light + Dark theme tested (stock Uber)
+- [ ] Light + Dark theme tested (stock Base Web)
 - [ ] PWA + APK safe-area when touching chrome
 - [ ] Functionality unchanged
 
@@ -208,7 +208,7 @@ Use Uber Base Web components wherever practical. Consistent language for buttons
 
 ## Branch & PR
 
-- Branch: `cursor/uber-<descriptive-name>-9c4c`
+- Branch: `cursor/design-<descriptive-name>-9c4c`
 - Base branch: `main`
 
 ---

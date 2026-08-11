@@ -4,7 +4,7 @@
    Targets all 9 viewSurface cells + public marketing surfaces.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─── Typography (Uber-inspired stack — not Guardr IBM Plex) ─────────────── */
+/* ─── Typography (refined stack — not Guardr IBM Plex) ─────────────── */
 
 body.mobility-platform,
 body[data-view-surface] {
@@ -13,7 +13,7 @@ body[data-view-surface] {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Global token remap: sage brand → Uber accent (entire app) ─────────── */
+/* ─── Global token remap: sage brand → accent (entire app) ─────────── */
 
 html.theme-light,
 html.theme-dark,
@@ -40,7 +40,7 @@ html.theme-grey {
   --mobility-header-h: 56px;
 }
 
-/* Dark mode depth — Uber layers near-black surfaces rather than painting the
+/* Dark mode depth — Base Web layers near-black surfaces rather than painting the
    whole shell #000, so navigation and chrome stay legible against content. */
 html.theme-dark .uber-app-shell .mobility-drawer,
 html.theme-dark .uber-app-shell .uber-direct-sidebar,
@@ -189,7 +189,7 @@ body[data-shell="native"] .uber-app-shell.mobility-shell {
   background: var(--uber-bg, #fff);
 }
 
-/* PWA / APK welcome — Uber only, no brand fallbacks */
+/* PWA / APK welcome — Base Web only, no brand fallbacks */
 body[data-shell="pwa"] .app-welcome,
 body.shell-pwa .app-welcome {
   background: var(--uber-bg, #ffffff);
@@ -240,7 +240,7 @@ body[data-form-factor="desktop"] {
   --adm-border: var(--uber-border, #e2e2e2);
 }
 
-/* ─── Uber black CTA inside signed-in shell ─────────────────────────────── */
+/* ─── Guardr black CTA inside signed-in shell ─────────────────────────────── */
 
 .uber-app-shell .adm-btn--sand,
 .uber-app-shell .app-button-primary {
@@ -274,7 +274,7 @@ html.theme-dark .uber-app-shell .app-button-primary {
   box-shadow: none;
 }
 
-/* ─── Desktop — Uber Direct workspace (white sidebar + gray canvas) ─────── */
+/* ─── Desktop — Guardr Direct workspace (white sidebar + gray canvas) ─────── */
 
 body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] aside {
   background: var(--uber-bg, #ffffff);
@@ -294,7 +294,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-dir
   padding-top: 0;
 }
 
-/* Legacy black header — only when not using Uber Direct layout */
+/* Legacy black header — only when not using Guardr Direct layout */
 body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header {
   background: #000 !important;
   border-bottom: none !important;

@@ -5,7 +5,7 @@ import { MapPin, Shield, Star, Radio, ChevronRight, Phone } from 'lucide-react';
 import { FONT_DISPLAY } from '../../../theme/typography';
 
 /**
- * Hero illustration — mimics Uber's mobile app screenshot:
+ * Hero illustration — mimics Base Web mobile app screenshot:
  * map background with white bottom sheet showing a guard profile card.
  */
 export function UberLandingHeroVisual() {
@@ -263,7 +263,7 @@ export function UberLandingHeroVisual() {
   );
 }
 
-/** Login band visual — Uber-style guard profile card */
+/** Login band visual — Guardr-style guard profile card */
 export function UberLandingLoginVisual() {
   const [, theme] = useStyletron();
   const isDark = theme.colors.backgroundPrimary !== '#FFFFFF' && theme.colors.backgroundPrimary !== 'white';

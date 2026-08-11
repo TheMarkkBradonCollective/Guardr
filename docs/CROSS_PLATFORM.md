@@ -20,7 +20,7 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 
 1. **Web app (responsive)** — in progress; mobile-first guard UX, client SaaS flow, staff dashboard
 2. **PWA installability** — manifest, service worker, install prompt, standalone safe areas
-3. **Guard mobile UX** — Uber-style bottom nav, large touch targets, optional map
+3. **Guard mobile UX** — Guardr-style bottom nav, large touch targets, optional map
 4. **Staff command center** — ops sidebar; tablet split panels on staff-ops branch
 5. **Capacitor wrappers** — Android APK available (`npm run android:apk`); iOS pending Apple Developer account
 6. **App Store + Play Store** — Apple Developer account, FCM native push, Stripe compliance
@@ -111,14 +111,14 @@ src/components/baseui/layout/mobilityChrome.ts — tier-aware shell chrome
 src/styles/platform-optimizations.css — per-surface + per-tier CSS
 ```
 
-### Pre-auth surfaces (`/uberplatforms` — Phase 1)
+### Pre-auth surfaces (`/platforms` — Phase 1)
 
 | Surface | Component | Notes |
 |---------|-----------|-------|
 | `browser-desktop` | `DesktopLandingPage` | Base Web split editorial + preview |
 | `browser-tablet` | `TabletLandingPage` | Touch-first 2-column landing (not scaled desktop) |
 | `browser-mobile` | `MobileLandingPage` | Thumb-first landing + fixed CTA bar |
-| `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Glass dock, “Installed” badge, Uber accent hero copy |
+| `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Glass dock, “Installed” badge, accent hero copy |
 | `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Solid dock, safe-area padding, native press feedback |
 
 Central files:
@@ -137,7 +137,7 @@ src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 
 Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
-### Uber mobility platform (`/uberplatforms` Phase 2)
+### Base Web mobility platform (`/platforms` Phase 2)
 
 | Surface | Shell behavior |
 |---------|----------------|
@@ -156,7 +156,7 @@ Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`**
 | Guard performance | `GuardPerformanceScreen` | Migrated — `WorkbenchFlatSplit` |
 | Guard preferences / availability | `GuardPreferencesScreen`, `GuardAvailabilityScreen` | Migrated — `WorkbenchPage` + toolbar |
 | Client reports desktop | `ClientReportsDesktop` | Migrated — `WorkbenchTabBar` + `WorkbenchSplit` |
-| Client invoice panel | `ClientInvoicePanel` | Migrated — `GuardrButton`, Uber table typography |
+| Client invoice panel | `ClientInvoicePanel` | Migrated — `GuardrButton`, Base Web table typography |
 | Client guard directory | `ClientDashboard` (guards view) | Migrated — `WorkbenchFlatSplit` |
 | Staff incidents / violations / disputes | `StaffIncidentsPanel`, etc. | Migrated — `WorkbenchPage` + `WorkbenchSplit` |
 | Staff payments / legal / cities / audit | Staff ops panels | Migrated — workbench adapters |
@@ -202,7 +202,7 @@ Central files:
 
 ```
 src/components/baseui/layout/WorkbenchLayout.tsx  — WorkbenchPage, Split, StatChips, Grid
-src/styles/uber-workbench.css                     — Uber workbench layout CSS
+src/styles/uber-workbench.css                     — Base Web workbench layout CSS
 src/components/staff/StaffOverviewDesktop.tsx     — staff command center (desktop)
 src/components/guard/GuardMyJobsDesktop.tsx       — guard shifts workbench
 src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
@@ -210,21 +210,21 @@ src/components/client/ClientRequestsDesktop.tsx   — client jobs workbench
 
 ## Theme System
 
-- **Presentation layer:** Uber Base Web tokens via `guardrBaseTheme.ts` / `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
+- **Presentation layer:** Base Web tokens via `guardrBaseTheme.ts` / `uberBaseTheme.ts`, `uber-tokens.css`, `uber-global.css`, and `uber-mobility.css`
 - **Themes:** Light (default web/PWA), Dark (default APK) — black/white primary CTAs, monochrome accent system
 - **Experience tiers:** PWA Full/Lite and APK Full/Premium adjust chrome, motion, and haptics without changing feature set
-- **Typography:** Uber Move / Uber Move Text stack
+- **Typography:** Guardr Sans / Guardr Sans stack
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
 
-### Uber design system files (`/uberplatforms` complete)
+### design system files (`/platforms` complete)
 
 ```
 src/styles/uber-tokens.css      — canonical --uber-* tokens + --brand-* bridge
 src/styles/uber-global.css      — global presentation overrides (buttons, cards, inputs, tables)
 src/styles/uber-mobility.css    — per-viewSurface shell chrome
 src/styles/uber-surfaces.css    — legacy adm-*/app-* bridge inside .uber-app-shell
-src/styles/uber-landing.css     — public marketing (Uber.com homepage pattern)
+src/styles/uber-landing.css     — public marketing (mobility homepage pattern)
 src/styles/app-pwa.css          — PWA glass chrome, safe areas
 src/styles/app-native.css       — APK native touch targets, safe areas
 src/components/baseui/          — Base Web adapters (GuardrButton, GuardrCard, etc.)
@@ -247,7 +247,7 @@ Design foundation in `src/lib/platform/offlineQueue.ts`:
 
 | Persona | Reference | Guardr surface |
 |---------|-----------|----------------|
-| Guard | Uber Driver | Map/opportunities, self-audit, earnings |
+| Guard | guard field app | Map/opportunities, self-audit, earnings |
 | Staff / Admin | Stripe Dashboard | Ops center, approvals, payments |
 | Client | Airbnb host flow | Request wizard, live coverage, reports |
 | Real-time | Slack | Activity feed (from real job events only) |

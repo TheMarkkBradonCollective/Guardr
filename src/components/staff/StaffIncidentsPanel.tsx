@@ -29,7 +29,7 @@ const SEVERITY_TONE: Record<OpsIncident['severity'], 'default' | 'primary' | 'su
   critical: 'danger',
 };
 
-/** Severity climbs from neutral to negative the way Uber tints escalating states. */
+/** Severity climbs from neutral to negative the way Base Web tints escalating states. */
 const SEVERITY_CHIP_TONE: Record<OpsIncident['severity'], StatusTone> = {
   low: 'neutral',
   medium: 'warning',

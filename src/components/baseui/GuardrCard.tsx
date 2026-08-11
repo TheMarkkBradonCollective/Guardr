@@ -25,10 +25,10 @@ export type GuardrCardProps = Omit<CardProps, 'overrides'> & {
 };
 
 /**
- * Guardr card — real Uber app style.
+ * Guardr card — Production Guardr app style.
  * White background, very light border, minimal shadow.
- * "service" variant: gray background (#F6F6F6) like Uber's service tiles.
- * "selected" variant: black border like Uber's selected ride card.
+ * "service" variant: gray background (#F6F6F6) like Base Web service tiles.
+ * "selected" variant: black border like Base Web selected ride card.
  */
 export function GuardrCard({
   children,

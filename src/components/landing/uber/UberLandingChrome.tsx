@@ -214,7 +214,7 @@ export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: Ub
         </LabelSmall>
       </Block>
 
-      {/* Hero heading — matches Uber's bold style */}
+      {/* Hero heading — matches Base Web bold style */}
       <Block
         as="h1"
         margin={`0 0 ${theme.sizing.scale600}`}

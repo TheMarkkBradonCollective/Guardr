@@ -1,8 +1,8 @@
 /**
  * Guardr Base Web component library.
  *
- * All UI primitives built on https://baseweb.design/ with Uber's design
- * language (black/white, flat cards, Uber Move typography).
+ * All UI primitives built on https://baseweb.design/ with Base Web design
+ * language (black/white, flat cards, Guardr Sans typography).
  *
  * Usage:
  *   import { GuardrButton, GuardrInput, GuardrSpinner } from '@/src/components/baseui';

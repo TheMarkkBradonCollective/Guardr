@@ -1,5 +1,5 @@
 /**
- * Desktop landing — exact Uber.com homepage pattern.
+ * Desktop landing — exact mobility homepage homepage pattern.
  *
  * Layout:
  *   Black sticky nav bar (wordmark + links left, Log in + Sign up right)
@@ -319,7 +319,7 @@ function DesktopHero({
         {/* Heading */}
         <h1 className="dsk-hero-heading">{tab.heading}</h1>
 
-        {/* Sub-role cards — like Uber's Drive/Ride cards */}
+        {/* Sub-role cards — like Base Web Drive/Ride cards */}
         <div className="dsk-hero-role-cards">
           {tab.cards.map(({ icon: Icon, title, body }) => (
             <div key={title} className="dsk-hero-role-card">
@@ -339,7 +339,7 @@ function DesktopHero({
           ))}
         </div>
 
-        {/* Primary CTA — black solid like Uber's "Sign up to drive" */}
+        {/* Primary CTA — black solid like Base Web "Sign up to drive" */}
         <div className="dsk-hero-ctas">
           <button
             type="button"
@@ -530,7 +530,7 @@ function DesktopFooter({ onOpenLegal }: { onOpenLegal: (page: LegalPageId) => vo
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-/** Desktop browser landing — full Uber.com split-hero layout. */
+/** Desktop browser landing — full mobility homepage split-hero layout. */
 export function DesktopLandingPage({
   onNavigateToAuth,
   onOpenLegal,

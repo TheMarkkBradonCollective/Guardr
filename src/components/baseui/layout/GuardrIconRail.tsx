@@ -52,7 +52,7 @@ function RailButton({
 }
 
 /**
- * Uber Freight TMS icon rail — the black column pinned to the left edge of the
+ * desktop ops workspace icon rail — the black column pinned to the left edge of the
  * desktop workspace. Holds the app menu toggle plus primary destinations; the
  * labelled secondary nav lives in the white panel beside it.
  */

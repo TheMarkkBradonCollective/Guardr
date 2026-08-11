@@ -64,7 +64,7 @@ html.theme-dark .signature-security-brand:hover {
   color: color-mix(in srgb, #7AAE7F 88%, #ffffff);
 }
 
-/* ─── Primary buttons — Uber solid black ─────────────────────────────────── */
+/* ─── Primary buttons — solid black ─────────────────────────────────── */
 
 .uber-button-primary,
 .uber-button-sage,
@@ -182,7 +182,7 @@ html.theme-dark .uber-app-shell .adm-card {
   border-color: var(--uber-border, #2b2b2b);
 }
 
-/* Ride/job selection cards — Uber style with selected outline */
+/* Ride/job selection cards — Base Web style with selected outline */
 .uber-service-card {
   background: var(--uber-bg, #fff);
   border: 2px solid transparent;
@@ -202,7 +202,7 @@ html.theme-dark .uber-app-shell .adm-card {
 
 .uber-service-card:hover { background: var(--uber-surface, #f6f6f6); }
 
-/* ─── Service grid tiles — Uber home grid ────────────────────────────────── */
+/* ─── Service grid tiles — Guardr home grid ────────────────────────────────── */
 
 .uber-grid-tile {
   display: flex;
@@ -243,7 +243,7 @@ html.theme-dark .uber-grid-tile-icon { background: var(--uber-surface, #1a1a1a);
   white-space: nowrap;
 }
 
-/* ─── Inputs — Uber gray fill ────────────────────────────────────────────── */
+/* ─── Inputs — neutral gray fill ────────────────────────────────────────────── */
 
 .app-input,
 .app-textarea,
@@ -276,7 +276,7 @@ textarea:focus {
 input::placeholder,
 textarea::placeholder { color: var(--uber-text-muted, #767676); }
 
-/* Search bar — Uber booking bar style */
+/* Search bar — Guardr booking bar style */
 .uber-search-bar {
   display: flex;
   align-items: center;
@@ -361,7 +361,7 @@ a,
   padding: 3px 10px;
 }
 
-/* Uber "Cheaper" style badge */
+/* Base Web "Cheaper" style badge */
 .uber-badge-promo {
   background: color-mix(in srgb, var(--uber-positive, #048848) 16%, transparent);
   color: var(--uber-positive, #048848);

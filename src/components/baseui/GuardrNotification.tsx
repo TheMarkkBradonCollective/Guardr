@@ -2,7 +2,7 @@
  * GuardrNotification — Base Web Notification/Banner wrapper.
  * https://baseweb.design/components/notification/
  *
- * Uber pattern: full-width contextual notice (info/warning/error).
+ * Base Web pattern: full-width contextual notice (info/warning/error).
  */
 
 import React from 'react';

@@ -1276,7 +1276,7 @@ export function GuardDashboard({
     nextShiftJob.status === 'accepted' &&
     !showShiftOverlay;
 
-  // Uber-style trip lock: stay on the job map (messages allowed for client chat).
+  // Guardr-style trip lock: stay on the job map (messages allowed for client chat).
   useEffect(() => {
     if (!showShiftOverlay) return;
     if (tab !== 'map' && tab !== 'messages') setTab('map');

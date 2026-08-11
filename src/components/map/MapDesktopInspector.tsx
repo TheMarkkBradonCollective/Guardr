@@ -35,7 +35,7 @@ export function MapMobileBottomSheet({
 }: {
   children: React.ReactNode;
   className?: string;
-  /** `trip` = Uber-style full-bleed active job from en route through complete. */
+  /** `trip` = Guardr-style full-bleed active job from en route through complete. */
   mode?: 'sheet' | 'trip';
 }) {
   const { viewSurface } = useDevice();

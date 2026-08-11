@@ -59,7 +59,7 @@
   color: var(--uber-text-muted, #767676) !important;
 }
 
-/* Metric values keep Uber's tabular figures so stacked cards line up. */
+/* Metric values keep Base Web tabular figures so stacked cards line up. */
 .app-metric-cell-value,
 .dashboard-kpi-value,
 .guard-performance-stat-value,

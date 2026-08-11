@@ -1,6 +1,6 @@
 /**
  * Guardr-branded Base Web themes.
- * Monochrome black/white accent on top of stock Uber LightTheme / DarkTheme.
+ * Monochrome black/white accent on top of stock Base Web LightTheme / DarkTheme.
  */
 export {
   guardrLightTheme as uberLightTheme,
