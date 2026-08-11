@@ -36,7 +36,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'client',
     title: 'Client User Manual',
-    description: 'Post jobs, hire, pay, confirm coverage, and invoices.',
+    description: 'Post jobs, hire independent contractors, pay, costs, and invoices.',
     fileName: 'Guardr-Client-User-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Client-User-Manual.pdf`,
     forAudiences: ['all', 'client', 'staff'],
@@ -44,7 +44,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'guard',
     title: 'Guard User Manual',
-    description: 'Credentials, marketplace jobs, shifts, and payouts.',
+    description: 'Contractor status, credentials, shifts, earnings, and payouts.',
     fileName: 'Guardr-Guard-User-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Guard-User-Manual.pdf`,
     forAudiences: ['all', 'guard', 'staff'],
@@ -52,7 +52,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'staff',
     title: 'Staff Ops Manual',
-    description: 'Support through Founder — hiring, verification, and ops.',
+    description: 'Employee ops, governance, marketplace payments, and staff pay.',
     fileName: 'Guardr-Staff-Ops-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Staff-Ops-Manual.pdf`,
     forAudiences: ['all', 'staff'],
