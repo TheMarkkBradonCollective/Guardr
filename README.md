@@ -40,6 +40,8 @@ User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is
 
 Role user manuals: **[docs/user-manuals/](docs/user-manuals/)** (Quick Start, Client, Guard, Staff Ops)
 
+Print-ready PDFs (US Letter): **[docs/user-manuals/pdf/](docs/user-manuals/pdf/)** — regenerate with `npm run docs:manuals-pdf`
+
 ## Deploy to guardr.co
 
 Full step-by-step: **[docs/DEPLOYMENT-GUARDR-CO.md](docs/DEPLOYMENT-GUARDR-CO.md)** (Vercel + GoDaddy DNS + Supabase + Stripe)
