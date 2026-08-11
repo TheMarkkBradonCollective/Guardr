@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.120':
+    'Expanded user manuals: pay/payouts for guards, client costs, staff compensation, and contractor vs employee legal positioning.',
   '1.0.119':
     'Renamed all source files that contained uber in their names (gr-* CSS, mobility landing, GuardrDataTable, DirectTopHeader).',
   '1.0.118':

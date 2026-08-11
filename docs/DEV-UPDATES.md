@@ -3,11 +3,26 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.119**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.120**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.120
+
+**Shipped**
+- **User manuals expanded** — full pay/payout sections for guards (contractor earnings, Stripe, release stages), clients (costs, platform fee model, overtime/tips), and staff (revenue share, Prop 22 hourly add-ons, timesheets, governance limits)
+- **Legal positioning** — each manual states role clearly: guards/clients = independent contractors / direct engagement; staff = Guardr employees
+- Restored `docs/user-manuals/*.md` sources + `npm run docs:manuals-pdf` build pipeline
+- Regenerated all PDFs in `public/manuals/`
+- **v1.0.120** (build **220**) web + PWA + APK version alignment
+
+**Release verification**
+- Lint, test, build green
+- No open PRs after merge
 
 ---
 
