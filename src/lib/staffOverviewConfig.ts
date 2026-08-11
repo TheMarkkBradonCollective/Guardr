@@ -76,7 +76,10 @@ const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
 const SUPPORT_METRICS = ['Active jobs', 'On site now', 'Active guards'];
 
 const STAFF_OVERVIEW_CONFIG: Record<
-  Extract<PlatformRole, 'support' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner'>,
+  Extract<
+    PlatformRole,
+    'support' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner' | 'finance'
+  >,
   StaffOverviewConfig
 > = {
   support: {
@@ -171,6 +174,23 @@ const STAFF_OVERVIEW_CONFIG: Record<
       'Platform is clear. Review governance settings, financials, or staff activity.',
     quickLinkSections: ['settings', 'payment-settings', 'agreements', 'audit-log', 'team', 'payments', 'analytics', 'map', 'applications'],
   },
+  finance: {
+    roleLabel: ROLE_LABELS.finance,
+    workspaceKicker: 'Finance desk',
+    focusLine: 'Payment desk only — payouts, fees, deposits, and audit follow-up. No ops ladder role.',
+    layout: 'compact',
+    metricLabels: ['Completed jobs', 'Active clients', 'Active guards'],
+    showPaymentsInQueue: true,
+    showDirectorFinancials: true,
+    showOperationsSnapshot: false,
+    showPlatformPulse: false,
+    pulseFullDetail: false,
+    showPipelineInsight: false,
+    showWeeklyInsight: false,
+    showActivityFeed: true,
+    emptyAttentionCopy: 'No payment items waiting. Open Payments or Payment settings to continue.',
+    quickLinkSections: ['payments', 'payment-settings', 'agreements', 'audit-log'],
+  },
 };
 
 export function getStaffOverviewConfig(role: PlatformRole): StaffOverviewConfig {
@@ -180,7 +200,8 @@ export function getStaffOverviewConfig(role: PlatformRole): StaffOverviewConfig 
     role === 'administrator' ||
     role === 'manager' ||
     role === 'director' ||
-    role === 'owner'
+    role === 'owner' ||
+    role === 'finance'
   ) {
     return STAFF_OVERVIEW_CONFIG[role];
   }

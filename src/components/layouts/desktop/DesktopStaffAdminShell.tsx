@@ -33,6 +33,7 @@ interface DesktopStaffAdminShellProps {
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  financeDeskOnly?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenDownload?: () => void;
   hideHeader?: boolean;
@@ -89,6 +90,7 @@ export function DesktopStaffAdminShell({
   showPermissions,
   showDisputes,
   showCities,
+  financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
   hideHeader = false,
@@ -102,7 +104,15 @@ export function DesktopStaffAdminShell({
 }: DesktopStaffAdminShellProps) {
   const { surface } = useSurface();
   const isMobileShell = surface === 'mobile';
-  const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
+  const accessFlags = {
+    showFinance,
+    showPayments,
+    showSettings,
+    showPermissions,
+    showDisputes,
+    showCities,
+    financeDeskOnly,
+  };
   const isMap = isStaffOpsMapSection(activeSection);
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
@@ -122,14 +132,26 @@ export function DesktopStaffAdminShell({
             badge: item.badge,
           })),
       })).filter((group) => group.items.length > 0),
-    [navItems, showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities],
+    [
+      navItems,
+      showFinance,
+      showPayments,
+      showSettings,
+      showPermissions,
+      showDisputes,
+      showCities,
+      financeDeskOnly,
+    ],
   );
 
   const flatNavItems = useMemo(() => navGroups.flatMap((group) => group.items), [navGroups]);
 
   const mobileBottomNavItems = useMemo(() => {
     if (!isMobileShell) return undefined;
-    return STAFF_BOTTOM_NAV_IDS.map((id) => {
+    const bottomIds = financeDeskOnly
+      ? (['overview', 'payments', 'payment-settings', 'agreements', 'audit-log'] as StaffSection[])
+      : STAFF_BOTTOM_NAV_IDS;
+    return bottomIds.map((id) => {
       const item = flatNavItems.find((nav) => nav.id === id);
       if (!item) return null;
       return {
@@ -137,7 +159,7 @@ export function DesktopStaffAdminShell({
         label: id === 'guards' ? 'Guard' : item.label,
       };
     }).filter((item): item is NonNullable<typeof item> => item != null);
-  }, [isMobileShell, flatNavItems]);
+  }, [isMobileShell, flatNavItems, financeDeskOnly]);
 
   const destinations = useMemo<SurfaceDestination[]>(() => {
     return MENU_GROUPS.flatMap((group) =>
@@ -166,6 +188,7 @@ export function DesktopStaffAdminShell({
     showPermissions,
     showDisputes,
     showCities,
+    financeDeskOnly,
   ]);
 
   const handleNav = (id: string) => {

@@ -50,6 +50,15 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     ],
   },
   {
+    role: 'finance',
+    icon: DollarSign,
+    permissions: [
+      'Finance side seat — payment desk only when ladder role is null',
+      'Payouts, fees, financial data, and audit log',
+      'No ops approvals, credentials, disputes, or city markets',
+    ],
+  },
+  {
     role: 'director',
     icon: Award,
     permissions: [

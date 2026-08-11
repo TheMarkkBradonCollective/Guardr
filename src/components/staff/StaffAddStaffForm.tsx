@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { StaffRole, PlatformRole } from '../../types';
+import { StaffRole, PlatformRole, StaffSideRole } from '../../types';
 import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -8,10 +8,14 @@ import type { PlatformCity } from '../../lib/platformCities';
 import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
 import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
+import { canAssignStaffSideRole } from '../../lib/permissions';
 
 import {
+  nextFinanceDeskBadgeNumber,
   nextStaffBadgeNumber,
+  staffBadgeMatchesFinanceDesk,
   staffBadgeMatchesRole,
+  validateFinanceDeskBadgeNumber,
   validateStaffBadgeNumber,
 } from '../../lib/staffBadgeNumber';
 import { PersonNameFields } from '../profile/PersonNameFields';
@@ -21,7 +25,9 @@ export interface StaffAddStaffInput {
   email: string;
   personalEmail?: string;
   badgeNumber: string;
-  staffRole: StaffRole;
+  /** Null when Finance desk only (stagnant ladder seat). */
+  staffRole: StaffRole | null;
+  sideRole?: StaffSideRole | null;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -60,36 +66,49 @@ export function StaffAddStaffForm({
   const [lastName, setLastName] = useState('');
   const [badge, setBadge] = useState('');
   const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
+  const [financeDeskOnly, setFinanceDeskOnly] = useState(false);
+  const [sideRoleFinance, setSideRoleFinance] = useState(false);
   const [managedCities, setManagedCities] = useState<string[]>([]);
   const [assignedManagerIds, setAssignedManagerIds] = useState<string[]>([]);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const canAssignFinance = canAssignStaffSideRole(actorRole);
+
   const assignableCityNames = useMemo(
     () => getAssignableCityNamesForStaffAccess(platformCities, actorRole, actorManagedCities),
     [actorManagedCities, actorRole, platformCities]
   );
 
-  const suggestedBadge = useMemo(
-    () => nextStaffBadgeNumber(role, roster.map((member) => ({ badgeNumber: member.badgeNumber, isStaff: true }))),
-    [role, roster]
-  );
+  const suggestedBadge = useMemo(() => {
+    const rosterForBadge = roster.map((member) => ({
+      badgeNumber: member.badgeNumber,
+      isStaff: true as const,
+    }));
+    if (financeDeskOnly) return nextFinanceDeskBadgeNumber(rosterForBadge);
+    return nextStaffBadgeNumber(role, rosterForBadge);
+  }, [financeDeskOnly, role, roster]);
 
   const applySuggestedBadge = () => setBadge(suggestedBadge);
 
   useEffect(() => {
     if (!open) return;
     setBadge((current) => {
-      if (!current.trim() || staffBadgeMatchesRole(current, role)) {
+      if (
+        !current.trim() ||
+        (financeDeskOnly
+          ? staffBadgeMatchesFinanceDesk(current)
+          : staffBadgeMatchesRole(current, role))
+      ) {
         return suggestedBadge;
       }
       return current;
     });
-    if (isExecutiveStaffRole(role)) {
+    if (financeDeskOnly || isExecutiveStaffRole(role)) {
       setManagedCities([]);
     }
-  }, [open, role, suggestedBadge]);
+  }, [open, role, suggestedBadge, financeDeskOnly]);
 
   const reset = () => {
     setEmail('');
@@ -99,6 +118,8 @@ export function StaffAddStaffForm({
     setLastName('');
     setBadge('');
     setRole(assignableRoles[0] ?? 'Moderator');
+    setFinanceDeskOnly(false);
+    setSideRoleFinance(false);
     setManagedCities([]);
     setAssignedManagerIds([]);
     setError('');
@@ -124,28 +145,50 @@ export function StaffAddStaffForm({
       setError('Staff ID and email are required.');
       return;
     }
-    const badgeError = validateStaffBadgeNumber(badge, role);
+    if (financeDeskOnly && !canAssignFinance) {
+      setError('Only Directors and Founders can create Finance desk seats.');
+      return;
+    }
+    const badgeError = financeDeskOnly
+      ? validateFinanceDeskBadgeNumber(badge)
+      : validateStaffBadgeNumber(badge, role);
     if (badgeError) {
       setError(badgeError);
       return;
     }
     setSaving(true);
     try {
+      const nextSideRole: StaffSideRole | null =
+        financeDeskOnly || sideRoleFinance ? 'Finance' : null;
       const staffId = await onAdd({
         email: email.trim(),
         personalEmail: personalEmail.trim() || undefined,
         badgeNumber: badge.trim().toUpperCase(),
-        staffRole: role,
+        staffRole: financeDeskOnly ? null : role,
+        sideRole: nextSideRole,
         firstName: normalizedName.firstName,
         middleName: normalizedName.middleName,
         lastName: normalizedName.lastName,
-        managedCities: managedCities.length > 0 ? managedCities : undefined,
-        assignedManagerIds: assignedManagerIds.length > 0 ? assignedManagerIds : undefined,
+        managedCities: financeDeskOnly
+          ? undefined
+          : managedCities.length > 0
+            ? managedCities
+            : undefined,
+        assignedManagerIds: financeDeskOnly
+          ? undefined
+          : assignedManagerIds.length > 0
+            ? assignedManagerIds
+            : undefined,
       });
+      const roleLabel = financeDeskOnly
+        ? 'Finance desk'
+        : nextSideRole
+          ? `${role} + Finance`
+          : role;
       setMsg(
         requiresDirectorApproval
           ? `${badge.trim()} submitted for Director approval.`
-          : `${normalizedName.name} (${badge.trim()}) added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+          : `${normalizedName.name} (${badge.trim()}) added as ${roleLabel}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
       );
       reset();
       if (staffId) onCreated?.(staffId);
@@ -211,7 +254,9 @@ export function StaffAddStaffForm({
                 </button>
               </div>
               <p className="text-xs text-brand-text-muted mt-1">
-                Role prefix only — never STF. Next for {role}: {suggestedBadge}
+                {financeDeskOnly
+                  ? `Finance desk uses FIN prefix. Next: ${suggestedBadge}`
+                  : `Role prefix only — never STF. Next for ${role}: ${suggestedBadge}`}
               </p>
             </div>
             <div>
@@ -238,23 +283,63 @@ export function StaffAddStaffForm({
                 Optional contact email. Work email is used to sign in.
               </p>
             </div>
-            <div className="sm:col-span-2">
-              <label className="uber-label block mb-1">Role</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as StaffRole)}
-                className="uber-select w-full"
-              >
-                {assignableRoles.map((staffRole) => (
-                  <option key={staffRole} value={staffRole}>
-                    {staffRole}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {canAssignFinance && (
+              <div className="sm:col-span-2 space-y-2">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={financeDeskOnly}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setFinanceDeskOnly(next);
+                      if (next) setSideRoleFinance(true);
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="font-medium">Finance desk only</span>
+                    <span className="block text-xs text-brand-text-muted">
+                      Ladder role stays null/stagnant — payment tools only.
+                    </span>
+                  </span>
+                </label>
+                {!financeDeskOnly && (
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sideRoleFinance}
+                      onChange={(e) => setSideRoleFinance(e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="font-medium">Add Finance side role</span>
+                      <span className="block text-xs text-brand-text-muted">
+                        Keep the ladder role and also grant payment tools.
+                      </span>
+                    </span>
+                  </label>
+                )}
+              </div>
+            )}
+            {!financeDeskOnly && (
+              <div className="sm:col-span-2">
+                <label className="uber-label block mb-1">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as StaffRole)}
+                  className="uber-select w-full"
+                >
+                  {assignableRoles.map((staffRole) => (
+                    <option key={staffRole} value={staffRole}>
+                      {staffRole}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          {staffRequiresCityAssignment(role) && assignableCityNames.length > 0 && (
+          {!financeDeskOnly && staffRequiresCityAssignment(role) && assignableCityNames.length > 0 && (
             <div className="space-y-2">
               <label className="uber-label block">City assignment</label>
               <p className="text-xs text-brand-text-muted">
@@ -272,7 +357,7 @@ export function StaffAddStaffForm({
             </div>
           )}
 
-          {managerOptions.length > 0 && (
+          {!financeDeskOnly && managerOptions.length > 0 && (
             <div>
               <label className="uber-label block mb-1">Assigned managers</label>
               <select

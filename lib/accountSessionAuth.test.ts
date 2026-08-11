@@ -35,4 +35,17 @@ describe('accountSessionAuth', () => {
     assert.equal(isStaffPlatformRole('administrator'), true);
     assert.equal(hasFinancePlatformAccess('administrator'), false);
   });
+
+  it('maps Finance side role with null ladder role to finance desk', () => {
+    assert.equal(
+      resolvePlatformRole({ isStaff: true, staffRole: null, sideRole: 'Finance', legacyRole: 'staff' }),
+      'finance'
+    );
+  });
+
+  it('grants finance access to finance desk and Finance side role', () => {
+    assert.equal(isStaffPlatformRole('finance'), true);
+    assert.equal(hasFinancePlatformAccess('finance'), true);
+    assert.equal(hasFinancePlatformAccess('administrator', 'Finance'), true);
+  });
 });

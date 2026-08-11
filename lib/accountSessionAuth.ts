@@ -8,9 +8,12 @@ export type PlatformRole =
   | 'administrator'
   | 'manager'
   | 'director'
-  | 'owner';
+  | 'owner'
+  | 'finance';
 
 export type StaffDbRole = 'Founder' | 'Owner' | 'Director' | 'Manager' | 'Administrator' | 'Moderator' | 'Support';
+
+export type StaffSideRole = 'Finance';
 
 export interface SessionCredentials {
   userId: string;
@@ -20,6 +23,7 @@ export interface SessionCredentials {
 
 export interface VerifiedSession extends SessionCredentials {
   platformRole: PlatformRole;
+  sideRole?: StaffSideRole | null;
 }
 
 const STAFF_PLATFORM_ROLES = new Set([
@@ -29,13 +33,15 @@ const STAFF_PLATFORM_ROLES = new Set([
   'administrator',
   'moderator',
   'support',
+  'finance',
   'staff',
   'auditor',
 ]);
 
 export function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: StaffDbRole;
+  staffRole?: StaffDbRole | null;
+  sideRole?: StaffSideRole | null;
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
@@ -56,6 +62,7 @@ export function resolvePlatformRole(input: {
         return 'support';
     }
   }
+  if (input.isStaff && input.sideRole === 'Finance') return 'finance';
   if (input.legacyRole === 'auditor') return 'moderator';
   if (input.legacyRole === 'staff') return 'administrator';
   return 'guard';
@@ -68,12 +75,17 @@ export function isStaffPlatformRole(role: PlatformRole): boolean {
     role === 'administrator' ||
     role === 'manager' ||
     role === 'director' ||
-    role === 'owner'
+    role === 'owner' ||
+    role === 'finance'
   );
 }
 
-/** Manager, Director, and Founder — financial controls */
-export function hasFinancePlatformAccess(role: PlatformRole): boolean {
+/** Manager, Director, Founder ladder — or Finance desk / Finance side role */
+export function hasFinancePlatformAccess(
+  role: PlatformRole,
+  sideRole?: StaffSideRole | null,
+): boolean {
+  if (sideRole === 'Finance' || role === 'finance') return true;
   return role === 'manager' || role === 'director' || role === 'owner';
 }
 
@@ -85,14 +97,14 @@ async function verifyStaffSession(
   const emailLower = email.trim().toLowerCase();
   let { data, error } = await db
     .from('staff')
-    .select('id, email, personal_email, staff_role')
+    .select('id, email, personal_email, staff_role, side_role')
     .eq('id', userId)
     .maybeSingle();
 
   if (!data && !error) {
     const byEmail = await db
       .from('staff')
-      .select('id, email, personal_email, staff_role')
+      .select('id, email, personal_email, staff_role, side_role')
       .or(`email.eq.${emailLower},personal_email.eq.${emailLower}`)
       .maybeSingle();
     data = byEmail.data ?? null;
@@ -104,13 +116,21 @@ async function verifyStaffSession(
   const matchesPersonal = data?.personal_email?.toLowerCase() === emailLower;
   if (!data || (!matchesWork && !matchesPersonal)) return null;
 
+  const sideRole = data.side_role === 'Finance' ? ('Finance' as const) : null;
   const platformRole = resolvePlatformRole({
     isStaff: true,
     staffRole: data.staff_role ?? undefined,
+    sideRole,
     legacyRole: 'staff',
   });
 
-  return { userId: data.id, email: emailLower, role: platformRole, platformRole };
+  return {
+    userId: data.id,
+    email: emailLower,
+    role: platformRole,
+    platformRole,
+    sideRole,
+  };
 }
 
 async function verifyFieldGuardSession(
@@ -121,14 +141,14 @@ async function verifyFieldGuardSession(
 ): Promise<VerifiedSession | null> {
   let { data, error } = await db
     .from('guards')
-    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+    .select('id, email, is_staff, staff_role, side_role, migrated_to_staff_at')
     .eq('id', userId)
     .maybeSingle();
 
   if (!data && !error) {
     const byEmail = await db
       .from('guards')
-      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .select('id, email, is_staff, staff_role, side_role, migrated_to_staff_at')
       .eq('email', email)
       .maybeSingle();
     data = byEmail.data ?? null;
@@ -139,9 +159,11 @@ async function verifyFieldGuardSession(
   if (!data || data.email?.toLowerCase() !== email) return null;
   if (data.migrated_to_staff_at) return null;
 
+  const sideRole = data.side_role === 'Finance' ? ('Finance' as const) : null;
   const platformRole = resolvePlatformRole({
     isStaff: data.is_staff,
     staffRole: data.staff_role ?? undefined,
+    sideRole,
     legacyRole: data.is_staff ? 'staff' : 'guard',
   });
 
@@ -151,7 +173,7 @@ async function verifyFieldGuardSession(
     );
   }
 
-  return { userId: data.id, email, role: platformRole, platformRole };
+  return { userId: data.id, email, role: platformRole, platformRole, sideRole };
 }
 
 export async function verifyAccountSession(
@@ -189,6 +211,6 @@ export async function verifyFinanceStaffSession(
 ): Promise<VerifiedSession | null> {
   const session = await verifyAccountSession(db, credentials);
   if (!session || !isStaffPlatformRole(session.platformRole)) return null;
-  if (!hasFinancePlatformAccess(session.platformRole)) return null;
+  if (!hasFinancePlatformAccess(session.platformRole, session.sideRole)) return null;
   return session;
 }

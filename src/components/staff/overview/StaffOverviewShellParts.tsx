@@ -590,7 +590,7 @@ export function StaffOverviewQueueBoard({
       count: stats.paymentsNeedingAction,
       description: 'Deposits, payouts, or billing follow-up',
       section: 'payments' as StaffSection,
-      roles: ['manager', 'director', 'owner'] as PlatformRole[],
+      roles: ['manager', 'director', 'owner', 'finance'] as PlatformRole[],
       hidden: !showPayments,
     },
     {

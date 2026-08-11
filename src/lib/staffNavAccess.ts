@@ -7,6 +7,8 @@ export interface StaffNavAccessFlags {
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  /** Finance desk only — hide ops nav; payment tools + overview/profile/help */
+  financeDeskOnly?: boolean;
 }
 
 export interface StaffNavAccessNotice {
@@ -27,10 +29,29 @@ const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
 
+/** Sections a finance-only (null ladder) seat may open */
+export const FINANCE_DESK_ALLOWED_SECTIONS = new Set<StaffSection>([
+  'overview',
+  'payments',
+  'payment-settings',
+  'agreements',
+  'audit-log',
+  'guide',
+  'profile',
+  'preferences',
+]);
+
 export function getStaffNavAccessNotice(
   section: StaffSection,
   flags: StaffNavAccessFlags,
 ): StaffNavAccessNotice | null {
+  if (flags.financeDeskOnly && !FINANCE_DESK_ALLOWED_SECTIONS.has(section)) {
+    return {
+      title: 'Finance desk',
+      message:
+        'This account is a Finance side seat with no ops ladder role. Only payment-related tools are available.',
+    };
+  }
   if (PAYMENTS_SECTIONS.has(section) && !flags.showPayments) {
     return {
       title: 'Payments',
@@ -83,9 +104,12 @@ export interface StaffNavItemAccess {
 
 /** Hide nav items the current role cannot use (desktop already did this; mobile menu did not). */
 export function isStaffNavItemVisible(
-  item: StaffNavItemAccess,
+  item: StaffNavItemAccess & { id?: StaffSection },
   flags: StaffNavAccessFlags,
 ): boolean {
+  if (flags.financeDeskOnly && item.id && !FINANCE_DESK_ALLOWED_SECTIONS.has(item.id)) {
+    return false;
+  }
   if (item.financeOnly && !flags.showFinance) return false;
   if (item.paymentsOnly && !flags.showPayments) return false;
   if (item.settingsOnly && !flags.showSettings) return false;
