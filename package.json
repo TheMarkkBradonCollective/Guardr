@@ -1,7 +1,7 @@
 {
   "name": "guardr",
   "private": true,
-  "version": "1.0.121-beta",
+  "version": "1.0.122-beta",
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp && npm run generate:download-version",
@@ -69,6 +69,7 @@
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "marked": "^18.0.9",
+    "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.14",

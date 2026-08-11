@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.122':
+    'User manuals: each role is a standalone printable PDF; combined binder merges those same files in order.',
   '1.0.121':
     'Staff revenue-share raised to ~50% of platform fees with a tighter role ladder (Director ~11.1%, Founder ~11.9%).',
   '1.0.120':

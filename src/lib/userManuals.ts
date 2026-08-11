@@ -28,7 +28,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'quick-start',
     title: 'Quick Start',
-    description: 'Three doors — client, guard, or Apply to work at Guardr.',
+    description: 'Standalone printable PDF — three doors: client, guard, or staff.',
     fileName: 'Guardr-Quick-Start.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Quick-Start.pdf`,
     forAudiences: ['all', 'client', 'guard', 'staff'],
@@ -36,7 +36,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'client',
     title: 'Client User Manual',
-    description: 'Post jobs, hire independent contractors, pay, costs, and invoices.',
+    description: 'Standalone printable PDF — hire contractors, pay, costs, and invoices.',
     fileName: 'Guardr-Client-User-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Client-User-Manual.pdf`,
     forAudiences: ['all', 'client', 'staff'],
@@ -44,7 +44,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'guard',
     title: 'Guard User Manual',
-    description: 'Contractor status, credentials, shifts, earnings, and payouts.',
+    description: 'Standalone printable PDF — contractor status, shifts, earnings, payouts.',
     fileName: 'Guardr-Guard-User-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Guard-User-Manual.pdf`,
     forAudiences: ['all', 'guard', 'staff'],
@@ -52,7 +52,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'staff',
     title: 'Staff Ops Manual',
-    description: 'Employee ops, governance, marketplace payments, and staff pay.',
+    description: 'Standalone printable PDF — employee ops, governance, and staff pay.',
     fileName: 'Guardr-Staff-Ops-Manual.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-Staff-Ops-Manual.pdf`,
     forAudiences: ['all', 'staff'],
@@ -60,7 +60,7 @@ export const USER_MANUALS: UserManualFile[] = [
   {
     id: 'combined',
     title: 'All manuals (combined)',
-    description: 'Single PDF binder with every role manual.',
+    description: 'Combined binder — merges the standalone PDFs in order (same content).',
     fileName: 'Guardr-User-Manuals-Combined.pdf',
     href: `${USER_MANUALS_BASE_PATH}/Guardr-User-Manuals-Combined.pdf`,
     forAudiences: ['all', 'staff'],
