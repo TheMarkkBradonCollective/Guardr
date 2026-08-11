@@ -95,16 +95,17 @@ export interface StaffCompensationPreview {
   awaitingAdjustments: boolean;
 }
 
+/** Default split targets ~50% of collected platform fees to staff (was ~18%). */
 export const DEFAULT_STAFF_COMPENSATION_CONFIG: StaffCompensationConfig = {
   enabled: true,
   cadence: 'weekly',
   roleRules: {
-    Support: { percentOfFees: 0.015, floorPerPeriod: 0, capPerPeriod: 400, hourlyPayRate: 18 },
-    Moderator: { percentOfFees: 0.02, floorPerPeriod: 0, capPerPeriod: 600, hourlyPayRate: 20 },
-    Administrator: { percentOfFees: 0.025, floorPerPeriod: 0, capPerPeriod: 800, hourlyPayRate: 22 },
-    Manager: { percentOfFees: 0.03, floorPerPeriod: 0, capPerPeriod: 1200, hourlyPayRate: 28 },
-    Director: { percentOfFees: 0.04, floorPerPeriod: 0, capPerPeriod: 2000, hourlyPayRate: 35 },
-    Founder: { percentOfFees: 0.05, floorPerPeriod: 0, capPerPeriod: 3000, hourlyPayRate: 40 },
+    Support: { percentOfFees: 0.0417, floorPerPeriod: 0, capPerPeriod: 1100, hourlyPayRate: 18 },
+    Moderator: { percentOfFees: 0.0556, floorPerPeriod: 0, capPerPeriod: 1700, hourlyPayRate: 20 },
+    Administrator: { percentOfFees: 0.0694, floorPerPeriod: 0, capPerPeriod: 2200, hourlyPayRate: 22 },
+    Manager: { percentOfFees: 0.0833, floorPerPeriod: 0, capPerPeriod: 3300, hourlyPayRate: 28 },
+    Director: { percentOfFees: 0.1111, floorPerPeriod: 0, capPerPeriod: 5600, hourlyPayRate: 35 },
+    Founder: { percentOfFees: 0.1389, floorPerPeriod: 0, capPerPeriod: 8300, hourlyPayRate: 40 },
   },
 };
 
