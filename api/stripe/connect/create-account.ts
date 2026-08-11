@@ -30,27 +30,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(503).json({ error: 'Stripe is not configured' });
   }
 
-  const { guardId, email, name } = (req.body ?? {}) as {
+  const { guardId, staffId, email, name } = (req.body ?? {}) as {
     guardId?: string;
+    staffId?: string;
     email?: string;
     name?: string;
   };
 
-  if (!guardId || !email) {
-    return res.status(400).json({ error: 'guardId and email are required' });
+  const subjectId = staffId ?? guardId;
+  if (!subjectId || !email) {
+    return res.status(400).json({ error: 'guardId or staffId, plus email, are required' });
   }
+
+  const table = staffId ? 'staff' : 'guards';
+  const metadataKey = staffId ? 'staff_id' : 'guard_id';
 
   try {
     const db = await getSupabaseAdmin();
     let accountId: string | null = null;
 
     if (db) {
-      const { data: guard } = await db
-        .from('guards')
+      const { data: row } = await db
+        .from(table)
         .select('stripe_connect_account_id')
-        .eq('id', guardId)
+        .eq('id', subjectId)
         .maybeSingle();
-      accountId = guard?.stripe_connect_account_id ?? null;
+      accountId = row?.stripe_connect_account_id ?? null;
     }
 
     if (!accountId) {
@@ -58,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         type: 'express',
         country: 'US',
         email,
-        metadata: { guard_id: guardId },
+        metadata: { [metadataKey]: subjectId },
         capabilities: { transfers: { requested: true } },
         business_type: 'individual',
         ...(name ? { business_profile: { name } } : {}),
@@ -66,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       accountId = account.id;
 
       if (db) {
-        await db.from('guards').update({ stripe_connect_account_id: accountId }).eq('id', guardId);
+        await db.from(table).update({ stripe_connect_account_id: accountId }).eq('id', subjectId);
       }
     }
 
@@ -79,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const isLive = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
       return res.status(503).json({
         error: isLive
-          ? 'Guardr’s Stripe account must finish Connect platform setup before guards can onboard. In Stripe Dashboard go to Connect → Get started and complete your platform profile (this is separate from webhooks).'
+          ? 'Guardr’s Stripe account must finish Connect platform setup before payouts can onboard. In Stripe Dashboard go to Connect → Get started and complete your platform profile (this is separate from webhooks).'
           : 'Enable Stripe Connect in test mode: Stripe Dashboard → switch to Test mode → Connect → Get started, then use your sk_test_ key in Vercel.',
         code: 'connect_platform_not_enabled',
       });
