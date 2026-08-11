@@ -559,11 +559,20 @@ export function LandingFooter({
         {!isMobile ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
 
         <Block display="flex" flexDirection="column" alignItems={isMobile ? 'flex-start' : 'flex-end'} gridGap="scale400">
-          {onOpenGuide ? (
-            <AppButton variant="ghost" size="sm" onClick={onOpenGuide}>
-              Guide
+          <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gridGap="scale300">
+            {onOpenGuide ? (
+              <AppButton variant="ghost" size="sm" onClick={onOpenGuide}>
+                Guide
+              </AppButton>
+            ) : null}
+            <AppButton
+              variant="ghost"
+              size="sm"
+              {...({ $as: 'a', href: '/manuals/', target: '_blank', rel: 'noopener noreferrer' } as Record<string, unknown>)}
+            >
+              Manuals (PDF)
             </AppButton>
-          ) : null}
+          </Block>
           <LegalFooterLinks onOpenLegal={onOpenLegal} />
           <ParagraphMedium margin={0} color="contentSecondary" $style={{ fontSize: '12px', maxWidth: '280px', textAlign: isMobile ? 'left' : 'right' }}>
             © {new Date().getFullYear()} <LegalEntityName />. Independent contractor marketplace. State licensing rules apply.

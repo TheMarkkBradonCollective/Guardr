@@ -3,9 +3,11 @@
  * Build print-ready Letter PDFs for docs/user-manuals/*.md
  *
  * Usage: node scripts/build-user-manual-pdfs.mjs
- * Output: docs/user-manuals/pdf/*.pdf
+ * Output:
+ *   docs/user-manuals/pdf/*.pdf  (repo docs)
+ *   public/manuals/*.pdf         (website / app downloads at /manuals/)
  */
-import { mkdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const MANUALS_DIR = path.join(ROOT, 'docs', 'user-manuals');
 const OUT_DIR = path.join(MANUALS_DIR, 'pdf');
+const PUBLIC_DIR = path.join(ROOT, 'public', 'manuals');
 const BUILD_DATE = new Date().toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
@@ -453,8 +456,18 @@ async function buildCombined(browser) {
   return printHtmlToPdf(browser, html, pdfPath, 'User Manuals (Combined)');
 }
 
+async function syncPublicDownloads(pdfPaths) {
+  await mkdir(PUBLIC_DIR, { recursive: true });
+  for (const pdfPath of pdfPaths) {
+    const dest = path.join(PUBLIC_DIR, path.basename(pdfPath));
+    await copyFile(pdfPath, dest);
+    console.log('Synced', path.relative(ROOT, dest));
+  }
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(PUBLIC_DIR, { recursive: true });
 
   const browser = await chromium.launch({
     channel: 'chrome',
@@ -472,10 +485,14 @@ async function main() {
     results.push(combined);
     console.log('Wrote', path.relative(ROOT, combined.pdfPath));
 
+    await syncPublicDownloads(results.map((r) => r.pdfPath));
+
     const index = [
       '# Print-ready PDFs',
       '',
       `Generated ${BUILD_DATE}. US Letter, with cover page, running headers/footers, and page numbers.`,
+      '',
+      'Public downloads (website/app): `/manuals/*.pdf` and [guardr.co/manuals](https://guardr.co/manuals).',
       '',
       '| Manual | PDF |',
       '|--------|-----|',

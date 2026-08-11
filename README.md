@@ -42,6 +42,8 @@ Role user manuals: **[docs/user-manuals/](docs/user-manuals/)** (Quick Start, Cl
 
 Print-ready PDFs (US Letter): **[docs/user-manuals/pdf/](docs/user-manuals/pdf/)** — regenerate with `npm run docs:manuals-pdf`
 
+Public downloads: **[/manuals](https://guardr.co/manuals)** (also in-app **Guide → Download manuals**)
+
 ## Deploy to guardr.co
 
 Full step-by-step: **[docs/DEPLOYMENT-GUARDR-CO.md](docs/DEPLOYMENT-GUARDR-CO.md)** (Vercel + GoDaddy DNS + Supabase + Stripe)

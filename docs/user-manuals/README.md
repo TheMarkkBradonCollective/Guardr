@@ -6,15 +6,21 @@ Role-based manuals for Guardr (operated by Signature Security Specialist, LLC). 
 
 Open and print these directly. Each file has a cover page, running headers/footers, and page numbers.
 
-| Manual | PDF |
-|--------|-----|
-| Quick Start | [pdf/Guardr-Quick-Start.pdf](./pdf/Guardr-Quick-Start.pdf) |
-| Client User Manual | [pdf/Guardr-Client-User-Manual.pdf](./pdf/Guardr-Client-User-Manual.pdf) |
-| Guard User Manual | [pdf/Guardr-Guard-User-Manual.pdf](./pdf/Guardr-Guard-User-Manual.pdf) |
-| Staff Ops Manual | [pdf/Guardr-Staff-Ops-Manual.pdf](./pdf/Guardr-Staff-Ops-Manual.pdf) |
-| Combined (all) | [pdf/Guardr-User-Manuals-Combined.pdf](./pdf/Guardr-User-Manuals-Combined.pdf) |
+**Download on the live site / app**
 
-Regenerate after editing the Markdown sources:
+- Public page: [guardr.co/manuals](https://guardr.co/manuals) (`public/manuals/`)
+- In-app: **Guide → Download manuals** (role-filtered PDF links)
+- Landing footer: **Manuals (PDF)**
+
+| Manual | Repo PDF | Public URL |
+|--------|----------|------------|
+| Quick Start | [pdf/Guardr-Quick-Start.pdf](./pdf/Guardr-Quick-Start.pdf) | `/manuals/Guardr-Quick-Start.pdf` |
+| Client User Manual | [pdf/Guardr-Client-User-Manual.pdf](./pdf/Guardr-Client-User-Manual.pdf) | `/manuals/Guardr-Client-User-Manual.pdf` |
+| Guard User Manual | [pdf/Guardr-Guard-User-Manual.pdf](./pdf/Guardr-Guard-User-Manual.pdf) | `/manuals/Guardr-Guard-User-Manual.pdf` |
+| Staff Ops Manual | [pdf/Guardr-Staff-Ops-Manual.pdf](./pdf/Guardr-Staff-Ops-Manual.pdf) | `/manuals/Guardr-Staff-Ops-Manual.pdf` |
+| Combined (all) | [pdf/Guardr-User-Manuals-Combined.pdf](./pdf/Guardr-User-Manuals-Combined.pdf) | `/manuals/Guardr-User-Manuals-Combined.pdf` |
+
+Regenerate after editing the Markdown sources (also syncs into `public/manuals/`):
 
 ```bash
 npm run docs:manuals-pdf

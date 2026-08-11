@@ -44,7 +44,7 @@
     }
   },
   "rewrites": [
-    { "source": "/((?!api/|marketing/|download/|guardr\\.apk|version\\.json).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|marketing/|download/|manuals/|guardr\\.apk|version\\.json).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -70,6 +70,14 @@
       "source": "/download/version.json",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/manuals/(.*)\\.pdf",
+      "headers": [
+        { "key": "Content-Type", "value": "application/pdf" },
+        { "key": "Content-Disposition", "value": "inline" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
   ]
