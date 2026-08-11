@@ -11,7 +11,7 @@ import { AppEmptyState, AppFormSection } from '../ui/app/AppPrimitives';
 import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { StatusChip } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { useDevice } from '../../lib/platform';
 import {
   WorkbenchEmpty,
@@ -105,7 +105,7 @@ export function StaffLegalCompliancePanel({
 
   const missingCount = report.filter((row) => !row.complete).length;
 
-  const complianceColumns: UberTableColumn<(typeof report)[number]>[] = [
+  const complianceColumns: GuardrTableColumn<(typeof report)[number]>[] = [
     {
       id: 'user',
       header: 'User',
@@ -182,7 +182,7 @@ export function StaffLegalCompliancePanel({
           <WorkbenchSplit
             className="adm-finance-split"
             list={
-              <UberDataTable
+              <GuardrDataTable
                 columns={complianceColumns}
                 rows={filtered}
                 rowKey={(row) => row.userId}

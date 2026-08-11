@@ -5,7 +5,7 @@ import type { PlatformFeeConfig } from '../../lib/payments';
 import { formatShiftRange } from '../../lib/dates';
 import { useDevice } from '../../lib/platform';
 import { StatusChip } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
 import {
   WorkbenchEmpty,
@@ -198,7 +198,7 @@ export function StaffJobsPanel({
     );
   }
 
-  const jobColumns: UberTableColumn<SecurityRequest>[] = [
+  const jobColumns: GuardrTableColumn<SecurityRequest>[] = [
     {
       id: 'job',
       header: 'Job',
@@ -272,7 +272,7 @@ export function StaffJobsPanel({
                   message={search ? 'No matching jobs' : 'No jobs yet'}
                 />
               ) : (
-                <UberDataTable
+                <GuardrDataTable
                   columns={jobColumns}
                   rows={filtered}
                   rowKey={(req) => req.id}

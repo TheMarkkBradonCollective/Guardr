@@ -7,7 +7,7 @@ import { Logo } from '../../Logo';
 import { GuardrSideNav } from './GuardrSideNav';
 import { GuardrBottomNav } from './GuardrBottomNav';
 import { GuardrIconRail } from './GuardrIconRail';
-import { UberDirectTopHeader } from './UberDirectTopHeader';
+import { DirectTopHeader } from './DirectTopHeader';
 import { resolveMobilityChrome, type MobilityLayout } from './mobilityChrome';
 import type { GuardrNavGroup, GuardrNavItem } from './types';
 import { useDevice } from '../../../lib/platform';
@@ -677,7 +677,7 @@ export function GuardrDrawerShell({
         minHeight={0}
       >
         {isDesktopWorkspace ? (
-          <UberDirectTopHeader
+          <DirectTopHeader
             contextLabel={workspaceLabel}
             leading={
               showHeaderSidebarToggle ? (

@@ -1,12 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { uberDarkTheme, uberLightTheme, uberThemeForMode } from '../../theme/uberBaseTheme.ts';
+import { guardrDarkTheme, guardrLightTheme, guardrThemeForMode } from '../../theme/guardrBaseTheme.ts';
 import { motionDuration, prefersReducedMotion, MOTION_DURATION } from '../../theme/motionTokens.ts';
 
-describe('uberBaseTheme', () => {
-  it('uses Uber black (#000) as accent in light theme', () => {
+describe('guardrBaseTheme', () => {
+  it('uses black (#000) as accent in light theme', () => {
     // Real Guardr app: black primary CTA
-    const accent = uberLightTheme.colors.accent.toUpperCase().replace('#', '');
+    const accent = guardrLightTheme.colors.accent.toUpperCase().replace('#', '');
     assert.ok(
       accent === '000000' || accent === '000',
       `Expected black accent (#000000), got #${accent}`,
@@ -14,7 +14,7 @@ describe('uberBaseTheme', () => {
   });
 
   it('uses Uber white (#FFF) as accent in dark theme', () => {
-    const accent = uberDarkTheme.colors.accent.toUpperCase().replace('#', '');
+    const accent = guardrDarkTheme.colors.accent.toUpperCase().replace('#', '');
     assert.ok(
       accent === 'FFFFFF' || accent === 'FFF',
       `Expected white accent (#FFFFFF), got #${accent}`,
@@ -22,8 +22,8 @@ describe('uberBaseTheme', () => {
   });
 
   it('resolves different themes by mode', () => {
-    const light = uberThemeForMode('light').colors.accent;
-    const dark  = uberThemeForMode('dark').colors.accent;
+    const light = guardrThemeForMode('light').colors.accent;
+    const dark  = guardrThemeForMode('dark').colors.accent;
     assert.notEqual(light, dark, 'Light and dark themes must have different accent colors');
   });
 });

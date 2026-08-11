@@ -16,7 +16,7 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -304,7 +304,7 @@ export function StaffPaymentsPanel({
     return allQueueItems.filter((item) => item.kind === 'job' && item.stage === filter);
   }, [actionQueueItems, allQueueItems, filter]);
 
-  const queueColumns: UberTableColumn<PaymentQueueItem>[] = [
+  const queueColumns: GuardrTableColumn<PaymentQueueItem>[] = [
     {
       id: 'item',
       header: 'Job / invoice',
@@ -462,7 +462,7 @@ export function StaffPaymentsPanel({
               <WorkbenchSplit
                 className="adm-finance-split adm-ops-list-detail"
                 list={
-                  <UberDataTable
+                  <GuardrDataTable
                     columns={queueColumns}
                     rows={filteredQueue}
                     rowKey={(item) => item.id}

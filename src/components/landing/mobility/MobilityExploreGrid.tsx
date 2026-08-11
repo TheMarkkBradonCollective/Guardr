@@ -3,16 +3,16 @@ import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
 import type { FormFactor } from '../../../lib/platform/device';
 import { GuardrButton } from '../../baseui/GuardrButton';
-import { EXPLORE_SERVICES } from './uberLandingData';
+import { EXPLORE_SERVICES } from './mobilityLandingData';
 import { FONT_DISPLAY } from '../../../theme/typography';
 
-interface UberExploreGridProps {
+interface MobilityExploreGridProps {
   formFactor: FormFactor;
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
 }
 
 /** Guardr-style "Explore" section — gray tile grid like Guardr home (Food, Reserve, etc.) */
-export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGridProps) {
+export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityExploreGridProps) {
   const [, theme] = useStyletron();
   const isMobile = formFactor === 'mobile';
   const columns  = isMobile ? 'repeat(2, 1fr)' : formFactor === 'tablet' ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)';
@@ -132,14 +132,14 @@ export function UberExploreGrid({ formFactor, onNavigateToAuth }: UberExploreGri
   );
 }
 
-interface UberLoginBandProps {
+interface MobilityLoginBandProps {
   formFactor: FormFactor;
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   visual?: React.ReactNode;
 }
 
 /** Login / account band — matches Base Web "Log in to see your account" section */
-export function UberLoginBand({ formFactor, onNavigateToAuth, visual }: UberLoginBandProps) {
+export function MobilityLoginBand({ formFactor, onNavigateToAuth, visual }: MobilityLoginBandProps) {
   const [, theme] = useStyletron();
   const isMobile = formFactor === 'mobile';
 

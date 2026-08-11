@@ -47,7 +47,7 @@ import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { useDevice } from '../../lib/platform';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -499,7 +499,7 @@ export function StaffCredentials({
     if (!stillVisible) openItem(filteredFeed[0].id);
   }, [filter, filteredFeed, activeItemId, formFactor]);
 
-  const credentialColumns: UberTableColumn<ApprovalFeedItem>[] = useMemo(
+  const credentialColumns: GuardrTableColumn<ApprovalFeedItem>[] = useMemo(
     () => [
       {
         id: 'credential',
@@ -667,7 +667,7 @@ export function StaffCredentials({
                   message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
                 />
               ) : (
-                <UberDataTable
+                <GuardrDataTable
                   columns={credentialColumns}
                   rows={filteredFeed}
                   rowKey={(item) => item.id}

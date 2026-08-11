@@ -6,7 +6,7 @@ Official visual and interaction specification for Guardr across **Website** (mob
 
 **Related docs:** [`CROSS_PLATFORM.md`](./CROSS_PLATFORM.md) · [`ANDROID-APK.md`](./ANDROID-APK.md) · [`design-patterns.md`](./design-patterns.md) · [`.cursor/commands/design-system.md`](../.cursor/commands/design-system.md)
 
-**Implementation:** Guardr Base Web custom themes (`src/theme/guardrBaseTheme.ts`) with sage-green accent applied across all production surfaces. Styletron CSS-in-JS engine syncs tokens to CSS custom properties via `UberThemeVars`.
+**Implementation:** Guardr Base Web custom themes (`src/theme/guardrBaseTheme.ts`) with sage-green accent applied across all production surfaces. Styletron CSS-in-JS engine syncs tokens to CSS custom properties via `GuardrThemeVars`.
 
 ---
 
@@ -95,8 +95,8 @@ All colors, radii, shadows, and spacing tokens live in:
 **Brand accent:** accent blue (`--uber-accent` / `#276EF1` light, `#335BA3` dark) via stock Base Web themes.
 
 ```
-src/styles/uber-tokens.css   — Canonical Base Web Base tokens + --brand-* bridge
-src/theme/uberBaseTheme.ts   — Stock LightTheme / DarkTheme
+src/styles/gr-tokens.css   — Canonical Base Web Base tokens + --brand-* bridge
+src/theme/guardrBaseTheme.ts   — Stock LightTheme / DarkTheme
 src/index.css                — Legacy layout CSS (migrating to Base Web)
 src/lib/platform/theme.ts    — Light / Dark mode apply + persistence
 src/lib/platform/themeBranding.ts — PWA/APK icon + theme-color meta swap

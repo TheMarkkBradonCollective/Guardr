@@ -6,7 +6,7 @@ import { ClientInvoicePanel } from './ClientInvoicePanel';
 import type { Client, SecurityRequest } from '../../types';
 import { FileText } from 'lucide-react';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -56,7 +56,7 @@ export function ClientReportsDesktop({
     }
   }, [reports.length, tab, selectedIncidentId, onSelectIncident, reports]);
 
-  const reportColumns: UberTableColumn<ClientReportCard>[] = [
+  const reportColumns: GuardrTableColumn<ClientReportCard>[] = [
     {
       id: 'report',
       header: 'Report',
@@ -109,7 +109,7 @@ export function ClientReportsDesktop({
             reports.length === 0 ? (
               <WorkbenchEmpty icon={FileText} message="No reports yet" />
             ) : (
-              <UberDataTable
+              <GuardrDataTable
                 columns={reportColumns}
                 rows={reports}
                 rowKey={(report) => report.id}

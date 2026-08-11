@@ -5,7 +5,7 @@ import { useStyletron } from 'baseui';
  * Syncs Guardr × Base Web theme tokens to CSS custom properties.
  * Hybrid Tailwind/CSS screens consume the same values as Base Web components.
  */
-export function UberThemeVars() {
+export function GuardrThemeVars() {
   const [, theme] = useStyletron();
 
   useEffect(() => {

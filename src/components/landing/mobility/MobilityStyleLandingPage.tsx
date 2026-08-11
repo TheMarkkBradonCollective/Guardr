@@ -10,16 +10,16 @@ import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
-import { UberLandingNav, UberLandingHero } from './UberLandingChrome';
-import { UberExploreGrid, UberLoginBand } from './UberExploreGrid';
-import { UberLandingHeroVisual, UberLandingLoginVisual } from './UberLandingVisuals';
+import { MobilityLandingNav, MobilityLandingHero } from './MobilityLandingChrome';
+import { MobilityExploreGrid, MobilityLoginBand } from './MobilityExploreGrid';
+import { MobilityLandingHeroVisual, MobilityLandingLoginVisual } from './MobilityLandingVisuals';
 import type { LandingSectionsProps } from '../shared/LandingSections';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
 import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 
-type UberFormFactor = 'mobile' | 'tablet' | 'desktop';
+type MobilityFormFactor = 'mobile' | 'tablet' | 'desktop';
 
-function toUberFactor(formFactor: FormFactor): UberFormFactor {
+function toMobilityFactor(formFactor: FormFactor): MobilityFormFactor {
   if (formFactor === 'tablet') return 'tablet';
   if (formFactor === 'desktop') return 'desktop';
   return 'mobile';
@@ -74,7 +74,7 @@ function TrustStrip({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-interface UberStyleLandingProps extends LandingSectionsProps {
+interface MobilityStyleLandingProps extends LandingSectionsProps {
   formFactor: FormFactor;
 }
 
@@ -83,7 +83,7 @@ interface UberStyleLandingProps extends LandingSectionsProps {
  * Black nav · booking hero · trust strip · explore grid · login band · footer.
  * Platform-specific layout: mobile | tablet | desktop.
  */
-export function UberStyleLandingPage({
+export function MobilityStyleLandingPage({
   formFactor,
   themeMode,
   onChangeTheme,
@@ -91,8 +91,8 @@ export function UberStyleLandingPage({
   onOpenLegal,
   onOpenGuide,
   companyPlacardDocuments = [],
-}: UberStyleLandingProps) {
-  const factor = toUberFactor(formFactor);
+}: MobilityStyleLandingProps) {
+  const factor = toMobilityFactor(formFactor);
   const isMobile = factor === 'mobile';
   const showHeroVisual = factor !== 'mobile';
 
@@ -103,7 +103,7 @@ export function UberStyleLandingPage({
       data-landing-factor={formFactor}
       className={`mobility-landing uber-style-landing uber-style-landing--${factor}`}
     >
-      <UberLandingNav
+      <MobilityLandingNav
         formFactor={factor}
         themeMode={themeMode}
         onChangeTheme={onChangeTheme}
@@ -111,20 +111,20 @@ export function UberStyleLandingPage({
         onOpenGuide={onOpenGuide}
       />
 
-      <UberLandingHero
+      <MobilityLandingHero
         formFactor={factor}
         onNavigateToAuth={onNavigateToAuth}
-        heroVisual={showHeroVisual ? <UberLandingHeroVisual /> : undefined}
+        heroVisual={showHeroVisual ? <MobilityLandingHeroVisual /> : undefined}
       />
 
       <TrustStrip isMobile={isMobile} />
 
-      <UberExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
+      <MobilityExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
 
-      <UberLoginBand
+      <MobilityLoginBand
         formFactor={formFactor}
         onNavigateToAuth={onNavigateToAuth}
-        visual={<UberLandingLoginVisual />}
+        visual={<MobilityLandingLoginVisual />}
       />
 
       {/* App download CTA */}

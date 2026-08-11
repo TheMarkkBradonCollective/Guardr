@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { FONT_DISPLAY, FONT_MONO, FONT_TEXT, TRACKING, withUberTypeScale } from './typography.ts';
+import { FONT_DISPLAY, FONT_MONO, FONT_TEXT, TRACKING, withDisplayTypeScale } from './typography.ts';
 
 const baseTheme = {
   colors: {},
@@ -14,9 +14,9 @@ const baseTheme = {
   },
 } as never;
 
-describe('withUberTypeScale', () => {
+describe('withDisplayTypeScale', () => {
   it('ships a font stack that names a family the app actually loads', () => {
-    // "Guardr Sans" is declared in styles/uber-typography.css from
+    // "Guardr Sans" is declared in styles/gr-typography.css from
     // /public/fonts, so the stack resolves without Guardr Sans installed.
     for (const stack of [FONT_TEXT, FONT_DISPLAY]) {
       assert.ok(stack.includes('Uber Move'), 'keeps Uber Move first when present');
@@ -27,7 +27,7 @@ describe('withUberTypeScale', () => {
   });
 
   it('tightens display and heading tracking, leaving body text at zero', () => {
-    const theme = withUberTypeScale(baseTheme) as unknown as {
+    const theme = withDisplayTypeScale(baseTheme) as unknown as {
       typography: Record<string, { letterSpacing: string; fontFamily: string }>;
     };
 
@@ -39,7 +39,7 @@ describe('withUberTypeScale', () => {
   });
 
   it('routes display slots to the display stack and text slots to the text stack', () => {
-    const theme = withUberTypeScale(baseTheme) as unknown as {
+    const theme = withDisplayTypeScale(baseTheme) as unknown as {
       typography: Record<string, { fontFamily: string }>;
     };
 
@@ -51,13 +51,13 @@ describe('withUberTypeScale', () => {
 
   it('leaves the source theme untouched', () => {
     const source = JSON.parse(JSON.stringify(baseTheme));
-    withUberTypeScale(source as never);
+    withDisplayTypeScale(source as never);
     assert.equal(source.typography.DisplayLarge.letterSpacing, '0');
   });
 
   it('ignores slots the Base Web theme does not define', () => {
     const sparse = { colors: {}, typography: { ParagraphMedium: { letterSpacing: '1px' } } } as never;
-    const theme = withUberTypeScale(sparse) as unknown as {
+    const theme = withDisplayTypeScale(sparse) as unknown as {
       typography: Record<string, { letterSpacing: string }>;
     };
     assert.equal(theme.typography.DisplayLarge, undefined);

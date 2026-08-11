@@ -10,7 +10,7 @@ import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { FONT_DISPLAY } from '../../../theme/typography';
 
-interface UberLandingNavProps {
+interface MobilityLandingNavProps {
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -18,11 +18,11 @@ interface UberLandingNavProps {
   formFactor: 'mobile' | 'tablet' | 'desktop';
 }
 
-export function UberLandingNav({
+export function MobilityLandingNav({
   onNavigateToAuth,
   onOpenGuide,
   formFactor,
-}: UberLandingNavProps) {
+}: MobilityLandingNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = formFactor === 'mobile';
 
@@ -190,13 +190,13 @@ export function UberLandingNav({
   );
 }
 
-interface UberLandingHeroProps {
+interface MobilityLandingHeroProps {
   formFactor: 'mobile' | 'tablet' | 'desktop';
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   heroVisual?: React.ReactNode;
 }
 
-export function UberLandingHero({ formFactor, onNavigateToAuth, heroVisual }: UberLandingHeroProps) {
+export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }: MobilityLandingHeroProps) {
   const [, theme] = useStyletron();
   const isMobile  = formFactor === 'mobile';
   const isDesktop = formFactor === 'desktop';

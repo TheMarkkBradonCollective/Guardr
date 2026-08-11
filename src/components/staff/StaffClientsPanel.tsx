@@ -20,7 +20,7 @@ import { canManageStaffPermissions } from '../../lib/permissions';
 import type { StaffPermissionsPatch } from './StaffPermissionsPanel';
 import { useDevice } from '../../lib/platform';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchPage,
@@ -123,7 +123,7 @@ export function StaffClientsPanel({
     if (!stillVisible) setSelectedId(filtered[0].id);
   }, [statusFilter, filtered, selectedId, formFactor, pageTab]);
 
-  const clientColumns: UberTableColumn<Client>[] = useMemo(
+  const clientColumns: GuardrTableColumn<Client>[] = useMemo(
     () => [
       {
         id: 'client',
@@ -262,7 +262,7 @@ export function StaffClientsPanel({
                   message={search ? 'No clients match your search' : 'No clients yet'}
                 />
               ) : (
-                <UberDataTable
+                <GuardrDataTable
                   columns={clientColumns}
                   rows={filtered}
                   rowKey={(client) => client.id}

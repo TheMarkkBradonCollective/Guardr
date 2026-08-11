@@ -8,7 +8,7 @@ import { FONT_DISPLAY } from '../../../theme/typography';
  * Hero illustration — mimics Base Web mobile app screenshot:
  * map background with white bottom sheet showing a guard profile card.
  */
-export function UberLandingHeroVisual() {
+export function MobilityLandingHeroVisual() {
   const [, theme] = useStyletron();
   const isDark = theme.colors.backgroundPrimary !== '#FFFFFF' && theme.colors.backgroundPrimary !== 'white';
 
@@ -264,7 +264,7 @@ export function UberLandingHeroVisual() {
 }
 
 /** Login band visual — Guardr-style guard profile card */
-export function UberLandingLoginVisual() {
+export function MobilityLandingLoginVisual() {
   const [, theme] = useStyletron();
   const isDark = theme.colors.backgroundPrimary !== '#FFFFFF' && theme.colors.backgroundPrimary !== 'white';
 

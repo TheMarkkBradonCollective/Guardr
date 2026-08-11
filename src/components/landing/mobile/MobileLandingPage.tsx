@@ -1,8 +1,8 @@
 import React from 'react';
 import type { LandingSectionsProps } from '../shared/LandingSections';
-import { UberStyleLandingPage } from '../uber/UberStyleLandingPage';
+import { MobilityStyleLandingPage } from '../mobility/MobilityStyleLandingPage';
 
 /** Thumb-first mobile browser landing — mobility homepage pattern. */
 export function MobileLandingPage(props: LandingSectionsProps) {
-  return <UberStyleLandingPage {...props} formFactor="mobile" />;
+  return <MobilityStyleLandingPage {...props} formFactor="mobile" />;
 }

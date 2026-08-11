@@ -70,7 +70,7 @@ Each surface gets a **dedicated design** — not a scaled copy.
 
 | Layer | Location |
 |-------|----------|
-| **Stock Base Web theme** | `src/theme/uberBaseTheme.ts` (`LightTheme` / `DarkTheme`) |
+| **Stock Base Web theme** | `src/theme/guardrBaseTheme.ts` (`LightTheme` / `DarkTheme`) |
 | Motion tokens | `src/theme/motionTokens.ts` |
 | Provider | `src/components/baseui/BaseUIProvider.tsx` |
 | Adapters | `src/components/baseui/Guardr*.tsx` |
@@ -84,10 +84,10 @@ Each surface gets a **dedicated design** — not a scaled copy.
 ### Theme rule
 
 ```ts
-import { uberThemeForMode } from '../theme/uberBaseTheme';
+import { guardrThemeForMode } from '../theme/guardrBaseTheme';
 import { withAppBreakpoints } from '../components/baseui/layout/shellStyles';
 
-const theme = withAppBreakpoints(uberThemeForMode(mode));
+const theme = withAppBreakpoints(guardrThemeForMode(mode));
 ```
 
 - Use `$theme.colors.*` or Styletron token strings (`accent`, `accent50`, `contentSecondary`) in Base Web overrides.
@@ -122,7 +122,7 @@ const theme = withAppBreakpoints(uberThemeForMode(mode));
 - `AppButton` maps `.app-button-*` → `GuardrButton`
 
 ### Phase 4 — Role dashboards (in progress)
-- **Foundation:** `baseui/dashboard/*` (DashboardHero, DashboardZone, MetricCell, QuickActionTile, UberThemeVars)
+- **Foundation:** `baseui/dashboard/*` (DashboardHero, DashboardZone, MetricCell, QuickActionTile, GuardrThemeVars)
 - **CSS bridge:** `--uber-*` custom properties + `.uber-text-accent` utilities
 - **Hub screens migrated:** Client home, Staff overview, Guard earnings, User profile (shared)
 - **Remaining:** Client (15 views), Guard (14 tabs + map), Staff (26 sections), map views last

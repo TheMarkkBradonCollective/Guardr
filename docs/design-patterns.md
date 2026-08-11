@@ -16,9 +16,9 @@ const theme = withAppBreakpoints(guardrThemeForMode(useThemeMode()));
 
 - **Light:** black accent `#000000`, black primary CTA on white / `#F6F6F6` surfaces
 - **Dark:** white accent `#FFFFFF`, white primary CTA; navigation and chrome layer on `#101010` so they stay legible against the `#000` canvas
-- `UberThemeVars` syncs theme tokens to CSS custom properties on every render
+- `GuardrThemeVars` syncs theme tokens to CSS custom properties on every render
 - Use `useStyletron()` or Styletron token strings in overrides — **not** raw hex values
-- `--brand-*` CSS variables are bridged from theme tokens via `UberThemeVars`
+- `--brand-*` CSS variables are bridged from theme tokens via `GuardrThemeVars`
 
 ## Typography
 
@@ -28,14 +28,14 @@ const theme = withAppBreakpoints(guardrThemeForMode(useThemeMode()));
 import { FONT_DISPLAY, FONT_TEXT, TRACKING } from '../theme/typography';
 ```
 
-- Guardr Sans is the proprietary stand-in. `styles/uber-typography.css` declares **`Guardr Sans`** from `/public/fonts` (latin + latin-ext variable subsets) as the loaded stand-in, so stacks read `"Guardr Sans", …` and render Base Web's type colour even when display fonts are unavailable.
-- `withUberTypeScale()` retightens the Base Web display and heading slots (`-0.04em` display, `-0.02em` heading, `-0.01em` title); body and label slots stay at zero.
+- Guardr Sans is the proprietary stand-in. `styles/gr-typography.css` declares **`Guardr Sans`** from `/public/fonts` (latin + latin-ext variable subsets) as the loaded stand-in, so stacks read `"Guardr Sans", …` and render Base Web's type colour even when display fonts are unavailable.
+- `withDisplayTypeScale()` retightens the Base Web display and heading slots (`-0.04em` display, `-0.02em` heading, `-0.01em` title); body and label slots stay at zero.
 - The service worker precaches the two normal-weight subsets, so an installed PWA never cold-starts in Arial.
 - Ops numerals use `.uber-tabular` / `font-variant-numeric: tabular-nums` so columns align.
 
 ## Forms
 
-`styles/uber-forms.css` loads last and owns field chrome app-wide:
+`styles/gr-forms.css` loads last and owns field chrome app-wide:
 
 - `.uber-label` / `.app-field-label` — sentence case, 14px/500, primary content colour (**not** uppercase micro-caps)
 - `.app-field-hint` — 13px caption in muted grey
@@ -123,7 +123,7 @@ Global overlays live in `src/components/baseui/overlays/`:
 | Piece | Element | Notes |
 |-------|---------|-------|
 | Icon rail | `GuardrIconRail` (`.uber-rail`) | Black column on the left edge: app-menu toggle on top, first nav group below, hover labels + badges. Stays put on full-bleed map screens. |
-| Global bar | `UberDirectTopHeader` | Wordmark left · `contextLabel` centred · notifications + account right. |
+| Global bar | `DirectTopHeader` | Wordmark left · `contextLabel` centred · notifications + account right. |
 | Page band | `.uber-page-band` | `pageBreadcrumb` › `title`, plus `headerContext` and `pageActions`. Suppressed when a screen passes `bleed` or `headerOverride`. |
 | Tabs | `WorkbenchTabBar` | Renders as underline tabs inside `[data-uber-direct]`; stays a chip row on phones. |
 
@@ -133,7 +133,7 @@ Tablet and phone keep the compact `mobility-header` title, so the band never dup
 
 `src/components/baseui/`:
 
-- `UberDataTable` — quiet sentence-case headers, hairline rules, tabular figures, right-aligned amounts, whole-row hover/keyboard activation, optional per-column sorting. It measures its own container and switches to stacked record cards (`.uber-record`) whenever a table would scroll sideways — phones always, plus tablet portrait and split panes. Map columns onto card slots with `cardLayout`, or force a shape with `layout`.
+- `GuardrDataTable` — quiet sentence-case headers, hairline rules, tabular figures, right-aligned amounts, whole-row hover/keyboard activation, optional per-column sorting. It measures its own container and switches to stacked record cards (`.uber-record`) whenever a table would scroll sideways — phones always, plus tablet portrait and split panes. Map columns onto card slots with `cardLayout`, or force a shape with `layout`.
 - `StatusChip` — tinted state pill (`positive` / `negative` / `warning` / `info` / `neutral` / `accent`), light and dark.
 
 Legacy `.uber-workbench-table` markup follows the same conventions, so existing staff/guard/client tables inherit the look without component changes.
@@ -149,13 +149,13 @@ Legacy `.uber-workbench-table` markup follows the same conventions, so existing 
 
 **Experience tiers:** `src/lib/platform/experienceTier.ts` — resolves `pwa-full|pwa-lite|apk-full|apk-premium|website` and sets `body[data-experience-tier]`, `data-pwa-mode`, `data-apk-mode`.
 
-**Surface bridge:** `src/styles/uber-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
+**Surface bridge:** `src/styles/gr-surfaces.css` — remaps legacy `adm-*`, `app-*`, and brand Tailwind inside `.uber-app-shell` to `--uber-*` tokens on every form factor.
 
-**Mobility platform:** `src/styles/uber-mobility.css` + `mobilityChrome.ts` — independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
+**Mobility platform:** `src/styles/gr-mobility.css` + `mobilityChrome.ts` — independent shell per `viewSurface` (mobile drawer / tablet rail / desktop workspace).
 
 **Platform optimizations:** `src/styles/platform-optimizations.css` — purpose-built CSS for Website · PWA Full/Lite · APK Full/Premium.
 
-**Public landing (browser):** `UberStyleLandingPage` — mobility homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
+**Public landing (browser):** `MobilityStyleLandingPage` — mobility homepage pattern (black nav, booking hero, explore grid, login band). Independent layout per form factor via `MobileLandingPage`, `TabletLandingPage`, `DesktopLandingPage`.
 
 ## Dashboard building blocks (Phase 4)
 
@@ -168,7 +168,7 @@ Legacy `.uber-workbench-table` markup follows the same conventions, so existing 
 | `MetricCell` / `MetricStrip` | At-a-glance stats (GuardrCard) |
 | `QuickActionTile` | Client home quick-action grid |
 | `AccentIcon` / `MutedIcon` | Lucide icons using theme colors |
-| `UberThemeVars` | Syncs `--uber-accent` etc. to CSS (auto-mounted in BaseUIProvider) |
+| `GuardrThemeVars` | Syncs `--uber-accent` etc. to CSS (auto-mounted in BaseUIProvider) |
 
 Hybrid screens use `.uber-text-accent`, `.uber-text-muted` instead of `text-brand-*`.
 

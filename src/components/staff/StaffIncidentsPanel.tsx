@@ -9,7 +9,7 @@ import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -48,7 +48,7 @@ export function StaffIncidentsPanel({
   const selectedIncident = selectedId ? incidents.find((inc) => inc.id === selectedId) ?? null : null;
   const selectedDetail = selectedId ? incidentDetails.find((d) => d.id === selectedId) ?? null : null;
 
-  const incidentColumns: UberTableColumn<OpsIncident>[] = [
+  const incidentColumns: GuardrTableColumn<OpsIncident>[] = [
     {
       id: 'location',
       header: 'Location',
@@ -103,7 +103,7 @@ export function StaffIncidentsPanel({
             incidents.length === 0 ? (
               <WorkbenchEmpty icon={AlertTriangle} message="No incidents on file" />
             ) : (
-              <UberDataTable
+              <GuardrDataTable
                 columns={incidentColumns}
                 rows={incidents}
                 rowKey={(inc) => inc.id}

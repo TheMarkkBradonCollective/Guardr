@@ -2,7 +2,7 @@ import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { LabelSmall } from 'baseui/typography';
-import { UberDirectHubCard } from '../../baseui/dashboard';
+import { DirectHubCard } from '../../baseui/dashboard';
 import { MetricCell, MetricStrip } from '../../baseui/dashboard/MetricCell';
 import { QuickActionTile } from '../../baseui/dashboard/QuickActionTile';
 import { WorkbenchPanel } from '../../baseui/layout/WorkbenchLayout';
@@ -228,7 +228,7 @@ export function StaffOverviewHubCards({
   return (
     <div className={`uber-direct-home-hub staff-overview-hub ${className}`.trim()}>
       {items.map((item) => (
-        <UberDirectHubCard
+        <DirectHubCard
           key={item.id}
           title={item.title}
           description={item.description}

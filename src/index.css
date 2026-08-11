@@ -23579,7 +23579,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
   gap: 0.75rem;
 }
 
-/* /platform-ui — Base Web theme bridge (synced by UberThemeVars in BaseUIProvider) */
+/* /platform-ui — Base Web theme bridge (synced by GuardrThemeVars in BaseUIProvider) */
 .uber-text-accent { color: var(--uber-accent, #000000); }
 .uber-text-muted { color: var(--uber-text-muted, #6B6B6B); }
 .uber-text { color: var(--uber-text, #000000); }

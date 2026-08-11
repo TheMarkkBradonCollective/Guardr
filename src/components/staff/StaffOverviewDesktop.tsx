@@ -57,7 +57,7 @@ import {
   StaffOverviewQuickGrid,
   StaffOverviewRoleHeader,
   StaffOverviewSectionHeader,
-} from './overview/StaffOverviewUberParts';
+} from './overview/StaffOverviewShellParts';
 
 interface StaffOverviewDesktopProps {
   stats: PlatformStats;

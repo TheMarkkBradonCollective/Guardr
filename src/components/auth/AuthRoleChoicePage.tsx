@@ -5,7 +5,7 @@ import { ArrowRight, Briefcase, Building2, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
 import type { AuthViewRole } from '../../lib/appNavigation';
-import { UberDirectTopHeader } from '../baseui/layout/UberDirectTopHeader';
+import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { FONT_DISPLAY } from '../../theme/typography';
 
@@ -219,7 +219,7 @@ export function AuthRoleChoicePage({
       flexDirection="column"
       overflow="hidden"
     >
-      <UberDirectTopHeader onBrandClick={onBack} />
+      <DirectTopHeader onBrandClick={onBack} />
       {onBack ? <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel="Home" /> : null}
 
       <Block as="main" className="auth-role-choice-main">

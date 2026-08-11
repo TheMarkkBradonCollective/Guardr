@@ -45,7 +45,7 @@ import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalC
 import { LegalAcceptanceCheckbox } from './legal/LegalAcceptanceCheckbox';
 import { LegalDocumentLink } from './legal/LegalDocumentLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
-import { UberDirectTopHeader } from './baseui/layout/UberDirectTopHeader';
+import { DirectTopHeader } from './baseui/layout/DirectTopHeader';
 import {
   getStoredPassword,
   shouldPromptPasswordChange,
@@ -1700,7 +1700,7 @@ export function AuthPage({
     >
       {isDesktopAuth ? (
         <>
-          <UberDirectTopHeader
+          <DirectTopHeader
             onBrandClick={onBackToHome}
             trailing={
               <button type="button" onClick={handleAuthBack} className="dsk-auth-back">
@@ -1744,7 +1744,7 @@ export function AuthPage({
         </>
       ) : (
         <div className="auth-role-choice-page auth-form-page">
-          <UberDirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
+          <DirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
           <AppSubScreenHeader
             title=""
             hideTitle

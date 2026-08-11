@@ -1,25 +1,25 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 
-export interface UberDirectContextOption {
+export interface DirectContextOption {
   id: string;
   label: string;
 }
 
-interface UberDirectContextSelectProps {
+interface DirectContextSelectProps {
   value: string;
-  options: UberDirectContextOption[];
+  options: DirectContextOption[];
   onChange?: (id: string) => void;
   'aria-label'?: string;
 }
 
 /** Compact org/location selector for Guardr Direct page header (right of title). */
-export function UberDirectContextSelect({
+export function DirectContextSelect({
   value,
   options,
   onChange,
   'aria-label': ariaLabel = 'Organization',
-}: UberDirectContextSelectProps) {
+}: DirectContextSelectProps) {
   const current = options.find((option) => option.id === value) ?? options[0];
 
   if (!current || options.length <= 1) {

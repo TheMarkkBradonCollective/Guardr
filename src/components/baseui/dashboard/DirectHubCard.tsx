@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
 
 /** Guardr Direct home hub card — title with arrow, description, circular accent icon. */
-export function UberDirectHubCard({
+export function DirectHubCard({
   title,
   description,
   icon: Icon,

@@ -3,7 +3,7 @@ import { Loader2, ShieldAlert } from 'lucide-react';
 import { OpsShiftViolation } from '../../lib/staffOps';
 import { WfBadge } from '../ui/wireframe';
 import { StatusChip } from '../baseui/StatusChip';
-import { UberDataTable, type UberTableColumn } from '../baseui/UberDataTable';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useDevice } from '../../lib/platform';
@@ -84,7 +84,7 @@ export function StaffViolationsPanel({
     return { all: violations.length, open, resolved };
   }, [violations, statusMap]);
 
-  const violationColumns: UberTableColumn<OpsShiftViolation>[] = [
+  const violationColumns: GuardrTableColumn<OpsShiftViolation>[] = [
     {
       id: 'violation',
       header: 'Violation',
@@ -323,7 +323,7 @@ export function StaffViolationsPanel({
         {tabBar}
         <WorkbenchSplit
           list={
-            <UberDataTable
+            <GuardrDataTable
               columns={violationColumns}
               rows={filtered}
               rowKey={(v) => v.id}
