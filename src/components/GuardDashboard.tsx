@@ -266,7 +266,8 @@ export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages'
 export type GuardSupportMode = 'compose' | 'report';
 
 function guardHasCredentialUpdateRequest(guard: SecurityGuard): boolean {
-  if (guard.insurancePolicy?.updateRequestedAt && !guard.insurancePolicy?.pendingUpdate) return true;
+  // COI has no pendingUpdate blob — updateRequestedAt alone means staff asked for a new upload.
+  if (guard.insurancePolicy?.updateRequestedAt) return true;
   if (guard.idUpdateRequestedAt) return true;
   return (guard.certifications ?? []).some(
     (cert) => Boolean(cert.updateRequestedAt) && !cert.pendingUpdate
