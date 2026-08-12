@@ -24,12 +24,6 @@ interface StaffDisputesPanelProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => void | Promise<void>;
-  onResolveAuditViolation?: (
-    requestId: string,
-    violationId: string,
-    action: 'uphold' | 'dismiss',
-    note?: string
-  ) => void | Promise<void>;
 }
 
 type DisputeStatusTab = 'open' | 'closed' | 'all';
@@ -82,7 +76,6 @@ export function StaffDisputesPanel({
   const visiblePool = useMemo(
     () =>
       disputes.filter((d) => {
-        if (d.type === 'audit-violation') return false;
         const status = effectiveStatus(d, statusMap);
         if (statusTab === 'open') return isOpenStatus(status);
         if (statusTab === 'closed') return isClosedStatus(status);
@@ -101,18 +94,14 @@ export function StaffDisputesPanel({
   );
 
   const tabCounts = useMemo(() => {
-    const nonAudit = disputes.filter((d) => {
-      if (d.type === 'audit-violation') return false;
-      return true;
-    });
     let open = 0;
     let closed = 0;
-    for (const d of nonAudit) {
+    for (const d of disputes) {
       const status = effectiveStatus(d, statusMap);
       if (isClosedStatus(status)) closed += 1;
       else open += 1;
     }
-    return { open, closed, all: nonAudit.length };
+    return { open, closed, all: disputes.length };
   }, [disputes, statusMap]);
 
   useEffect(() => {

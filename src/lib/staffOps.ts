@@ -360,7 +360,7 @@ export interface OpsDispute {
   requestId?: string;
   guardId?: string;
   clientId?: string;
-  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime' | 'audit-violation';
+  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime';
   jobTitle: string;
   guardName: string;
   clientName: string;
@@ -381,9 +381,6 @@ export interface OpsDispute {
   claimedAmount?: number;
   hourlyRate?: number;
   guardsNeeded?: number;
-  auditViolationId?: string;
-  auditCheckpoint?: string;
-  auditCategory?: string;
 }
 
 export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
@@ -950,29 +947,7 @@ export function buildDisputes(
     });
   }
 
-  for (const req of requests) {
-    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
-    for (const violation of req.shiftAuditViolations ?? []) {
-      if (!['auto-flagged', 'flagged', 'dispute-open'].includes(violation.status)) continue;
-      disputes.push({
-        id: `audit-dispute-${violation.id}`,
-        type: 'audit-violation',
-        requestId: req.id,
-        guardId: violation.guardId,
-        clientId: req.clientId,
-        jobTitle: req.title,
-        guardName,
-        clientName: req.clientName,
-        guardStatement: violation.dispute?.guardNote?.trim() || 'No guard dispute note yet.',
-        clientStatement: violation.description,
-        status: 'open',
-        openedAt: violation.createdAt,
-        auditViolationId: violation.id,
-        auditCheckpoint: violation.checkpoint,
-        auditCategory: violation.category,
-      });
-    }
-  }
+  // Audit / checkpoint violations live under Violations (buildStaffShiftViolations), not Disputes.
 
   for (const ticket of tickets) {
     if (ticket.kind !== 'report') continue;
