@@ -1,7 +1,6 @@
 import React from 'react';
 import { StaffSection } from '../../lib/staffOps';
 import { STAFF_NAV_GROUPS } from '../../lib/staffNavGroups';
-import type { StaffNavNotificationSignal } from '../../lib/staffOpsNavNotifications';
 import { getStaffNavAccessNotice, isStaffNavItemVisible, type StaffNavAccessFlags } from '../../lib/staffNavAccess';
 import { showAppAlert } from '../ui/AppConfirm';
 import { LayoutDashboard } from 'lucide-react';
@@ -10,7 +9,6 @@ export interface StaffNavItem {
   id: StaffSection;
   label: string;
   icon: typeof LayoutDashboard;
-  notification?: StaffNavNotificationSignal;
   /** Visible to finance staff and all compensatable staff (Payments includes staff pay). */
   paymentsOnly?: boolean;
   /** Visible only to Director and Founder (payments / fund handling) */
@@ -36,16 +34,6 @@ interface StaffSidebarNavProps {
   showDisputes: boolean;
   showCities: boolean;
   financeDeskOnly?: boolean;
-}
-
-function NavNotificationDot({ signal }: { signal: StaffNavNotificationSignal }) {
-  return (
-    <span
-      className={`staff-nav-notify-dot staff-nav-notify-dot--${signal.kind}`}
-      title={signal.kind === 'handled-by-other' ? 'Updated by another staff member' : 'New items'}
-      aria-hidden
-    />
-  );
 }
 
 function NavGroup({
@@ -84,7 +72,7 @@ function NavGroup({
         {title}
       </p>
       <div className="uber-side-nav">
-        {groupItems.map(({ id, label, icon: Icon, notification }) => (
+        {groupItems.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -95,7 +83,6 @@ function NavGroup({
           >
             <Icon className="w-[1.125rem] h-[1.125rem] shrink-0" />
             <span className="flex-1 truncate">{label}</span>
-            {notification ? <NavNotificationDot signal={notification} /> : null}
           </button>
         ))}
       </div>

@@ -85,7 +85,6 @@ import { StaffSupportPanel } from './staff/StaffSupportPanel';
 import { openTicketCount } from '../lib/support';
 import {
   buildStaffNavOpenItemIds,
-  computeStaffNavNotifications,
   loadStaffOpsNavViewState,
   markStaffSectionViewed,
   recordStaffSelfHandledItem,
@@ -95,6 +94,14 @@ import {
   type StaffNotifiableSection,
   type StaffOpsNavViewState,
 } from '../lib/staffOpsNavNotifications';
+import {
+  buildStaffOpsInboxNotifications,
+  isStaffOpsInboxNotification,
+  markStaffInboxNotificationRead,
+  staffSectionFromOpsNotification,
+} from '../lib/staffOpsInboxNotifications';
+import { sortNotificationsNewestFirst } from '../lib/notificationInbox';
+import type { UserNotification } from '../types';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
@@ -661,10 +668,76 @@ export function StaffDashboard({
     }
   }, [syncedNavViewState, navViewState, currentUser.id]);
 
-  const navNotifications = useMemo(
-    () => computeStaffNavNotifications(syncedNavViewState, staffNavOpenItems),
-    [syncedNavViewState, staffNavOpenItems]
+  const [inboxReadTick, setInboxReadTick] = useState(0);
+
+  const staffOpsInboxNotifications = useMemo(() => {
+    void inboxReadTick;
+    return buildStaffOpsInboxNotifications({
+      staffId: currentUser.id,
+      guards,
+      clients,
+      violations: shiftViolations,
+      disputes,
+      incidents,
+      openItemsBySection: staffNavOpenItems,
+      viewState: syncedNavViewState,
+    });
+  }, [
+    inboxReadTick,
+    currentUser.id,
+    guards,
+    clients,
+    shiftViolations,
+    disputes,
+    incidents,
+    staffNavOpenItems,
+    syncedNavViewState,
+  ]);
+
+  const mergedAccountNotifications = useMemo<AccountMenuNotificationProps | undefined>(() => {
+    if (!accountNotifications?.onNotificationClick || !accountNotifications.onMarkAllNotificationsRead) {
+      return accountNotifications;
+    }
+    const persisted = accountNotifications.notifications ?? [];
+    const merged = sortNotificationsNewestFirst([...staffOpsInboxNotifications, ...persisted]);
+    const seen = new Set<string>();
+    const notifications = merged.filter((n) => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+    return { ...accountNotifications, notifications };
+  }, [accountNotifications, staffOpsInboxNotifications]);
+
+  const handleMergedNotificationClick = useCallback(
+    async (notification: UserNotification) => {
+      if (isStaffOpsInboxNotification(notification)) {
+        markStaffInboxNotificationRead(currentUser.id, notification.id);
+        setInboxReadTick((t) => t + 1);
+        const target = staffSectionFromOpsNotification(notification);
+        if (target) navigateSection(target);
+        return;
+      }
+      await accountNotifications?.onNotificationClick?.(notification);
+    },
+    [accountNotifications, currentUser.id, navigateSection]
   );
+
+  const handleMergedMarkAllRead = useCallback(async () => {
+    for (const n of staffOpsInboxNotifications) {
+      if (!n.readAt) markStaffInboxNotificationRead(currentUser.id, n.id);
+    }
+    setInboxReadTick((t) => t + 1);
+    await accountNotifications?.onMarkAllNotificationsRead?.();
+  }, [accountNotifications, currentUser.id, staffOpsInboxNotifications]);
+
+  const staffAccountNotifications = mergedAccountNotifications
+    ? {
+        ...mergedAccountNotifications,
+        onNotificationClick: handleMergedNotificationClick,
+        onMarkAllNotificationsRead: handleMergedMarkAllRead,
+      }
+    : undefined;
 
   const handleStaffOpsItemHandled = useCallback((itemId: string) => {
     setNavViewState((prev) => {
@@ -690,8 +763,6 @@ export function StaffDashboard({
     setNavViewState(next);
     saveStaffOpsNavViewState(currentUser.id, next);
   }, [section, staffNavOpenItems, currentUser.id]);
-
-  const badges = navNotifications;
 
   const renderSection = () => {
     switch (section) {
@@ -1245,11 +1316,10 @@ export function StaffDashboard({
       onChangeTheme={onChangeTheme}
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
-      badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
       onOpenDownload={onOpenDownload}
-      accountNotifications={accountNotifications}
+      accountNotifications={staffAccountNotifications}
       headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}
       canCreateJob={canManageJobs}

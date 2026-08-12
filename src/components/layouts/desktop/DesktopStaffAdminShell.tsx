@@ -120,7 +120,6 @@ export function DesktopStaffAdminShell({
             id: item.id,
             label: item.label,
             icon: item.icon,
-            notification: item.notification?.kind,
           })),
       })).filter((group) => group.items.length > 0),
     [
@@ -163,7 +162,6 @@ export function DesktopStaffAdminShell({
             id: item.id,
             label: item.label,
             icon: item.icon,
-            notification: item.notification?.kind,
             section: group.title ?? 'Operations',
             mobileRank: mobileIndex >= 0 ? mobileIndex + 1 : undefined,
             tabletQuick: TABLET_QUICK.includes(item.id),

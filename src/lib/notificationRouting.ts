@@ -38,11 +38,18 @@ function parsePath(url: string): { pathname: string; searchParams: URLSearchPara
 
 /** Resolve the in-app destination for a notification row or push payload. */
 export function resolveNotificationDestination(
-  notification: Pick<UserNotification, 'type' | 'url' | 'requestId' | 'guardId' | 'ticketId'>,
+  notification: Pick<UserNotification, 'type' | 'url' | 'requestId' | 'guardId' | 'ticketId' | 'metadata'>,
   user: SessionUser
 ): string | null {
   const role = appRoleForUser(user);
   if (!role) return null;
+
+  if (notification.type.startsWith('staff.') && role === 'staff') {
+    const section = notification.metadata?.section;
+    if (typeof section === 'string') return `/staff/${section}`;
+    const trimmed = notification.url?.trim();
+    if (trimmed) return trimmed;
+  }
 
   const trimmedUrl = notification.url?.trim();
   if (trimmedUrl) {
@@ -85,6 +92,10 @@ export function remapNotificationUrlForUser(url: string, user: SessionUser): str
       return `${base}?jc=${encodeURIComponent(requestId)}${openChat ? '&chat=1' : ''}`;
     }
     if (role === 'staff') {
+      if (pathname.includes('/violations')) return '/staff/violations';
+      if (pathname.includes('/disputes')) return '/staff/disputes';
+      if (pathname.includes('/incidents')) return '/staff/incidents';
+      if (pathname.includes('/applications')) return '/staff/applications';
       return `/staff/jobs?j=${encodeURIComponent(requestId)}`;
     }
   }
