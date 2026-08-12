@@ -132,7 +132,7 @@ export function StaffSettingsPanel({
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="animate-fade-in min-w-0 max-w-full">
       <AppFormSection title="Homepage messages">
         <div className="pb-6">{homepageMessagesBody}</div>
       </AppFormSection>

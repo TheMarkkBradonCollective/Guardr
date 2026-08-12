@@ -20876,24 +20876,31 @@ html.theme-dark .staff-shell .app-inbox-row-selected {
 /* Bleed roster lists to the content edges so rows fit the screen width. */
 .uber-app-shell .staff-ops-mobile-body .app-item-card-stack,
 .uber-app-shell .staff-roster-panel .app-item-card-stack,
-.uber-app-shell .staff-ops-mobile-body .split-list-pane > .app-item-card-stack {
-  margin-inline: calc(-1 * var(--ops-list-bleed, 1rem));
-  width: calc(100% + (2 * var(--ops-list-bleed, 1rem)));
+.uber-app-shell .staff-ops-mobile-body .split-list-pane > .app-item-card-stack,
+.uber-app-shell .ops-list-bleed-stack {
+  margin-inline: calc(-1 * var(--ops-list-bleed, 0.75rem));
+  width: calc(100% + (2 * var(--ops-list-bleed, 0.75rem)));
+  max-width: none;
+  box-sizing: border-box;
 }
 
 .uber-app-shell .staff-ops-mobile-body .app-item-card-stack .app-item-card,
 .uber-app-shell .staff-ops-mobile-body .app-item-card-stack .wf-list-card,
 .uber-app-shell .staff-roster-panel .app-item-card-stack .app-item-card,
-.uber-app-shell .staff-roster-panel .app-item-card-stack .wf-list-card {
-  padding-inline: var(--ops-list-bleed, 1rem) !important;
+.uber-app-shell .staff-roster-panel .app-item-card-stack .wf-list-card,
+.uber-app-shell .ops-list-bleed-stack .app-item-card,
+.uber-app-shell .ops-list-bleed-stack .wf-list-card {
+  padding-inline: var(--ops-list-bleed, 0.75rem) !important;
 }
 
 body[data-form-factor="mobile"] .uber-app-shell {
-  --ops-list-bleed: 1rem; /* matches BaseUI scale500 content padding */
+  /* BaseUI scale500 = 12px — must match GuardrDrawerShell contentPadding */
+  --ops-list-bleed: 0.75rem;
 }
 
 body[data-form-factor="tablet"] .uber-app-shell {
-  --ops-list-bleed: 1.25rem; /* matches BaseUI scale600 content padding */
+  /* BaseUI scale600 = 16px */
+  --ops-list-bleed: 1rem;
 }
 
 /* Ops pages scroll as one document (toolbar + list together). */
@@ -21237,6 +21244,79 @@ button.staff-action-btn--ok:hover:not(:disabled) {
 .staff-shell .-mx-4,
 .staff-shell .sm\:-mx-5 {
   margin-inline: 0 !important;
+}
+
+/* Live staff chrome is uber-app-shell (not .staff-shell). Neutralize leftover
+   Tailwind bleeds that overshoot BaseUI scale500/600 content padding and get
+   clipped by overflow-x: clip — causing cut-off toggles/inputs on mobile. */
+.uber-app-shell .animate-fade-in.-mx-4,
+.uber-app-shell .animate-fade-in.sm\:-mx-5,
+.uber-app-shell .staff-ops-mobile-body.-mx-4,
+.uber-app-shell .staff-ops-mobile-body.sm\:-mx-5 {
+  margin-inline: 0 !important;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.uber-app-shell .mobility-content-inner {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.uber-app-shell .mobility-content-inner > .app-page-transition,
+.uber-app-shell .mobility-content-inner > * {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Form pages: keep controls inside the padded column */
+.uber-app-shell .app-form-section,
+.uber-app-shell .app-form-section textarea,
+.uber-app-shell .app-form-section input,
+.uber-app-shell .app-form-section .uber-input {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.uber-app-shell .app-form-section .app-metric-strip,
+.uber-app-shell .animate-fade-in > .app-form-section .app-metric-strip,
+.uber-app-shell .animate-fade-in .app-metric-strip {
+  margin-inline: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.uber-app-shell .app-switch-row,
+.uber-app-shell .staff-toggle-row {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.uber-app-shell .app-switch-row > span:first-child,
+.uber-app-shell .staff-toggle-row > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Guard + client shells: same fit contract */
+body[data-form-factor="mobile"] .uber-app-shell .mobility-content-inner,
+body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner {
+  overflow-x: clip;
+}
+
+body[data-form-factor="mobile"] .uber-app-shell .app-screen,
+body[data-form-factor="mobile"] .uber-app-shell .app-page,
+body[data-form-factor="mobile"] .uber-app-shell .staff-mgmt-panel,
+body[data-form-factor="mobile"] .uber-app-shell .staff-roster-panel {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: clip;
 }
 
 .staff-shell .app-dashboard-hero,

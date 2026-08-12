@@ -137,7 +137,7 @@ function PipelineSection({
         <WfSectionHeader title={meta.title} count={items.length} />
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{meta.description}</p>
       </div>
-      <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+      <AppItemCardStack className="ops-list-bleed-stack">
         {visible.map((req) => (
           <JobPaymentRow
             key={req.id}
@@ -539,7 +539,7 @@ export function StaffPaymentsPanel({
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
-            <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+            <AppItemCardStack className="ops-list-bleed-stack">
               {openInvoices.map((invoice) => (
                 <StaffPayoutInvoiceRow
                   key={invoice.id}
