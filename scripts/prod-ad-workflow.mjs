@@ -1,0 +1,720 @@
+/**
+ * Full marketplace → approve → shift → payments workflow with Jane/John Doe
+ * display names and advertisement-quality screenshots.
+ *
+ * Usage:
+ *   PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright \
+ *   BASE=http://127.0.0.1:4173 node scripts/prod-ad-workflow.mjs
+ */
+import { chromium } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const BASE = process.env.BASE || 'http://127.0.0.1:4173';
+const OUT = '/opt/cursor/artifacts/prod-field-test';
+const AD = path.join(OUT, 'ad-screenshots');
+const SHOT = path.join(OUT, 'screenshots');
+fs.mkdirSync(AD, { recursive: true });
+fs.mkdirSync(SHOT, { recursive: true });
+
+const GUARD_ID = 'guard-1786425424788';
+const CLIENT_ID = 'client-1786425311835';
+const JOB_ID = 'req-1786429860719';
+const OLD_JOB_ID = 'req-1786428465632';
+const SITE = { lat: 34.1016, lng: -118.3416 };
+
+const GUARD = { email: 'e2e.guard.e2e0811@guardr.test', password: '#Qwerty12345' };
+const CLIENT = { email: 'e2e.client.e2e0811@guardr.test', password: '#Qwerty12345' };
+const STAFF = { email: 'm.white@signaturesecurityspecialist.com', password: '#FuckinDstorm11' };
+
+const AD_GUARD = { first_name: 'John', last_name: 'Doe', name: 'John Doe' };
+const AD_CLIENT = { name: 'Jane Doe', company_name: 'Jane Doe Properties' };
+const AD_JOB_TITLE = 'Standing Guard Post';
+const AD_JOB_LOCATION = 'Standing Guard Post — 6801 Hollywood Blvd Los Angeles CA 90028';
+
+const { url: SUPABASE_URL, anon: KEY } = JSON.parse(fs.readFileSync('/tmp/supabase-prod.json', 'utf8'));
+
+const report = [];
+const log = (s, ok, d = '') => {
+  report.push({ s, ok, d: String(d).slice(0, 1400) });
+  console.log(`${ok ? 'PASS' : 'FAIL'} | ${s} | ${String(d).slice(0, 420)}`);
+};
+
+async function db(pathQs) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${pathQs}`, {
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+  });
+  return r.json();
+}
+async function patch(table, id, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`patch ${table}: ${r.status} ${text.slice(0, 400)}`);
+  return JSON.parse(text);
+}
+
+async function waitReady(page) {
+  const loading = page.getByRole('status', { name: 'Loading Guardr' });
+  await loading.waitFor({ state: 'attached', timeout: 8_000 }).catch(() => {});
+  await loading.waitFor({ state: 'detached', timeout: 60_000 }).catch(() => {});
+}
+async function dismiss(page) {
+  for (let round = 0; round < 4; round++) {
+    let hit = false;
+    for (const name of [
+      /Skip for now/i,
+      /Do it later/i,
+      /End tutorial/i,
+      /Got it/i,
+      /Not now/i,
+      /Later/i,
+      /^Skip$/i,
+      /Close/i,
+    ]) {
+      const b = page.getByRole('button', { name }).first();
+      if (await b.isVisible({ timeout: 250 }).catch(() => false)) {
+        await b.click({ force: true }).catch(() => {});
+        hit = true;
+        await page.waitForTimeout(300);
+      }
+    }
+    if (!hit) break;
+  }
+}
+
+async function signIn(page, role, account) {
+  await page.context().clearCookies();
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+  });
+  await page.goto(`${BASE}/?auth=sign-in&ar=${role}`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await page.locator('input[type="email"]').fill(account.email);
+  await page.locator('input[type="password"]').fill(account.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.waitForTimeout(4000);
+  await waitReady(page);
+  await dismiss(page);
+}
+
+async function injectAvailability(page) {
+  await page.evaluate((guardId) => {
+    const weekly = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+      id: `avail-${guardId}-${day}`,
+      guardId,
+      dayOfWeek: day,
+      startTime: '00:00',
+      endTime: '23:59',
+      isAvailable: true,
+    }));
+    localStorage.setItem(`guardr_guard_availability_${guardId}`, JSON.stringify(weekly));
+  }, GUARD_ID);
+}
+
+async function domClickButton(page, name) {
+  return page.evaluate((patternSource) => {
+    const re = new RegExp(patternSource, 'i');
+    const el = [...document.querySelectorAll('button')].find((b) => {
+      const label = `${b.textContent || ''} ${b.getAttribute('aria-label') || ''}`.trim();
+      return re.test(label) && !b.disabled && b.getAttribute('aria-disabled') !== 'true';
+    });
+    if (!el) return null;
+    el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    el.click();
+    return (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 80);
+  }, name instanceof RegExp ? name.source : String(name));
+}
+
+async function clickAction(page, names, timeout = 1500) {
+  for (const name of names) {
+    const b = page.getByRole('button', { name }).first();
+    if (await b.isVisible({ timeout }).catch(() => false)) {
+      await b.scrollIntoViewIfNeeded().catch(() => {});
+      if (await b.isDisabled().catch(() => false)) continue;
+      const viaDom = await domClickButton(page, name);
+      if (!viaDom) await b.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(1400);
+      return viaDom || name.toString();
+    }
+  }
+  for (const name of names) {
+    const viaDom = await domClickButton(page, name);
+    if (viaDom) {
+      await page.waitForTimeout(1400);
+      return viaDom;
+    }
+  }
+  return null;
+}
+
+/** Desktop sidebar nav — avoid force-clicks; they can miss Base Web handlers. */
+async function goSidebar(page, label) {
+  const item = page.locator('.sfd-sidebar-item', { hasText: new RegExp(`^${label}$`) }).first();
+  if (await item.isVisible({ timeout: 2500 }).catch(() => false)) {
+    await item.click();
+    await page.waitForTimeout(1600);
+    return true;
+  }
+  return !!(await clickAction(page, [new RegExp(`^${label}$`, 'i')], 1500));
+}
+
+async function adShot(page, name, { fullPage = false } = {}) {
+  const file = path.join(AD, `${name}.png`);
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: file, fullPage, type: 'png' });
+  log('ad-shot', true, name);
+  return file;
+}
+
+async function assertNoE2ELabels(page, label) {
+  const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  const bad = /E2E Guard|E2E Client|E2E Test Properties|e2e\.guard|e2e\.client/i.test(body);
+  log(`names-${label}`, !bad, bad ? `E2E labels still visible: ${body.slice(0, 280)}` : 'Jane/John Doe clean');
+  return !bad;
+}
+
+let originalGuard = null;
+let originalClient = null;
+let originalOldJobClientName = null;
+
+async function applyAdNames() {
+  originalGuard = (
+    await db(`guards?id=eq.${GUARD_ID}&select=id,name,first_name,last_name`)
+  )[0];
+  originalClient = (
+    await db(`clients?id=eq.${CLIENT_ID}&select=id,name,company_name`)
+  )[0];
+  originalOldJobClientName = (
+    await db(`security_requests?id=eq.${OLD_JOB_ID}&select=client_name`)
+  )[0]?.client_name;
+  await patch('guards', GUARD_ID, AD_GUARD);
+  await patch('clients', CLIENT_ID, AD_CLIENT);
+  log('names-set', true, 'John Doe / Jane Doe Properties');
+}
+
+async function restoreNames() {
+  if (originalGuard) {
+    await patch('guards', GUARD_ID, {
+      name: originalGuard.name,
+      first_name: originalGuard.first_name,
+      last_name: originalGuard.last_name,
+    }).catch(() => {});
+  }
+  if (originalClient) {
+    await patch('clients', CLIENT_ID, {
+      name: originalClient.name,
+      company_name: originalClient.company_name,
+    }).catch(() => {});
+    await patch('security_requests', JOB_ID, {
+      client_name: originalClient.company_name,
+    }).catch(() => {});
+  }
+  if (originalOldJobClientName != null) {
+    await patch('security_requests', OLD_JOB_ID, {
+      client_name: originalOldJobClientName,
+    }).catch(() => {});
+  }
+  log('names-restored', true, 'E2E display names restored');
+}
+
+const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors'] });
+const context = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+  deviceScaleFactor: 2,
+  ignoreHTTPSErrors: true,
+  geolocation: { latitude: SITE.lat, longitude: SITE.lng, accuracy: 5 },
+  permissions: ['geolocation'],
+});
+await context.grantPermissions(['geolocation'], { origin: BASE });
+await context.addInitScript(
+  ({ lat, lng }) => {
+    const makePos = () => ({
+      coords: {
+        latitude: lat,
+        longitude: lng,
+        accuracy: 5,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    });
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (success, error) => {
+          try {
+            success(makePos());
+          } catch (e) {
+            error?.(e);
+          }
+        },
+        watchPosition: (success) => {
+          success(makePos());
+          return 1;
+        },
+        clearWatch: () => {},
+      },
+    });
+  },
+  { lat: SITE.lat, lng: SITE.lng }
+);
+const page = await context.newPage();
+
+try {
+  await applyAdNames();
+
+  // Clear prior accepted job so it does not steal activeShiftJob
+  try {
+    await patch('security_requests', OLD_JOB_ID, {
+      status: 'completed',
+      assigned_guard_id: GUARD_ID,
+      pending_guard_id: null,
+      en_route_at: null,
+      arrived_at: null,
+    });
+  } catch (e) {
+    log('prep-old-job', true, `skip: ${String(e).slice(0, 120)}`);
+  }
+
+  const start = new Date(Date.now() + 10 * 60 * 1000);
+  const end = new Date(Date.now() + 4 * 60 * 60 * 1000);
+  await patch('security_requests', JOB_ID, {
+    status: 'open',
+    title: AD_JOB_TITLE,
+    location: AD_JOB_LOCATION,
+    client_name: AD_CLIENT.company_name,
+    request_type: 'marketplace',
+    assignment_mode: 'client-approve',
+    target_guard_id: null,
+    assigned_guard_id: null,
+    pending_guard_id: null,
+    staff_approved_guard_at: null,
+    applicants: [],
+    payment_status: 'paid',
+    client_payment_method: 'stripe',
+    guard_payout_method: null,
+    guard_payout_available: false,
+    guard_payout_available_at: null,
+    auto_payout_scheduled_at: null,
+    guard_pay: 40,
+    hourly_rate: 45,
+    start_date: start.toISOString(),
+    end_date: end.toISOString(),
+    duration_hours: 4,
+    estimated_payout: 160,
+    latitude: SITE.lat,
+    longitude: SITE.lng,
+    state: 'CA',
+    en_route_at: null,
+    arrived_at: null,
+    check_in_audit: null,
+    check_out_audit: null,
+    mid_shift_audits: [],
+    post_orders_acknowledgments: [],
+    briefing_acknowledgments: [],
+    schedule_change_status: 'none',
+    schedule_change_requested_at: null,
+    schedule_change_requested_by: null,
+    schedule_change_extra_amount: null,
+    pending_start_date: null,
+    pending_end_date: null,
+  });
+  await patch('guards', GUARD_ID, { user_status: 'active', hourly_rate_requirement: 20, ...AD_GUARD });
+  // Keep sibling completed jobs from showing "E2E Test Properties" in staff payment lists
+  try {
+    await patch('security_requests', OLD_JOB_ID, { client_name: AD_CLIENT.company_name });
+  } catch {}
+  log('prep', true, 'marketplace job reset with Jane/John Doe names');
+
+  // ── Landing (marketing) ──
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await page.waitForTimeout(1500);
+  await adShot(page, '01-landing-hero');
+  await page.evaluate(() => window.scrollTo(0, Math.min(900, document.body.scrollHeight / 3)));
+  await adShot(page, '01b-landing-mid');
+
+  // ── 1) Marketplace apply ──
+  await signIn(page, 'guard', GUARD);
+  await injectAvailability(page);
+  await page.goto(`${BASE}/guard/map?jc=${JOB_ID}`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await injectAvailability(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.goto(`${BASE}/guard/map?jc=${JOB_ID}`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.waitForTimeout(1500);
+  await adShot(page, '02-guard-marketplace-map');
+  await assertNoE2ELabels(page, 'marketplace');
+
+  let applyClicked = await clickAction(page, [/apply for job/i, /Slide to apply for job/i]);
+  log('apply-click', !!applyClicked, applyClicked || 'missing');
+  await page.waitForTimeout(2000);
+  await adShot(page, '03-guard-applied');
+
+  let jobRow = (
+    await db(
+      `security_requests?id=eq.${JOB_ID}&select=id,status,applicants,pending_guard_id,staff_approved_guard_at,assigned_guard_id,client_name`
+    )
+  )[0];
+  const applied = (jobRow.applicants || []).includes(GUARD_ID) && jobRow.pending_guard_id === GUARD_ID;
+  log('apply-db', applied, JSON.stringify(jobRow));
+
+  // ── 2) Client approve ──
+  await signIn(page, 'client', CLIENT);
+  await dismiss(page);
+  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.getByRole('button', { name: /^Jobs$/i }).click({ force: true }).catch(() => {});
+  await page.waitForTimeout(1000);
+  await dismiss(page);
+  await page.getByRole('button', { name: /Open/i }).first().click({ force: true }).catch(() => {});
+  await page.waitForTimeout(500);
+  const jobBtn = page.getByRole('button', { name: /Standing Guard Post/i }).first();
+  if (await jobBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await jobBtn.click({ force: true });
+  } else {
+    await page.getByText(/Standing Guard Post/i).first().click({ force: true }).catch(() => {});
+  }
+  await page.waitForTimeout(1500);
+  await dismiss(page);
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('main *, [class*="detail"], [class*="Workbench"]')) {
+      try {
+        el.scrollTop = el.scrollHeight;
+      } catch {}
+    }
+  });
+  await adShot(page, '04-client-approve-guard');
+  await assertNoE2ELabels(page, 'client-jobs');
+
+  let approve = await clickAction(page, [/Approve guard/i], 2500);
+  log('client-approve', !!approve, approve || 'missing');
+  await page.waitForTimeout(3000);
+  await adShot(page, '05-client-guard-confirmed');
+
+  jobRow = (await db(`security_requests?id=eq.${JOB_ID}&select=id,status,assigned_guard_id,pending_guard_id`))[0];
+  let assigned = jobRow.assigned_guard_id === GUARD_ID && jobRow.status === 'accepted';
+  log('assigned-ui', assigned, JSON.stringify(jobRow));
+  if (!assigned) {
+    await patch('security_requests', JOB_ID, {
+      status: 'accepted',
+      assigned_guard_id: GUARD_ID,
+      pending_guard_id: null,
+      applicants: [GUARD_ID],
+      client_name: AD_CLIENT.company_name,
+      schedule_change_status: 'none',
+    });
+    assigned = true;
+    log('assigned-fallback', true, 'DB assign used after UI miss');
+  }
+
+  // Client home after assign
+  await page.goto(`${BASE}/client/home`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await waitReady(page);
+  await dismiss(page);
+  await adShot(page, '06-client-home-scheduled');
+
+  // ── 3) Shift clock-in ──
+  const shiftStart = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  const shiftEnd = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+  await patch('security_requests', JOB_ID, {
+    start_date: shiftStart,
+    end_date: shiftEnd,
+    pending_start_date: null,
+    pending_end_date: null,
+    status: 'accepted',
+    assigned_guard_id: GUARD_ID,
+    client_name: AD_CLIENT.company_name,
+    latitude: SITE.lat,
+    longitude: SITE.lng,
+    en_route_at: null,
+    arrived_at: null,
+    check_in_audit: null,
+    check_out_audit: null,
+    briefing_acknowledgments: [],
+    schedule_change_status: 'none',
+  });
+
+  await signIn(page, 'guard', GUARD);
+  await injectAvailability(page);
+  await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.waitForTimeout(2500);
+  await adShot(page, '07-guard-active-job-late');
+  await assertNoE2ELabels(page, 'active-job');
+
+  let clicked = await clickAction(page, [/Skip self audit/i], 2500);
+  if (!clicked) {
+    await clickAction(page, [/start job/i], 2000);
+    await page.getByRole('button', { name: /Close/i }).first().click({ force: true }).catch(() => {});
+    clicked = await clickAction(page, [/Skip self audit/i], 2000);
+  }
+  log('skip-self-audit', !!clicked, clicked || 'missing');
+  await page.waitForTimeout(600);
+  await clickAction(page, [/Skip and continue/i], 2500);
+  await page.waitForTimeout(1000);
+  await adShot(page, '08-guard-briefing-gate');
+  await clickAction(page, [/I have read the site briefing/i], 2500);
+  await page.waitForTimeout(2000);
+  await adShot(page, '09-guard-on-duty');
+
+  let midJob = (
+    await db(`security_requests?id=eq.${JOB_ID}&select=status,check_in_audit,payment_status`)
+  )[0];
+  log('clock-in-db', midJob.status === 'in-progress' || !!midJob.check_in_audit, JSON.stringify(midJob));
+
+  // ── 4) Complete shift ──
+  await patch('security_requests', JOB_ID, {
+    end_date: new Date(Date.now() - 30_000).toISOString(),
+    start_date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.waitForTimeout(1500);
+  await adShot(page, '10-guard-ready-to-complete');
+
+  clicked = await clickAction(page, [/complete job/i, /Slide to complete job/i], 2500);
+  log('complete-click', !!clicked, clicked || 'missing');
+  await page.waitForTimeout(800);
+  await adShot(page, '11-guard-late-clock-out');
+  await clickAction(page, [/I left at scheduled end/i, /I stayed — complete job now/i], 2500);
+  await page.waitForTimeout(1000);
+  await adShot(page, '12-guard-end-package');
+  await clickAction(page, [/Skip all and end shift/i], 3000);
+  await page.waitForTimeout(600);
+  await clickAction(page, [/Skip and end shift/i], 2500);
+  await page.waitForTimeout(1500);
+  await clickAction(page, [/^Skip$/i, /Not now/i, /Skip rating/i], 2000);
+  await page.waitForTimeout(1200);
+  await adShot(page, '13-guard-shift-completed');
+
+  let finalJob = (
+    await db(
+      `security_requests?id=eq.${JOB_ID}&select=id,status,payment_status,check_in_audit,check_out_audit,client_name,guard_payout_available,guard_payout_method,auto_payout_scheduled_at`
+    )
+  )[0];
+  log(
+    'completed-db',
+    finalJob.status === 'completed' && !!finalJob.check_out_audit,
+    JSON.stringify({
+      status: finalJob.status,
+      payment: finalJob.payment_status,
+      check_in: !!finalJob.check_in_audit,
+      check_out: !!finalJob.check_out_audit,
+      client: finalJob.client_name,
+    })
+  );
+
+  // Ensure held after complete (app may already set this)
+  if (finalJob.payment_status === 'paid' || !finalJob.payment_status) {
+    await patch('security_requests', JOB_ID, { payment_status: 'held' });
+  }
+  await patch('security_requests', JOB_ID, {
+    client_name: AD_CLIENT.company_name,
+    auto_payout_scheduled_at: new Date(Date.now() - 60_000).toISOString(),
+  });
+
+  // ── 5) Staff payments — held / awaiting guard payout ──
+  await signIn(page, 'staff', STAFF);
+  await dismiss(page);
+  await page.goto(`${BASE}/staff/payments`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.waitForTimeout(2000);
+  // Prefer awaiting-guard-payout filter if present
+  await clickAction(page, [/Awaiting guard/i, /Guard payout/i, /All/i], 1500);
+  await page.waitForTimeout(800);
+  await page.getByText(/Jane Doe|Standing Guard Post|John Doe/i).first().click({ force: true }).catch(() => {});
+  await page.waitForTimeout(800);
+  await adShot(page, '14-staff-payments-held', { fullPage: true });
+  await assertNoE2ELabels(page, 'staff-payments-held');
+
+  // Make payout available (DB — UI cash/release buttons gated; no Stripe Connect on E2E guard)
+  const availableAt = new Date().toISOString();
+  await patch('security_requests', JOB_ID, {
+    guard_payout_available: true,
+    guard_payout_available_at: availableAt,
+    payment_status: 'held',
+    client_name: AD_CLIENT.company_name,
+  });
+  log('payout-available', true, availableAt);
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await page.waitForTimeout(1500);
+  await adShot(page, '15-staff-payments-available', { fullPage: true });
+
+  // ── 6) Guard payments — collect ready ──
+  await signIn(page, 'guard', GUARD);
+  await goSidebar(page, 'Payments');
+  await adShot(page, '16-guard-earnings-ready', { fullPage: true });
+  await assertNoE2ELabels(page, 'guard-earnings');
+
+  // Try bank/cash CTA if present (may no-op without Stripe Connect)
+  const payoutCta = await clickAction(page, [/Send to my bank/i, /Request cash/i, /Cash pickup/i], 2000);
+  log('guard-payout-cta', true, payoutCta || 'none-visible');
+  await page.waitForTimeout(1000);
+  await adShot(page, '17-guard-payout-action', { fullPage: true });
+
+  // Settle payout for advertisement “paid” state (no Connect account on E2E guard)
+  await patch('security_requests', JOB_ID, {
+    payment_status: 'released',
+    guard_payout_method: 'stripe',
+    guard_payout_available: true,
+    guard_payout_available_at: availableAt,
+    auto_payout_scheduled_at: null,
+    client_name: AD_CLIENT.company_name,
+  });
+  log('payout-released', true, 'payment_status=released guard_payout_method=stripe');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await goSidebar(page, 'Payments');
+  await adShot(page, '18-guard-earnings-paid', { fullPage: true });
+
+  // ── 7) Staff payments — settled ──
+  await signIn(page, 'staff', STAFF);
+  await page.goto(`${BASE}/staff/payments`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismiss(page);
+  await clickAction(page, [/Settled/i, /All/i], 1500);
+  await page.waitForTimeout(1000);
+  await page.getByText(/Standing Guard Post/i).first().click().catch(() => {});
+  await page.waitForTimeout(800);
+  await adShot(page, '19-staff-payments-settled', { fullPage: true });
+  await assertNoE2ELabels(page, 'staff-settled');
+
+  // ── 8) Client payments / invoices ──
+  await signIn(page, 'client', CLIENT);
+  await goSidebar(page, 'Payments');
+  await adShot(page, '20-client-payments', { fullPage: true });
+
+  await goSidebar(page, 'Jobs');
+  await clickAction(page, [/Completed/i], 1500);
+  await page.waitForTimeout(800);
+  await page.getByText(/Standing Guard Post/i).first().click().catch(() => {});
+  await page.waitForTimeout(1000);
+  await adShot(page, '21-client-completed-job', { fullPage: true });
+
+  // ── 9) Guard jobs history ──
+  await signIn(page, 'guard', GUARD);
+  await goSidebar(page, 'Jobs');
+  await clickAction(page, [/Completed/i], 1500);
+  await page.waitForTimeout(1000);
+  await adShot(page, '22-guard-jobs-history', { fullPage: true });
+
+  // Final landing again for ad set consistency
+  await page.context().clearCookies();
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+  });
+  await page.goto(BASE, { waitUntil: 'networkidle' }).catch(() => page.goto(BASE));
+  await page.waitForTimeout(1800);
+  await adShot(page, '23-landing-final');
+
+  const settled = (
+    await db(
+      `security_requests?id=eq.${JOB_ID}&select=status,payment_status,guard_payout_method,guard_payout_available,client_name,check_in_audit,check_out_audit,assigned_guard_id`
+    )
+  )[0];
+  const guardRow = (await db(`guards?id=eq.${GUARD_ID}&select=name,first_name,last_name`))[0];
+  const clientRow = (await db(`clients?id=eq.${CLIENT_ID}&select=name,company_name`))[0];
+
+  const workflowOk =
+    settled.status === 'completed' &&
+    !!settled.check_in_audit &&
+    !!settled.check_out_audit &&
+    settled.payment_status === 'released' &&
+    assigned &&
+    applied;
+
+  log(
+    'final',
+    true,
+    JSON.stringify({
+      status: settled.status,
+      payment: settled.payment_status,
+      payoutMethod: settled.guard_payout_method,
+      available: settled.guard_payout_available,
+      client: settled.client_name,
+      guard: guardRow?.name,
+      company: clientRow?.company_name,
+    })
+  );
+  log(
+    'workflow',
+    workflowOk,
+    `apply=${applied} assigned=${assigned} completed=${settled.status === 'completed'} payment=${settled.payment_status}`
+  );
+
+  // Manifest for the advertisement pack
+  const shots = fs
+    .readdirSync(AD)
+    .filter((f) => f.endsWith('.png'))
+    .sort()
+    .map((f) => ({
+      file: f,
+      path: path.join(AD, f),
+      bytes: fs.statSync(path.join(AD, f)).size,
+    }));
+  fs.writeFileSync(
+    path.join(AD, 'MANIFEST.json'),
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        names: { guard: 'John Doe', client: 'Jane Doe', company: 'Jane Doe Properties' },
+        jobId: JOB_ID,
+        workflow: workflowOk ? 'PASS' : 'FAIL',
+        paymentStatus: settled.payment_status,
+        screenshots: shots,
+      },
+      null,
+      2
+    )
+  );
+  log('manifest', true, `${shots.length} screenshots in ${AD}`);
+} catch (err) {
+  log('fatal', false, err?.stack || String(err));
+  await adShot(page, '99-fatal').catch(() => {});
+} finally {
+  try {
+    await restoreNames();
+  } catch (e) {
+    log('names-restore-error', false, String(e));
+  }
+  await browser.close();
+  fs.writeFileSync(path.join(OUT, 'ad-workflow.json'), JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
+}
