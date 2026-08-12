@@ -460,13 +460,22 @@ try {
 
   clicked = await clickAction(page, [/complete job/i, /Slide to complete job/i, /End shift/i], 2500);
   log('complete-click', !!clicked, clicked || 'missing');
-  await page.waitForTimeout(800);
-  // Late clock-out prompt may appear first
-  await clickAction(page, [/I stayed — complete job now/i, /complete job now/i], 1500);
-  await page.waitForTimeout(800);
-  await clickAction(page, [/Skip all and end shift/i, /Slide to complete shift/i, /Complete shift/i], 2500);
+  await page.waitForTimeout(1000);
+
+  // Late clock-out → end package (prefer on-time leave to avoid overtime confirm)
+  let lateChoice = await clickAction(page, [/I left at scheduled end/i, /I stayed — complete job now/i], 2500);
+  log('late-choice', !!lateChoice, lateChoice || 'none');
   await page.waitForTimeout(1200);
-  await clickAction(page, [/Skip and continue/i, /^Skip$/i, /Not now/i], 1500);
+
+  let endSkip = await clickAction(page, [/Skip all and end shift/i], 3000);
+  log('end-skip', !!endSkip, endSkip || 'missing');
+  await page.waitForTimeout(800);
+  let endConfirm = await clickAction(page, [/Skip and end shift/i], 2500);
+  log('end-confirm', !!endConfirm, endConfirm || 'missing');
+  await page.waitForTimeout(2000);
+
+  // Client rating modal after complete
+  await clickAction(page, [/^Skip$/i, /Not now/i, /Skip rating/i], 2000);
   await page.waitForTimeout(1500);
   await shot(page, '3115-complete');
 
@@ -490,11 +499,12 @@ try {
   );
 
   const marketplaceFixed = applied;
-  const shiftProgress = !!(finalJob.en_route_at || finalJob.arrived_at || finalJob.check_in_audit || finalJob.status === 'in-progress' || finalJob.status === 'completed');
+  const clockedIn = !!finalJob.check_in_audit || finalJob.status === 'in-progress' || finalJob.status === 'completed';
+  const completed = finalJob.status === 'completed' && !!finalJob.check_out_audit;
   log(
     'workflow',
-    marketplaceFixed && assigned && shiftProgress,
-    `apply=${marketplaceFixed} assigned=${assigned} shift=${shiftProgress} status=${finalJob.status}`
+    marketplaceFixed && assigned && clockedIn && completed,
+    `apply=${marketplaceFixed} assigned=${assigned} clockIn=${clockedIn} completed=${completed} status=${finalJob.status}`
   );
 } catch (err) {
   log('fatal', false, err?.stack || String(err));
