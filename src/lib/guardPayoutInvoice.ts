@@ -2,7 +2,8 @@ import { GuardPayoutInvoiceLine, SecurityGuard, SecurityRequest } from '../types
 import { guardPayoutAmount, isStripeDepositSatisfied } from './cashPayments';
 import { formatShiftRange } from './dates';
 
-export type GuardPayoutMethod = 'cash' | 'stripe';
+/** Stripe is the only guard payout method. Legacy 'cash' may appear in stored invoices. */
+export type GuardPayoutMethod = 'stripe' | 'cash';
 
 /** Base filter: job complete, payout released, not yet paid out. */
 function basePayoutEligible(guardId: string, req: SecurityRequest): boolean {
@@ -17,8 +18,7 @@ function basePayoutEligible(guardId: string, req: SecurityRequest): boolean {
 
 /**
  * Jobs eligible for a Stripe bank transfer.
- * Money must be in Guardr's Stripe account — if client paid cash and it hasn't
- * been deposited yet, Stripe payout is unavailable (only cash pickup applies).
+ * Stripe deposit is always satisfied on the Stripe-only product path.
  */
 export function getGuardStripePayoutEligibleJobs(
   guardId: string,
@@ -29,23 +29,20 @@ export function getGuardStripePayoutEligibleJobs(
   );
 }
 
-/**
- * Jobs eligible for a cash pickup.
- * Available regardless of Stripe deposit status — Guardr pays from their own funds.
- */
+/** @deprecated Cash pickup removed — always empty. */
 export function getGuardCashPayoutEligibleJobs(
-  guardId: string,
-  requests: SecurityRequest[]
+  _guardId: string,
+  _requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return requests.filter((r) => basePayoutEligible(guardId, r));
+  return [];
 }
 
-/** All payout-eligible jobs (used for general checks). */
+/** All payout-eligible jobs (Stripe bank transfer only). */
 export function getGuardPayoutEligibleJobs(
   guardId: string,
   requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return getGuardCashPayoutEligibleJobs(guardId, requests);
+  return getGuardStripePayoutEligibleJobs(guardId, requests);
 }
 
 export function buildGuardPayoutInvoice(params: {

@@ -84,7 +84,8 @@ export function maybeCompletePayoutInvoice(
 }
 
 export function payoutInvoiceLabel(invoice: GuardPayoutInvoice): string {
-  return invoice.method === 'cash' ? 'Cash pickup' : 'Bank transfer';
+  // Legacy cash invoices still display as bank transfer — cash pickup removed.
+  return 'Bank transfer';
 }
 
 export function guardPayoutInvoiceLines(invoice: Pick<GuardPayoutInvoice, 'lines'>): GuardPayoutInvoice['lines'] {

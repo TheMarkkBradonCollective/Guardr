@@ -185,8 +185,6 @@ interface StaffDashboardProps {
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
-  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
-  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
   onResolveOvertimeDispute?: (
     requestId: string,
     action: 'waive' | 'uphold' | 'adjust',
@@ -198,14 +196,7 @@ interface StaffDashboardProps {
     action: 'uphold' | 'dismiss',
     resolutionNote?: string
   ) => Promise<void>;
-  onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
-  onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
-  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
-  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
-  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
-  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
@@ -393,18 +384,9 @@ export function StaffDashboard({
   onMakeGuardPayoutAvailable,
   onReleasePayout,
   onRefundPayment,
-  onMarkClientPaidCash,
-  onMarkOvertimePaidCash,
   onResolveOvertimeDispute,
   onResolveAuditViolation,
-  onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
-  onMarkOvertimeGuardPaidCash,
-  onApproveClientCashPayment,
-  onRejectClientCashPayment,
-  onMarkGuardPaidCash,
-  onMarkPlatformFeePaidCash,
-  onMarkCashDepositManually,
   onCompletePayoutInvoice,
   isDbConnected,
   currentUser,
@@ -965,16 +947,7 @@ export function StaffDashboard({
               onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
               onReleasePayout={onReleasePayout}
               onRefundPayment={onRefundPayment}
-              onMarkClientPaidCash={onMarkClientPaidCash}
-              onMarkOvertimePaidCash={onMarkOvertimePaidCash}
-              onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
               onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
-              onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
-              onApproveClientCashPayment={onApproveClientCashPayment}
-              onRejectClientCashPayment={onRejectClientCashPayment}
-              onMarkGuardPaidCash={onMarkGuardPaidCash}
-              onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
-              onMarkCashDepositManually={onMarkCashDepositManually}
               onCompletePayoutInvoice={onCompletePayoutInvoice}
             />
           </PaymentsPage>
@@ -1023,7 +996,6 @@ export function StaffDashboard({
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
-            onResolveAuditViolation={onResolveAuditViolation}
           />
         ) : (
           <AppBlockedAccessScreen

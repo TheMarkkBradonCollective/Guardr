@@ -43,20 +43,11 @@ interface StaffPaymentsPanelProps {
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
-  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
-  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
-  onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
-  onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
-  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
-  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
-  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
-  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
 
-type PipelineStageKey = Exclude<PaymentPipelineStage, 'closed'>;
+type PipelineStageKey = Exclude<PaymentPipelineStage, 'closed' | 'cash-deposit-pending'>;
 
 type PaymentQueueItem =
   | { kind: 'job'; id: string; req: SecurityRequest; stage: PipelineStageKey }
@@ -66,13 +57,11 @@ type PaymentsFilter = 'action' | 'all' | PipelineStageKey | 'invoices';
 
 const ACTION_STAGES: PipelineStageKey[] = [
   'awaiting-guard-payout',
-  'cash-deposit-pending',
   'awaiting-client',
 ];
 
 const PIPELINE_STAGE_ORDER: PipelineStageKey[] = [
   'awaiting-guard-payout',
-  'cash-deposit-pending',
   'awaiting-client',
   'guard-collection-pending',
   'client-paid-active',
@@ -89,16 +78,7 @@ function PipelineSection({
   paymentGates,
   onMakeGuardPayoutAvailable,
   onRefundPayment,
-  onMarkClientPaidCash,
-  onMarkOvertimePaidCash,
-  onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
-  onMarkOvertimeGuardPaidCash,
-  onApproveClientCashPayment,
-  onRejectClientCashPayment,
-  onMarkGuardPaidCash,
-  onMarkPlatformFeePaidCash,
-  onMarkCashDepositManually,
   readOnly = false,
   limit,
 }: {
@@ -111,16 +91,7 @@ function PipelineSection({
   paymentGates: ClientPaymentGates;
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
-  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
-  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
-  onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
-  onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
-  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
-  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
-  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
-  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
 }) {
@@ -137,7 +108,7 @@ function PipelineSection({
         <WfSectionHeader title={meta.title} count={items.length} />
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{meta.description}</p>
       </div>
-      <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+      <AppItemCardStack className="ops-list-bleed-stack">
         {visible.map((req) => (
           <JobPaymentRow
             key={req.id}
@@ -150,16 +121,7 @@ function PipelineSection({
             readOnly={readOnly}
             onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onRefundPayment={onRefundPayment}
-            onMarkClientPaidCash={onMarkClientPaidCash}
-            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
-            onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
             onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
-            onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
-            onApproveClientCashPayment={onApproveClientCashPayment}
-            onRejectClientCashPayment={onRejectClientCashPayment}
-            onMarkGuardPaidCash={onMarkGuardPaidCash}
-            onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
-            onMarkCashDepositManually={onMarkCashDepositManually}
           />
         ))}
       </AppItemCardStack>
@@ -220,16 +182,7 @@ export function StaffPaymentsPanel({
   onMakeGuardPayoutAvailable,
   onReleasePayout,
   onRefundPayment,
-  onMarkClientPaidCash,
-  onMarkOvertimePaidCash,
-  onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
-  onMarkOvertimeGuardPaidCash,
-  onApproveClientCashPayment,
-  onRejectClientCashPayment,
-  onMarkGuardPaidCash,
-  onMarkPlatformFeePaidCash,
-  onMarkCashDepositManually,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
   const { formFactor } = useDevice();
@@ -246,22 +199,12 @@ export function StaffPaymentsPanel({
     paymentGates,
     onMakeGuardPayoutAvailable,
     onRefundPayment,
-    onMarkClientPaidCash,
-    onMarkOvertimePaidCash,
-    onApproveOvertimeCashPayment,
     onMakeOvertimeGuardPayoutAvailable,
-    onMarkOvertimeGuardPaidCash,
-    onApproveClientCashPayment,
-    onRejectClientCashPayment,
-    onMarkGuardPaidCash,
-    onMarkPlatformFeePaidCash,
-    onMarkCashDepositManually,
   };
 
   const actionCount =
     openInvoices.length +
     summary.awaitingGuardPayout.length +
-    summary.cashDepositPending.length +
     summary.awaitingClient.length;
 
   const allQueueItems = useMemo(() => {
@@ -480,7 +423,6 @@ export function StaffPaymentsPanel({
                         requests={requests}
                         guards={guards}
                         isDirector={isDirector}
-                        onMarkGuardPaidCash={onMarkGuardPaidCash}
                         onReleasePayout={onReleasePayout}
                         onCompleteInvoice={onCompletePayoutInvoice}
                       />
@@ -539,7 +481,7 @@ export function StaffPaymentsPanel({
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
-            <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+            <AppItemCardStack className="ops-list-bleed-stack">
               {openInvoices.map((invoice) => (
                 <StaffPayoutInvoiceRow
                   key={invoice.id}
@@ -547,7 +489,6 @@ export function StaffPaymentsPanel({
                   requests={requests}
                   guards={guards}
                   isDirector={isDirector}
-                  onMarkGuardPaidCash={onMarkGuardPaidCash}
                   onReleasePayout={onReleasePayout}
                   onCompleteInvoice={onCompletePayoutInvoice}
                 />
@@ -557,7 +498,6 @@ export function StaffPaymentsPanel({
         )}
 
         <PipelineSection stage="awaiting-guard-payout" items={summary.awaitingGuardPayout} {...sectionProps} />
-        <PipelineSection stage="cash-deposit-pending" items={summary.cashDepositPending} {...sectionProps} />
         <PipelineSection stage="awaiting-client" items={summary.awaitingClient} {...sectionProps} />
         <PipelineSection
           stage="guard-collection-pending"

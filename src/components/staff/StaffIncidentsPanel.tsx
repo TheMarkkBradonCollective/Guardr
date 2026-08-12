@@ -162,7 +162,7 @@ export function StaffIncidentsPanel({
 
   return (
     <div className="staff-ops-mobile-shell flex flex-col animate-fade-in min-w-0">
-      <div className="staff-ops-mobile-body min-w-0 -mx-4 sm:-mx-5">
+      <div className="staff-ops-mobile-body min-w-0 max-w-full">
       {incidents.length === 0 ? (
         <div className="app-empty-state">
           <div className="app-empty-state-icon">

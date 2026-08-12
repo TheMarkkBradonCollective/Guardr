@@ -203,7 +203,7 @@ import {
   isOpenContractPricing,
 } from './lib/agreementPricing';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
-import { getGuardCashPayoutEligibleJobs, getGuardStripePayoutEligibleJobs } from './lib/guardPayoutInvoice';
+import { getGuardStripePayoutEligibleJobs } from './lib/guardPayoutInvoice';
 import {
   createGuardPayoutInvoiceRecord,
   loadGuardPayoutInvoicesFromStorage,
@@ -6724,7 +6724,7 @@ export default function App() {
           recipientUserId: guardId,
           guardId,
           title: 'You are now a trusted guard',
-          body: 'You can skip Guardr applicant review on Stripe jobs. Cash jobs still require staff confirmation.',
+          body: 'You can skip Guardr applicant review on Stripe jobs.',
         });
         appToast(`${guard.name} is now a trusted guard.`, 'success');
       } else {
@@ -6764,7 +6764,7 @@ export default function App() {
         clientId,
         title: trusted ? 'You are now a trusted client' : 'Trusted status removed',
         body: trusted
-          ? 'Your non-cash job postings will open to guards immediately without Guardr approval.'
+          ? 'Your job postings will open to guards immediately without Guardr approval.'
           : 'Your job postings will require Guardr staff approval before guards can apply.',
       });
       appToast(
@@ -8092,227 +8092,24 @@ export default function App() {
     }
   };
 
-  const applyClientPaidCash = async (requestId: string, req: SecurityRequest) => {
-    const paymentId = `pay-cash-client-${Date.now()}`;
-    const existingPayment = payments.find((p) => p.jobId === requestId);
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              paymentStatus: 'paid',
-              clientPaymentMethod: 'cash',
-              cashDepositedToStripe: false,
-              cashDepositedAmount: 0,
-              cashDepositedAt: undefined,
-              platformFeePaidCash: false,
-              clientCashPaymentRequested: false,
-              clientCashPaymentRequestedAt: undefined,
-            }
-          : r
-      )
-    );
-    setPayments((prev) => {
-      if (existingPayment) {
-        return prev.map((p) =>
-          p.jobId === requestId ? { ...p, status: 'paid', paymentMethod: 'cash' } : p
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: paymentId,
-          jobId: requestId,
-          amount: req.estimatedPayout,
-          status: 'paid' as const,
-          paymentMethod: 'cash' as const,
-        },
-      ];
-    });
-
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          payment_status: 'paid',
-          client_payment_method: 'cash',
-          cash_deposited_to_stripe: false,
-          cash_deposited_at: null,
-          cash_deposited_amount: 0,
-          platform_fee_paid_cash: false,
-          client_cash_payment_requested: false,
-          client_cash_payment_requested_at: null,
-        })
-        .eq('id', requestId);
-      if (existingPayment) {
-        await supabase
-          .from('payments')
-          .update({ status: 'paid', payment_method: 'cash' })
-          .eq('id', existingPayment.id);
-      } else {
-        await supabase.from('payments').insert({
-          id: paymentId,
-          job_id: requestId,
-          amount: req.estimatedPayout,
-          status: 'paid',
-          payment_method: 'cash',
-        });
-      }
-    }
-
-    if (currentUser && req.clientId) {
-      void reportPushEvent(currentUser, {
-        type: 'support_ticket_status',
-        recipientUserId: req.clientId,
-        requestId,
-        title: 'Payment received',
-        body: `Your payment for "${req.title}" was confirmed. This job is now live for guards.`,
-      });
-    }
-    if (currentUser && req.status === 'open') {
-      notifyOpenJobToGuards(currentUser, req, verifiedGuards, {
-        allRequests: requests,
-      });
-    }
+  const applyClientPaidCash = async (_requestId: string, _req: SecurityRequest) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleClientRequestCashPayment = async (requestId: string) => {
-    if (!currentUser || currentUser.role !== 'client') return;
-    if (!platformAllowsCash(platformSettings)) {
-      appToast('Cash payments are not enabled on this platform.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    const gates = clientPaymentGates(platformSettings);
-    if (!req || !canClientRequestCashPayment(req, gates)) {
-      appToast('This job cannot be marked for cash payment right now.', 'error');
-      return;
-    }
-    if (!(await showAppConfirm({
-      title: 'Pay in cash?',
-      message: `Request to pay $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}"? Staff will confirm once payment is received.`,
-      confirmLabel: 'Request cash payment',
-    }))) return;
-
-    const requestedAt = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? { ...r, clientCashPaymentRequested: true, clientCashPaymentRequestedAt: requestedAt }
-          : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          client_cash_payment_requested: true,
-          client_cash_payment_requested_at: requestedAt,
-        })
-        .eq('id', requestId);
-    }
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'client_cash_payment_requested',
-        requestId,
-        location: req.location,
-        title: 'Client wants to pay in cash',
-        body: `${req.clientName} requested to pay $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}". Approve on the Payments screen.`,
-      });
-    }
-    appToast('Cash payment requested — staff will confirm once received.', 'success');
+  const handleClientRequestCashPayment = async (_requestId: string) => {
+    appToast('Cash payments are not supported. Pay by card via Stripe.', 'error');
   };
 
-  const handleApproveClientCashPayment = async (requestId: string) => {
-    if (!currentUser || !canAccessFinancialControls(currentUser)) {
-      appToast('You do not have permission to approve cash payments.', 'error');
-      return;
-    }
-    if (!platformAllowsCash(platformSettings)) {
-      appToast('Cash payments are not enabled on this platform.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canStaffApproveClientCashPayment(req)) {
-      appToast('This cash payment request cannot be approved.', 'error');
-      return;
-    }
-    if (!(await showAppConfirm({
-      title: 'Approve cash payment?',
-      message: `Confirm the client paid $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}"?`,
-      confirmLabel: 'Approve payment',
-    }))) return;
-
-    await applyClientPaidCash(requestId, req);
-    appToast('Cash payment approved.', 'success');
+  const handleApproveClientCashPayment = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleRejectClientCashPayment = async (requestId: string) => {
-    if (!currentUser || !canAccessFinancialControls(currentUser)) {
-      appToast('You do not have permission to decline cash payments.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canStaffApproveClientCashPayment(req)) {
-      appToast('This cash payment request cannot be declined.', 'error');
-      return;
-    }
-    if (!(await showAppConfirm({
-      title: 'Decline cash payment request?',
-      message: `The client can choose card checkout or request cash again for "${req.title}".`,
-      confirmLabel: 'Decline request',
-      tone: 'danger',
-    }))) return;
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? { ...r, clientCashPaymentRequested: false, clientCashPaymentRequestedAt: undefined }
-          : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          client_cash_payment_requested: false,
-          client_cash_payment_requested_at: null,
-        })
-        .eq('id', requestId);
-    }
-    if (currentUser && req) {
-      notifyAccountUpdate(
-        currentUser,
-        req.clientId,
-        'Cash payment declined',
-        `Your cash payment request for "${req.title}" was declined. You can pay by card instead.`
-      );
-    }
-    appToast('Cash payment request declined.', 'success');
+  const handleRejectClientCashPayment = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleMarkClientPaidCash = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can record cash client payments.', 'error');
-      return;
-    }
-    if (!platformAllowsCash(platformSettings)) {
-      appToast('Cash payments are not enabled on this platform.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorMarkClientPaidCash(req)) {
-      appToast('This job cannot be marked as paid in cash.', 'error');
-      return;
-    }
-    if (!(await showAppConfirm({
-      title: 'Record cash payment?',
-      message: `Record client cash payment of $${req.estimatedPayout} for "${req.title}"?`,
-      confirmLabel: 'Record payment',
-    }))) return;
-
-    await applyClientPaidCash(requestId, req);
+  const handleMarkClientPaidCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
   const applyOvertimeClientPaid = async (
@@ -8321,6 +8118,11 @@ export default function App() {
     method: 'cash' | 'stripe',
     paymentRecord?: Payment
   ) => {
+    // Cash product path removed — always record Stripe.
+    method = 'stripe';
+    if (paymentRecord?.paymentMethod === 'cash') {
+      paymentRecord = { ...paymentRecord, paymentMethod: 'stripe' };
+    }
     const billing = applyOvertimePaidBilling(req);
     setRequests((prev) =>
       prev.map((r) =>
@@ -8612,118 +8414,16 @@ export default function App() {
     }
   };
 
-  const handleClientRequestOvertimeCash = async (requestId: string) => {
-    if (!currentUser || currentUser.role !== 'client') return;
-    if (!platformAllowsCash(platformSettings)) {
-      appToast('Cash payments are not enabled on this platform.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    const gates = clientPaymentGates(platformSettings);
-    if (!req || req.overtimeStatus !== 'awaiting_payment') {
-      appToast('Overtime is not ready for payment yet.', 'error');
-      return;
-    }
-    if (!gates.allowSquare) {
-      appToast('Square payments are not enabled.', 'error');
-      return;
-    }
-    const overtimeAmount = req.overtimeAmount ?? 0;
-    if (!(await showAppConfirm({
-      title: 'Pay overtime in cash?',
-      message: `Request to pay $${overtimeAmount.toFixed(2)} in cash for late clock-out on "${req.title}"? Staff will confirm once payment is received.`,
-      confirmLabel: 'Request cash payment',
-    }))) return;
-
-    const requestedAt = new Date().toISOString();
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              overtimeClientCashPaymentRequested: true,
-              overtimeClientCashPaymentRequestedAt: requestedAt,
-            }
-          : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          overtime_client_cash_payment_requested: true,
-          overtime_client_cash_payment_requested_at: requestedAt,
-        })
-        .eq('id', requestId);
-    }
-    appToast('Overtime cash payment requested — staff will confirm once received.', 'success');
-    if (currentUser) {
-      notifyStaffAttention(
-        currentUser,
-        `Client requested $${overtimeAmount.toFixed(2)} cash payment for overtime on "${req.title}".`,
-        { requestId }
-      );
-    }
+  const handleClientRequestOvertimeCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported. Pay overtime by card via Stripe.', 'error');
   };
 
-  const handleApproveOvertimeCashPayment = async (requestId: string) => {
-    if (!currentUser || !canAccessFinancialControls(currentUser)) {
-      appToast('You do not have permission to approve cash payments.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canStaffApproveOvertimeCashPayment(req)) {
-      appToast('This overtime cash payment cannot be approved.', 'error');
-      return;
-    }
-    const overtimeAmount = req.overtimeAmount ?? 0;
-    if (!(await showAppConfirm({
-      title: 'Approve overtime cash payment?',
-      message: `Confirm the client paid $${overtimeAmount.toFixed(2)} in cash for overtime on "${req.title}"?`,
-      confirmLabel: 'Approve payment',
-    }))) return;
-
-    const paymentId = `pay-overtime-cash-${Date.now()}`;
-    await applyOvertimeClientPaid(requestId, req, 'cash', {
-      id: paymentId,
-      jobId: requestId,
-      amount: overtimeAmount,
-      status: 'paid',
-      paymentMethod: 'cash',
-    });
-    appToast('Overtime cash payment approved.', 'success');
+  const handleApproveOvertimeCashPayment = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleMarkOvertimePaidCash = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can record overtime cash payments.', 'error');
-      return;
-    }
-    if (!platformAllowsCash(platformSettings)) {
-      appToast('Cash payments are not enabled on this platform.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorMarkOvertimePaidCash(req)) {
-      appToast('This job has no overtime balance to record.', 'error');
-      return;
-    }
-    const overtimeAmount = req.overtimeAmount ?? 0;
-    if (!(await showAppConfirm({
-      title: 'Record overtime payment?',
-      message: `Record client cash payment of $${overtimeAmount.toFixed(2)} for late clock-out on "${req.title}"?`,
-      confirmLabel: 'Record overtime paid',
-    }))) return;
-
-    const paymentId = `pay-overtime-cash-${Date.now()}`;
-    await applyOvertimeClientPaid(requestId, req, 'cash', {
-      id: paymentId,
-      jobId: requestId,
-      amount: overtimeAmount,
-      status: 'paid',
-      paymentMethod: 'cash',
-    });
-    appToast(`Overtime payment of $${overtimeAmount.toFixed(2)} recorded.`, 'success');
+  const handleMarkOvertimePaidCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
   const handleMakeOvertimeGuardPayoutAvailable = async (requestId: string) => {
@@ -8766,43 +8466,8 @@ export default function App() {
     }
   };
 
-  const handleMarkOvertimeGuardPaidCash = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can record cash guard payouts.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorPayOvertimeGuardCash(req)) {
-      appToast('Overtime guard cash payout is not available for this job.', 'error');
-      return;
-    }
-    const amount = overtimeGuardEarnings(req);
-    if (!(await showAppConfirm({
-      title: 'Record overtime cash payout?',
-      message: `Record $${amount.toFixed(2)} paid in cash to the guard for overtime on "${req.title}"?`,
-      confirmLabel: 'Record payout',
-    }))) return;
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId ? { ...r, overtimeGuardPayoutMethod: 'cash' as const } : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({ overtime_guard_payout_method: 'cash' })
-        .eq('id', requestId);
-    }
-    appToast(`Overtime cash payout of $${amount.toFixed(2)} recorded.`, 'success');
-    if (currentUser && req.assignedGuardId) {
-      notifyAccountUpdate(
-        currentUser,
-        req.assignedGuardId,
-        'Overtime payout recorded',
-        `$${amount.toFixed(2)} overtime cash payout recorded for "${req.title}".`
-      );
-    }
+  const handleMarkOvertimeGuardPaidCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
   const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
@@ -9017,243 +8682,16 @@ export default function App() {
     }
   };
 
-  const handleMarkGuardPaidCash = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can record cash guard payouts.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorPayGuardCash(req)) {
-      appToast('This job is not ready for a cash guard payout.', 'error');
-      return;
-    }
-    const amount = guardPayoutAmount(req);
-    if (!(await showAppConfirm({
-      title: 'Record cash payout?',
-      message: `Record $${amount} paid in cash to the guard for "${req.title}"?`,
-      confirmLabel: 'Record payout',
-    }))) return;
-
-    const paymentId = `pay-cash-guard-${Date.now()}`;
-    const existingGuardPayment = payments.find(
-      (p) => p.jobId === requestId && p.status === 'released'
-    );
-
-    const nextRequests = requests.map((r) =>
-      r.id === requestId
-        ? {
-            ...r,
-            paymentStatus: 'released' as const,
-            guardPayoutMethod: 'cash' as const,
-            guardCashPayoutRequested: false,
-            guardCashPayoutRequestedAt: undefined,
-          }
-        : r
-    );
-    setRequests(nextRequests);
-    setPayments((prev) => {
-      if (existingGuardPayment) {
-        return prev.map((p) =>
-          p.id === existingGuardPayment.id
-            ? { ...p, status: 'released', paymentMethod: 'cash', amount }
-            : p
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: paymentId,
-          jobId: requestId,
-          amount,
-          status: 'released' as const,
-          paymentMethod: 'cash' as const,
-        },
-      ];
-    });
-
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          payment_status: 'released',
-          guard_payout_method: 'cash',
-          guard_cash_payout_requested: false,
-          guard_cash_payout_requested_at: null,
-        })
-        .eq('id', requestId);
-      if (existingGuardPayment) {
-        await supabase
-          .from('payments')
-          .update({ status: 'released', payment_method: 'cash', amount })
-          .eq('id', existingGuardPayment.id);
-      } else {
-        await supabase.from('payments').insert({
-          id: paymentId,
-          job_id: requestId,
-          amount,
-          status: 'released',
-          payment_method: 'cash',
-        });
-      }
-    }
-    await syncOpenPayoutInvoices(nextRequests);
-    appToast(`Recorded $${amount} cash payout to guard.`, 'success');
-    if (currentUser && req.assignedGuardId) {
-      notifyAccountUpdate(
-        currentUser,
-        req.assignedGuardId,
-        'Cash payout recorded',
-        `$${amount} cash payout recorded for "${req.title}".`
-      );
-    }
+  const handleMarkGuardPaidCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleMarkPlatformFeePaidCash = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can manually deposit platform fees.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorMarkPlatformFeePaidCash(req)) {
-      appToast('This job does not have a platform fee ready to manually deposit.', 'error');
-      return;
-    }
-    const feeAmount = getPlatformFeeAmount(req);
-    if (!(await showAppConfirm({
-      title: 'Deposit platform fee?',
-      message: `Manually deposit $${feeAmount.toFixed(2)} platform fee for "${req.title}"?`,
-      confirmLabel: 'Deposit fee',
-    }))) {
-      return;
-    }
-
-    const depositedAt = new Date().toISOString();
-    const previousDeposited = req.cashDepositedAmount ?? 0;
-    const newDeposited = Math.round((previousDeposited + feeAmount) * 100) / 100;
-    const remaining = Math.max(0, getRequiredStripeDeposit(req) - newDeposited);
-    const fullySatisfied = remaining <= 0;
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              platformFeePaidCash: true,
-              cashDepositedManually: true,
-              cashDepositedAmount: newDeposited,
-              cashDepositedToStripe: fullySatisfied,
-              cashDepositedAt: depositedAt,
-            }
-          : r
-      )
-    );
-
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          platform_fee_paid_cash: true,
-          cash_deposited_manually: true,
-          cash_deposited_amount: newDeposited,
-          cash_deposited_to_stripe: fullySatisfied,
-          cash_deposited_at: depositedAt,
-        })
-        .eq('id', requestId);
-
-      const paymentId = `pay-cash-platform-fee-${Date.now()}`;
-      await supabase.from('payments').insert({
-        id: paymentId,
-        job_id: requestId,
-        amount: feeAmount,
-        status: 'paid',
-        payment_method: 'cash',
-      });
-      setPayments((prev) => [
-        ...prev,
-        {
-          id: paymentId,
-          jobId: requestId,
-          amount: feeAmount,
-          status: 'paid',
-          paymentMethod: 'cash',
-        },
-      ]);
-    }
-
-    appToast(`Manually deposited $${feeAmount.toFixed(2)} platform fee.`, 'success');
+  const handleMarkPlatformFeePaidCash = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
-  const handleMarkCashDepositManually = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Founders can manually record cash deposits.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorMarkCashDepositManually(req)) {
-      appToast('This job does not have a deposit ready to record manually.', 'error');
-      return;
-    }
-    const depositAmount = getManualCashDepositDue(req);
-    if (!(await showAppConfirm({
-      title: 'Record manual deposit?',
-      message: `Record $${depositAmount.toFixed(2)} deposited for "${req.title}"? Use this when you moved money outside card checkout (bank transfer, in-hand, etc.).`,
-      confirmLabel: 'Record deposit',
-    }))) {
-      return;
-    }
-
-    const depositedAt = new Date().toISOString();
-    const previousDeposited = req.cashDepositedAmount ?? 0;
-    const newDeposited = Math.round((previousDeposited + depositAmount) * 100) / 100;
-    const remaining = Math.max(0, getRequiredStripeDeposit(req) - newDeposited);
-    const fullySatisfied = remaining <= 0;
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              cashDepositedManually: true,
-              cashDepositedAmount: newDeposited,
-              cashDepositedToStripe: fullySatisfied,
-              cashDepositedAt: depositedAt,
-            }
-          : r
-      )
-    );
-
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          cash_deposited_manually: true,
-          cash_deposited_amount: newDeposited,
-          cash_deposited_to_stripe: fullySatisfied,
-          cash_deposited_at: depositedAt,
-        })
-        .eq('id', requestId);
-
-      const paymentId = `pay-cash-deposit-${Date.now()}`;
-      await supabase.from('payments').insert({
-        id: paymentId,
-        job_id: requestId,
-        amount: depositAmount,
-        status: 'paid',
-        payment_method: 'cash',
-      });
-      setPayments((prev) => [
-        ...prev,
-        {
-          id: paymentId,
-          jobId: requestId,
-          amount: depositAmount,
-          status: 'paid',
-          paymentMethod: 'cash',
-        },
-      ]);
-    }
-
-    appToast(`Recorded $${depositAmount.toFixed(2)} manual deposit.`, 'success');
+  const handleMarkCashDepositManually = async (_requestId: string) => {
+    appToast('Cash payments are not supported.', 'error');
   };
 
   const handleAddReview = async (
@@ -9777,7 +9215,7 @@ export default function App() {
           type: 'payment_attention',
           requestId,
           location: existing.location,
-          body: `Client approved schedule change for "${existing.title}" — confirm cash billing before times go live.`,
+          body: `Client approved schedule change for "${existing.title}" — confirm billing before times go live.`,
         });
       }
     }
@@ -9946,7 +9384,7 @@ export default function App() {
     } else if (outcome === 'awaiting_payment') {
       appToast('Times approved. Pay the extension to update the listing.', 'success');
     } else if (outcome === 'pending_staff_billing') {
-      appToast('Times approved. Guardr will confirm cash billing before guards are notified.', 'info');
+      appToast('Times approved. Guardr will confirm billing before guards are notified.', 'info');
     }
   };
 
@@ -11912,7 +11350,7 @@ export default function App() {
     });
     if (updated) await persistGuardPayoutInvoiceToDb(updated);
     if (currentUser && updated) {
-      const methodLabel = updated.method === 'cash' ? 'cash pickup' : 'bank transfer';
+      const methodLabel = 'bank transfer';
       notifyAccountUpdate(
         currentUser,
         updated.guardId,
@@ -11924,11 +11362,11 @@ export default function App() {
 
   const submitGuardPayoutInvoice = async (
     guard: SecurityGuard,
-    method: 'cash' | 'stripe',
+    method: 'stripe',
     eligible: SecurityRequest[]
   ) => {
     const draft = createGuardPayoutInvoiceRecord({ guard, method, jobs: eligible });
-    const label = method === 'cash' ? 'cash pickup' : 'bank transfer';
+    const label = 'bank transfer';
     if (
       !(await showAppConfirm({
         title: 'Send payout invoice?',
@@ -11944,26 +11382,12 @@ export default function App() {
         type: 'payment_attention',
         body: `${guard.name} requested a $${draft.total.toFixed(2)} ${label} payout for ${eligible.length} job(s)`,
       });
-      if (method === 'cash') {
-        void reportPushEvent(currentUser, {
-          type: 'guard_cash_payout_requested',
-          guardId: guard.id,
-          body: `${guard.name} submitted a $${draft.total.toFixed(2)} cash payout invoice for ${eligible.length} completed job(s).`,
-        });
-      }
     }
-    appToast(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`, 'success');
+    appToast(`Bank transfer invoice sent to Payments. Request again anytime you have more unpaid jobs.`, 'success');
   };
 
-  const handleGuardRequestCashPayout = async (guardId: string) => {
-    const guard = guards.find((g) => g.id === guardId);
-    if (!guard) return;
-    const eligible = getGuardCashPayoutEligibleJobs(guardId, requests);
-    if (eligible.length === 0) {
-      appToast('No completed jobs are available for a cash payout invoice.', 'error');
-      return;
-    }
-    await submitGuardPayoutInvoice(guard, 'cash', eligible);
+  const handleGuardRequestCashPayout = async (_guardId: string) => {
+    appToast('Cash pickup is not supported. Use bank transfer from Pay.', 'error');
   };
 
   const handleGuardRequestStripePayout = async (guardId: string) => {
@@ -11983,8 +11407,8 @@ export default function App() {
       appToast('No guard has picked up this job yet.', 'error');
       return;
     }
-    if (req.guardPayoutMethod === 'cash') {
-      appToast('This guard was already paid in cash for this job.', 'error');
+    if (req.guardPayoutMethod === 'cash' || req.guardPayoutMethod === 'stripe') {
+      appToast('This guard was already paid for this job.', 'error');
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);
@@ -13340,7 +12764,6 @@ export default function App() {
           onPerformanceFactorChange={setPerformanceFactorId}
           onSubmitIncidentReport={handleSubmitIncidentReport}
           guardPayoutInvoices={guardPayoutInvoices}
-          onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
           onOpenLegal={openLegalPage}
           onOpenDownload={openDownloadPage}
@@ -13719,18 +13142,9 @@ export default function App() {
           onMakeGuardPayoutAvailable={handleMakeGuardPayoutAvailable}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
-          onMarkClientPaidCash={handleMarkClientPaidCash}
-          onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
           onResolveOvertimeDispute={handleStaffResolveOvertimeDispute}
           onResolveAuditViolation={handleStaffResolveAuditViolation}
-          onApproveOvertimeCashPayment={handleApproveOvertimeCashPayment}
           onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
-          onMarkOvertimeGuardPaidCash={handleMarkOvertimeGuardPaidCash}
-          onApproveClientCashPayment={handleApproveClientCashPayment}
-          onRejectClientCashPayment={handleRejectClientCashPayment}
-          onMarkGuardPaidCash={handleMarkGuardPaidCash}
-          onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
-          onMarkCashDepositManually={handleMarkCashDepositManually}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           platformSettings={platformSettings}
           platformCities={platformCities}

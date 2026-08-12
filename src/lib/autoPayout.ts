@@ -1,6 +1,5 @@
 import type { PlatformSettings } from './platformSettings';
 import type { SecurityRequest } from '../types';
-import { isCashClientPayment } from './cashPayments';
 
 export function shouldScheduleAutoStripePayout(
   job: Pick<
@@ -14,8 +13,8 @@ export function shouldScheduleAutoStripePayout(
   >
 ): boolean {
   if (!job.assignedGuardId) return false;
-  if (isCashClientPayment(job)) return false;
-  if (job.guardPayoutMethod === 'cash' || job.guardCashPayoutRequested) return false;
+  // Cash product path removed — legacy cash client / cash-request markers do not block auto payout.
+  if (job.guardPayoutMethod) return false;
   if (!['paid', 'held'].includes(job.paymentStatus ?? '')) return false;
   if (job.overtimeStatus && !['none', 'paid', 'waived'].includes(job.overtimeStatus)) return false;
   return true;

@@ -9,11 +9,10 @@ import { isGuardProfileApproved, isGuardTrusted } from './guardTrust';
  */
 export function shouldSkipStaffGuardReview(
   guard: SecurityGuard,
-  req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>,
+  _req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>,
   options?: { verifiedSelfServeEnabled?: boolean }
 ): boolean {
   if (isGuardTrusted(guard)) return true;
-  if (req.clientCashPaymentRequested) return false;
   if (options?.verifiedSelfServeEnabled === false) return false;
   if (!isGuardAccountActive(guard)) return false;
   if (!isGuardProfileApproved(guard)) return false;

@@ -116,7 +116,7 @@ export function buildDirectorFinancialCells(financials: OperationalFinancials): 
       sub:
         financials.paidJobCount === 0
           ? 'No client payments recorded yet'
-          : `${formatOperationalMoney(financials.grossIncomeCash)} cash · ${formatOperationalMoney(financials.grossIncomeCard)} card · ${financials.paidJobCount} paid job${financials.paidJobCount === 1 ? '' : 's'}`,
+          : `${formatOperationalMoney(financials.grossIncomeCard)} via Stripe · ${financials.paidJobCount} paid job${financials.paidJobCount === 1 ? '' : 's'}`,
       accent: financials.grossIncome > 0,
     },
     {
@@ -136,7 +136,7 @@ export function buildDirectorFinancialCells(financials: OperationalFinancials): 
           ? financials.guardPayoutsDue > 0
             ? `${formatOperationalMoney(financials.guardPayoutsDue)} due on finished jobs`
             : 'No guard payouts released yet'
-          : `${formatOperationalMoney(financials.guardPayoutsPaidCash)} cash · ${formatOperationalMoney(financials.guardPayoutsPaidStripe)} Stripe${financials.guardPayoutsDue > 0 ? ` · ${formatOperationalMoney(financials.guardPayoutsDue)} due` : ''}`,
+          : `${formatOperationalMoney(financials.guardPayoutsPaidStripe)} via Stripe${financials.guardPayoutsDue > 0 ? ` · ${formatOperationalMoney(financials.guardPayoutsDue)} due` : ''}`,
       accent: financials.guardPayoutsPaid > 0 || financials.guardPayoutsDue > 0,
     },
     {
@@ -186,7 +186,7 @@ export function buildDirectorOperationsLines(
     },
     {
       label: 'Client collections',
-      value: `${formatOperationalMoney(financials.grossIncomeCash)} cash on site · ${formatOperationalMoney(financials.grossIncomeCard)} card via Stripe`,
+      value: `${formatOperationalMoney(financials.grossIncomeCard)} via Stripe`,
     },
     {
       label: 'Guard settlements',

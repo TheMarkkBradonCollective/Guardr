@@ -131,6 +131,9 @@ function IntegrationToggleCard({
       $style={{
         borderRadius: 0,
         border: 'none',
+        minWidth: 0,
+        maxWidth: '100%',
+        boxSizing: 'border-box',
       }}
     >
       <Block flex="1" minWidth={0}>
@@ -152,12 +155,14 @@ function IntegrationToggleCard({
           </LabelXSmall>
         )}
       </Block>
-      <AppSwitch
-        checked={enabled}
-        disabled={!canEdit || disabled}
-        onChange={() => onToggle()}
-        ariaLabel={`Toggle ${title}`}
-      />
+      <Block flex="0 0 auto">
+        <AppSwitch
+          checked={enabled}
+          disabled={!canEdit || disabled}
+          onChange={() => onToggle()}
+          ariaLabel={`Toggle ${title}`}
+        />
+      </Block>
     </Block>
   );
 }
@@ -443,7 +448,7 @@ export function StaffIntegrationsPanel({
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="animate-fade-in min-w-0 max-w-full">
       <AppFormSection title="Payment methods">
         <div className="pb-6">{paymentMethodsBody}</div>
       </AppFormSection>

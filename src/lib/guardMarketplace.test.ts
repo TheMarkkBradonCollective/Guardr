@@ -123,13 +123,13 @@ describe('shouldSkipStaffGuardReview', () => {
     );
   });
 
-  it('requires staff review for cash jobs', () => {
+  it('does not special-case legacy cash payment flags', () => {
     assert.equal(
       shouldSkipStaffGuardReview(baseGuard, {
         ...stripeJob,
         clientCashPaymentRequested: true,
-      }),
-      false
+      }, { verifiedSelfServeEnabled: true }),
+      true
     );
   });
 });

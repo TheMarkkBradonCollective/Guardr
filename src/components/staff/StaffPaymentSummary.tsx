@@ -1,6 +1,5 @@
 import React from 'react';
 import { paymentPipelineSummary } from '../../lib/paymentPipeline';
-import { isPlatformFeeOnlyDeposit } from '../../lib/cashPayments';
 import type { OperationalFinancials } from '../../lib/operationalFinancials';
 import { formatOperationalMoney } from '../../lib/operationalFinancials';
 import { MetricCell, MetricStrip } from '../baseui/dashboard';
@@ -13,10 +12,6 @@ interface StaffPaymentSummaryProps {
 }
 
 export function StaffPaymentSummary({ summary, financials, variant = 'default' }: StaffPaymentSummaryProps) {
-  const platformFeeOnlyDeposits =
-    summary.cashDepositPending.length > 0 &&
-    summary.cashDepositPending.every((req) => isPlatformFeeOnlyDeposit(req));
-
   if (variant === 'desktop') {
     const chips = [
       ...(financials
@@ -44,11 +39,6 @@ export function StaffPaymentSummary({ summary, financials, variant = 'default' }
         accent: summary.awaitingGuardPayout.length > 0,
       },
       {
-        label: platformFeeOnlyDeposits ? 'Platform fees due' : 'Stripe deposit due',
-        value: `$${summary.cashDepositTotal.toFixed(2)}`,
-        accent: summary.cashDepositPending.length > 0,
-      },
-      {
         label: 'Paid to guards',
         value: `$${summary.settledGuardTotal.toFixed(2)}`,
         accent: summary.settledGuardTotal > 0,
@@ -74,7 +64,7 @@ export function StaffPaymentSummary({ summary, financials, variant = 'default' }
             sub={
               financials.paidJobCount === 0
                 ? 'No client payments recorded yet'
-                : `${formatOperationalMoney(financials.grossIncomeCash)} cash · ${formatOperationalMoney(financials.grossIncomeCard)} card · ${financials.paidJobCount} paid job${financials.paidJobCount === 1 ? '' : 's'}`
+                : `${formatOperationalMoney(financials.grossIncomeCard)} via Stripe · ${financials.paidJobCount} paid job${financials.paidJobCount === 1 ? '' : 's'}`
             }
             accent={financials.grossIncome > 0}
           />
@@ -112,18 +102,6 @@ export function StaffPaymentSummary({ summary, financials, variant = 'default' }
               : `${summary.awaitingGuardPayout.length} finished job${summary.awaitingGuardPayout.length === 1 ? '' : 's'} — make funds available for guard collection`
           }
           accent={summary.awaitingGuardPayout.length > 0}
-        />
-        <StaffSummaryCell
-          label={platformFeeOnlyDeposits ? 'Platform fees still due' : 'Stripe deposit still due'}
-          value={`$${summary.cashDepositTotal.toFixed(2)}`}
-          sub={
-            summary.cashDepositPending.length === 0
-              ? 'No cash jobs need a deposit'
-              : platformFeeOnlyDeposits
-                ? `${summary.cashDepositPending.length} cash job${summary.cashDepositPending.length === 1 ? '' : 's'} — manually deposit or pay platform fee with card`
-                : `${summary.cashDepositPending.length} cash job${summary.cashDepositPending.length === 1 ? '' : 's'} — record in Stripe with your card`
-          }
-          accent={summary.cashDepositPending.length > 0}
         />
         <StaffSummaryCell
           label="Already paid to guards"

@@ -360,7 +360,7 @@ export interface OpsDispute {
   requestId?: string;
   guardId?: string;
   clientId?: string;
-  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime' | 'audit-violation';
+  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime';
   jobTitle: string;
   guardName: string;
   clientName: string;
@@ -368,6 +368,10 @@ export interface OpsDispute {
   clientStatement: string;
   status: 'open' | 'held' | 'resolved';
   openedAt: string;
+  /** When staff closed the dispute (resolved/waived/upheld). */
+  resolvedAt?: string;
+  /** Staff resolution note or outcome label. */
+  resolutionNote?: string;
   scheduledEnd?: string;
   clockOutAt?: string;
   clientClaimedClockOutAt?: string;
@@ -377,9 +381,6 @@ export interface OpsDispute {
   claimedAmount?: number;
   hourlyRate?: number;
   guardsNeeded?: number;
-  auditViolationId?: string;
-  auditCheckpoint?: string;
-  auditCategory?: string;
 }
 
 export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
@@ -892,7 +893,14 @@ export function buildDisputes(
   const disputes: OpsDispute[] = [];
 
   for (const req of requests) {
-    if (req.overtimeStatus !== 'disputed') continue;
+    const isOpenOvertimeDispute = req.overtimeStatus === 'disputed';
+    const isClosedOvertimeDispute =
+      !!req.overtimeDisputeResolvedAt ||
+      (!!req.overtimeDisputedAt &&
+        req.overtimeStatus != null &&
+        ['waived', 'paid', 'awaiting_payment'].includes(req.overtimeStatus));
+    if (!isOpenOvertimeDispute && !isClosedOvertimeDispute) continue;
+
     const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
     const claimedHours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
     const claimedAmount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
@@ -907,6 +915,7 @@ export function buildDisputes(
         ? computeOvertimeAmount(clientClaimedHours, req.hourlyRate, req.guardsNeeded ?? 1)
         : undefined;
     const guardApprovedAt = req.overtimeGuardApprovedAt;
+    const closed = !isOpenOvertimeDispute;
 
     disputes.push({
       id: `ot-dispute-${req.id}`,
@@ -919,8 +928,13 @@ export function buildDisputes(
         ? `Confirmed ${claimedHours}h late clock-out on ${formatDisputeWhen(guardApprovedAt)}.`
         : `Confirmed ${claimedHours}h late clock-out.`,
       clientStatement: req.overtimeDisputeReason?.trim() || 'No reason provided.',
-      status: 'open',
+      status: closed ? 'resolved' : 'open',
       openedAt: req.overtimeDisputedAt ?? req.endDate,
+      resolvedAt: closed ? req.overtimeDisputeResolvedAt ?? undefined : undefined,
+      resolutionNote: closed
+        ? req.overtimeDisputeResolution?.trim() ||
+          (req.overtimeStatus === 'waived' ? 'Charge waived' : 'Dispute resolved')
+        : undefined,
       scheduledEnd: req.endDate,
       clockOutAt,
       clientClaimedClockOutAt,
@@ -933,32 +947,10 @@ export function buildDisputes(
     });
   }
 
-  for (const req of requests) {
-    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
-    for (const violation of req.shiftAuditViolations ?? []) {
-      if (!['auto-flagged', 'flagged', 'dispute-open'].includes(violation.status)) continue;
-      disputes.push({
-        id: `audit-dispute-${violation.id}`,
-        type: 'audit-violation',
-        requestId: req.id,
-        guardId: violation.guardId,
-        clientId: req.clientId,
-        jobTitle: req.title,
-        guardName,
-        clientName: req.clientName,
-        guardStatement: violation.dispute?.guardNote?.trim() || 'No guard dispute note yet.',
-        clientStatement: violation.description,
-        status: 'open',
-        openedAt: violation.createdAt,
-        auditViolationId: violation.id,
-        auditCheckpoint: violation.checkpoint,
-        auditCategory: violation.category,
-      });
-    }
-  }
+  // Audit / checkpoint violations live under Violations (buildStaffShiftViolations), not Disputes.
 
   for (const ticket of tickets) {
-    if (ticket.status === 'resolved' || ticket.kind !== 'report') continue;
+    if (ticket.kind !== 'report') continue;
     if (!['payment', 'job-issue', 'safety'].includes(ticket.category)) continue;
 
     const relatedJob = ticket.relatedRequestId
@@ -975,6 +967,9 @@ export function buildDisputes(
           ? 'safety'
           : 'service';
 
+    const status: OpsDispute['status'] =
+      ticket.status === 'resolved' ? 'resolved' : ticket.status === 'in-progress' ? 'held' : 'open';
+
     disputes.push({
       id: ticket.id,
       ticketId: ticket.id,
@@ -988,8 +983,9 @@ export function buildDisputes(
       clientName: relatedJob?.clientName ?? (ticket.userRole === 'client' ? ticket.userName : 'Pending client'),
       guardStatement: ticket.userRole === 'guard' ? ticket.messages[0]?.body ?? '' : '—',
       clientStatement: ticket.userRole === 'client' ? ticket.messages[0]?.body ?? '' : '—',
-      status: ticket.status === 'in-progress' ? 'held' : 'open',
+      status,
       openedAt: ticket.createdAt,
+      resolvedAt: ticket.status === 'resolved' ? ticket.updatedAt ?? ticket.createdAt : undefined,
     });
   }
 
