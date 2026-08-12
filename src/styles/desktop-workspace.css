@@ -462,7 +462,9 @@ body[data-form-factor="desktop"] .desktop-map-inspector {
   background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
   border-left: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
   box-shadow: -16px 0 48px -24px color-mix(in srgb, #000 42%, transparent);
-  z-index: 30;
+  /* Above Leaflet overlay panes (~400–700) so Active job actions stay clickable */
+  z-index: 1100;
+  pointer-events: auto;
 }
 
 body[data-form-factor="desktop"] .desktop-map-inspector-header {
