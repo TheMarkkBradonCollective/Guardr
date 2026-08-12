@@ -136,7 +136,7 @@ export function JobBillingSummaryFromRequest({
             <span className="text-emerald-600 dark:text-emerald-400">Refunded via Stripe</span>
           )}
           {req.earlyClockOutRefundStatus === 'returned_cash' && (
-            <span className="text-emerald-600 dark:text-emerald-400">Refunded in cash</span>
+            <span className="text-emerald-600 dark:text-emerald-400">Refunded</span>
           )}
         </div>
       )}

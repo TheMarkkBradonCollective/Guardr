@@ -35,7 +35,7 @@ export function GuardStripeConnectSheet({
         <ul className="text-sm text-brand-text-muted space-y-2 list-disc list-inside leading-relaxed">
           <li>Bank details stay with Stripe — Guardr never stores your account number</li>
           <li>You will return here automatically when setup is finished</li>
-          <li>Cash pickup stays available even before bank setup is complete</li>
+          <li>Payouts are sent after staff releases your earnings for a completed job</li>
         </ul>
 
         {error && (

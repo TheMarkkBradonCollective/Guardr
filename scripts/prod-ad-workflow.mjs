@@ -664,8 +664,8 @@ try {
   await adShot(page, 'desktop', '16-guard-earnings-ready', { fullPage: true });
   await assertNoE2ELabels(page, 'guard-earnings');
 
-  // Try bank/cash CTA if present (may no-op without Stripe Connect)
-  const payoutCta = await clickAction(page, [/Send to my bank/i, /Request cash/i, /Cash pickup/i], 2000);
+  // Try bank CTA if present (may no-op without Stripe Connect)
+  const payoutCta = await clickAction(page, [/Send to my bank/i], 2000);
   log('guard-payout-cta', true, payoutCta || 'none-visible');
   await page.waitForTimeout(1000);
   await adShot(page, 'desktop', '17-guard-payout-action', { fullPage: true });

@@ -4,7 +4,7 @@ import { GuardEarningsBreakdown } from '../../lib/guardEarnings';
 import { GuardJobView, GuardPayoutView, getShiftPayDisplay } from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
-import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
+import { CreditCard, Link2, Loader2 } from 'lucide-react';
 import { GuardrCard } from '../baseui/GuardrCard';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
@@ -23,10 +23,7 @@ export interface GuardEarningsDesktopProps {
   connectPending?: boolean;
   onConnectStripe?: () => void;
   onRequestStripePayout?: () => Promise<void>;
-  onRequestCashPayout?: () => Promise<void>;
   stripeRequestPending?: boolean;
-  cashRequestPending?: boolean;
-  openCashInvoices?: number;
   openStripeInvoices?: number;
   payments?: GuardPayoutView[];
 }
@@ -39,17 +36,15 @@ export function GuardEarningsDesktop({
   connectPending = false,
   onConnectStripe,
   onRequestStripePayout,
-  onRequestCashPayout,
   stripeRequestPending = false,
-  cashRequestPending = false,
   payments = [],
 }: GuardEarningsDesktopProps) {
   const paymentByJobId = new Map(payments.map((p) => [p.jobId, p]));
   const sortedShifts = [...completedJobs].sort(
     (a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime(),
   );
-  const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
-  const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
+  const alreadyPaid = breakdown.stripePaid;
+  const readyToCollect = breakdown.onlineAvailable ?? 0;
 
   const earningsColumns: GuardrTableColumn<GuardJobView>[] = [
     {
@@ -96,7 +91,7 @@ export function GuardEarningsDesktop({
   return (
     <WorkbenchPage className="mobility-workspace" data-tour="guard-earnings">
       <WorkbenchGrid>
-        <WorkbenchGridCell span={4}>
+        <WorkbenchGridCell span={6}>
           <GuardrCard>
             <LabelSmall color="contentSecondary" marginBottom="scale200">
               Ready to collect
@@ -110,27 +105,7 @@ export function GuardEarningsDesktop({
           </GuardrCard>
         </WorkbenchGridCell>
 
-        <WorkbenchGridCell span={4}>
-          <GuardrCard>
-            <LabelSmall color="contentSecondary" marginBottom="scale200">
-              Cash pickup
-            </LabelSmall>
-            <HeadingMedium marginTop={0} marginBottom="scale400">
-              ${(breakdown.cashAvailable ?? 0).toFixed(2)}
-            </HeadingMedium>
-            <GuardrButton
-              kind="secondary"
-              size="compact"
-              disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-              onClick={() => void onRequestCashPayout?.()}
-            >
-              {cashRequestPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
-              Request cash pickup
-            </GuardrButton>
-          </GuardrCard>
-        </WorkbenchGridCell>
-
-        <WorkbenchGridCell span={4}>
+        <WorkbenchGridCell span={6}>
           <GuardrCard>
             <LabelSmall color="contentSecondary" marginBottom="scale200">
               Bank transfer
@@ -155,7 +130,7 @@ export function GuardEarningsDesktop({
             <GuardrCard>
               <WorkbenchCardTitle>Connect your bank</WorkbenchCardTitle>
               <ParagraphMedium marginTop={0} marginBottom="scale500" color="contentSecondary">
-                Link Stripe to receive online payouts. Cash pickup works without this step.
+                Link Stripe to receive payouts for completed shifts.
               </ParagraphMedium>
               <GuardrButton kind="primary" size="compact" onClick={onConnectStripe} disabled={connectPending}>
                 {connectPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}

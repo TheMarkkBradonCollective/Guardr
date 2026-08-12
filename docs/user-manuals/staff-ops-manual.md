@@ -165,7 +165,7 @@ Directors / Founders edit global fees in **Payment settings**.
 | **Awaiting client** | Monitor; approve legacy cash requests if any |
 | **Client paid / active** | Monitor job progress |
 | **Awaiting guard payout** | Auto-release ~48h after completion; manual release on **dispute hold** only |
-| **Guard collection pending** | Fulfill guard **payout invoice** — Stripe transfer or record cash pickup |
+| **Guard collection pending** | Fulfill guard **payout invoice** via Stripe transfer |
 | **Settled** | No action |
 
 **Director financial snapshot** on **Payments** / **Stats:** gross income, platform fees collected/outstanding, guard payouts paid/due.
@@ -174,7 +174,6 @@ Directors / Founders edit global fees in **Payment settings**.
 
 - Guard pay blocked until client paid, job complete, overtime settled, refunds settled.
 - **Auto Stripe payout** to guard Connect account: typically **48 hours** after completion.
-- **Cash pickup:** guard may collect cash once pay is released; staff record fulfillment.
 - Guards are **contractors** — staff do not withhold taxes on guard payouts.
 
 ### D4. Client billing (for staff reference)

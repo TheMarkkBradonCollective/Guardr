@@ -12,7 +12,6 @@ import {
   isClientCashPaymentPendingApproval,
   isPlatformFeeCollected,
   isPlatformFeeOnlyDeposit,
-  isPlatformFeePaidCash,
   isStripeDepositSatisfied,
   platformFeeLedgerLabel,
   stripeDepositLedgerLabel,
@@ -84,7 +83,7 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
           : isOvertimeWaived(req)
             ? 'Waived after dispute'
             : isOvertimeCashPaymentPendingApproval(req)
-              ? 'Cash pending approval'
+              ? 'Pending approval'
               : overtimeStatusLabel(req.overtimeStatus) || 'Pending',
     });
   }
@@ -137,7 +136,7 @@ export function clientPaymentStatusLabel(
   >
 ): string {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
-    return 'Cash pending';
+    return 'Payment pending';
   }
   if (req?.overtimeStatus === 'pending_guard') return 'Overtime pending guard';
   if (req?.overtimeStatus === 'pending_client') return 'Overtime pending approval';
@@ -239,8 +238,8 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 
   if (isOvertimeCashPaymentPendingApproval(req)) {
     return {
-      headline: 'Overtime cash payment pending',
-      detail: `Approve $${(req.overtimeAmount ?? 0).toFixed(2)} overtime cash from the client.`,
+      headline: 'Overtime payment pending',
+      detail: `Approve $${(req.overtimeAmount ?? 0).toFixed(2)} overtime from the client.`,
     };
   }
 
@@ -255,7 +254,7 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
     case 'awaiting-client':
       if (isClientCashPaymentPendingApproval(req)) {
         return {
-          headline: 'Client requested to pay in cash',
+          headline: 'Client payment pending approval',
           detail: `Confirm $${clientBill.toFixed(2)} was received before assigning a guard.`,
         };
       }
@@ -264,48 +263,43 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
         detail: `Client owes $${clientBill.toFixed(2)} before the job can proceed.`,
       };
     case 'cash-deposit-pending': {
+      // Legacy stage — cash deposits removed; treat as Stripe deposit messaging only.
       const due = getRemainingStripeDeposit(req);
       if (isPlatformFeeOnlyDeposit(req)) {
         return {
-          headline: isPlatformFeePaidCash(req)
-            ? 'Client paid cash · guard paid cash'
-            : 'Client paid cash · platform fee due',
-          detail: isPlatformFeePaidCash(req)
-            ? `$${due.toFixed(2)} still needs to be deposited with card.`
-            : `Manually deposit $${getPlatformFeeAmount(req).toFixed(2)} platform fee or pay via card.`,
+          headline: 'Platform fee due',
+          detail: `Deposit $${getPlatformFeeAmount(req).toFixed(2)} platform fee via card.`,
         };
       }
       if (isPlatformFeeCollected(req)) {
         return {
-          headline: 'Client paid cash · guard pay ready to release',
-          detail: `Platform fee deposited — pay $${guardPay.toFixed(2)} in cash or deposit for the guard to collect via Stripe.`,
+          headline: 'Guard pay ready to release',
+          detail: `Platform fee deposited — make $${guardPay.toFixed(2)} available for Stripe collection.`,
         };
       }
       return {
-        headline: 'Client paid cash · Stripe deposit pending',
-        detail: `$${due.toFixed(2)} not deposited to Stripe yet (can be after paying the guard).`,
+        headline: 'Stripe deposit pending',
+        detail: `$${due.toFixed(2)} not deposited to Stripe yet.`,
       };
     }
     case 'client-paid-active':
       return {
-        headline: isCashClientPayment(req) ? 'Client paid cash · job running' : 'Client paid by card · job running',
+        headline: 'Client paid by card · job running',
         detail: `Guard earns $${guardPay.toFixed(2)} after the job is marked complete.`,
       };
     case 'awaiting-guard-payout':
       return {
         headline: 'Job done · pay the guard',
-        detail: isCashClientPayment(req)
-          ? `Deposit $${guardPay.toFixed(2)} for Stripe payout, or pay $${guardPay.toFixed(2)} in cash on site.`
-          : `Make $${guardPay.toFixed(2)} available so the guard can collect from Pay.`,
+        detail: `Make $${guardPay.toFixed(2)} available so the guard can collect from Pay.`,
       };
     case 'guard-collection-pending':
       return {
         headline: 'Funds available · waiting on guard',
-        detail: `$${guardPay.toFixed(2)} is ready for the guard to request bank transfer or cash pickup.`,
+        detail: `$${guardPay.toFixed(2)} is ready for the guard to request a bank transfer.`,
       };
     case 'settled':
       return {
-        headline: isCashGuardPayout(req) ? 'All paid · guard received cash' : 'All paid · guard paid on Stripe',
+        headline: 'All paid · guard paid on Stripe',
         detail: `Client bill $${clientBill.toFixed(2)} · guard received $${guardPay.toFixed(2)}.`,
       };
     default:
@@ -314,9 +308,9 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 }
 
 export const PIPELINE_FLOW_STEPS = [
-  { step: 1, label: 'Client pays', description: 'Card checkout, cash request, or staff records cash on site' },
+  { step: 1, label: 'Client pays', description: 'Card checkout via Stripe' },
   { step: 2, label: 'Job in progress', description: 'Funds stay secured until the job is complete' },
-  { step: 3, label: 'Guard collects pay', description: 'Staff releases funds; the guard chooses bank transfer or cash pickup' },
+  { step: 3, label: 'Guard collects pay', description: 'Staff releases funds; the guard collects via bank transfer' },
 ] as const;
 
 export function pipelineStageUrgency(stage: PaymentPipelineStage): number {

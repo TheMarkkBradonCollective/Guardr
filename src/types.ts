@@ -1230,7 +1230,7 @@ export interface SecurityRequest {
   /** Guard requested physical cash from director for this job */
   guardCashPayoutRequested?: boolean;
   guardCashPayoutRequestedAt?: string;
-  /** Staff released pay — guard can collect via Pay (bank or cash pickup) */
+  /** Staff released pay — guard can collect via Pay (Stripe bank transfer) */
   guardPayoutAvailable?: boolean;
   guardPayoutAvailableAt?: string;
   /** Client chose pay-in-cash — awaiting staff confirmation */

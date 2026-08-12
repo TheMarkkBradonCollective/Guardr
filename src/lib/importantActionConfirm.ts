@@ -16,7 +16,7 @@ function accountLabel(kind: AccountKind): string {
 export async function confirmMarkGuardTrusted(guardName: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Mark guard as trusted?',
-    message: `${guardName} will skip Guardr applicant review on Stripe jobs, and cash jobs will still require staff confirmation.`,
+    message: `${guardName} will skip Guardr applicant review on Stripe jobs.`,
     confirmLabel: 'Mark trusted',
   });
 }

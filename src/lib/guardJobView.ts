@@ -82,8 +82,7 @@ export interface GuardJobView {
   guardPayoutAvailable?: boolean;
   /**
    * True when Guardr's Stripe account holds the funds for this job.
-   * False only for cash-paying clients whose cash hasn't been deposited yet.
-   * When false, guard can only request a cash pickup — not a Stripe bank transfer.
+   * Always true for Stripe-only product paths (legacy cash rows are treated as deposited).
    */
   stripeDepositSatisfied?: boolean;
   overtimeHours?: number;
@@ -148,13 +147,7 @@ export function getShiftPayDisplay(
   const paidDate = formatPayDate(payment?.createdAt);
 
   if (job.payoutStatus === 'paid') {
-    if (job.payoutMethod === 'cash') {
-      return {
-        headline: 'Paid in cash',
-        subtext: paidDate ? `Marked paid ${paidDate}` : 'Confirmed by platform staff',
-      };
-    }
-    if (job.payoutMethod === 'stripe') {
+    if (job.payoutMethod === 'stripe' || job.payoutMethod === 'cash') {
       return {
         headline: 'Paid on Stripe',
         subtext: paidDate ? `Deposited ${paidDate}` : 'Sent to your connected account',
@@ -172,13 +165,13 @@ export function getShiftPayDisplay(
     }
     return {
       headline: 'Ready to collect',
-      subtext: 'Send a bank or cash pickup invoice from Pay',
+      subtext: 'Send a bank transfer invoice from Pay',
     };
   }
 
   return {
     headline: 'Not paid yet',
-    subtext: 'Send a bank or cash pickup invoice from Pay',
+    subtext: 'Send a bank transfer invoice from Pay',
   };
 }
 

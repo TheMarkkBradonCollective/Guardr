@@ -199,7 +199,7 @@ export function StaffClientDetailPanel({
                 title={
                   client.trusted
                     ? 'Remove trusted status — client jobs will require staff approval'
-                    : 'Mark as trusted — client jobs skip approval queue for non-cash jobs'
+                    : 'Mark as trusted — client jobs skip approval queue'
                 }
               >
                 {client.trusted ? 'Remove trusted' : 'Mark as trusted'}
