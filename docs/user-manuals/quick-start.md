@@ -43,7 +43,7 @@ You are an **independent contractor** using Guardr to find clients. You do **not
 4. Open **Pay** → connect your bank (Stripe Connect).
 5. Open **Map** → apply to open jobs or **claim** a direct request.
 6. On shift day: head → arrive → start → self-audit → work → end shift.
-7. After pay is **released** (~48h typical), collect earnings on **Pay** (bank or cash pickup).
+7. After pay is **released** (~48h typical), collect earnings on **Pay** (bank transfer via Stripe).
 
 **What you earn:** **Guard pay** = client hourly rate minus platform fee (default **$5/hr** unless negotiated). You contract **directly with the client** per job.
 

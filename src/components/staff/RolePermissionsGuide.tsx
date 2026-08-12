@@ -66,7 +66,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Manage Administrators & Moderators (not other Directors)',
       'Payments, payment settings, agreements & audit log',
       'View all financial data & override system restrictions',
-      'Cash payments & job creation',
+      'Payments & job creation',
     ],
   },
   {
@@ -76,7 +76,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Everything Directors can do',
       'Platform governance overseer — manages all staff tiers',
       'Manage Directors, Administrators & Moderators',
-      'Change payment methods (Stripe / cash)',
+      'Change payment methods (Stripe)',
       'Cannot moderate other Founders',
     ],
   },

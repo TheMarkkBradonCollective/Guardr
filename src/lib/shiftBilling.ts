@@ -199,12 +199,8 @@ export function isOvertimeAwaitingClientPayment(req: SecurityRequest): boolean {
   return req.overtimeStatus === 'awaiting_payment';
 }
 
-export function isOvertimeCashPaymentPendingApproval(req: SecurityRequest): boolean {
-  return (
-    req.overtimeStatus === 'awaiting_payment' &&
-    !!req.overtimeClientCashPaymentRequested &&
-    req.overtimePaymentStatus !== 'paid'
-  );
+export function isOvertimeCashPaymentPendingApproval(_req: SecurityRequest): boolean {
+  return false;
 }
 
 export function hasUnpaidOvertime(req: SecurityRequest): boolean {
@@ -232,16 +228,12 @@ export function canClientRequestOvertimeCash(
   return false;
 }
 
-export function canStaffApproveOvertimeCashPayment(req: SecurityRequest): boolean {
-  return isOvertimeCashPaymentPendingApproval(req);
+export function canStaffApproveOvertimeCashPayment(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function canDirectorMarkOvertimePaidCash(req: SecurityRequest): boolean {
-  return (
-    isOvertimeAwaitingClientPayment(req) &&
-    !req.overtimeClientCashPaymentRequested &&
-    req.overtimePaymentStatus !== 'paid'
-  );
+export function canDirectorMarkOvertimePaidCash(_req: SecurityRequest): boolean {
+  return false;
 }
 
 export function isOvertimeClientPaid(req: SecurityRequest): boolean {
@@ -257,12 +249,8 @@ export function canMakeOvertimeGuardPayoutAvailable(req: SecurityRequest): boole
   );
 }
 
-export function canDirectorPayOvertimeGuardCash(req: SecurityRequest): boolean {
-  return (
-    isOvertimeClientPaid(req) &&
-    !req.overtimeGuardPayoutMethod &&
-    !!req.assignedGuardId
-  );
+export function canDirectorPayOvertimeGuardCash(_req: SecurityRequest): boolean {
+  return false;
 }
 
 export function isOvertimeGuardPaid(req: SecurityRequest): boolean {

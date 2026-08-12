@@ -9,7 +9,7 @@ import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
 import { AppEmptyState, AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
-import { Banknote, CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
+import { CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { GuardEarningsDesktop } from './GuardEarningsDesktop';
 
@@ -21,10 +21,7 @@ interface GuardEarningsPanelProps {
   connectPending?: boolean;
   onConnectStripe?: () => void;
   onRequestStripePayout?: () => Promise<void>;
-  onRequestCashPayout?: () => Promise<void>;
   stripeRequestPending?: boolean;
-  cashRequestPending?: boolean;
-  openCashInvoices?: number;
   openStripeInvoices?: number;
   payments?: GuardPayoutView[];
 }
@@ -44,10 +41,7 @@ export function GuardEarningsPanel({
   connectPending = false,
   onConnectStripe,
   onRequestStripePayout,
-  onRequestCashPayout,
   stripeRequestPending = false,
-  cashRequestPending = false,
-  openCashInvoices = 0,
   openStripeInvoices = 0,
   payments = [],
 }: GuardEarningsPanelProps) {
@@ -65,10 +59,9 @@ export function GuardEarningsPanel({
     [completedJobs]
   );
 
-  const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
-  const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
-  const needsBankForOnline =
-    !stripeReady && (breakdown.onlineAvailable > 0 || (breakdown.cashAvailable ?? 0) === 0);
+  const alreadyPaid = breakdown.stripePaid;
+  const readyToCollect = breakdown.onlineAvailable ?? 0;
+  const needsBankForOnline = !stripeReady && breakdown.onlineAvailable > 0;
 
   if (formFactor === 'desktop') {
     return (
@@ -80,10 +73,7 @@ export function GuardEarningsPanel({
         connectPending={connectPending}
         onConnectStripe={onConnectStripe}
         onRequestStripePayout={onRequestStripePayout}
-        onRequestCashPayout={onRequestCashPayout}
         stripeRequestPending={stripeRequestPending}
-        cashRequestPending={cashRequestPending}
-        openCashInvoices={openCashInvoices}
         openStripeInvoices={openStripeInvoices}
         payments={payments}
       />
@@ -116,32 +106,10 @@ export function GuardEarningsPanel({
           {!stripeReady && needsBankForOnline && (
             <p className="guard-pay-action-hint">Connect your bank through Stripe first</p>
           )}
-          {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
-            <p className="guard-pay-action-hint">Pending deposit — cash pickup available now</p>
-          )}
-          {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
+          {stripeReady && breakdown.onlineAvailable <= 0 && (
             <p className="guard-pay-action-hint">
               No bank payouts ready yet — complete more shifts first
             </p>
-          )}
-        </div>
-        <div className="guard-pay-action-block">
-          <AppButton
-            type="button"
-            variant="outline"
-            onClick={() => void onRequestCashPayout?.()}
-            disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
-            className="guard-pay-action-button"
-          >
-            {cashRequestPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Banknote className="w-4 h-4" />
-            )}
-            Request cash pickup
-          </AppButton>
-          {(breakdown.cashAvailable ?? 0) <= 0 && (
-            <p className="guard-pay-action-hint">Available when cash pickup funds are ready</p>
           )}
         </div>
       </div>
@@ -165,15 +133,9 @@ export function GuardEarningsPanel({
               <span className="guard-tier-hero-score-label">Ready to collect</span>
               <span className="guard-tier-hero-score-value">${alreadyPaid.toFixed(2)} paid</span>
             </div>
-            {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
+            {breakdown.onlineAvailable > 0 ? (
               <p className="guard-tier-hero-subtitle">
-                {(breakdown.cashAvailable ?? 0) > 0 && (
-                  <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
-                )}
-                {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
-                {breakdown.onlineAvailable > 0 && (
-                  <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
-                )}
+                Bank transfer ${breakdown.onlineAvailable.toFixed(2)}
               </p>
             ) : (
               <p className="guard-tier-hero-subtitle">
@@ -192,12 +154,12 @@ export function GuardEarningsPanel({
               <Link2 className="guard-pref-empty-banner-icon" aria-hidden />
               <div>
                 <p className="guard-pref-empty-banner-title">
-                  {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid online'}
+                  {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid'}
                 </p>
                 <p className="guard-pref-empty-banner-text">
                   {stripeConnected
-                    ? 'Stripe still needs a few payout details before online bank transfers are enabled.'
-                    : 'Link your bank through Stripe to receive online payouts. Cash pickup stays available without this step.'}
+                    ? 'Stripe still needs a few payout details before bank transfers are enabled.'
+                    : 'Link your bank through Stripe to receive payouts for completed shifts.'}
                 </p>
                 <AppButton
                   type="button"
@@ -221,19 +183,9 @@ export function GuardEarningsPanel({
             </div>
           )}
 
-          {(openCashInvoices > 0 || openStripeInvoices > 0) && (
+          {openStripeInvoices > 0 && (
             <p className="guard-pay-invoice-notice">
-              {openCashInvoices > 0 && (
-                <span>
-                  {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
-                </span>
-              )}
-              {openCashInvoices > 0 && openStripeInvoices > 0 ? ' ' : null}
-              {openStripeInvoices > 0 && (
-                <span>
-                  {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
-                </span>
-              )}
+              {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
               {' '}You can send another invoice when more jobs are ready to collect.
             </p>
           )}
@@ -247,12 +199,7 @@ export function GuardEarningsPanel({
             <div className="guard-performance-stat">
               <p className="guard-performance-stat-label">Bank</p>
               <p className="guard-performance-stat-value">${breakdown.stripePaid.toFixed(2)}</p>
-              <p className="guard-performance-stat-sub">Online payouts</p>
-            </div>
-            <div className="guard-performance-stat">
-              <p className="guard-performance-stat-label">Cash</p>
-              <p className="guard-performance-stat-value">${breakdown.cashPaid.toFixed(2)}</p>
-              <p className="guard-performance-stat-sub">Pickup payouts</p>
+              <p className="guard-performance-stat-sub">Stripe payouts</p>
             </div>
             <div className="guard-performance-stat">
               <p className="guard-performance-stat-label">Total earned</p>
@@ -274,7 +221,7 @@ export function GuardEarningsPanel({
             </div>
 
             {sortedShifts.length === 0 ? (
-              <AppEmptyState icon={<Banknote className="w-5 h-5" />} title="No completed shifts yet">
+              <AppEmptyState icon={<CreditCard className="w-5 h-5" />} title="No completed shifts yet">
                 Your earnings history will appear here after you complete jobs.
               </AppEmptyState>
             ) : (

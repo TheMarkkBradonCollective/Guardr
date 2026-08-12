@@ -28,7 +28,7 @@ export function EditRequestSheet({
       ? 'Edit title & location'
       : 'Edit job listing';
   const subtitle = paidReschedule
-    ? 'Move start and end within paid hours. Longer shifts and cash jobs need staff approval.'
+    ? 'Move start and end within paid hours. Longer shifts need staff approval.'
     : scheduleLocked
       ? 'Schedule is locked after payment. Title and location can still be updated.'
       : 'Update listing details, post orders, and site briefing.';

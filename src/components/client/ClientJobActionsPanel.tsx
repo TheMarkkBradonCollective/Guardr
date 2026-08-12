@@ -722,7 +722,7 @@ export function ClientJobActionsPanel({
                 {req.scheduleChangeStatus === 'awaiting_payment' &&
                   ` Approved extension: $${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} — pay to update the listing.`}
                 {req.scheduleChangeStatus === 'pending_staff_billing' &&
-                  ' Approved — Guardr is confirming cash billing before guards are notified.'}
+                  ' Approved — Guardr is confirming billing before guards are notified.'}
               </p>
             </div>
 

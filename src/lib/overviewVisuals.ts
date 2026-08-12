@@ -107,11 +107,12 @@ export function buildPeopleSegments(guards: SecurityGuard[], clients: Client[]):
 
 export function buildRevenueMixSegments(financials: OperationalFinancials): OverviewSegment[] {
   const segments: OverviewSegment[] = [];
-  if (financials.grossIncomeCash > 0) {
-    segments.push({ label: 'Cash on site', value: financials.grossIncomeCash, tone: 'success' });
-  }
-  if (financials.grossIncomeCard > 0) {
-    segments.push({ label: 'Card via Stripe', value: financials.grossIncomeCard, tone: 'primary' });
+  if (financials.grossIncomeCard > 0 || financials.grossIncome > 0) {
+    segments.push({
+      label: 'Card via Stripe',
+      value: financials.grossIncomeCard || financials.grossIncome,
+      tone: 'primary',
+    });
   }
   return segments;
 }
@@ -194,7 +195,7 @@ export function buildOperationsSnapshotCards(
               },
             ]
           : undefined,
-      footnote: `${formatOperationalMoney(financials.grossIncomeCash)} cash · ${formatOperationalMoney(financials.grossIncomeCard)} card`,
+      footnote: `${formatOperationalMoney(financials.grossIncomeCard)} via Stripe`,
     },
     {
       id: 'risk',

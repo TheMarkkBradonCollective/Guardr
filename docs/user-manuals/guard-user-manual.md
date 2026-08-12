@@ -117,7 +117,7 @@ Client pays → Job runs → Job complete → Pay released → You collect → S
 | **Awaiting client payment** | Job not yet paid | None — wait for client |
 | **Job active** | Paid and in progress | Work the shift |
 | **Awaiting payout release** | Complete; pay not released yet | Wait (overtime/refunds may block) |
-| **Ready to collect** | Pay released to you | Request **bank transfer** or **cash pickup** on **Pay** |
+| **Ready to collect** | Pay released to you | Request a **bank transfer** on **Pay** |
 | **Paid** | Funds sent or cash recorded | Done |
 
 **Typical auto-release:** about **48 hours** after job completion if there are no holds.
@@ -135,7 +135,7 @@ Client pays → Job runs → Job complete → Pay released → You collect → S
 2. Complete Stripe onboarding — bank details stay with Stripe, not stored in Guardr.
 3. When earnings are **ready to collect**, use **Send to my bank** (or wait for auto-transfer if enabled).
 
-**Cash pickup** is available once pay is released — even before you connect a bank account. Guardr may pay cash from company funds while client deposits settle.
+Connect your bank through Stripe on **Pay**, then request a bank transfer once pay is released.
 
 ### 5.4 Requesting a payout
 

@@ -1,12 +1,14 @@
 import { PaymentMethod, SecurityRequest } from '../types';
 import { computeGuardEarnings, PLATFORM_FEE_PER_HOUR } from './payments';
 
-export function isCashClientPayment(req: Pick<SecurityRequest, 'clientPaymentMethod'>): boolean {
-  return req.clientPaymentMethod === 'cash';
+/** Legacy rows may still say cash; treat as non-cash for all product paths. */
+export function isCashClientPayment(_req: Pick<SecurityRequest, 'clientPaymentMethod'>): boolean {
+  return false;
 }
 
-export function isCashGuardPayout(req: Pick<SecurityRequest, 'guardPayoutMethod'>): boolean {
-  return req.guardPayoutMethod === 'cash';
+/** Legacy rows may still say cash; treat as non-cash for all product paths. */
+export function isCashGuardPayout(_req: Pick<SecurityRequest, 'guardPayoutMethod'>): boolean {
+  return false;
 }
 
 export function getPlatformFeeAmount(req: SecurityRequest): number {
@@ -14,116 +16,82 @@ export function getPlatformFeeAmount(req: SecurityRequest): number {
   return Math.round(req.durationHours * feePerHour * 100) / 100;
 }
 
-/**
- * Client paid cash → how much must eventually be recorded in Stripe:
- * - Guard paid via Stripe Connect: full client payment (can be deposited after guard payout)
- * - Guard paid in cash: platform fee only
- */
-export function getRequiredStripeDeposit(req: SecurityRequest): number {
-  if (!isCashClientPayment(req)) return 0;
-  if (isCashGuardPayout(req)) {
-    return getPlatformFeeAmount(req);
-  }
-  return req.estimatedPayout;
-}
-
-/** Cash jobs where the Stripe/card deposit is only the platform fee (guard was paid cash). */
-export function isPlatformFeeOnlyDeposit(req: SecurityRequest): boolean {
-  if (!isCashClientPayment(req)) return false;
-  return getRequiredStripeDeposit(req) < req.estimatedPayout;
-}
-
-export function getCashDepositedAmount(req: SecurityRequest): number {
-  if (req.cashDepositedAmount != null && req.cashDepositedAmount > 0) {
-    return req.cashDepositedAmount;
-  }
-  if (req.cashDepositedToStripe) {
-    return req.estimatedPayout;
-  }
+/** @deprecated Cash deposits removed — always 0. */
+export function getRequiredStripeDeposit(_req: SecurityRequest): number {
   return 0;
 }
 
-export function getRemainingStripeDeposit(req: SecurityRequest): number {
-  const remaining = getRequiredStripeDeposit(req) - getCashDepositedAmount(req);
-  return Math.max(0, Math.round(remaining * 100) / 100);
+/** @deprecated Cash deposits removed. */
+export function isPlatformFeeOnlyDeposit(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function isStripeDepositSatisfied(req: SecurityRequest): boolean {
-  if (!isCashClientPayment(req)) return true;
-  return getRemainingStripeDeposit(req) <= 0;
+/** @deprecated Cash deposits removed. */
+export function getCashDepositedAmount(_req: SecurityRequest): number {
+  return 0;
 }
 
-export function isCashAwaitingStripeDeposit(req: SecurityRequest): boolean {
-  return (
-    isCashClientPayment(req) &&
-    !!req.paymentStatus &&
-    req.paymentStatus !== 'unpaid' &&
-    !isStripeDepositSatisfied(req)
-  );
+/** @deprecated Cash deposits removed. */
+export function getRemainingStripeDeposit(_req: SecurityRequest): number {
+  return 0;
+}
+
+/** Stripe is the only payment rail — deposit is always satisfied. */
+export function isStripeDepositSatisfied(_req: SecurityRequest): boolean {
+  return true;
+}
+
+/** @deprecated Cash client deposits removed. */
+export function isCashAwaitingStripeDeposit(_req: SecurityRequest): boolean {
+  return false;
 }
 
 export function isClientCashPaymentRequested(
-  req: Pick<SecurityRequest, 'clientCashPaymentRequested'>
+  _req: Pick<SecurityRequest, 'clientCashPaymentRequested'>
 ): boolean {
-  return !!req.clientCashPaymentRequested;
+  return false;
 }
 
-export function isClientCashPaymentPendingApproval(req: SecurityRequest): boolean {
-  return (
-    (!req.paymentStatus || req.paymentStatus === 'unpaid') && isClientCashPaymentRequested(req)
-  );
+export function isClientCashPaymentPendingApproval(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function canDirectorMarkClientPaidCash(req: SecurityRequest): boolean {
-  return (!req.paymentStatus || req.paymentStatus === 'unpaid') && !isClientCashPaymentRequested(req);
+export function canDirectorMarkClientPaidCash(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function canStaffApproveClientCashPayment(req: SecurityRequest): boolean {
-  return isClientCashPaymentPendingApproval(req);
+export function canStaffApproveClientCashPayment(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function isPlatformFeePaidCash(req: Pick<SecurityRequest, 'platformFeePaidCash'>): boolean {
-  return !!req.platformFeePaidCash;
+export function isPlatformFeePaidCash(_req: Pick<SecurityRequest, 'platformFeePaidCash'>): boolean {
+  return false;
 }
 
-export function getPlatformFeeCashDue(req: SecurityRequest): number {
-  if (!isCashAwaitingStripeDeposit(req) || isPlatformFeePaidCash(req)) return 0;
-  return getPlatformFeeAmount(req);
+export function getPlatformFeeCashDue(_req: SecurityRequest): number {
+  return 0;
 }
 
-export function canDirectorMarkPlatformFeePaidCash(req: SecurityRequest): boolean {
-  return getPlatformFeeCashDue(req) > 0;
+export function canDirectorMarkPlatformFeePaidCash(_req: SecurityRequest): boolean {
+  return false;
 }
 
-/** Remaining cash-client balance staff can record without a card checkout */
-export function getManualCashDepositDue(req: SecurityRequest): number {
-  if (!isCashAwaitingStripeDeposit(req)) return 0;
-  const remaining = getRemainingStripeDeposit(req);
-  if (remaining <= 0) return 0;
-  if (isPlatformFeeOnlyDeposit(req) && !isPlatformFeeCollected(req)) return 0;
-  return remaining;
+/** @deprecated Cash deposits removed. */
+export function getManualCashDepositDue(_req: SecurityRequest): number {
+  return 0;
 }
 
-export function canDirectorMarkCashDepositManually(req: SecurityRequest): boolean {
-  return getManualCashDepositDue(req) > 0;
+export function canDirectorMarkCashDepositManually(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
-  return isCashAwaitingStripeDeposit(req) && getRemainingStripeDeposit(req) > 0;
+export function canDirectorDepositCashToStripe(_req: SecurityRequest): boolean {
+  return false;
 }
 
-/**
- * Cash payout to guard — requires job complete and all adjustments settled.
- * Same rules as canMakeGuardPayoutAvailable: overtime paid and refunds returned first.
- */
-export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
-  if (!req.assignedGuardId) return false;
-  if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
-  if (isCashGuardPayout(req)) return false;
-  if (!['paid', 'held'].includes(req.paymentStatus)) return false;
-  // Must satisfy the same adjustment gates as the Stripe release
-  if (guardPayoutBlockedReason(req) !== null) return false;
-  return true;
+/** @deprecated Cash guard payouts removed. */
+export function canDirectorPayGuardCash(_req: SecurityRequest): boolean {
+  return false;
 }
 
 /**
@@ -131,24 +99,18 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
  * 1. Job is complete
  * 2. All overtime is settled (client paid OR waived — not pending or awaiting payment)
  * 3. Any early clock-out refund has been returned to the client (not pending)
- *
- * Client must pay/receive money before the guard gets paid.
  */
 export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (req.guardPayoutAvailable) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
-  if (isCashGuardPayout(req)) return false;
   if (req.status !== 'completed') return false;
 
-  // Overtime must be fully settled before paying the guard
   const ot = req.overtimeStatus;
   if (ot && ot !== 'none' && ot !== 'paid' && ot !== 'waived') {
-    // pending_client, pending_guard, awaiting_payment, disputed — not settled
     return false;
   }
 
-  // Early clock-out refund must be returned to client before paying guard
   if ((req.earlyClockOutRefundAmount ?? 0) > 0 && req.earlyClockOutRefundStatus === 'pending') {
     return false;
   }
@@ -184,60 +146,31 @@ export function guardPayoutBlockedReason(req: SecurityRequest): string | null {
   return null;
 }
 
-/** @deprecated Use canDirectorPayGuardCash */
+/** @deprecated Use canDirectorPayGuardCash (always false). */
 export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
   return canDirectorPayGuardCash(req);
 }
 
-/**
- * Guard can only request a Stripe bank transfer if money is actually in Guardr's Stripe.
- * - Client paid via Stripe → always satisfied.
- * - Client paid cash → only if the cash has been deposited to Guardr's Stripe.
- * If cash isn't deposited yet, the guard can only receive a cash pickup.
- */
+/** Stripe is the only guard payout rail. */
 export function canStripePayGuard(req: SecurityRequest): boolean {
-  if (isCashGuardPayout(req)) return false;
-  // Cash client whose deposit hasn't landed in Stripe yet — no funds to transfer
-  if (!isStripeDepositSatisfied(req)) return false;
+  if (req.paymentStatus === 'released') return false;
   return true;
 }
 
-/** Platform fee already recorded (manual deposit or partial Stripe deposit). */
 export function isPlatformFeeCollected(req: SecurityRequest): boolean {
-  if (!isCashClientPayment(req)) {
-    return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
-  }
-  if (isPlatformFeePaidCash(req)) return true;
-  return getCashDepositedAmount(req) >= getPlatformFeeAmount(req) - 0.001;
+  return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
 }
 
-export function stripeDepositLabel(req: SecurityRequest): string {
-  const remaining = getRemainingStripeDeposit(req);
-  if (remaining <= 0) return 'Paid into Stripe';
-  if (isPlatformFeeOnlyDeposit(req)) {
-    if (isPlatformFeePaidCash(req)) {
-      return `Pay $${remaining} with card`;
-    }
-    return `Pay $${remaining} platform fee (card)`;
-  }
-  if (isPlatformFeeCollected(req)) {
-    return `Deposit $${remaining} to Stripe`;
-  }
-  return `Pay $${remaining} with card`;
+export function stripeDepositLabel(_req: SecurityRequest): string {
+  return 'Paid into Stripe';
 }
 
-export function stripeDepositDescription(req: SecurityRequest): string {
-  if (isCashGuardPayout(req)) {
-    return 'Guard was paid cash — manually deposit the platform fee or pay with your card.';
-  }
-  return 'Client paid cash — pay the job amount with your own card to fund Stripe (can be after guard payout).';
+export function stripeDepositDescription(_req: SecurityRequest): string {
+  return 'Client payments are collected via Stripe.';
 }
 
 export function clientPaymentDisplay(req: SecurityRequest): string {
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'Unpaid';
-  if (isCashClientPayment(req)) {
-    return 'Paid cash';
-  }
   switch (req.paymentStatus) {
     case 'paid':
       return 'Paid (card)';
@@ -250,69 +183,24 @@ export function clientPaymentDisplay(req: SecurityRequest): string {
   }
 }
 
-export function stripeDepositLedgerLabel(req: SecurityRequest): string {
-  if (!isCashClientPayment(req)) return '—';
-
-  const remaining = getRemainingStripeDeposit(req);
-  const deposited = getCashDepositedAmount(req);
-
-  if (isStripeDepositSatisfied(req)) {
-    if (req.cashDepositedManually || (isPlatformFeePaidCash(req) && isCashGuardPayout(req))) {
-      return 'Manually deposited';
-    }
-    return 'Deposited via card';
-  }
-
-  if (deposited > 0) {
-    return `$${deposited.toFixed(2)} deposited · $${remaining.toFixed(2)} remaining`;
-  }
-
-  return 'Not deposited yet';
+export function stripeDepositLedgerLabel(_req: SecurityRequest): string {
+  return '—';
 }
 
 export function platformFeeLedgerLabel(req: SecurityRequest): string {
   const clientUnpaid = !req.paymentStatus || req.paymentStatus === 'unpaid';
   if (clientUnpaid) return '—';
-
-  if (!isCashClientPayment(req)) {
-    return 'Included in client payment';
-  }
-
-  if (!isStripeDepositSatisfied(req)) {
-    if (isCashGuardPayout(req)) {
-      if (isPlatformFeePaidCash(req)) {
-        return `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`;
-      }
-      return `Manually deposit or card — $${getPlatformFeeAmount(req).toFixed(2)}`;
-    }
-    if (isPlatformFeeCollected(req)) {
-      return 'Collected via Stripe';
-    }
-    return 'Awaiting Stripe deposit';
-  }
-
-  if (isPlatformFeePaidCash(req)) {
-    return 'Manually deposited';
-  }
-
-  return 'Collected via Stripe';
+  return 'Included in client payment';
 }
 
 export function platformFundsDisplay(req: SecurityRequest): string {
-  if (!isCashClientPayment(req)) {
-    if (!req.paymentStatus || req.paymentStatus === 'unpaid') return '—';
-    return 'Stripe (card)';
-  }
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return '—';
-  if (!isStripeDepositSatisfied(req)) {
-    return stripeDepositLedgerLabel(req);
-  }
-  return platformFeeLedgerLabel(req);
+  return 'Stripe (card)';
 }
 
 export function guardPayoutDisplay(req: SecurityRequest): string {
   if (req.paymentStatus === 'released') {
-    return isCashGuardPayout(req) ? 'Paid cash' : 'Paid via Stripe';
+    return 'Paid via Stripe';
   }
   if (req.guardPayoutAvailable && req.status === 'completed') {
     return 'Available to collect';
@@ -339,6 +227,7 @@ export {
   overtimeGuardEarnings,
 } from './shiftBilling';
 
+/** Only Stripe is a valid payment method going forward. */
 export function parsePaymentMethod(value: unknown): PaymentMethod | undefined {
-  return value === 'stripe' || value === 'cash' ? value : undefined;
+  return value === 'stripe' ? 'stripe' : undefined;
 }
