@@ -240,7 +240,7 @@ describe('buildDisputes', () => {
     assert.equal(closed?.resolutionNote, 'Charge waived');
   });
 
-  it('includes closed payment report tickets', () => {
+  it('does not include support report tickets (those stay in Support)', () => {
     const tickets = [
       {
         id: 't-closed',
@@ -260,8 +260,6 @@ describe('buildDisputes', () => {
     ] as SupportTicket[];
 
     const disputes = buildDisputes([], guards, tickets);
-    assert.equal(disputes.length, 1);
-    assert.equal(disputes[0].status, 'resolved');
-    assert.equal(disputes[0].type, 'payment');
+    assert.equal(disputes.length, 0);
   });
 });

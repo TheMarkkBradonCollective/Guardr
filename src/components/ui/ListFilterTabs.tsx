@@ -8,8 +8,7 @@ export interface ListFilterTab {
 }
 
 export function formatListFilterTabLabel(tab: ListFilterTab): string {
-  if (tab.count === undefined || tab.count <= 0) return tab.label;
-  return `${tab.label} (${tab.count})`;
+  return tab.label;
 }
 
 interface ListFilterTabsProps {
@@ -37,7 +36,6 @@ export function ListFilterTabs({
         tabs={tabs.map((tab) => ({
           id: tab.id,
           label: tab.label,
-          badge: tab.count,
         }))}
       />
     </div>

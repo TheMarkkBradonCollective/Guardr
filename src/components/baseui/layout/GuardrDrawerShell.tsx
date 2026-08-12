@@ -158,6 +158,10 @@ export function GuardrDrawerShell({
   const showMoreTab = useBottomNav && overflowItems.length > 0;
   const moreActive = showMoreTab && overflowItems.some((item) => item.id === activeNavId);
   const moreBadge = overflowItems.reduce((sum, item) => sum + (item.badge && item.badge > 0 ? item.badge : 0), 0);
+  const moreNotification = overflowItems.some((item) => item.notification)
+    ? (overflowItems.find((item) => item.notification === 'unread')?.notification ??
+      overflowItems.find((item) => item.notification)?.notification)
+    : undefined;
   const moreSheetItems = overflowItems as BottomNavItem[];
 
   const sidebarVisible = sidebarOpen;
@@ -617,6 +621,7 @@ export function GuardrDrawerShell({
               showMore={showMoreTab}
               moreActive={moreActive}
               moreBadge={moreBadge}
+              moreNotification={moreNotification}
               onMoreClick={openMore}
             />
           </Block>

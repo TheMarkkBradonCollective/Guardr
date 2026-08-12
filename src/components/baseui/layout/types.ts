@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { StaffNavNotificationKind } from '../../../lib/staffOpsNavNotifications';
 
 export type GuardrNavSubItem = {
   id: string;
@@ -9,7 +10,9 @@ export type GuardrNavItem = {
   id: string;
   label: string;
   icon?: LucideIcon;
+  /** @deprecated Prefer notification dot for staff nav */
   badge?: number;
+  notification?: StaffNavNotificationKind;
   disabled?: boolean;
   /** Guardr Direct nested nav (e.g. Jobs → Today / Future / Past). */
   children?: GuardrNavSubItem[];

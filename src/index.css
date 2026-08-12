@@ -8553,6 +8553,32 @@ button:active:not(:disabled) {
   color: #ffffff;
 }
 
+/* Staff nav notification dots (replace numeric sidebar badges) */
+.staff-nav-notify-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.staff-nav-notify-dot--unread {
+  background: var(--brand-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+}
+.staff-nav-notify-dot--handled-by-other {
+  background: #6366f1;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #6366f1 28%, transparent);
+}
+.staff-nav-notify-dot--tab,
+.staff-nav-notify-dot--rail {
+  position: absolute;
+  top: 2px;
+  right: 0;
+}
+.uber-tab-icon-wrap,
+.uber-rail-btn {
+  position: relative;
+}
+
 .map-offer-card-pay {
   font-size: 1.625rem;
   font-weight: 900;

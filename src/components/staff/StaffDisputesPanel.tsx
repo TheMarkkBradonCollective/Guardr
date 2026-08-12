@@ -24,6 +24,7 @@ interface StaffDisputesPanelProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => void | Promise<void>;
+  onItemHandled?: (itemId: string) => void;
 }
 
 type DisputeStatusTab = 'open' | 'closed' | 'all';
@@ -63,6 +64,7 @@ export function StaffDisputesPanel({
   disputes,
   onResolveDispute,
   onResolveOvertimeDispute,
+  onItemHandled,
 }: StaffDisputesPanelProps) {
   const { formFactor } = useDevice();
   const [statusTab, setStatusTab] = useState<DisputeStatusTab>('open');
@@ -93,16 +95,29 @@ export function StaffDisputesPanel({
     [visiblePool, typeTab]
   );
 
-  const tabCounts = useMemo(() => {
-    let open = 0;
-    let closed = 0;
-    for (const d of disputes) {
-      const status = effectiveStatus(d, statusMap);
-      if (isClosedStatus(status)) closed += 1;
-      else open += 1;
-    }
-    return { open, closed, all: disputes.length };
-  }, [disputes, statusMap]);
+  const tabBar = (
+    <div className="space-y-2">
+      <StaffListFilterTabs
+        aria-label="Dispute status"
+        activeId={statusTab}
+        onChange={(id) => setStatusTab(id as DisputeStatusTab)}
+        tabs={[
+          { id: 'open', label: 'Open' },
+          { id: 'closed', label: 'Closed' },
+          { id: 'all', label: 'All' },
+        ]}
+      />
+      <StaffListFilterTabs
+        aria-label="Dispute type"
+        activeId={typeTab}
+        onChange={(id) => setTypeTab(id as DisputeTypeTab)}
+        tabs={[
+          { id: 'all', label: 'All types' },
+          { id: 'overtime', label: 'Overtime' },
+        ]}
+      />
+    </div>
+  );
 
   useEffect(() => {
     if (formFactor === 'desktop' && visibleDisputes.length > 0 && !selectedId) {
@@ -167,6 +182,7 @@ export function StaffDisputesPanel({
   ) => {
     setStatusMap((m) => ({ ...m, [dispute.id]: status }));
     void onResolveDispute?.(dispute, action);
+    onItemHandled?.(dispute.id);
     showAppToast(message, { tone: status === 'resolved' ? 'success' : 'info' });
   };
 
@@ -183,6 +199,7 @@ export function StaffDisputesPanel({
         resolutionNote: resolutionNoteById[dispute.id],
       });
       setStatusMap((m) => ({ ...m, [dispute.id]: 'resolved' }));
+      onItemHandled?.(dispute.id);
       setStatusTab('closed');
     } catch (e) {
       showAppToast(e instanceof Error ? e.message : 'Unable to resolve dispute', { tone: 'error' });
@@ -371,8 +388,8 @@ export function StaffDisputesPanel({
     statusTab === 'closed' ? 'No closed disputes' : statusTab === 'all' ? 'No disputes' : 'No open disputes';
   const emptyBody =
     statusTab === 'closed'
-      ? 'Resolved overtime and payment disputes will appear here after staff closes them.'
-      : 'Overtime billing disputes and guard vs client conflicts appear here. Shift checkpoint violations are under Violations.';
+      ? 'Resolved overtime disputes will appear here after staff closes them.'
+      : 'Overtime billing disputes appear here. Shift checkpoint violations are under Violations; payment and safety reports are under Support.';
 
   const emptyState =
     formFactor === 'desktop' ? (
@@ -391,34 +408,6 @@ export function StaffDisputesPanel({
         <p className="app-empty-state-body">{emptyBody}</p>
       </div>
     );
-
-  const tabBar = (
-    <div className="space-y-2">
-      <StaffListFilterTabs
-        aria-label="Dispute status"
-        activeId={statusTab}
-        onChange={(id) => setStatusTab(id as DisputeStatusTab)}
-        tabs={[
-          { id: 'open', label: 'Open', count: tabCounts.open },
-          { id: 'closed', label: 'Closed', count: tabCounts.closed },
-          { id: 'all', label: 'All', count: tabCounts.all },
-        ]}
-      />
-      <StaffListFilterTabs
-        aria-label="Dispute type"
-        activeId={typeTab}
-        onChange={(id) => setTypeTab(id as DisputeTypeTab)}
-        tabs={[
-          { id: 'all', label: 'All types', count: visiblePool.length },
-          {
-            id: 'overtime',
-            label: 'Overtime',
-            count: visiblePool.filter((d) => d.type === 'overtime').length,
-          },
-        ]}
-      />
-    </div>
-  );
 
   const toolbarSubtitle =
     statusTab === 'closed'

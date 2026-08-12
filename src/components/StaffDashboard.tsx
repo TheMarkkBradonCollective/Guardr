@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import {
   Certification,
   Client,
@@ -58,9 +58,6 @@ import {
   buildStaffShiftViolations,
   computePlatformStats,
   computeWeeklyCompletedJobs,
-  countPendingCredentialReviews,
-  getPendingClientAccounts,
-  getPendingGuardAccounts,
   isStaffOpsMapSection,
   isStaffMessagesSection,
   isStaffMessagesHubSection,
@@ -86,7 +83,18 @@ import { StaffStatsPanel } from './staff/StaffStatsPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
 import { openTicketCount } from '../lib/support';
-import { staffMessagesBadge } from '../lib/messagesInbox';
+import {
+  buildStaffNavOpenItemIds,
+  computeStaffNavNotifications,
+  loadStaffOpsNavViewState,
+  markStaffSectionViewed,
+  recordStaffSelfHandledItem,
+  saveStaffOpsNavViewState,
+  STAFF_NOTIFIABLE_SECTIONS,
+  syncStaffNavHandledElsewhere,
+  type StaffNotifiableSection,
+  type StaffOpsNavViewState,
+} from '../lib/staffOpsNavNotifications';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
@@ -609,27 +617,81 @@ export function StaffDashboard({
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
 
   const openPayoutInvoices = useMemo(
-    () => openGuardPayoutInvoices(guardPayoutInvoices).length,
+    () => openGuardPayoutInvoices(guardPayoutInvoices),
     [guardPayoutInvoices]
   );
 
-  const badges = useMemo(
-    () => ({
-      applications: stats.pendingAccountApplications,
-      credentials: countPendingCredentialReviews(guards),
-      guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
-      clients: getPendingClientAccounts(clients).length,
-      jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
-      locations: 0,
-      incidents: incidents.filter((i) => i.status !== 'resolved').length,
-      violations: shiftViolations.filter((v) => v.needsReview).length,
-      disputes: disputes.filter((d) => d.status === 'open').length,
-      support: openTicketCount(supportTickets),
-      messages: staffMessagesBadge(jobChatThreads, supportTickets),
-      payments: openPayoutInvoices,
-    }),
-    [guards, stats, clients, requests, incidents, shiftViolations, disputes, supportTickets, jobChatThreads, openPayoutInvoices, jobLocations]
+  const [navViewState, setNavViewState] = useState<StaffOpsNavViewState>(() =>
+    loadStaffOpsNavViewState(currentUser.id)
   );
+  const navViewStateRef = useRef(navViewState);
+  navViewStateRef.current = navViewState;
+
+  const staffNavOpenItems = useMemo(
+    () =>
+      buildStaffNavOpenItemIds({
+        guards,
+        clients,
+        requests,
+        disputes,
+        supportTickets,
+        jobChatThreads,
+        guardPayoutInvoices,
+      }),
+    [guards, clients, requests, disputes, supportTickets, jobChatThreads, guardPayoutInvoices]
+  );
+
+  const syncedNavViewState = useMemo(() => {
+    let next = navViewState;
+    for (const notifiableSection of Object.keys(staffNavOpenItems) as StaffNotifiableSection[]) {
+      next = syncStaffNavHandledElsewhere(
+        next,
+        notifiableSection,
+        staffNavOpenItems[notifiableSection] ?? [],
+        section
+      );
+    }
+    return next;
+  }, [navViewState, staffNavOpenItems, section]);
+
+  useEffect(() => {
+    if (syncedNavViewState !== navViewState) {
+      setNavViewState(syncedNavViewState);
+      saveStaffOpsNavViewState(currentUser.id, syncedNavViewState);
+    }
+  }, [syncedNavViewState, navViewState, currentUser.id]);
+
+  const navNotifications = useMemo(
+    () => computeStaffNavNotifications(syncedNavViewState, staffNavOpenItems),
+    [syncedNavViewState, staffNavOpenItems]
+  );
+
+  const handleStaffOpsItemHandled = useCallback((itemId: string) => {
+    setNavViewState((prev) => {
+      const next = recordStaffSelfHandledItem(prev, itemId);
+      saveStaffOpsNavViewState(currentUser.id, next);
+      return next;
+    });
+  }, [currentUser.id]);
+
+  useEffect(() => {
+    if (!STAFF_NOTIFIABLE_SECTIONS.includes(section as StaffNotifiableSection)) return;
+    const notifiable = section as StaffNotifiableSection;
+    const openIds = staffNavOpenItems[notifiable] ?? [];
+    const sortedOpen = [...openIds].sort();
+    const prev = navViewStateRef.current.sections[notifiable];
+    const sameSnapshot =
+      prev &&
+      prev.openItemIds.length === sortedOpen.length &&
+      prev.openItemIds.every((id, i) => id === sortedOpen[i]);
+    if (sameSnapshot) return;
+    const next = markStaffSectionViewed(navViewStateRef.current, notifiable, openIds);
+    navViewStateRef.current = next;
+    setNavViewState(next);
+    saveStaffOpsNavViewState(currentUser.id, next);
+  }, [section, staffNavOpenItems, currentUser.id]);
+
+  const badges = navNotifications;
 
   const renderSection = () => {
     switch (section) {
@@ -964,6 +1026,7 @@ export function StaffDashboard({
             violations={shiftViolations}
             onResolveAuditViolation={showDisputes ? onResolveAuditViolation : undefined}
             onOpenJob={openJob}
+            onItemHandled={handleStaffOpsItemHandled}
           />
         ) : (
           <AppBlockedAccessScreen
@@ -996,6 +1059,7 @@ export function StaffDashboard({
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
+            onItemHandled={handleStaffOpsItemHandled}
           />
         ) : (
           <AppBlockedAccessScreen

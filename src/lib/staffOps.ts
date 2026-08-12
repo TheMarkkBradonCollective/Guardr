@@ -947,47 +947,8 @@ export function buildDisputes(
     });
   }
 
-  // Audit / checkpoint violations live under Violations (buildStaffShiftViolations), not Disputes.
-
-  for (const ticket of tickets) {
-    if (ticket.kind !== 'report') continue;
-    if (!['payment', 'job-issue', 'safety'].includes(ticket.category)) continue;
-
-    const relatedJob = ticket.relatedRequestId
-      ? requests.find((r) => r.id === ticket.relatedRequestId)
-      : undefined;
-    const assignedGuard = relatedJob?.assignedGuardId
-      ? guards.find((g) => g.id === relatedJob.assignedGuardId)
-      : undefined;
-
-    const type =
-      ticket.category === 'payment'
-        ? 'payment'
-        : ticket.category === 'safety'
-          ? 'safety'
-          : 'service';
-
-    const status: OpsDispute['status'] =
-      ticket.status === 'resolved' ? 'resolved' : ticket.status === 'in-progress' ? 'held' : 'open';
-
-    disputes.push({
-      id: ticket.id,
-      ticketId: ticket.id,
-      requestId: ticket.relatedRequestId,
-      guardId: assignedGuard?.id ?? (ticket.userRole === 'guard' ? ticket.userId : undefined),
-      clientId: relatedJob?.clientId ?? (ticket.userRole === 'client' ? ticket.userId : undefined),
-      type,
-      jobTitle: relatedJob?.title ?? ticket.subject,
-      guardName:
-        assignedGuard?.name ?? (ticket.userRole === 'guard' ? ticket.userName : 'Pending guard'),
-      clientName: relatedJob?.clientName ?? (ticket.userRole === 'client' ? ticket.userName : 'Pending client'),
-      guardStatement: ticket.userRole === 'guard' ? ticket.messages[0]?.body ?? '' : '—',
-      clientStatement: ticket.userRole === 'client' ? ticket.messages[0]?.body ?? '' : '—',
-      status,
-      openedAt: ticket.createdAt,
-      resolvedAt: ticket.status === 'resolved' ? ticket.updatedAt ?? ticket.createdAt : undefined,
-    });
-  }
+  // Overtime billing disputes only — checkpoint/shift violations live under Violations;
+  // payment and safety reports stay in Support.
 
   return disputes.sort(
     (a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()

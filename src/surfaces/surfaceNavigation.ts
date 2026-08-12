@@ -17,11 +17,16 @@ import type { LucideIcon } from 'lucide-react';
 import type { SurfaceKind } from './surfaceKind';
 import { surfacePrimaryNavCapacity } from './surfaceDesign';
 
+import type { StaffNavNotificationKind } from '../lib/staffOpsNavNotifications';
+
 export interface SurfaceDestination {
   id: string;
   label: string;
   icon?: LucideIcon;
+  /** @deprecated Use notification dot — numeric badges removed from staff nav */
   badge?: number;
+  /** Staff nav notification dot (unread / handled-by-other) */
+  notification?: StaffNavNotificationKind;
   disabled?: boolean;
   /** Section this destination belongs to. Drives desktop groups + mobile sheet sections. */
   section?: string;
@@ -128,7 +133,7 @@ export function buildMobileNavigation(
     kind: 'bottom-tabs',
     tabs,
     overflow: groupBySection(rest),
-    overflowBadge: rest.reduce((sum, item) => sum + Math.max(0, item.badge ?? 0), 0),
+    overflowBadge: rest.filter((item) => item.notification).length,
     hasOverflow: rest.length > 0,
   };
 }

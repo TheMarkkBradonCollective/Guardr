@@ -11,7 +11,12 @@ function NavTitle({ item, hideIcon = false }: { item: GuardrNavItem; hideIcon?: 
     <Block display="flex" alignItems="center" gridGap="scale400" width="100%">
       {Icon && !hideIcon ? <Icon size={18} strokeWidth={2} aria-hidden /> : null}
       <ParagraphMedium $style={{ fontWeight: 600, margin: 0, flex: 1 }}>{item.label}</ParagraphMedium>
-      {item.badge != null && item.badge > 0 ? (
+      {item.notification ? (
+        <span
+          className={`staff-nav-notify-dot staff-nav-notify-dot--${item.notification}`}
+          aria-hidden
+        />
+      ) : item.badge != null && item.badge > 0 ? (
         <LabelSmall
           $style={{
             backgroundColor: 'accent',
