@@ -314,7 +314,10 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
 /** Restore suspended/blocked guards to active or approved based on activation readiness. */
 export function resolveGuardRestoreUserStatus(guard: SecurityGuard, state = 'CA'): 'active' | 'approved' {
   if (guard.isStaff) return 'active';
-  if (guardAccountActivationBlockers(guard, state).length === 0) return 'active';
+  // Suspended/blocked accounts already cleared application approval. Do not reuse
+  // staffActivationBlockers — that list requires approved|active status and would
+  // always force "approved" for suspended restores even when credentials are ready.
+  if (buildCredentialActivationBlockers(guard, state).length === 0) return 'active';
   return 'approved';
 }
 

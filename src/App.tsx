@@ -2399,8 +2399,11 @@ export default function App() {
         (g: any) => !g.migrated_to_staff_at && !g.is_staff
       );
 
-      const loadedGuards = [...fieldGuardRows.map(mapGuardRow), ...staffFromTable].map(
+      const sanitizedGuards = [...fieldGuardRows.map(mapGuardRow), ...staffFromTable].map(
         sanitizeGuardCombinedCertificates
+      );
+      const loadedGuards = sanitizedGuards.map((g) =>
+        withAutoGuardActivation(syncGuardCredentialExpiryState(syncGuardCredentialGraceState(g)))
       );
       const disallowedCombinedCertIds = (dbCerts ?? [])
         .filter((c: any) =>
@@ -2411,6 +2414,23 @@ export default function App() {
         )
         .map((c: any) => String(c.id));
       setGuards(loadedGuards);
+      // Persist auto-activation heal when credentials are already complete but user_status
+      // was left on approved (e.g. last verify happened while suspended).
+      for (let i = 0; i < loadedGuards.length; i++) {
+        const before = sanitizedGuards[i];
+        const after = loadedGuards[i];
+        if (before.isStaff || !guardAutoActivated(before, after)) continue;
+        void supabase
+          .from('guards')
+          .update({
+            user_status: 'active',
+            verified: true,
+            credential_grace_deadline: null,
+            credential_grace_missing: null,
+            credential_grace_hours: null,
+          })
+          .eq('id', after.id);
+      }
       if (disallowedCombinedCertIds.length > 0) {
         void supabase.from('certifications').delete().in('id', disallowedCombinedCertIds);
       }
@@ -5562,11 +5582,9 @@ export default function App() {
           appToast(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`, 'error');
           return;
         }
-        appToast(
-          'Accounts activate automatically once all five credentials are uploaded and verified.',
-          'error'
-        );
-        return;
+        // Heal stuck approved accounts when credentials are already fully verified
+        // (auto-activation can be missed if the last verify happened while suspended).
+        nextStatus = 'active';
       }
     }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: nextStatus } : g));

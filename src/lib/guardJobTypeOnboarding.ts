@@ -396,13 +396,19 @@ export const JOB_TYPE_ONBOARDING: Record<JobType, JobTypeOnboardingContent> = {
 };
 
 export function normalizeJobTypeOnboarding(
-  value: Partial<Record<string, string>> | null | undefined
+  value: Partial<Record<string, string | { completedAt?: string }>> | null | undefined
 ): Partial<Record<JobType, string>> {
   if (!value || typeof value !== 'object') return {};
   const next: Partial<Record<JobType, string>> = {};
-  for (const [key, completedAt] of Object.entries(value)) {
-    if (typeof completedAt === 'string' && completedAt.trim()) {
-      next[key as JobType] = completedAt;
+  for (const [key, raw] of Object.entries(value)) {
+    const completedAt =
+      typeof raw === 'string'
+        ? raw
+        : raw && typeof raw === 'object' && typeof raw.completedAt === 'string'
+          ? raw.completedAt
+          : '';
+    if (completedAt.trim()) {
+      next[key as JobType] = completedAt.trim();
     }
   }
   return next;

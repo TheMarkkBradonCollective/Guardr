@@ -77,6 +77,7 @@ import {
   guardCanApplyToJob,
   guardCanViewJob,
   checkJobRequirements,
+  openMarketplaceJobIsGuardVisible,
   loadShiftPhase,
   saveShiftPhase,
   ShiftPhase,
@@ -264,9 +265,17 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
+function guardHasCredentialUpdateRequest(guard: SecurityGuard): boolean {
+  if (guard.insurancePolicy?.updateRequestedAt && !guard.insurancePolicy?.pendingUpdate) return true;
+  if (guard.idUpdateRequestedAt) return true;
+  return (guard.certifications ?? []).some(
+    (cert) => Boolean(cert.updateRequestedAt) && !cert.pendingUpdate
+  );
+}
+
 function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
   const tabs: GuardTab[] = ['settings', 'guide'];
-  if (guard.applicationRevisionRequestedAt) {
+  if (guard.applicationRevisionRequestedAt || guardHasCredentialUpdateRequest(guard)) {
     tabs.push('profile');
   }
   if (isGuardAccountApproved(guard)) {
@@ -764,7 +773,12 @@ export function GuardDashboard({
       const missing = jobView
         ? checkJobRequirements(guard, jobView, requests).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
         : 'job requirements';
-      showAppToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, { tone: 'error' });
+      const reason =
+        missing ||
+        (jobView && !openMarketplaceJobIsGuardVisible(jobView)
+          ? 'This job is not open for applications yet'
+          : 'job requirements');
+      showAppToast(`You must qualify before applying: ${reason}. Upload the required credentials in your profile.`, { tone: 'error' });
       return;
     }
     onAcceptJob(jobId);

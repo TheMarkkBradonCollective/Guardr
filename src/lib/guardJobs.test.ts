@@ -23,4 +23,15 @@ describe('openMarketplaceJobIsGuardVisible', () => {
       true
     );
   });
+
+  it('uses GuardJobView clientPaymentRecorded when paymentStatus is omitted', () => {
+    assert.equal(
+      openMarketplaceJobIsGuardVisible({ requestType: 'marketplace', clientPaymentRecorded: true }),
+      true
+    );
+    assert.equal(
+      openMarketplaceJobIsGuardVisible({ requestType: 'marketplace', clientPaymentRecorded: false }),
+      false
+    );
+  });
 });

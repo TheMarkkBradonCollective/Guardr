@@ -14,6 +14,7 @@ import {
   GUARD_PENDING_CREDENTIALS_LABEL,
   GUARD_PENDING_CREDENTIAL_VERIFICATION_LABEL,
   isGuardAccountActive,
+  resolveGuardRestoreUserStatus,
 } from './guardAccountActivation.ts';
 import { GUARD_CREDENTIAL_RESTRICTED_LABEL } from './guardCredentialExpiryEnforcement.ts';
 import { guardHasSubmittedItemsForStaffReview } from './approvalSubmissions.ts';
@@ -287,6 +288,28 @@ describe('guard account activation gates', () => {
     assert.equal(isGuardAccountActive(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canActivate, true);
     assert.equal(guardCanStaffActivateAccount({ ...guard, userStatus: 'approved' }), true);
+  });
+
+  it('restores suspended guards with verified credentials to active (not approved)', () => {
+    const suspended = fullyVerifiedGuard({ userStatus: 'suspended' });
+    // staffActivationBlockers still mention application approval for suspended rows —
+    // restore must ignore that and use credential readiness only.
+    assert.ok(
+      getGuardActivationChecklist(suspended).staffActivationBlockers.some((b) =>
+        /Approve the guard application/i.test(b)
+      )
+    );
+    assert.equal(resolveGuardRestoreUserStatus(suspended), 'active');
+  });
+
+  it('restores suspended guards missing credentials to approved', () => {
+    const suspended = fullyVerifiedGuard({
+      userStatus: 'suspended',
+      certifications: fullyVerifiedGuard().certifications.filter(
+        (cert) => cert.catalogId !== 'bsis-public-relations'
+      ),
+    });
+    assert.equal(resolveGuardRestoreUserStatus(suspended), 'approved');
   });
 
   it('includes pending guards in account approvals when application is ready for staff approval', () => {

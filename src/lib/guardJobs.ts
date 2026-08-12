@@ -328,16 +328,24 @@ type GuardJobVisibility = Pick<
 
 /** Marketplace browse requires client payment; direct hires may be visible earlier. */
 export function openMarketplaceJobIsGuardVisible(
-  job: Pick<SecurityRequest, 'paymentStatus' | 'requestType'>
+  job: Pick<SecurityRequest, 'requestType'> &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      /** Set on GuardJobView when paymentStatus is intentionally omitted */
+      clientPaymentRecorded?: boolean;
+    }
 ): boolean {
   if (job.requestType === 'direct') return true;
-  return isJobPaid(job);
+  if (typeof job.clientPaymentRecorded === 'boolean') return job.clientPaymentRecorded;
+  return isJobPaid({ paymentStatus: job.paymentStatus });
 }
 
 /** Open jobs visible on a guard's map/list — silently filtered by preferences and availability. */
 export function guardCanViewJob(
   guard: SecurityGuard,
-  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>
+  job: GuardJobVisibility &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      clientPaymentRecorded?: boolean;
+    }
 ): boolean {
   const licenseState = resolveJobLicenseState(job.state);
   if (!guardCanWorkFieldJobs(guard, licenseState)) return false;
@@ -357,7 +365,10 @@ export function guardCanViewJob(
 /** Whether a guard meets all requirements to apply to an open job offer */
 export function guardCanApplyToJob(
   guard: SecurityGuard,
-  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>,
+  job: GuardJobVisibility &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      clientPaymentRecorded?: boolean;
+    },
   allRequests?: ScheduleJob[]
 ): boolean {
   if (job.status !== 'open') return false;

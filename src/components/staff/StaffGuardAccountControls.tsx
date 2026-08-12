@@ -13,9 +13,11 @@ import {
   confirmRestoreAccount,
   confirmSuspendAccount,
 } from '../../lib/importantActionConfirm';
+import { showAppConfirm } from '../ui/AppConfirm';
 import {
   promptDenyGuardApplicationNote,
 } from '../../lib/staffDocumentReview';
+import { guardCanStaffActivateAccount } from '../../lib/guardAccountActivation';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 
@@ -75,6 +77,30 @@ export function StaffGuardAccountControls({
     }
   };
 
+  const runActivateAccount = async () => {
+    if (!onUpdateUserStatus) return;
+    if (!guardCanStaffActivateAccount(guard)) {
+      showAppToast('Verify all five activation credentials before activating this account.', {
+        tone: 'error',
+      });
+      return;
+    }
+    const confirmed = await showAppConfirm({
+      title: 'Activate guard account?',
+      message: `Activate ${guard.name} for marketplace access. They will be able to browse and accept jobs.`,
+      confirmLabel: 'Activate account',
+    });
+    if (!confirmed) return;
+    setActionPending(true);
+    try {
+      await onUpdateUserStatus(guard.id, 'active');
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
+    } finally {
+      setActionPending(false);
+    }
+  };
+
   const runDenyApplication = async () => {
     if (!onRejectGuardApplication) return;
     const reason = await promptDenyGuardApplicationNote();
@@ -89,12 +115,16 @@ export function StaffGuardAccountControls({
     }
   };
 
+  const canActivateAccount =
+    status === 'approved' && Boolean(onUpdateUserStatus) && guardCanStaffActivateAccount(guard);
+
   const showAccessActions =
     canModerateAccess &&
     (guardCanDeactivateAccount(status) ||
       guardCanBlockAccount(status) ||
       guardCanRestoreAccountAccess(status) ||
-      guardCanDenyApplication(status));
+      guardCanDenyApplication(status) ||
+      canActivateAccount);
 
   return (
     <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
@@ -122,6 +152,18 @@ export function StaffGuardAccountControls({
               onClick={() => void runDenyApplication()}
             >
               Deny application
+            </AppButton>
+          )}
+          {canActivateAccount && (
+            <AppButton
+              variant="primary"
+              size="sm"
+              className="staff-action-btn--ok"
+              disabled={actionPending}
+              onClick={() => void runActivateAccount()}
+              title="Activate marketplace access — all five credentials are verified"
+            >
+              Activate account
             </AppButton>
           )}
           {guardCanDeactivateAccount(status) && onUpdateUserStatus && (

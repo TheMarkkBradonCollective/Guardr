@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   countOnboardingWords,
   formatOnboardingRemaining,
+  isJobTypeOnboarded,
   jobTypeOnboardingRequiredMs,
   jobTypeOnboardingSpeechText,
+  normalizeJobTypeOnboarding,
   ONBOARDING_MIN_READ_SECONDS,
 } from './guardJobTypeOnboarding.ts';
 import type { JobType } from '../types.ts';
@@ -48,5 +50,20 @@ describe('formatOnboardingRemaining', () => {
     assert.equal(formatOnboardingRemaining(4500), '5s');
     assert.equal(formatOnboardingRemaining(65_000), '1:05');
     assert.equal(formatOnboardingRemaining(0), '0s');
+  });
+});
+
+describe('normalizeJobTypeOnboarding', () => {
+  it('keeps string timestamps and object completedAt shapes', () => {
+    const normalized = normalizeJobTypeOnboarding({
+      'event-corporate': '2026-08-12T00:00:00.000Z',
+      'standing-guard': { completedAt: '2026-08-12T00:01:00.000Z' },
+      patrol: { completedAt: '' },
+    });
+    assert.equal(normalized['event-corporate'], '2026-08-12T00:00:00.000Z');
+    assert.equal(normalized['standing-guard'], '2026-08-12T00:01:00.000Z');
+    assert.equal(normalized.patrol, undefined);
+    assert.equal(isJobTypeOnboarded({ jobTypeOnboarding: normalized }, 'event-corporate'), true);
+    assert.equal(isJobTypeOnboarded({ jobTypeOnboarding: normalized }, 'standing-guard'), true);
   });
 });
