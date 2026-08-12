@@ -10,6 +10,7 @@ import { normalizeStaffSideRole, resolvePlatformRole, isStaffRole } from '../per
 import { resolvePersonNameParts } from '../personName';
 import { getGuardUserStatus } from '../accountStatus';
 import { staffLoginEmailMatches, staffLoginEmailOrFilter, staffWorkLoginEmail } from '../staffEmail';
+import { normalizeGuardIndependentContractorNumber } from '../guardContractorNumber';
 
 export type AuthRole = 'guard' | 'client' | 'staff';
 
@@ -139,7 +140,12 @@ function guardFromRow(row: Record<string, unknown>, isStaff = false): SecurityGu
       typeof row.personal_email === 'string' && row.personal_email.trim()
         ? row.personal_email.trim()
         : undefined,
-    badgeNumber: typeof row.badge_number === 'string' ? row.badge_number : '',
+    badgeNumber:
+      typeof row.badge_number === 'string'
+        ? isStaff || row.is_staff === true
+          ? row.badge_number
+          : normalizeGuardIndependentContractorNumber(row.badge_number)
+        : '',
     avatar: typeof row.avatar === 'string' ? row.avatar : '',
     phone: typeof row.phone === 'string' ? row.phone : '',
     bio: typeof row.bio === 'string' ? row.bio : '',

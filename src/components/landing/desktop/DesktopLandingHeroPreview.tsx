@@ -26,9 +26,9 @@ const METRICS = [
 ];
 
 const ROWS = [
-  { id: 'GR-1042', site: 'Retail patrol', status: 'Live', tone: 'success' },
-  { id: 'GR-1038', site: 'Event security', status: 'Pending', tone: 'warn' },
-  { id: 'GR-1031', site: 'Corporate lobby', status: 'Scheduled', tone: 'neutral' },
+  { id: 'ICN-1042', site: 'Retail patrol', status: 'Live', tone: 'success' },
+  { id: 'ICN-1038', site: 'Event security', status: 'Pending', tone: 'warn' },
+  { id: 'ICN-1031', site: 'Corporate lobby', status: 'Scheduled', tone: 'neutral' },
 ];
 
 export function DesktopLandingHeroPreview() {

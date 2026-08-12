@@ -15,7 +15,7 @@ function baseGuard(partial: Partial<SecurityGuard> = {}): SecurityGuard {
     id: 'g-1',
     name: 'Test Guard',
     email: 'guard@example.com',
-    badgeNumber: 'GR-10001',
+    badgeNumber: 'ICN-10001',
     avatar: '',
     phone: '555-0100',
     bio: 'Background',

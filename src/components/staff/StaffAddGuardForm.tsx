@@ -5,6 +5,7 @@ import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
+import { GUARD_ICN_LABEL } from '../../lib/guardContractorNumber';
 
 export interface StaffAddGuardInput {
   firstName: string;
@@ -142,13 +143,13 @@ export function StaffAddGuardForm({
               />
             </div>
             <div>
-              <label className="uber-label block mb-1">Badge number</label>
+              <label className="uber-label block mb-1">{GUARD_ICN_LABEL}</label>
               <input
                 type="text"
                 value={badgeNumber}
                 onChange={(e) => setBadgeNumber(e.target.value)}
                 className="uber-input w-full"
-                placeholder="Auto-generated if blank"
+                placeholder="Auto-generated ICN if blank"
               />
             </div>
             <div className="sm:col-span-2 sm:max-w-xs">

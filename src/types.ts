@@ -688,7 +688,7 @@ export interface SecurityGuard {
   email: string;
   /** Staff-only personal contact email (not used for sign-in). */
   personalEmail?: string;
-  badgeNumber: string;
+  badgeNumber: string; // Independent Contractor Number (ICN-#####) for guards; staff ID for staff
   avatar: string;
   phone: string;
   /** @deprecated Use summary/about — kept for legacy rows */

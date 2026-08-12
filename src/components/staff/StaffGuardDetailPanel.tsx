@@ -31,6 +31,7 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
+import { GUARD_ICN_LABEL, GUARD_ICN_SHORT_LABEL } from '../../lib/guardContractorNumber';
 import { ArrowLeft, Camera, Check, Save, User, Users, X } from 'lucide-react';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import type { StaffGuardDetailTab } from '../../lib/appNavigation';
@@ -735,14 +736,14 @@ export function StaffGuardDetailPanel({
           {photoSaving && <p className="text-xs text-brand-text-muted mt-1">Saving photo…</p>}
           {editing ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <EditField label="Badge number" value={badgeNumber} onChange={setBadgeNumber} />
+              <EditField label={GUARD_ICN_LABEL} value={badgeNumber} onChange={setBadgeNumber} />
               <EditField label="Phone" value={phone} onChange={setPhone} type="tel" />
               <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" min={0} />
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
               <div>
-                <p className="wf-metric-label">Badge</p>
+                <p className="wf-metric-label">{GUARD_ICN_SHORT_LABEL}</p>
                 <p className="wf-metric-value">{guard.badgeNumber}</p>
               </div>
               <div>

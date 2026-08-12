@@ -383,6 +383,10 @@ import {
   validateStaffBadgeNumber,
 } from './lib/staffBadgeNumber';
 import {
+  generateGuardIndependentContractorNumber,
+  normalizeGuardIndependentContractorNumber,
+} from './lib/guardContractorNumber';
+import {
   listenForPushNavigation,
   listenForPushSubscriptionChange,
   syncPushSubscriptionWithServer,
@@ -2313,7 +2317,7 @@ export default function App() {
           name: g.name,
         });
         return {
-        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email, badgeNumber: g.badge_number,
+        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email, badgeNumber: normalizeGuardIndependentContractorNumber(g.badge_number),
         avatar: g.avatar, phone: g.phone, bio: g.bio,
         headline: g.headline || undefined,
         summary: g.summary || undefined,
@@ -5432,7 +5436,11 @@ export default function App() {
               inventoryUniforms: payload.inventoryUniforms ?? g.inventoryUniforms,
               isArmed: payload.listedWeaponGear?.includes('firearm') ?? g.isArmed,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
-              badgeNumber: payload.badgeNumber ?? g.badgeNumber,
+              badgeNumber: payload.badgeNumber !== undefined
+                ? (previous.isStaff
+                    ? payload.badgeNumber
+                    : normalizeGuardIndependentContractorNumber(payload.badgeNumber))
+                : g.badgeNumber,
               ...(clearRevision
                 ? { applicationRevisionRequestedAt: undefined, applicationRevisionNote: undefined }
                 : {}),
@@ -5451,7 +5459,11 @@ export default function App() {
           bio: payload.bio ?? payload.summary ?? '',
       };
       if (payload.avatar !== undefined) profileUpdate.avatar = payload.avatar;
-      if (payload.badgeNumber !== undefined) profileUpdate.badge_number = payload.badgeNumber;
+      if (payload.badgeNumber !== undefined) {
+        profileUpdate.badge_number = previous.isStaff
+          ? payload.badgeNumber
+          : normalizeGuardIndependentContractorNumber(payload.badgeNumber);
+      }
       if (clearRevision) {
         profileUpdate.application_revision_requested_at = null;
         profileUpdate.application_revision_note = null;
@@ -5677,7 +5689,8 @@ export default function App() {
       middleName: normalized.middleName,
       lastName: normalized.lastName,
       email: input.email.trim(),
-      badgeNumber: input.badgeNumber?.trim() || `GR-${Math.floor(10000 + Math.random() * 90000)}`,
+      badgeNumber: normalizeGuardIndependentContractorNumber(input.badgeNumber) ||
+        generateGuardIndependentContractorNumber(),
       avatar: '',
       phone: input.phone?.trim() || '',
       bio: 'Licensed security professional.',

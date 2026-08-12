@@ -15,7 +15,7 @@ const guardUser: SessionUser = {
   name: 'Test Guard',
   email: 'guard@example.com',
   role: 'guard',
-  badgeNumber: 'GR-1',
+  badgeNumber: 'ICN-1',
   avatar: '',
   hourlyRate: 40,
 };
@@ -25,7 +25,7 @@ const guards: SecurityGuard[] = [
     id: 'guard-row-1',
     name: 'Test Guard',
     email: 'guard@example.com',
-    badgeNumber: 'GR-1',
+    badgeNumber: 'ICN-1',
     avatar: '',
     phone: '',
     bio: '',
