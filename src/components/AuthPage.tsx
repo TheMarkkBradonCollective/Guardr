@@ -38,6 +38,7 @@ import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
+import { generateGuardIndependentContractorNumber } from '../lib/guardContractorNumber';
 import type { LegalPageId } from '../lib/legalContent';
 import { SITE_NAME } from '../lib/siteConfig';
 import { LegalEntityName } from './SignatureSecurityBrand';
@@ -647,7 +648,7 @@ export function AuthPage({
         middleName: normalized.middleName,
         lastName: normalized.lastName,
         email,
-        badgeNumber: `GR-${Math.floor(10000 + Math.random() * 90000)}`,
+        badgeNumber: generateGuardIndependentContractorNumber(),
         avatar: '',
         phone: phone.trim(),
         bio: bio.trim(),
