@@ -111,6 +111,21 @@ async function injectAvailability(page) {
   }, GUARD_ID);
 }
 
+/** DOM click — Playwright force-click still hits Leaflet paths when panels overlap the map. */
+async function domClickButton(page, name) {
+  return page.evaluate((patternSource) => {
+    const re = new RegExp(patternSource, 'i');
+    const el = [...document.querySelectorAll('button')].find((b) => {
+      const label = `${b.textContent || ''} ${b.getAttribute('aria-label') || ''}`.trim();
+      return re.test(label) && !b.disabled && b.getAttribute('aria-disabled') !== 'true';
+    });
+    if (!el) return null;
+    el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    el.click();
+    return (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 80);
+  }, name instanceof RegExp ? name.source : String(name));
+}
+
 async function clickAction(page, names, timeout = 1500) {
   for (const name of names) {
     const b = page.getByRole('button', { name }).first();
@@ -121,17 +136,19 @@ async function clickAction(page, names, timeout = 1500) {
         log('btn-disabled', false, String(name));
         continue;
       }
-      await b.click({ force: true });
+      const viaDom = await domClickButton(page, name);
+      if (!viaDom) {
+        await b.click({ force: true }).catch(() => {});
+      }
       await page.waitForTimeout(1600);
-      return name.toString();
+      return viaDom || name.toString();
     }
   }
   for (const name of names) {
-    const b = page.locator('button', { hasText: name }).first();
-    if (await b.isVisible({ timeout: 600 }).catch(() => false)) {
-      await b.click({ force: true });
+    const viaDom = await domClickButton(page, name);
+    if (viaDom) {
       await page.waitForTimeout(1600);
-      return `text:${name}`;
+      return `text:${viaDom}`;
     }
   }
   return null;
@@ -234,6 +251,8 @@ try {
     schedule_change_requested_at: null,
     schedule_change_requested_by: null,
     schedule_change_extra_amount: null,
+    pending_start_date: null,
+    pending_end_date: null,
   });
   await patch('guards', GUARD_ID, { user_status: 'active', hourly_rate_requirement: 20 });
   log('prep', true, 'marketplace job reset; schedule change cleared');
