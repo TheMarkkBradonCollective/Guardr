@@ -133,7 +133,10 @@ export function buildMobileNavigation(
     kind: 'bottom-tabs',
     tabs,
     overflow: groupBySection(rest),
-    overflowBadge: rest.filter((item) => item.notification).length,
+    overflowBadge: rest.reduce((sum, item) => {
+      if (item.notification) return sum + 1;
+      return sum + Math.max(0, item.badge ?? 0);
+    }, 0),
     hasOverflow: rest.length > 0,
   };
 }
