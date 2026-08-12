@@ -76,11 +76,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (job.guard_payout_method === 'cash') {
-      return res.status(400).json({ error: 'Guard was paid in cash for this job' });
+      return res.status(400).json({ error: 'Guard payout for this job is already settled' });
     }
 
     if (job.guard_cash_payout_requested) {
-      return res.status(400).json({ error: 'Guard requested cash payout for this job' });
+      return res.status(400).json({ error: 'Guard payout for this job cannot be released via Stripe' });
     }
 
     if (job.platform_fee_per_hour != null) {

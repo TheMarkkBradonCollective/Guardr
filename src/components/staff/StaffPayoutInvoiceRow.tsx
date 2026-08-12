@@ -1,5 +1,5 @@
 import React from 'react';
-import { Banknote, CreditCard } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { GuardPayoutInvoice, SecurityGuard, SecurityRequest } from '../../types';
 import { payoutInvoiceLabel, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import { WfBadge } from '../ui/wireframe';
@@ -16,7 +16,6 @@ interface StaffPayoutInvoiceRowProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   isDirector: boolean;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onCompleteInvoice?: (invoiceId: string) => Promise<void>;
 }
@@ -26,7 +25,6 @@ export function StaffPayoutInvoiceRow({
   requests,
   guards,
   isDirector,
-  onMarkGuardPaidCash,
   onReleasePayout,
   onCompleteInvoice,
 }: StaffPayoutInvoiceRowProps) {
@@ -44,11 +42,7 @@ export function StaffPayoutInvoiceRow({
       <div className="flex flex-wrap items-start justify-between gap-3 w-full">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            {invoice.method === 'cash' ? (
-              <Banknote className="w-4 h-4 text-brand-primary shrink-0" />
-            ) : (
-              <CreditCard className="w-4 h-4 text-brand-primary shrink-0" />
-            )}
+            <CreditCard className="w-4 h-4 text-brand-primary shrink-0" />
             <p className="font-semibold text-sm">{payoutInvoiceLabel(invoice)} payout invoice</p>
             <WfBadge tone="warning">Open</WfBadge>
           </div>
@@ -89,34 +83,20 @@ export function StaffPayoutInvoiceRow({
               </div>
               <div className="shrink-0 text-right space-y-2">
                 <p className="font-semibold">${(Number(line.amount) || 0).toFixed(2)}</p>
-                {!paid && isDirector && job && (
-                  invoice.method === 'cash' ? (
-                    onMarkGuardPaidCash && (
-                      <button
-                        type="button"
-                        onClick={() => onMarkGuardPaidCash(line.jobId)}
-                        className="app-button-primary app-btn-sm"
-                      >
-                        Mark paid cash
-                      </button>
-                    )
-                  ) : (
-                    onReleasePayout && (
-                      <button
-                        type="button"
-                        onClick={() => onReleasePayout(line.jobId)}
-                        disabled={!guard?.stripeConnectAccountId}
-                        className="app-button-primary app-btn-sm disabled:opacity-40"
-                        title={
-                          guard?.stripeConnectAccountId
-                            ? 'Send payout via Stripe'
-                            : 'Guard has no Stripe account connected'
-                        }
-                      >
-                        Send via Stripe
-                      </button>
-                    )
-                  )
+                {!paid && isDirector && job && onReleasePayout && (
+                  <button
+                    type="button"
+                    onClick={() => onReleasePayout(line.jobId)}
+                    disabled={!guard?.stripeConnectAccountId}
+                    className="app-button-primary app-btn-sm disabled:opacity-40"
+                    title={
+                      guard?.stripeConnectAccountId
+                        ? 'Send payout via Stripe'
+                        : 'Guard has no Stripe account connected'
+                    }
+                  >
+                    Send via Stripe
+                  </button>
                 )}
               </div>
             </li>

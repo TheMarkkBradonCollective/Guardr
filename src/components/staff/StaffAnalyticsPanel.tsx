@@ -86,7 +86,7 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
   }
 
   return (
-    <div className="animate-fade-in -mx-4 sm:-mx-5">
+    <div className="animate-fade-in min-w-0 max-w-full">
       {showFinancials && (
         <div className="px-4 sm:px-5 pb-5 border-b border-brand-border space-y-4">
           <WfSectionHeader title="Financial breakdown" />

@@ -1,25 +1,10 @@
 import React, { useState } from 'react';
-import { Banknote, Loader2, RotateCcw, Wallet } from 'lucide-react';
+import { Loader2, RotateCcw, Wallet } from 'lucide-react';
 import {
-  canDirectorMarkClientPaidCash,
-  canDirectorMarkCashDepositManually,
-  canDirectorMarkOvertimePaidCash,
-  canDirectorMarkPlatformFeePaidCash,
-  canDirectorPayGuardCash,
-  canDirectorPayOvertimeGuardCash,
-  canMakeGuardPayoutAvailable,
-  canStaffManuallyReleaseGuardPayout,
   canMakeOvertimeGuardPayoutAvailable,
-  canStaffApproveClientCashPayment,
-  canStaffApproveOvertimeCashPayment,
-  getCashDepositedAmount,
-  getManualCashDepositDue,
-  getPlatformFeeAmount,
+  canStaffManuallyReleaseGuardPayout,
   guardPayoutAmount,
   guardPayoutBlockedReason,
-  isCashClientPayment,
-  isClientCashPaymentPendingApproval,
-  isOvertimeCashPaymentPendingApproval,
   overtimeGuardEarnings,
 } from '../../lib/cashPayments';
 import { hasOvertime, overtimeStatusLabel } from '../../lib/shiftBilling';
@@ -70,16 +55,7 @@ interface JobPaymentRowProps {
   paymentGates: ClientPaymentGates;
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
-  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
-  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
-  onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
-  onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
-  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
-  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
-  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
-  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
 }
 
@@ -88,53 +64,27 @@ export function JobPaymentRow({
   guard,
   payment: _payment,
   isDirector,
-  canManagePayments,
-  paymentGates,
+  canManagePayments: _canManagePayments,
+  paymentGates: _paymentGates,
   onMakeGuardPayoutAvailable,
   onRefundPayment,
-  onMarkClientPaidCash,
-  onMarkOvertimePaidCash,
-  onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
-  onMarkOvertimeGuardPaidCash,
-  onApproveClientCashPayment,
-  onRejectClientCashPayment,
-  onMarkGuardPaidCash,
-  onMarkPlatformFeePaidCash,
-  onMarkCashDepositManually,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'overtime' | 'approveOvertimeCash' | 'releaseOvertime' | 'overtimeGuardCash' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'platformFee' | 'manualDeposit' | null>(null);
+  const [busy, setBusy] = useState<'releaseOvertime' | 'release' | 'refund' | null>(null);
 
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
   const guardAmount = guardPayoutAmount(req);
-  const cashClientJob = isCashClientPayment(req);
-  const cashPending = isClientCashPaymentPendingApproval(req);
-  const canApproveCash = false;
-  const canRejectCash = false;
-  const canMarkClientCash = false;
-  const canMarkOvertimeCash = false;
-  const canApproveOvertimeCash = false;
   const canReleaseOvertimeGuard =
     isDirector && canMakeOvertimeGuardPayoutAvailable(req) && onMakeOvertimeGuardPayoutAvailable && !readOnly;
-  const canOvertimeGuardCash = false;
   const overtimeGuardAmount = overtimeGuardEarnings(req);
-  const manualDepositDue = getManualCashDepositDue(req);
-  const canManualDeposit =
-    isDirector && canDirectorMarkCashDepositManually(req) && onMarkCashDepositManually;
-  const canPlatformFeeCash =
-    isDirector && canDirectorMarkPlatformFeePaidCash(req) && onMarkPlatformFeePaidCash;
   const canReleaseFunds =
     isDirector &&
     canStaffManuallyReleaseGuardPayout(req) &&
     onMakeGuardPayoutAvailable &&
     !readOnly;
-  const canCashGuard = false;
-  const guardDepositLabel = cashClientJob
-    ? `Deposit $${guardAmount.toFixed(2)} for guard`
-    : `Make $${guardAmount.toFixed(2)} available to guard`;
-  // Show why guard pay is blocked when job is complete but adjustments aren't settled
+  const guardDepositLabel = `Make $${guardAmount.toFixed(2)} available to guard`;
   const payoutBlockedReason =
     req.status === 'completed' &&
     !req.guardPayoutAvailable &&
@@ -176,13 +126,6 @@ export function JobPaymentRow({
           {hasOvertime(req) && req.overtimeStatus !== 'paid' && (
             <p className="text-xs text-amber-400/90 mt-1.5">{overtimeStatusLabel(req.overtimeStatus)}</p>
           )}
-          {getCashDepositedAmount(req) > 0 && (
-            <p className="text-xs text-emerald-400/80 mt-1.5">
-              ${getCashDepositedAmount(req).toFixed(2)} already recorded
-              {req.cashDepositedManually ? ' (manual)' : ' in Stripe'}
-              {req.cashDepositedAt ? ` · ${new Date(req.cashDepositedAt).toLocaleString()}` : ''}
-            </p>
-          )}
         </div>
 
         <div className="shrink-0 w-full lg:w-auto lg:min-w-[15rem]">
@@ -206,69 +149,8 @@ export function JobPaymentRow({
         </div>
       )}
 
-      {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canApproveOvertimeCash || canMarkOvertimeCash || canReleaseOvertimeGuard || canOvertimeGuardCash || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
+      {!readOnly && (canReleaseOvertimeGuard || canReleaseFunds || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
-          {canApproveCash && (
-            <AppButton
-              variant="primary"
-              size="sm"
-              onClick={() => run('approveCash', onApproveClientCashPayment)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'approveCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Approve cash payment
-            </AppButton>
-          )}
-
-          {canRejectCash && (
-            <AppButton
-              variant="danger"
-              size="sm"
-              onClick={() => run('rejectCash', onRejectClientCashPayment)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'rejectCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : undefined}
-            >
-              Decline request
-            </AppButton>
-          )}
-
-          {canMarkClientCash && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              onClick={() => run('client', onMarkClientPaidCash)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Client paid cash
-            </AppButton>
-          )}
-
-          {canApproveOvertimeCash && (
-            <AppButton
-              variant="primary"
-              size="sm"
-              onClick={() => run('approveOvertimeCash', onApproveOvertimeCashPayment)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'approveOvertimeCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Approve overtime cash
-            </AppButton>
-          )}
-
-          {canMarkOvertimeCash && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              onClick={() => run('overtime', onMarkOvertimePaidCash)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'overtime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Overtime paid ${(req.overtimeAmount ?? 0).toFixed(2)}
-            </AppButton>
-          )}
-
           {canReleaseOvertimeGuard && (
             <AppButton
               variant="primary"
@@ -281,30 +163,6 @@ export function JobPaymentRow({
             </AppButton>
           )}
 
-          {canOvertimeGuardCash && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              onClick={() => run('overtimeGuardCash', onMarkOvertimeGuardPaidCash)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'overtimeGuardCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Pay overtime cash ${overtimeGuardAmount.toFixed(2)}
-            </AppButton>
-          )}
-
-          {canCashGuard && (
-            <AppButton
-              variant={cashClientJob ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => run('guard', onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Pay guard ${guardAmount.toFixed(2)} cash
-            </AppButton>
-          )}
-
           {canReleaseFunds && (
             <AppButton
               variant="primary"
@@ -314,30 +172,6 @@ export function JobPaymentRow({
               startEnhancer={busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
             >
               {guardDepositLabel}
-            </AppButton>
-          )}
-
-          {canManualDeposit && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              onClick={() => run('manualDeposit', onMarkCashDepositManually)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'manualDeposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Manually record ${manualDepositDue.toFixed(2)} deposited
-            </AppButton>
-          )}
-
-          {canPlatformFeeCash && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              onClick={() => run('platformFee', onMarkPlatformFeePaidCash)}
-              disabled={busy !== null}
-              startEnhancer={busy === 'platformFee' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-            >
-              Manually deposit ${getPlatformFeeAmount(req).toFixed(2)} platform fee
             </AppButton>
           )}
 

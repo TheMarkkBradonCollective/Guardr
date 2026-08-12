@@ -1,7 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Client, SecurityGuard } from '../types';
+import type { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../types';
 import {
+  buildDisputes,
   computePlatformStats,
   normalizeStaffSection,
   resolveOverviewActionSelection,
@@ -182,5 +183,85 @@ describe('computePlatformStats active guards', () => {
     const stats = computePlatformStats(guards, [], requests);
     assert.equal(stats.activeGuards, 3);
     assert.equal(stats.assignedGuardsOnJobs, 3);
+  });
+});
+
+describe('buildDisputes', () => {
+  const guards = [
+    {
+      id: 'guard-1',
+      name: 'John Doe',
+      email: 'g@test.com',
+      userStatus: 'approved',
+    } as SecurityGuard,
+  ];
+
+  it('includes open and closed overtime disputes', () => {
+    const requests = [
+      {
+        id: 'job-open',
+        title: 'Open OT',
+        clientId: 'c1',
+        clientName: 'Client',
+        assignedGuardId: 'guard-1',
+        overtimeStatus: 'disputed',
+        overtimeDisputedAt: '2026-08-01T12:00:00.000Z',
+        overtimeDisputeReason: 'Wrong hours',
+        overtimeHours: 2,
+        overtimeAmount: 80,
+        endDate: '2026-08-01T10:00:00.000Z',
+        hourlyRate: 40,
+        guardsNeeded: 1,
+      },
+      {
+        id: 'job-closed',
+        title: 'Closed OT',
+        clientId: 'c1',
+        clientName: 'Client',
+        assignedGuardId: 'guard-1',
+        overtimeStatus: 'waived',
+        overtimeDisputedAt: '2026-08-02T12:00:00.000Z',
+        overtimeDisputeResolvedAt: '2026-08-03T12:00:00.000Z',
+        overtimeDisputeResolution: 'Charge waived',
+        overtimeDisputeReason: 'Not late',
+        overtimeOriginalHours: 1,
+        overtimeOriginalAmount: 40,
+        endDate: '2026-08-02T10:00:00.000Z',
+        hourlyRate: 40,
+        guardsNeeded: 1,
+      },
+    ] as SecurityRequest[];
+
+    const disputes = buildDisputes(requests, guards, []);
+    assert.equal(disputes.length, 2);
+    assert.equal(disputes.find((d) => d.requestId === 'job-open')?.status, 'open');
+    const closed = disputes.find((d) => d.requestId === 'job-closed');
+    assert.equal(closed?.status, 'resolved');
+    assert.equal(closed?.resolutionNote, 'Charge waived');
+  });
+
+  it('includes closed payment report tickets', () => {
+    const tickets = [
+      {
+        id: 't-closed',
+        userId: 'c1',
+        userName: 'Client',
+        userEmail: 'c@test.com',
+        userRole: 'client',
+        kind: 'report',
+        subject: 'Payment issue',
+        category: 'payment',
+        priority: 'normal',
+        status: 'resolved',
+        createdAt: '2026-08-01T12:00:00.000Z',
+        updatedAt: '2026-08-02T12:00:00.000Z',
+        messages: [{ id: 'm1', ticketId: 't-closed', senderId: 'c1', senderName: 'Client', senderRole: 'client', body: 'Refund please', createdAt: '2026-08-01T12:00:00.000Z' }],
+      },
+    ] as SupportTicket[];
+
+    const disputes = buildDisputes([], guards, tickets);
+    assert.equal(disputes.length, 1);
+    assert.equal(disputes[0].status, 'resolved');
+    assert.equal(disputes[0].type, 'payment');
   });
 });

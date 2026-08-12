@@ -172,7 +172,7 @@ async function goGuardPayments(page) {
 async function assertPayments(page, label) {
   const ok = /\/guard\/payments/.test(page.url());
   const text = ((await page.locator('body').innerText().catch(() => '')) || '').replace(/\s+/g, ' ');
-  const looksLikePay = /Ready to collect|Your pay|Paid on Stripe|Connect your bank|Request cash pickup/i.test(text);
+  const looksLikePay = /Ready to collect|Your pay|Paid on Stripe|Connect your bank|Send to my bank/i.test(text);
   log(`assert-payments-${label}`, ok && looksLikePay, `${page.url()} | ${text.slice(0, 160)}`);
   return ok && looksLikePay;
 }

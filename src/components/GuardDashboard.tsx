@@ -223,7 +223,6 @@ interface GuardDashboardProps {
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
   onSubmitIncidentReport?: (requestId: string, input: IncidentReportFormInput) => void | Promise<void>;
-  onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
   jobChatRequestId?: string | null;
   openJobChat?: boolean;
@@ -372,7 +371,6 @@ export function GuardDashboard({
   onSendGuardMessage,
   onRefreshGuardMessages,
   onSubmitIncidentReport,
-  onRequestCashPayout,
   onRequestStripePayout,
   jobChatRequestId = null,
   openJobChat = false,
@@ -477,7 +475,6 @@ export function GuardDashboard({
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showIncidentReport, setShowIncidentReport] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
-  const [cashRequestPending, setCashRequestPending] = useState(false);
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
   const [connectSheetOpen, setConnectSheetOpen] = useState(false);
@@ -701,10 +698,6 @@ export function GuardDashboard({
     [completedJobs]
   );
 
-  const openCashInvoices = useMemo(
-    () => openGuardPayoutInvoices(guardPayoutInvoices, guard.id, 'cash').length,
-    [guardPayoutInvoices, guard.id]
-  );
   const openStripeInvoices = useMemo(
     () => openGuardPayoutInvoices(guardPayoutInvoices, guard.id, 'stripe').length,
     [guardPayoutInvoices, guard.id]
@@ -1219,21 +1212,6 @@ export function GuardDashboard({
     }
   };
 
-  const handleRequestCashPayout = async () => {
-    if (!onRequestCashPayout) return;
-    setCashRequestPending(true);
-    try {
-      await onRequestCashPayout();
-    } catch (error) {
-      showAppToast('Cash payout request failed', {
-        tone: 'error',
-        body: error instanceof Error ? error.message : 'Try again or contact Guardr support.',
-      });
-    } finally {
-      setCashRequestPending(false);
-    }
-  };
-
   const handleRequestStripePayout = async () => {
     if (!onRequestStripePayout) return;
     setStripeRequestPending(true);
@@ -1550,11 +1528,8 @@ export function GuardDashboard({
                     stripeReady={connectReady}
                     connectPending={connectPending}
                     onConnectStripe={handleConnectStripeClick}
-                    onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
                     onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
-                    cashRequestPending={cashRequestPending}
                     stripeRequestPending={stripeRequestPending}
-                    openCashInvoices={openCashInvoices}
                     openStripeInvoices={openStripeInvoices}
                     payments={payments}
                   />

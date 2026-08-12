@@ -50,13 +50,14 @@ describe('jobScheduleChange', () => {
     assert.equal(hasScheduleDateChange(job, job.startDate, job.endDate), false);
   });
 
-  it('requires staff approval for cash and duration extensions', () => {
+  it('requires staff approval for duration extensions', () => {
     const stripeJob = baseJob();
     assert.equal(scheduleChangeRequiresStaffApproval(stripeJob, 8), false);
     assert.equal(scheduleChangeRequiresStaffApproval(stripeJob, 9), true);
 
-    const cashJob = baseJob({ clientPaymentMethod: 'cash' });
-    assert.equal(scheduleChangeRequiresStaffApproval(cashJob, 8), true);
+    // Legacy clientPaymentMethod cash is ignored — Stripe-only platform.
+    const legacyCashJob = baseJob({ clientPaymentMethod: 'cash' });
+    assert.equal(scheduleChangeRequiresStaffApproval(legacyCashJob, 8), false);
   });
 
   it('collects assigned and crew guards for notifications', () => {
@@ -96,15 +97,14 @@ describe('jobScheduleChange', () => {
     assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'staff'), { action: 'apply' });
   });
 
-  it('staff-proposed change on cash job needs billing confirmation after client approval', () => {
+  it('staff-proposed same-duration change applies after client approval', () => {
     const job = baseJob({
-      clientPaymentMethod: 'cash',
+      clientPaymentMethod: 'cash', // legacy — ignored
       scheduleChangeRequestedBy: 'staff',
       pendingDurationHours: 8,
     });
     assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'client'), {
-      action: 'pending_staff_billing',
-      extraAmount: 0,
+      action: 'apply',
     });
   });
 
