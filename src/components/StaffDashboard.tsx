@@ -44,6 +44,7 @@ import {
   canViewStats,
   canViewViolations,
   isStaffRole,
+  isFinanceDeskOnly,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -251,7 +252,8 @@ interface StaffDashboardProps {
       email: string;
       personalEmail?: string;
       badgeNumber: string;
-      staffRole: StaffRole;
+      staffRole: StaffRole | null;
+      sideRole?: import('../types').StaffSideRole | null;
       firstName: string;
       middleName?: string;
       lastName: string;
@@ -263,7 +265,8 @@ interface StaffDashboardProps {
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onUpdateStaffRole: (
     staffId: string,
-    staffRole: StaffRole
+    staffRole: StaffRole | null,
+    options?: { sideRole?: import('../types').StaffSideRole | null }
   ) => Promise<{ badgeNumber: string } | void>;
   onAddGuardProfile: (input: StaffAddGuardInput) => Promise<string>;
   onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
@@ -569,6 +572,7 @@ export function StaffDashboard({
   const showFinance = canAccessFinancialControls(currentUser);
   const showPayments = showFinance || canViewStaffCompensation(currentUser);
   const showPermissions = canAccessStaffPermissions(currentUser);
+  const financeDeskOnly = isFinanceDeskOnly(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canProposeStaff = canProposeStaffAccounts(currentUser);
   const canApproveStaff = canApproveStaffAccounts(currentUser);
@@ -595,11 +599,19 @@ export function StaffDashboard({
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
 
   useEffect(() => {
-    const accessFlags = { showFinance, showPayments, showSettings: true, showPermissions, showDisputes, showCities };
+    const accessFlags = {
+      showFinance,
+      showPayments,
+      showSettings: true,
+      showPermissions,
+      showDisputes,
+      showCities,
+      financeDeskOnly,
+    };
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities]);
+  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities, financeDeskOnly]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);

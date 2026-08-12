@@ -33,6 +33,7 @@ interface StaffSidebarNavProps {
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  financeDeskOnly?: boolean;
 }
 
 const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
@@ -120,8 +121,17 @@ export function StaffSidebarNav({
   showPermissions,
   showDisputes,
   showCities,
+  financeDeskOnly = false,
 }: StaffSidebarNavProps) {
-  const accessFlags = { showFinance, showPayments, showSettings, showPermissions, showDisputes, showCities };
+  const accessFlags = {
+    showFinance,
+    showPayments,
+    showSettings,
+    showPermissions,
+    showDisputes,
+    showCities,
+    financeDeskOnly,
+  };
 
   return (
     <nav aria-label="Staff navigation">

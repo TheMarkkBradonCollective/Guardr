@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
+import { PlatformRole, SecurityGuard, StaffRole, StaffSideRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
 import type { PlatformSettings } from '../../lib/platformSettings';
@@ -35,7 +35,8 @@ interface StaffTeamPanelProps {
     email: string;
     personalEmail?: string;
     badgeNumber: string;
-    staffRole: StaffRole;
+    staffRole: StaffRole | null;
+    sideRole?: StaffSideRole | null;
     firstName: string;
     middleName?: string;
     lastName: string;
@@ -44,7 +45,11 @@ interface StaffTeamPanelProps {
   }) => Promise<string>;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
+  onUpdateStaffRole?: (
+    staffId: string,
+    role: StaffRole | null,
+    options?: { sideRole?: StaffSideRole | null }
+  ) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
@@ -189,7 +194,15 @@ export function StaffTeamPanel({
                 subtitle={member.email}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
+                    <WfBadge tone="primary">
+                      {member.staffRole
+                        ? member.sideRole === 'Finance'
+                          ? `${member.staffRole} · Finance`
+                          : member.staffRole
+                        : member.sideRole === 'Finance'
+                          ? 'Finance desk'
+                          : 'Staff'}
+                    </WfBadge>
                     <span className="text-xs text-brand-text-muted">{member.badgeNumber}</span>
                     <span className="capitalize">{accountStatus}</span>
                   </div>

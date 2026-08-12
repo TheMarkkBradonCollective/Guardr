@@ -5,8 +5,8 @@
 import { supabase } from '../supabase';
 import { verifyAccountPassword } from '../accountPasswords';
 import { hashPassword, isPasswordHash, verifyPasswordHash } from './passwordHash';
-import type { Client, PlatformRole, SecurityGuard, SessionUser, StaffRole } from '../../types';
-import { resolvePlatformRole, isStaffRole } from '../permissions';
+import type { Client, PlatformRole, SecurityGuard, SessionUser, StaffRole, StaffSideRole } from '../../types';
+import { normalizeStaffSideRole, resolvePlatformRole, isStaffRole } from '../permissions';
 import { resolvePersonNameParts } from '../personName';
 import { getGuardUserStatus } from '../accountStatus';
 import { staffLoginEmailMatches, staffLoginEmailOrFilter, staffWorkLoginEmail } from '../staffEmail';
@@ -64,6 +64,7 @@ function sessionUserFromProfile(profile: AuthProfile): SessionUser {
       avatar: profile.guard.avatar,
       hourlyRate: profile.guard.hourlyRateRequirement,
       staffRole: profile.guard.staffRole,
+      sideRole: profile.guard.sideRole ?? null,
     };
   }
   if (profile.client) {
@@ -124,6 +125,9 @@ function guardFromRow(row: Record<string, unknown>, isStaff = false): SecurityGu
     row.staff_role === 'Support'
       ? (row.staff_role as StaffRole)
       : undefined;
+  const sideRole = normalizeStaffSideRole(
+    typeof row.side_role === 'string' ? row.side_role : null
+  ) as StaffSideRole | undefined;
   return {
     id: String(row.id),
     name: nameParts.name,
@@ -150,6 +154,7 @@ function guardFromRow(row: Record<string, unknown>, isStaff = false): SecurityGu
       typeof row.hourly_rate_requirement === 'number' ? row.hourly_rate_requirement : 35,
     isStaff: isStaff || row.is_staff === true,
     staffRole,
+    sideRole: sideRole ?? null,
     userStatus: getGuardUserStatus({
       userStatus:
         typeof row.user_status === 'string'
@@ -178,7 +183,11 @@ function profileFromClient(client: Client): AuthProfile {
 }
 
 function profileFromGuard(guard: SecurityGuard): AuthProfile {
-  const role = resolvePlatformRole({ isStaff: guard.isStaff, staffRole: guard.staffRole });
+  const role = resolvePlatformRole({
+    isStaff: guard.isStaff,
+    staffRole: guard.staffRole,
+    sideRole: guard.sideRole,
+  });
   return {
     table: guard.isStaff ? 'staff' : 'guards',
     id: guard.id,

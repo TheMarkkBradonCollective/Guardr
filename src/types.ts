@@ -89,10 +89,15 @@ export type PlatformRole =
   | 'administrator'
   | 'manager'
   | 'director'
-  | 'owner';
+  | 'owner'
+  /** Finance desk — payment-only staff when ladder role is null/stagnant */
+  | 'finance';
 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
 export type StaffRole = 'Founder' | 'Director' | 'Manager' | 'Administrator' | 'Moderator' | 'Support';
+
+/** Optional specialty seat alongside (or instead of) the ops ladder role */
+export type StaffSideRole = 'Finance';
 
 export type CertCategory =
   | 'guard-card'
@@ -732,6 +737,8 @@ export interface SecurityGuard {
   referredBy?: string;
   isStaff?: boolean;
   staffRole?: StaffRole;
+  /** Optional Finance specialty — payment tools; may pair with a null/stagnant staffRole */
+  sideRole?: StaffSideRole | null;
   /** Cities this staff member may manage or operate in */
   managedCities?: string[];
   /** Manager staff IDs supervising this account */
@@ -1588,5 +1595,7 @@ export interface SessionUser {
   hourlyRate?: number;
   /** @deprecated Derive from role for staff accounts */
   staffRole?: StaffRole;
+  /** Optional Finance specialty for payment-desk access */
+  sideRole?: StaffSideRole | null;
 }
 

@@ -1,9 +1,10 @@
-import { SecurityGuard, StaffRole } from '../types';
+import { SecurityGuard, StaffRole, StaffSideRole } from '../types';
 import { resolvePersonNameParts } from './personName';
 import { isThemeMode } from './platform/theme';
 import { normalizeManagedCities } from './platformCities';
 import { parseGovIdRevisionHistory } from './govIdRevisionHistory';
 import type { GuardUserStatus } from './accountStatus';
+import { normalizeStaffRole, normalizeStaffSideRole } from './permissions';
 
 export type StaffRow = {
   id: string;
@@ -21,7 +22,8 @@ export type StaffRow = {
   summary?: string | null;
   about?: string | null;
   specialties?: string[] | null;
-  staff_role: StaffRole;
+  staff_role: StaffRole | null;
+  side_role?: StaffSideRole | string | null;
   user_status?: string | null;
   managed_cities?: string[] | null;
   assigned_manager_ids?: string[] | null;
@@ -104,7 +106,8 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     experience: [],
     hourlyRateRequirement: 0,
     isStaff: true,
-    staffRole: row.staff_role,
+    staffRole: normalizeStaffRole(row.staff_role),
+    sideRole: normalizeStaffSideRole(row.side_role) ?? null,
     managedCities: normalizeManagedCities(
       Array.isArray(row.managed_cities) ? (row.managed_cities as string[]) : undefined
     ),
@@ -161,7 +164,8 @@ export function staffRowPatchFromGuard(member: SecurityGuard): Record<string, un
     summary: member.summary ?? '',
     about: member.about ?? '',
     specialties: member.specialties ?? [],
-    staff_role: member.staffRole,
+    staff_role: member.staffRole ?? null,
+    side_role: member.sideRole ?? null,
     user_status: member.userStatus ?? 'pending',
     managed_cities: member.managedCities ?? [],
     assigned_manager_ids: member.assignedManagerIds ?? [],

@@ -1,4 +1,4 @@
-import { PlatformRole, SessionUser, StaffRole } from '../types';
+import { PlatformRole, SessionUser, StaffRole, StaffSideRole } from '../types';
 
 /** Platform permission keys aligned with Guardr role spec */
 export type Permission =
@@ -153,6 +153,14 @@ const OWNER_PERMISSIONS: Permission[] = [
   'owner.platform_governance',
 ];
 
+/** Payment-desk only — Manager-level finance catalog, no ops ladder tools. */
+export const FINANCE_SIDE_PERMISSIONS: Permission[] = [
+  'admin.manage_payouts',
+  'admin.manage_fees',
+  'director.view_all_financial_data',
+  'director.access_audit_logs',
+];
+
 export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
   client: CLIENT_PERMISSIONS,
   guard: GUARD_PERMISSIONS,
@@ -162,6 +170,7 @@ export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
   manager: MANAGER_PERMISSIONS,
   director: DIRECTOR_PERMISSIONS,
   owner: OWNER_PERMISSIONS,
+  finance: FINANCE_SIDE_PERMISSIONS,
 };
 
 export const ROLE_LABELS: Record<PlatformRole, string> = {
@@ -173,6 +182,7 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
   manager: 'Manager',
   director: 'Director',
   owner: 'Founder',
+  finance: 'Finance',
 };
 
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
@@ -184,7 +194,29 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   manager: 'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
   director: 'Executive operations with global city markets and governance-adjacent controls shared with Founder.',
   owner: 'Platform governance overseer — manages staff below the Founder tier.',
+  finance:
+    'Payment desk — payouts, fees, financial data, and audit log only. Ladder role stays null/stagnant.',
 };
+
+export function normalizeStaffSideRole(sideRole?: string | null): StaffSideRole | undefined {
+  if (!sideRole) return undefined;
+  if (sideRole === 'Finance') return 'Finance';
+  return undefined;
+}
+
+/** True when this account is the Finance specialty seat with no ops ladder role. */
+export function isFinanceDeskOnly(
+  user: Pick<SessionUser, 'role' | 'staffRole' | 'sideRole'>,
+): boolean {
+  if (user.role === 'finance') return true;
+  return !user.staffRole && normalizeStaffSideRole(user.sideRole) === 'Finance';
+}
+
+export function hasFinanceSideRole(
+  user: Pick<SessionUser, 'sideRole' | 'role'>,
+): boolean {
+  return user.role === 'finance' || normalizeStaffSideRole(user.sideRole) === 'Finance';
+}
 
 export const STAFF_ROLES_ORDERED: StaffRole[] = [
   'Support',
@@ -289,14 +321,16 @@ export function isStaffRole(role: PlatformRole): role is
   | 'administrator'
   | 'manager'
   | 'director'
-  | 'owner' {
+  | 'owner'
+  | 'finance' {
   return (
     role === 'support' ||
     role === 'moderator' ||
     role === 'administrator' ||
     role === 'manager' ||
     role === 'director' ||
-    role === 'owner'
+    role === 'owner' ||
+    role === 'finance'
   );
 }
 
@@ -372,28 +406,48 @@ export function setStaffRolePermissionOverrides(overrides?: StaffRolePermissionO
   activeStaffRolePermissionOverrides = overrides;
 }
 
+function mergeFinanceSidePermissions(permissions: Permission[]): Permission[] {
+  const merged = new Set<Permission>(permissions);
+  for (const permission of FINANCE_SIDE_PERMISSIONS) merged.add(permission);
+  return [...merged];
+}
+
 export function getEffectiveRolePermissions(
   role: PlatformRole,
   overrides?: StaffRolePermissionOverrides,
+  sideRole?: StaffSideRole | null,
 ): Permission[] {
   const staffRole = platformRoleToStaffRole(role);
   const resolvedOverrides = overrides ?? activeStaffRolePermissionOverrides;
+  let permissions: Permission[];
   if (staffRole && resolvedOverrides?.[staffRole]) {
-    return resolvedOverrides[staffRole]!;
+    permissions = [...resolvedOverrides[staffRole]!];
+  } else {
+    permissions = [...(ROLE_PERMISSIONS[role] ?? [])];
   }
-  return ROLE_PERMISSIONS[role] ?? [];
+  if (role !== 'finance' && normalizeStaffSideRole(sideRole) === 'Finance') {
+    permissions = mergeFinanceSidePermissions(permissions);
+  }
+  return permissions;
 }
 
-export function hasPermission(user: Pick<SessionUser, 'role'>, permission: Permission): boolean {
-  return getEffectiveRolePermissions(user.role).includes(permission);
+export function hasPermission(
+  user: Pick<SessionUser, 'role' | 'sideRole'>,
+  permission: Permission,
+): boolean {
+  return getEffectiveRolePermissions(user.role, undefined, user.sideRole).includes(permission);
 }
 
-export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: Permission[]): boolean {
+export function hasAnyPermission(
+  user: Pick<SessionUser, 'role' | 'sideRole'>,
+  permissions: Permission[],
+): boolean {
   return permissions.some((p) => hasPermission(user, p));
 }
 
 /** Payouts, fees, cash handling, and financial analytics — driven by finance catalog permissions. */
-export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boolean {
+export function canAccessFinancialControls(user: Pick<SessionUser, 'role' | 'sideRole'>): boolean {
+  if (hasFinanceSideRole(user)) return true;
   return hasAnyPermission(user, [
     'admin.manage_payouts',
     'admin.manage_fees',
@@ -496,22 +550,37 @@ export function canAssignStaffRole(actorRole: PlatformRole, targetRole: StaffRol
 /**
  * Staff may only moderate accounts strictly below their own role tier.
  * Same-role peers and higher tiers are never manageable.
+ * Finance-only (null ladder + Finance side) seats are managed by Director+.
  */
-export function canModifyStaffMember(actorRole: PlatformRole, memberStaffRole?: StaffRole): boolean {
-  if (!memberStaffRole) return false;
+export function canModifyStaffMember(
+  actorRole: PlatformRole,
+  memberStaffRole?: StaffRole | null,
+  memberSideRole?: StaffSideRole | null,
+): boolean {
   const actorRank = platformStaffRank(actorRole);
   if (actorRank === null) return false;
+  if (!memberStaffRole) {
+    return (
+      normalizeStaffSideRole(memberSideRole) === 'Finance' &&
+      actorRank >= staffRoleRank('Director')
+    );
+  }
   return actorRank > staffRoleRank(memberStaffRole);
 }
 
 export function canModerateStaffMember(
   actorRole: PlatformRole,
   actorId: string,
-  member: { id: string; staffRole?: StaffRole }
+  member: { id: string; staffRole?: StaffRole | null; sideRole?: StaffSideRole | null },
 ): boolean {
-  if (!member.staffRole) return false;
   if (member.id === actorId) return false;
-  return canModifyStaffMember(actorRole, member.staffRole);
+  return canModifyStaffMember(actorRole, member.staffRole, member.sideRole);
+}
+
+/** Director+ may assign or clear the Finance side role. */
+export function canAssignStaffSideRole(actorRole: PlatformRole): boolean {
+  const actorRank = platformStaffRank(actorRole);
+  return actorRank !== null && actorRank >= staffRoleRank('Director');
 }
 
 export function canReviewJobRequests(user: Pick<SessionUser, 'role'>): boolean {
@@ -570,9 +639,9 @@ export function canToggleStaffRole(user: Pick<SessionUser, 'role'>): boolean {
   return hasAnyPermission(user, ['director.manage_moderators', 'owner.manage_directors']);
 }
 
-/** Cash client payments and cash guard payouts are Director/Founder overrides */
-export function canRecordCashPayments(user: Pick<SessionUser, 'role'>): boolean {
-  return hasExecutivePaymentControls(user);
+/** Cash client payments and cash guard payouts — Manager+ ladder or Finance desk */
+export function canRecordCashPayments(user: Pick<SessionUser, 'role' | 'sideRole'>): boolean {
+  return hasExecutivePaymentControls(user) || hasFinanceSideRole(user);
 }
 
 /** Only Directors and Founders may mark guards or clients as trusted. */
@@ -617,7 +686,7 @@ export function canAssignCityManager(user: Pick<SessionUser, 'role'>): boolean {
 export function canEditStaffProfile(
   actorRole: PlatformRole,
   actorId: string,
-  member: { id: string; staffRole?: StaffRole }
+  member: { id: string; staffRole?: StaffRole | null; sideRole?: StaffSideRole | null }
 ): boolean {
   if (member.id === actorId) return true;
   return canModerateStaffMember(actorRole, actorId, member);
@@ -645,15 +714,21 @@ export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: StaffRole | string;
+  staffRole?: StaffRole | string | null;
+  sideRole?: StaffSideRole | string | null;
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
   const normalizedStaffRole = normalizeStaffRole(
-    typeof input.staffRole === 'string' ? input.staffRole : input.staffRole
+    typeof input.staffRole === 'string' || input.staffRole == null
+      ? input.staffRole
+      : input.staffRole
   );
   if (input.isStaff && normalizedStaffRole) {
     return staffRoleToPlatformRole(normalizedStaffRole);
+  }
+  if (input.isStaff && normalizeStaffSideRole(input.sideRole) === 'Finance') {
+    return 'finance';
   }
   if (input.legacyRole === 'auditor') return 'moderator';
   if (input.legacyRole === 'staff') return 'administrator';

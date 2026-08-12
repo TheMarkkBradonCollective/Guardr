@@ -20,6 +20,7 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
   StaffRole,
+  StaffSideRole,
   JobChatThread,
   JobChatMessage,
   StaffMessage,
@@ -35,7 +36,7 @@ import {
   DifferentialPayRates,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -376,7 +377,9 @@ import {
   normalizeOptionalStaffEmail,
 } from './lib/staffEmail';
 import {
+  nextFinanceDeskBadgeNumberForChange,
   nextStaffBadgeNumberForRoleChange,
+  validateFinanceDeskBadgeNumber,
   validateStaffBadgeNumber,
 } from './lib/staffBadgeNumber';
 import {
@@ -2061,6 +2064,38 @@ export default function App() {
     localStorage.setItem('guardr_current_user', JSON.stringify(next));
     setCurrentUser(next);
     setActiveGuardId(matched.id);
+  }, [currentUser, guards, loading]);
+
+  // Keep staff session role + Finance side role aligned with the staff roster row.
+  useEffect(() => {
+    if (!currentUser || !isStaffRole(currentUser.role) || loading) return;
+    const member = guards.find((g) => g.id === currentUser.id && g.isStaff);
+    if (!member) return;
+    const nextSide = member.sideRole ?? null;
+    const nextStaffRole = member.staffRole;
+    const nextRole = resolvePlatformRole({
+      isStaff: true,
+      staffRole: nextStaffRole,
+      sideRole: nextSide,
+    });
+    if (
+      currentUser.role === nextRole &&
+      (currentUser.sideRole ?? null) === nextSide &&
+      (currentUser.staffRole ?? undefined) === nextStaffRole
+    ) {
+      return;
+    }
+    const next: SessionUser = {
+      ...currentUser,
+      role: nextRole,
+      staffRole: nextStaffRole,
+      sideRole: nextSide,
+      badgeNumber: member.badgeNumber || currentUser.badgeNumber,
+      name: member.name || currentUser.name,
+      avatar: member.avatar || currentUser.avatar,
+    };
+    localStorage.setItem('guardr_current_user', JSON.stringify(next));
+    setCurrentUser(next);
   }, [currentUser, guards, loading]);
 
   useEffect(() => {
@@ -5771,7 +5806,8 @@ export default function App() {
     email: string;
     personalEmail?: string;
     badgeNumber: string;
-    staffRole: StaffRole;
+    staffRole: StaffRole | null;
+    sideRole?: StaffSideRole | null;
     firstName: string;
     middleName?: string;
     lastName: string;
@@ -5783,25 +5819,35 @@ export default function App() {
       personalEmail,
       badgeNumber,
       staffRole,
+      sideRole = null,
       firstName,
       middleName,
       lastName,
       managedCities = [],
       assignedManagerIds = [],
     } = input;
+    const nextSideRole = sideRole === 'Finance' ? ('Finance' as const) : null;
+    if (!staffRole && nextSideRole !== 'Finance') {
+      throw new Error('A ladder role is required unless Finance side role is set.');
+    }
     const normalizedManagedCities = normalizeStaffManagedCitiesForRole(
-      staffRole,
+      staffRole ?? undefined,
       managedCities,
       platformCities
     );
-    validateStaffCityAssignment(staffRole, normalizedManagedCities, { platformCities });
+    validateStaffCityAssignment(staffRole ?? undefined, normalizedManagedCities, { platformCities });
     if (!currentUser || !canProposeStaffAccounts(currentUser)) {
       throw new Error('You do not have permission to add staff.');
     }
-    if (!canAssignStaffRole(currentUser.role, staffRole)) {
+    if (staffRole && !canAssignStaffRole(currentUser.role, staffRole)) {
       throw new Error('You cannot assign that staff role.');
     }
-    const badgeError = validateStaffBadgeNumber(badgeNumber, staffRole);
+    if (nextSideRole === 'Finance' && !canAssignStaffSideRole(currentUser.role)) {
+      throw new Error('Only Directors and Founders can assign the Finance side role.');
+    }
+    const badgeError = !staffRole
+      ? validateFinanceDeskBadgeNumber(badgeNumber)
+      : validateStaffBadgeNumber(badgeNumber, staffRole);
     if (badgeError) {
       throw new Error(badgeError);
     }
@@ -5823,6 +5869,11 @@ export default function App() {
     const staffBadge = badgeNumber.trim().toUpperCase();
     const requiresApproval = !canApproveStaffAccounts(currentUser);
     const userStatus = requiresApproval ? ('pending' as const) : ('active' as const);
+    const bio = !staffRole
+      ? 'Finance — Payment desk.'
+      : nextSideRole
+        ? `${staffRole} — Platform operations (Finance side role).`
+        : `${staffRole} — Platform operations.`;
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
       name: normalizedName.name,
@@ -5834,7 +5885,7 @@ export default function App() {
       badgeNumber: staffBadge,
       avatar: '',
       phone: '',
-      bio: `${staffRole} — Platform operations.`,
+      bio,
       isArmed: false,
       backgroundChecked: true,
       verified: true,
@@ -5844,9 +5895,10 @@ export default function App() {
       experience: [],
       hourlyRateRequirement: 0,
       isStaff: true,
-      staffRole,
+      staffRole: staffRole ?? undefined,
+      sideRole: nextSideRole,
       managedCities: normalizedManagedCities,
-      assignedManagerIds,
+      assignedManagerIds: staffRole ? assignedManagerIds : [],
       userStatus,
       password,
       mustChangePassword,
@@ -5867,9 +5919,10 @@ export default function App() {
           phone: newStaff.phone,
           bio: newStaff.bio,
           staff_role: staffRole,
+          side_role: nextSideRole,
           user_status: userStatus,
           managed_cities: normalizedManagedCities,
-          assigned_manager_ids: assignedManagerIds,
+          assigned_manager_ids: staffRole ? assignedManagerIds : [],
           password,
           must_change_password: mustChangePassword,
         });
@@ -5963,7 +6016,8 @@ export default function App() {
 
   const handleUpdateStaffRole = async (
     staffId: string,
-    staffRole: StaffRole
+    staffRole: StaffRole | null,
+    options?: { sideRole?: StaffSideRole | null }
   ): Promise<{ badgeNumber: string } | void> => {
     if (staffId === currentUser?.id) {
       throw new Error('You cannot change your own role.');
@@ -5975,23 +6029,51 @@ export default function App() {
     if (!currentUser || !canModerateStaffMember(currentUser.role, currentUser.id, member)) {
       throw new Error('You cannot moderate staff at the same role level or above your own.');
     }
-    if (!canAssignStaffRole(currentUser.role, staffRole)) {
+    const nextSideRole =
+      options?.sideRole !== undefined
+        ? options.sideRole === 'Finance'
+          ? ('Finance' as const)
+          : null
+        : member.sideRole === 'Finance'
+          ? ('Finance' as const)
+          : null;
+    if (!staffRole && nextSideRole !== 'Finance') {
+      throw new Error('A ladder role is required unless Finance side role is set.');
+    }
+    if (staffRole && !canAssignStaffRole(currentUser.role, staffRole)) {
       throw new Error('You cannot assign that staff role.');
     }
-    const roleChanged = staffRole !== member.staffRole;
-    const nextBadge = roleChanged
-      ? nextStaffBadgeNumberForRoleChange(staffRole, guards, staffId)
-      : member.badgeNumber;
+    if (
+      options?.sideRole !== undefined &&
+      options.sideRole !== (member.sideRole ?? null) &&
+      !canAssignStaffSideRole(currentUser.role)
+    ) {
+      throw new Error('Only Directors and Founders can change the Finance side role.');
+    }
+    const roleChanged = staffRole !== (member.staffRole ?? null);
+    const sideChanged = nextSideRole !== (member.sideRole ?? null);
+    const becomingFinanceDesk = !staffRole && nextSideRole === 'Finance';
+    const wasFinanceDesk = !member.staffRole && member.sideRole === 'Finance';
+    const nextBadge =
+      becomingFinanceDesk && (!wasFinanceDesk || roleChanged)
+        ? nextFinanceDeskBadgeNumberForChange(guards, staffId)
+        : staffRole && roleChanged
+          ? nextStaffBadgeNumberForRoleChange(staffRole, guards, staffId)
+          : member.badgeNumber;
     const bio =
       member.bio?.trim() && !isAutoGeneratedStaffBio(member.bio)
         ? member.bio
-        : `${staffRole} — Platform operations.`;
+        : becomingFinanceDesk
+          ? 'Finance — Payment desk.'
+          : nextSideRole
+            ? `${staffRole} — Platform operations (Finance side role).`
+            : `${staffRole} — Platform operations.`;
     const nextManagedCities = normalizeStaffManagedCitiesForRole(
-      staffRole,
+      staffRole ?? undefined,
       member.managedCities,
       platformCities
     );
-    validateStaffCityAssignment(staffRole, nextManagedCities, {
+    validateStaffCityAssignment(staffRole ?? undefined, nextManagedCities, {
       staffId,
       platformCities,
     });
@@ -6004,9 +6086,11 @@ export default function App() {
         g.id === staffId
           ? {
               ...g,
-              staffRole,
+              staffRole: staffRole ?? undefined,
+              sideRole: nextSideRole,
               badgeNumber: nextBadge,
               managedCities: nextManagedCities,
+              assignedManagerIds: staffRole ? g.assignedManagerIds : [],
               ...(g.bio?.trim() && !isAutoGeneratedStaffBio(g.bio) ? {} : { bio }),
             }
           : g
@@ -6025,9 +6109,13 @@ export default function App() {
       try {
         const update: Record<string, unknown> = {
           staff_role: staffRole,
+          side_role: nextSideRole,
           badge_number: nextBadge,
           managed_cities: nextManagedCities,
         };
+        if (!staffRole) {
+          update.assigned_manager_ids = [];
+        }
         if (!member.bio?.trim() || isAutoGeneratedStaffBio(member.bio)) {
           update.bio = bio;
         }
@@ -6043,15 +6131,27 @@ export default function App() {
         throw new Error('Could not update staff role in the database.');
       }
     }
-    if (roleChanged && nextBadge !== member.badgeNumber) {
+    if ((roleChanged || sideChanged) && nextBadge !== member.badgeNumber) {
       void writeAuditLog(currentUser, 'staff_role_updated', 'staff', staffId, {
         email: member.email,
-        previousRole: member.staffRole,
+        previousRole: member.staffRole ?? null,
         staffRole,
+        previousSideRole: member.sideRole ?? null,
+        sideRole: nextSideRole,
         previousBadgeNumber: member.badgeNumber,
         badgeNumber: nextBadge,
       });
       return { badgeNumber: nextBadge };
+    }
+    if (roleChanged || sideChanged) {
+      void writeAuditLog(currentUser, 'staff_role_updated', 'staff', staffId, {
+        email: member.email,
+        previousRole: member.staffRole ?? null,
+        staffRole,
+        previousSideRole: member.sideRole ?? null,
+        sideRole: nextSideRole,
+        badgeNumber: nextBadge,
+      });
     }
   };
 

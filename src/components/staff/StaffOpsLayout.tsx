@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation, isFinanceDeskOnly } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -125,6 +125,7 @@ export function StaffOpsLayout({
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
+  const financeDeskOnly = isFinanceDeskOnly(currentUser);
 
   const navItems: StaffNavItem[] = useMemo(
     () => [
@@ -184,6 +185,7 @@ export function StaffOpsLayout({
         showPermissions={showPermissions}
         showDisputes={showDisputes}
         showCities={showCities}
+        financeDeskOnly={financeDeskOnly}
         onOpenLegal={onOpenLegal}
         onOpenDownload={onOpenDownload}
         hideHeader={hideHeader}
@@ -214,6 +216,7 @@ interface StaffOpsLayoutInnerProps
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  financeDeskOnly?: boolean;
 }
 
 function StaffOpsLayoutInner({
@@ -234,6 +237,7 @@ function StaffOpsLayoutInner({
   showPermissions,
   showDisputes,
   showCities,
+  financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
   hideHeader = false,
@@ -274,6 +278,7 @@ function StaffOpsLayoutInner({
       showPermissions={showPermissions}
       showDisputes={showDisputes}
       showCities={showCities}
+      financeDeskOnly={financeDeskOnly}
       onOpenLegal={onOpenLegal}
       onOpenDownload={onOpenDownload}
       hideHeader={hideHeader}

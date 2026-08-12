@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
+import { PlatformRole, SecurityGuard, StaffRole, StaffSideRole } from '../../types';
 import {
   confirmApproveStaffAccount,
   confirmBlockAccount,
@@ -15,6 +15,7 @@ import {
   getAssignableStaffRoles,
   canModerateStaffMember,
   canAssignStaffCityAccess,
+  canAssignStaffSideRole,
   canEditStaffProfile,
   platformStaffRank,
   staffRoleRank,
@@ -36,8 +37,10 @@ import { showAppToast } from '../ui/AppToast';
 import { ArrowLeft, Mail, Phone } from 'lucide-react';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import {
+  nextFinanceDeskBadgeNumberForChange,
   nextStaffBadgeNumberForRoleChange,
   STAFF_BADGE_PREFIX,
+  FINANCE_DESK_BADGE_PREFIX,
 } from '../../lib/staffBadgeNumber';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import type { StaffTeamDetailTab } from '../../lib/appNavigation';
@@ -57,7 +60,11 @@ interface StaffTeamDetailPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
-  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<{ badgeNumber: string } | void>;
+  onUpdateStaffRole?: (
+    staffId: string,
+    role: StaffRole | null,
+    options?: { sideRole?: StaffSideRole | null }
+  ) => Promise<{ badgeNumber: string } | void>;
   onUpdateStaffCityAccess?: (
     staffId: string,
     patch: { managedCities?: string[]; assignedManagerIds?: string[] }
@@ -76,6 +83,9 @@ function staffModerationBlockedReason(
 ): string {
   if (member.id === currentUserId) {
     return 'You cannot change your own role or account status.';
+  }
+  if (!member.staffRole && member.sideRole === 'Finance') {
+    return 'Only Directors and Founders can manage Finance desk seats.';
   }
   const memberRole = member.staffRole ? staffRoleToPlatformRole(member.staffRole) : null;
   if (memberRole === currentUserRole) {
@@ -112,7 +122,8 @@ export function StaffTeamDetailPanel({
 }: StaffTeamDetailPanelProps) {
   const accountStatus = member.userStatus || 'active';
   const isPending = accountStatus === 'pending';
-  const [role, setRole] = useState<StaffRole>(member.staffRole || 'Moderator');
+  const [role, setRole] = useState<StaffRole | ''>(member.staffRole || '');
+  const [sideRoleFinance, setSideRoleFinance] = useState(member.sideRole === 'Finance');
   const [roleMsg, setRoleMsg] = useState('');
   const [roleError, setRoleError] = useState('');
   const [savingRole, setSavingRole] = useState(false);
@@ -149,7 +160,8 @@ export function StaffTeamDetailPanel({
       about: member.about ?? member.bio ?? '',
       specialties: member.specialties ?? [],
     });
-    setRole(member.staffRole || 'Moderator');
+    setRole(member.staffRole || '');
+    setSideRoleFinance(member.sideRole === 'Finance');
     setRoleMsg('');
     setRoleError('');
     setManagedCities(member.managedCities ?? []);
@@ -159,6 +171,7 @@ export function StaffTeamDetailPanel({
   }, [
     member.id,
     member.staffRole,
+    member.sideRole,
     member.managedCities,
     member.assignedManagerIds,
     member.headline,
@@ -170,8 +183,23 @@ export function StaffTeamDetailPanel({
     member.personalEmail,
   ]);
 
-  const platformRole = staffRoleToPlatformRole(role);
+  const nextStaffRole: StaffRole | null = role || null;
+  const nextSideRole: StaffSideRole | null = sideRoleFinance ? 'Finance' : null;
+  const platformRole = nextStaffRole
+    ? staffRoleToPlatformRole(nextStaffRole)
+    : nextSideRole === 'Finance'
+      ? 'finance'
+      : 'moderator';
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
+  const canAssignFinanceSide = canAssignStaffSideRole(currentUserRole);
+  const roleDirty =
+    nextStaffRole !== (member.staffRole ?? null) ||
+    nextSideRole !== (member.sideRole ?? null);
+  const pendingBadge = !nextStaffRole && nextSideRole === 'Finance'
+    ? nextFinanceDeskBadgeNumberForChange(roster, member.id)
+    : nextStaffRole && nextStaffRole !== member.staffRole
+      ? nextStaffBadgeNumberForRoleChange(nextStaffRole, roster, member.id)
+      : member.badgeNumber;
   const canModifyMember =
     canManageStaff && canModerateStaffMember(currentUserRole, currentUserId, member);
   const blockedReason = staffModerationBlockedReason(currentUserRole, currentUserId, member);
@@ -240,27 +268,32 @@ export function StaffTeamDetailPanel({
   };
 
   const handleRoleSave = async () => {
-    if (!onUpdateStaffRole || role === member.staffRole) return;
-    const pendingBadge =
-      role !== member.staffRole
-        ? nextStaffBadgeNumberForRoleChange(role, roster, member.id)
-        : member.badgeNumber;
+    if (!onUpdateStaffRole || !roleDirty) return;
+    if (!nextStaffRole && nextSideRole !== 'Finance') {
+      setRoleError('Choose a ladder role, or keep Finance side role for a stagnant Finance desk seat.');
+      return;
+    }
+    const roleLabel = !nextStaffRole
+      ? 'Finance desk (no ladder role)'
+      : nextSideRole
+        ? `${nextStaffRole} + Finance`
+        : nextStaffRole;
     if (!(await confirmStaffRoleChange(
       getStaffDisplayName(member),
-      role,
-      role !== member.staffRole ? pendingBadge : undefined
+      roleLabel,
+      pendingBadge !== member.badgeNumber ? pendingBadge : undefined
     ))) return;
     setRoleError('');
     setRoleMsg('');
     setSavingRole(true);
     try {
-      const result = await onUpdateStaffRole(member.id, role);
+      const result = await onUpdateStaffRole(member.id, nextStaffRole, { sideRole: nextSideRole });
       const badgeNumber =
         result && 'badgeNumber' in result ? result.badgeNumber : pendingBadge;
       setRoleMsg(
         badgeNumber !== member.badgeNumber
-          ? `Role updated to ${role}. Staff ID is now ${badgeNumber}.`
-          : `Role updated to ${role}.`
+          ? `Role updated to ${roleLabel}. Staff ID is now ${badgeNumber}.`
+          : `Role updated to ${roleLabel}.`
       );
     } catch (err) {
       setRoleError(err instanceof Error ? err.message : 'Could not update role.');
@@ -523,28 +556,53 @@ export function StaffTeamDetailPanel({
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
-        {role !== member.staffRole && (
+        {member.sideRole === 'Finance' && (
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            Side role: Finance
+            {!member.staffRole ? ' — ladder role is null/stagnant (payment desk only).' : ' — payment tools added on top of the ladder role.'}
+          </p>
+        )}
+        {roleDirty && pendingBadge !== member.badgeNumber && (
           <p className="text-xs text-brand-primary leading-relaxed">
-            Staff ID will change to{' '}
-            {nextStaffBadgeNumberForRoleChange(role, roster, member.id)} ({STAFF_BADGE_PREFIX[role]} series).
+            Staff ID will change to {pendingBadge} (
+            {!nextStaffRole ? FINANCE_DESK_BADGE_PREFIX : STAFF_BADGE_PREFIX[nextStaffRole!]} series).
           </p>
         )}
         {canModifyMember && onUpdateStaffRole ? (
           <div className="space-y-2 max-w-sm">
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as StaffRole)}
+              onChange={(e) => setRole(e.target.value as StaffRole | '')}
               className="uber-select w-full"
             >
+              {canAssignFinanceSide && (
+                <option value="">None — stagnant (Finance desk)</option>
+              )}
               {assignableRoles.map((staffRole) => (
                 <option key={staffRole} value={staffRole}>
                   {staffRole} — {ROLE_LABELS[staffRoleToPlatformRole(staffRole)]}
                 </option>
               ))}
             </select>
-            {role !== member.staffRole && (
+            {canAssignFinanceSide && (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={sideRoleFinance}
+                  onChange={(e) => setSideRoleFinance(e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="font-medium">Finance side role</span>
+                  <span className="block text-xs text-brand-text-muted">
+                    Payment tools only when ladder role is None; otherwise additive on the ladder seat.
+                  </span>
+                </span>
+              </label>
+            )}
+            {roleDirty && (
               <AppButton variant="primary" size="sm" onClick={handleRoleSave} disabled={savingRole}>
-                {savingRole ? 'Saving…' : `Save as ${role}`}
+                {savingRole ? 'Saving…' : 'Save role'}
               </AppButton>
             )}
             {roleError && <p className="text-sm text-red-400">{roleError}</p>}

@@ -21,8 +21,9 @@ interface StaffStaffApplicationSummaryProps {
 }
 
 export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSummaryProps) {
-  const staffRole = member.staffRole || 'Support';
-  const platformRole = staffRoleToPlatformRole(staffRole);
+  const isFinanceDesk = !member.staffRole && member.sideRole === 'Finance';
+  const staffRole = member.staffRole || (isFinanceDesk ? null : 'Support');
+  const platformRole = staffRole ? staffRoleToPlatformRole(staffRole) : 'finance';
   const cities = (member.managedCities ?? []).filter(Boolean);
   const hasIntake =
     Boolean(member.phone?.trim()) ||
@@ -30,6 +31,11 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
     Boolean(member.lastName?.trim()) ||
     Boolean(member.bio?.trim()) ||
     cities.length > 0;
+  const requestedRoleLabel = isFinanceDesk
+    ? `Finance desk — ${ROLE_LABELS.finance}`
+    : member.sideRole === 'Finance' && staffRole
+      ? `${staffRole} + Finance — ${ROLE_LABELS[platformRole]}`
+      : `${staffRole} — ${ROLE_LABELS[platformRole]}`;
 
   return (
     <section className="staff-detail-section space-y-4 !px-0">
@@ -46,7 +52,7 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
         <DetailRow label="Years of experience" value={member.yearsExperience?.toString()} />
         <DetailRow label="Availability" value={member.availabilityNotes} />
         <DetailRow label="Referred by" value={member.referredBy} />
-        <DetailRow label="Requested role" value={`${staffRole} — ${ROLE_LABELS[platformRole]}`} />
+        <DetailRow label="Requested role" value={requestedRoleLabel} />
       </div>
 
       <div>
