@@ -131,7 +131,8 @@ export function StaffViolationsPanel({
     const status = statusMap[v.id] ?? v.status;
     const needsReview = OPEN_STATUSES.has(status);
     const busy = resolvingId === v.id;
-    const canResolve = needsReview && v.status === 'dispute-open' && onResolveAuditViolation;
+    // Actions for any open review status (auto-flagged / flagged / dispute-open), not only disputes.
+    const canResolve = needsReview && Boolean(onResolveAuditViolation);
 
     return (
       <div className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4 staff-dispute-block !shadow-none">

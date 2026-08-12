@@ -24,12 +24,6 @@ interface StaffDisputesPanelProps {
     action: 'waive' | 'uphold' | 'adjust',
     options?: { adjustedHours?: number; resolutionNote?: string }
   ) => void | Promise<void>;
-  onResolveAuditViolation?: (
-    requestId: string,
-    violationId: string,
-    action: 'uphold' | 'dismiss',
-    note?: string
-  ) => void | Promise<void>;
 }
 
 type DisputeTab = 'all' | 'overtime';
@@ -57,11 +51,7 @@ export function StaffDisputesPanel({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const openPool = useMemo(
-    () =>
-      disputes.filter((d) => {
-        const status = statusMap[d.id] ?? d.status;
-        return status === 'open' && d.type !== 'audit-violation';
-      }),
+    () => disputes.filter((d) => (statusMap[d.id] ?? d.status) === 'open'),
     [disputes, statusMap]
   );
 
@@ -71,7 +61,7 @@ export function StaffDisputesPanel({
         const status = statusMap[d.id] ?? d.status;
         if (status !== 'open') return false;
         if (tab === 'overtime') return d.type === 'overtime';
-        return d.type !== 'audit-violation';
+        return true;
       }),
     [disputes, statusMap, tab]
   );
