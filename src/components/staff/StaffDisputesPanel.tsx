@@ -32,7 +32,8 @@ interface StaffDisputesPanelProps {
   ) => void | Promise<void>;
 }
 
-type DisputeTab = 'all' | 'overtime';
+type DisputeStatusTab = 'open' | 'closed' | 'all';
+type DisputeTypeTab = 'all' | 'overtime';
 
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
@@ -43,47 +44,85 @@ function formatWhen(iso: string): string {
   });
 }
 
+function effectiveStatus(
+  dispute: OpsDispute,
+  statusMap: Record<string, OpsDispute['status']>
+): OpsDispute['status'] {
+  return statusMap[dispute.id] ?? dispute.status;
+}
+
+function isClosedStatus(status: OpsDispute['status']): boolean {
+  return status === 'resolved';
+}
+
+function isOpenStatus(status: OpsDispute['status']): boolean {
+  return status === 'open' || status === 'held';
+}
+
+function statusLabel(status: OpsDispute['status']): string {
+  if (status === 'resolved') return 'Closed';
+  if (status === 'held') return 'Held';
+  return 'Open';
+}
+
 export function StaffDisputesPanel({
   disputes,
   onResolveDispute,
   onResolveOvertimeDispute,
 }: StaffDisputesPanelProps) {
   const { formFactor } = useDevice();
-  const [tab, setTab] = useState<DisputeTab>('all');
+  const [statusTab, setStatusTab] = useState<DisputeStatusTab>('open');
+  const [typeTab, setTypeTab] = useState<DisputeTypeTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [adjustHoursById, setAdjustHoursById] = useState<Record<string, string>>({});
   const [resolutionNoteById, setResolutionNoteById] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const openPool = useMemo(
+  const visiblePool = useMemo(
     () =>
       disputes.filter((d) => {
-        const status = statusMap[d.id] ?? d.status;
-        return status === 'open' && d.type !== 'audit-violation';
+        if (d.type === 'audit-violation') return false;
+        const status = effectiveStatus(d, statusMap);
+        if (statusTab === 'open') return isOpenStatus(status);
+        if (statusTab === 'closed') return isClosedStatus(status);
+        return true;
       }),
-    [disputes, statusMap]
+    [disputes, statusMap, statusTab]
   );
 
-  const openDisputes = useMemo(
+  const visibleDisputes = useMemo(
     () =>
-      disputes.filter((d) => {
-        const status = statusMap[d.id] ?? d.status;
-        if (status !== 'open') return false;
-        if (tab === 'overtime') return d.type === 'overtime';
-        return d.type !== 'audit-violation';
+      visiblePool.filter((d) => {
+        if (typeTab === 'overtime') return d.type === 'overtime';
+        return true;
       }),
-    [disputes, statusMap, tab]
+    [visiblePool, typeTab]
   );
+
+  const tabCounts = useMemo(() => {
+    const nonAudit = disputes.filter((d) => {
+      if (d.type === 'audit-violation') return false;
+      return true;
+    });
+    let open = 0;
+    let closed = 0;
+    for (const d of nonAudit) {
+      const status = effectiveStatus(d, statusMap);
+      if (isClosedStatus(status)) closed += 1;
+      else open += 1;
+    }
+    return { open, closed, all: nonAudit.length };
+  }, [disputes, statusMap]);
 
   useEffect(() => {
-    if (formFactor === 'desktop' && openDisputes.length > 0 && !selectedId) {
-      setSelectedId(openDisputes[0].id);
+    if (formFactor === 'desktop' && visibleDisputes.length > 0 && !selectedId) {
+      setSelectedId(visibleDisputes[0].id);
     }
-    if (selectedId && !openDisputes.some((d) => d.id === selectedId)) {
-      setSelectedId(openDisputes[0]?.id ?? null);
+    if (selectedId && !visibleDisputes.some((d) => d.id === selectedId)) {
+      setSelectedId(visibleDisputes[0]?.id ?? null);
     }
-  }, [formFactor, openDisputes, selectedId]);
+  }, [formFactor, visibleDisputes, selectedId]);
 
   const disputeColumns: GuardrTableColumn<OpsDispute>[] = [
     {
@@ -109,6 +148,19 @@ export function StaffDisputesPanel({
           {d.type === 'overtime' ? 'Overtime' : d.type}
         </StatusChip>
       ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (d) => effectiveStatus(d, statusMap),
+      render: (d) => {
+        const status = effectiveStatus(d, statusMap);
+        return (
+          <StatusChip tone={status === 'open' ? 'warning' : status === 'resolved' ? 'positive' : 'neutral'}>
+            {statusLabel(status)}
+          </StatusChip>
+        );
+      },
     },
     {
       id: 'opened',
@@ -142,6 +194,7 @@ export function StaffDisputesPanel({
         resolutionNote: resolutionNoteById[dispute.id],
       });
       setStatusMap((m) => ({ ...m, [dispute.id]: 'resolved' }));
+      setStatusTab('closed');
     } catch (e) {
       showAppToast(e instanceof Error ? e.message : 'Unable to resolve dispute', { tone: 'error' });
     } finally {
@@ -151,7 +204,8 @@ export function StaffDisputesPanel({
 
   const renderDisputeCard = (d: OpsDispute) => {
     const isOvertime = d.type === 'overtime';
-    const status = statusMap[d.id] ?? d.status;
+    const status = effectiveStatus(d, statusMap);
+    const closed = isClosedStatus(status);
     const defaultAdjustHours =
       d.clientClaimedHours != null ? d.clientClaimedHours : d.claimedHours ?? 0;
     const adjustHoursRaw = adjustHoursById[d.id] ?? String(defaultAdjustHours);
@@ -171,9 +225,12 @@ export function StaffDisputesPanel({
             </WfBadge>
             <h3 className="font-semibold text-sm mt-1">{d.jobTitle}</h3>
             <p className="text-xs text-brand-text-muted mt-0.5">Opened {formatWhen(d.openedAt)}</p>
+            {closed && d.resolvedAt ? (
+              <p className="text-xs text-brand-text-muted mt-0.5">Closed {formatWhen(d.resolvedAt)}</p>
+            ) : null}
           </div>
           <WfBadge tone={status === 'open' ? 'warning' : status === 'resolved' ? 'success' : 'default'}>
-            {status}
+            {statusLabel(status)}
           </WfBadge>
         </div>
 
@@ -217,7 +274,14 @@ export function StaffDisputesPanel({
           </div>
         </div>
 
-        {isOvertime && onResolveOvertimeDispute && (
+        {closed && d.resolutionNote ? (
+          <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-2.5">
+            <p className="wf-metric-label">Resolution</p>
+            <p className="text-sm text-brand-text-muted mt-1">{d.resolutionNote}</p>
+          </div>
+        ) : null}
+
+        {isOvertime && !closed && onResolveOvertimeDispute && (
           <div className="space-y-3 pt-2 border-t border-brand-border">
             <label className="block space-y-1.5">
               <span className="text-xs font-medium text-brand-text-muted">Staff resolution note (optional)</span>
@@ -314,54 +378,72 @@ export function StaffDisputesPanel({
     );
   };
 
+  const emptyTitle =
+    statusTab === 'closed' ? 'No closed disputes' : statusTab === 'all' ? 'No disputes' : 'No open disputes';
+  const emptyBody =
+    statusTab === 'closed'
+      ? 'Resolved overtime and payment disputes will appear here after staff closes them.'
+      : 'Overtime billing disputes and guard vs client conflicts appear here. Shift checkpoint violations are under Violations.';
+
   const emptyState =
     formFactor === 'desktop' ? (
       <WorkbenchEmpty
         icon={Scale}
-        message="No open disputes"
+        message={emptyTitle}
         variant="detail"
-        action={
-          <p className="uber-workbench-subtitle text-center max-w-md">
-            Overtime billing disputes and guard vs client conflicts appear here. Shift checkpoint violations are under Violations.
-          </p>
-        }
+        action={<p className="uber-workbench-subtitle text-center max-w-md">{emptyBody}</p>}
       />
     ) : (
       <div className="app-empty-state">
         <div className="app-empty-state-icon">
           <Scale className="w-5 h-5" />
         </div>
-        <p className="app-empty-state-title">No open disputes</p>
-        <p className="app-empty-state-body">
-          Overtime billing disputes and guard vs client conflicts appear here. Shift checkpoint violations are under Violations.
-        </p>
+        <p className="app-empty-state-title">{emptyTitle}</p>
+        <p className="app-empty-state-body">{emptyBody}</p>
       </div>
     );
 
   const tabBar = (
-    <StaffListFilterTabs
-      aria-label="Dispute type"
-      activeId={tab}
-      onChange={(id) => setTab(id as DisputeTab)}
-      tabs={[
-        { id: 'all', label: 'All', count: openPool.length },
-        {
-          id: 'overtime',
-          label: 'Overtime',
-          count: openPool.filter((d) => d.type === 'overtime').length,
-        },
-      ]}
-    />
+    <div className="space-y-2">
+      <StaffListFilterTabs
+        aria-label="Dispute status"
+        activeId={statusTab}
+        onChange={(id) => setStatusTab(id as DisputeStatusTab)}
+        tabs={[
+          { id: 'open', label: 'Open', count: tabCounts.open },
+          { id: 'closed', label: 'Closed', count: tabCounts.closed },
+          { id: 'all', label: 'All', count: tabCounts.all },
+        ]}
+      />
+      <StaffListFilterTabs
+        aria-label="Dispute type"
+        activeId={typeTab}
+        onChange={(id) => setTypeTab(id as DisputeTypeTab)}
+        tabs={[
+          { id: 'all', label: 'All types', count: visiblePool.length },
+          {
+            id: 'overtime',
+            label: 'Overtime',
+            count: visiblePool.filter((d) => d.type === 'overtime').length,
+          },
+        ]}
+      />
+    </div>
   );
 
-  if (openDisputes.length === 0) {
+  const toolbarSubtitle =
+    statusTab === 'closed'
+      ? 'Closed disputes kept for staff review history.'
+      : statusTab === 'all'
+        ? 'Open and closed disputes.'
+        : 'Open disputes requiring staff resolution.';
+
+  if (visibleDisputes.length === 0) {
     if (formFactor === 'desktop') {
       return (
         <StaffOpsPageShell
           className="staff-mgmt-panel staff-roster-panel"
-          toolbar={
-            <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
-          }
+          toolbar={<WorkbenchToolbar eyebrow="Billing" subtitle={toolbarSubtitle} />}
         >
           {tabBar}
           {emptyState}
@@ -377,26 +459,24 @@ export function StaffDisputesPanel({
   }
 
   if (formFactor === 'desktop') {
-    const selected = openDisputes.find((d) => d.id === selectedId) ?? openDisputes[0];
+    const selected = visibleDisputes.find((d) => d.id === selectedId) ?? visibleDisputes[0];
 
     return (
       <StaffOpsPageShell
         className="staff-mgmt-panel staff-roster-panel"
-        toolbar={
-          <WorkbenchToolbar eyebrow="Billing" subtitle="Open disputes requiring staff resolution." />
-        }
+        toolbar={<WorkbenchToolbar eyebrow="Billing" subtitle={toolbarSubtitle} />}
       >
         {tabBar}
         <WorkbenchSplit
           list={
             <GuardrDataTable
               columns={disputeColumns}
-              rows={openDisputes}
+              rows={visibleDisputes}
               rowKey={(d) => d.id}
               selectedKey={selected?.id}
               onRowClick={(d) => setSelectedId(d.id)}
-              caption="Open disputes"
-              cardLayout={{ title: 'job', subtitle: 'opened', trailing: 'type' }}
+              caption={statusTab === 'closed' ? 'Closed disputes' : 'Disputes'}
+              cardLayout={{ title: 'job', subtitle: 'opened', trailing: 'status' }}
             />
           }
           detail={
@@ -415,7 +495,7 @@ export function StaffDisputesPanel({
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}
       <div className="border-t border-brand-border">
-        {openDisputes.map((d) => (
+        {visibleDisputes.map((d) => (
           <React.Fragment key={d.id}>{renderDisputeCard(d)}</React.Fragment>
         ))}
       </div>
