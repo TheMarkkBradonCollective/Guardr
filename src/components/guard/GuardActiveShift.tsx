@@ -280,13 +280,26 @@ export function GuardActiveShift({
         {phase === 'upcoming' && (
           <Block display="flex" flexDirection="column" gridGap="scale400">
             {onSite ? (
-              <SlideToConfirm
-                label="Slide to start job"
-                confirmedLabel="Starting…"
-                onConfirm={onBeginAudit}
-                disabled={!jobStartOpen}
-                disabledHint={jobStartMsg ?? `Job start opens at ${jobStartOpensLabel} (15 min before start).`}
-              />
+              <>
+                <SlideToConfirm
+                  label="Slide to start job"
+                  confirmedLabel="Starting…"
+                  onConfirm={onBeginAudit}
+                  disabled={!jobStartOpen}
+                  disabledHint={jobStartMsg ?? `Job start opens at ${jobStartOpensLabel} (15 min before start).`}
+                />
+                <AppButton
+                  variant="outline"
+                  onClick={onSkipAudit}
+                  disabled={!jobStartOpen}
+                  fullWidth
+                >
+                  Skip self audit · start job
+                </AppButton>
+                <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
+                  Skipping flags missing start items automatically for client review.
+                </ParagraphXSmall>
+              </>
             ) : (
               <SlideToConfirm
                 label={gpsRequired ? 'Must be on site to arrive' : 'Slide to arrive on site'}

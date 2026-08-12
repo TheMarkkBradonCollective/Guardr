@@ -134,10 +134,18 @@ export function getEstimatedGuardEarnings(job: Pick<GuardJobView, 'guardPay' | '
   return Math.round(job.durationHours * job.guardPay * 100) / 100;
 }
 
+export type CheckJobRequirementsOptions = {
+  /** Skip device-local availability (client/staff machines do not have the guard's schedule). */
+  skipAvailability?: boolean;
+  /** Skip overlap checks against other jobs. */
+  skipScheduleConflict?: boolean;
+};
+
 export function checkJobRequirements(
   guard: SecurityGuard,
   job: GuardJobView,
-  allRequests?: ScheduleJob[]
+  allRequests?: ScheduleJob[],
+  options?: CheckJobRequirementsOptions
 ): { checks: RequirementCheck[]; canAccept: boolean } {
   const jobCity = job.state ?? 'CA';
   const licenseState = resolveJobLicenseState(jobCity);
@@ -250,16 +258,18 @@ export function checkJobRequirements(
     canAccept = false;
   }
 
-  const availabilityReason = guardAvailabilityBlockReason(guard.id, job);
-  if (availabilityReason) {
-    checks.push({
-      label: availabilityReason,
-      met: false,
-    });
-    canAccept = false;
+  if (!options?.skipAvailability) {
+    const availabilityReason = guardAvailabilityBlockReason(guard.id, job);
+    if (availabilityReason) {
+      checks.push({
+        label: availabilityReason,
+        met: false,
+      });
+      canAccept = false;
+    }
   }
 
-  if (canAccept && allRequests) {
+  if (canAccept && allRequests && !options?.skipScheduleConflict) {
     const conflict = findGuardScheduleConflict(guard.id, job, allRequests);
     if (conflict) {
       checks.push({

@@ -545,7 +545,8 @@ export function GuardDashboard({
       return 'en-route';
     }
     const stored = shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
-    return stored;
+    // Accepted jobs with no local phase yet still need the upcoming/late clock-in overlay.
+    return stored ?? 'upcoming';
   }, [activeShiftJob, shiftPhases, guard.id]);
 
   const replacementOffers = useMemo(
