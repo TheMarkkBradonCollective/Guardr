@@ -191,64 +191,51 @@ async function goSidebar(page, label) {
     await page.waitForTimeout(1600);
     return true;
   }
-  // Prefer role buttons — preview builds may not expose .sfm-tab classes.
-  const mobileTabBtn = page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first();
-  const mobileTabClass = page.locator('.sfm-tab', { hasText: new RegExp(`^${label}$`, 'i') }).first();
-  if (await mobileTabClass.isVisible({ timeout: 600 }).catch(() => false)) {
-    await mobileTabClass.click();
-    await page.waitForTimeout(1600);
-    return true;
-  }
-  if (
-    !/^Payments$/i.test(label) &&
-    (await mobileTabBtn.isVisible({ timeout: 600 }).catch(() => false))
-  ) {
-    // Avoid clicking a More-sheet Payments tile before opening More.
-    const inMoreSheet = await page.locator('.more-menu-panel, .sfm-more, [role="dialog"]').count();
-    if (!inMoreSheet || /^(Map|Jobs|Messages|Support|More)$/i.test(label)) {
-      await mobileTabBtn.click();
+
+  const isPrimaryTab = /^(Map|Jobs|Messages|Support)$/i.test(label);
+  if (isPrimaryTab) {
+    const tab = page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first();
+    if (await tab.isVisible({ timeout: 1200 }).catch(() => false)) {
+      await tab.click();
       await page.waitForTimeout(1600);
       return true;
     }
   }
-  // Payments / Availability / etc. live behind the mobile More sheet.
-  const moreTab =
-    page.locator('.sfm-tab', { hasText: /^More$/i }).first().or(page.getByRole('button', { name: /^More$/i }).first());
-  if (await moreTab.isVisible({ timeout: 1200 }).catch(() => false)) {
-    await moreTab.click();
+
+  // Overflow destinations (Payments, Availability, …) live behind More.
+  const more = page.getByRole('button', { name: /^More$/i }).first();
+  if (await more.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await more.click();
     await page.waitForTimeout(800);
-    const tile = page
-      .locator('.sfm-more-tile, .more-menu-panel button, [role="dialog"] button', {
-        hasText: new RegExp(`^${label}$`, 'i'),
-      })
-      .first()
-      .or(page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first());
+    const tile = page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first();
     if (await tile.isVisible({ timeout: 2000 }).catch(() => false)) {
       await tile.click();
       await page.waitForTimeout(1600);
       return true;
     }
   }
+
   return !!(await clickAction(page, [new RegExp(`^${label}$`, 'i')], 1500));
 }
 
-/** Prefer More → Payments on mobile; never trust a lone goto/reload to land on Payments. */
+/** Prefer More → Payments on mobile; avoid relying on /guard/payments deep-link races. */
 async function goGuardPayments(page) {
   await dismiss(page);
   const viaNav = await goSidebar(page, 'Payments');
+  await dismiss(page);
   if (viaNav && /\/guard\/payments/.test(page.url())) {
-    await dismiss(page);
-    const text = ((await page.locator('body').innerText().catch(() => '')) || '');
-    if (/Ready to collect|Your pay|Paid on Stripe|Request cash pickup/i.test(text)) return true;
+    const ok = await page
+      .getByText(/Earnings, payouts|Ready to collect|Your pay|Paid on Stripe/i)
+      .first()
+      .isVisible({ timeout: 1500 })
+      .catch(() => false);
+    if (ok) return true;
   }
-  // Direct URL often races with tutorial/default sync → map?sec=support. Recover via More.
-  await page.goto(`${BASE}/guard/payments`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismiss(page);
-  if (!/\/guard\/payments/.test(page.url()) || !(await page.getByText(/Earnings, payouts/i).isVisible({ timeout: 800 }).catch(() => false))) {
-    await goSidebar(page, 'Payments');
-    await dismiss(page);
-  }
+  await goSidebar(page, 'Payments');
+  await dismiss(page);
   return /\/guard\/payments/.test(page.url());
 }
 

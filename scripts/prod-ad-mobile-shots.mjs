@@ -67,6 +67,27 @@ async function dismiss(page) {
     if (!hit) break;
   }
 }
+/** Client mobile nav drawer often opens and intercepts job-card clicks. */
+async function closeDrawer(page) {
+  const drawer = page.locator('aside.mobility-drawer--open, aside[aria-label="Main navigation"][aria-hidden="false"]');
+  if (!(await drawer.isVisible({ timeout: 400 }).catch(() => false))) return;
+  await page
+    .locator('.mobility-content-pane, main, .uber-shell-content')
+    .first()
+    .click({ position: { x: 300, y: 200 }, force: true })
+    .catch(() => {});
+  await page.waitForTimeout(250);
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.waitForTimeout(250);
+  if (await drawer.isVisible({ timeout: 300 }).catch(() => false)) {
+    await page
+      .getByRole('button', { name: /Open navigation|Close navigation|Menu/i })
+      .first()
+      .click({ force: true })
+      .catch(() => {});
+    await page.waitForTimeout(350);
+  }
+}
 async function signIn(page, role, account) {
   await page.context().clearCookies();
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -277,8 +298,10 @@ try {
     await waitReady(page);
     await dismiss(page);
   }
-  await clickAction(page, [/Completed/i], 1500);
-  await page.waitForTimeout(900);
+  const completedTab = page.getByRole('button', { name: /Completed/i }).first();
+  if (await completedTab.isVisible({ timeout: 2000 }).catch(() => false)) await completedTab.click();
+  else await clickAction(page, [/Completed/i], 1500);
+  await page.waitForTimeout(1000);
   await shot(page, '22-guard-jobs-history');
 
   await signIn(page, 'staff', STAFF);
@@ -296,10 +319,12 @@ try {
   await dismiss(page);
   await page.waitForTimeout(1000);
   await shot(page, '20-client-payments');
-  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE}/client/requests`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismiss(page);
+  await closeDrawer(page);
   await clickAction(page, [/Completed/i, /Past/i], 1500);
+  await closeDrawer(page);
   await page.getByText(/Standing Guard Post/i).first().click().catch(() => {});
   await page.waitForTimeout(900);
   await shot(page, '21-client-completed-job');
@@ -384,29 +409,41 @@ try {
     end_date: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
   });
   await signIn(page, 'client', CLIENT);
-  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE}/client/requests`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismiss(page);
-  // Close any open drawer/sidebar
-  await page.keyboard.press('Escape').catch(() => {});
-  await dismiss(page);
-  await clickAction(page, [/Open/i, /Today/i, /Future/i], 1500);
-  await page.getByText(/Standing Guard Post/i).first().click().catch(() => {});
-  await page.waitForTimeout(1400);
-  await dismiss(page);
-  await shot(page, '04-client-approve-guard');
-  // Approve if button present so confirmed/scheduled shots differ
-  const approved = await clickAction(page, [/Approve guard/i, /^Approve$/i], 2000);
-  log('client-approve', !!approved, approved || 'no approve button');
-  await page.waitForTimeout(1200);
-  await dismiss(page);
-  await shot(page, '05-client-guard-confirmed');
+  await closeDrawer(page);
+  await clickAction(page, [/^Open$/i], 1500);
+  await closeDrawer(page);
+  const jobCard = page.locator('p.font-semibold', { hasText: /Standing Guard Post/i }).first();
+  if (await jobCard.isVisible({ timeout: 2500 }).catch(() => false)) {
+    await jobCard.click({ force: true });
+  } else {
+    await page.getByText(/Standing Guard Post/i).first().click({ force: true }).catch(() => {});
+  }
+  await page.waitForTimeout(1600);
+  await closeDrawer(page);
+  const approveBtn = page.getByRole('button', { name: /Approve guard/i }).first();
+  if (await approveBtn.isVisible({ timeout: 2500 }).catch(() => false)) {
+    await approveBtn.scrollIntoViewIfNeeded().catch(() => {});
+    await shot(page, '04-client-approve-guard');
+    await approveBtn.click({ force: true });
+    await page.waitForTimeout(1800);
+    await dismiss(page);
+    await closeDrawer(page);
+    await shot(page, '05-client-guard-confirmed');
+    log('client-approve', true, 'Approve guard');
+  } else {
+    await shot(page, '04-client-approve-guard');
+    await shot(page, '05-client-guard-confirmed');
+    log('client-approve', false, 'no approve button');
+  }
   await page.goto(`${BASE}/client/home`, { waitUntil: 'domcontentloaded' }).catch(() =>
     page.goto(`${BASE}/client`, { waitUntil: 'domcontentloaded' })
   );
   await waitReady(page);
   await dismiss(page);
-  await page.keyboard.press('Escape').catch(() => {});
+  await closeDrawer(page);
   await page.waitForTimeout(1000);
   await shot(page, '06-client-home-scheduled');
 
