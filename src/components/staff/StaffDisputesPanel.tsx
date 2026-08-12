@@ -263,7 +263,7 @@ export function StaffDisputesPanel({
           </div>
         )}
 
-        <div className={`staff-dispute-statements mt-3${formFactor === 'desktop' ? '' : ' -mx-4 sm:-mx-5'}`}>
+        <div className="staff-dispute-statements mt-3">
           <div className="staff-dispute-statement">
             <p className="wf-metric-label">Guard — {d.guardName}</p>
             <p className="text-sm text-brand-text-muted mt-1">{d.guardStatement}</p>

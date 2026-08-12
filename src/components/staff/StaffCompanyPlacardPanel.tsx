@@ -129,7 +129,7 @@ export function StaffCompanyPlacardPanel({
           display-only and does not block platform operations.
         </p>
 
-        <MetricStrip className="!px-0">
+        <MetricStrip className="!mx-0 w-full max-w-full">
           <MetricCell label="Required on file" value={`${summary.requiredOnFile}/${summary.requiredTotal}`} />
           <MetricCell label="Still needed" value={String(summary.requiredMissing)} accent={summary.requiredMissing > 0} />
           <MetricCell label="Expiring / expired" value={String(summary.expiringOrExpired)} accent={summary.expiringOrExpired > 0} />
@@ -143,14 +143,16 @@ export function StaffCompanyPlacardPanel({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span>Show company placard on public homepage</span>
-          <AppSwitch
-            checked={publicEnabled}
-            disabled={!canEdit}
-            onChange={(checked) => void onSetPublicEnabled(checked)}
-            ariaLabel="Show company placard on public homepage"
-          />
+        <div className="staff-toggle-row flex items-center justify-between gap-3 text-sm min-w-0">
+          <span className="min-w-0 flex-1 leading-snug pr-2">Show company placard on public homepage</span>
+          <div className="shrink-0">
+            <AppSwitch
+              checked={publicEnabled}
+              disabled={!canEdit}
+              onChange={(checked) => void onSetPublicEnabled(checked)}
+              ariaLabel="Show company placard on public homepage"
+            />
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -294,13 +296,15 @@ function CompanyDocumentEditor({
         label="Document photo (registration, COI, or certificate)"
         previewAlt={`${typeDef.title} preview`}
       />
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span>Show on public homepage placard</span>
-        <AppSwitch
-          checked={displayOnHomepage}
-          onChange={setDisplayOnHomepage}
-          ariaLabel="Show on public homepage placard"
-        />
+      <div className="staff-toggle-row flex items-center justify-between gap-3 text-sm min-w-0">
+        <span className="min-w-0 flex-1 leading-snug pr-2">Show on public homepage placard</span>
+        <div className="shrink-0">
+          <AppSwitch
+            checked={displayOnHomepage}
+            onChange={setDisplayOnHomepage}
+            ariaLabel="Show on public homepage placard"
+          />
+        </div>
       </div>
       <label className="block space-y-1">
         <span className="uber-label">Internal notes (staff only)</span>
