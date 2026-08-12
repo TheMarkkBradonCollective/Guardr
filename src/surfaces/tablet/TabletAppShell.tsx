@@ -179,7 +179,9 @@ function RailItem({
         <Icon size={22} strokeWidth={active ? 2.3 : 1.9} aria-hidden />
       </span>
       {expanded ? <span className="sft-rail-item-label">{item.label}</span> : null}
-      {item.badge != null && item.badge > 0 ? (
+      {item.notification ? (
+        <span className={`staff-nav-notify-dot staff-nav-notify-dot--${item.notification}`} aria-hidden />
+      ) : item.badge != null && item.badge > 0 ? (
         <span className="sft-rail-item-badge">{item.badge > 99 ? '99+' : item.badge}</span>
       ) : null}
     </button>

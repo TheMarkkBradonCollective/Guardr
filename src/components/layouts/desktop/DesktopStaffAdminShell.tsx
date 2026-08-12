@@ -8,6 +8,7 @@ import type { LegalPageId } from '../../../lib/legalContent';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { SidebarFooterLinks } from '../SidebarFooterLinks';
+import { STAFF_NAV_GROUPS } from '../../../lib/staffNavGroups';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
 import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
@@ -46,18 +47,8 @@ interface DesktopStaffAdminShellProps {
   sidebarPrimaryActions?: Array<SurfacePrimaryAction | SidebarPrimaryAction>;
 }
 
-/** Section groups for drawer / rail / sidebar. */
-const MENU_GROUPS: { label?: string; ids: StaffSection[] }[] = [
-  { label: 'Dashboard', ids: ['overview', 'map'] },
-  {
-    label: 'Operations',
-    ids: ['jobs', 'locations', 'applications', 'credentials', 'guards', 'clients', 'team'],
-  },
-  { label: 'Communications', ids: ['messages', 'support'] },
-  { label: 'Management', ids: ['payments', 'payment-settings', 'agreements', 'audit-log'] },
-  { label: 'Oversight', ids: ['incidents', 'violations', 'stats', 'disputes', 'analytics'] },
-  { label: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations', 'guide', 'dev-updates'] },
-];
+/** Section groups for drawer / rail / sidebar — see staffNavGroups.ts */
+const MENU_GROUPS = STAFF_NAV_GROUPS;
 
 /** Thumb-order tabs for the mobile staff app. Everything else lives in the drawer / More sheet. */
 const MOBILE_TAB_ORDER: StaffSection[] = ['overview', 'jobs', 'guards', 'messages'];
@@ -121,7 +112,7 @@ export function DesktopStaffAdminShell({
   const navGroups = useMemo(
     () =>
       MENU_GROUPS.map((group) => ({
-        title: group.label,
+        title: group.title,
         items: group.ids
           .map((id) => navItems.find((n) => n.id === id))
           .filter((item): item is StaffNavItem => !!item && visible(item))
@@ -129,7 +120,6 @@ export function DesktopStaffAdminShell({
             id: item.id,
             label: item.label,
             icon: item.icon,
-            badge: item.badge,
           })),
       })).filter((group) => group.items.length > 0),
     [
@@ -172,11 +162,10 @@ export function DesktopStaffAdminShell({
             id: item.id,
             label: item.label,
             icon: item.icon,
-            badge: item.badge,
-            section: group.label ?? 'Operations',
+            section: group.title ?? 'Operations',
             mobileRank: mobileIndex >= 0 ? mobileIndex + 1 : undefined,
             tabletQuick: TABLET_QUICK.includes(item.id),
-            keywords: [group.label ?? '', item.id],
+            keywords: [group.title ?? '', item.id],
           };
         }),
     );

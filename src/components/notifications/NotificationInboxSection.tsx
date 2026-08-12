@@ -93,6 +93,9 @@ export function NotificationInboxSection({
                         <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed line-clamp-2">
                           {n.body}
                         </p>
+                        {n.metadata?.handledByOther === true ? (
+                          <p className="text-[10px] font-semibold text-indigo-500 mt-1">Handled by another staff member</p>
+                        ) : null}
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mt-1">
                           {formatWhen(n.createdAt)}
                         </p>

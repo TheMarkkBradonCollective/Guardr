@@ -1,5 +1,6 @@
 import React from 'react';
 import { LayoutGrid, Map, type LucideIcon } from 'lucide-react';
+import type { StaffNavNotificationKind } from '../../../lib/staffOpsNavNotifications';
 import type { GuardrNavItem } from './types';
 
 export type GuardrBottomNavItem = GuardrNavItem;
@@ -11,6 +12,7 @@ interface GuardrBottomNavProps {
   showMore?: boolean;
   moreActive?: boolean;
   moreBadge?: number;
+  moreNotification?: StaffNavNotificationKind;
   onMoreClick?: () => void;
   flat?: boolean;
   centerItemId?: string;
@@ -22,12 +24,14 @@ function BottomNavTab({
   icon: Icon,
   active,
   badge,
+  notification,
   onClick,
 }: {
   label: string;
   icon: LucideIcon;
   active: boolean;
   badge?: number;
+  notification?: StaffNavNotificationKind;
   onClick: () => void;
 }) {
   return (
@@ -40,7 +44,9 @@ function BottomNavTab({
     >
       <span className="uber-tab-icon-wrap">
         <Icon size={24} strokeWidth={active ? 2.25 : 1.75} className="uber-tab-icon" />
-        {badge != null && badge > 0 ? (
+        {notification ? (
+          <span className={`staff-nav-notify-dot staff-nav-notify-dot--${notification} staff-nav-notify-dot--tab`} aria-hidden />
+        ) : badge != null && badge > 0 ? (
           <span className="uber-tab-badge">{badge > 9 ? '9+' : badge}</span>
         ) : null}
       </span>
@@ -58,6 +64,7 @@ export function GuardrBottomNav({
   showMore = false,
   moreActive = false,
   moreBadge = 0,
+  moreNotification,
   onMoreClick,
   flat = false,
   centerItemId = 'map',
@@ -74,6 +81,7 @@ export function GuardrBottomNav({
             icon={item.icon ?? Map}
             active={activeId === item.id}
             badge={item.badge}
+            notification={item.notification}
             onClick={() => onNavigate(item.id)}
           />
         ))}
@@ -82,7 +90,8 @@ export function GuardrBottomNav({
             label="More"
             icon={LayoutGrid}
             active={moreActive}
-            badge={moreBadge}
+            badge={moreNotification ? undefined : moreBadge}
+            notification={moreNotification}
             onClick={() => onMoreClick?.()}
           />
         ) : null}

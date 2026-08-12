@@ -22,6 +22,7 @@ interface StaffViolationsPanelProps {
     resolutionNote?: string
   ) => void | Promise<void>;
   onOpenJob?: (requestId: string) => void;
+  onItemHandled?: (itemId: string) => void;
 }
 
 type ViolationTab = 'open' | 'all' | 'resolved';
@@ -55,6 +56,7 @@ export function StaffViolationsPanel({
   violations,
   onResolveAuditViolation,
   onOpenJob,
+  onItemHandled,
 }: StaffViolationsPanelProps) {
   const { formFactor } = useDevice();
   const [tab, setTab] = useState<ViolationTab>('open');
@@ -72,17 +74,6 @@ export function StaffViolationsPanel({
       return true;
     });
   }, [violations, statusMap, tab]);
-
-  const tabCounts = useMemo(() => {
-    let open = 0;
-    let resolved = 0;
-    for (const violation of violations) {
-      const status = statusMap[violation.id] ?? violation.status;
-      if (OPEN_STATUSES.has(status)) open += 1;
-      else resolved += 1;
-    }
-    return { all: violations.length, open, resolved };
-  }, [violations, statusMap]);
 
   const violationColumns: GuardrTableColumn<OpsShiftViolation>[] = [
     {
@@ -204,7 +195,10 @@ export function StaffViolationsPanel({
                       resolutionNoteById[v.id]
                     )
                   )
-                    .then(() => setStatusMap((m) => ({ ...m, [v.id]: 'dismissed' })))
+                    .then(() => {
+                      setStatusMap((m) => ({ ...m, [v.id]: 'dismissed' }));
+                      onItemHandled?.(v.id);
+                    })
                     .finally(() => setResolvingId(null));
                 }}
                 className="app-button-outline app-btn-sm disabled:opacity-50"
@@ -224,7 +218,10 @@ export function StaffViolationsPanel({
                       resolutionNoteById[v.id]
                     )
                   )
-                    .then(() => setStatusMap((m) => ({ ...m, [v.id]: 'upheld' })))
+                    .then(() => {
+                      setStatusMap((m) => ({ ...m, [v.id]: 'upheld' }));
+                      onItemHandled?.(v.id);
+                    })
                     .finally(() => setResolvingId(null));
                 }}
                 className="app-button-primary app-btn-sm disabled:opacity-50"
@@ -254,9 +251,9 @@ export function StaffViolationsPanel({
       activeId={tab}
       onChange={(id) => setTab(id as ViolationTab)}
       tabs={[
-        { id: 'open', label: 'Open', count: tabCounts.open },
-        { id: 'all', label: 'All', count: tabCounts.all },
-        { id: 'resolved', label: 'Resolved', count: tabCounts.resolved },
+        { id: 'open', label: 'Open' },
+        { id: 'all', label: 'All' },
+        { id: 'resolved', label: 'Resolved' },
       ]}
     />
   );

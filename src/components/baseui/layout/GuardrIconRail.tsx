@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu, type LucideIcon } from 'lucide-react';
+import type { StaffNavNotificationKind } from '../../../lib/staffOpsNavNotifications';
 import type { GuardrNavItem } from './types';
 
 export interface GuardrIconRailProps {
@@ -19,6 +20,7 @@ function RailButton({
   label,
   active,
   badge,
+  notification,
   onClick,
   ...rest
 }: {
@@ -26,6 +28,7 @@ function RailButton({
   label: string;
   active?: boolean;
   badge?: number;
+  notification?: StaffNavNotificationKind;
   onClick: () => void;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'>) {
   return (
@@ -41,7 +44,9 @@ function RailButton({
       {...rest}
     >
       <Icon size={20} strokeWidth={active ? 2.25 : 1.75} aria-hidden />
-      {badge != null && badge > 0 ? (
+      {notification ? (
+        <span className={`staff-nav-notify-dot staff-nav-notify-dot--${notification} staff-nav-notify-dot--rail`} aria-hidden />
+      ) : badge != null && badge > 0 ? (
         <span className="uber-rail-badge">{badge > 9 ? '9+' : badge}</span>
       ) : null}
       <span className="uber-rail-tip" role="tooltip">
@@ -93,6 +98,7 @@ export function GuardrIconRail({
               label={item.label}
               active={activeId === item.id}
               badge={item.badge}
+              notification={item.notification}
               onClick={() => onSelect(item.id)}
             />
           ) : null,

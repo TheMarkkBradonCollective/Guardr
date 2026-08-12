@@ -47,7 +47,6 @@ interface StaffOpsLayoutProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   isDbConnected: boolean;
-  badges?: Partial<Record<StaffSection, number>>;
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenDownload?: () => void;
@@ -105,7 +104,6 @@ export function StaffOpsLayout({
   onChangeTheme,
   onSignOut,
   isDbConnected,
-  badges = {},
   fullBleed: _fullBleed = false,
   onOpenLegal,
   onOpenDownload,
@@ -131,23 +129,23 @@ export function StaffOpsLayout({
     () => [
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
       { id: 'map', label: 'Map', icon: Map },
-      { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
-      { id: 'locations', label: 'Locations', icon: MapPin, badge: badges.locations },
-      { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
-      { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
-      { id: 'guards', label: 'Guards', icon: Shield, badge: badges.guards },
-      { id: 'clients', label: 'Clients', icon: Building2, badge: badges.clients },
+      { id: 'jobs', label: 'Jobs', icon: Briefcase },
+      { id: 'locations', label: 'Locations', icon: MapPin },
+      { id: 'applications', label: 'Applications', icon: UserCheck },
+      { id: 'credentials', label: 'Credentials', icon: ShieldCheck },
+      { id: 'guards', label: 'Guards', icon: Shield },
+      { id: 'clients', label: 'Clients', icon: Building2 },
       { id: 'team', label: 'Staff', icon: Users },
-      { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
-      { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
-      { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, paymentsOnly: true },
+      { id: 'messages', label: 'Messages', icon: MessagesSquare },
+      { id: 'support', label: 'Support', icon: LifeBuoy },
+      { id: 'payments', label: 'Payments', icon: DollarSign, paymentsOnly: true },
       { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
       { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
-      { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
-      { id: 'violations', label: 'Violations', icon: ShieldAlert, badge: badges.violations },
+      { id: 'incidents', label: 'Incidents', icon: AlertTriangle },
+      { id: 'violations', label: 'Violations', icon: ShieldAlert },
       { id: 'stats', label: 'Stats', icon: BarChart3 },
-      { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
+      { id: 'disputes', label: 'Disputes', icon: Scale, disputesOnly: true },
       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       { id: 'cities', label: 'Service Areas', icon: MapPinned, citiesOnly: true },
       { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
@@ -156,7 +154,7 @@ export function StaffOpsLayout({
       { id: 'guide', label: 'Guide', icon: BookOpen },
       { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
     ],
-    [badges],
+    [],
   );
 
   const navHighlight = isStaffMessagesHubSection(activeSection)
@@ -206,7 +204,7 @@ export function StaffOpsLayout({
 }
 
 interface StaffOpsLayoutInnerProps
-  extends Omit<StaffOpsLayoutProps, 'fullBleed' | 'badges'> {
+  extends Omit<StaffOpsLayoutProps, 'fullBleed'> {
   navItems: StaffNavItem[];
   screenTitle: string;
   navHighlight: StaffSection;
