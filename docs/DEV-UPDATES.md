@@ -3,11 +3,29 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 11, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.121**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.122**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Tuesday, August 11, 2026 — /update → v1.0.122
+
+**PR cleanup (merged to `main`)**
+- **#953** — Separate printable user manuals; combined PDF merges standalone files
+
+**Shipped**
+- **Standalone printable PDFs** — each role manual (Quick Start, Client, Guard, Staff) is a complete printable document with cover and document control
+- **Combined binder** — `Guardr-User-Manuals-Combined.pdf` merges the four standalone PDFs in order (plus binder cover) so content always matches
+- **`npm run docs:manuals-pdf`** — uses `pdf-lib` merge; regenerated all manual PDFs
+- Download UI copy updated (Guide, Settings, embedded)
+- **v1.0.122** (build **222**) web + PWA + APK version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-122-beta`
+
+**Release verification**
+- Lint, test, build green
 
 ---
 

@@ -18,6 +18,16 @@ npm run docs:manuals-pdf
 
 Output is copied to `public/manuals/` for website and in-app downloads at `/manuals/*.pdf`.
 
+## Standalone vs combined
+
+| File | Purpose |
+|------|---------|
+| `Guardr-Quick-Start.pdf` | Print Quick Start only |
+| `Guardr-Client-User-Manual.pdf` | Print client manual only |
+| `Guardr-Guard-User-Manual.pdf` | Print guard manual only |
+| `Guardr-Staff-Ops-Manual.pdf` | Print staff manual only |
+| `Guardr-User-Manuals-Combined.pdf` | Full binder — **merges the four standalone PDFs** in order (plus a binder cover). Content matches the standalone files. |
+
 Each manual is written for its role:
 
 - **Client** — hiring independent contractors; costs, billing, and direct engagement

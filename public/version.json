@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.121-beta",
+  "webVersion": "1.0.122-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.121",
-    "versionCode": 221,
+    "version": "1.0.122",
+    "versionCode": 222,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.121.apk",
-    "fileSize": 61702408,
-    "sha256": "cd5bf8ab991d2b3c6bdad2860bb88aad0f09df427b797e44fce6bfc4d4cb7de4",
-    "releaseNotes": "Staff revenue-share raised to ~50% of platform fees with a tighter role ladder (Director ~11.1%, Founder ~11.9%)."
+    "downloadName": "guardr-v1.0.122.apk",
+    "fileSize": 69619009,
+    "sha256": "5d93b4975971123219451830425e512f38a9268302fa8c6946aacda26919aaed",
+    "releaseNotes": "User manuals: each role is a standalone printable PDF; combined binder merges those same files in order."
   },
-  "updatedAt": "2026-08-11T07:11:35.156Z"
+  "updatedAt": "2026-08-11T07:19:18.907Z"
 }
