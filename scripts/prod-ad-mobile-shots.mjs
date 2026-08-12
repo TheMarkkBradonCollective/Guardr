@@ -110,18 +110,21 @@ async function clickAction(page, names, timeout = 1500) {
   return null;
 }
 async function goNav(page, label) {
-  const tab = page.locator('.sfm-tab', { hasText: new RegExp(`^${label}$`, 'i') }).first();
-  if (await tab.isVisible({ timeout: 1500 }).catch(() => false)) {
-    await tab.click();
-    await page.waitForTimeout(1400);
-    return true;
+  // Bottom tabs are role=button (Map/Jobs/Messages/Support/More). Overflow items sit in More sheet.
+  if (!/^Payments$/i.test(label)) {
+    const tab = page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first();
+    if (await tab.isVisible({ timeout: 1200 }).catch(() => false)) {
+      await tab.click();
+      await page.waitForTimeout(1400);
+      return true;
+    }
   }
-  const more = page.locator('.sfm-tab', { hasText: /^More$/i }).first();
-  if (await more.isVisible({ timeout: 1200 }).catch(() => false)) {
+  const more = page.getByRole('button', { name: /^More$/i }).first();
+  if (await more.isVisible({ timeout: 1500 }).catch(() => false)) {
     await more.click();
-    await page.waitForTimeout(700);
-    const tile = page.locator('.sfm-more-tile', { hasText: new RegExp(`^${label}$`, 'i') }).first();
-    if (await tile.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await page.waitForTimeout(800);
+    const tile = page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first();
+    if (await tile.isVisible({ timeout: 2000 }).catch(() => false)) {
       await tile.click();
       await page.waitForTimeout(1600);
       return true;
@@ -132,22 +135,17 @@ async function goNav(page, label) {
 async function goGuardPayments(page) {
   await dismiss(page);
   await goNav(page, 'Payments');
+  await dismiss(page);
   if (/\/guard\/payments/.test(page.url())) {
-    await dismiss(page);
-    return true;
+    const ok = await page.getByText(/Earnings, payouts|Ready to collect|Your pay/i).isVisible({ timeout: 1500 }).catch(() => false);
+    if (ok) return true;
   }
-  await page.goto(`${BASE}/guard/payments`, { waitUntil: 'domcontentloaded' });
+  // Direct /guard/payments can race into map?sec=support — recover via More → Payments.
+  await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismiss(page);
-  if (!/\/guard\/payments/.test(page.url())) {
-    await goNav(page, 'Payments');
-    await dismiss(page);
-  }
-  if (!/\/guard\/payments/.test(page.url())) {
-    await page.goto(`${BASE}/guard/payments`, { waitUntil: 'domcontentloaded' });
-    await waitReady(page);
-    await dismiss(page);
-  }
+  await goNav(page, 'Payments');
+  await dismiss(page);
   return /\/guard\/payments/.test(page.url());
 }
 async function assertPayments(page, label) {
