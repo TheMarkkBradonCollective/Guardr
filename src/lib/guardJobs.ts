@@ -134,10 +134,18 @@ export function getEstimatedGuardEarnings(job: Pick<GuardJobView, 'guardPay' | '
   return Math.round(job.durationHours * job.guardPay * 100) / 100;
 }
 
+export type CheckJobRequirementsOptions = {
+  /** Skip device-local availability (client/staff machines do not have the guard's schedule). */
+  skipAvailability?: boolean;
+  /** Skip overlap checks against other jobs. */
+  skipScheduleConflict?: boolean;
+};
+
 export function checkJobRequirements(
   guard: SecurityGuard,
   job: GuardJobView,
-  allRequests?: ScheduleJob[]
+  allRequests?: ScheduleJob[],
+  options?: CheckJobRequirementsOptions
 ): { checks: RequirementCheck[]; canAccept: boolean } {
   const jobCity = job.state ?? 'CA';
   const licenseState = resolveJobLicenseState(jobCity);
@@ -250,16 +258,18 @@ export function checkJobRequirements(
     canAccept = false;
   }
 
-  const availabilityReason = guardAvailabilityBlockReason(guard.id, job);
-  if (availabilityReason) {
-    checks.push({
-      label: availabilityReason,
-      met: false,
-    });
-    canAccept = false;
+  if (!options?.skipAvailability) {
+    const availabilityReason = guardAvailabilityBlockReason(guard.id, job);
+    if (availabilityReason) {
+      checks.push({
+        label: availabilityReason,
+        met: false,
+      });
+      canAccept = false;
+    }
   }
 
-  if (canAccept && allRequests) {
+  if (canAccept && allRequests && !options?.skipScheduleConflict) {
     const conflict = findGuardScheduleConflict(guard.id, job, allRequests);
     if (conflict) {
       checks.push({
@@ -328,16 +338,24 @@ type GuardJobVisibility = Pick<
 
 /** Marketplace browse requires client payment; direct hires may be visible earlier. */
 export function openMarketplaceJobIsGuardVisible(
-  job: Pick<SecurityRequest, 'paymentStatus' | 'requestType'>
+  job: Pick<SecurityRequest, 'requestType'> &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      /** Set on GuardJobView when paymentStatus is intentionally omitted */
+      clientPaymentRecorded?: boolean;
+    }
 ): boolean {
   if (job.requestType === 'direct') return true;
-  return isJobPaid(job);
+  if (typeof job.clientPaymentRecorded === 'boolean') return job.clientPaymentRecorded;
+  return isJobPaid({ paymentStatus: job.paymentStatus });
 }
 
 /** Open jobs visible on a guard's map/list — silently filtered by preferences and availability. */
 export function guardCanViewJob(
   guard: SecurityGuard,
-  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>
+  job: GuardJobVisibility &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      clientPaymentRecorded?: boolean;
+    }
 ): boolean {
   const licenseState = resolveJobLicenseState(job.state);
   if (!guardCanWorkFieldJobs(guard, licenseState)) return false;
@@ -357,7 +375,10 @@ export function guardCanViewJob(
 /** Whether a guard meets all requirements to apply to an open job offer */
 export function guardCanApplyToJob(
   guard: SecurityGuard,
-  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>,
+  job: GuardJobVisibility &
+    Partial<Pick<SecurityRequest, 'paymentStatus'>> & {
+      clientPaymentRecorded?: boolean;
+    },
   allRequests?: ScheduleJob[]
 ): boolean {
   if (job.status !== 'open') return false;

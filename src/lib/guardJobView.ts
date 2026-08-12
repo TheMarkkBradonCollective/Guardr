@@ -5,6 +5,7 @@ import { guardCanViewJob } from './guardJobs';
 import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
 import { overtimeGuardEarnings } from './shiftBilling';
 import { isStripeDepositSatisfied } from './cashPayments';
+import { isJobPaid } from './jobEditRules';
 
 /** Guard-safe payout state — no internal payment pipeline details */
 export type GuardPayoutStatus = 'pending' | 'processing' | 'paid';
@@ -51,6 +52,11 @@ export interface GuardJobView {
   pendingGuardId?: string | null;
   requestType?: SecurityRequest['requestType'];
   targetGuardId?: string | null;
+  /**
+   * Guard-safe paid flag for marketplace visibility/apply checks.
+   * Full paymentStatus is omitted so billing pipeline details stay staff/client-only.
+   */
+  clientPaymentRecorded?: boolean;
   requiredCertifications: string[];
   minGuardQualification?: SecurityRequest['minGuardQualification'];
   minYearsExperience?: number;
@@ -225,6 +231,7 @@ export function toGuardJobView(
     pendingGuardId: req.pendingGuardId,
     requestType: req.requestType,
     targetGuardId: req.targetGuardId,
+    clientPaymentRecorded: isJobPaid(req),
     requiredCertifications: req.requiredCertifications,
     minGuardQualification: req.minGuardQualification,
     minYearsExperience: req.minYearsExperience,

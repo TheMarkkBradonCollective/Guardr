@@ -2,7 +2,8 @@ import { beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 function installWindowMock() {
-  const back = mock.fn();
+  const backMock = mock.fn();
+  const goMock = mock.fn();
   const history = {
     length: 2,
     state: null as Record<string, unknown> | null,
@@ -10,12 +11,24 @@ function installWindowMock() {
       history.state = state;
       history.length += 1;
     },
-    back,
+    back() {
+      backMock();
+      history.length = Math.max(1, history.length - 1);
+      history.state = null;
+    },
+    go(delta: number) {
+      goMock(delta);
+      const steps = Math.abs(delta);
+      for (let i = 0; i < steps; i += 1) {
+        history.length = Math.max(1, history.length - 1);
+      }
+      history.state = null;
+    },
   };
 
   (globalThis as unknown as { window: { history: typeof history } }).window = { history };
 
-  return { back, history };
+  return { back: backMock, go: goMock, history };
 }
 
 describe('systemBackButton', () => {
@@ -53,6 +66,26 @@ describe('systemBackButton', () => {
     assert.equal(consumeOverlayPopState(), true);
     assert.equal(closed, true);
     cleanup();
+  });
+
+  it('does not close a chained overlay when the previous modal cleans up', async () => {
+    const { consumeOverlayPopState, pushOverlayBackHistory } = await import('./systemBackButton.ts');
+
+    let secondClosed = 0;
+    const cleanupFirst = pushOverlayBackHistory(() => {});
+    const cleanupSecond = pushOverlayBackHistory(() => {
+      secondClosed += 1;
+    });
+
+    // UI dismisses the first modal while the second is already open (chaining).
+    cleanupFirst();
+    assert.equal(secondClosed, 0);
+
+    // Top modal still owns the stack — user back should close only the second.
+    assert.equal(consumeOverlayPopState(), true);
+    assert.equal(secondClosed, 1);
+
+    cleanupSecond();
   });
 
   it('calls history.back when no handler consumes the event', async () => {

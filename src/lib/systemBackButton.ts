@@ -8,6 +8,15 @@ type BackHandler = () => boolean;
 const backHandlers: BackHandler[] = [];
 const overlayClosers: Array<() => void> = [];
 
+/**
+ * When an overlay is dismissed via UI, cleanup rewinds history. That popstate must
+ * not close a newer overlay (modal chaining: late clock-out → end package).
+ */
+let suppressNextOverlayPopClose = false;
+
+/** Overlay entries closed while not topmost leave orphan history states to rewind later. */
+let orphanOverlayHistoryEntries = 0;
+
 /** Register a handler that runs before history navigation (most recent wins). */
 export function registerSystemBackHandler(handler: BackHandler): () => void {
   backHandlers.push(handler);
@@ -29,16 +38,36 @@ export function pushOverlayBackHistory(onClose: () => void): () => void {
 
   return () => {
     const index = overlayClosers.lastIndexOf(onClose);
-    if (index !== -1) overlayClosers.splice(index, 1);
-    const state = window.history.state as Record<string, unknown> | null;
-    if (state?.[OVERLAY_HISTORY_STATE_KEY]) {
-      window.history.back();
+    if (index === -1) return;
+
+    const wasTop = index === overlayClosers.length - 1;
+    overlayClosers.splice(index, 1);
+
+    if (!wasTop) {
+      // A newer overlay owns the current history entry — leave it alone.
+      orphanOverlayHistoryEntries += 1;
+      return;
     }
+
+    const state = window.history.state as Record<string, unknown> | null;
+    if (!state?.[OVERLAY_HISTORY_STATE_KEY]) return;
+
+    // Rewind this overlay's entry (+ any orphans from out-of-order closes)
+    // without treating the popstate as a user back that closes the next modal.
+    const steps = 1 + orphanOverlayHistoryEntries;
+    orphanOverlayHistoryEntries = 0;
+    suppressNextOverlayPopClose = true;
+    if (steps === 1) window.history.back();
+    else window.history.go(-steps);
   };
 }
 
 /** Browser / PWA popstate: close the top overlay that owned the popped entry. */
 export function consumeOverlayPopState(): boolean {
+  if (suppressNextOverlayPopClose) {
+    suppressNextOverlayPopClose = false;
+    return true;
+  }
   if (overlayClosers.length === 0) return false;
   const close = overlayClosers.pop();
   close?.();
@@ -90,6 +119,8 @@ let capacitorListenerAttached = false;
 export function resetSystemBackButtonStateForTests(): void {
   backHandlers.length = 0;
   overlayClosers.length = 0;
+  suppressNextOverlayPopClose = false;
+  orphanOverlayHistoryEntries = 0;
   capacitorListenerAttached = false;
 }
 

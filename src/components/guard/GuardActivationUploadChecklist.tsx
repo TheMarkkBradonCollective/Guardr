@@ -31,6 +31,7 @@ import {
   guardActivationMandatoryTrainingStepDetail,
 } from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
+import { certUpdateSubmissionAllowed } from '../../lib/certRevisionHistory';
 import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
 import {
   resolveCredentialLinksForGuard,
@@ -169,7 +170,10 @@ export function GuardActivationUploadChecklist({
   const mandatoryCanUpload = !!onAddCertification && !mandatoryDone;
 
   const ceDone = guardMeetsContinuingEducation(guard);
-  const ceCanUpload = !!onAddCertification && !ceDone;
+  const ceNeedsStaffRequestedUpdate = guard.certifications.some(
+    (cert) => isContinuingEducationCatalogId(resolveCertCatalogId(cert)) && certUpdateSubmissionAllowed(cert)
+  );
+  const ceCanUpload = !!onAddCertification && (!ceDone || ceNeedsStaffRequestedUpdate);
 
   const optionalOnFile = getSupplementalCredentialsOnFile(guard);
   const optionalCanUpload = !!onAddCertification;
@@ -232,9 +236,11 @@ export function GuardActivationUploadChecklist({
             resourceLinks={linksFor('continuedEducation')}
             actionLabel={
               ceCanUpload
-                ? ceRejected
-                  ? 'Resubmit Continued Education'
-                  : 'Add Continued Education'
+                ? ceNeedsStaffRequestedUpdate
+                  ? 'Update Continued Education'
+                  : ceRejected
+                    ? 'Resubmit Continued Education'
+                    : 'Add Continued Education'
                 : undefined
             }
             onAction={ceCanUpload ? () => setOpenUpload('ce') : undefined}

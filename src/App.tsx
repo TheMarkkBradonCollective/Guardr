@@ -2399,8 +2399,11 @@ export default function App() {
         (g: any) => !g.migrated_to_staff_at && !g.is_staff
       );
 
-      const loadedGuards = [...fieldGuardRows.map(mapGuardRow), ...staffFromTable].map(
+      const sanitizedGuards = [...fieldGuardRows.map(mapGuardRow), ...staffFromTable].map(
         sanitizeGuardCombinedCertificates
+      );
+      const loadedGuards = sanitizedGuards.map((g) =>
+        withAutoGuardActivation(syncGuardCredentialExpiryState(syncGuardCredentialGraceState(g)))
       );
       const disallowedCombinedCertIds = (dbCerts ?? [])
         .filter((c: any) =>
@@ -2411,6 +2414,23 @@ export default function App() {
         )
         .map((c: any) => String(c.id));
       setGuards(loadedGuards);
+      // Persist auto-activation heal when credentials are already complete but user_status
+      // was left on approved (e.g. last verify happened while suspended).
+      for (let i = 0; i < loadedGuards.length; i++) {
+        const before = sanitizedGuards[i];
+        const after = loadedGuards[i];
+        if (before.isStaff || !guardAutoActivated(before, after)) continue;
+        void supabase
+          .from('guards')
+          .update({
+            user_status: 'active',
+            verified: true,
+            credential_grace_deadline: null,
+            credential_grace_missing: null,
+            credential_grace_hours: null,
+          })
+          .eq('id', after.id);
+      }
       if (disallowedCombinedCertIds.length > 0) {
         void supabase.from('certifications').delete().in('id', disallowedCombinedCertIds);
       }
@@ -5562,11 +5582,9 @@ export default function App() {
           appToast(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`, 'error');
           return;
         }
-        appToast(
-          'Accounts activate automatically once all five credentials are uploaded and verified.',
-          'error'
-        );
-        return;
+        // Heal stuck approved accounts when credentials are already fully verified
+        // (auto-activation can be missed if the last verify happened while suspended).
+        nextStatus = 'active';
       }
     }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: nextStatus } : g));
@@ -10004,15 +10022,27 @@ export default function App() {
       appToast('Guard profile not found. Please refresh and try again.', 'error');
       return false;
     }
-    const workBlocked = guardWorkBlockedMessage(guard, job.state);
-    if (workBlocked) {
-      appToast(workBlocked, 'error');
-      return false;
-    }
-    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
-    if (!canAccept) {
-      appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
-      return false;
+    // Client/staff machines often lack the guard's full credential blobs (RLS / image hydration).
+    // Guards already passed apply-time checks when pending; trust that for client confirmation.
+    const trustPriorApplication =
+      options?.assignmentSource === 'client' ||
+      options?.assignmentSource === 'staff' ||
+      job.pendingGuardId === guardId ||
+      job.applicants.includes(guardId);
+    if (!trustPriorApplication) {
+      const workBlocked = guardWorkBlockedMessage(guard, job.state);
+      if (workBlocked) {
+        appToast(workBlocked, 'error');
+        return false;
+      }
+      // Availability is stored on the guard's device — never evaluate it on client/staff browsers.
+      const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id), requests, {
+        skipAvailability: true,
+      });
+      if (!canAccept) {
+        appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
+        return false;
+      }
     }
     const scheduleBlocked = guardScheduleConflictError(guardId, job, requests, { guardName: guard.name });
     if (scheduleBlocked) {
@@ -10268,7 +10298,9 @@ export default function App() {
       appToast(workBlocked, 'error');
       return;
     }
-    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id), requests, {
+      skipAvailability: true,
+    });
     if (!canAccept) {
       appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
       return;
@@ -13219,6 +13251,24 @@ export default function App() {
       r.clientName === currentUser.name
     );
     const hireableGuards = getBrowsableGuards(verifiedGuards);
+    // Pending applicants must remain visible for Approve even if directory filters change.
+    const clientGuardsForJobs = (() => {
+      const byId = new Map(hireableGuards.map((g) => [g.id, g]));
+      for (const req of myRequests) {
+        const pendingId = req.pendingGuardId;
+        if (pendingId && !byId.has(pendingId)) {
+          const pending = verifiedGuards.find((g) => g.id === pendingId);
+          if (pending) byId.set(pending.id, pending);
+        }
+        for (const applicantId of req.applicants ?? []) {
+          if (!byId.has(applicantId)) {
+            const applicant = verifiedGuards.find((g) => g.id === applicantId);
+            if (applicant) byId.set(applicant.id, applicant);
+          }
+        }
+      }
+      return [...byId.values()];
+    })();
     const clientAccountPending = isClientAccountPending({
       accountStatus: clientRecord?.accountStatus,
       approved: clientRecord?.approved,
@@ -13363,7 +13413,7 @@ export default function App() {
               approved={clientRecord?.approved}
               requests={myRequests}
               platformRequests={requests}
-              guards={hireableGuards}
+              guards={clientGuardsForJobs}
                   clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
               activeView={clientView}
