@@ -2,7 +2,7 @@
 
 Run a **100% app-driven** field test against production (or preview). No Supabase REST patches, SQL updates, or status overrides during the test run.
 
-This is a full **head-to-toe** diagnostic: account creation for every role, staff ops, jobs, payments, violations, disputes, reviews, and layout/design checks.
+This is a full **head-to-toe** diagnostic: account creation for every role, staff ops, jobs through finish, payments, violations, disputes, reviews, layout/design, and **desktop + tablet + mobile** (each view must load and be scrollable).
 
 ## Setup (once, outside the test)
 
@@ -20,7 +20,7 @@ node scripts/seed-field-test-staff.mjs
 | Display name | Staff (Field Test) |
 | Access | Full ops — every staff section, including governance |
 
-The database `staff_role` column only accepts ladder values (`Support` … `Founder`). There is no `"Staff"` enum, so the row is stored as **Founder** (the only value that grants access above every other seat, including other Founders’ tools). The account is **not** a human ladder title — it is a QA operator labeled **Staff**.
+The database `staff_role` column only accepts ladder values (`Support` … `Founder`). There is no `"Staff"` enum, so the row is stored as **Founder** (the only value that grants access above every other seat). The account is **not** a human ladder title — it is a QA operator labeled **Staff**.
 
 Do **not** use this account for live operations. Test purposes only.
 
@@ -35,8 +35,6 @@ Preview / local:
 ```bash
 GUARDR_BASE_URL=http://127.0.0.1:4173 npm run fieldtest
 ```
-
-Optional env:
 
 | Variable | Default |
 |----------|---------|
@@ -55,7 +53,8 @@ Optional env:
 3. **Guard** self-signup (`fieldtest.guard.<tag>@guardr.test`)
 4. **Staff** public application (Support intake)
 5. **Staff of each ladder role** via Team → Add staff: Support, Moderator, Administrator, Manager, Director
-6. Approve pending client / guard / staff applications from Applications
+6. Sign in as each provisioned ladder role (`#Qwerty12345`)
+7. Approve pending client / guard / staff applications from Applications
 
 ### Staff console (every section)
 
@@ -71,12 +70,22 @@ Every `/client/*` route. Post a job through the wizard. Open Payments / invoices
 
 Every `/guard/*` route including activation, availability, vehicle, performance. Marketplace apply. Payments / Connect bank. Clock-in / complete-job CTAs if a live assignment exists.
 
-### Design / diagnostics
+### Viewports (must all work and scroll)
+
+| Device | Size |
+|--------|------|
+| Desktop | 1440×900 |
+| Tablet | 768×1024 |
+| Mobile | 390×844 |
+
+On each viewport: landing, staff overview/jobs/applications/violations/disputes/incidents/payments/team, client home/jobs/payments, guard map/activation/jobs/payments.
+
+Record:
 
 - Horizontal overflow
+- Content taller than the viewport that cannot scroll
 - Missing headings
 - `pageerror` and console errors
-- Mobile (390×844) landing + staff overview
 
 ## Rules
 
@@ -92,7 +101,7 @@ If a UI step fails, **record FAIL and continue**. Do not fall back to the databa
 
 - **Live Stripe checkout** cannot complete with a fake card on production. Record whether Checkout opens.
 - **Full shift → payout** needs an activated guard (credentials + ID verified in the UI) and a paid job. Attempt every CTA; do not invent settlement in SQL.
-- Provisioned Team staff sign in with `#Qwerty12345` (app default). Self-signup uses `#FieldTest2026`.
+- Provisioned Team staff sign in with `#Qwerty12345`. Self-signup uses `#FieldTest2026`.
 
 ## Output
 
@@ -103,7 +112,7 @@ If a UI step fails, **record FAIL and continue**. Do not fall back to the databa
 
 1. Summarize pass/fail matrix
 2. List emails created this run
-3. List design findings (overflow, missing headings, console errors)
+3. List design findings (overflow, scroll, missing headings, console errors) per viewport
 4. Call out any flow that stopped at a real product gate (activation, Stripe, no open job)
 5. Fix product bugs found in the UI when they are clearly broken — not by writing DB shortcuts
 

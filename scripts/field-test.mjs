@@ -13,11 +13,14 @@ import {
   FIELD_TEST_PASSWORD,
   GUARD_PATHS,
   OUT,
+  PROVISIONED_PASSWORD,
   PUBLIC_PATHS,
   STAFF_EMAIL,
   STAFF_LADDER_ROLES,
   STAFF_PASSWORD,
   STAFF_SECTIONS,
+  VIEWPORTS,
+  VIEWPORT_SWEEP_PATHS,
   addStaffViaTeam,
   attachDiagnostics,
   checkLayout,
@@ -35,6 +38,7 @@ import {
   signUpClient,
   signUpGuard,
   signUpStaff,
+  tryScroll,
   visitPath,
   waitReady,
 } from './field-test-lib.mjs';
@@ -197,6 +201,7 @@ async function run() {
   for (const p of PUBLIC_PATHS) {
     await visitPath(page, log, `public-${p.replace(/\//g, '-') || 'home'}`, p);
     await checkLayout(page, p, findings);
+    await tryScroll(page, p, findings);
   }
 
   // ── Staff operator login ─────────────────────────────────────
@@ -215,6 +220,7 @@ async function run() {
     const label = section.replace(/^\/staff\//, 'staff-');
     await visitPath(page, log, label, section);
     await checkLayout(page, section, findings);
+    await tryScroll(page, section, findings);
   }
   await inspectStaffIssuePanels(page);
 
@@ -284,6 +290,7 @@ async function run() {
   for (const p of CLIENT_PATHS) {
     await visitPath(page, log, `client-${p.replace(/^\/client\//, '')}`, p);
     await checkLayout(page, p, findings);
+    await tryScroll(page, p, findings);
   }
   await page.goto(`${BASE}/client/home`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
@@ -306,6 +313,7 @@ async function run() {
   for (const p of GUARD_PATHS) {
     await visitPath(page, log, `guard-${p.replace(/^\/guard\//, '')}`, p);
     await checkLayout(page, p, findings);
+    await tryScroll(page, p, findings);
   }
   {
     const apply = await tryGuardApply(page);
@@ -327,28 +335,72 @@ async function run() {
     /Field Test|Patrol|pending|open/i.test(jobsText),
     jobsText.match(/Field Test[\s\S]{0,120}/)?.[0] || 'job not visible yet'
   );
-  await inspectStaffIssuePanels(page);
+    await inspectStaffIssuePanels(page);
 
-  // ── Mobile smoke (design) ────────────────────────────────────
-  const mobile = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    isMobile: true,
-    hasTouch: true,
-    ignoreHTTPSErrors: true,
-  });
-  const mpage = await mobile.newPage();
-  attachDiagnostics(mpage, diagnostics);
-  await mpage.goto(BASE, { waitUntil: 'domcontentloaded' });
-  await waitReady(mpage);
-  await shot(mpage, 'mobile-landing');
-  await checkLayout(mpage, 'mobile-landing', findings);
-  {
-    const { failed } = await login(mpage, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
-    log('mobile-staff-login', !failed, mpage.url());
-    await shot(mpage, 'mobile-staff-overview');
-    await checkLayout(mpage, 'mobile-staff-overview', findings);
+  // ── Sign in as each provisioned ladder role ──────────────────
+  for (const role of STAFF_LADDER_ROLES) {
+    await hardReset(page, context);
+    const { failed, url, body } = await login(
+      page,
+      'staff',
+      emails.staff[role],
+      PROVISIONED_PASSWORD
+    );
+    await shot(page, `staff-login-${role.toLowerCase()}`);
+    log(
+      `staff-login-${role.toLowerCase()}`,
+      !failed,
+      failed ? body.slice(0, 220) : url
+    );
   }
-  await mobile.close();
+
+  // ── Viewport sweep: desktop (repeat key pages), tablet, mobile ──
+  for (const [device, vp] of Object.entries(VIEWPORTS)) {
+    const sweepCtx = await browser.newContext({
+      viewport: { width: vp.width, height: vp.height },
+      isMobile: vp.isMobile,
+      hasTouch: vp.hasTouch,
+      ignoreHTTPSErrors: true,
+    });
+    const sp = await sweepCtx.newPage();
+    attachDiagnostics(sp, diagnostics);
+
+    for (const p of VIEWPORT_SWEEP_PATHS.public) {
+      await visitPath(sp, log, `${device}-public`, p);
+      await checkLayout(sp, `${device}-public`, findings);
+      await tryScroll(sp, `${device}-public`, findings);
+    }
+
+    await hardReset(sp, sweepCtx);
+    const staffIn = await login(sp, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
+    log(`${device}-staff-login`, !staffIn.failed, sp.url());
+    for (const p of VIEWPORT_SWEEP_PATHS.staff) {
+      await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
+      await checkLayout(sp, `${device}${p}`, findings);
+      await tryScroll(sp, `${device}${p}`, findings);
+      await clickAllFilterTabs(sp);
+    }
+
+    await hardReset(sp, sweepCtx);
+    const clientIn = await login(sp, 'client', emails.client, FIELD_TEST_PASSWORD);
+    log(`${device}-client-login`, !clientIn.failed, sp.url());
+    for (const p of VIEWPORT_SWEEP_PATHS.client) {
+      await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
+      await checkLayout(sp, `${device}${p}`, findings);
+      await tryScroll(sp, `${device}${p}`, findings);
+    }
+
+    await hardReset(sp, sweepCtx);
+    const guardIn = await login(sp, 'guard', emails.guard, FIELD_TEST_PASSWORD);
+    log(`${device}-guard-login`, !guardIn.failed, sp.url());
+    for (const p of VIEWPORT_SWEEP_PATHS.guard) {
+      await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
+      await checkLayout(sp, `${device}${p}`, findings);
+      await tryScroll(sp, `${device}${p}`, findings);
+    }
+
+    await sweepCtx.close();
+  }
 
   await browser.close();
 }

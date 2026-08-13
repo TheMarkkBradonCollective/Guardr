@@ -42,18 +42,90 @@ export function attachDiagnostics(page, bag) {
   });
 }
 
+export const VIEWPORTS = {
+  desktop: { width: 1440, height: 900, isMobile: false, hasTouch: false },
+  tablet: { width: 768, height: 1024, isMobile: true, hasTouch: true },
+  mobile: { width: 390, height: 844, isMobile: true, hasTouch: true },
+};
+
+/** Paths visited on every viewport after the desktop walkthrough. */
+export const VIEWPORT_SWEEP_PATHS = {
+  public: ['/'],
+  staff: [
+    '/staff/overview',
+    '/staff/jobs',
+    '/staff/applications',
+    '/staff/violations',
+    '/staff/disputes',
+    '/staff/incidents',
+    '/staff/payments',
+    '/staff/team',
+  ],
+  client: ['/client/home', '/client/jobs', '/client/payments'],
+  guard: ['/guard/map', '/guard/activation', '/guard/my-jobs', '/guard/payments'],
+};
+
 export async function checkLayout(page, label, findings) {
   const issues = await page.evaluate(() => {
     const out = [];
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const doc = document.documentElement;
-    if (doc.scrollWidth > vw + 8) out.push(`horizontal overflow ${doc.scrollWidth}px > ${vw}px`);
+    const body = document.body;
+    if (doc.scrollWidth > vw + 8) {
+      out.push(`horizontal overflow ${doc.scrollWidth}px > ${vw}px`);
+    }
+    const contentH = Math.max(doc.scrollHeight, body.scrollHeight);
+    const htmlY = getComputedStyle(doc).overflowY;
+    const bodyY = getComputedStyle(body).overflowY;
+    const windowBlocked = htmlY === 'hidden' && bodyY === 'hidden';
+    let innerScrollable = false;
+    const nodes = document.querySelectorAll('main, [data-scroll], [class*="overflow-y"], [class*="overflow-auto"]');
+    for (const el of nodes) {
+      const s = getComputedStyle(el);
+      const y = s.overflowY;
+      if ((y === 'auto' || y === 'scroll' || y === 'overlay') && el.scrollHeight > el.clientHeight + 8) {
+        innerScrollable = true;
+        break;
+      }
+    }
+    if (contentH > vh + 40 && windowBlocked && !innerScrollable) {
+      out.push(`not vertically scrollable (content ${contentH}px vs viewport ${vh}px)`);
+    }
     const h1 = document.querySelector('h1, [role="heading"]');
     if (!h1) out.push('no heading');
     return out;
   });
-  for (const issue of issues) findings.push({ label, issue });
+  for (const issue of issues) findings.push({ label, issue, viewport: `${page.viewportSize()?.width}x${page.viewportSize()?.height}` });
   return issues;
+}
+
+export async function tryScroll(page, label, findings) {
+  const before = await page.evaluate(() => ({
+    y: window.scrollY,
+    main: document.querySelector('main')?.scrollTop ?? 0,
+    h: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+    vh: window.innerHeight,
+  }));
+  await page.mouse.wheel(0, 600).catch(() => {});
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    window.scrollBy(0, 400);
+    const main = document.querySelector('main');
+    if (main) main.scrollTop += 400;
+  }).catch(() => {});
+  const after = await page.evaluate(() => ({
+    y: window.scrollY,
+    main: document.querySelector('main')?.scrollTop ?? 0,
+  }));
+  const moved = after.y > before.y || after.main > before.main;
+  if (before.h > before.vh + 80 && !moved) {
+    findings.push({
+      label: `${label}-scroll`,
+      issue: `wheel/scroll did not move (content ${before.h}px, viewport ${before.vh}px)`,
+    });
+  }
+  return moved || before.h <= before.vh + 80;
 }
 
 export function createLogger(results) {
@@ -328,6 +400,7 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
   await page.waitForTimeout(600);
   await fillIfVisible(page, /first name/i, firstName);
   await fillIfVisible(page, /last name/i, lastName);
+  await clickFirstMatching(page, [/use next/i], 800);
   const workEmail = page.getByLabel(/work email/i).first();
   if (await workEmail.isVisible({ timeout: 800 }).catch(() => false)) {
     await workEmail.fill(email);
