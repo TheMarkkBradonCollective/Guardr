@@ -8,8 +8,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 import {
+  AD,
   BASE,
   CLIENT_PATHS,
+  FAKE_CRED,
   FIELD_TEST_PASSWORD,
   GUARD_PATHS,
   OUT,
@@ -21,7 +23,11 @@ import {
   STAFF_SECTIONS,
   VIEWPORTS,
   VIEWPORT_SWEEP_PATHS,
+  addClientViaStaff,
+  addGuardViaStaff,
   addStaffViaTeam,
+  adShot,
+  assertJaneJohn,
   attachDiagnostics,
   checkLayout,
   clickAllFilterTabs,
@@ -35,10 +41,10 @@ import {
   postJobThroughWizard,
   searchAndOpen,
   shot,
-  signUpClient,
-  signUpGuard,
   signUpStaff,
+  staffVerifyOpenCredentials,
   tryScroll,
+  uploadFakeCredentials,
   visitPath,
   waitReady,
 } from './field-test-lib.mjs';
@@ -64,6 +70,8 @@ function writeReport() {
     consoleErrors: diagnostics.consoleErrors.slice(0, 40),
     results,
     rule: 'Site-only — no Supabase REST/SQL during test execution',
+    names: { client: AD.client.name, guard: AD.guard.name, company: AD.client.company },
+    fakeCredential: FAKE_CRED || null,
   };
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(summary, null, 2));
   return summary;
@@ -203,6 +211,7 @@ async function run() {
     await checkLayout(page, p, findings);
     await tryScroll(page, p, findings);
   }
+  await adShot(page, 'desktop', '01-landing-hero');
 
   // ── Staff operator login ─────────────────────────────────────
   await hardReset(page, context);
@@ -224,6 +233,29 @@ async function run() {
   }
   await inspectStaffIssuePanels(page);
 
+  // ── Create Jane Doe (client) + John Doe (guard) in the app ───
+  {
+    const jane = await addClientViaStaff(page, {
+      firstName: AD.client.first,
+      lastName: AD.client.last,
+      email: emails.client,
+      company: AD.client.company,
+      phone: '(555) 010-1001',
+    });
+    await shot(page, 'staff-add-jane-doe');
+    log('staff-add-jane-doe', jane.ok, jane.detail);
+  }
+  {
+    const john = await addGuardViaStaff(page, {
+      firstName: AD.guard.first,
+      lastName: AD.guard.last,
+      email: emails.guard,
+      phone: '(555) 010-2002',
+    });
+    await shot(page, 'staff-add-john-doe');
+    log('staff-add-john-doe', john.ok, john.detail);
+  }
+
   // ── Provision staff of each ladder role via Team UI ──────────
   for (const role of STAFF_LADDER_ROLES) {
     try {
@@ -241,7 +273,7 @@ async function run() {
     }
   }
 
-  // ── Public staff application ─────────────────────────────────
+  // ── Public staff application (extra intake path) ─────────────
   await hardReset(page, context);
   {
     const { ok, body, url } = await signUpStaff(page, emails.staffSignup, FIELD_TEST_PASSWORD);
@@ -249,47 +281,20 @@ async function run() {
     log('staff-public-signup', ok, ok ? url : body.slice(0, 300));
   }
 
-  // ── Client self-signup ───────────────────────────────────────
-  await hardReset(page, context);
-  {
-    const { ok, body, url } = await signUpClient(page, emails.client, FIELD_TEST_PASSWORD);
-    await shot(page, 'client-signup');
-    log('client-signup', ok, ok ? url : body.slice(0, 300));
-  }
-
-  // ── Guard self-signup ────────────────────────────────────────
-  await hardReset(page, context);
-  {
-    const { ok, body, url } = await signUpGuard(page, emails.guard, FIELD_TEST_PASSWORD);
-    await shot(page, 'guard-signup');
-    log('guard-signup', ok, ok ? url : body.slice(0, 300));
-  }
-
-  // ── Staff approves applications ──────────────────────────────
   await hardReset(page, context);
   await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
-  {
-    const clientApprove = await staffApproveApplication(page, 'Field Client');
-    await shot(page, 'staff-approve-client');
-    log('staff-approve-client', clientApprove.ok, clientApprove.detail);
-  }
-  {
-    const guardApprove = await staffApproveApplication(page, 'Field Guard');
-    await shot(page, 'staff-approve-guard');
-    log('staff-approve-guard', guardApprove.ok, guardApprove.detail);
-  }
   {
     const staffApprove = await staffApproveApplication(page, 'Field Support');
     await shot(page, 'staff-approve-staff-app');
     log('staff-approve-public-staff', staffApprove.ok, staffApprove.detail);
   }
 
-  // ── Client: all routes, post job, pay, review ────────────────
+  // ── Jane Doe: all routes, post job, pay, review ──────────────
   await hardReset(page, context);
   {
-    const { failed, url } = await login(page, 'client', emails.client, FIELD_TEST_PASSWORD);
-    await shot(page, 'client-login');
-    log('client-login', !failed, failed ? 'sign-in failed' : url);
+    const { failed, url } = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+    await shot(page, 'client-login-jane');
+    log('client-login-jane', !failed, failed ? 'sign-in failed' : url);
   }
   for (const p of CLIENT_PATHS) {
     await visitPath(page, log, `client-${p.replace(/^\/client\//, '')}`, p);
@@ -305,14 +310,19 @@ async function run() {
     log('client-job-post', jobPosted, jobPosted ? url : body.slice(0, 300));
   }
   await tryClientPayAndReview(page);
+  await adShot(page, 'desktop', '04-client-home');
+  await assertJaneJohn(page, log, 'client-home');
+  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await adShot(page, 'desktop', '05-client-jobs');
 
-  // ── Guard: all routes, marketplace, apply, pay, shift ────────
+  // ── John Doe: activation + fake credentials ──────────────────
   await hardReset(page, context);
   {
-    const { failed, body, url } = await login(page, 'guard', emails.guard, FIELD_TEST_PASSWORD);
-    await shot(page, 'guard-login');
+    const { failed, body, url } = await login(page, 'guard', emails.guard, PROVISIONED_PASSWORD);
+    await shot(page, 'guard-login-john');
     const activation = /activation|government id|guard card|application under review/i.test(body);
-    log('guard-login', !failed, failed ? body.slice(0, 300) : activation ? 'activation checklist' : url);
+    log('guard-login-john', !failed, failed ? body.slice(0, 300) : activation ? 'activation checklist' : url);
   }
   for (const p of GUARD_PATHS) {
     await visitPath(page, log, `guard-${p.replace(/^\/guard\//, '')}`, p);
@@ -320,26 +330,71 @@ async function run() {
     await tryScroll(page, p, findings);
   }
   {
+    const uploads = await uploadFakeCredentials(page, (n) => shot(page, n));
+    for (const u of uploads) log(`john-cred-${u.step}`, u.ok, u.detail);
+  }
+
+  // ── Staff verifies John's credentials and activates ──────────
+  await hardReset(page, context);
+  await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
+  {
+    const { verified, activate } = await staffVerifyOpenCredentials(page);
+    await shot(page, 'staff-verify-john-creds');
+    log('staff-verify-john-creds', verified > 0 || Boolean(activate), `verified=${verified} activate=${activate || 'none'}`);
+    await page.goto(`${BASE}/staff/guards`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await searchAndOpen(page, 'John Doe');
+    await clickFirstMatching(page, [/Activate/i, /Approve application/i, /Restore access/i], 1500);
+    await shot(page, 'staff-activate-john');
+  }
+
+  // ── John: marketplace apply, pay, shift ──────────────────────
+  await hardReset(page, context);
+  await login(page, 'guard', emails.guard, PROVISIONED_PASSWORD);
+  {
     const apply = await tryGuardApply(page);
     log('guard-apply', apply.ok, apply.detail);
+    await adShot(page, 'desktop', '02-guard-marketplace-map');
+    await assertJaneJohn(page, log, 'marketplace');
   }
   await tryGuardPaymentsAndShift(page);
+  await adShot(page, 'desktop', '16-guard-earnings');
 
-  // ── Staff reviews listing + leftover issue queues ────────────
+  // ── Jane approves John's application if still pending ────────
+  await hardReset(page, context);
+  await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await searchAndOpen(page, 'Field Test');
+  await clickFirstMatching(page, [/Approve guard/i, /^Approve$/i], 2000);
+  await shot(page, 'jane-approve-john');
+  log('jane-approve-john', true, page.url());
+
+  // ── Staff jobs, payments, violations, disputes + ad shots ────
   await hardReset(page, context);
   await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
   await page.goto(`${BASE}/staff/jobs`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismissOverlays(page);
   await searchAndOpen(page, 'Field Test');
-  await shot(page, 'staff-jobs-field-test');
+  await shot(page, 'staff-jobs-jane-john');
   const jobsText = await page.locator('body').innerText();
   log(
     'staff-jobs-listing',
-    /Field Test|Patrol|pending|open/i.test(jobsText),
-    jobsText.match(/Field Test[\s\S]{0,120}/)?.[0] || 'job not visible yet'
+    /Jane Doe|Field Test|Patrol|pending|open/i.test(jobsText),
+    jobsText.match(/Jane Doe|Field Test[\s\S]{0,120}/)?.[0] || 'job not visible yet'
   );
-    await inspectStaffIssuePanels(page);
+  await inspectStaffIssuePanels(page);
+  await page.goto(`${BASE}/staff/payments`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await adShot(page, 'desktop', '14-staff-payments');
+  await assertJaneJohn(page, log, 'staff-payments');
+  await page.goto(`${BASE}/staff/violations`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await adShot(page, 'desktop', '23-staff-violations');
+  await page.goto(`${BASE}/staff/disputes`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await adShot(page, 'desktop', '24-staff-disputes');
 
   // ── Sign in as each provisioned ladder role ──────────────────
   for (const role of STAFF_LADDER_ROLES) {
@@ -373,6 +428,7 @@ async function run() {
       await visitPath(sp, log, `${device}-public`, p);
       await checkLayout(sp, `${device}-public`, findings);
       await tryScroll(sp, `${device}-public`, findings);
+      await adShot(sp, device, '01-landing-hero');
     }
 
     await hardReset(sp, sweepCtx);
@@ -383,10 +439,14 @@ async function run() {
       await checkLayout(sp, `${device}${p}`, findings);
       await tryScroll(sp, `${device}${p}`, findings);
       await clickAllFilterTabs(sp);
+      if (/violations|disputes|payments/.test(p)) {
+        await adShot(sp, device, p.replace('/staff/', 'staff-'));
+        await assertJaneJohn(sp, log, `${device}${p}`);
+      }
     }
 
     await hardReset(sp, sweepCtx);
-    const clientIn = await login(sp, 'client', emails.client, FIELD_TEST_PASSWORD);
+    const clientIn = await login(sp, 'client', emails.client, PROVISIONED_PASSWORD);
     log(`${device}-client-login`, !clientIn.failed, sp.url());
     for (const p of VIEWPORT_SWEEP_PATHS.client) {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
@@ -395,7 +455,7 @@ async function run() {
     }
 
     await hardReset(sp, sweepCtx);
-    const guardIn = await login(sp, 'guard', emails.guard, FIELD_TEST_PASSWORD);
+    const guardIn = await login(sp, 'guard', emails.guard, PROVISIONED_PASSWORD);
     log(`${device}-guard-login`, !guardIn.failed, sp.url());
     for (const p of VIEWPORT_SWEEP_PATHS.guard) {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);

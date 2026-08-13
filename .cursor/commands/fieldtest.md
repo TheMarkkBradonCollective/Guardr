@@ -1,8 +1,19 @@
-# /fieldtest — Site-only production field diagnostic
+# /fieldtest — Site-only production field diagnostic + ad screenshots
+
+Type `/fieldtest` to run this entire playbook. Do **not** ask the user to repeat these details.
 
 Run a **100% app-driven** field test against production (or preview). No Supabase REST patches, SQL updates, or status overrides during the test run.
 
-This is a full **head-to-toe** diagnostic: account creation for every role, staff ops, jobs through finish, payments, violations, disputes, reviews, layout/design, and **desktop + tablet + mobile** (each view must load and be scrollable).
+This is a full **head-to-toe** diagnostic **and** advertisement capture:
+
+- Sign in as `staff@guardr.co`
+- Create **client, guard, and staff (each ladder role)** in the website/app
+- Use **Jane Doe** (client) and **John Doe** (guard) display names
+- Upload **fake credentials** for John and staff-verify them in the UI
+- Walk jobs through apply → approve → shift → complete → payments
+- Test violations, disputes, reviews, and every staff/client/guard surface
+- Check **desktop, tablet, and mobile** (each must load and scroll)
+- Save advertisement screenshots (Jane/John Doe only — no `E2E` / `fieldtest` labels in the frame)
 
 ## Setup (once, outside the test)
 
@@ -42,35 +53,59 @@ GUARDR_BASE_URL=http://127.0.0.1:4173 npm run fieldtest
 | `GUARDR_FIELD_TEST_OUT` | `/opt/cursor/artifacts/field-test` |
 | `FIELD_TEST_STAFF_EMAIL` | `staff@guardr.co` |
 | `FIELD_TEST_STAFF_PASSWORD` | `#FieldTestStaff2026` |
-| `FIELD_TEST_PASSWORD` | `#FieldTest2026` (self-signup accounts) |
+| `FIELD_TEST_PASSWORD` | `#FieldTest2026` (public self-signup) |
+
+Staff-provisioned Jane/John and ladder staff sign in with `#Qwerty12345`.
 
 ## What it must do (all through the UI)
 
-### Accounts
+### 1. Operator
 
-1. Sign in as `staff@guardr.co`
-2. **Client** self-signup (`fieldtest.client.<tag>@guardr.test`)
-3. **Guard** self-signup (`fieldtest.guard.<tag>@guardr.test`)
-4. **Staff** public application (Support intake)
-5. **Staff of each ladder role** via Team → Add staff: Support, Moderator, Administrator, Manager, Director
-6. Sign in as each provisioned ladder role (`#Qwerty12345`)
-7. Approve pending client / guard / staff applications from Applications
+Sign in as `staff@guardr.co`. Visit every `/staff/*` section. Click filter tabs on violations, disputes, incidents, payments, credentials, support.
 
-### Staff console (every section)
+### 2. Create accounts in the app (Jane / John Doe)
 
-Overview, map, jobs, locations, applications, credentials, guards, clients, team, messages, support, incidents, **violations**, **disputes**, stats, analytics, payments, payment-settings, agreements, audit-log, cities, permissions, settings, integrations, guide, dev-updates.
+From the staff console (not SQL):
 
-Click filter tabs on violations, disputes, incidents, payments, credentials, support.
+1. **Clients → Add client** — Jane Doe, Jane Doe Properties, `jane.doe.<tag>@guardr.test`
+2. **Guards → Add guard** — John Doe, `john.doe.<tag>@guardr.test`
+3. **Team → Add staff** for each ladder role: Support, Moderator, Administrator, Manager, Director
+4. Optional: public staff application (Support intake)
+5. Approve pending Jane / John / staff applications from Applications
+6. Sign in as each provisioned ladder role to confirm access
 
-### Client workflow
+### 3. Fake credentials + activation (John Doe)
 
-Every `/client/*` route. Post a job through the wizard. Open Payments / invoices. Attempt Stripe checkout if the CTA exists. Look for rate/review CTAs on completed jobs.
+1. Sign in as John Doe → `/guard/activation`
+2. Upload the fixture `scripts/fixtures/fake-credential.png` for:
+   - Government ID (front, back, selfie)
+   - Certificate of Insurance
+   - BSIS Guard Card
+   - PTA / UOF
+   - 32-hour Continued Education package
+3. Sign in as `staff@guardr.co` → Credentials: verify / approve each item
+4. Activate John for marketplace work **in the UI** (Approve / Activate). Do not PATCH `user_status` in the database.
 
-### Guard workflow
+### 4. Job → finish → payments
 
-Every `/guard/*` route including activation, availability, vehicle, performance. Marketplace apply. Payments / Connect bank. Clock-in / complete-job CTAs if a live assignment exists.
+1. Jane posts a job through the client wizard (Standing Guard / site patrol, Hollywood Blvd)
+2. John applies from the marketplace map
+3. Jane (or staff) approves the application
+4. Attempt Stripe checkout if a Pay CTA exists (record whether Checkout opens — do not fake a live charge)
+5. John: en route / clock in / complete job / skip audits if the product allows
+6. Staff payments + guard Pay + client invoices
+7. Click any **rate / review** CTAs on completed jobs
+8. Open **violations** and **disputes** and click every filter tab
 
-### Viewports (must all work and scroll)
+### 5. Advertisement screenshots (Jane / John Doe)
+
+Save marketing-quality shots under `ad-screenshots/desktop|tablet|mobile/`.
+
+Names on screen must be Jane Doe / John Doe / Jane Doe Properties. Fail the names check if `E2E` or `fieldtest` is visible in the frame.
+
+Capture at least: landing, marketplace map, client home, client jobs, guard on duty / earnings, staff payments, staff violations, staff disputes.
+
+### 6. Viewports (must all work and scroll)
 
 | Device | Size |
 |--------|------|
@@ -78,44 +113,48 @@ Every `/guard/*` route including activation, availability, vehicle, performance.
 | Tablet | 768×1024 |
 | Mobile | 390×844 |
 
-On each viewport: landing, staff overview/jobs/applications/violations/disputes/incidents/payments/team, client home/jobs/payments, guard map/activation/jobs/payments.
+On each: landing, staff overview/jobs/applications/violations/disputes/payments, client home/jobs/payments, guard map/activation/jobs/payments.
 
-Record:
-
-- Horizontal overflow
-- Content taller than the viewport that cannot scroll
-- Missing headings
-- `pageerror` and console errors
+Record horizontal overflow, content that cannot scroll, missing headings, `pageerror` / console errors.
 
 ## Rules
 
 | Allowed | Forbidden during the test |
 |---------|---------------------------|
-| `seed-field-test-staff.mjs` **before** the run | Any `patch()` / DELETE / SQL on jobs or users |
-| Playwright clicks, forms, navigation, uploads | Setting `payment_status`, assignment, audits in the DB |
-| Screenshots + `report.json` | Ad-workflow DB shortcuts |
+| `seed-field-test-staff.mjs` **before** the run | Any `patch()` / DELETE / SQL on jobs, payments, or users |
+| Playwright clicks, forms, file uploads, navigation | Setting `payment_status`, assignment, or audits in the DB |
+| Screenshots + `report.json` | Old `prod-ad-workflow.mjs` DB shortcuts |
 
 If a UI step fails, **record FAIL and continue**. Do not fall back to the database to force the next screen.
 
-## Honest limits (still test the UI)
+## Honest product gates
 
 - **Live Stripe checkout** cannot complete with a fake card on production. Record whether Checkout opens.
-- **Full shift → payout** needs an activated guard (credentials + ID verified in the UI) and a paid job. Attempt every CTA; do not invent settlement in SQL.
-- Provisioned Team staff sign in with `#Qwerty12345`. Self-signup uses `#FieldTest2026`.
+- **Full shift → payout** needs John activated (credentials verified in the UI) and a paid job. Attempt every CTA; do not invent settlement in SQL.
 
 ## Output
 
-- Screenshots: `/opt/cursor/artifacts/field-test/screenshots/`
+- Diagnostic shots: `/opt/cursor/artifacts/field-test/screenshots/`
+- Ad shots: `/opt/cursor/artifacts/field-test/ad-screenshots/{desktop,tablet,mobile}/`
 - Report: `/opt/cursor/artifacts/field-test/report.json`
 
 ## After the run
 
-1. Summarize pass/fail matrix
-2. List emails created this run
-3. List design findings (overflow, scroll, missing headings, console errors) per viewport
-4. Call out any flow that stopped at a real product gate (activation, Stripe, no open job)
-5. Fix product bugs found in the UI when they are clearly broken — not by writing DB shortcuts
+1. Pass/fail matrix
+2. Emails created this run (Jane, John, each staff role)
+3. Design findings per viewport
+4. Which ad screenshots are clean Jane/John Doe
+5. Any flow that stopped at a real product gate
+6. Fix product bugs found in the UI when they are clearly broken — not by writing DB shortcuts
 
 ## Branch
 
 `cursor/fieldtest-8a1e`
+
+## Files
+
+- `.cursor/commands/fieldtest.md` — this command
+- `scripts/field-test.mjs` — runner (`npm run fieldtest`)
+- `scripts/field-test-lib.mjs` — site-only helpers
+- `scripts/seed-field-test-staff.mjs` — one-time operator seed
+- `scripts/fixtures/fake-credential.png` — fake upload image

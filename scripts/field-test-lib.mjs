@@ -14,6 +14,20 @@ export const STAFF_PASSWORD = process.env.FIELD_TEST_STAFF_PASSWORD || '#FieldTe
 /** Password assigned when staff@guardr.co provisions accounts in the UI */
 export const PROVISIONED_PASSWORD = '#Qwerty12345';
 export const STAFF_LADDER_ROLES = ['Support', 'Moderator', 'Administrator', 'Manager', 'Director'];
+export const AD = {
+  guard: { first: 'John', last: 'Doe', name: 'John Doe' },
+  client: { first: 'Jane', last: 'Doe', name: 'Jane Doe', company: 'Jane Doe Properties' },
+};
+export const FAKE_CRED = [
+  path.join(path.dirname(new URL(import.meta.url).pathname), 'fixtures', 'fake-credential.png'),
+  '/tmp/fieldtest-fake-credential.png',
+  '/tmp/e2e-fake-credential.png',
+  '/home/ubuntu/Downloads/e2e-fake-credential.png',
+].find((p) => fs.existsSync(p));
+export const AD_DIR = path.join(OUT, 'ad-screenshots');
+for (const d of ['desktop', 'tablet', 'mobile']) {
+  fs.mkdirSync(path.join(AD_DIR, d), { recursive: true });
+}
 
 fs.mkdirSync(SHOT, { recursive: true });
 
@@ -28,8 +42,8 @@ export function makeTestEmails(runId) {
     staff[role] = `fieldtest.staff.${role.toLowerCase()}.${tag}@guardr.test`;
   }
   return {
-    client: `fieldtest.client.${tag}@guardr.test`,
-    guard: `fieldtest.guard.${tag}@guardr.test`,
+    client: `jane.doe.${tag}@guardr.test`,
+    guard: `john.doe.${tag}@guardr.test`,
     staffSignup: `fieldtest.staff.apply.${tag}@guardr.test`,
     staff,
   };
@@ -462,6 +476,213 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
+}
+
+export async function adShot(page, device, name, { fullPage = true } = {}) {
+  const dir = path.join(AD_DIR, device);
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `${name}.png`);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: file, fullPage, type: 'png' }).catch(() => {});
+  return file;
+}
+
+export async function assertJaneJohn(page, log, label) {
+  const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  const bad = /E2E Guard|E2E Client|e2e\.guard|e2e\.client|fieldtest\.(client|guard)/i.test(body);
+  log(`names-${label}`, !bad, bad ? `non-ad labels visible: ${body.slice(0, 220)}` : 'Jane/John Doe clean');
+  return !bad;
+}
+
+export async function clickNamedCta(page, patternSrc) {
+  return page.evaluate((src) => {
+    const re = new RegExp(src, 'i');
+    const btn = [...document.querySelectorAll('button')].find((b) =>
+      re.test(`${b.getAttribute('title') || ''} ${b.textContent || ''}`)
+    );
+    if (!btn) return false;
+    btn.click();
+    return true;
+  }, patternSrc);
+}
+
+export async function addClientViaStaff(page, { firstName, lastName, email, company, phone }) {
+  try {
+    await page.goto(`${BASE}/staff/clients`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await dismissOverlays(page);
+    await clickNamedCta(page, String.raw`\+?\s*Add client`);
+    const open = await page.getByText(/Add client account/i).isVisible({ timeout: 4000 }).catch(() => false);
+    if (!open) return { ok: false, detail: 'Add client form did not open' };
+    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByPlaceholder('client@company.com').fill(email, { timeout: 4000 }).catch(async () => {
+      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
+    });
+    const companyBox = page.locator('label', { hasText: /Company/i }).first().locator('xpath=..').locator('input');
+    if (await companyBox.isVisible({ timeout: 800 }).catch(() => false)) {
+      await companyBox.fill(company);
+    }
+    await page.getByPlaceholder('Optional — shows on job posts').fill(company).catch(() => {});
+    await page.locator('label', { hasText: /^Phone$/i }).locator('xpath=..').locator('input').fill(phone).catch(() => {});
+    await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true });
+    await page.waitForTimeout(1800);
+    const body = await page.locator('body').innerText();
+    return { ok: /added|created|Jane|default sign-in/i.test(body), detail: body.slice(0, 400) };
+  } catch (err) {
+    return { ok: false, detail: String(err).slice(0, 400) };
+  }
+}
+
+export async function addGuardViaStaff(page, { firstName, lastName, email, phone }) {
+  try {
+    await page.goto(`${BASE}/staff/guards`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await dismissOverlays(page);
+    await clickNamedCta(page, String.raw`\+?\s*Add guard`);
+    const open = await page.getByText(/Add field guard/i).isVisible({ timeout: 4000 }).catch(() => false);
+    if (!open) return { ok: false, detail: 'Add guard form did not open' };
+    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByPlaceholder('guard@example.com').fill(email, { timeout: 4000 }).catch(async () => {
+      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
+    });
+    await page.getByPlaceholder('Optional').fill(phone).catch(() => {});
+    await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true });
+    await page.waitForTimeout(1800);
+    const body = await page.locator('body').innerText();
+    return { ok: /added|created|John|default sign-in/i.test(body), detail: body.slice(0, 400) };
+  } catch (err) {
+    return { ok: false, detail: String(err).slice(0, 400) };
+  }
+}
+
+async function setAllFakeFiles(page) {
+  if (!FAKE_CRED) return 0;
+  const files = page.locator('input[type="file"]');
+  const n = await files.count();
+  for (let i = 0; i < n; i++) {
+    await files.nth(i).setInputFiles(FAKE_CRED).catch(() => {});
+    await page.waitForTimeout(400);
+  }
+  return n;
+}
+
+async function clickCredentialSubmit(page) {
+  const btn = page
+    .getByRole('button', { name: /Submit for review|Save|Add credential|Upload|Submit|Add COI|Add guard card|Done/i })
+    .last();
+  if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await btn.click({ force: true });
+    await page.waitForTimeout(1600);
+    return true;
+  }
+  return false;
+}
+
+export async function uploadFakeCredentials(page, shotFn) {
+  const results = [];
+  if (!FAKE_CRED) return [{ step: 'fixture', ok: false, detail: 'fake-credential.png missing' }];
+
+  const tryOpen = async (name) => {
+    const btn = page.getByRole('button', { name }).first();
+    if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await btn.click({ force: true });
+      await page.waitForTimeout(800);
+      return true;
+    }
+    return false;
+  };
+
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+
+  if (await tryOpen(/Add government ID/i)) {
+    const sel = page.locator('select').first();
+    if (await sel.isVisible({ timeout: 800 }).catch(() => false)) {
+      await sel.selectOption({ label: /driver|license|state id/i }).catch(() => {});
+    }
+    await page.getByPlaceholder(/number/i).fill('D1234567').catch(() => {});
+    const n = await setAllFakeFiles(page);
+    const ok = await clickCredentialSubmit(page);
+    if (shotFn) await shotFn('cred-gov-id');
+    results.push({ step: 'gov-id', ok, detail: `files=${n}` });
+  }
+
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  if (await tryOpen(/Add COI/i)) {
+    for (const el of await page.locator('input:visible, textarea:visible').all()) {
+      const type = await el.getAttribute('type');
+      if (['file', 'checkbox', 'radio', 'hidden'].includes(type || '')) continue;
+      const val = await el.inputValue().catch(() => '');
+      if (val) continue;
+      const tip = ((await el.getAttribute('placeholder')) || '').toLowerCase();
+      if (/carrier|insurer|company/.test(tip)) await el.fill('Field Test Insurance');
+      else if (/policy/.test(tip)) await el.fill('COI-DOE-2026');
+      else if (type === 'date') await el.fill('2027-12-31').catch(() => {});
+    }
+    const n = await setAllFakeFiles(page);
+    const ok = await clickCredentialSubmit(page);
+    if (shotFn) await shotFn('cred-coi');
+    results.push({ step: 'coi', ok, detail: `files=${n}` });
+  }
+
+  for (const [re, step] of [
+    [/Add guard card/i, 'guard-card'],
+    [/Add PTA\/UOF/i, 'pta'],
+    [/Add Continued Education/i, 'ce'],
+  ]) {
+    await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    if (!(await tryOpen(re))) {
+      results.push({ step, ok: false, detail: 'open button missing' });
+      continue;
+    }
+    const option = page.getByRole('button', { name: /combined|PTA|Guard Card|32-hour|BSIS|certificate/i }).first();
+    if (await option.isVisible({ timeout: 800 }).catch(() => false)) await option.click({ force: true });
+    for (const el of await page.locator('input:visible').all()) {
+      const type = await el.getAttribute('type');
+      if (type === 'file' || type === 'checkbox') continue;
+      const val = await el.inputValue().catch(() => '');
+      if (!val && type !== 'date') await el.fill(`FT-DOE-${step}`).catch(() => {});
+    }
+    const n = await setAllFakeFiles(page);
+    const ok = await clickCredentialSubmit(page);
+    if (shotFn) await shotFn(`cred-${step}`);
+    results.push({ step, ok, detail: `files=${n}` });
+  }
+
+  return results;
+}
+
+export async function staffVerifyOpenCredentials(page) {
+  await page.goto(`${BASE}/staff/credentials`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  let verified = 0;
+  for (let i = 0; i < 8; i++) {
+    const row = page.getByText(/John Doe|pending review|Pending/i).first();
+    if (!(await row.isVisible({ timeout: 1500 }).catch(() => false))) break;
+    await row.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(600);
+    const action = await clickFirstMatching(
+      page,
+      [/Verify/i, /Approve/i, /Mark verified/i, /Accept/i],
+      1200
+    );
+    if (action) {
+      verified += 1;
+      await page.waitForTimeout(800);
+    } else break;
+  }
+  const activate = await clickFirstMatching(
+    page,
+    [/Activate (guard|account)/i, /Approve application/i, /^Activate$/i],
+    1500
+  );
+  return { verified, activate };
 }
 
 export async function clickAllFilterTabs(page) {
