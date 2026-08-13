@@ -427,45 +427,37 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     await page.goto(`${BASE}/staff/team`, { waitUntil: 'domcontentloaded' });
     await waitReady(page);
     await dismissOverlays(page);
-    const candidates = [
-      page.locator('button.sfd-sidebar-cta').first(),
-      page.getByTitle('+ Add staff').first(),
-      page.locator('button.app-button-primary').filter({ hasText: /^Add staff$/i }).first(),
-      page.getByRole('button', { name: /add staff/i }).last(),
-    ];
-    let clicked = false;
-    for (const btn of candidates) {
-      if (await btn.isVisible({ timeout: 800 }).catch(() => false)) {
-        await btn.click({ force: true }).catch(() => {});
-        clicked = true;
-        break;
-      }
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('button')].find((b) =>
+        /\+?\s*Add staff/i.test((b.getAttribute('title') || '') + (b.textContent || ''))
+      );
+      btn?.click();
+    });
+    const formOpen = await page.getByText(/Add platform staff/i).isVisible({ timeout: 4000 }).catch(() => false);
+    if (!formOpen) {
+      return { ok: false, detail: 'Add staff form did not open' };
     }
-    if (!clicked) {
-      return { ok: false, detail: 'Add staff button missing' };
-    }
-    await page.waitForTimeout(800);
-    await fillIfVisible(page, /first name/i, firstName);
-    await fillIfVisible(page, /last name/i, lastName);
-    await clickFirstMatching(page, [/use next/i], 800);
-    const workEmail = page.getByLabel(/work email/i).first();
-    if (await workEmail.isVisible({ timeout: 800 }).catch(() => false)) {
-      await workEmail.fill(email);
+    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
+    const emailInput = page.getByPlaceholder(/signaturesecurityspecialist/i).first();
+    if (await emailInput.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await emailInput.fill(email, { timeout: 4000 });
     } else {
-      await page.locator('input[type="email"]').first().fill(email);
+      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
     }
-    const roleSelect = page.getByLabel(/^role$/i).first();
+    const roleSelect = page.locator('form select, [role="dialog"] select').first();
     if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
-      await roleSelect.selectOption(role).catch(() => roleSelect.selectOption({ label: role }));
+      await roleSelect.selectOption({ label: role }).catch(() => roleSelect.selectOption(role));
     }
-    const cityBox = page.locator('input[type="checkbox"]:visible').first();
+    const cityBox = page.locator('[role="dialog"] input[type="checkbox"], form input[type="checkbox"]').first();
     if (await cityBox.isVisible({ timeout: 500 }).catch(() => false)) {
       await cityBox.check({ force: true }).catch(() => {});
     }
-    await page.getByRole('button', { name: /add staff|create|save|submit/i }).last().click({ force: true });
+    await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true });
     await page.waitForTimeout(2000);
     const body = await page.locator('body').innerText();
-    const ok = new RegExp(firstName, 'i').test(body) || /added|created|pending/i.test(body);
+    const ok = new RegExp(email.split('@')[0], 'i').test(body) || /added|created|pending|default sign-in/i.test(body);
     return { ok, detail: body.slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
