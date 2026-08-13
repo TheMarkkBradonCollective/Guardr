@@ -263,12 +263,12 @@ export async function clickFirstMatching(page, patterns, timeout = 1500) {
   for (const pattern of patterns) {
     const btn = page.getByRole('button', { name: pattern }).first();
     if (await btn.isVisible({ timeout }).catch(() => false)) {
-      await btn.click({ force: true });
+      await btn.click({ force: true }).catch(() => {});
       return pattern.toString();
     }
     const link = page.getByRole('link', { name: pattern }).first();
     if (await link.isVisible({ timeout: 200 }).catch(() => false)) {
-      await link.click({ force: true });
+      await link.click({ force: true }).catch(() => {});
       return pattern.toString();
     }
   }
@@ -389,37 +389,46 @@ export async function signUpStaff(page, email, password) {
 }
 
 export async function addStaffViaTeam(page, { firstName, lastName, email, role }) {
-  await page.goto(`${BASE}/staff/team`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await dismissOverlays(page);
-  const add = page.getByRole('button', { name: /add staff/i }).first();
-  if (!(await add.isVisible({ timeout: 4000 }).catch(() => false))) {
-    return { ok: false, detail: 'Add staff button missing' };
+  try {
+    await page.goto(`${BASE}/staff/team`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await dismissOverlays(page);
+    const add =
+      page.locator('button.app-button-primary').filter({ hasText: /^Add staff$/i }).first();
+    const fallback = page.getByRole('button', { name: /^Add staff$/i }).last();
+    if (await add.isVisible({ timeout: 2500 }).catch(() => false)) {
+      await add.click({ force: true });
+    } else if (await fallback.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await fallback.click({ force: true });
+    } else {
+      return { ok: false, detail: 'Add staff button missing' };
+    }
+    await page.waitForTimeout(800);
+    await fillIfVisible(page, /first name/i, firstName);
+    await fillIfVisible(page, /last name/i, lastName);
+    await clickFirstMatching(page, [/use next/i], 800);
+    const workEmail = page.getByLabel(/work email/i).first();
+    if (await workEmail.isVisible({ timeout: 800 }).catch(() => false)) {
+      await workEmail.fill(email);
+    } else {
+      await page.locator('input[type="email"]').first().fill(email);
+    }
+    const roleSelect = page.getByLabel(/^role$/i).first();
+    if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
+      await roleSelect.selectOption(role).catch(() => roleSelect.selectOption({ label: role }));
+    }
+    const cityBox = page.locator('input[type="checkbox"]:visible').first();
+    if (await cityBox.isVisible({ timeout: 500 }).catch(() => false)) {
+      await cityBox.check({ force: true }).catch(() => {});
+    }
+    await page.getByRole('button', { name: /add staff|create|save|submit/i }).last().click({ force: true });
+    await page.waitForTimeout(2000);
+    const body = await page.locator('body').innerText();
+    const ok = new RegExp(firstName, 'i').test(body) || /added|created|pending/i.test(body);
+    return { ok, detail: body.slice(0, 400) };
+  } catch (err) {
+    return { ok: false, detail: String(err).slice(0, 400) };
   }
-  await add.click();
-  await page.waitForTimeout(600);
-  await fillIfVisible(page, /first name/i, firstName);
-  await fillIfVisible(page, /last name/i, lastName);
-  await clickFirstMatching(page, [/use next/i], 800);
-  const workEmail = page.getByLabel(/work email/i).first();
-  if (await workEmail.isVisible({ timeout: 800 }).catch(() => false)) {
-    await workEmail.fill(email);
-  } else {
-    await page.locator('input[type="email"]').first().fill(email);
-  }
-  const roleSelect = page.getByLabel(/^role$/i).first();
-  if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
-    await roleSelect.selectOption(role).catch(() => roleSelect.selectOption({ label: role }));
-  }
-  const cityBox = page.locator('input[type="checkbox"]:visible').first();
-  if (await cityBox.isVisible({ timeout: 500 }).catch(() => false)) {
-    await cityBox.check({ force: true }).catch(() => {});
-  }
-  await page.getByRole('button', { name: /add staff|create|save|submit/i }).last().click();
-  await page.waitForTimeout(2000);
-  const body = await page.locator('body').innerText();
-  const ok = new RegExp(firstName, 'i').test(body) || /added|created|pending/i.test(body);
-  return { ok, detail: body.slice(0, 400) };
 }
 
 export async function clickAllFilterTabs(page) {

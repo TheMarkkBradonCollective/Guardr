@@ -226,15 +226,19 @@ async function run() {
 
   // ── Provision staff of each ladder role via Team UI ──────────
   for (const role of STAFF_LADDER_ROLES) {
-    const email = emails.staff[role];
-    const added = await addStaffViaTeam(page, {
-      firstName: 'Field',
-      lastName: role,
-      email,
-      role,
-    });
-    await shot(page, `staff-add-${role.toLowerCase()}`);
-    log(`staff-provision-${role.toLowerCase()}`, added.ok, added.detail);
+    try {
+      const email = emails.staff[role];
+      const added = await addStaffViaTeam(page, {
+        firstName: 'Field',
+        lastName: role,
+        email,
+        role,
+      });
+      await shot(page, `staff-add-${role.toLowerCase()}`);
+      log(`staff-provision-${role.toLowerCase()}`, added.ok, added.detail);
+    } catch (err) {
+      log(`staff-provision-${role.toLowerCase()}`, false, String(err).slice(0, 300));
+    }
   }
 
   // ── Public staff application ─────────────────────────────────
