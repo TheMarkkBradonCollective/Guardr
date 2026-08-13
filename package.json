@@ -21,8 +21,11 @@
     "generate:download-version": "node scripts/generate-download-version.mjs",
     "docs:manuals-pdf": "node scripts/build-user-manual-pdfs.mjs",
     "apk:audit": "node scripts/audit-apk-parity.mjs",
+    "play:check": "node scripts/check-play-readiness.mjs",
+    "play:assets": "node scripts/generate-play-store-assets.mjs",
     "cap:sync": "npm run build && npx cap sync android",
     "android:apk": "node scripts/build-android-apk.mjs",
+    "android:play": "node scripts/build-android-play.mjs",
     "android:open": "npx cap open android"
   },
   "dependencies": {
