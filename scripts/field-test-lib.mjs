@@ -247,7 +247,7 @@ export async function acceptTerms(page) {
 
 export async function fillIfVisible(page, pattern, value) {
   const byLabel = page.getByLabel(pattern).first();
-  if (await byLabel.isVisible({ timeout: 500 }).catch(() => false)) {
+  if (await byLabel.isVisible({ timeout: 400 }).catch(() => false)) {
     await byLabel.fill(value);
     return true;
   }
@@ -257,6 +257,42 @@ export async function fillIfVisible(page, pattern, value) {
     return true;
   }
   return false;
+}
+
+export async function fillLabeled(page, labelText, value) {
+  const box = page.locator('label', { hasText: labelText }).first().locator('xpath=..');
+  const field = box.locator('input, textarea, select').first();
+  if (await field.isVisible({ timeout: 800 }).catch(() => false)) {
+    const tag = await field.evaluate((el) => el.tagName.toLowerCase());
+    if (tag === 'select') {
+      await field.selectOption({ label: value }).catch(() => field.selectOption({ value }));
+    } else {
+      await field.fill(value);
+    }
+    return true;
+  }
+  return fillIfVisible(page, new RegExp(labelText, 'i'), value);
+}
+
+export async function selectFirstCity(page, labelText) {
+  const box = page.locator('label', { hasText: labelText }).first().locator('xpath=..');
+  const select = box.locator('select').first();
+  if (!(await select.isVisible({ timeout: 800 }).catch(() => false))) return false;
+  const values = await select.locator('option').evaluateAll((opts) =>
+    opts.map((o) => ({ value: o.value, label: o.textContent || '' })).filter((o) => o.value)
+  );
+  const la = values.find((o) => /los angeles/i.test(o.label) || /los angeles/i.test(o.value));
+  const pick = la || values[0];
+  if (!pick) return false;
+  await select.selectOption(pick.value);
+  return true;
+}
+
+function signupLooksComplete(page, body) {
+  const onForm = /auth=sign-up/.test(page.url());
+  if (onForm && /please |required|select at least|enter your/i.test(body)) return false;
+  if (onForm && /application submitted/i.test(body)) return true;
+  return !onForm || /pending|activation|under review|welcome/i.test(body);
 }
 
 export async function clickFirstMatching(page, patterns, timeout = 1500) {
@@ -280,29 +316,96 @@ export async function visitPath(page, log, label, pathSeg) {
   await waitReady(page);
   await dismissOverlays(page);
   const text = await page.locator('body').innerText();
-  const broken = /page could not be found|something went wrong|application error|failed to load/i.test(text);
+  const broken =
+    /page could not be found|something went wrong|application error|failed to load/i.test(text);
+  const loggedOut =
+    /\/(staff|guard|client)\//.test(pathSeg) &&
+    /enter your email and password|log in as |create account/i.test(text) &&
+    (await page.locator('input[type="email"]').count()) > 0;
   await shot(page, label);
-  log(label, !broken, broken ? text.slice(0, 200) : page.url());
-  return !broken;
+  log(label, !broken && !loggedOut, broken || loggedOut ? text.slice(0, 200) : page.url());
+  return !broken && !loggedOut;
 }
 
 export async function signUpClient(page, email, password) {
   await page.goto(`${BASE}/?auth=sign-up&ar=client`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
-  await fillIfVisible(page, /first name/i, 'Field');
-  await fillIfVisible(page, /last name/i, 'Client');
+  await fillIfVisible(page, /^First name$/i, 'Field');
+  await fillIfVisible(page, /^Last name$/i, 'Client');
   await page.locator('input[type="email"]').first().fill(email);
   await page.locator('input[type="password"]').first().fill(password);
-  await fillIfVisible(page, /company/i, 'Field Test Properties LLC');
-  await fillIfVisible(page, /phone/i, '(555) 010-1001');
+  await fillIfVisible(page, /Acme Corp/i, 'Field Test Properties LLC');
+  await fillIfVisible(page, /\+1 \(555\)/i, '(555) 010-1001');
+  await selectFirstCity(page, /Primary city of operations/i);
   await acceptTerms(page);
-  await page.getByRole('button', { name: /sign up|create account|continue|submit/i }).first().click();
-  await page.waitForTimeout(3000);
+  await page.getByRole('button', { name: /create account|sign up/i }).first().click({ force: true });
+  await page.waitForTimeout(4000);
+  await waitReady(page);
+  const body = await page.locator('body').innerText();
+  const ok = signupLooksComplete(page, body) && !/already (exists|registered)|sign up failed/i.test(body);
+  return { ok, body: body.slice(0, 1500), url: page.url() };
+}
+
+export async function signUpGuard(page, email, password) {
+  await page.goto(`${BASE}/?auth=sign-up&ar=guard`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await fillIfVisible(page, /^First name$/i, 'Field');
+  await fillIfVisible(page, /^Last name$/i, 'Guard');
+  await page.locator('input[type="email"]').first().fill(email);
+  await page.locator('input[type="password"]').first().fill(password);
+  await fillLabeled(page, /^Phone$/i, '(555) 010-2002');
+  await fillLabeled(page, /Hourly rate/i, '35');
+  await fillLabeled(page, /Years in security/i, '3');
+  await fillLabeled(page, /Armed work/i, 'Unarmed only');
+  await page.getByRole('button', { name: /Event security/i }).first().click({ force: true }).catch(() => {});
+  await page.getByRole('button', { name: /Site patrol/i }).first().click({ force: true }).catch(() => {});
+  await selectFirstCity(page, /Primary service area/i);
+  await fillLabeled(page, /Guard card status/i, 'Active CA guard card on hand');
+  await fillLabeled(page, /Reliable transportation/i, 'Yes');
+  await fillIfVisible(
+    page,
+    /Last 1–2 employers/i,
+    'Worked event security and retail loss prevention for multiple employers in Los Angeles.'
+  );
+  await fillIfVisible(
+    page,
+    /Training, licenses/i,
+    'Field test guard with three years of event and site security experience in Los Angeles.'
+  );
+  await fillIfVisible(page, /Days\/times you usually work/i, 'Available weekdays and weekends, flexible hours.');
+  await acceptTerms(page);
+  await page.getByRole('button', { name: /create account|sign up|apply/i }).first().click({ force: true });
+  await page.waitForTimeout(4000);
+  await waitReady(page);
+  const body = await page.locator('body').innerText();
+  const ok = signupLooksComplete(page, body) && !/already (exists|registered)|sign up failed/i.test(body);
+  return { ok, body: body.slice(0, 1500), url: page.url() };
+}
+
+export async function signUpStaff(page, email, password) {
+  await page.goto(`${BASE}/?auth=sign-up&ar=staff`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await fillIfVisible(page, /^First name$/i, 'Field');
+  await fillIfVisible(page, /^Last name$/i, 'Support');
+  await page.locator('input[type="email"]').first().fill(email);
+  await page.locator('input[type="password"]').first().fill(password);
+  await fillLabeled(page, /^Phone$/i, '(555) 010-4004');
+  await fillLabeled(page, /Years of experience/i, '4');
+  await selectFirstCity(page, /Primary city/i);
+  await fillIfVisible(
+    page,
+    /Recent roles, employers, and operations experience/i,
+    'Four years of operations and dispatch experience supporting licensed security teams in California.'
+  );
+  await fillIfVisible(page, /Days, hours, or schedule/i, 'Weekdays 8am–6pm Pacific.');
+  await acceptTerms(page);
+  await page.getByRole('button', { name: /create account|sign up|apply/i }).first().click({ force: true });
+  await page.waitForTimeout(4000);
   await waitReady(page);
   const body = await page.locator('body').innerText();
   const ok =
-    !/already (exists|registered)|sign up failed|something went wrong/i.test(body) &&
-    (/pending|welcome|home|jobs|account/i.test(body) || !(await page.locator('input[type="email"]').count()));
+    signupLooksComplete(page, body) &&
+    !/already (exists|registered)|sign up failed/i.test(body);
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
@@ -319,88 +422,26 @@ export async function selectFirstMatchingOption(page, labelRe, valueRe) {
   return false;
 }
 
-export async function signUpGuard(page, email, password) {
-  await page.goto(`${BASE}/?auth=sign-up&ar=guard`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await fillIfVisible(page, /first name/i, 'Field');
-  await fillIfVisible(page, /last name/i, 'Guard');
-  await page.locator('input[type="email"]').first().fill(email);
-  await page.locator('input[type="password"]').first().fill(password);
-  await fillIfVisible(page, /phone/i, '(555) 010-2002');
-  await fillIfVisible(page, /hourly rate/i, '35');
-  await fillIfVisible(page, /years in security|years of/i, '3');
-  await page.locator('input[type="number"]').nth(1).fill('3').catch(() => {});
-  await fillIfVisible(
-    page,
-    /bio|background|professional/i,
-    'Field test guard with three years of event and site security experience in Los Angeles.'
-  );
-  await fillIfVisible(
-    page,
-    /work history|recent roles|operations experience/i,
-    'Worked event security and retail loss prevention for multiple employers in Los Angeles.'
-  );
-  await fillIfVisible(page, /availability/i, 'Available weekdays and weekends, flexible hours.');
-  await clickFirstMatching(page, [/event security/i, /site patrol/i, /retail/i], 800);
-  await selectFirstMatchingOption(page, /armed work/i, /unarmed/i);
-  await selectFirstMatchingOption(page, /primary service area|primary city/i, /los angeles/i);
-  await selectFirstMatchingOption(page, /guard card/i, /active|yes|valid/i);
-  await selectFirstMatchingOption(page, /transport/i, /yes/i);
-  await clickFirstMatching(page, [/active guard card/i, /i have a guard card/i], 600);
-  await clickFirstMatching(page, [/yes/i], 400);
-  await acceptTerms(page);
-  await page.getByRole('button', { name: /sign up|create account|continue|submit|apply/i }).first().click();
-  await page.waitForTimeout(3500);
-  await waitReady(page);
-  const body = await page.locator('body').innerText();
-  const ok =
-    !/already (exists|registered)|sign up failed|something went wrong/i.test(body) &&
-    (/pending|application|activation|welcome|map|under review/i.test(body) ||
-      !(await page.locator('input[type="email"]').count()));
-  return { ok, body: body.slice(0, 1500), url: page.url() };
-}
-
-export async function signUpStaff(page, email, password) {
-  await page.goto(`${BASE}/?auth=sign-up&ar=staff`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await fillIfVisible(page, /first name/i, 'Field');
-  await fillIfVisible(page, /last name/i, 'Support');
-  await page.locator('input[type="email"]').first().fill(email);
-  await page.locator('input[type="password"]').first().fill(password);
-  await fillIfVisible(page, /phone/i, '(555) 010-4004');
-  await fillIfVisible(page, /years/i, '4');
-  await selectFirstMatchingOption(page, /primary city|primary work city/i, /los angeles/i);
-  await fillIfVisible(
-    page,
-    /work history|relevant work|operations/i,
-    'Four years of operations and dispatch experience supporting licensed security teams in California.'
-  );
-  await fillIfVisible(page, /availability/i, 'Weekdays 8am–6pm Pacific.');
-  await acceptTerms(page);
-  await page.getByRole('button', { name: /sign up|create account|continue|submit|apply/i }).first().click();
-  await page.waitForTimeout(3500);
-  await waitReady(page);
-  const body = await page.locator('body').innerText();
-  const ok =
-    !/already (exists|registered)|sign up failed|something went wrong/i.test(body) &&
-    (/application submitted|pending|director review|sign in/i.test(body) ||
-      !(await page.locator('input[type="email"]').count()));
-  return { ok, body: body.slice(0, 1500), url: page.url() };
-}
-
 export async function addStaffViaTeam(page, { firstName, lastName, email, role }) {
   try {
     await page.goto(`${BASE}/staff/team`, { waitUntil: 'domcontentloaded' });
     await waitReady(page);
     await dismissOverlays(page);
-    const add =
-      page.locator('button.app-button-primary').filter({ hasText: /^Add staff$/i }).first();
-    const fallback = page.getByRole('button', { name: /^Add staff$/i }).last();
-    if (await add.isVisible({ timeout: 2500 }).catch(() => false)) {
-      await add.click({ force: true });
-    } else if (await fallback.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await fallback.click({ force: true });
-    } else {
+    const candidates = [
+      page.locator('button.sfd-sidebar-cta').first(),
+      page.getByTitle('+ Add staff').first(),
+      page.locator('button.app-button-primary').filter({ hasText: /^Add staff$/i }).first(),
+      page.getByRole('button', { name: /add staff/i }).last(),
+    ];
+    let clicked = false;
+    for (const btn of candidates) {
+      if (await btn.isVisible({ timeout: 800 }).catch(() => false)) {
+        await btn.click({ force: true }).catch(() => {});
+        clicked = true;
+        break;
+      }
+    }
+    if (!clicked) {
       return { ok: false, detail: 'Add staff button missing' };
     }
     await page.waitForTimeout(800);
@@ -432,15 +473,15 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
 }
 
 export async function clickAllFilterTabs(page) {
-  const tabs = page.locator('[role="tab"]:visible, nav button:visible');
-  const n = Math.min(await tabs.count(), 12);
+  const tabs = page.locator('[role="tab"]:visible');
+  const n = Math.min(await tabs.count(), 10);
   const labels = [];
   for (let i = 0; i < n; i++) {
     const t = tabs.nth(i);
     const text = ((await t.innerText().catch(() => '')) || '').trim();
     if (!text || text.length > 40) continue;
     await t.click({ force: true }).catch(() => {});
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(200);
     labels.push(text);
   }
   return labels;
