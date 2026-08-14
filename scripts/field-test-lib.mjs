@@ -106,7 +106,9 @@ export async function checkLayout(page, label, findings) {
     if (contentH > vh + 40 && windowBlocked && !innerScrollable) {
       out.push(`not vertically scrollable (content ${contentH}px vs viewport ${vh}px)`);
     }
-    const h1 = document.querySelector('h1, [role="heading"]');
+    const h1 = document.querySelector(
+      'h1, h2, h3, h4, h5, h6, [role="heading"], .uber-page-band-title, .app-subscreen-title'
+    );
     if (!h1) out.push('no heading');
     return out;
   });
@@ -444,41 +446,55 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     await page.goto(`${BASE}/staff/team`, { waitUntil: 'domcontentloaded' });
     await waitReady(page);
     await dismissOverlays(page);
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll('button')].find((b) =>
-        /\+?\s*Add staff/i.test((b.getAttribute('title') || '') + (b.textContent || ''))
-      );
-      btn?.click();
-    });
+    await clickNamedCta(page, String.raw`\+?\s*Add staff`);
     const formOpen = await page.getByText(/Add platform staff/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!formOpen) {
       return { ok: false, detail: 'Add staff form did not open' };
     }
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
-    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
-    await page.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
-    const emailInput = page.getByPlaceholder(/signaturesecurityspecialist/i).first();
+    const sheet = visibleDialog(page);
+    await fillInDialog(page, 'First name', firstName);
+    await fillInDialog(page, 'Last name', lastName);
+    await sheet.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
+    const emailInput = sheet.getByPlaceholder(/signaturesecurityspecialist/i).first();
     if (await emailInput.isVisible({ timeout: 1500 }).catch(() => false)) {
       await emailInput.fill(email, { timeout: 4000 });
     } else {
-      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
+      await sheet.locator('input[type="email"]').first().fill(email, { timeout: 4000 });
     }
-    const roleSelect = page.locator('form select, [role="dialog"] select').first();
+    const roleSelect = sheet.locator('select').first();
     if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
       await roleSelect.selectOption({ label: role }).catch(() => roleSelect.selectOption(role));
     }
-    const cityBox = page.locator('[role="dialog"] input[type="checkbox"], form input[type="checkbox"]').first();
-    if (await cityBox.isVisible({ timeout: 500 }).catch(() => false)) {
-      await cityBox.check({ force: true }).catch(() => {});
+    const citySearch = sheet.getByPlaceholder('Search cities...');
+    if (await citySearch.isVisible({ timeout: 800 }).catch(() => false)) {
+      await citySearch.fill('Los Angeles');
+      await page.waitForTimeout(400);
+      const cityRow = sheet.locator('label').filter({ hasText: /Los Angeles|Hollywood/i }).first();
+      if (await cityRow.isVisible({ timeout: 800 }).catch(() => false)) {
+        await cityRow.click({ force: true });
+      } else {
+        const firstCity = sheet.locator('#add-staff-operations-access label').first();
+        if (await firstCity.isVisible({ timeout: 500 }).catch(() => false)) {
+          await firstCity.click({ force: true });
+        }
+      }
     }
-    await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true });
-    await dismissOverlays(page);
-    await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true }).catch(() => {});
-    await page.waitForTimeout(2000);
+    await clickDialogSubmit(page, /create staff account|submit for approval/i);
+    await page.waitForTimeout(2500);
+    const stillOpen = await page.getByText(/Add platform staff/i).isVisible({ timeout: 400 }).catch(() => false);
+    const sheetText = stillOpen ? await visibleDialog(page).innerText().catch(() => '') : '';
+    if (stillOpen && /required|could not add/i.test(sheetText)) {
+      return { ok: false, detail: sheetText.slice(0, 400) };
+    }
+    if (stillOpen) {
+      await page.keyboard.press('Escape').catch(() => {});
+      await page.waitForTimeout(400);
+    }
+    const found = await searchAndOpen(page, email);
     const body = await page.locator('body').innerText();
-    const ok = new RegExp(email.split('@')[0], 'i').test(body) || new RegExp(lastName, 'i').test(body);
-    return { ok, detail: body.slice(0, 400) };
+    const ok = Boolean(found) && body.includes(email);
+    return { ok, detail: ok ? email : (sheetText || body).slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
@@ -530,6 +546,81 @@ export async function clickNamedCta(page, patternSrc) {
   }, patternSrc);
 }
 
+export function visibleDialog(page) {
+  return page.locator('[role="dialog"]:visible').last();
+}
+
+export async function confirmAppDialog(page, extraPatterns = []) {
+  const patterns = [
+    ...extraPatterns,
+    /^Approve account$/i,
+    /^Approve profile$/i,
+    /^Mark trusted$/i,
+    /^Approve application$/i,
+    /^Confirm$/i,
+  ];
+  await page.waitForTimeout(500);
+  for (const pattern of patterns) {
+    const btn = page.getByRole('button', { name: pattern }).first();
+    if (await btn.isVisible({ timeout: 1200 }).catch(() => false)) {
+      await btn.click({ force: true });
+      await page.waitForTimeout(900);
+      return String(pattern);
+    }
+  }
+  return null;
+}
+
+export async function fillInDialog(page, placeholder, value) {
+  const field = visibleDialog(page).getByPlaceholder(placeholder).first();
+  await field.waitFor({ state: 'visible', timeout: 8000 });
+  await field.fill(value, { force: true });
+}
+
+async function clickDialogSubmit(page, nameRe) {
+  const btn = visibleDialog(page).getByRole('button', { name: nameRe }).last();
+  if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await btn.click({ force: true });
+    return true;
+  }
+  return false;
+}
+
+export async function approvePendingClient(page) {
+  const approve = await clickFirstMatching(page, [/Approve client account/i], 2500);
+  if (approve) await confirmAppDialog(page, [/^Approve account$/i]);
+  await page.waitForTimeout(600);
+  const trust = await clickFirstMatching(page, [/^Mark as trusted$/i], 1500);
+  if (trust) await confirmAppDialog(page, [/^Mark trusted$/i]);
+  await page.waitForTimeout(800);
+  const body = await page.locator('body').innerText();
+  return {
+    ok: /active|approved|trusted/i.test(body) && !/Pending approval/i.test(body),
+    detail: [approve, trust].filter(Boolean).join(' → ') || body.slice(0, 240),
+  };
+}
+
+export async function approvePendingGuard(page) {
+  const review = await clickFirstMatching(
+    page,
+    [/Review application/i, /Approve guard application/i, /Approve application/i],
+    2500
+  );
+  await page.waitForTimeout(800);
+  const approve = await clickFirstMatching(
+    page,
+    [/Approve guard application/i, /^Approve application$/i, /Approve profile/i],
+    2500
+  );
+  if (approve) await confirmAppDialog(page, [/^Approve profile$/i, /^Approve application$/i]);
+  await page.waitForTimeout(800);
+  const body = await page.locator('body').innerText();
+  return {
+    ok: Boolean(review || approve) && /approved|active|application/i.test(body),
+    detail: [review, approve].filter(Boolean).join(' → ') || body.slice(0, 240),
+  };
+}
+
 export async function addClientViaStaff(page, { firstName, lastName, email, company, phone }) {
   try {
     await page.goto(`${BASE}/staff/clients`, { waitUntil: 'domcontentloaded' });
@@ -539,26 +630,36 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     const open = await page.getByText(/Add client account/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add client form did not open' };
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
-    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
-    await page.getByPlaceholder('client@company.com').fill(email, { timeout: 4000 }).catch(async () => {
-      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
-    });
-    const companyBox = page.locator('label', { hasText: /Company/i }).first().locator('xpath=..').locator('input');
-    if (await companyBox.isVisible({ timeout: 800 }).catch(() => false)) {
-      await companyBox.fill(company);
-    }
-    await page.getByPlaceholder('Optional — shows on job posts').fill(company).catch(() => {});
-    await page.locator('label', { hasText: /^Phone$/i }).locator('xpath=..').locator('input').fill(phone).catch(() => {});
-    await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true });
-    await clearBlockingModals(page);
-    await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true }).catch(() => {});
-    await page.waitForTimeout(1200);
-    await clickFirstMatching(page, [/Approve client account/i], 2000);
-    await page.waitForTimeout(800);
-    await page.waitForTimeout(1800);
+    await fillInDialog(page, 'First name', firstName);
+    await fillInDialog(page, 'Last name', lastName);
+    await visibleDialog(page)
+      .getByPlaceholder('client@company.com')
+      .fill(email, { timeout: 4000 })
+      .catch(async () => {
+        await visibleDialog(page).locator('input[type="email"]').first().fill(email);
+      });
+    await visibleDialog(page)
+      .getByPlaceholder('Optional — shows on job posts')
+      .fill(company)
+      .catch(() => {});
+    await visibleDialog(page)
+      .locator('label', { hasText: /^Phone$/i })
+      .locator('xpath=..')
+      .locator('input')
+      .fill(phone)
+      .catch(() => {});
+    await clickDialogSubmit(page, /create client account/i);
+    await page.waitForTimeout(2000);
+    await searchAndOpen(page, email).catch(() => searchAndOpen(page, `${firstName} ${lastName}`));
+    const approved = await approvePendingClient(page);
     const body = await page.locator('body').innerText();
-    return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
+    const created = new RegExp(`${email}|${firstName}\\s+${lastName}`, 'i').test(body);
+    return {
+      ok: created && approved.ok,
+      detail: created
+        ? `created; approve=${approved.detail}`
+        : body.slice(0, 400),
+    };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
@@ -573,21 +674,21 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     const open = await page.getByText(/Add field guard/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add guard form did not open' };
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
-    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
-    await page.getByPlaceholder('guard@example.com').fill(email, { timeout: 4000 }).catch(async () => {
-      await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
-    });
-    await page.getByPlaceholder('Optional').fill(phone).catch(() => {});
-    await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true });
-    await clearBlockingModals(page);
-    await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true }).catch(() => {});
-    await page.waitForTimeout(1200);
-    await clickFirstMatching(page, [/Approve application/i, /Activate/i, /Approve guard/i], 2000);
-    await page.waitForTimeout(800);
-    await page.waitForTimeout(1800);
+    await fillInDialog(page, 'First name', firstName);
+    await fillInDialog(page, 'Last name', lastName);
+    await visibleDialog(page)
+      .getByPlaceholder('guard@example.com')
+      .fill(email, { timeout: 4000 })
+      .catch(async () => {
+        await visibleDialog(page).locator('input[type="email"]').first().fill(email);
+      });
+    await visibleDialog(page).getByPlaceholder('Optional').fill(phone).catch(() => {});
+    await clickDialogSubmit(page, /create guard profile/i);
+    await page.waitForTimeout(2000);
+    await searchAndOpen(page, email).catch(() => searchAndOpen(page, `${firstName} ${lastName}`));
     const body = await page.locator('body').innerText();
-    return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
+    const created = new RegExp(`${email}|${firstName}\\s+${lastName}`, 'i').test(body);
+    return { ok: created, detail: created ? email : body.slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
@@ -597,23 +698,59 @@ async function setAllFakeFiles(page) {
   if (!FAKE_CRED) return 0;
   const files = page.locator('input[type="file"]');
   const n = await files.count();
+  let attached = 0;
   for (let i = 0; i < n; i++) {
-    await files.nth(i).setInputFiles(FAKE_CRED).catch(() => {});
-    await page.waitForTimeout(400);
+    try {
+      await files.nth(i).setInputFiles(FAKE_CRED);
+      attached += 1;
+      await page.waitForTimeout(700);
+    } catch {
+      /* hidden or detached */
+    }
   }
-  return n;
+  return attached;
 }
 
-async function clickCredentialSubmit(page) {
-  const btn = page
-    .getByRole('button', { name: /Submit for review|Save|Add credential|Upload|Submit|Add COI|Add guard card|Done/i })
-    .last();
+async function waitForPhotoReady(page, submitName) {
+  for (let i = 0; i < 12; i++) {
+    const processing = page.getByRole('button', { name: /Processing/i }).first();
+    if (await processing.isVisible({ timeout: 200 }).catch(() => false)) {
+      await page.waitForTimeout(400);
+      continue;
+    }
+    const btn = page.getByRole('button', { name: submitName }).last();
+    if (await btn.isVisible({ timeout: 400 }).catch(() => false) && !(await btn.isDisabled().catch(() => true))) {
+      return true;
+    }
+    await page.waitForTimeout(350);
+  }
+  return false;
+}
+
+async function clickCredentialSubmit(page, nameRe = /Submit for review|Upload credential|^Add$|Save|Done/i) {
+  const ready = await waitForPhotoReady(page, nameRe);
+  const btn = page.getByRole('button', { name: nameRe }).last();
   if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
     await btn.click({ force: true });
     await page.waitForTimeout(1600);
     return true;
   }
-  return false;
+  return ready;
+}
+
+async function fillCredentialSheet(page, { issuer, number, submitName }) {
+  const sheet = visibleDialog(page);
+  await sheet
+    .getByPlaceholder(/Issuing organization/i)
+    .fill(issuer)
+    .catch(() => {});
+  await sheet
+    .getByPlaceholder(/Certificate number/i)
+    .fill(number)
+    .catch(() => {});
+  const n = await setAllFakeFiles(page);
+  const ok = await clickCredentialSubmit(page, submitName);
+  return { ok, files: n };
 }
 
 export async function uploadFakeCredentials(page, shotFn) {
@@ -635,13 +772,13 @@ export async function uploadFakeCredentials(page, shotFn) {
   await dismissOverlays(page);
 
   if (await tryOpen(/Add government ID/i)) {
-    const sel = page.locator('select').first();
+    const sel = visibleDialog(page).locator('select').first();
     if (await sel.isVisible({ timeout: 800 }).catch(() => false)) {
       await sel.selectOption({ label: /driver|license|state id/i }).catch(() => {});
     }
-    await page.getByPlaceholder(/number/i).fill('D1234567').catch(() => {});
+    await visibleDialog(page).getByPlaceholder(/number/i).fill('D1234567').catch(() => {});
     const n = await setAllFakeFiles(page);
-    const ok = await clickCredentialSubmit(page);
+    const ok = await clickCredentialSubmit(page, /Submit for review|Save|Upload/i);
     if (shotFn) await shotFn('cred-gov-id');
     results.push({ step: 'gov-id', ok, detail: `files=${n}` });
   }
@@ -649,7 +786,7 @@ export async function uploadFakeCredentials(page, shotFn) {
   await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   if (await tryOpen(/Add COI/i)) {
-    for (const el of await page.locator('input:visible, textarea:visible').all()) {
+    for (const el of await visibleDialog(page).locator('input, textarea').all()) {
       const type = await el.getAttribute('type');
       if (['file', 'checkbox', 'radio', 'hidden'].includes(type || '')) continue;
       const val = await el.inputValue().catch(() => '');
@@ -660,34 +797,68 @@ export async function uploadFakeCredentials(page, shotFn) {
       else if (type === 'date') await el.fill('2027-12-31').catch(() => {});
     }
     const n = await setAllFakeFiles(page);
-    const ok = await clickCredentialSubmit(page);
+    const ok = await clickCredentialSubmit(page, /Add COI|Submit|Save|Upload/i);
     if (shotFn) await shotFn('cred-coi');
     results.push({ step: 'coi', ok, detail: `files=${n}` });
   }
 
-  for (const [re, step] of [
-    [/Add guard card/i, 'guard-card'],
-    [/Add PTA\/UOF/i, 'pta'],
-    [/Add Continued Education/i, 'ce'],
-  ]) {
-    await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
-    await waitReady(page);
-    if (!(await tryOpen(re))) {
-      results.push({ step, ok: false, detail: 'open button missing' });
-      continue;
-    }
-    const option = page.getByRole('button', { name: /combined|PTA|Guard Card|32-hour|BSIS|certificate/i }).first();
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  if (await tryOpen(/Add guard card/i)) {
+    const option = visibleDialog(page)
+      .getByRole('button', { name: /Guard Card|BSIS|combined/i })
+      .first();
     if (await option.isVisible({ timeout: 800 }).catch(() => false)) await option.click({ force: true });
-    for (const el of await page.locator('input:visible').all()) {
-      const type = await el.getAttribute('type');
-      if (type === 'file' || type === 'checkbox') continue;
-      const val = await el.inputValue().catch(() => '');
-      if (!val && type !== 'date') await el.fill(`FT-DOE-${step}`).catch(() => {});
+    await fillCredentialSheet(page, {
+      issuer: 'BSIS',
+      number: 'FT-DOE-guard-card',
+      submitName: /Upload credential|Add guard card|Submit|Save/i,
+    }).then(async ({ ok, files }) => {
+      if (shotFn) await shotFn('cred-guard-card');
+      results.push({ step: 'guard-card', ok, detail: `files=${files}` });
+    });
+  } else {
+    results.push({ step: 'guard-card', ok: false, detail: 'open button missing' });
+  }
+
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  if (await tryOpen(/Add PTA\/UOF/i)) {
+    const combined = visibleDialog(page).getByRole('button', {
+      name: /Upload combined 8-hour certificate/i,
+    });
+    if (await combined.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await combined.click({ force: true });
+      await page.waitForTimeout(600);
     }
-    const n = await setAllFakeFiles(page);
-    const ok = await clickCredentialSubmit(page);
-    if (shotFn) await shotFn(`cred-${step}`);
-    results.push({ step, ok, detail: `files=${n}` });
+    const { ok, files } = await fillCredentialSheet(page, {
+      issuer: 'BSIS',
+      number: 'PTA-DOE-2026',
+      submitName: /Upload credential/i,
+    });
+    if (shotFn) await shotFn('cred-pta');
+    results.push({ step: 'pta', ok: ok && files > 0, detail: `files=${files}` });
+  } else {
+    results.push({ step: 'pta', ok: false, detail: 'open button missing' });
+  }
+
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  if (await tryOpen(/Add Continued Education/i)) {
+    const courseAdd = visibleDialog(page).getByRole('button', { name: /^Add$/i }).first();
+    if (await courseAdd.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await courseAdd.click({ force: true });
+      await page.waitForTimeout(600);
+    }
+    const { ok, files } = await fillCredentialSheet(page, {
+      issuer: 'BSIS',
+      number: 'CE-DOE-2026',
+      submitName: /^Add$/i,
+    });
+    if (shotFn) await shotFn('cred-ce');
+    results.push({ step: 'ce', ok: ok && files > 0, detail: `files=${files}` });
+  } else {
+    results.push({ step: 'ce', ok: false, detail: 'open button missing' });
   }
 
   return results;
@@ -710,6 +881,7 @@ export async function staffVerifyOpenCredentials(page) {
     );
     if (action) {
       verified += 1;
+      await confirmAppDialog(page);
       await page.waitForTimeout(800);
     } else break;
   }
@@ -718,6 +890,7 @@ export async function staffVerifyOpenCredentials(page) {
     [/Activate (guard|account)/i, /Approve application/i, /^Activate$/i],
     1500
   );
+  if (activate) await confirmAppDialog(page, [/^Approve profile$/i, /^Activate$/i]);
   return { verified, activate };
 }
 
@@ -753,11 +926,20 @@ export async function searchAndOpen(page, term) {
 
 export async function postJobThroughWizard(page) {
   let jobPosted = false;
-  const postBtn = page.getByRole('button', { name: /post a job|post job/i }).first();
-  if (await postBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await postBtn.click();
-  } else {
-    await page.getByText(/post a job|post job/i).first().click({ timeout: 3000 }).catch(() => {});
+  const pending = await page.getByText(/Account pending approval/i).isVisible({ timeout: 1500 }).catch(() => false);
+  if (pending) {
+    const body = await page.locator('body').innerText();
+    return { jobPosted: false, body: `blocked: account pending approval\n${body.slice(0, 400)}`, url: page.url() };
+  }
+
+  const named = await clickNamedCta(page, String.raw`\+?\s*Post a job`);
+  if (!named) {
+    const postBtn = page.getByRole('button', { name: /post a job|post job/i }).first();
+    if (await postBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await postBtn.click();
+    } else {
+      await page.goto(`${BASE}/client/request`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+    }
   }
   await page.waitForTimeout(1500);
 

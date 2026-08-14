@@ -27,11 +27,14 @@ import {
   addGuardViaStaff,
   addStaffViaTeam,
   adShot,
+  approvePendingClient,
+  approvePendingGuard,
   assertJaneJohn,
   attachDiagnostics,
   checkLayout,
   clickAllFilterTabs,
   clickFirstMatching,
+  confirmAppDialog,
   createLogger,
   dismissOverlays,
   hardReset,
@@ -284,7 +287,7 @@ async function run() {
   await hardReset(page, context);
   await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
   {
-    const staffApprove = await staffApproveApplication(page, 'Field Support');
+    const staffApprove = await staffApproveApplication(page, emails.staffSignup);
     await shot(page, 'staff-approve-staff-app');
     log('staff-approve-public-staff', staffApprove.ok, staffApprove.detail);
   }
@@ -292,9 +295,22 @@ async function run() {
   // ── Jane Doe: all routes, post job, pay, review ──────────────
   await hardReset(page, context);
   {
-    const { failed, url } = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+    const { failed, url, body } = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
     await shot(page, 'client-login-jane');
     log('client-login-jane', !failed, failed ? 'sign-in failed' : url);
+    if (!failed && /Account pending approval/i.test(body || '')) {
+      await hardReset(page, context);
+      await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
+      await page.goto(`${BASE}/staff/clients`, { waitUntil: 'domcontentloaded' });
+      await waitReady(page);
+      await searchAndOpen(page, emails.client);
+      const retry = await approvePendingClient(page);
+      await shot(page, 'staff-approve-jane-retry');
+      log('staff-approve-jane-retry', retry.ok, retry.detail);
+      await hardReset(page, context);
+      const again = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+      log('client-login-jane-after-approve', !again.failed, again.url);
+    }
   }
   for (const p of CLIENT_PATHS) {
     await visitPath(page, log, `client-${p.replace(/^\/client\//, '')}`, p);
@@ -344,7 +360,10 @@ async function run() {
     await page.goto(`${BASE}/staff/guards`, { waitUntil: 'domcontentloaded' });
     await waitReady(page);
     await searchAndOpen(page, 'John Doe');
+    const johnApprove = await approvePendingGuard(page);
+    log('staff-approve-john-application', johnApprove.ok, johnApprove.detail);
     await clickFirstMatching(page, [/Activate/i, /Approve application/i, /Restore access/i], 1500);
+    await confirmAppDialog(page).catch(() => {});
     await shot(page, 'staff-activate-john');
   }
 
