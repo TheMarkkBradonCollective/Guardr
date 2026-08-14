@@ -455,7 +455,7 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
       return { ok: false, detail: 'Add staff form did not open' };
     }
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
     await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
     await page.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
     const emailInput = page.getByPlaceholder(/signaturesecurityspecialist/i).first();
@@ -553,6 +553,9 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true });
     await clearBlockingModals(page);
     await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true }).catch(() => {});
+    await page.waitForTimeout(1200);
+    await clickFirstMatching(page, [/Approve client account/i], 2000);
+    await page.waitForTimeout(800);
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
     return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
@@ -579,6 +582,9 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true });
     await clearBlockingModals(page);
     await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true }).catch(() => {});
+    await page.waitForTimeout(1200);
+    await clickFirstMatching(page, [/Approve application/i, /Activate/i, /Approve guard/i], 2000);
+    await page.waitForTimeout(800);
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
     return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
