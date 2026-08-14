@@ -1690,10 +1690,62 @@ export function formatFieldtestStaffChatReport(summary) {
   return lines.join('\n').slice(0, 7800);
 }
 
-/** Post fieldtest summary to internal Staff chat as staff@guardr.co. */
-export async function postFieldtestReportToStaffChat(summary) {
+function describeCleanupBeforeStart(cleanup) {
+  if (!cleanup) return null;
+  if (cleanup.skipped) return 'We skipped clearing test accounts before this run.';
+  const parts = [];
+  if (cleanup.found?.guards) {
+    parts.push(`${cleanup.found.guards} guard test account${cleanup.found.guards === 1 ? '' : 's'}`);
+  }
+  if (cleanup.found?.clients) {
+    parts.push(`${cleanup.found.clients} client test account${cleanup.found.clients === 1 ? '' : 's'}`);
+  }
+  if (cleanup.found?.staff) {
+    parts.push(`${cleanup.found.staff} staff test account${cleanup.found.staff === 1 ? '' : 's'}`);
+  }
+  if (!parts.length) {
+    return 'We checked for leftover test accounts before starting and did not find any.';
+  }
+  return `Before starting, we removed ${parts.join(', ')}.`;
+}
+
+/** Plain-English heads-up for Staff chat before each run begins. */
+export function formatFieldtestStaffChatStartMessage(input) {
+  const market = input.marketCity || FIELD_TEST_MARKET_CITY;
+  const site = input.base || BASE;
+  const lines = [
+    `Starting field test (${input.runId})`,
+    '',
+    `We are about to run a full field test on ${site}. ${market} is the open market we use for guard and client signups.`,
+  ];
+
+  const cleanupSentence = describeCleanupBeforeStart(input.cleanupBefore);
+  if (cleanupSentence) {
+    lines.push('', cleanupSentence);
+  }
+
+  if (input.emails?.client || input.emails?.guard) {
+    lines.push(
+      '',
+      `This run will create Jane Doe (${input.emails.client || 'new client'}) and John Doe (${input.emails.guard || 'new guard'}) as temporary test users, then walk through signup, approvals, job posting, payments, guard activation, and shift completion.`
+    );
+  } else {
+    lines.push(
+      '',
+      'This run will create temporary Jane Doe and John Doe test users, then walk through signup, approvals, job posting, payments, guard activation, and shift completion.'
+    );
+  }
+
+  lines.push(
+    '',
+    'We will post another message here when the run finishes with what worked, what did not, and any fixes.'
+  );
+  return lines.join('\n').slice(0, 7800);
+}
+
+/** Post any message to Staff chat → Team → Staff chat as staff@guardr.co. */
+export async function postStaffChatMessage(body, verifySnippet) {
   const { chromium } = await import('@playwright/test');
-  const body = formatFieldtestStaffChatReport(summary);
   const browser = await chromium.launch({
     headless: true,
     args: ['--ignore-certificate-errors'],
@@ -1735,15 +1787,30 @@ export async function postFieldtestReportToStaffChat(summary) {
     await page.waitForTimeout(300);
     const send = page.getByRole('button', { name: /Send message/i }).first();
     if (await send.isDisabled().catch(() => true)) {
-      return { ok: false, detail: 'Send button disabled after filling report' };
+      return { ok: false, detail: 'Send button disabled after filling message' };
     }
     await send.click({ force: true });
     await page.waitForTimeout(1500);
 
     const threadText = await page.locator('body').innerText();
-    const posted = threadText.includes(summary.runId) || threadText.includes('Fieldtest report');
+    const snippet = verifySnippet?.trim();
+    const posted = snippet
+      ? threadText.includes(snippet) || threadText.includes(body.slice(0, 80))
+      : threadText.includes(body.slice(0, 80));
     return { ok: posted, detail: posted ? 'posted to Staff chat' : 'send clicked; verify in thread' };
   } finally {
     await browser.close();
   }
+}
+
+/** Post fieldtest start notice to Staff chat before the run begins. */
+export async function postFieldtestStartToStaffChat(input) {
+  const body = formatFieldtestStaffChatStartMessage(input);
+  return postStaffChatMessage(body, input.runId);
+}
+
+/** Post fieldtest summary to internal Staff chat as staff@guardr.co. */
+export async function postFieldtestReportToStaffChat(summary) {
+  const body = formatFieldtestStaffChatReport(summary);
+  return postStaffChatMessage(body, summary.runId);
 }
