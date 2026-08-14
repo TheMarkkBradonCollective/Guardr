@@ -58,6 +58,7 @@ import {
   staffAssertSignupMarketReady,
   staffVerifyOpenCredentials,
   postFieldtestReportToStaffChat,
+  formatFieldtestMarkdownReport,
   tryScroll,
   uploadFakeCredentials,
   visitPath,
@@ -103,76 +104,7 @@ async function runCleanup(phase) {
 }
 
 function writeReportMarkdown(summary) {
-  const lines = [
-    `# Fieldtest report — ${summary.runId}`,
-    '',
-    `- **Base:** ${summary.base}`,
-    `- **Started:** ${summary.startedAt}`,
-    `- **Finished:** ${summary.finishedAt}`,
-    `- **Passed:** ${summary.passed} · **Failed:** ${summary.failed}`,
-    `- **Market:** ${summary.marketCity}`,
-    '',
-    '## Cleanup',
-    '',
-    `| Phase | OK | Guards | Clients | Staff | Remaining |`,
-    `|-------|----|--------|---------|-------|-----------|`,
-  ];
-
-  for (const phase of ['before', 'after']) {
-    const c = summary.cleanup[phase];
-    if (!c) continue;
-    if (c.skipped) {
-      lines.push(`| ${phase} | skipped | — | — | — | — |`);
-      continue;
-    }
-    lines.push(
-      `| ${phase} | ${c.ok ? 'yes' : 'no'} | ${c.found?.guards ?? '—'} | ${c.found?.clients ?? '—'} | ${c.found?.staff ?? '—'} | ${JSON.stringify(c.verify?.remaining ?? {})} |`
-    );
-  }
-
-  lines.push('', '## Fixes applied during run', '');
-  if (summary.fixesApplied.length === 0) {
-    lines.push('_None — no runner or product fixes were needed during this run._');
-  } else {
-    for (const fix of summary.fixesApplied) {
-      lines.push(`- **${fix.phase}:** ${fix.description}`);
-    }
-  }
-
-  lines.push('', '## Failed steps', '');
-  const failed = summary.results.filter((r) => !r.ok);
-  if (failed.length === 0) {
-    lines.push('_All steps passed._');
-  } else {
-    for (const step of failed) {
-      lines.push(`- **${step.section}:** ${step.detail}`);
-    }
-  }
-
-  lines.push('', '## Passed workflow (high level)', '');
-  const keySteps = [
-    'staff-signup-market-check',
-    'public-signup-jane-doe',
-    'public-signup-john-doe',
-    'staff-approve-jane-doe',
-    'staff-approve-john-doe',
-    'client-job-post',
-    'staff-approve-job-listing',
-    'client-payment-gate',
-    'staff-verify-john-creds',
-    'guard-apply',
-    'jane-approve-john',
-    'guard-shift-workflow',
-  ];
-  for (const key of keySteps) {
-    const row = summary.results.find((r) => r.section === key);
-    if (row) lines.push(`- ${row.ok ? '✓' : '✗'} ${key}: ${row.detail?.slice(0, 120) || ''}`);
-  }
-
-  lines.push('', '## Stripe', '', `\`${JSON.stringify(summary.stripe)}\``, '');
-  lines.push('## Artifacts', '', `- JSON: \`${summary.reportJsonPath}\``, `- Screenshots: \`${summary.screenshotsDir}\``);
-
-  fs.writeFileSync(path.join(OUT, 'report.md'), lines.join('\n'));
+  fs.writeFileSync(path.join(OUT, 'report.md'), formatFieldtestMarkdownReport(summary));
 }
 
 function writeReport(startedAt) {
