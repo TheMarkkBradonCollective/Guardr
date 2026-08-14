@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { canDeleteGroupChatMessage } from './chatDeleteAuth';
 
 type PlatformRole = 'client' | 'guard' | 'support' | 'moderator' | 'administrator' | 'manager' | 'director' | 'owner';
 
@@ -286,6 +287,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               'client_messages table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor',
           });
         }
+        return res.status(500).json({ error: error.message });
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'DELETE') {
+      const body = (req.body ?? {}) as {
+        userId?: string;
+        email?: string;
+        role?: string;
+        messageId?: string;
+      };
+
+      const session = await verifyClientChatSession(
+        db,
+        {
+          userId: body.userId ?? '',
+          email: body.email ?? '',
+          role: body.role ?? '',
+        },
+        { requirePost: false }
+      );
+      if (!session) {
+        return res.status(401).json({ error: 'Unauthorized — staff or client sign-in required' });
+      }
+
+      const messageId = body.messageId?.trim();
+      if (!messageId) {
+        return res.status(400).json({ error: 'messageId is required' });
+      }
+
+      const { data: row, error: fetchError } = await db
+        .from('client_messages')
+        .select('id, sender_id, sender_role')
+        .eq('id', messageId)
+        .maybeSingle();
+
+      if (fetchError) {
+        return res.status(500).json({ error: fetchError.message });
+      }
+      if (!row) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+
+      if (
+        !canDeleteGroupChatMessage({
+          actorUserId: session.userId,
+          actorRole: session.platformRole,
+          senderId: row.sender_id,
+          senderRole: row.sender_role,
+        })
+      ) {
+        return res.status(403).json({ error: 'You cannot delete this message' });
+      }
+
+      const { error } = await db.from('client_messages').delete().eq('id', messageId);
+      if (error) {
         return res.status(500).json({ error: error.message });
       }
 

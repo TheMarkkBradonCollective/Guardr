@@ -315,6 +315,7 @@ import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
+  removeSupportTicketMessage,
   ACTIVATION_SUPPORT_SUBJECT,
   buildActivationSupportTicketForGuard,
   buildMissingActivationSupportTickets,
@@ -337,6 +338,7 @@ import {
   saveJobChatMessagesToStorage,
   saveJobChatThreadsToStorage,
   threadForRequest,
+  removeJobChatMessage,
 } from './lib/jobChat';
 import { clientMessagesBadge, clientSupportBadge } from './lib/messagesInbox';
 import {
@@ -347,8 +349,9 @@ import {
   appendGuardMessage,
   saveGuardMessagesToStorage,
   sortedGuardMessages,
+  removeGuardMessage,
 } from './lib/guardMessenger';
-import { fetchGuardMessagesFromApi, postGuardMessageToApi } from './lib/guardMessagesApi';
+import { fetchGuardMessagesFromApi, postGuardMessageToApi, deleteGuardMessageFromApi } from './lib/guardMessagesApi';
 import {
   buildClientMessage,
   canPostToClientChat,
@@ -357,16 +360,19 @@ import {
   appendClientMessage,
   saveClientMessagesToStorage,
   sortedClientMessages,
+  removeClientMessage,
 } from './lib/clientMessenger';
-import { fetchClientMessagesFromApi, postClientMessageToApi } from './lib/clientMessagesApi';
+import { fetchClientMessagesFromApi, postClientMessageToApi, deleteClientMessageFromApi } from './lib/clientMessagesApi';
 import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
   appendStaffMessage,
   saveStaffMessagesToStorage,
   sortedStaffMessages,
+  removeStaffMessage,
 } from './lib/staffMessenger';
-import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
+import { fetchStaffMessagesFromApi, postStaffMessageToApi, deleteStaffMessageFromApi } from './lib/staffMessagesApi';
+import { canDeleteChatMessage } from './lib/chatPermissions';
 import { mapStaffRowToSecurityGuard } from './lib/staffAccounts';
 import { withAutoStaffActivation, staffAutoActivationRowPatch } from './lib/staffAutoActivation';
 import { getConnectAccountStatus } from './lib/stripeApi';
@@ -12304,6 +12310,177 @@ export default function App() {
     appToast('Support conversation deleted.', 'success');
   };
 
+  const confirmDeleteChatMessage = async (body: string) =>
+    showAppConfirm({
+      title: 'Delete message?',
+      message:
+        body.trim().length > 160
+          ? `${body.trim().slice(0, 160).replace(/\s+/g, ' ')}…`
+          : body.trim().replace(/\s+/g, ' '),
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+
+  const handleDeleteStaffMessage = async (messageId: string) => {
+    if (!currentUser) return;
+    const message = staffMessages.find((entry) => entry.id === messageId);
+    if (!message || !canDeleteChatMessage(currentUser, message, 'staff')) {
+      appToast('You cannot delete this message.', 'error');
+      return;
+    }
+    if (!(await confirmDeleteChatMessage(message.body))) return;
+
+    beginLocalMutation();
+    setStaffMessages((prev) => {
+      const next = removeStaffMessage(prev, messageId);
+      saveStaffMessagesToStorage(next);
+      return next;
+    });
+
+    try {
+      await deleteStaffMessageFromApi(currentUser, messageId);
+    } catch (e) {
+      if (isDbConnected) {
+        try {
+          const { error } = await supabase.from('staff_messages').delete().eq('id', messageId);
+          if (error) console.warn('Staff message delete DB sync:', error);
+        } catch (dbErr) {
+          console.warn('Staff message delete DB sync:', dbErr);
+        }
+      } else {
+        console.warn('Staff message delete API sync:', e);
+      }
+    }
+    appToast('Message deleted.', 'success');
+  };
+
+  const handleDeleteGuardMessage = async (messageId: string) => {
+    if (!currentUser) return;
+    const message = guardMessages.find((entry) => entry.id === messageId);
+    if (!message || !canDeleteChatMessage(currentUser, message, 'guard')) {
+      appToast('You cannot delete this message.', 'error');
+      return;
+    }
+    if (!(await confirmDeleteChatMessage(message.body))) return;
+
+    beginLocalMutation();
+    setGuardMessages((prev) => {
+      const next = removeGuardMessage(prev, messageId);
+      saveGuardMessagesToStorage(next);
+      return next;
+    });
+
+    try {
+      await deleteGuardMessageFromApi(currentUser, messageId);
+    } catch (e) {
+      if (isDbConnected) {
+        try {
+          const { error } = await supabase.from('guard_messages').delete().eq('id', messageId);
+          if (error) console.warn('Guard message delete DB sync:', error);
+        } catch (dbErr) {
+          console.warn('Guard message delete DB sync:', dbErr);
+        }
+      } else {
+        console.warn('Guard message delete API sync:', e);
+      }
+    }
+    appToast('Message deleted.', 'success');
+  };
+
+  const handleDeleteClientMessage = async (messageId: string) => {
+    if (!currentUser) return;
+    const message = clientMessages.find((entry) => entry.id === messageId);
+    if (!message || !canDeleteChatMessage(currentUser, message, 'client')) {
+      appToast('You cannot delete this message.', 'error');
+      return;
+    }
+    if (!(await confirmDeleteChatMessage(message.body))) return;
+
+    beginLocalMutation();
+    setClientMessages((prev) => {
+      const next = removeClientMessage(prev, messageId);
+      saveClientMessagesToStorage(next);
+      return next;
+    });
+
+    try {
+      await deleteClientMessageFromApi(currentUser, messageId);
+    } catch (e) {
+      if (isDbConnected) {
+        try {
+          const { error } = await supabase.from('client_messages').delete().eq('id', messageId);
+          if (error) console.warn('Client message delete DB sync:', error);
+        } catch (dbErr) {
+          console.warn('Client message delete DB sync:', dbErr);
+        }
+      } else {
+        console.warn('Client message delete API sync:', e);
+      }
+    }
+    appToast('Message deleted.', 'success');
+  };
+
+  const handleDeleteJobChatMessage = async (messageId: string) => {
+    if (!currentUser) return;
+    const message = jobChatMessages.find((entry) => entry.id === messageId);
+    if (!message || !canDeleteChatMessage(currentUser, message, 'job_chat')) {
+      appToast('You cannot delete this message.', 'error');
+      return;
+    }
+    if (!(await confirmDeleteChatMessage(message.body))) return;
+
+    beginLocalMutation();
+    setJobChatMessages((prev) => {
+      const next = removeJobChatMessage(prev, messageId);
+      saveJobChatMessagesToStorage(next);
+      return next;
+    });
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('job_chat_messages').delete().eq('id', messageId);
+        if (error) console.warn('Job chat message delete DB sync:', error);
+      } catch (e) {
+        console.warn('Job chat message delete DB sync:', e);
+      }
+    }
+    appToast('Message deleted.', 'success');
+  };
+
+  const handleDeleteSupportMessage = async (ticketId: string, messageId: string) => {
+    if (!currentUser) return;
+    const ticket = supportTickets.find((entry) => entry.id === ticketId);
+    const message = ticket?.messages.find((entry) => entry.id === messageId);
+    if (!ticket || !message || !canDeleteChatMessage(currentUser, message, 'support')) {
+      appToast('You cannot delete this message.', 'error');
+      return;
+    }
+    if (!(await confirmDeleteChatMessage(message.body))) return;
+
+    beginLocalMutation();
+    setSupportTickets((prev) => {
+      const next = prev
+        .map((entry) => {
+          if (entry.id !== ticketId) return entry;
+          const updated = removeSupportTicketMessage(entry, messageId);
+          return updated ?? entry;
+        })
+        .filter(Boolean);
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('support_messages').delete().eq('id', messageId);
+        if (error) console.warn('Support message delete DB sync:', error);
+      } catch (e) {
+        console.warn('Support message delete DB sync:', e);
+      }
+    }
+    appToast('Message deleted.', 'success');
+  };
+
   const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
     const ticket = supportTickets.find((t) => t.id === ticketId);
     const previousStatus = ticket?.status;
@@ -12773,6 +12950,9 @@ export default function App() {
           onSendJobChatMessage={handleSendJobChatMessage}
           guardMessages={guardMessages}
           onSendGuardMessage={handleSendGuardMessage}
+          onDeleteGuardMessage={handleDeleteGuardMessage}
+          onDeleteJobChatMessage={handleDeleteJobChatMessage}
+          onDeleteSupportMessage={handleDeleteSupportMessage}
           onRefreshGuardMessages={refreshGuardMessages}
           jobChatRequestId={jobChatRequestId}
           openJobChat={openJobChat}
@@ -13030,6 +13210,9 @@ export default function App() {
               clientMessages={clientMessages}
               onSendJobChatMessage={handleSendJobChatMessage}
               onSendClientMessage={handleSendClientMessage}
+              onDeleteClientMessage={handleDeleteClientMessage}
+              onDeleteJobChatMessage={handleDeleteJobChatMessage}
+              onDeleteSupportMessage={handleDeleteSupportMessage}
               onRefreshClientMessages={refreshClientMessages}
               jobChatRequestId={jobChatRequestId}
               openJobChat={openJobChat}
@@ -13223,8 +13406,13 @@ export default function App() {
           guardMessages={guardMessages}
           clientMessages={clientMessages}
           onSendStaffMessage={handleSendStaffMessage}
+          onDeleteStaffMessage={handleDeleteStaffMessage}
           onSendGuardMessage={handleSendGuardMessage}
+          onDeleteGuardMessage={handleDeleteGuardMessage}
           onSendClientMessage={handleSendClientMessage}
+          onDeleteClientMessage={handleDeleteClientMessage}
+          onDeleteJobChatMessage={handleDeleteJobChatMessage}
+          onDeleteSupportMessage={handleDeleteSupportMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
           onOpenLegal={openLegalPage}

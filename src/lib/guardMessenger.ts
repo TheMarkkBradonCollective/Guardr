@@ -22,6 +22,10 @@ export function appendGuardMessage(messages: GuardMessage[], message: GuardMessa
   return mergeGuardMessages(messages, [message]);
 }
 
+export function removeGuardMessage(messages: GuardMessage[], messageId: string): GuardMessage[] {
+  return messages.filter((entry) => entry.id !== messageId);
+}
+
 export function loadGuardMessagesFromStorage(): GuardMessage[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

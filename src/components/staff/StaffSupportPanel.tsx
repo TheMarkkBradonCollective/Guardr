@@ -8,13 +8,14 @@ import {
   supportStatusLabel,
 } from '../../lib/support';
 import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
+import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import {
   AppChatHeader,
   AppEmptyState,
   AppInboxList,
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
-import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { WfBadge } from '../ui/wireframe';
@@ -31,6 +32,7 @@ interface StaffSupportPanelProps {
   onSendMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   selectedTicketId?: string | null;
   onSelectedTicketIdChange?: (ticketId: string | null) => void;
   initialSelectedTicketId?: string | null;
@@ -53,6 +55,7 @@ export function StaffSupportPanel({
   onSendMessage,
   onUpdateStatus,
   onDeleteSupportTicket,
+  onDeleteSupportMessage,
   selectedTicketId: controlledSelectedId,
   onSelectedTicketIdChange,
   initialSelectedTicketId = null,
@@ -303,7 +306,16 @@ export function StaffSupportPanel({
             createdAt: msg.createdAt,
           }))}
           currentUserId={currentUser.id}
+          viewerRole={currentUser.role}
           onSend={handleSend}
+          onDeleteMessage={
+            onDeleteSupportMessage
+              ? (messageId) => onDeleteSupportMessage(selected.id, messageId)
+              : undefined
+          }
+          canDeleteMessage={(msg: ChatBubbleMessage) =>
+            canDeleteChatMessage(currentUser, msg, 'support')
+          }
           placeholder={selected.kind === 'report' ? 'Staff note or follow-up…' : 'Reply to user…'}
           teamChat
         />

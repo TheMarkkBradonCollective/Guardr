@@ -131,6 +131,10 @@ export function messagesForThread(messages: JobChatMessage[], threadId: string):
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
 
+export function removeJobChatMessage(messages: JobChatMessage[], messageId: string): JobChatMessage[] {
+  return messages.filter((m) => m.id !== messageId);
+}
+
 export function threadForRequest(threads: JobChatThread[], requestId: string): JobChatThread | undefined {
   return threads.find((t) => t.requestId === requestId);
 }

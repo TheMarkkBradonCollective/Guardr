@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CornerDownLeft, SmilePlus, MessageCircle, Lock } from 'lucide-react';
+import { CornerDownLeft, SmilePlus, MessageCircle, Lock, Trash2 } from 'lucide-react';
 import { PlatformRole } from '../../types';
 import { isStaffSender } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
@@ -114,6 +114,9 @@ interface ChatThreadPanelProps {
   clientChatLabels?: boolean;
   /** Who is reading — staff names are hidden from clients and guards. */
   viewerRole?: PlatformRole;
+  /** When provided, shows delete on messages the viewer may remove. */
+  onDeleteMessage?: (messageId: string) => void | Promise<void>;
+  canDeleteMessage?: (msg: ChatBubbleMessage) => boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -208,6 +211,8 @@ export function ChatThreadPanel({
   guardChatLabels = false,
   clientChatLabels = false,
   viewerRole = 'owner',
+  onDeleteMessage,
+  canDeleteMessage,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -353,6 +358,21 @@ export function ChatThreadPanel({
                     ),
                 body: bodyText,
               };
+              const deletable =
+                !!onDeleteMessage && (canDeleteMessage?.(msg) ?? mine);
+
+              const renderDeleteButton = () =>
+                deletable ? (
+                  <button
+                    type="button"
+                    className="app-chat-action-btn"
+                    title="Delete message"
+                    onClick={() => void onDeleteMessage!(msg.id)}
+                    aria-label="Delete message"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                  </button>
+                ) : null;
 
               return (
                 <React.Fragment key={msg.id}>
@@ -399,7 +419,11 @@ export function ChatThreadPanel({
                         >
                           <SmilePlus className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
+                        {renderDeleteButton()}
                       </div>
+                    )}
+                    {mine && readOnly && deletable && (
+                      <div className="app-chat-msg-actions">{renderDeleteButton()}</div>
                     )}
 
                     {/* Bubble + reactions + picker container */}
@@ -496,7 +520,11 @@ export function ChatThreadPanel({
                         >
                           <SmilePlus className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
+                        {renderDeleteButton()}
                       </div>
+                    )}
+                    {!mine && readOnly && deletable && (
+                      <div className="app-chat-msg-actions">{renderDeleteButton()}</div>
                     )}
                   </div>
                 </React.Fragment>

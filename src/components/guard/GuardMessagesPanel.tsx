@@ -21,8 +21,9 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
+import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
@@ -58,6 +59,9 @@ interface GuardMessagesPanelProps {
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
+  onDeleteGuardMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
   initialJobChatRequestId?: string | null;
   initialJobChatOpen?: boolean;
@@ -93,6 +97,9 @@ export function GuardMessagesPanel({
   onSendJobChatMessage,
   onSendGuardMessage,
   onSendSupportMessage,
+  onDeleteGuardMessage,
+  onDeleteJobChatMessage,
+  onDeleteSupportMessage,
   initialJobChatRequestId = null,
   initialJobChatOpen = false,
   onJobChatRequestIdChange,
@@ -399,6 +406,10 @@ export function GuardMessagesPanel({
               currentUserId={currentUser.id}
               viewerRole={currentUser.role}
               onSend={canPostGuardChat ? onSendGuardMessage : undefined}
+              onDeleteMessage={onDeleteGuardMessage}
+              canDeleteMessage={(msg: ChatBubbleMessage) =>
+                canDeleteChatMessage(currentUser, msg, 'guard')
+              }
               placeholder="Message the guard community…"
               teamChat
               guardChatLabels
@@ -421,6 +432,7 @@ export function GuardMessagesPanel({
               messages={jobChatMessages}
               currentUser={currentUser}
               onSend={(body) => onSendJobChatMessage(job.id, body)}
+              onDeleteMessage={onDeleteJobChatMessage}
               onBack={backToList}
               hideBackOnDesktop
               hideShellHeader={embedHeaderInShell}
@@ -461,6 +473,14 @@ export function GuardMessagesPanel({
                 currentUserId={currentUser.id}
                 viewerRole={currentUser.role}
                 onSend={(body) => onSendSupportMessage(ticket.id, body)}
+                onDeleteMessage={
+                  onDeleteSupportMessage
+                    ? (messageId) => onDeleteSupportMessage(ticket.id, messageId)
+                    : undefined
+                }
+                canDeleteMessage={(msg: ChatBubbleMessage) =>
+                  canDeleteChatMessage(currentUser, msg, 'support')
+                }
                 placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
                 readOnly={ticket.status === 'resolved'}
                 readOnlyMessage={

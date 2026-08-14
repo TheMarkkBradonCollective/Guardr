@@ -305,3 +305,12 @@ export function appendMessage(
     messages: [...ticket.messages, message],
   };
 }
+
+export function removeSupportTicketMessage(
+  ticket: SupportTicket,
+  messageId: string
+): SupportTicket | null {
+  const messages = ticket.messages.filter((message) => message.id !== messageId);
+  if (messages.length === ticket.messages.length) return null;
+  return { ...ticket, messages };
+}

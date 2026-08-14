@@ -5,7 +5,8 @@ import {
   isJobChatReadOnly,
   messagesForThread,
 } from '../../lib/jobChat';
-import { ChatThreadPanel } from './ChatThreadPanel';
+import { canDeleteChatMessage } from '../../lib/chatPermissions';
+import { ChatThreadPanel, type ChatBubbleMessage } from './ChatThreadPanel';
 import { AppChatHeader } from '../ui/app/AppPrimitives';
 
 interface JobChatPanelProps {
@@ -14,6 +15,7 @@ interface JobChatPanelProps {
   messages: JobChatMessage[];
   currentUser: SessionUser;
   onSend: (body: string) => void | Promise<void>;
+  onDeleteMessage?: (messageId: string) => void | Promise<void>;
   onBack?: () => void;
   compact?: boolean;
   hideBackOnDesktop?: boolean;
@@ -26,6 +28,7 @@ export function JobChatPanel({
   messages,
   currentUser,
   onSend,
+  onDeleteMessage,
   onBack,
   compact = false,
   hideBackOnDesktop = false,
@@ -62,6 +65,10 @@ export function JobChatPanel({
         currentUserId={currentUser.id}
         viewerRole={currentUser.role}
         onSend={onSend}
+        onDeleteMessage={onDeleteMessage}
+        canDeleteMessage={(msg: ChatBubbleMessage) =>
+          canDeleteChatMessage(currentUser, msg, 'job_chat')
+        }
         placeholder="Message about this job…"
         readOnly={readOnly || !canChat}
         readOnlyMessage="Job chat is closed. Contact support if you need help."

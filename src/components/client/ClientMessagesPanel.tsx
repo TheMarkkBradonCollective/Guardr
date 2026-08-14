@@ -17,8 +17,9 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMessenger';
+import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
@@ -57,6 +58,9 @@ interface ClientMessagesPanelProps {
   onSendJobChatMessage: (requestId: string, body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onSendClientMessage?: (body: string) => void | Promise<void>;
+  onDeleteClientMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   onRefreshClientMessages?: () => void | Promise<void>;
   initialChatRequestId?: string | null;
   initialChatOpen?: boolean;
@@ -93,6 +97,9 @@ export function ClientMessagesPanel({
   onSendJobChatMessage,
   onSendSupportMessage,
   onSendClientMessage,
+  onDeleteClientMessage,
+  onDeleteJobChatMessage,
+  onDeleteSupportMessage,
   onRefreshClientMessages,
   initialChatRequestId = null,
   initialChatOpen = false,
@@ -431,6 +438,10 @@ export function ClientMessagesPanel({
               currentUserId={currentUser.id}
               viewerRole={currentUser.role}
               onSend={canPostClientChat ? onSendClientMessage : undefined}
+              onDeleteMessage={onDeleteClientMessage}
+              canDeleteMessage={(msg: ChatBubbleMessage) =>
+                canDeleteChatMessage(currentUser, msg, 'client')
+              }
               placeholder="Message the client community…"
               teamChat
               clientChatLabels
@@ -453,6 +464,7 @@ export function ClientMessagesPanel({
               messages={jobChatMessages}
               currentUser={currentUser}
               onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
+              onDeleteMessage={onDeleteJobChatMessage}
               onBack={backToList}
               hideBackOnDesktop
               hideShellHeader={embedHeaderInShell}
@@ -493,6 +505,14 @@ export function ClientMessagesPanel({
                 currentUserId={currentUser.id}
                 viewerRole={currentUser.role}
                 onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
+                onDeleteMessage={
+                  onDeleteSupportMessage
+                    ? (messageId) => onDeleteSupportMessage(activeTicket.id, messageId)
+                    : undefined
+                }
+                canDeleteMessage={(msg: ChatBubbleMessage) =>
+                  canDeleteChatMessage(currentUser, msg, 'support')
+                }
                 placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
                 readOnly={activeTicket.status === 'resolved'}
                 readOnlyMessage={

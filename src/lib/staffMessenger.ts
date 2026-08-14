@@ -20,6 +20,10 @@ export function appendStaffMessage(messages: StaffMessage[], message: StaffMessa
   return mergeStaffMessages(messages, [message]);
 }
 
+export function removeStaffMessage(messages: StaffMessage[], messageId: string): StaffMessage[] {
+  return messages.filter((entry) => entry.id !== messageId);
+}
+
 export function loadStaffMessagesFromStorage(): StaffMessage[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
