@@ -8,6 +8,7 @@ import {
   getAssignableCityNamesForStaffAccess,
   getSelectableCityNamesForClients,
   getSelectableCityNamesForGuards,
+  getSignupCityNamesForRole,
   GUARDR_LAUNCH_CITY,
   mergeMissingPlatformCities,
   normalizeManagedCities,
@@ -79,10 +80,49 @@ describe('platform city access', () => {
     assert.ok(merged.some((city) => city.name === 'Sacramento'));
   });
 
-  it('falls back to Sacramento when no markets are open', () => {
+  it('returns empty default when no markets are open for signup', () => {
     setPlatformCitiesCache(buildDefaultPlatformCities());
-    assert.equal(defaultSelectableCity('guard'), GUARDR_LAUNCH_CITY);
-    assert.equal(defaultSelectableCity('client'), GUARDR_LAUNCH_CITY);
+    assert.equal(defaultSelectableCity('guard'), '');
+    assert.equal(defaultSelectableCity('client'), '');
+  });
+
+  it('prefers Sacramento among open markets', () => {
+    setPlatformCitiesCache([
+      {
+        id: 'sacramento',
+        name: 'Sacramento',
+        stateCode: 'CA',
+        status: 'open',
+        waitlistAudience: 'both',
+        recommendOpen: false,
+        sortOrder: 0,
+      },
+      {
+        id: 'los-angeles',
+        name: 'Los Angeles',
+        stateCode: 'CA',
+        status: 'closed',
+        waitlistAudience: 'both',
+        recommendOpen: false,
+        sortOrder: 1,
+      },
+    ]);
+    assert.equal(defaultSelectableCity('guard'), 'Sacramento');
+    assert.equal(defaultSelectableCity('client'), 'Sacramento');
+  });
+
+  it('blocks unknown cities for signup', () => {
+    setPlatformCitiesCache(sampleCities);
+    const unknown = checkCityAccessForRole('Not A Real City', 'guard');
+    assert.equal(unknown.allowed, false);
+    if (!unknown.allowed) assert.equal(unknown.reason, 'closed');
+  });
+
+  it('limits signup dropdown cities by role', () => {
+    setPlatformCitiesCache(sampleCities);
+    assert.deepEqual(getSignupCityNamesForRole('guard'), ['Los Angeles', 'Sacramento']);
+    assert.deepEqual(getSignupCityNamesForRole('client'), ['Los Angeles', 'Oakland']);
+    assert.ok(getSignupCityNamesForRole('staff').includes('San Diego'));
   });
 
   it('blocks closed cities for guards and clients', () => {

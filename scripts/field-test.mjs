@@ -53,7 +53,7 @@ import {
   signUpGuard,
   signUpStaff,
   staffApproveJobListing,
-  staffEnsureCitiesOpen,
+  staffAssertSignupMarketReady,
   staffVerifyOpenCredentials,
   tryScroll,
   uploadFakeCredentials,
@@ -258,13 +258,14 @@ async function run() {
   await adShot(page, 'desktop', '01-landing-hero');
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 1b — Staff operator: open markets so signups are accepted
+  // PHASE 1b — Staff operator: confirm Sacramento is open for guard/client signups
+  // (never force-open closed cities like Los Angeles during fieldtest)
   // ══════════════════════════════════════════════════════════════
   await loginAsStaffOperator(page, context);
   {
-    const cities = await staffEnsureCitiesOpen(page, ['Los Angeles', 'Sacramento']);
-    await shot(page, 'staff-open-cities');
-    log('staff-open-cities', cities.ok, cities.detail);
+    const cities = await staffAssertSignupMarketReady(page, 'Sacramento');
+    await shot(page, 'staff-signup-market-check');
+    log('staff-signup-market-check', cities.ok, cities.detail);
   }
   await hardReset(page, context);
 

@@ -323,31 +323,22 @@ export async function selectFirstCity(page, labelText) {
   return selectOpenCityForSignup(page, labelText);
 }
 
-/** Pick a city that is open for signup (avoids "not accepting applications" gate). */
-export async function selectOpenCityForSignup(page, labelText) {
+/** Pick the configured open market for guard/client signup (Sacramento in production). */
+export async function selectOpenCityForSignup(page, labelText, { preferredCity = FIELD_TEST_MARKET_CITY } = {}) {
   const box = page.locator('label', { hasText: labelText }).first().locator('xpath=..');
   const select = box.locator('select').first();
   if (!(await select.isVisible({ timeout: 800 }).catch(() => false))) return false;
   const values = await select.locator('option').evaluateAll((opts) =>
     opts.map((o) => ({ value: o.value, label: o.textContent || '' })).filter((o) => o.value)
   );
-  const closedRe = /not accepting new applications|on the wait list/i;
-  const preferred = ['Los Angeles', 'Sacramento', 'San Francisco', 'San Diego', 'Oakland'];
-  const tryOrder = [
-    ...preferred.flatMap((name) => values.filter((o) => o.label.includes(name) || o.value.includes(name))),
-    ...values,
-  ];
-  const seen = new Set();
-  for (const opt of tryOrder) {
-    const key = opt.value;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    await select.selectOption(opt.value);
-    await page.waitForTimeout(450);
-    const body = await page.locator('body').innerText();
-    if (!closedRe.test(body)) return opt.label.trim();
-  }
-  return false;
+  if (values.length === 0) return false;
+  const preferred = values.find(
+    (opt) => opt.label.includes(preferredCity) || opt.value.includes(preferredCity)
+  );
+  const chosen = preferred ?? values[0];
+  await select.selectOption(chosen.value);
+  await page.waitForTimeout(300);
+  return chosen.label.trim();
 }
 
 function signupLooksComplete(page, body, role = 'any') {
@@ -488,12 +479,12 @@ export async function signUpGuard(
   await fillIfVisible(
     page,
     /Last 1–2 employers/i,
-    'Worked event security and retail loss prevention for multiple employers in Los Angeles.'
+    'Worked event security and retail loss prevention for multiple employers in Sacramento.'
   );
   await fillIfVisible(
     page,
     /Training, licenses/i,
-    'Field test guard with three years of event and site security experience in Los Angeles.'
+    'Field test guard with three years of event and site security experience in Sacramento.'
   );
   await fillIfVisible(page, /Days\/times you usually work/i, 'Available weekdays and weekends, flexible hours.');
   await acceptTerms(page);
@@ -535,52 +526,43 @@ export async function signUpStaff(page, email, password, { firstName = 'Field', 
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
-/** Staff opens markets required for public client/guard signups (UI-only fix during fieldtest). */
-export async function staffEnsureCitiesOpen(page, cityNames = ['Los Angeles', 'Sacramento']) {
+/** Verify the guard/client signup market is open — never changes city status during fieldtest. */
+export async function staffAssertSignupMarketReady(page, requiredCity = FIELD_TEST_MARKET_CITY) {
   await page.goto(`${BASE}/staff/cities`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismissOverlays(page);
-  const updated = [];
-  for (const cityName of cityNames) {
-    const search = page.getByPlaceholder(/search cities/i).first();
-    if (await search.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await search.fill('');
-      await search.fill(cityName);
-      await page.waitForTimeout(700);
-    }
-    let row = page.getByRole('button', { name: new RegExp(cityName, 'i') }).first();
-    if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
-      row = page.locator('.app-list-row').filter({ hasText: cityName }).first();
-    }
-    if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
-      updated.push(`${cityName}:missing`);
-      continue;
-    }
-    await row.click({ force: true });
-    await page.waitForTimeout(900);
-    const statusSelect = page.getByLabel(/Service area status/i).first();
-    if (await statusSelect.isVisible({ timeout: 2500 }).catch(() => false)) {
-      const current = await statusSelect.inputValue();
-      if (current !== 'open') {
-        await statusSelect.selectOption('open');
-        await page.waitForTimeout(1500);
-        updated.push(`${cityName}:opened`);
-      } else {
-        updated.push(`${cityName}:already-open`);
-      }
-      continue;
-    }
-    const inlineSelect = page.locator('.app-list-row').filter({ hasText: cityName }).locator('select').first();
-    if (await inlineSelect.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await inlineSelect.selectOption('open');
-      await page.waitForTimeout(1500);
-      updated.push(`${cityName}:opened-mobile`);
-    } else {
-      updated.push(`${cityName}:no-status-select`);
-    }
+  const search = page.getByPlaceholder(/search cities/i).first();
+  if (await search.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await search.fill('');
+    await search.fill(requiredCity);
+    await page.waitForTimeout(700);
   }
-  const ok = updated.some((u) => /opened|already-open/.test(u));
-  return { ok, detail: updated.join('; ') };
+  let row = page.getByRole('button', { name: new RegExp(requiredCity, 'i') }).first();
+  if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
+    row = page.locator('.app-list-row').filter({ hasText: requiredCity }).first();
+  }
+  if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
+    return { ok: false, detail: `${requiredCity}:missing` };
+  }
+  await row.click({ force: true });
+  await page.waitForTimeout(900);
+  const statusSelect = page.getByLabel(/Service area status/i).first();
+  if (await statusSelect.isVisible({ timeout: 2500 }).catch(() => false)) {
+    const current = await statusSelect.inputValue();
+    if (current === 'open') {
+      return { ok: true, detail: `${requiredCity}:open` };
+    }
+    return { ok: false, detail: `${requiredCity}:${current || 'not-open'}` };
+  }
+  const inlineSelect = page.locator('.app-list-row').filter({ hasText: requiredCity }).locator('select').first();
+  if (await inlineSelect.isVisible({ timeout: 1000 }).catch(() => false)) {
+    const current = await inlineSelect.inputValue();
+    if (current === 'open') {
+      return { ok: true, detail: `${requiredCity}:open` };
+    }
+    return { ok: false, detail: `${requiredCity}:${current || 'not-open'}` };
+  }
+  return { ok: false, detail: `${requiredCity}:status-unreadable` };
 }
 
 export async function selectFirstMatchingOption(page, labelRe, valueRe) {
@@ -625,9 +607,9 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     }
     const citySearch = sheet.getByPlaceholder('Search cities...');
     if (await citySearch.isVisible({ timeout: 800 }).catch(() => false)) {
-      await citySearch.fill('Los Angeles');
+      await citySearch.fill(FIELD_TEST_MARKET_CITY);
       await page.waitForTimeout(400);
-      const cityRow = sheet.locator('label').filter({ hasText: /Los Angeles|Hollywood/i }).first();
+      const cityRow = sheet.locator('label').filter({ hasText: new RegExp(FIELD_TEST_MARKET_CITY, 'i') }).first();
       if (await cityRow.isVisible({ timeout: 800 }).catch(() => false)) {
         await cityRow.click({ force: true });
       } else {
@@ -1090,11 +1072,15 @@ export async function searchAndOpen(page, term) {
   return false;
 }
 
-/** Hollywood site used for geocoding + guard on-site GPS during shift tests. */
+export const FIELD_TEST_MARKET_CITY = 'Sacramento';
+
+/** Sacramento site used for geocoding + guard on-site GPS during shift tests. */
 export const FIELD_TEST_SITE = {
-  lat: 34.1016,
-  lng: -118.3416,
-  address: '6801 Hollywood Blvd, Los Angeles, CA 90028',
+  lat: 38.5816,
+  lng: -121.4944,
+  address: '1010 8th St, Sacramento, CA 95814',
+  city: FIELD_TEST_MARKET_CITY,
+  zip: '95814',
 };
 
 /** Shift window: started recently, ends soon — clock-in open now, complete opens during the run. */
@@ -1492,9 +1478,9 @@ export async function postJobThroughWizard(page, options = {}) {
       if (/address|street|location|site/.test(labelish)) {
         await input.fill(FIELD_TEST_SITE.address);
       } else if (/city/.test(labelish)) {
-        await input.fill('Los Angeles');
+        await input.fill(FIELD_TEST_SITE.city);
       } else if (/zip|postal/.test(labelish)) {
-        await input.fill('90028');
+        await input.fill(FIELD_TEST_SITE.zip);
       } else if (/name|title|site/.test(labelish)) {
         await input.fill('Field Test Patrol Post');
       } else if (/phone/.test(labelish)) {

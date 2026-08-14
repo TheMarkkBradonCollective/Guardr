@@ -47,11 +47,11 @@ npm run fieldtest
 ### 1. Public visitor
 Browse landing + legal. Capture hero ad shot.
 
-### 1b. Staff operator — open service areas
-`staff@guardr.co` → **Cities** → set **Los Angeles** and **Sacramento** to **Open** (required before client/guard signups succeed).
+### 1b. Staff operator — confirm signup market
+`staff@guardr.co` → **Cities** → verify **Sacramento** is **Open** for guard/client signups. The runner **does not** open closed cities (e.g. Los Angeles). Staff applications are remote and may use any city.
 
 ### 2. Public self-sign-up (as themselves)
-From the **main page** — not staff console:
+From the **main page** — not staff console. Guard and client signups only offer **open** markets (Sacramento when that is the only open city):
 - **Jane Doe** — client sign-up (`/?auth=sign-up&ar=client`)
 - **John Doe** — guard sign-up (`/?auth=sign-up&ar=guard`)
 - **Ladder staff** — staff application per role (`/?auth=sign-up&ar=staff`)
@@ -103,7 +103,7 @@ Desktop, tablet, mobile — each role signs in on each device and visits key pag
 | UI clicks, forms, uploads per role | Staff creating users via Add client/guard/staff |
 | Screenshots + `report.json` | Doing client/guard actions while logged in as staff |
 
-During `/fieldtest`, **fix problems as you find them** — update the runner, unblock platform config via staff UI (e.g. open cities), or patch product bugs — then re-run. Record FAIL and continue only when blocked. Do not cheat past the UI with SQL.
+During `/fieldtest`, **fix problems as you find them** — update the runner or patch product bugs — then re-run. Record FAIL and continue only when blocked. Do not cheat past the UI with SQL, and **do not force-open closed service areas** during the run.
 
 ## Honest product gates
 

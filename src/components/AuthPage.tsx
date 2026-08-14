@@ -4,6 +4,7 @@ import {
   checkCityAccessForRole,
   defaultSelectableCity,
   getSignupCityNames,
+  getSignupCityNamesForRole,
 } from '../lib/platformCities';
 import { Logo } from './Logo';
 import {
@@ -388,7 +389,9 @@ export function AuthPage({
     setErrorMsg('');
   }, [initialRole, initialMode]);
 
-  const signupCities = getSignupCityNames();
+  const guardSignupCities = getSignupCityNamesForRole('guard');
+  const clientSignupCities = getSignupCityNamesForRole('client');
+  const staffSignupCities = getSignupCityNames();
 
   const handleGuardCityChange = (city: string) => {
     setGuardPrimaryCity(city);
@@ -543,6 +546,17 @@ export function AuthPage({
           setErrorMsg(guardCityAccess.message);
           return;
         }
+        const extraCities = guardExtraCities
+          .split(',')
+          .map((city) => city.trim())
+          .filter(Boolean);
+        for (const city of extraCities) {
+          const extraAccess = checkCityAccessForRole(city, 'guard');
+          if (extraAccess.allowed === false) {
+            setErrorMsg(`${city}: ${extraAccess.message}`);
+            return;
+          }
+        }
         if (!guardCardStatus) {
           setErrorMsg('Tell us your current guard card status.');
           return;
@@ -635,11 +649,11 @@ export function AuthPage({
       }
 
       const armedSignup = guardArmedPreferenceFromSignup(guardArmedPreference as GuardArmedPreference);
-      const extraCities = guardExtraCities
+      const extraCitiesForProfile = guardExtraCities
         .split(',')
         .map((city) => city.trim())
         .filter(Boolean);
-      const serviceAreas = normalizeGuardServiceAreas([guardPrimaryCity, ...extraCities]);
+      const serviceAreas = normalizeGuardServiceAreas([guardPrimaryCity, ...extraCitiesForProfile]);
 
       const newGuardProfile: SecurityGuard = {
         id: randomId,
@@ -977,7 +991,7 @@ export function AuthPage({
                         className="uber-input"
                       >
                         <option value="">Select city</option>
-                        {signupCities.map((city) => (
+                        {staffSignupCities.map((city) => (
                           <option key={city} value={city}>
                             {city}
                           </option>
@@ -1117,14 +1131,23 @@ export function AuthPage({
                           onChange={(e) => handleGuardCityChange(e.target.value)}
                           className="uber-input pl-10 appearance-none pr-8"
                         >
-                          {signupCities.map((city) => (
-                            <option key={city} value={city}>
-                              {city}
-                            </option>
-                          ))}
+                          {guardSignupCities.length === 0 ? (
+                            <option value="">No open markets right now</option>
+                          ) : (
+                            guardSignupCities.map((city) => (
+                              <option key={city} value={city}>
+                                {city}
+                              </option>
+                            ))
+                          )}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                       </div>
+                      {guardSignupCities.length === 0 ? (
+                        <p className="text-xs text-amber-400 mt-1.5">
+                          Guardr is not accepting new guard applications in any city right now. Check back when a market opens.
+                        </p>
+                      ) : null}
                       {guardCityAccessMsg ? (
                         <p className="text-xs text-amber-400 mt-1.5">{guardCityAccessMsg}</p>
                       ) : null}
@@ -1449,12 +1472,21 @@ export function AuthPage({
                         onChange={(e) => handleClientCityChange(e.target.value)}
                         className="uber-select pl-10"
                       >
-                        {signupCities.map((city) => (
-                          <option key={city} value={city}>{city}, CA</option>
-                        ))}
+                        {clientSignupCities.length === 0 ? (
+                          <option value="">No open markets right now</option>
+                        ) : (
+                          clientSignupCities.map((city) => (
+                            <option key={city} value={city}>{city}, CA</option>
+                          ))
+                        )}
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                     </div>
+                    {clientSignupCities.length === 0 ? (
+                      <p className="text-xs text-amber-400 mt-1.5">
+                        Guardr is not accepting new client applications in any city right now. Check back when a market opens.
+                      </p>
+                    ) : null}
                     {clientCityAccessMsg && (
                       <p className="text-xs text-amber-400 mt-1.5">{clientCityAccessMsg}</p>
                     )}
