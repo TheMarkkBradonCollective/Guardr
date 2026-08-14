@@ -455,16 +455,18 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     const sheet = visibleDialog(page);
     await fillInDialog(page, 'First name', firstName);
     await fillInDialog(page, 'Last name', lastName);
-    await sheet.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
+    const roleSelect = sheet.locator('select').first();
+    if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
+      await roleSelect.selectOption({ label: role }).catch(() => roleSelect.selectOption(role));
+      await page.waitForTimeout(400);
+    }
+    await sheet.getByRole('button', { name: /use next/i }).click({ force: true });
+    await page.waitForTimeout(300);
     const emailInput = sheet.getByPlaceholder(/signaturesecurityspecialist/i).first();
     if (await emailInput.isVisible({ timeout: 1500 }).catch(() => false)) {
       await emailInput.fill(email, { timeout: 4000 });
     } else {
       await sheet.locator('input[type="email"]').first().fill(email, { timeout: 4000 });
-    }
-    const roleSelect = sheet.locator('select').first();
-    if (await roleSelect.isVisible({ timeout: 800 }).catch(() => false)) {
-      await roleSelect.selectOption({ label: role }).catch(() => roleSelect.selectOption(role));
     }
     const citySearch = sheet.getByPlaceholder('Search cities...');
     if (await citySearch.isVisible({ timeout: 800 }).catch(() => false)) {
@@ -484,12 +486,8 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     await page.waitForTimeout(2500);
     const stillOpen = await page.getByText(/Add platform staff/i).isVisible({ timeout: 400 }).catch(() => false);
     const sheetText = stillOpen ? await visibleDialog(page).innerText().catch(() => '') : '';
-    if (stillOpen && /required|could not add/i.test(sheetText)) {
-      return { ok: false, detail: sheetText.slice(0, 400) };
-    }
     if (stillOpen) {
-      await page.keyboard.press('Escape').catch(() => {});
-      await page.waitForTimeout(400);
+      return { ok: false, detail: sheetText.slice(0, 500) || 'Create staff form stayed open' };
     }
     const found = await searchAndOpen(page, email);
     const body = await page.locator('body').innerText();
@@ -824,6 +822,11 @@ export async function uploadFakeCredentials(page, shotFn) {
   await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   if (await tryOpen(/Add PTA\/UOF/i)) {
+    const combinedToggle = visibleDialog(page).getByRole('button', { name: /^Combined certificate$/i });
+    if (await combinedToggle.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await combinedToggle.click({ force: true });
+      await page.waitForTimeout(400);
+    }
     const combined = visibleDialog(page).getByRole('button', {
       name: /Upload combined 8-hour certificate/i,
     });
@@ -910,6 +913,14 @@ export async function clickAllFilterTabs(page) {
 }
 
 export async function searchAndOpen(page, term) {
+  const allTab = page.getByRole('tab', { name: /^All$/i }).first();
+  if (await allTab.isVisible({ timeout: 800 }).catch(() => false)) {
+    await allTab.click({ force: true });
+    await page.waitForTimeout(400);
+  } else {
+    await page.getByText(/^All$/, { exact: true }).first().click({ force: true }).catch(() => {});
+    await page.waitForTimeout(300);
+  }
   const search = page.getByPlaceholder(/search/i).first();
   if (await search.isVisible({ timeout: 1500 }).catch(() => false)) {
     await search.fill(term);
