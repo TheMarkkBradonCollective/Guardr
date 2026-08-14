@@ -33,3 +33,21 @@ export async function postGuardMessageToApi(
     throw new Error(data.error ?? `Failed to send guard message (${res.status})`);
   }
 }
+
+export async function deleteGuardMessageFromApi(
+  user: SessionUser,
+  messageId: string
+): Promise<void> {
+  const res = await fetch(apiUrl('/api/messages/guards'), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...sessionBody(user),
+      messageId,
+    }),
+  });
+  const data = await parseApiResponse<{ ok?: boolean; error?: string }>(res);
+  if (!res.ok) {
+    throw new Error(data.error ?? `Failed to delete guard message (${res.status})`);
+  }
+}

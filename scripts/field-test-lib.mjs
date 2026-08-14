@@ -1637,63 +1637,309 @@ const FIELDTEST_KEY_STEPS = [
   'cleanup-after',
 ];
 
-/** Condensed report for Staff chat (staff@guardr.co posts after each run). */
+const FIELDTEST_STEP_LABELS = {
+  'cleanup-before': 'Clear leftover test accounts before the run',
+  'cleanup-after': 'Clear test accounts after the run',
+  'staff-signup-market-check': 'Confirm Sacramento is open for guard and client signups',
+  'public-signup-jane-doe': 'Jane Doe signs up as a client',
+  'public-signup-john-doe': 'John Doe signs up as a guard',
+  'staff-approve-jane-doe': 'Staff approves Jane Doe',
+  'staff-approve-john-doe': 'Staff approves John Doe',
+  'client-job-post': 'Jane posts a field test job',
+  'staff-approve-job-listing': 'Staff approves the job listing',
+  'client-payment-gate': 'Jane pays for the job through Stripe',
+  'client-stripe-payment': 'Jane completes the Stripe checkout',
+  'staff-verify-john-creds': 'Staff verifies John’s uploaded credentials',
+  'staff-activate-john-profile': 'Staff activates John’s guard profile',
+  'guard-apply': 'John applies to Jane’s job',
+  'jane-approve-john': 'Jane approves John for the job',
+  'guard-shift-workflow': 'John completes the shift on the map',
+  'guard-complete-click': 'John taps Complete on the shift',
+  'guard-clock-in': 'John clocks in on the shift',
+  'guard-shift-complete': 'Shift shows as completed',
+};
+
+function humanizeSectionKey(section) {
+  if (FIELDTEST_STEP_LABELS[section]) return FIELDTEST_STEP_LABELS[section];
+  let text = section;
+  if (text.startsWith('desktop-')) text = `Desktop check: ${text.slice(8)}`;
+  else if (text.startsWith('tablet-')) text = `Tablet check: ${text.slice(7)}`;
+  else if (text.startsWith('mobile-')) text = `Mobile check: ${text.slice(7)}`;
+  else if (text.startsWith('staff-login-')) {
+    const role = text.slice('staff-login-'.length);
+    return `Staff sign-in tour (${role.charAt(0).toUpperCase()}${role.slice(1)} role)`;
+  }
+  else if (text.startsWith('public-signup-staff-')) {
+    const role = text.slice('public-signup-staff-'.length);
+    return `Field test staff applicant signs up (${role})`;
+  }
+  text = text.replace(/^public-/, '').replace(/-/g, ' ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function isUrlDetail(detail) {
+  return /^https?:\/\//i.test(String(detail || '').trim());
+}
+
+function describeStepOutcome(row) {
+  const label = humanizeSectionKey(row.section);
+  const detail = String(row.detail || '').trim();
+  if (row.ok) {
+    if (!detail || isUrlDetail(detail)) return `${label} worked.`;
+    return `${label} worked (${detail.slice(0, 140)}).`;
+  }
+  if (!detail) return `${label} did not work.`;
+  return `${label} did not work: ${detail.slice(0, 180)}.`;
+}
+
+function describeCleanupPhase(phase, cleanup) {
+  if (!cleanup) return null;
+  if (cleanup.skipped) {
+    return phase === 'before'
+      ? 'We skipped clearing test accounts before this run.'
+      : 'We skipped clearing test accounts after this run.';
+  }
+  const when = phase === 'before' ? 'Before the run' : 'After the run';
+  const found = cleanup.found;
+  const remaining = cleanup.verify?.remaining;
+  const parts = [];
+  if (found?.guards) parts.push(`${found.guards} guard test account${found.guards === 1 ? '' : 's'}`);
+  if (found?.clients) parts.push(`${found.clients} client test account${found.clients === 1 ? '' : 's'}`);
+  if (found?.staff) parts.push(`${found.staff} staff test account${found.staff === 1 ? '' : 's'}`);
+  const foundText = parts.length ? parts.join(', ') : 'no leftover test accounts';
+  const allClear =
+    remaining &&
+    remaining.guards === 0 &&
+    remaining.clients === 0 &&
+    remaining.staff === 0 &&
+    (remaining.testJobs == null || remaining.testJobs === 0);
+  if (cleanup.ok && allClear) {
+    return `${when}, we removed ${foundText}. Everything was cleared afterward — nothing was left behind.`;
+  }
+  if (cleanup.ok) {
+    return `${when}, we removed ${foundText}. Cleanup finished, but some test data may still remain.`;
+  }
+  return `${when}, cleanup failed${cleanup.error ? `: ${String(cleanup.error).slice(0, 120)}` : '.'}`;
+}
+
+/** Plain-English report for Staff chat (posted by staff@guardr.co after each run). */
 export function formatFieldtestStaffChatReport(summary) {
-  const lines = [
-    `📋 Fieldtest report — ${summary.runId}`,
-    `${summary.marketCity || FIELD_TEST_MARKET_CITY} · ${summary.passed} passed · ${summary.failed} failed`,
-    `Jane: ${summary.emails?.client ?? '—'} · John: ${summary.emails?.guard ?? '—'}`,
-    '',
-    'Cleanup:',
-  ];
+  const lines = [];
+  const market = summary.marketCity || FIELD_TEST_MARKET_CITY;
+  const passed = summary.passed ?? 0;
+  const failed = summary.failed ?? 0;
+  const site = summary.base || BASE;
 
+  lines.push(`Field test report (${summary.runId})`);
+  lines.push('');
+  lines.push(
+    `We finished a full field test on ${site}. Sacramento is the open market we use for signups and jobs. Overall, ${passed} checks passed and ${failed} failed.`
+  );
+  lines.push('');
+
+  if (summary.emails?.client || summary.emails?.guard) {
+    lines.push(
+      `This run created Jane Doe (${summary.emails?.client || 'n/a'}) and John Doe (${summary.emails?.guard || 'n/a'}) as temporary test users.`
+    );
+    lines.push('');
+  }
+
+  lines.push('Cleanup');
   for (const phase of ['before', 'after']) {
-    const c = summary.cleanup?.[phase];
-    if (!c) continue;
-    if (c.skipped) {
-      lines.push(`• ${phase}: skipped`);
-      continue;
+    const sentence = describeCleanupPhase(phase, summary.cleanup?.[phase]);
+    if (sentence) lines.push(sentence);
+  }
+  lines.push('');
+
+  const workflowRows = FIELDTEST_KEY_STEPS.map((key) => summary.results?.find((r) => r.section === key)).filter(
+    Boolean
+  );
+  const workflowPassed = workflowRows.filter((r) => r.ok);
+  const workflowFailed = workflowRows.filter((r) => !r.ok);
+
+  if (workflowPassed.length) {
+    lines.push('What worked');
+    for (const row of workflowPassed) {
+      if (row.section === 'cleanup-before' || row.section === 'cleanup-after') continue;
+      lines.push(`• ${describeStepOutcome(row)}`);
     }
-    const found = c.found
-      ? `g${c.found.guards}/c${c.found.clients}/s${c.found.staff}`
-      : '—';
-    const rem = c.verify?.remaining ? JSON.stringify(c.verify.remaining) : '—';
-    lines.push(`• ${phase}: ${c.ok ? 'OK' : 'FAIL'} (found ${found}, remaining ${rem})`);
+    lines.push('');
   }
 
-  lines.push('', 'Workflow:');
-  for (const key of FIELDTEST_KEY_STEPS) {
-    const row = summary.results?.find((r) => r.section === key);
-    if (!row) continue;
-    lines.push(`${row.ok ? '✓' : '✗'} ${key}${row.detail ? `: ${String(row.detail).slice(0, 80)}` : ''}`);
-  }
-
-  const failed = (summary.results || []).filter((r) => !r.ok && !FIELDTEST_KEY_STEPS.includes(r.section));
-  if (failed.length > 0) {
-    lines.push('', 'Other failures:');
-    for (const row of failed.slice(0, 12)) {
-      lines.push(`✗ ${row.section}: ${String(row.detail || '').slice(0, 100)}`);
+  if (workflowFailed.length) {
+    lines.push('What did not work');
+    for (const row of workflowFailed) {
+      if (row.section === 'cleanup-before' || row.section === 'cleanup-after') continue;
+      lines.push(`• ${describeStepOutcome(row)}`);
     }
-    if (failed.length > 12) lines.push(`… +${failed.length - 12} more (see report.json)`);
+    lines.push('');
   }
 
-  lines.push('', 'Fixes during run:');
+  const otherFailed = (summary.results || []).filter((r) => !r.ok && !FIELDTEST_KEY_STEPS.includes(r.section));
+  if (otherFailed.length) {
+    lines.push('Other issues (layout checks, viewport sweeps, and similar)');
+    for (const row of otherFailed.slice(0, 10)) {
+      lines.push(`• ${describeStepOutcome(row)}`);
+    }
+    if (otherFailed.length > 10) {
+      lines.push(
+        `• There were ${otherFailed.length - 10} more minor issues. The full report file has the complete list.`
+      );
+    }
+    lines.push('');
+  }
+
+  lines.push('Fixes applied during this run');
   if (!summary.fixesApplied?.length) {
-    lines.push('• None');
+    lines.push('We did not need to change the app or the test runner during this run.');
   } else {
     for (const fix of summary.fixesApplied) {
-      lines.push(`• ${fix.phase}: ${fix.description}`);
+      lines.push(`• ${fix.description}`);
     }
   }
+  lines.push('');
 
-  lines.push('', `Artifacts: ${summary.reportJsonPath || path.join(OUT, 'report.json')}`);
+  if (summary.stripe?.liveMode) {
+    lines.push(
+      'Note: Production is on live Stripe keys. The automated runner cannot enter a real card number, so payment steps may fail even when checkout is working for real users.'
+    );
+    lines.push('');
+  }
+
+  lines.push(
+    'Technical details (exact step names, URLs, and screenshots) are saved in the field test report on the server.'
+  );
   return lines.join('\n').slice(0, 7800);
 }
 
-/** Post fieldtest summary to internal Staff chat as staff@guardr.co. */
-export async function postFieldtestReportToStaffChat(summary) {
+/** Plain-English markdown report written to report.md after each run. */
+export function formatFieldtestMarkdownReport(summary) {
+  const lines = [
+    `# Field test report — ${summary.runId}`,
+    '',
+    `We ran a full field test on **${summary.base}** using **${summary.marketCity}** as the open market.`,
+    `**Started:** ${summary.startedAt}`,
+    `**Finished:** ${summary.finishedAt}`,
+    `**Result:** ${summary.passed} checks passed, ${summary.failed} failed.`,
+    '',
+    '## Cleanup',
+    '',
+  ];
+
+  for (const phase of ['before', 'after']) {
+    const sentence = describeCleanupPhase(phase, summary.cleanup?.[phase]);
+    if (sentence) lines.push(`- ${sentence}`);
+  }
+
+  lines.push('', '## What worked', '');
+  const passedSteps = (summary.results || []).filter((r) => r.ok);
+  const keyPassed = FIELDTEST_KEY_STEPS.filter((k) => k !== 'cleanup-before' && k !== 'cleanup-after')
+    .map((key) => summary.results?.find((r) => r.section === key))
+    .filter((r) => r?.ok);
+  if (keyPassed.length === 0) {
+    lines.push('_No major workflow steps passed._');
+  } else {
+    for (const row of keyPassed) {
+      lines.push(`- ${describeStepOutcome(row)}`);
+    }
+  }
+
+  lines.push('', '## What did not work', '');
+  const failedSteps = (summary.results || []).filter((r) => !r.ok);
+  if (failedSteps.length === 0) {
+    lines.push('_All checks passed._');
+  } else {
+    for (const row of failedSteps) {
+      lines.push(`- ${describeStepOutcome(row)}`);
+    }
+  }
+
+  lines.push('', '## Fixes applied during this run', '');
+  if (!summary.fixesApplied?.length) {
+    lines.push('_We did not need to change the app or the test runner during this run._');
+  } else {
+    for (const fix of summary.fixesApplied) {
+      lines.push(`- ${fix.description}`);
+    }
+  }
+
+  if (summary.stripe?.liveMode) {
+    lines.push(
+      '',
+      '## Stripe',
+      '',
+      'Production uses live Stripe keys. The automated runner cannot complete a real card payment, so payment-related steps may fail even when checkout works for real users.'
+    );
+  }
+
+  lines.push(
+    '',
+    '## Artifacts',
+    '',
+    `- Report JSON: \`${summary.reportJsonPath}\``,
+    `- Screenshots: \`${summary.screenshotsDir}\``,
+    `- Total checks recorded: ${passedSteps.length + failedSteps.length}`
+  );
+
+  return lines.join('\n');
+}
+
+function describeCleanupBeforeStart(cleanup) {
+  if (!cleanup) return null;
+  if (cleanup.skipped) return 'We skipped clearing test accounts before this run.';
+  const parts = [];
+  if (cleanup.found?.guards) {
+    parts.push(`${cleanup.found.guards} guard test account${cleanup.found.guards === 1 ? '' : 's'}`);
+  }
+  if (cleanup.found?.clients) {
+    parts.push(`${cleanup.found.clients} client test account${cleanup.found.clients === 1 ? '' : 's'}`);
+  }
+  if (cleanup.found?.staff) {
+    parts.push(`${cleanup.found.staff} staff test account${cleanup.found.staff === 1 ? '' : 's'}`);
+  }
+  if (!parts.length) {
+    return 'We checked for leftover test accounts before starting and did not find any.';
+  }
+  return `Before starting, we removed ${parts.join(', ')}.`;
+}
+
+/** Plain-English heads-up for Staff chat before each run begins. */
+export function formatFieldtestStaffChatStartMessage(input) {
+  const market = input.marketCity || FIELD_TEST_MARKET_CITY;
+  const site = input.base || BASE;
+  const lines = [
+    `Starting field test (${input.runId})`,
+    '',
+    `We are about to run a full field test on ${site}. ${market} is the open market we use for guard and client signups.`,
+  ];
+
+  const cleanupSentence = describeCleanupBeforeStart(input.cleanupBefore);
+  if (cleanupSentence) {
+    lines.push('', cleanupSentence);
+  }
+
+  if (input.emails?.client || input.emails?.guard) {
+    lines.push(
+      '',
+      `This run will create Jane Doe (${input.emails.client || 'new client'}) and John Doe (${input.emails.guard || 'new guard'}) as temporary test users, then walk through signup, approvals, job posting, payments, guard activation, and shift completion.`
+    );
+  } else {
+    lines.push(
+      '',
+      'This run will create temporary Jane Doe and John Doe test users, then walk through signup, approvals, job posting, payments, guard activation, and shift completion.'
+    );
+  }
+
+  lines.push(
+    '',
+    'We will post another message here when the run finishes with what worked, what did not, and any fixes.'
+  );
+  return lines.join('\n').slice(0, 7800);
+}
+
+/** Post any message to Staff chat → Team → Staff chat as staff@guardr.co. */
+export async function postStaffChatMessage(body, verifySnippet) {
   const { chromium } = await import('@playwright/test');
-  const body = formatFieldtestStaffChatReport(summary);
   const browser = await chromium.launch({
     headless: true,
     args: ['--ignore-certificate-errors'],
@@ -1735,15 +1981,30 @@ export async function postFieldtestReportToStaffChat(summary) {
     await page.waitForTimeout(300);
     const send = page.getByRole('button', { name: /Send message/i }).first();
     if (await send.isDisabled().catch(() => true)) {
-      return { ok: false, detail: 'Send button disabled after filling report' };
+      return { ok: false, detail: 'Send button disabled after filling message' };
     }
     await send.click({ force: true });
     await page.waitForTimeout(1500);
 
     const threadText = await page.locator('body').innerText();
-    const posted = threadText.includes(summary.runId) || threadText.includes('Fieldtest report');
+    const snippet = verifySnippet?.trim();
+    const posted = snippet
+      ? threadText.includes(snippet) || threadText.includes(body.slice(0, 80))
+      : threadText.includes(body.slice(0, 80));
     return { ok: posted, detail: posted ? 'posted to Staff chat' : 'send clicked; verify in thread' };
   } finally {
     await browser.close();
   }
+}
+
+/** Post fieldtest start notice to Staff chat before the run begins. */
+export async function postFieldtestStartToStaffChat(input) {
+  const body = formatFieldtestStaffChatStartMessage(input);
+  return postStaffChatMessage(body, input.runId);
+}
+
+/** Post fieldtest summary to internal Staff chat as staff@guardr.co. */
+export async function postFieldtestReportToStaffChat(summary) {
+  const body = formatFieldtestStaffChatReport(summary);
+  return postStaffChatMessage(body, summary.runId);
 }

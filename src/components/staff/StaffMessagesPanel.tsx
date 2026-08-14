@@ -21,8 +21,9 @@ import {
 } from '../../lib/support';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
+import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { AppChatHeader, AppEmptyState, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
@@ -58,8 +59,12 @@ interface StaffMessagesPanelProps {
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
   onSendStaffMessage: (body: string) => void | Promise<void>;
+  onDeleteStaffMessage?: (messageId: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onDeleteGuardMessage?: (messageId: string) => void | Promise<void>;
   onSendClientMessage?: (body: string) => void | Promise<void>;
+  onDeleteClientMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   selectedJobChatRequestId?: string | null;
@@ -94,8 +99,12 @@ export function StaffMessagesPanel({
   currentUser,
   onSendJobChat,
   onSendStaffMessage,
+  onDeleteStaffMessage,
   onSendGuardMessage,
+  onDeleteGuardMessage,
   onSendClientMessage,
+  onDeleteClientMessage,
+  onDeleteJobChatMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
   selectedJobChatRequestId,
@@ -343,6 +352,10 @@ r.channel === 'guard-community' ||
               currentUserId={currentUser.id}
               viewerRole={currentUser.role}
               onSend={canPostGuardChat ? onSendGuardMessage : undefined}
+              onDeleteMessage={onDeleteGuardMessage}
+              canDeleteMessage={(msg: ChatBubbleMessage) =>
+                canDeleteChatMessage(currentUser, msg, 'guard')
+              }
               placeholder="Message the guard community…"
               guardChatLabels
               readOnly={!canPostGuardChat}
@@ -371,6 +384,10 @@ r.channel === 'guard-community' ||
               currentUserId={currentUser.id}
               viewerRole={currentUser.role}
               onSend={canPostClientChat ? onSendClientMessage : undefined}
+              onDeleteMessage={onDeleteClientMessage}
+              canDeleteMessage={(msg: ChatBubbleMessage) =>
+                canDeleteChatMessage(currentUser, msg, 'client')
+              }
               placeholder="Message the client community…"
               clientChatLabels
               readOnly={!canPostClientChat}
@@ -397,6 +414,10 @@ r.channel === 'guard-community' ||
               messages={sortedStaffMessages(staffMessages)}
               currentUserId={currentUser.id}
               onSend={onSendStaffMessage}
+              onDeleteMessage={onDeleteStaffMessage}
+              canDeleteMessage={(msg: ChatBubbleMessage) =>
+                canDeleteChatMessage(currentUser, msg, 'staff')
+              }
               placeholder="Message the Guardr team…"
               staffChatLabels
             />
@@ -415,6 +436,7 @@ r.channel === 'guard-community' ||
           messages={messages}
           currentUser={currentUser}
           onSend={(body) => onSendJobChat(request.id, body)}
+          onDeleteMessage={onDeleteJobChatMessage}
           onBack={clearSelection}
           hideBackOnDesktop
           hideShellHeader={embedHeaderInShell}

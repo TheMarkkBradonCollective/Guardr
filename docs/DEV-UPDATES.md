@@ -1,13 +1,35 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Tuesday, August 11, 2026  
+**Last updated:** Friday, August 14, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.122**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.123**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
+
+---
+
+## Friday, August 14, 2026 — /update → v1.0.123
+
+**PR cleanup (merged to `main`)**
+- **#953** — Separate printable user manuals; combined PDF merges standalone files
+- **#965** — Google Play release pipeline and store prep
+- **#971** — Field-test staff account branded as Guardr (not Founder) in Staff chat
+- **#972** — Users can delete own chat messages; higher staff can delete others in group chats
+- **#973** — Fieldtest posts Staff chat heads-up before each run starts
+
+**Shipped**
+- **Fieldtest automation** — pre/post cleanup, plain-English Staff chat report before and after each run, Sacramento-only signup market
+- **Staff chat** — field-test operator posts as **Guardr** (Director-level ops, not Founder tag)
+- **Chat delete** — trash icon on your own messages; higher-ranked staff can remove lower staff/guard/client posts in group channels (not support)
+- **Google Play prep** — `build:play`, readiness checks, store assets and docs (`docs/GOOGLE-PLAY.md`)
+- **v1.0.123** (build **223**) web + PWA version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-123-beta`
+
+**Release verification**
+- Lint, test (613), build green
 
 ---
 

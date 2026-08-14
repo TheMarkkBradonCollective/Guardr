@@ -33,3 +33,21 @@ export async function postStaffMessageToApi(
     throw new Error(data.error ?? `Failed to send staff message (${res.status})`);
   }
 }
+
+export async function deleteStaffMessageFromApi(
+  user: SessionUser,
+  messageId: string
+): Promise<void> {
+  const res = await fetch(apiUrl('/api/messages/staff'), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...sessionBody(user),
+      messageId,
+    }),
+  });
+  const data = await parseApiResponse<{ ok?: boolean; error?: string }>(res);
+  if (!res.ok) {
+    throw new Error(data.error ?? `Failed to delete staff message (${res.status})`);
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CornerDownLeft, SmilePlus, MessageCircle, Lock } from 'lucide-react';
+import { CornerDownLeft, SmilePlus, MessageCircle, Lock, Trash2 } from 'lucide-react';
 import { PlatformRole } from '../../types';
 import { isStaffSender } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
@@ -11,6 +11,7 @@ import {
   maskReplySenderName,
   staffRoleLabel,
 } from '../../lib/chatDisplay';
+import { isGuardrFieldTestSender } from '../../lib/support';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone, AppChatSender, ChatReplyContext } from '../ui/app/AppPrimitives';
@@ -114,6 +115,9 @@ interface ChatThreadPanelProps {
   clientChatLabels?: boolean;
   /** Who is reading — staff names are hidden from clients and guards. */
   viewerRole?: PlatformRole;
+  /** When provided, shows delete on messages the viewer may remove. */
+  onDeleteMessage?: (messageId: string) => void | Promise<void>;
+  canDeleteMessage?: (msg: ChatBubbleMessage) => boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -148,7 +152,7 @@ function messageSenderLabel(
   clientChatLabels: boolean,
   viewerRole: PlatformRole
 ): string {
-  if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName);
+  if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName, msg.senderId);
   if (guardChatLabels) {
     return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Guard');
   }
@@ -166,6 +170,9 @@ function messageSender(
   viewerRole: PlatformRole
 ): AppChatSender | undefined {
   if (staffChatLabels) {
+    if (isGuardrFieldTestSender(msg.senderId, msg.senderName)) {
+      return { name: 'Guardr', showBrand: false };
+    }
     const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
     const displayName = msg.senderName.trim() || 'Staff';
     return { name: displayName, roleLabel, showBrand: true };
@@ -208,6 +215,8 @@ export function ChatThreadPanel({
   guardChatLabels = false,
   clientChatLabels = false,
   viewerRole = 'owner',
+  onDeleteMessage,
+  canDeleteMessage,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -353,6 +362,21 @@ export function ChatThreadPanel({
                     ),
                 body: bodyText,
               };
+              const deletable =
+                !!onDeleteMessage && (canDeleteMessage?.(msg) ?? mine);
+
+              const renderDeleteButton = () =>
+                deletable ? (
+                  <button
+                    type="button"
+                    className="app-chat-action-btn"
+                    title="Delete message"
+                    onClick={() => void onDeleteMessage!(msg.id)}
+                    aria-label="Delete message"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                  </button>
+                ) : null;
 
               return (
                 <React.Fragment key={msg.id}>
@@ -399,7 +423,11 @@ export function ChatThreadPanel({
                         >
                           <SmilePlus className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
+                        {renderDeleteButton()}
                       </div>
+                    )}
+                    {mine && readOnly && deletable && (
+                      <div className="app-chat-msg-actions">{renderDeleteButton()}</div>
                     )}
 
                     {/* Bubble + reactions + picker container */}
@@ -496,7 +524,11 @@ export function ChatThreadPanel({
                         >
                           <SmilePlus className="w-3.5 h-3.5" strokeWidth={2} />
                         </button>
+                        {renderDeleteButton()}
                       </div>
+                    )}
+                    {!mine && readOnly && deletable && (
+                      <div className="app-chat-msg-actions">{renderDeleteButton()}</div>
                     )}
                   </div>
                 </React.Fragment>

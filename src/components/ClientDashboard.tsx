@@ -122,6 +122,9 @@ interface ClientDashboardProps {
   clientMessages?: ClientMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendClientMessage?: (body: string) => void | Promise<void>;
+  onDeleteClientMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   onRefreshClientMessages?: () => void | Promise<void>;
   jobChatRequestId?: string | null;
   openJobChat?: boolean;
@@ -206,6 +209,9 @@ export function ClientDashboard({
   clientMessages = [],
   onSendJobChatMessage,
   onSendClientMessage,
+  onDeleteClientMessage,
+  onDeleteJobChatMessage,
+  onDeleteSupportMessage,
   onRefreshClientMessages,
   jobChatRequestId = null,
   openJobChat = false,
@@ -583,6 +589,9 @@ export function ClientDashboard({
         supportTickets={supportTickets}
         onSendJobChatMessage={onSendJobChatMessage}
         onSendClientMessage={onSendClientMessage}
+        onDeleteClientMessage={onDeleteClientMessage}
+        onDeleteJobChatMessage={onDeleteJobChatMessage}
+        onDeleteSupportMessage={onDeleteSupportMessage}
         onRefreshClientMessages={onRefreshClientMessages}
         onSendSupportMessage={onSendSupportMessage}
         initialChatRequestId={jobChatRequestId}
@@ -620,6 +629,9 @@ export function ClientDashboard({
           supportTickets={supportTickets}
           onSendJobChatMessage={onSendJobChatMessage!}
           onSendClientMessage={onSendClientMessage}
+          onDeleteClientMessage={onDeleteClientMessage}
+          onDeleteJobChatMessage={onDeleteJobChatMessage}
+          onDeleteSupportMessage={onDeleteSupportMessage}
           onRefreshClientMessages={onRefreshClientMessages}
           onSendSupportMessage={onSendSupportMessage}
           initialSupportTicketId={supportTicketId}

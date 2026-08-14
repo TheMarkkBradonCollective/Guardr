@@ -19,6 +19,7 @@ interface StaffJobChatsPanelProps {
   messages: JobChatMessage[];
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
   selectedRequestId?: string | null;
   onSelectedRequestIdChange?: (requestId: string | null) => void;
   initialSelectedRequestId?: string | null;
@@ -31,6 +32,7 @@ export function StaffJobChatsPanel({
   messages,
   currentUser,
   onSendJobChat,
+  onDeleteJobChatMessage,
   selectedRequestId: controlledSelectedId,
   onSelectedRequestIdChange,
   initialSelectedRequestId = null,
@@ -123,6 +125,7 @@ export function StaffJobChatsPanel({
       messages={messages}
       currentUser={currentUser}
       onSend={(body) => onSendJobChat(selectedRequest.id, body)}
+      onDeleteMessage={onDeleteJobChatMessage}
       onBack={() => setSelectedRequestId(null)}
     />
   ) : (

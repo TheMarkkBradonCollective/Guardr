@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { isPlayStoreBuild } from '../lib/platform/playStoreBuild';
 import { APP_VERSION } from '../lib/appVersion';
 import {
   compareVersions,
@@ -121,5 +122,5 @@ export function currentWebVersionLabel(manifest: DownloadVersionManifest | null)
 }
 
 export function canInstallApkInApp(): boolean {
-  return Capacitor.isNativePlatform();
+  return Capacitor.isNativePlatform() && !isPlayStoreBuild();
 }

@@ -1,8 +1,8 @@
 /**
  * Seed the field-test staff operator account (setup only — not part of /fieldtest).
  *
- * Creates staff@guardr.co with Founder-level ops access for automated QA.
- * Platform login path: staff. Display name: Staff (Field Test).
+ * Creates staff@guardr.co with Director-level ops access for automated QA.
+ * Platform login path: staff. Display name: Guardr (branded in Staff chat — not Founder).
  *
  * Usage:
  *   node scripts/seed-field-test-staff.mjs
@@ -38,16 +38,16 @@ async function db(pathQs, init = {}) {
 
 const row = {
   id: STAFF_ID,
-  name: 'Staff (Field Test)',
-  first_name: 'Staff',
-  last_name: 'Field Test',
+  name: 'Guardr',
+  first_name: 'Guardr',
+  last_name: '',
   email: STAFF_EMAIL,
   badge_number: 'STF-FIELD01',
   avatar: '',
   phone: '(555) 010-2026',
-  bio: 'Automated field-test operator — full ops access for QA only.',
-  summary: 'Field test automation account with Founder-level platform access.',
-  staff_role: 'Founder',
+  bio: 'Automated field-test operator — Director-level ops access for QA.',
+  summary: 'Field test automation account (branded Guardr in Staff chat).',
+  staff_role: 'Director',
   user_status: 'active',
   password: STAFF_PASSWORD,
   must_change_password: false,
