@@ -14,6 +14,8 @@ export const STAFF_PASSWORD = process.env.FIELD_TEST_STAFF_PASSWORD || '#FieldTe
 /** Password assigned when staff@guardr.co provisions accounts in the UI */
 export const PROVISIONED_PASSWORD = '#Qwerty12345';
 export const STAFF_LADDER_ROLES = ['Support', 'Moderator', 'Administrator', 'Manager', 'Director'];
+/** Open market used for guard/client signups and field-test job site. */
+export const FIELD_TEST_MARKET_CITY = 'Sacramento';
 export const AD = {
   guard: { first: 'John', last: 'Doe', name: 'John Doe' },
   client: { first: 'Jane', last: 'Doe', name: 'Jane Doe', company: 'Jane Doe Properties' },
@@ -1071,8 +1073,6 @@ export async function searchAndOpen(page, term) {
   }
   return false;
 }
-
-export const FIELD_TEST_MARKET_CITY = 'Sacramento';
 
 /** Sacramento site used for geocoding + guard on-site GPS during shift tests. */
 export const FIELD_TEST_SITE = {
