@@ -27,8 +27,8 @@ node scripts/seed-field-test-staff.mjs
 | Email | `staff@guardr.co` |
 | Password | `#FieldTestStaff2026` |
 | Sign-in path | Staff (`/?auth=sign-in&ar=staff`) |
-| Display name | Staff (Field Test) |
-| Access | Founder-level ops (QA operator only) |
+| Display name | Guardr |
+| Access | Director-level ops (QA operator only; branded Guardr in Staff chat) |
 
 ## Run
 
@@ -105,7 +105,7 @@ Desktop, tablet, mobile — each role signs in on each device and visits key pag
 
 During `/fieldtest`, **fix problems as you find them** — update the runner or patch product bugs — then re-run. Record FAIL and continue only when blocked. Do not cheat past the UI with SQL, and **do not force-open closed service areas** during the run.
 
-Each run **clears `*@guardr.test` accounts before and after** (skip with `FIELDTEST_SKIP_CLEANUP=1`). When finished, **`staff@guardr.co` posts a summary to Staff chat → Team → Staff chat** with pass/fail steps, cleanup counts, and fixes applied.
+Each run **clears `*@guardr.test` accounts before and after** (skip with `FIELDTEST_SKIP_CLEANUP=1`). When finished, **`staff@guardr.co` posts a plain-English summary to Staff chat → Team → Staff chat** — full sentences explaining what worked, what did not, cleanup, and any fixes (not code-style step names or JSON).
 
 ## Honest product gates
 

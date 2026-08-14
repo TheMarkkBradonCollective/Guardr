@@ -11,6 +11,7 @@ import {
   maskReplySenderName,
   staffRoleLabel,
 } from '../../lib/chatDisplay';
+import { isGuardrFieldTestSender } from '../../lib/support';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone, AppChatSender, ChatReplyContext } from '../ui/app/AppPrimitives';
@@ -148,7 +149,7 @@ function messageSenderLabel(
   clientChatLabels: boolean,
   viewerRole: PlatformRole
 ): string {
-  if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName);
+  if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName, msg.senderId);
   if (guardChatLabels) {
     return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Guard');
   }
@@ -166,6 +167,9 @@ function messageSender(
   viewerRole: PlatformRole
 ): AppChatSender | undefined {
   if (staffChatLabels) {
+    if (isGuardrFieldTestSender(msg.senderId, msg.senderName)) {
+      return { name: 'Guardr', showBrand: false };
+    }
     const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
     const displayName = msg.senderName.trim() || 'Staff';
     return { name: displayName, roleLabel, showBrand: true };
