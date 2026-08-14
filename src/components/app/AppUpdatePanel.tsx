@@ -4,6 +4,7 @@ import { AppSettingsHead, AppSettingsSection } from '../ui/app/AppPrimitives';
 import { useDevice } from '../../lib/platform';
 import { appVersionLabel, formatAppVersion } from '../../lib/appVersion';
 import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUpdate';
+import { isPlayStoreBuild } from '../../lib/platform/playStoreBuild';
 import { showAppAlert } from '../ui/AppConfirm';
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 
@@ -59,6 +60,26 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
   };
 
   if (shellKind === 'native') {
+    if (isPlayStoreBuild()) {
+      return (
+        <>
+          <AppSettingsHead>App update</AppSettingsHead>
+          <AppSettingsSection>
+            <div className="space-y-3">
+              <p className="text-sm text-brand-text-muted">
+                {appVersionLabel()}
+                {installedVersion ? ` · Installed ${formatAppVersion(installedVersion)}` : ''}
+              </p>
+              <p className="text-sm text-brand-text-muted leading-relaxed">
+                This build is distributed through Google Play. Updates install automatically when you roll out a new
+                release in Play Console, or when you tap Update in the Play Store app.
+              </p>
+            </div>
+          </AppSettingsSection>
+        </>
+      );
+    }
+
     return (
       <>
         <AppSettingsHead>App update</AppSettingsHead>

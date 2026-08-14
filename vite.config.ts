@@ -9,12 +9,14 @@ const googleServicesPath = path.resolve(__dirname, 'android/app/google-services.
 const nativeFcmConfigured =
   process.env.VITE_NATIVE_FCM_CONFIGURED === 'true' ||
   (process.env.VITE_NATIVE_FCM_CONFIGURED !== 'false' && existsSync(googleServicesPath));
+const playStoreBuild = process.env.VITE_PLAY_STORE_BUILD === 'true';
 
 export default defineConfig(() => {
   return {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
       'import.meta.env.VITE_NATIVE_FCM_CONFIGURED': JSON.stringify(nativeFcmConfigured ? 'true' : 'false'),
+      'import.meta.env.VITE_PLAY_STORE_BUILD': JSON.stringify(playStoreBuild ? 'true' : 'false'),
     },
     plugins: [react(), tailwindcss()],
     resolve: {

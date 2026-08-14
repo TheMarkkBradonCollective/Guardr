@@ -70,7 +70,7 @@ npm run android:open
 - **API calls** — `apiUrl()` in `src/lib/siteConfig.ts` routes `/api/*` to `https://guardr.co` when running in the native shell
 - **Push notifications** — Web/PWA uses Web Push (VAPID). The Android APK uses native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVICE_ACCOUNT_JSON`).
 - **Runtime permissions** — location, camera, photos, and notifications are requested on first launch (see `src/lib/platform/nativePermissions.ts`)
-- **Release signing** — beta builds use the debug keystore for sideload distribution; replace with a production keystore before Play Store submission
+- **Release signing** — sideload builds use the debug keystore; Play Store builds use `android/keystore.properties` (see [GOOGLE-PLAY.md](GOOGLE-PLAY.md))
 
 ## Permissions
 
@@ -102,12 +102,16 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 
 **CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.
 
-## Play Store (future)
+## Play Store
 
-1. Create a release keystore (do **not** commit it)
-2. Configure `android/app/build.gradle` `signingConfigs.release`
-3. Build an AAB: `./gradlew bundleRelease`
-4. Upload to Google Play Console
+Full guide: **[docs/GOOGLE-PLAY.md](GOOGLE-PLAY.md)**
+
+1. Create upload keystore → `android/keystore.properties` (see `keystore.properties.example`)
+2. Add Firebase `google-services.json` for `com.signaturesecurity.guardr`
+3. `npm run android:play` → upload `dist/play-store/guardr-play-release.aab`
+4. Complete Play Console store listing, Data safety, content rating, and reviewer test accounts
+
+The **play** flavor omits sideload-only permissions; **sideload** (`npm run android:apk`) keeps debug signing for guardr.co/download.
 
 ## CI
 
