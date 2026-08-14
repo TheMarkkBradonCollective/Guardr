@@ -258,6 +258,8 @@ export async function acceptTerms(page) {
   const terms = page.locator('#auth-accept-terms');
   if (await terms.count()) await terms.check({ force: true }).catch(() => {});
   await page.locator('.legal-accept-checkbox-visual').first().click().catch(() => {});
+  await page.locator('label[for="auth-accept-terms"]').click().catch(() => {});
+  await clickFirstMatching(page, [/Accept and continue/i, /I agree/i], 600);
 }
 
 export async function fillIfVisible(page, pattern, value) {
@@ -452,6 +454,7 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     if (!formOpen) {
       return { ok: false, detail: 'Add staff form did not open' };
     }
+    await clearBlockingModals(page);
     await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
     await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
     await page.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
@@ -474,7 +477,7 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(2000);
     const body = await page.locator('body').innerText();
-    const ok = new RegExp(email.split('@')[0], 'i').test(body) || /added|created|pending|default sign-in/i.test(body);
+    const ok = new RegExp(email.split('@')[0], 'i').test(body) || new RegExp(lastName, 'i').test(body);
     return { ok, detail: body.slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
@@ -497,6 +500,26 @@ export async function assertJaneJohn(page, log, label) {
   return !bad;
 }
 
+export async function clearBlockingModals(page) {
+  for (let i = 0; i < 8; i++) {
+    await dismissOverlays(page);
+    const clicked = await page.evaluate(() => {
+      const labels = [/Accept and continue/i, /^Continue$/i, /^I agree$/i, /^Accept$/i];
+      const buttons = [...document.querySelectorAll('button')];
+      for (const re of labels) {
+        const btn = buttons.find((b) => re.test((b.textContent || '').trim()));
+        if (btn && btn.offsetParent !== null) {
+          btn.click();
+          return true;
+        }
+      }
+      return false;
+    });
+    if (!clicked) break;
+    await page.waitForTimeout(400);
+  }
+}
+
 export async function clickNamedCta(page, patternSrc) {
   return page.evaluate((src) => {
     const re = new RegExp(src, 'i');
@@ -517,8 +540,8 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     await clickNamedCta(page, String.raw`\+?\s*Add client`);
     const open = await page.getByText(/Add client account/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add client form did not open' };
-    await dismissOverlays(page);
-    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await clearBlockingModals(page);
+    await page.getByPlaceholder('First name').fill(firstName, { timeout: 8000 });
     await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
     await page.getByPlaceholder('client@company.com').fill(email, { timeout: 4000 }).catch(async () => {
       await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
@@ -530,7 +553,7 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     await page.getByPlaceholder('Optional — shows on job posts').fill(company).catch(() => {});
     await page.locator('label', { hasText: /^Phone$/i }).locator('xpath=..').locator('input').fill(phone).catch(() => {});
     await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true });
-    await dismissOverlays(page);
+    await clearBlockingModals(page);
     await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
@@ -548,15 +571,15 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     await clickNamedCta(page, String.raw`\+?\s*Add guard`);
     const open = await page.getByText(/Add field guard/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add guard form did not open' };
-    await dismissOverlays(page);
-    await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
+    await clearBlockingModals(page);
+    await page.getByPlaceholder('First name').fill(firstName, { timeout: 8000 });
     await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
     await page.getByPlaceholder('guard@example.com').fill(email, { timeout: 4000 }).catch(async () => {
       await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
     });
     await page.getByPlaceholder('Optional').fill(phone).catch(() => {});
     await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true });
-    await dismissOverlays(page);
+    await clearBlockingModals(page);
     await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
