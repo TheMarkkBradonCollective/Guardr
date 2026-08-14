@@ -100,7 +100,10 @@ export function checkCityAccessForRole(
   cities = getPlatformCities()
 ): CityAccessResult {
   const city = findPlatformCity(cityName, cities);
-  if (!city || city.status === 'open') {
+  if (!city) {
+    return { allowed: false, reason: 'closed', message: CLOSED_MESSAGE };
+  }
+  if (city.status === 'open') {
     return { allowed: true };
   }
   if (city.status === 'closed') {
@@ -142,9 +145,19 @@ export function getSelectableCityNamesForClients(cities = getPlatformCities()): 
   return getSelectableCitiesForClients(cities).map((city) => city.name);
 }
 
-/** Signup dropdowns show every configured city; selection triggers access messaging. */
+/** Staff signup — remote roles may list any configured city. */
 export function getSignupCityNames(cities = getPlatformCities()): string[] {
   return cities.map((city) => city.name);
+}
+
+/** Guard/client signup — only cities that pass marketplace access checks. */
+export function getSignupCityNamesForRole(
+  role: 'guard' | 'client' | 'staff',
+  cities = getPlatformCities()
+): string[] {
+  if (role === 'guard') return getSelectableCityNamesForGuards(cities);
+  if (role === 'client') return getSelectableCityNamesForClients(cities);
+  return getSignupCityNames(cities);
 }
 
 export function defaultSelectableCity(
@@ -156,7 +169,7 @@ export function defaultSelectableCity(
   const preferred =
     selectable.find((city) => city.name === GUARDR_LAUNCH_CITY) ??
     selectable.find((city) => city.name === DEFAULT_CALIFORNIA_CITY);
-  return preferred?.name ?? selectable[0]?.name ?? GUARDR_LAUNCH_CITY;
+  return preferred?.name ?? selectable[0]?.name ?? '';
 }
 
 export function normalizeManagedCities(
