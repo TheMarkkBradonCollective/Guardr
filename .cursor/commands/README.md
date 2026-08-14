@@ -42,6 +42,7 @@ Cursor slash commands for Guardr development. Invoke as `/commandname` in Cursor
 | `/run` | Scope-aware audit, validation, optimization, and repair |
 | `/fullaudit` | Comprehensive production-readiness audit |
 | `/test` | Functionality testing without design changes |
+| `/fieldtest` | Site-only production diagnostic: Jane/John Doe accounts, fake creds, jobs→pay, ads, all viewports |
 | `/secure` | Security audit and repair |
 | `/speed` | Performance optimization |
 | `/websiteaudit` | Full website audit (all breakpoints) |

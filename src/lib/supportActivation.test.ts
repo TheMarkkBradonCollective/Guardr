@@ -8,7 +8,9 @@ import {
   findActivationSupportChat,
   guardNeedsActivationSupportChat,
   GUARDR_SUPPORT_ACTOR,
+  isActivationSupportTicket,
   listGuardsNeedingActivationSupport,
+  resolveActivationSupportTicketsForGuard,
 } from './support.ts';
 
 function guard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
@@ -105,5 +107,64 @@ describe('activation support chat', () => {
     assert.equal(tickets[1]?.userId, 'g2');
     assert.equal(tickets[0]?.messages[0]?.senderId, GUARDR_SUPPORT_ACTOR.id);
     assert.equal(tickets[0]?.messages[0]?.senderName, GUARDR_SUPPORT_ACTOR.name);
+  });
+
+  it('resolves open activation support chats when guard becomes active', () => {
+    const openTicket: SupportTicket = {
+      id: 'support-1',
+      userId: 'g1',
+      userName: 'Alex Rivera',
+      userEmail: 'alex@test.com',
+      userRole: 'guard',
+      kind: 'chat',
+      subject: ACTIVATION_SUPPORT_SUBJECT,
+      category: 'account',
+      priority: 'normal',
+      status: 'open',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      messages: [],
+    };
+    const otherTicket: SupportTicket = {
+      ...openTicket,
+      id: 'support-2',
+      subject: 'Billing question',
+      userId: 'g1',
+    };
+
+    const { tickets, resolved } = resolveActivationSupportTicketsForGuard(
+      [openTicket, otherTicket],
+      guard({ userStatus: 'active' })
+    );
+
+    assert.equal(resolved.length, 1);
+    assert.equal(resolved[0]?.id, 'support-1');
+    assert.equal(resolved[0]?.status, 'resolved');
+    assert.match(resolved[0]?.messages.at(-1)?.body ?? '', /activated/i);
+    assert.equal(tickets.find((t) => t.id === 'support-2')?.status, 'open');
+    assert.equal(findActivationSupportChat(tickets, { id: 'g1', email: 'alex@test.com' }), null);
+  });
+
+  it('does not treat unrelated account chats as activation support', () => {
+    const ticket: SupportTicket = {
+      id: 'support-3',
+      userId: 'g1',
+      userName: 'Alex Rivera',
+      userEmail: 'alex@test.com',
+      userRole: 'guard',
+      kind: 'chat',
+      subject: 'Help with payouts',
+      category: 'account',
+      priority: 'normal',
+      status: 'open',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      messages: [],
+    };
+
+    assert.equal(isActivationSupportTicket(ticket), false);
+    assert.equal(findActivationSupportChat([ticket], { id: 'g1', email: 'alex@test.com' }), null);
+    const { resolved } = resolveActivationSupportTicketsForGuard([ticket], guard({ userStatus: 'active' }));
+    assert.equal(resolved.length, 0);
   });
 });
