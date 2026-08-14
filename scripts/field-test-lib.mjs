@@ -415,8 +415,8 @@ export async function goToAuthSignup(page, role) {
   await waitReady(page);
   const pick =
     role === 'guard'
-      ? /licensed guard|independent contractor/i
-      : /business or property|post jobs/i;
+      ? /^I'?m a licensed guard/i
+      : /^I need security for my site/i;
   const row = page.getByRole('button', { name: pick }).first();
   await row.waitFor({ state: 'visible', timeout: 12_000 });
   await row.click({ force: true });
