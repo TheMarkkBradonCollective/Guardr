@@ -27,6 +27,20 @@ export const FAKE_CRED = [
   '/home/ubuntu/Downloads/e2e-fake-credential.png',
 ].find((p) => fs.existsSync(p));
 export const AD_DIR = path.join(OUT, 'ad-screenshots');
+
+/** Launch Playwright with Google Chrome (default) or bundled Chromium. */
+export async function launchFieldTestBrowser() {
+  const { chromium } = await import('@playwright/test');
+  const headed = process.env.FIELDTEST_HEADED === '1';
+  const useChrome = (process.env.FIELDTEST_BROWSER || 'chrome').toLowerCase() !== 'chromium';
+  const launchOptions = {
+    headless: !headed,
+    args: ['--ignore-certificate-errors'],
+  };
+  if (useChrome) launchOptions.channel = 'chrome';
+  return chromium.launch(launchOptions);
+}
+
 for (const d of ['desktop', 'tablet', 'mobile']) {
   fs.mkdirSync(path.join(AD_DIR, d), { recursive: true });
 }
@@ -1939,11 +1953,7 @@ export function formatFieldtestStaffChatStartMessage(input) {
 
 /** Post any message to Staff chat → Team → Staff chat as staff@guardr.co. */
 export async function postStaffChatMessage(body, verifySnippet) {
-  const { chromium } = await import('@playwright/test');
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--ignore-certificate-errors'],
-  });
+  const browser = await launchFieldTestBrowser();
   try {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },

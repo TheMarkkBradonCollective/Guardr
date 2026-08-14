@@ -6,7 +6,6 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from '@playwright/test';
 import { clearTestData } from './clear-test-data-lib.mjs';
 import {
   AD,
@@ -45,6 +44,7 @@ import {
   goToAuthSignup,
   hardReset,
   injectGuardAvailability,
+  launchFieldTestBrowser,
   login,
   makeRunId,
   makeTestEmails,
@@ -295,10 +295,7 @@ async function run() {
   stripeHealth = await fetchStripeHealth();
   log('stripe-health', stripeHealth.configured, JSON.stringify(stripeHealth));
 
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--ignore-certificate-errors'],
-  });
+  const browser = await launchFieldTestBrowser();
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     ignoreHTTPSErrors: true,
