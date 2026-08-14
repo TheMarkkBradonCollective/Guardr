@@ -221,6 +221,9 @@ interface GuardDashboardProps {
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   guardMessages?: GuardMessage[];
   onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onDeleteGuardMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
   onSubmitIncidentReport?: (requestId: string, input: IncidentReportFormInput) => void | Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
@@ -369,6 +372,9 @@ export function GuardDashboard({
   onSendJobChatMessage,
   guardMessages = [],
   onSendGuardMessage,
+  onDeleteGuardMessage,
+  onDeleteJobChatMessage,
+  onDeleteSupportMessage,
   onRefreshGuardMessages,
   onSubmitIncidentReport,
   onRequestStripePayout,
@@ -1590,6 +1596,9 @@ export function GuardDashboard({
                 onSendJobChatMessage={onSendJobChatMessage}
                 onSendGuardMessage={onSendGuardMessage}
                 onSendSupportMessage={onSendSupportMessage}
+                onDeleteGuardMessage={onDeleteGuardMessage}
+                onDeleteJobChatMessage={onDeleteJobChatMessage}
+                onDeleteSupportMessage={onDeleteSupportMessage}
                 onRefreshGuardMessages={onRefreshGuardMessages}
                 initialJobChatRequestId={jobChatRequestId}
                 initialJobChatOpen={openJobChat}
@@ -1632,6 +1641,7 @@ export function GuardDashboard({
                   guardMessages={guardMessages}
                   supportTickets={supportTickets}
                   onSendSupportMessage={onSendSupportMessage}
+                  onDeleteSupportMessage={onDeleteSupportMessage}
                   initialSupportTicketId={supportTicketId}
                   onSupportTicketIdChange={onSupportTicketIdChange}
                   onOpenSupportCompose={onOpenSupportCompose}

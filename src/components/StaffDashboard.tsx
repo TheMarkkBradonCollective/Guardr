@@ -304,8 +304,13 @@ interface StaffDashboardProps {
     action: import('../lib/staffOps').DisputeResolutionAction
   ) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
+  onDeleteStaffMessage?: (messageId: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onDeleteGuardMessage?: (messageId: string) => void | Promise<void>;
   onSendClientMessage?: (body: string) => void | Promise<void>;
+  onDeleteClientMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteJobChatMessage?: (messageId: string) => void | Promise<void>;
+  onDeleteSupportMessage?: (ticketId: string, messageId: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
@@ -440,8 +445,13 @@ export function StaffDashboard({
   onDeleteSupportTicket,
   onResolveDispute,
   onSendStaffMessage,
+  onDeleteStaffMessage,
   onSendGuardMessage,
+  onDeleteGuardMessage,
   onSendClientMessage,
+  onDeleteClientMessage,
+  onDeleteJobChatMessage,
+  onDeleteSupportMessage,
   onRefreshStaffMessages,
   onSendJobChat,
   initialSection = 'overview',
@@ -1026,8 +1036,12 @@ export function StaffDashboard({
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
               onSendStaffMessage={onSendStaffMessage}
+              onDeleteStaffMessage={onDeleteStaffMessage}
               onSendGuardMessage={onSendGuardMessage}
+              onDeleteGuardMessage={onDeleteGuardMessage}
               onSendClientMessage={onSendClientMessage}
+              onDeleteClientMessage={onDeleteClientMessage}
+              onDeleteJobChatMessage={onDeleteJobChatMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
               selectedJobChatRequestId={selectedJobChatRequestId}
@@ -1052,6 +1066,7 @@ export function StaffDashboard({
               onSendMessage={onSendSupportMessage}
               onUpdateStatus={onUpdateSupportStatus}
               onDeleteSupportTicket={onDeleteSupportTicket}
+              onDeleteSupportMessage={onDeleteSupportMessage}
               selectedTicketId={selectedSupportTicketId}
               onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
               initialSelectedTicketId={selectedSupportTicketId}

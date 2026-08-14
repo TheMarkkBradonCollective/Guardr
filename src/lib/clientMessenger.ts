@@ -22,6 +22,10 @@ export function appendClientMessage(messages: ClientMessage[], message: ClientMe
   return mergeClientMessages(messages, [message]);
 }
 
+export function removeClientMessage(messages: ClientMessage[], messageId: string): ClientMessage[] {
+  return messages.filter((entry) => entry.id !== messageId);
+}
+
 export function loadClientMessagesFromStorage(): ClientMessage[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
