@@ -280,11 +280,52 @@ function appendMissingActivationCredentialItems(
   }
 }
 
+function appendStaffGovIdCredentialItem(
+  member: SecurityGuard,
+  items: ApprovalFeedItem[],
+  existingIds: Set<string>
+): void {
+  const idStatus = getGuardIdVerificationStatus(member);
+  if (!guardGovIdBelongsInCredentialFeed(member)) return;
+
+  const itemId = govIdApprovalItemId(member.id);
+  if (existingIds.has(itemId)) return;
+
+  const needsDocumentType = guardGovIdNeedsDocumentTypeSelection(member);
+  const awaitingReview = idStatus === 'pending' || idStatus === 'not_submitted';
+  items.push({
+    id: itemId,
+    queue: 'credentials',
+    title: `${member.name} — Government ID`,
+    subtitle: needsDocumentType
+      ? 'Select Government ID or driver’s license'
+      : ID_VERIFICATION_STATUS_LABELS[idStatus === 'not_submitted' ? 'pending' : idStatus],
+    status: idStatus === 'verified' ? 'approved' : idStatus === 'rejected' ? 'denied' : 'pending',
+    statusLabel:
+      idStatus === 'verified'
+        ? 'Verified'
+        : idStatus === 'rejected'
+          ? 'Rejected'
+          : 'Pending review',
+    submittedAt: member.idVerificationSubmittedAt,
+    reviewedAt: member.idVerificationReviewedAt,
+    reviewedByName: undefined,
+    reviewedByEmail: undefined,
+    sortKey:
+      new Date(member.idVerificationReviewedAt ?? member.idVerificationSubmittedAt ?? 0).getTime() ||
+      (awaitingReview ? Date.now() : 0),
+  });
+  existingIds.add(itemId);
+}
+
 function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   const items: ApprovalFeedItem[] = [];
 
   for (const guard of guards) {
-    if (guard.isStaff) continue;
+    if (guard.isStaff) {
+      appendStaffGovIdCredentialItem(guard, items, new Set<string>());
+      continue;
+    }
     const guardItemIds = new Set<string>();
 
     for (const cert of guard.certifications) {
@@ -703,20 +744,39 @@ function credentialQueueFeed(guards: SecurityGuard[]): ApprovalFeedItem[] {
 }
 
 /** Activation slots awaiting guard upload — Credentials “Pending upload” tab. */
-export function countPendingCredentialUploads(guards: SecurityGuard[]): number {
+export function countPendingCredentialUploads(
+  guards: SecurityGuard[],
+  audience?: CredentialAudienceKind
+): number {
   return credentialQueueFeed(guards).filter(
-    (item) => item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL
+    (item) =>
+      credentialQueueFeedMatchesAudience(item, guards, audience) &&
+      item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL
   ).length;
 }
 
 /** Credentials submitted and awaiting staff review — Credentials “Pending review” tab. */
-export function countPendingCredentialReviews(guards: SecurityGuard[]): number {
-  return credentialQueueFeed(guards).filter(isCredentialFeedItemAwaitingStaffReview).length;
+export function countPendingCredentialReviews(
+  guards: SecurityGuard[],
+  audience?: CredentialAudienceKind
+): number {
+  return credentialQueueFeed(guards).filter(
+    (item) =>
+      credentialQueueFeedMatchesAudience(item, guards, audience) &&
+      isCredentialFeedItemAwaitingStaffReview(item)
+  ).length;
 }
 
 /** Rejected credentials — Credentials “Rejected” tab. */
-export function countRejectedCredentials(guards: SecurityGuard[]): number {
-  return credentialQueueFeed(guards).filter(isCredentialFeedItemRejected).length;
+export function countRejectedCredentials(
+  guards: SecurityGuard[],
+  audience?: CredentialAudienceKind
+): number {
+  return credentialQueueFeed(guards).filter(
+    (item) =>
+      credentialQueueFeedMatchesAudience(item, guards, audience) &&
+      isCredentialFeedItemRejected(item)
+  ).length;
 }
 
 export function isCredentialFeedItemRejected(item: ApprovalFeedItem): boolean {
@@ -729,12 +789,59 @@ export function countPendingCredentialApprovals(guards: SecurityGuard[]): number
   return countPendingCredentialUploads(guards) + countPendingCredentialReviews(guards);
 }
 
-function guardIdForCredentialFeedItem(item: ApprovalFeedItem, guards: SecurityGuard[]): string | null {
+export type CredentialAudienceKind = 'staff' | 'guard';
+
+export function guardIdForCredentialFeedItem(
+  item: ApprovalFeedItem,
+  guards: SecurityGuard[]
+): string | null {
   if (isCoiApprovalItemId(item.id)) return guardIdFromCoiApprovalItemId(item.id);
   if (isGovIdApprovalItemId(item.id)) return guardIdFromGovIdApprovalItemId(item.id);
   const activation = parseActivationCredentialItemId(item.id);
   if (activation) return activation.guardId;
   return guards.find((guard) => guard.certifications.some((cert) => cert.id === item.id))?.id ?? null;
+}
+
+export function credentialFeedItemAudience(
+  item: ApprovalFeedItem,
+  guards: SecurityGuard[]
+): CredentialAudienceKind | null {
+  if (item.queue !== 'credentials') return null;
+  const guardId = guardIdForCredentialFeedItem(item, guards);
+  if (!guardId) return 'guard';
+  const member = guards.find((guard) => guard.id === guardId);
+  return member?.isStaff ? 'staff' : 'guard';
+}
+
+/** Manager+ list/detail — show staff badge numbers instead of hiding them behind names only. */
+export function enrichCredentialFeedItemDisplay(
+  item: ApprovalFeedItem,
+  guards: SecurityGuard[],
+  showStaffBadge: boolean
+): ApprovalFeedItem {
+  if (!showStaffBadge) return item;
+  const guardId = guardIdForCredentialFeedItem(item, guards);
+  const member = guardId ? guards.find((guard) => guard.id === guardId) : undefined;
+  const badge = member?.isStaff ? member.badgeNumber?.trim() : '';
+  if (!badge) return item;
+
+  const namePrefix = `${member!.name} — `;
+  if (!item.title.startsWith(namePrefix)) return item;
+  const credentialPart = item.title.slice(namePrefix.length);
+  return {
+    ...item,
+    title: `${badge} — ${credentialPart}`,
+    subtitle: item.subtitle ? `${member!.name} · ${item.subtitle}` : member!.name,
+  };
+}
+
+function credentialQueueFeedMatchesAudience(
+  item: ApprovalFeedItem,
+  guards: SecurityGuard[],
+  audience?: CredentialAudienceKind
+): boolean {
+  if (!audience) return true;
+  return credentialFeedItemAudience(item, guards) === audience;
 }
 
 /** Deep-link overview credential actions into the first pending credentials-queue item. */

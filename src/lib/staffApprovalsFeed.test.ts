@@ -11,7 +11,9 @@ import {
   countPendingCredentialUploads,
   countRejectedCredentials,
   CREDENTIAL_PENDING_UPLOAD_LABEL,
+  credentialFeedItemAudience,
   credentialFeedThumbnailUrl,
+  enrichCredentialFeedItemDisplay,
   isApplicationFeedItemOpen,
   isApplicationFeedItemPending,
   isCredentialFeedItemRejected,
@@ -320,5 +322,63 @@ describe('buildApplicationFeed', () => {
     assert.equal(rejected.length, 3);
     assert.equal(countRejectedCredentials([guard]), 3);
     assert.ok(rejected.every((item) => item.statusLabel === 'Rejected'));
+  });
+
+  it('includes staff government ID credentials in the credentials feed', () => {
+    const staffMember = {
+      id: 's-1',
+      name: 'Ops Manager',
+      email: 'manager@guardr.test',
+      userStatus: 'approved',
+      mustChangePassword: false,
+      isStaff: true,
+      staffRole: 'Manager',
+      badgeNumber: 'MGR-00001',
+      idVerificationStatus: 'pending',
+      idState: 'CA',
+      idNumber: 'ID-1',
+      idExpiryDate: '2099-12-31',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      idVerificationSubmittedAt: '2026-01-01T00:00:00.000Z',
+      certifications: [],
+    } as SecurityGuard;
+
+    const feed = buildStaffApprovalsFeed({ guards: [staffMember], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+
+    assert.equal(feed.length, 1);
+    assert.equal(feed[0]?.id, govIdApprovalItemId('s-1'));
+    assert.equal(credentialFeedItemAudience(feed[0]!, [staffMember]), 'staff');
+    assert.equal(countPendingCredentialReviews([staffMember], 'staff'), 1);
+    assert.equal(countPendingCredentialReviews([staffMember], 'guard'), 0);
+  });
+
+  it('shows staff badge numbers in credential titles for manager+ viewers', () => {
+    const staffMember = {
+      id: 's-1',
+      name: 'Ops Manager',
+      email: 'manager@guardr.test',
+      userStatus: 'approved',
+      mustChangePassword: false,
+      isStaff: true,
+      staffRole: 'Manager',
+      badgeNumber: 'MGR-00001',
+      idVerificationStatus: 'pending',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      certifications: [],
+    } as SecurityGuard;
+
+    const item = buildStaffApprovalsFeed({ guards: [staffMember], clients: [], requests: [] }).find(
+      (entry) => entry.id === govIdApprovalItemId('s-1')
+    );
+    assert.ok(item);
+    const enriched = enrichCredentialFeedItemDisplay(item!, [staffMember], true);
+    assert.equal(enriched.title, 'MGR-00001 — Government ID');
+    assert.match(enriched.subtitle ?? '', /Ops Manager/);
   });
 });

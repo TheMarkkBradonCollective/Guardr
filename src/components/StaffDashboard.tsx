@@ -852,6 +852,7 @@ export function StaffDashboard({
           <StaffCredentials
             guards={guards}
             canVerifyCredentials={canVerifyGuardCredentials}
+            currentUserRole={currentUser.role}
             initialItemId={selectedCredentialItemId}
             initialGuardId={selectedGuardId}
             onApproveCert={onApproveCert}
@@ -865,6 +866,7 @@ export function StaffDashboard({
             onReviewGuardInsurance={onReviewGuardInsurance}
             onRequestCoiUpdate={onRequestCoiUpdate}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
+            onOpenStaffProfile={(staffId) => navigateSection('team', { teamId: staffId })}
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
