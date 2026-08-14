@@ -145,7 +145,7 @@ function writeReportMarkdown(summary) {
     lines.push('_All steps passed._');
   } else {
     for (const step of failed) {
-      lines.push(`- **${step.label}:** ${step.detail}`);
+      lines.push(`- **${step.section}:** ${step.detail}`);
     }
   }
 
@@ -165,7 +165,7 @@ function writeReportMarkdown(summary) {
     'guard-shift-workflow',
   ];
   for (const key of keySteps) {
-    const row = summary.results.find((r) => r.label === key);
+    const row = summary.results.find((r) => r.section === key);
     if (row) lines.push(`- ${row.ok ? '✓' : '✗'} ${key}: ${row.detail?.slice(0, 120) || ''}`);
   }
 

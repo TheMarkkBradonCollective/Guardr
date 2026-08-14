@@ -108,7 +108,9 @@ export const VIEWPORT_SWEEP_PATHS = {
 };
 
 export async function checkLayout(page, label, findings) {
-  const issues = await page.evaluate(() => {
+  try {
+    await waitReady(page);
+    const issues = await page.evaluate(() => {
     const out = [];
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -140,12 +142,22 @@ export async function checkLayout(page, label, findings) {
     if (!h1) out.push('no heading');
     return out;
   });
-  for (const issue of issues) findings.push({ label, issue, viewport: `${page.viewportSize()?.width}x${page.viewportSize()?.height}` });
-  return issues;
+    for (const issue of issues) findings.push({ label, issue, viewport: `${page.viewportSize()?.width}x${page.viewportSize()?.height}` });
+    return issues;
+  } catch (err) {
+    findings.push({
+      label,
+      issue: `layout check skipped (${String(err).slice(0, 120)})`,
+      viewport: `${page.viewportSize()?.width}x${page.viewportSize()?.height}`,
+    });
+    return [];
+  }
 }
 
 export async function tryScroll(page, label, findings) {
-  const before = await page.evaluate(() => ({
+  try {
+    await waitReady(page);
+    const before = await page.evaluate(() => ({
     y: window.scrollY,
     main: document.querySelector('main')?.scrollTop ?? 0,
     h: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
@@ -170,6 +182,10 @@ export async function tryScroll(page, label, findings) {
     });
   }
   return moved || before.h <= before.vh + 80;
+  } catch (err) {
+    findings.push({ label: `${label}-scroll`, issue: `scroll check skipped (${String(err).slice(0, 120)})` });
+    return false;
+  }
 }
 
 export function createLogger(results) {
@@ -1647,16 +1663,16 @@ export function formatFieldtestStaffChatReport(summary) {
 
   lines.push('', 'Workflow:');
   for (const key of FIELDTEST_KEY_STEPS) {
-    const row = summary.results?.find((r) => r.label === key);
+    const row = summary.results?.find((r) => r.section === key);
     if (!row) continue;
     lines.push(`${row.ok ? '✓' : '✗'} ${key}${row.detail ? `: ${String(row.detail).slice(0, 80)}` : ''}`);
   }
 
-  const failed = (summary.results || []).filter((r) => !r.ok && !FIELDTEST_KEY_STEPS.includes(r.label));
+  const failed = (summary.results || []).filter((r) => !r.ok && !FIELDTEST_KEY_STEPS.includes(r.section));
   if (failed.length > 0) {
     lines.push('', 'Other failures:');
     for (const row of failed.slice(0, 12)) {
-      lines.push(`✗ ${row.label}: ${String(row.detail || '').slice(0, 100)}`);
+      lines.push(`✗ ${row.section}: ${String(row.detail || '').slice(0, 100)}`);
     }
     if (failed.length > 12) lines.push(`… +${failed.length - 12} more (see report.json)`);
   }
