@@ -322,6 +322,7 @@ import {
   findActivationSupportChat,
   guardNeedsActivationSupportChat,
   listGuardsNeedingActivationSupport,
+  resolveActivationSupportTicketsForGuard,
   isDeletableResolvedSupportChat,
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
@@ -1290,6 +1291,29 @@ export default function App() {
       return ticket.id;
     } finally {
       activationSupportCreationInFlightRef.current.delete(guard.id);
+    }
+  };
+
+  const syncActivationSupportClosures = async (activeGuards: SecurityGuard[]) => {
+    if (activeGuards.length === 0) return;
+    let nextTickets = supportTickets;
+    const closed: SupportTicket[] = [];
+    for (const guard of activeGuards) {
+      if (!isGuardAccountActive(guard)) continue;
+      const result = resolveActivationSupportTicketsForGuard(nextTickets, guard);
+      if (result.resolved.length === 0) continue;
+      nextTickets = result.tickets;
+      closed.push(...result.resolved);
+    }
+    if (closed.length === 0) return;
+
+    beginLocalMutation();
+    setSupportTickets(nextTickets);
+    saveSupportTicketsToStorage(nextTickets);
+    if (isDbConnected) {
+      for (const ticket of closed) {
+        await persistSupportTicketToDb(ticket);
+      }
     }
   };
 
@@ -3570,6 +3594,13 @@ export default function App() {
     if (!guard || !guardNeedsActivationSupportChat(guard, supportTickets)) return;
     void ensureActivationSupportTicket(guard);
   }, [loading, currentUser?.id, currentUser?.role, verifiedGuards, supportTickets]);
+
+  useEffect(() => {
+    if (loading) return;
+    const activeGuards = verifiedGuards.filter((g) => !g.isStaff && isGuardAccountActive(g));
+    if (activeGuards.length === 0) return;
+    void syncActivationSupportClosures(activeGuards);
+  }, [loading, verifiedGuards, supportTickets]);
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;

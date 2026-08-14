@@ -161,8 +161,53 @@ export function findActivationSupportChat(
 ): SupportTicket | null {
   const openChat = findOpenSupportChat(tickets, user);
   if (!openChat) return null;
-  if (openChat.subject === ACTIVATION_SUPPORT_SUBJECT) return openChat;
-  return openChat.category === 'account' ? openChat : null;
+  if (isActivationSupportTicket(openChat)) return openChat;
+  return null;
+}
+
+export function isActivationSupportTicket(
+  ticket: Pick<SupportTicket, 'kind' | 'subject'>
+): boolean {
+  return ticket.kind === 'chat' && ticket.subject === ACTIVATION_SUPPORT_SUBJECT;
+}
+
+const ACTIVATION_RESOLVED_MESSAGE =
+  'You are now activated on Guardr. This chat is closed — open Support anytime if you need help.';
+
+/** Close open activation help chats once the guard account is active. */
+export function resolveActivationSupportTicketsForGuard(
+  tickets: SupportTicket[],
+  guard: Pick<SecurityGuard, 'id' | 'email' | 'name'>
+): { tickets: SupportTicket[]; resolved: SupportTicket[] } {
+  const emailLower = guard.email.toLowerCase();
+  const now = new Date().toISOString();
+  const resolved: SupportTicket[] = [];
+  const next = tickets.map((ticket) => {
+    if (ticket.status === 'resolved') return ticket;
+    if (ticket.userId !== guard.id && ticket.userEmail.toLowerCase() !== emailLower) return ticket;
+    if (!isActivationSupportTicket(ticket)) return ticket;
+    const closed: SupportTicket = {
+      ...ticket,
+      status: 'resolved',
+      updatedAt: now,
+      messages: [
+        ...ticket.messages,
+        {
+          id: `smsg-${Date.now()}-${resolved.length}`,
+          ticketId: ticket.id,
+          senderId: GUARDR_SUPPORT_ACTOR.id,
+          senderName: GUARDR_SUPPORT_ACTOR.name,
+          senderRole: GUARDR_SUPPORT_ACTOR.role,
+          body: ACTIVATION_RESOLVED_MESSAGE,
+          createdAt: now,
+        },
+      ],
+    };
+    resolved.push(closed);
+    return closed;
+  });
+  if (resolved.length === 0) return { tickets, resolved };
+  return { tickets: next, resolved };
 }
 
 export function buildActivationSupportTicketForGuard(
