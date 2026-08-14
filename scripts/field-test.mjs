@@ -51,6 +51,7 @@ import {
   signUpGuard,
   signUpStaff,
   staffApproveJobListing,
+  staffEnsureCitiesOpen,
   staffVerifyOpenCredentials,
   tryScroll,
   uploadFakeCredentials,
@@ -253,6 +254,17 @@ async function run() {
     await tryScroll(page, p, findings);
   }
   await adShot(page, 'desktop', '01-landing-hero');
+
+  // ══════════════════════════════════════════════════════════════
+  // PHASE 1b — Staff operator: open markets so signups are accepted
+  // ══════════════════════════════════════════════════════════════
+  await loginAsStaffOperator(page, context);
+  {
+    const cities = await staffEnsureCitiesOpen(page, ['Los Angeles', 'Sacramento']);
+    await shot(page, 'staff-open-cities');
+    log('staff-open-cities', cities.ok, cities.detail);
+  }
+  await hardReset(page, context);
 
   // ══════════════════════════════════════════════════════════════
   // PHASE 2 — Each applicant signs up from the main page (as themselves)

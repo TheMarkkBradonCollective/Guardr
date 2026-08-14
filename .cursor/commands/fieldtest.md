@@ -47,6 +47,9 @@ npm run fieldtest
 ### 1. Public visitor
 Browse landing + legal. Capture hero ad shot.
 
+### 1b. Staff operator — open service areas
+`staff@guardr.co` → **Cities** → set **Los Angeles** and **Sacramento** to **Open** (required before client/guard signups succeed).
+
 ### 2. Public self-sign-up (as themselves)
 From the **main page** — not staff console:
 - **Jane Doe** — client sign-up (`/?auth=sign-up&ar=client`)
@@ -100,7 +103,7 @@ Desktop, tablet, mobile — each role signs in on each device and visits key pag
 | UI clicks, forms, uploads per role | Staff creating users via Add client/guard/staff |
 | Screenshots + `report.json` | Doing client/guard actions while logged in as staff |
 
-If a step fails, **record FAIL and continue**. Do not cheat past the UI.
+If a step fails, **diagnose and fix** (runner, product UI, or platform config via staff login) then re-run. Record FAIL and continue only when blocked — do not cheat past the UI with SQL.
 
 ## Honest product gates
 

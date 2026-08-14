@@ -320,24 +320,44 @@ export async function fillLabeled(page, labelText, value) {
 }
 
 export async function selectFirstCity(page, labelText) {
+  return selectOpenCityForSignup(page, labelText);
+}
+
+/** Pick a city that is open for signup (avoids "not accepting applications" gate). */
+export async function selectOpenCityForSignup(page, labelText) {
   const box = page.locator('label', { hasText: labelText }).first().locator('xpath=..');
   const select = box.locator('select').first();
   if (!(await select.isVisible({ timeout: 800 }).catch(() => false))) return false;
   const values = await select.locator('option').evaluateAll((opts) =>
     opts.map((o) => ({ value: o.value, label: o.textContent || '' })).filter((o) => o.value)
   );
-  const la = values.find((o) => /los angeles/i.test(o.label) || /los angeles/i.test(o.value));
-  const pick = la || values[0];
-  if (!pick) return false;
-  await select.selectOption(pick.value);
-  return true;
+  const closedRe = /not accepting new applications|on the wait list/i;
+  const preferred = ['Los Angeles', 'Sacramento', 'San Francisco', 'San Diego', 'Oakland'];
+  const tryOrder = [
+    ...preferred.flatMap((name) => values.filter((o) => o.label.includes(name) || o.value.includes(name))),
+    ...values,
+  ];
+  const seen = new Set();
+  for (const opt of tryOrder) {
+    const key = opt.value;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    await select.selectOption(opt.value);
+    await page.waitForTimeout(450);
+    const body = await page.locator('body').innerText();
+    if (!closedRe.test(body)) return opt.label.trim();
+  }
+  return false;
 }
 
-function signupLooksComplete(page, body) {
+function signupLooksComplete(page, body, role = 'any') {
+  if (/not accepting new applications|sign up failed|already (exists|registered)/i.test(body)) return false;
+  if (/application submitted|under review|pending approval|check your email/i.test(body)) return true;
   const onForm = /auth=sign-up/.test(page.url());
   if (onForm && /please |required|select at least|enter your/i.test(body)) return false;
-  if (onForm && /application submitted/i.test(body)) return true;
-  return !onForm || /pending|activation|under review|welcome/i.test(body);
+  if (!onForm && /\/(client|guard)\//.test(page.url())) return true;
+  if (!onForm && role === 'staff' && /auth=sign-in/.test(page.url())) return true;
+  return false;
 }
 
 export async function clickFirstMatching(page, patterns, timeout = 1500) {
@@ -386,13 +406,13 @@ export async function signUpClient(
   await page.locator('input[type="password"]').first().fill(password);
   await fillIfVisible(page, /Acme Corp/i, company);
   await fillIfVisible(page, /\+1 \(555\)/i, '(555) 010-1001');
-  await selectFirstCity(page, /Primary city of operations/i);
+  await selectOpenCityForSignup(page, /Primary city of operations/i);
   await acceptTerms(page);
   await page.getByRole('button', { name: /create account|sign up/i }).first().click({ force: true });
   await page.waitForTimeout(4000);
   await waitReady(page);
   const body = await page.locator('body').innerText();
-  const ok = signupLooksComplete(page, body) && !/already (exists|registered)|sign up failed/i.test(body);
+  const ok = signupLooksComplete(page, body, 'client') && !/already (exists|registered)|sign up failed/i.test(body);
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
@@ -414,7 +434,7 @@ export async function signUpGuard(
   await fillLabeled(page, /Armed work/i, 'Unarmed only');
   await page.getByRole('button', { name: /Event security/i }).first().click({ force: true }).catch(() => {});
   await page.getByRole('button', { name: /Site patrol/i }).first().click({ force: true }).catch(() => {});
-  await selectFirstCity(page, /Primary service area/i);
+  await selectOpenCityForSignup(page, /Primary service area/i);
   await fillLabeled(page, /Guard card status/i, 'Active CA guard card on hand');
   await fillLabeled(page, /Reliable transportation/i, 'Yes');
   await fillIfVisible(
@@ -433,7 +453,7 @@ export async function signUpGuard(
   await page.waitForTimeout(4000);
   await waitReady(page);
   const body = await page.locator('body').innerText();
-  const ok = signupLooksComplete(page, body) && !/already (exists|registered)|sign up failed/i.test(body);
+  const ok = signupLooksComplete(page, body, 'guard') && !/already (exists|registered)|sign up failed/i.test(body);
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
@@ -446,7 +466,7 @@ export async function signUpStaff(page, email, password, { firstName = 'Field', 
   await page.locator('input[type="password"]').first().fill(password);
   await fillLabeled(page, /^Phone$/i, '(555) 010-4004');
   await fillLabeled(page, /Years of experience/i, '4');
-  await selectFirstCity(page, /Primary city/i);
+  await selectOpenCityForSignup(page, /Primary city/i);
   await fillIfVisible(
     page,
     /Recent roles, employers, and operations experience/i,
@@ -459,9 +479,39 @@ export async function signUpStaff(page, email, password, { firstName = 'Field', 
   await waitReady(page);
   const body = await page.locator('body').innerText();
   const ok =
-    signupLooksComplete(page, body) &&
+    signupLooksComplete(page, body, 'staff') &&
     !/already (exists|registered)|sign up failed/i.test(body);
   return { ok, body: body.slice(0, 1500), url: page.url() };
+}
+
+/** Staff opens markets required for public client/guard signups (UI-only fix during fieldtest). */
+export async function staffEnsureCitiesOpen(page, cityNames = ['Los Angeles', 'Sacramento']) {
+  await page.goto(`${BASE}/staff/cities`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  const updated = [];
+  for (const cityName of cityNames) {
+    const row = page.locator('.app-list-row').filter({ hasText: cityName }).first();
+    if (!(await row.isVisible({ timeout: 2500 }).catch(() => false))) {
+      updated.push(`${cityName}:missing`);
+      continue;
+    }
+    const select = row.locator('select').first();
+    if (!(await select.isVisible({ timeout: 1000 }).catch(() => false))) {
+      updated.push(`${cityName}:no-select`);
+      continue;
+    }
+    const current = await select.inputValue();
+    if (current === 'open') {
+      updated.push(`${cityName}:already-open`);
+      continue;
+    }
+    await select.selectOption('open');
+    await page.waitForTimeout(1500);
+    updated.push(`${cityName}:opened`);
+  }
+  const ok = updated.some((u) => u.endsWith(':opened') || u.endsWith(':already-open'));
+  return { ok, detail: updated.join('; ') };
 }
 
 export async function selectFirstMatchingOption(page, labelRe, valueRe) {
