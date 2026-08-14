@@ -67,7 +67,7 @@ export function StaffDisputesPanel({
   onItemHandled,
 }: StaffDisputesPanelProps) {
   const { formFactor } = useDevice();
-  const [statusTab, setStatusTab] = useState<DisputeStatusTab>('open');
+  const [statusTab, setStatusTab] = useState<DisputeStatusTab>('all');
   const [typeTab, setTypeTab] = useState<DisputeTypeTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);

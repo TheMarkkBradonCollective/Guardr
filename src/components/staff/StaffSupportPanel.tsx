@@ -66,7 +66,7 @@ export function StaffSupportPanel({
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
   const [section, setSection] = useState<SupportInboxSection>('support');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('open');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedTicketId);
 
   const selectedId = controlledSelectedId ?? internalSelectedId;

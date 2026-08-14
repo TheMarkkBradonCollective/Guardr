@@ -111,9 +111,7 @@ export function StaffJobsPanel({
 }: StaffJobsPanelProps) {
   const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<JobsFilter>(() =>
-    getPendingScheduleChangeApprovals(requests).length > 0 ? 'schedule' : 'all'
-  );
+  const [filter, setFilter] = useState<JobsFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;

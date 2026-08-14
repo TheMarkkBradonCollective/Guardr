@@ -59,7 +59,7 @@ export function StaffViolationsPanel({
   onItemHandled,
 }: StaffViolationsPanelProps) {
   const { formFactor } = useDevice();
-  const [tab, setTab] = useState<ViolationTab>('open');
+  const [tab, setTab] = useState<ViolationTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, string>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolutionNoteById, setResolutionNoteById] = useState<Record<string, string>>({});

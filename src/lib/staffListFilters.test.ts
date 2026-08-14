@@ -235,5 +235,7 @@ describe('staffListFilters', () => {
     assert.equal(matchesCredentialAudienceFilter(guardItem!, 'staff', [guard, staffMember]), false);
     assert.equal(matchesCredentialAudienceFilter(staffItem!, 'staff', [guard, staffMember]), true);
     assert.equal(matchesCredentialAudienceFilter(staffItem!, 'guards', [guard, staffMember]), false);
+    assert.equal(matchesCredentialAudienceFilter(guardItem!, 'all', [guard, staffMember]), true);
+    assert.equal(matchesCredentialAudienceFilter(staffItem!, 'all', [guard, staffMember]), true);
   });
 });

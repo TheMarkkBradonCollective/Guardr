@@ -81,7 +81,7 @@ export function StaffClientsPanel({
   const { formFactor } = useDevice();
   const [pageTab, setPageTab] = useState<ClientsPageTab>('roster');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('pending');
+  const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;

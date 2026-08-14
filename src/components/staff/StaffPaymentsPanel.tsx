@@ -235,7 +235,7 @@ export function StaffPaymentsPanel({
     return items;
   }, [openInvoices, summary]);
 
-  const [filter, setFilter] = useState<PaymentsFilter>(actionCount > 0 ? 'action' : 'all');
+  const [filter, setFilter] = useState<PaymentsFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filteredQueue = useMemo(() => {

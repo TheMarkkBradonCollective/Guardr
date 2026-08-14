@@ -186,7 +186,7 @@ export function StaffCredentials({
   onAddCertification,
 }: StaffCredentialsProps) {
   const { formFactor } = useDevice();
-  const [audienceFilter, setAudienceFilter] = useState<CredentialAudienceFilter>('guards');
+  const [audienceFilter, setAudienceFilter] = useState<CredentialAudienceFilter>('all');
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
   const showStaffBadge = Boolean(currentUserRole && isExecutiveOpsRole(currentUserRole));
   const [search, setSearch] = useState('');
@@ -672,6 +672,7 @@ export function StaffCredentials({
           activeId={audienceFilter}
           onChange={(id) => setAudienceFilter(id as CredentialAudienceFilter)}
           tabs={[
+            { id: 'all', label: 'All' },
             { id: 'staff', label: 'Staff' },
             { id: 'guards', label: 'Guards' },
           ]}

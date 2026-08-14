@@ -84,7 +84,7 @@ export function StaffTeamPanel({
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('pending');
+  const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('all');
   const [staffTeamTab, setStaffTeamTab] = useState<StaffTeamDetailTab>('profile');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;

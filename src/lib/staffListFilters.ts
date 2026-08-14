@@ -21,7 +21,7 @@ export type ApplicationKindFilter = 'all' | 'client' | 'guard' | 'staff';
 
 export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'rejected' | 'all';
 
-export type CredentialAudienceFilter = 'staff' | 'guards';
+export type CredentialAudienceFilter = 'all' | 'staff' | 'guards';
 
 export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
@@ -86,6 +86,7 @@ export function matchesCredentialAudienceFilter(
   filter: CredentialAudienceFilter,
   guards: SecurityGuard[]
 ): boolean {
+  if (filter === 'all') return true;
   const audience = credentialFeedItemAudience(item, guards);
   if (!audience) return false;
   return filter === 'staff' ? audience === 'staff' : audience === 'guard';
