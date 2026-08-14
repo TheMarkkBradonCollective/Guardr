@@ -103,7 +103,7 @@ Desktop, tablet, mobile — each role signs in on each device and visits key pag
 | UI clicks, forms, uploads per role | Staff creating users via Add client/guard/staff |
 | Screenshots + `report.json` | Doing client/guard actions while logged in as staff |
 
-If a step fails, **diagnose and fix** (runner, product UI, or platform config via staff login) then re-run. Record FAIL and continue only when blocked — do not cheat past the UI with SQL.
+During `/fieldtest`, **fix problems as you find them** — update the runner, unblock platform config via staff UI (e.g. open cities), or patch product bugs — then re-run. Record FAIL and continue only when blocked. Do not cheat past the UI with SQL.
 
 ## Honest product gates
 

@@ -38,7 +38,9 @@ import {
   confirmAppDialog,
   createLogger,
   dismissOverlays,
+  ensureSignedOut,
   fetchStripeHealth,
+  goToAuthSignup,
   hardReset,
   injectGuardAvailability,
   login,
@@ -269,7 +271,7 @@ async function run() {
   // ══════════════════════════════════════════════════════════════
   // PHASE 2 — Each applicant signs up from the main page (as themselves)
   // ══════════════════════════════════════════════════════════════
-  await hardReset(page, context);
+  await ensureSignedOut(page, context);
   {
     const { ok, body, url } = await signUpClient(page, emails.client, FIELD_TEST_PASSWORD, {
       firstName: AD.client.first,
@@ -280,7 +282,7 @@ async function run() {
     log('public-signup-jane-doe', ok, ok ? url : body.slice(0, 300));
   }
 
-  await hardReset(page, context);
+  await ensureSignedOut(page, context);
   {
     const { ok, body, url } = await signUpGuard(page, emails.guard, FIELD_TEST_PASSWORD, {
       firstName: AD.guard.first,
@@ -291,7 +293,7 @@ async function run() {
   }
 
   for (const role of STAFF_LADDER_ROLES) {
-    await hardReset(page, context);
+    await ensureSignedOut(page, context);
     try {
       const { ok, body, url } = await signUpStaff(page, emails.staff[role], FIELD_TEST_PASSWORD, {
         firstName: 'Field',

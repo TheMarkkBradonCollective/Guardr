@@ -392,14 +392,59 @@ export async function visitPath(page, log, label, pathSeg) {
   return !broken && !loggedOut;
 }
 
+export async function ensureSignedOut(page, context) {
+  await hardReset(page, context);
+  await page.goto(`${BASE}/client/home`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await waitReady(page);
+  const signOut = page.getByRole('button', { name: /sign out|log out/i }).first();
+  if (await signOut.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await signOut.click({ force: true });
+    await page.waitForTimeout(1000);
+  }
+  await hardReset(page, context);
+}
+
+/** Navigate to the correct public signup form via the role picker (avoids stale ar= param). */
+export async function goToAuthSignup(page, role) {
+  if (role === 'staff') {
+    await page.goto(`${BASE}/?auth=sign-up&ar=staff`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    return;
+  }
+  await page.goto(`${BASE}/?auth=sign-up&pick=role`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  const pick =
+    role === 'guard'
+      ? /licensed guard|independent contractor/i
+      : /business or property|post jobs/i;
+  const row = page.getByRole('button', { name: pick }).first();
+  await row.waitFor({ state: 'visible', timeout: 12_000 });
+  await row.click({ force: true });
+  await waitReady(page);
+  await page.waitForTimeout(600);
+}
+
+export async function assertSignupRoleVisible(page, role) {
+  const markers = {
+    client: /Create your client account|Primary city of operations/i,
+    guard: /Guard marketplace application|Primary service area/i,
+    staff: /Apply to work at Guardr|New staff start as Support/i,
+  };
+  const ok = await page.getByText(markers[role]).first().isVisible({ timeout: 8000 }).catch(() => false);
+  return ok;
+}
+
 export async function signUpClient(
   page,
   email,
   password,
   { firstName = AD.client.first, lastName = AD.client.last, company = AD.client.company } = {}
 ) {
-  await page.goto(`${BASE}/?auth=sign-up&ar=client`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
+  await goToAuthSignup(page, 'client');
+  if (!(await assertSignupRoleVisible(page, 'client'))) {
+    const body = await page.locator('body').innerText();
+    return { ok: false, body: `wrong signup form\n${body.slice(0, 400)}`, url: page.url() };
+  }
   await fillIfVisible(page, /^First name$/i, firstName);
   await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
@@ -422,8 +467,11 @@ export async function signUpGuard(
   password,
   { firstName = AD.guard.first, lastName = AD.guard.last } = {}
 ) {
-  await page.goto(`${BASE}/?auth=sign-up&ar=guard`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
+  await goToAuthSignup(page, 'guard');
+  if (!(await assertSignupRoleVisible(page, 'guard'))) {
+    const body = await page.locator('body').innerText();
+    return { ok: false, body: `wrong signup form (expected guard)\n${body.slice(0, 400)}`, url: page.url() };
+  }
   await fillIfVisible(page, /^First name$/i, firstName);
   await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
@@ -449,7 +497,7 @@ export async function signUpGuard(
   );
   await fillIfVisible(page, /Days\/times you usually work/i, 'Available weekdays and weekends, flexible hours.');
   await acceptTerms(page);
-  await page.getByRole('button', { name: /create account|sign up|apply/i }).first().click({ force: true });
+  await page.getByRole('button', { name: /create account|sign up|submit application/i }).first().click({ force: true });
   await page.waitForTimeout(4000);
   await waitReady(page);
   const body = await page.locator('body').innerText();
@@ -458,8 +506,11 @@ export async function signUpGuard(
 }
 
 export async function signUpStaff(page, email, password, { firstName = 'Field', lastName = 'Support' } = {}) {
-  await page.goto(`${BASE}/?auth=sign-up&ar=staff`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
+  await goToAuthSignup(page, 'staff');
+  if (!(await assertSignupRoleVisible(page, 'staff'))) {
+    const body = await page.locator('body').innerText();
+    return { ok: false, body: `wrong signup form (expected staff)\n${body.slice(0, 400)}`, url: page.url() };
+  }
   await fillIfVisible(page, /^First name$/i, firstName);
   await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
@@ -491,26 +542,44 @@ export async function staffEnsureCitiesOpen(page, cityNames = ['Los Angeles', 'S
   await dismissOverlays(page);
   const updated = [];
   for (const cityName of cityNames) {
-    const row = page.locator('.app-list-row').filter({ hasText: cityName }).first();
-    if (!(await row.isVisible({ timeout: 2500 }).catch(() => false))) {
+    const search = page.getByPlaceholder(/search cities/i).first();
+    if (await search.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await search.fill('');
+      await search.fill(cityName);
+      await page.waitForTimeout(700);
+    }
+    let row = page.getByRole('button', { name: new RegExp(cityName, 'i') }).first();
+    if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
+      row = page.locator('.app-list-row').filter({ hasText: cityName }).first();
+    }
+    if (!(await row.isVisible({ timeout: 2000 }).catch(() => false))) {
       updated.push(`${cityName}:missing`);
       continue;
     }
-    const select = row.locator('select').first();
-    if (!(await select.isVisible({ timeout: 1000 }).catch(() => false))) {
-      updated.push(`${cityName}:no-select`);
+    await row.click({ force: true });
+    await page.waitForTimeout(900);
+    const statusSelect = page.getByLabel(/Service area status/i).first();
+    if (await statusSelect.isVisible({ timeout: 2500 }).catch(() => false)) {
+      const current = await statusSelect.inputValue();
+      if (current !== 'open') {
+        await statusSelect.selectOption('open');
+        await page.waitForTimeout(1500);
+        updated.push(`${cityName}:opened`);
+      } else {
+        updated.push(`${cityName}:already-open`);
+      }
       continue;
     }
-    const current = await select.inputValue();
-    if (current === 'open') {
-      updated.push(`${cityName}:already-open`);
-      continue;
+    const inlineSelect = page.locator('.app-list-row').filter({ hasText: cityName }).locator('select').first();
+    if (await inlineSelect.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await inlineSelect.selectOption('open');
+      await page.waitForTimeout(1500);
+      updated.push(`${cityName}:opened-mobile`);
+    } else {
+      updated.push(`${cityName}:no-status-select`);
     }
-    await select.selectOption('open');
-    await page.waitForTimeout(1500);
-    updated.push(`${cityName}:opened`);
   }
-  const ok = updated.some((u) => u.endsWith(':opened') || u.endsWith(':already-open'));
+  const ok = updated.some((u) => /opened|already-open/.test(u));
   return { ok, detail: updated.join('; ') };
 }
 
