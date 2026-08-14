@@ -59,6 +59,7 @@ import {
   staffVerifyOpenCredentials,
   postFieldtestReportToStaffChat,
   formatFieldtestMarkdownReport,
+  postFieldtestStartToStaffChat,
   tryScroll,
   uploadFakeCredentials,
   visitPath,
@@ -276,6 +277,20 @@ async function tryClientReviewAfterShift(page) {
 async function run() {
   const startedAt = new Date().toISOString();
   cleanupBefore = await runCleanup('before');
+
+  try {
+    const startChat = await postFieldtestStartToStaffChat({
+      runId,
+      base: BASE,
+      marketCity: FIELD_TEST_SITE.city,
+      emails,
+      cleanupBefore,
+      startedAt,
+    });
+    log('staff-chat-start', startChat.ok, startChat.detail);
+  } catch (err) {
+    log('staff-chat-start', false, String(err).slice(0, 300));
+  }
 
   stripeHealth = await fetchStripeHealth();
   log('stripe-health', stripeHealth.configured, JSON.stringify(stripeHealth));
