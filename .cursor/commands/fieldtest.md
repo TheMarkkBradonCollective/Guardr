@@ -105,6 +105,8 @@ Desktop, tablet, mobile — each role signs in on each device and visits key pag
 
 During `/fieldtest`, **fix problems as you find them** — update the runner or patch product bugs — then re-run. Record FAIL and continue only when blocked. Do not cheat past the UI with SQL, and **do not force-open closed service areas** during the run.
 
+Each run **clears `*@guardr.test` accounts before and after** (skip with `FIELDTEST_SKIP_CLEANUP=1`). When finished, **`staff@guardr.co` posts a summary to Staff chat → Team → Staff chat** with pass/fail steps, cleanup counts, and fixes applied.
+
 ## Honest product gates
 
 - **Stripe test mode** (`pk_test_…`): runner completes Checkout with card `4242 4242 4242 4242`.
@@ -117,6 +119,8 @@ During `/fieldtest`, **fix problems as you find them** — update the runner or 
 - `/opt/cursor/artifacts/field-test/screenshots/`
 - `/opt/cursor/artifacts/field-test/ad-screenshots/{desktop,tablet,mobile}/`
 - `/opt/cursor/artifacts/field-test/report.json`
+- `/opt/cursor/artifacts/field-test/report.md`
+- Staff chat message from `staff@guardr.co` (Team → Staff chat)
 
 ## Files
 
