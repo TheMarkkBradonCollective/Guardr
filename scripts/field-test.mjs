@@ -7,12 +7,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
+import { clearTestData } from './clear-test-data-lib.mjs';
 import {
   AD,
   BASE,
   CLIENT_PATHS,
   FAKE_CRED,
   FIELD_TEST_PASSWORD,
+  FIELD_TEST_SITE,
   GUARD_PATHS,
   OUT,
   PUBLIC_PATHS,
@@ -55,6 +57,7 @@ import {
   staffApproveJobListing,
   staffAssertSignupMarketReady,
   staffVerifyOpenCredentials,
+  postFieldtestReportToStaffChat,
   tryScroll,
   uploadFakeCredentials,
   visitPath,
@@ -66,34 +69,143 @@ const log = createLogger(results);
 const runId = makeRunId();
 const emails = makeTestEmails(runId);
 const findings = [];
+const fixesApplied = [];
 const diagnostics = { pageErrors: [], consoleErrors: [] };
 let stripeHealth = { configured: false, testMode: false, liveMode: false };
+let cleanupBefore = null;
+let cleanupAfter = null;
+const SKIP_CLEANUP = process.env.FIELDTEST_SKIP_CLEANUP === '1';
 
 fs.mkdirSync(OUT, { recursive: true });
 
-function writeReport() {
+function recordFix(phase, description) {
+  fixesApplied.push({ phase, description, at: new Date().toISOString() });
+}
+
+async function runCleanup(phase) {
+  if (SKIP_CLEANUP) {
+    const skipped = { ok: true, label: phase, skipped: true };
+    log(`cleanup-${phase}`, true, 'skipped (FIELDTEST_SKIP_CLEANUP=1)');
+    return skipped;
+  }
+  try {
+    const result = await clearTestData({ label: phase });
+    log(
+      `cleanup-${phase}`,
+      result.ok,
+      `found g${result.found.guards}/c${result.found.clients}/s${result.found.staff} → verify ${JSON.stringify(result.verify.remaining)}`
+    );
+    return result;
+  } catch (err) {
+    log(`cleanup-${phase}`, false, String(err).slice(0, 300));
+    return { ok: false, label: phase, error: String(err) };
+  }
+}
+
+function writeReportMarkdown(summary) {
+  const lines = [
+    `# Fieldtest report — ${summary.runId}`,
+    '',
+    `- **Base:** ${summary.base}`,
+    `- **Started:** ${summary.startedAt}`,
+    `- **Finished:** ${summary.finishedAt}`,
+    `- **Passed:** ${summary.passed} · **Failed:** ${summary.failed}`,
+    `- **Market:** ${summary.marketCity}`,
+    '',
+    '## Cleanup',
+    '',
+    `| Phase | OK | Guards | Clients | Staff | Remaining |`,
+    `|-------|----|--------|---------|-------|-----------|`,
+  ];
+
+  for (const phase of ['before', 'after']) {
+    const c = summary.cleanup[phase];
+    if (!c) continue;
+    if (c.skipped) {
+      lines.push(`| ${phase} | skipped | — | — | — | — |`);
+      continue;
+    }
+    lines.push(
+      `| ${phase} | ${c.ok ? 'yes' : 'no'} | ${c.found?.guards ?? '—'} | ${c.found?.clients ?? '—'} | ${c.found?.staff ?? '—'} | ${JSON.stringify(c.verify?.remaining ?? {})} |`
+    );
+  }
+
+  lines.push('', '## Fixes applied during run', '');
+  if (summary.fixesApplied.length === 0) {
+    lines.push('_None — no runner or product fixes were needed during this run._');
+  } else {
+    for (const fix of summary.fixesApplied) {
+      lines.push(`- **${fix.phase}:** ${fix.description}`);
+    }
+  }
+
+  lines.push('', '## Failed steps', '');
+  const failed = summary.results.filter((r) => !r.ok);
+  if (failed.length === 0) {
+    lines.push('_All steps passed._');
+  } else {
+    for (const step of failed) {
+      lines.push(`- **${step.label}:** ${step.detail}`);
+    }
+  }
+
+  lines.push('', '## Passed workflow (high level)', '');
+  const keySteps = [
+    'staff-signup-market-check',
+    'public-signup-jane-doe',
+    'public-signup-john-doe',
+    'staff-approve-jane-doe',
+    'staff-approve-john-doe',
+    'client-job-post',
+    'staff-approve-job-listing',
+    'client-payment-gate',
+    'staff-verify-john-creds',
+    'guard-apply',
+    'jane-approve-john',
+    'guard-shift-workflow',
+  ];
+  for (const key of keySteps) {
+    const row = summary.results.find((r) => r.label === key);
+    if (row) lines.push(`- ${row.ok ? '✓' : '✗'} ${key}: ${row.detail?.slice(0, 120) || ''}`);
+  }
+
+  lines.push('', '## Stripe', '', `\`${JSON.stringify(summary.stripe)}\``, '');
+  lines.push('## Artifacts', '', `- JSON: \`${summary.reportJsonPath}\``, `- Screenshots: \`${summary.screenshotsDir}\``);
+
+  fs.writeFileSync(path.join(OUT, 'report.md'), lines.join('\n'));
+}
+
+function writeReport(startedAt) {
+  const finishedAt = new Date().toISOString();
   const summary = {
     base: BASE,
     runId,
+    startedAt,
+    finishedAt,
     emails,
+    marketCity: FIELD_TEST_SITE.city,
     passed: results.filter((r) => r.ok).length,
     failed: results.filter((r) => !r.ok).length,
     designFindings: findings,
     pageErrors: diagnostics.pageErrors.slice(0, 40),
     consoleErrors: diagnostics.consoleErrors.slice(0, 40),
     results,
+    fixesApplied,
+    cleanup: { before: cleanupBefore, after: cleanupAfter },
     rule: 'Every action while signed in as that role — no cross-role shortcuts',
     names: { client: AD.client.name, guard: AD.guard.name, company: AD.client.company },
     fakeCredential: FAKE_CRED || null,
     screenshotsDir: path.join(OUT, 'screenshots'),
     adScreenshotsDir: path.join(OUT, 'ad-screenshots'),
+    reportJsonPath: path.join(OUT, 'report.json'),
     promoNote:
       'screenshots/ = every step (full diagnostic). ad-screenshots/{desktop,tablet,mobile}/ = promo-ready Jane/John Doe shots.',
     stripe: stripeHealth,
     workflowNote:
-      'Jane pays while job is open (marketplace requires paid). John completes shift on /guard/map after client approves guard.',
+      'Jane pays while job is open (marketplace requires paid). John completes shift on /guard/map after client approves guard. Pre/post cleanup removes *@guardr.test accounts.',
   };
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(summary, null, 2));
+  writeReportMarkdown(summary);
   return summary;
 }
 
@@ -230,6 +342,9 @@ async function tryClientReviewAfterShift(page) {
 }
 
 async function run() {
+  const startedAt = new Date().toISOString();
+  cleanupBefore = await runCleanup('before');
+
   stripeHealth = await fetchStripeHealth();
   log('stripe-health', stripeHealth.configured, JSON.stringify(stripeHealth));
 
@@ -240,7 +355,7 @@ async function run() {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     ignoreHTTPSErrors: true,
-    geolocation: { latitude: 34.1016, longitude: -118.3416, accuracy: 5 },
+    geolocation: { latitude: FIELD_TEST_SITE.lat, longitude: FIELD_TEST_SITE.lng, accuracy: 5 },
     permissions: ['geolocation'],
   });
   await applyFieldTestGeolocation(context);
@@ -553,21 +668,47 @@ async function run() {
   }
 
   await browser.close();
+  cleanupAfter = await runCleanup('after');
+  return startedAt;
 }
 
-await run()
-  .then(() => {
-    const summary = writeReport();
+const startedAt = await run()
+  .then((started) => started)
+  .catch(async (err) => {
+    console.error(err);
+    cleanupAfter = await runCleanup('after');
+    throw err;
+  })
+  .then(async (started) => {
+    const summary = writeReport(started);
     console.log('\n--- Field test summary ---');
     console.log(`Base: ${summary.base}`);
     console.log(`Passed: ${summary.passed}  Failed: ${summary.failed}`);
     console.log(`Design findings: ${summary.designFindings.length}`);
+    console.log(`Fixes applied: ${summary.fixesApplied.length}`);
     console.log(`Page errors: ${summary.pageErrors.length}`);
-    console.log(`Report: ${path.join(OUT, 'report.json')}`);
+    console.log(`Report JSON: ${summary.reportJsonPath}`);
+    console.log(`Report MD:   ${path.join(OUT, 'report.md')}`);
+
+    try {
+      const chat = await postFieldtestReportToStaffChat(summary);
+      log('staff-chat-report', chat.ok, chat.detail);
+      summary.staffChatReport = chat;
+      fs.writeFileSync(summary.reportJsonPath, JSON.stringify(summary, null, 2));
+    } catch (err) {
+      log('staff-chat-report', false, String(err).slice(0, 300));
+    }
+
     if (summary.failed > 0) process.exit(1);
   })
-  .catch((err) => {
+  .catch(async (err) => {
     console.error(err);
-    writeReport();
+    const summary = writeReport(new Date().toISOString());
+    try {
+      const chat = await postFieldtestReportToStaffChat(summary);
+      log('staff-chat-report', chat.ok, chat.detail);
+    } catch (chatErr) {
+      log('staff-chat-report', false, String(chatErr).slice(0, 300));
+    }
     process.exit(1);
   });

@@ -1603,3 +1603,131 @@ export const CLIENT_PATHS = [
 ];
 
 export const PUBLIC_PATHS = ['/', '/legal/terms', '/legal/privacy'];
+
+const FIELDTEST_KEY_STEPS = [
+  'cleanup-before',
+  'staff-signup-market-check',
+  'public-signup-jane-doe',
+  'public-signup-john-doe',
+  'staff-approve-jane-doe',
+  'staff-approve-john-doe',
+  'client-job-post',
+  'staff-approve-job-listing',
+  'client-payment-gate',
+  'staff-verify-john-creds',
+  'guard-apply',
+  'jane-approve-john',
+  'guard-shift-workflow',
+  'cleanup-after',
+];
+
+/** Condensed report for Staff chat (staff@guardr.co posts after each run). */
+export function formatFieldtestStaffChatReport(summary) {
+  const lines = [
+    `📋 Fieldtest report — ${summary.runId}`,
+    `${summary.marketCity || FIELD_TEST_MARKET_CITY} · ${summary.passed} passed · ${summary.failed} failed`,
+    `Jane: ${summary.emails?.client ?? '—'} · John: ${summary.emails?.guard ?? '—'}`,
+    '',
+    'Cleanup:',
+  ];
+
+  for (const phase of ['before', 'after']) {
+    const c = summary.cleanup?.[phase];
+    if (!c) continue;
+    if (c.skipped) {
+      lines.push(`• ${phase}: skipped`);
+      continue;
+    }
+    const found = c.found
+      ? `g${c.found.guards}/c${c.found.clients}/s${c.found.staff}`
+      : '—';
+    const rem = c.verify?.remaining ? JSON.stringify(c.verify.remaining) : '—';
+    lines.push(`• ${phase}: ${c.ok ? 'OK' : 'FAIL'} (found ${found}, remaining ${rem})`);
+  }
+
+  lines.push('', 'Workflow:');
+  for (const key of FIELDTEST_KEY_STEPS) {
+    const row = summary.results?.find((r) => r.label === key);
+    if (!row) continue;
+    lines.push(`${row.ok ? '✓' : '✗'} ${key}${row.detail ? `: ${String(row.detail).slice(0, 80)}` : ''}`);
+  }
+
+  const failed = (summary.results || []).filter((r) => !r.ok && !FIELDTEST_KEY_STEPS.includes(r.label));
+  if (failed.length > 0) {
+    lines.push('', 'Other failures:');
+    for (const row of failed.slice(0, 12)) {
+      lines.push(`✗ ${row.label}: ${String(row.detail || '').slice(0, 100)}`);
+    }
+    if (failed.length > 12) lines.push(`… +${failed.length - 12} more (see report.json)`);
+  }
+
+  lines.push('', 'Fixes during run:');
+  if (!summary.fixesApplied?.length) {
+    lines.push('• None');
+  } else {
+    for (const fix of summary.fixesApplied) {
+      lines.push(`• ${fix.phase}: ${fix.description}`);
+    }
+  }
+
+  lines.push('', `Artifacts: ${summary.reportJsonPath || path.join(OUT, 'report.json')}`);
+  return lines.join('\n').slice(0, 7800);
+}
+
+/** Post fieldtest summary to internal Staff chat as staff@guardr.co. */
+export async function postFieldtestReportToStaffChat(summary) {
+  const { chromium } = await import('@playwright/test');
+  const body = formatFieldtestStaffChatReport(summary);
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--ignore-certificate-errors'],
+  });
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      ignoreHTTPSErrors: true,
+    });
+    const page = await context.newPage();
+    const { failed, body: loginBody } = await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
+    if (failed) {
+      return { ok: false, detail: `staff login failed: ${loginBody.slice(0, 200)}` };
+    }
+
+    await page.goto(`${BASE}/staff/messages?mtab=team`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await dismissOverlays(page);
+    await page.waitForTimeout(800);
+
+    const teamTab = page.getByRole('button', { name: /^Team$/i }).first();
+    if (await teamTab.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await teamTab.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(400);
+    }
+
+    const staffChat = page.getByRole('button', { name: /Staff chat/i }).first();
+    if (await staffChat.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await staffChat.click({ force: true });
+      await page.waitForTimeout(600);
+    }
+
+    const composer = page.locator('textarea.app-chat-composer-input, textarea[placeholder*="Guardr team"]').first();
+    if (!(await composer.isVisible({ timeout: 5000 }).catch(() => false))) {
+      return { ok: false, detail: 'Staff chat composer not found' };
+    }
+
+    await composer.fill(body);
+    await page.waitForTimeout(300);
+    const send = page.getByRole('button', { name: /Send message/i }).first();
+    if (await send.isDisabled().catch(() => true)) {
+      return { ok: false, detail: 'Send button disabled after filling report' };
+    }
+    await send.click({ force: true });
+    await page.waitForTimeout(1500);
+
+    const threadText = await page.locator('body').innerText();
+    const posted = threadText.includes(summary.runId) || threadText.includes('Fieldtest report');
+    return { ok: posted, detail: posted ? 'posted to Staff chat' : 'send clicked; verify in thread' };
+  } finally {
+    await browser.close();
+  }
+}
