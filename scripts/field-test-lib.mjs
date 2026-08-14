@@ -62,6 +62,15 @@ export const VIEWPORTS = {
   mobile: { width: 390, height: 844, isMobile: true, hasTouch: true },
 };
 
+/** Key staff console pages each ladder role should reach after public apply + approval. */
+export const STAFF_LADDER_PATHS = [
+  '/staff/overview',
+  '/staff/applications',
+  '/staff/jobs',
+  '/staff/support',
+  '/staff/messages',
+];
+
 /** Paths visited on every viewport after the desktop walkthrough. */
 export const VIEWPORT_SWEEP_PATHS = {
   public: ['/'],
