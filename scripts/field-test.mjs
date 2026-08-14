@@ -21,6 +21,7 @@ import {
   STAFF_LADDER_ROLES,
   STAFF_PASSWORD,
   STAFF_SECTIONS,
+  PROMO_AD_BY_PATH,
   VIEWPORTS,
   VIEWPORT_SWEEP_PATHS,
   adShot,
@@ -73,6 +74,10 @@ function writeReport() {
     rule: 'Every action while signed in as that role — no cross-role shortcuts',
     names: { client: AD.client.name, guard: AD.guard.name, company: AD.client.company },
     fakeCredential: FAKE_CRED || null,
+    screenshotsDir: path.join(OUT, 'screenshots'),
+    adScreenshotsDir: path.join(OUT, 'ad-screenshots'),
+    promoNote:
+      'screenshots/ = every step (full diagnostic). ad-screenshots/{desktop,tablet,mobile}/ = promo-ready Jane/John Doe shots.',
   };
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(summary, null, 2));
   return summary;
@@ -342,6 +347,7 @@ async function run() {
     const { jobPosted, body, url } = await postJobThroughWizard(page);
     await shot(page, 'client-job-post');
     log('client-job-post', jobPosted, jobPosted ? url : body.slice(0, 300));
+    if (jobPosted) await adShot(page, 'desktop', '07-client-job-posted');
   }
   await adShot(page, 'desktop', '04-client-home');
   await assertJaneJohn(page, log, 'client-home');
@@ -359,8 +365,11 @@ async function run() {
     for (const u of uploads) log(`john-cred-${u.step}`, u.ok, u.detail);
   }
 
+  await page.goto(`${BASE}/guard/activation`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await adShot(page, 'desktop', '03-guard-activation');
+
   // ══════════════════════════════════════════════════════════════
-  // PHASE 6 — Staff operator: verify creds + activate John (staff-only)
   // ══════════════════════════════════════════════════════════════
   await loginAsStaffOperator(page, context);
   {
@@ -400,6 +409,7 @@ async function run() {
   await clickFirstMatching(page, [/Approve guard/i, /^Approve$/i], 2000);
   await shot(page, 'jane-approve-john');
   log('jane-approve-john', true, page.url());
+  await adShot(page, 'desktop', '11-client-approve-guard');
   await tryClientPayAndReview(page);
 
   // ══════════════════════════════════════════════════════════════
@@ -476,8 +486,9 @@ async function run() {
       await checkLayout(sp, `${device}${p}`, findings);
       await tryScroll(sp, `${device}${p}`, findings);
       await clickAllFilterTabs(sp);
-      if (/violations|disputes|payments/.test(p)) {
-        await adShot(sp, device, p.replace('/staff/', 'staff-'));
+      const promoName = PROMO_AD_BY_PATH[p];
+      if (promoName) {
+        await adShot(sp, device, promoName);
         await assertJaneJohn(sp, log, `${device}${p}`);
       }
     }
@@ -489,6 +500,11 @@ async function run() {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
       await checkLayout(sp, `${device}${p}`, findings);
       await tryScroll(sp, `${device}${p}`, findings);
+      const promoName = PROMO_AD_BY_PATH[p];
+      if (promoName) {
+        await adShot(sp, device, promoName);
+        await assertJaneJohn(sp, log, `${device}${p}`);
+      }
     }
 
     await hardReset(sp, sweepCtx);
@@ -498,6 +514,11 @@ async function run() {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
       await checkLayout(sp, `${device}${p}`, findings);
       await tryScroll(sp, `${device}${p}`, findings);
+      const promoName = PROMO_AD_BY_PATH[p];
+      if (promoName) {
+        await adShot(sp, device, promoName);
+        await assertJaneJohn(sp, log, `${device}${p}`);
+      }
     }
 
     await sweepCtx.close();

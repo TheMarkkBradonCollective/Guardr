@@ -71,6 +71,23 @@ export const STAFF_LADDER_PATHS = [
   '/staff/messages',
 ];
 
+/** Promo-ready ad captures keyed by path (Jane/John on screen, no E2E labels). */
+export const PROMO_AD_BY_PATH = {
+  '/client/home': '04-client-home',
+  '/client/jobs': '05-client-jobs',
+  '/client/payments': '06-client-payments',
+  '/guard/map': '02-guard-marketplace-map',
+  '/guard/activation': '03-guard-activation',
+  '/guard/my-jobs': '17-guard-my-jobs',
+  '/guard/payments': '16-guard-earnings',
+  '/staff/overview': '08-staff-overview',
+  '/staff/jobs': '09-staff-jobs',
+  '/staff/applications': '10-staff-applications',
+  '/staff/payments': '14-staff-payments',
+  '/staff/violations': '23-staff-violations',
+  '/staff/disputes': '24-staff-disputes',
+};
+
 /** Paths visited on every viewport after the desktop walkthrough. */
 export const VIEWPORT_SWEEP_PATHS = {
   public: ['/'],
