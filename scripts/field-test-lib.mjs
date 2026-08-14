@@ -971,7 +971,366 @@ export async function searchAndOpen(page, term) {
   return false;
 }
 
-export async function postJobThroughWizard(page) {
+/** Hollywood site used for geocoding + guard on-site GPS during shift tests. */
+export const FIELD_TEST_SITE = {
+  lat: 34.1016,
+  lng: -118.3416,
+  address: '6801 Hollywood Blvd, Los Angeles, CA 90028',
+};
+
+/** Shift window: started recently, ends soon — clock-in open now, complete opens during the run. */
+export function shiftTimesForFieldTest() {
+  const now = Date.now();
+  const start = new Date(now - 90 * 60 * 1000);
+  const end = new Date(now + 8 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtDate = (d) => d.toISOString().slice(0, 10);
+  const fmtTime = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {
+    startDate: fmtDate(start),
+    endDate: fmtDate(end),
+    startTime: fmtTime(start),
+    endTime: fmtTime(end),
+  };
+}
+
+export async function fetchStripeHealth() {
+  try {
+    const res = await fetch(`${BASE}/api/stripe/health`);
+    const data = await res.json();
+    const pk = data.publishableKey || '';
+    return {
+      configured: Boolean(data.configured),
+      publishableKey: pk,
+      testMode: pk.startsWith('pk_test_'),
+      liveMode: pk.startsWith('pk_live_'),
+    };
+  } catch (err) {
+    return {
+      configured: false,
+      publishableKey: null,
+      testMode: false,
+      liveMode: false,
+      error: String(err).slice(0, 200),
+    };
+  }
+}
+
+export async function applyFieldTestGeolocation(context) {
+  const { lat, lng } = FIELD_TEST_SITE;
+  await context.grantPermissions(['geolocation'], { origin: BASE }).catch(() => {});
+  await context.addInitScript(
+    ({ lat: la, lng: ln }) => {
+      const makePos = () => ({
+        coords: {
+          latitude: la,
+          longitude: ln,
+          accuracy: 5,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      });
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: {
+          getCurrentPosition: (success, error) => {
+            try {
+              success(makePos());
+            } catch (e) {
+              error?.(e);
+            }
+          },
+          watchPosition: (success) => {
+            success(makePos());
+            return 1;
+          },
+          clearWatch: () => {},
+        },
+      });
+    },
+    { lat, lng }
+  );
+}
+
+export async function injectGuardAvailability(page) {
+  const guardId = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((k) => k.startsWith('guardr_guard_availability_'));
+    if (key) return key.replace('guardr_guard_availability_', '');
+    try {
+      const raw = localStorage.getItem('guardr_current_user');
+      if (!raw) return null;
+      const user = JSON.parse(raw);
+      return user?.role === 'guard' ? user.id : null;
+    } catch {
+      return null;
+    }
+  });
+  if (!guardId) return false;
+  await page.evaluate((id) => {
+    const weekly = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+      id: `avail-${id}-${day}`,
+      guardId: id,
+      dayOfWeek: day,
+      startTime: '00:00',
+      endTime: '23:59',
+      isAvailable: true,
+    }));
+    localStorage.setItem(`guardr_guard_availability_${id}`, JSON.stringify(weekly));
+  }, guardId);
+  return true;
+}
+
+export async function domClickButton(page, patternSrc) {
+  return page.evaluate((source) => {
+    const re = new RegExp(source, 'i');
+    const el = [...document.querySelectorAll('button')].find((b) => {
+      const label = `${b.textContent || ''} ${b.getAttribute('aria-label') || ''}`.trim();
+      return re.test(label) && !b.disabled && b.getAttribute('aria-disabled') !== 'true';
+    });
+    if (!el) return null;
+    el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    el.click();
+    return (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 80);
+  }, patternSrc instanceof RegExp ? patternSrc.source : String(patternSrc));
+}
+
+export async function clickShiftAction(page, patterns, timeout = 2000) {
+  for (const name of patterns) {
+    const b = page.getByRole('button', { name }).first();
+    if (await b.isVisible({ timeout }).catch(() => false)) {
+      await b.scrollIntoViewIfNeeded().catch(() => {});
+      const disabled = await b.isDisabled().catch(() => false);
+      if (disabled) continue;
+      const viaDom = await domClickButton(page, name);
+      if (!viaDom) await b.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(1400);
+      return viaDom || name.toString();
+    }
+  }
+  for (const name of patterns) {
+    const viaDom = await domClickButton(page, name);
+    if (viaDom) {
+      await page.waitForTimeout(1400);
+      return `text:${viaDom}`;
+    }
+  }
+  return null;
+}
+
+export async function staffApproveJobListing(page, jobTitle = 'Field Test') {
+  await page.goto(`${BASE}/staff/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  await page.getByText(jobTitle, { exact: false }).first().click({ force: true }).catch(() => {});
+  await page.waitForTimeout(900);
+
+  const edit = page.getByRole('button', { name: /Edit job listing/i }).first();
+  if (await edit.isVisible({ timeout: 2500 }).catch(() => false)) {
+    await edit.click({ force: true });
+    await page.waitForTimeout(1000);
+    const lat = page.getByPlaceholder(/34\.05223|latitude|lat/i).first();
+    const lng = page.getByPlaceholder(/-118\.24368|longitude|lng/i).first();
+    if (await lat.isVisible({ timeout: 800 }).catch(() => false)) {
+      await lat.fill(String(FIELD_TEST_SITE.lat));
+    }
+    if (await lng.isVisible({ timeout: 800 }).catch(() => false)) {
+      await lng.fill(String(FIELD_TEST_SITE.lng));
+    }
+    await clickFirstMatching(page, [/Apply coordinates/i], 1200);
+    await page.waitForTimeout(500);
+    await clickFirstMatching(page, [/Save changes/i], 2000);
+    await page.waitForTimeout(1500);
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(400);
+    await page.getByText(jobTitle, { exact: false }).first().click({ force: true }).catch(() => {});
+    await page.waitForTimeout(800);
+  }
+
+  const approveBtn = page.getByRole('button', { name: /Approve Job/i }).first();
+  const disabled = await approveBtn.isDisabled().catch(() => true);
+  if (!disabled && (await approveBtn.isVisible({ timeout: 2000 }).catch(() => false))) {
+    await approveBtn.click({ force: true });
+    await page.waitForTimeout(1500);
+    await confirmAppDialog(page).catch(() => {});
+  }
+  const body = await page.locator('body').innerText();
+  const ok = /Open|Approved|Active/i.test(body) && !/Pending review/i.test(body.slice(0, 500));
+  return { ok, detail: body.match(/Open|Pending review|No map coordinates/i)?.[0] || body.slice(0, 200) };
+}
+
+export async function clientApproveGuardOnJob(page, searchTerm = 'Field Test') {
+  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  await page.getByRole('button', { name: /^Open$/i }).first().click({ force: true }).catch(() => {});
+  await page.waitForTimeout(400);
+  const opened = await searchAndOpen(page, searchTerm);
+  if (!opened) {
+    await page.getByText(new RegExp(searchTerm, 'i')).first().click({ force: true }).catch(() => {});
+  }
+  await page.waitForTimeout(800);
+  const approved = await clickFirstMatching(page, [/Approve guard/i, /^Approve$/i], 2500);
+  if (approved) await confirmAppDialog(page, [/Confirm/i, /Approve/i, /Yes/i]);
+  await page.waitForTimeout(1500);
+  const body = await page.locator('body').innerText();
+  return {
+    ok: Boolean(approved) || /confirmed|assigned|accepted/i.test(body),
+    detail: approved || body.slice(0, 200),
+  };
+}
+
+export async function completeStripeCheckout(page, log, stripeHealth, shotFn) {
+  await page.waitForTimeout(2000);
+  const url = page.url();
+  if (!/checkout\.stripe\.com|pay\.stripe\.com|stripe\.com\/c\/pay/i.test(url)) {
+    return { ok: false, paid: false, detail: `no stripe redirect: ${url}` };
+  }
+  if (shotFn) await shotFn('stripe-checkout');
+  if (!stripeHealth.testMode) {
+    log(
+      'stripe-live-mode',
+      true,
+      'Checkout opened on live Stripe — use pk_test_ keys (staging/preview) to complete with card 4242…'
+    );
+    return { ok: true, paid: false, detail: 'checkout-opened-live-mode' };
+  }
+
+  const fillCard = async () => {
+    const selectors = [
+      'input[name="cardNumber"]',
+      'input[autocomplete="cc-number"]',
+      'input[placeholder*="1234"]',
+      '#cardNumber',
+    ];
+    for (const sel of selectors) {
+      const el = page.locator(sel).first();
+      if (await el.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await el.fill('4242424242424242');
+        return true;
+      }
+    }
+    const frame = page.frameLocator('iframe[name*="card"], iframe[title*="card"]').first();
+    const inner = frame.locator('input[name="cardnumber"], input[placeholder*="1234"]').first();
+    if (await inner.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await inner.fill('4242424242424242');
+      return true;
+    }
+    return false;
+  };
+
+  const filled = await fillCard();
+  if (!filled) {
+    return { ok: false, paid: false, detail: 'could not find card field on Stripe Checkout' };
+  }
+  await page.locator('input[name="cardExpiry"], input[autocomplete="cc-exp"]').first().fill('12/34').catch(() => {});
+  await page.locator('input[name="cardCvc"], input[autocomplete="cc-csc"]').first().fill('123').catch(() => {});
+  await page.locator('input[name="billingName"], input[autocomplete="name"]').first().fill('Jane Doe').catch(() => {});
+  await page.getByRole('button', { name: /pay/i }).click({ force: true }).catch(() => {});
+  await page.waitForURL(/guardr\.co|payment=success|client\/invoices/i, { timeout: 120_000 }).catch(() => {});
+  const paid = /payment=success|paid/i.test(page.url()) || /paid|thank you|success/i.test(await page.locator('body').innerText());
+  if (shotFn) await shotFn('stripe-payment-success');
+  return { ok: paid, paid, detail: paid ? page.url() : `checkout submitted — ${page.url()}` };
+}
+
+export async function clientPayJobWithStripe(page, log, stripeHealth, shotFn) {
+  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  await page.getByRole('button', { name: /^Open$/i }).first().click({ force: true }).catch(() => {});
+  await page.waitForTimeout(400);
+  await searchAndOpen(page, 'Field Test');
+  await page.waitForTimeout(800);
+  if (shotFn) await shotFn('client-pay-before');
+  const payClicked = await clickFirstMatching(page, [/Pay with Stripe/i, /Pay now/i, /^Pay$/i], 3000);
+  if (!payClicked) {
+    await page.goto(`${BASE}/client/payments`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await clickFirstMatching(page, [/Pay with Stripe/i, /Pay now/i, /^Pay$/i], 2500);
+  }
+  await page.waitForTimeout(2500);
+  const checkout = await completeStripeCheckout(page, log, stripeHealth, shotFn);
+  log('client-stripe-payment', checkout.paid || checkout.ok, checkout.detail);
+  return checkout;
+}
+
+export async function completeGuardShiftOnMap(page, log, shotFn) {
+  await injectGuardAvailability(page);
+  await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
+  await waitReady(page);
+  await dismissOverlays(page);
+  await page.waitForTimeout(2000);
+  await clickShiftAction(page, [/Next Job/i, /See full details/i, /See job details/i], 2000);
+  if (shotFn) await shotFn('guard-shift-map-start');
+
+  let clicked = await clickShiftAction(page, [/Skip self audit/i], 2500);
+  if (!clicked) {
+    await clickShiftAction(page, [/start job/i, /Slide to start job/i], 2000);
+    await page.waitForTimeout(800);
+    await page.getByRole('button', { name: /Close/i }).first().click({ force: true }).catch(() => {});
+    clicked = await clickShiftAction(page, [/Skip self audit/i], 2000);
+  }
+  log('guard-skip-self-audit', Boolean(clicked), clicked || 'not shown');
+  if (clicked) {
+    await clickShiftAction(page, [/Skip and continue/i], 2500);
+    await page.waitForTimeout(1200);
+  }
+
+  await clickShiftAction(page, [/I have read the site briefing/i, /I have read the post orders/i], 2000);
+  await page.waitForTimeout(1500);
+  if (shotFn) await shotFn('guard-shift-clocked-in');
+
+  const bodyAfterClock = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  const clocked = /On job|on-duty|in progress|Complete job/i.test(bodyAfterClock);
+  log('guard-clock-in', clocked, clocked ? 'on duty' : bodyAfterClock.slice(0, 280));
+
+  // Wait for scheduled end (posted ~8 min ahead) so Complete job unlocks.
+  let completeClicked = null;
+  const deadline = Date.now() + 9 * 60 * 1000;
+  while (Date.now() < deadline) {
+    completeClicked = await clickShiftAction(
+      page,
+      [/complete job/i, /Slide to complete job/i, /End shift/i],
+      1500
+    );
+    if (completeClicked) break;
+    const body = await page.locator('body').innerText();
+    if (/Complete job opens at/i.test(body)) {
+      await page.waitForTimeout(15_000);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitReady(page);
+      await dismissOverlays(page);
+      continue;
+    }
+    if (/On job|on-duty|in progress/i.test(body) && !/Complete job opens at/i.test(body)) {
+      completeClicked = await clickShiftAction(page, [/complete job/i, /Slide to complete job/i], 1500);
+      if (completeClicked) break;
+    }
+    await page.waitForTimeout(10_000);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await dismissOverlays(page);
+  }
+  log('guard-complete-click', Boolean(completeClicked), completeClicked || 'complete CTA never enabled');
+
+  await clickShiftAction(page, [/I left at scheduled end/i, /I stayed — complete job now/i], 2500);
+  await page.waitForTimeout(1000);
+  await clickShiftAction(page, [/Skip all and end shift/i], 3000);
+  await clickShiftAction(page, [/Skip and end shift/i], 2500);
+  await page.waitForTimeout(1500);
+  await clickShiftAction(page, [/^Skip$/i, /Not now/i, /Skip rating/i], 2000);
+  if (shotFn) await shotFn('guard-shift-completed');
+
+  const finalBody = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  const completed = /completed|shift complete|thank you/i.test(finalBody);
+  log('guard-shift-complete', completed || Boolean(completeClicked), finalBody.slice(0, 280));
+  return { ok: completed || Boolean(completeClicked), detail: finalBody.slice(0, 300) };
+}
+
+export async function postJobThroughWizard(page, options = {}) {
+  const shift = options.shiftPreset === 'immediate-complete' ? shiftTimesForFieldTest() : null;
   let jobPosted = false;
   const pending = await page.getByText(/Account pending approval/i).isVisible({ timeout: 1500 }).catch(() => false);
   if (pending) {
@@ -1012,7 +1371,7 @@ export async function postJobThroughWizard(page) {
       const labelish = name + ' ' + ((await input.getAttribute('aria-label')) || '').toLowerCase();
       if (/email|password/.test(labelish)) continue;
       if (/address|street|location|site/.test(labelish)) {
-        await input.fill('6801 Hollywood Blvd, Los Angeles, CA 90028');
+        await input.fill(FIELD_TEST_SITE.address);
       } else if (/city/.test(labelish)) {
         await input.fill('Los Angeles');
       } else if (/zip|postal/.test(labelish)) {
@@ -1026,11 +1385,19 @@ export async function postJobThroughWizard(page) {
       } else if (/guard|count|quantity|heads/.test(labelish)) {
         await input.fill('1');
       } else if (type === 'date' || /date/.test(labelish)) {
-        const d = new Date();
-        d.setDate(d.getDate() + 2);
-        await input.fill(d.toISOString().slice(0, 10));
+        if (shift) {
+          await input.fill(/end/.test(labelish) ? shift.endDate : shift.startDate);
+        } else {
+          const d = new Date();
+          d.setDate(d.getDate() + 2);
+          await input.fill(d.toISOString().slice(0, 10));
+        }
       } else if (type === 'time' || /time|start|end/.test(labelish)) {
-        await input.fill(labelish.includes('end') ? '22:00' : '18:00');
+        if (shift) {
+          await input.fill(/end/.test(labelish) ? shift.endTime : shift.startTime);
+        } else {
+          await input.fill(labelish.includes('end') ? '22:00' : '18:00');
+        }
       } else if (type === 'number') {
         await input.fill('1');
       }

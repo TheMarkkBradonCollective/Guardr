@@ -26,15 +26,21 @@ import {
   VIEWPORT_SWEEP_PATHS,
   adShot,
   approvePendingGuard,
+  applyFieldTestGeolocation,
   assertJaneJohn,
   attachDiagnostics,
   checkLayout,
   clickAllFilterTabs,
   clickFirstMatching,
+  clientApproveGuardOnJob,
+  clientPayJobWithStripe,
+  completeGuardShiftOnMap,
   confirmAppDialog,
   createLogger,
   dismissOverlays,
+  fetchStripeHealth,
   hardReset,
+  injectGuardAvailability,
   login,
   makeRunId,
   makeTestEmails,
@@ -44,6 +50,7 @@ import {
   signUpClient,
   signUpGuard,
   signUpStaff,
+  staffApproveJobListing,
   staffVerifyOpenCredentials,
   tryScroll,
   uploadFakeCredentials,
@@ -57,6 +64,7 @@ const runId = makeRunId();
 const emails = makeTestEmails(runId);
 const findings = [];
 const diagnostics = { pageErrors: [], consoleErrors: [] };
+let stripeHealth = { configured: false, testMode: false, liveMode: false };
 
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -78,6 +86,9 @@ function writeReport() {
     adScreenshotsDir: path.join(OUT, 'ad-screenshots'),
     promoNote:
       'screenshots/ = every step (full diagnostic). ad-screenshots/{desktop,tablet,mobile}/ = promo-ready Jane/John Doe shots.',
+    stripe: stripeHealth,
+    workflowNote:
+      'Jane pays while job is open (marketplace requires paid). John completes shift on /guard/map after client approves guard.',
   };
   fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(summary, null, 2));
   return summary;
@@ -183,6 +194,7 @@ async function inspectStaffIssuePanels(page) {
 }
 
 async function tryGuardApply(page) {
+  await injectGuardAvailability(page);
   await page.goto(`${BASE}/guard/map`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await dismissOverlays(page);
@@ -199,27 +211,12 @@ async function tryGuardApply(page) {
   await shot(page, 'guard-apply-attempt');
   const body = await page.locator('body').innerText();
   return {
-    ok: Boolean(applied) || /activation|credential|no (open )?jobs|marketplace/i.test(body),
+    ok: Boolean(applied) || /awaiting client|application sent|pending/i.test(body),
     detail: applied || body.match(/activation|credential|no jobs|apply/i)?.[0] || 'no apply CTA',
   };
 }
 
-async function tryClientPayAndReview(page) {
-  await page.goto(`${BASE}/client/payments`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await dismissOverlays(page);
-  await shot(page, 'client-payments');
-  const payText = await page.locator('body').innerText();
-  log(
-    'client-payments-screen',
-    /invoice|payment|pay|stripe|unpaid|paid|empty|no /i.test(payText),
-    payText.slice(0, 180).replace(/\s+/g, ' ')
-  );
-  await clickFirstMatching(page, [/pay|checkout|card/i], 1200);
-  await page.waitForTimeout(1500);
-  const after = page.url();
-  log('client-stripe-checkout', /stripe|checkout/i.test(after) || true, after);
-
+async function tryClientReviewAfterShift(page) {
   await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await clickFirstMatching(page, [/completed/i], 1000);
@@ -229,33 +226,10 @@ async function tryClientPayAndReview(page) {
   log('client-review-cta', true, review || 'no completed job to review yet');
 }
 
-async function tryGuardPaymentsAndShift(page) {
-  await page.goto(`${BASE}/guard/payments`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await dismissOverlays(page);
-  await shot(page, 'guard-payments');
-  const text = await page.locator('body').innerText();
-  log(
-    'guard-payments-screen',
-    /earning|payout|pay|stripe|bank|connect|empty|no /i.test(text),
-    text.slice(0, 180).replace(/\s+/g, ' ')
-  );
-  await clickFirstMatching(page, [/connect (your )?bank|send to my bank|stripe/i], 1200);
-  await page.waitForTimeout(800);
-
-  await page.goto(`${BASE}/guard/my-jobs`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await clickAllFilterTabs(page);
-  await shot(page, 'guard-my-jobs');
-  const clock = await clickFirstMatching(
-    page,
-    [/clock in|start shift|en route|complete job|on duty/i],
-    1500
-  );
-  log('guard-shift-cta', true, clock || 'no live shift CTA (expected until assignment)');
-}
-
 async function run() {
+  stripeHealth = await fetchStripeHealth();
+  log('stripe-health', stripeHealth.configured, JSON.stringify(stripeHealth));
+
   const browser = await chromium.launch({
     headless: true,
     args: ['--ignore-certificate-errors'],
@@ -263,7 +237,10 @@ async function run() {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     ignoreHTTPSErrors: true,
+    geolocation: { latitude: 34.1016, longitude: -118.3416, accuracy: 5 },
+    permissions: ['geolocation'],
   });
+  await applyFieldTestGeolocation(context);
   const page = await context.newPage();
   attachDiagnostics(page, diagnostics);
 
@@ -344,7 +321,7 @@ async function run() {
   await waitReady(page);
   await dismissOverlays(page);
   {
-    const { jobPosted, body, url } = await postJobThroughWizard(page);
+    const { jobPosted, body, url } = await postJobThroughWizard(page, { shiftPreset: 'immediate-complete' });
     await shot(page, 'client-job-post');
     log('client-job-post', jobPosted, jobPosted ? url : body.slice(0, 300));
     if (jobPosted) await adShot(page, 'desktop', '07-client-job-posted');
@@ -354,6 +331,27 @@ async function run() {
   await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await adShot(page, 'desktop', '05-client-jobs');
+
+  // ══════════════════════════════════════════════════════════════
+  // PHASE 4b — Staff operator: approve job listing (open + coords)
+  // ══════════════════════════════════════════════════════════════
+  await loginAsStaffOperator(page, context);
+  {
+    const approved = await staffApproveJobListing(page, 'Field Test');
+    await shot(page, 'staff-approve-job-listing');
+    log('staff-approve-job-listing', approved.ok, approved.detail);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // PHASE 4c — Client Jane: pay job (required before guard marketplace apply)
+  // ══════════════════════════════════════════════════════════════
+  await loginAsClientJane(page, context);
+  {
+    const pay = await clientPayJobWithStripe(page, log, stripeHealth, (n) => shot(page, n));
+    await shot(page, 'client-payments');
+    await adShot(page, 'desktop', '06-client-payments');
+    log('client-payment-gate', pay.paid || pay.ok, pay.detail);
+  }
 
   // ══════════════════════════════════════════════════════════════
   // PHASE 5 — Guard John: his workspace + upload fake credentials
@@ -387,7 +385,7 @@ async function run() {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 7 — Guard John: marketplace apply, earnings, shift CTAs
+  // PHASE 7 — Guard John: marketplace apply
   // ══════════════════════════════════════════════════════════════
   await loginAsGuardJohn(page, context);
   {
@@ -396,24 +394,39 @@ async function run() {
     await adShot(page, 'desktop', '02-guard-marketplace-map');
     await assertJaneJohn(page, log, 'marketplace');
   }
-  await tryGuardPaymentsAndShift(page);
-  await adShot(page, 'desktop', '16-guard-earnings');
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 8 — Client Jane: approve guard for job, pay, review
+  // PHASE 8 — Client Jane: approve guard on her job
   // ══════════════════════════════════════════════════════════════
   await loginAsClientJane(page, context);
-  await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
-  await waitReady(page);
-  await searchAndOpen(page, 'Field Test');
-  await clickFirstMatching(page, [/Approve guard/i, /^Approve$/i], 2000);
-  await shot(page, 'jane-approve-john');
-  log('jane-approve-john', true, page.url());
-  await adShot(page, 'desktop', '11-client-approve-guard');
-  await tryClientPayAndReview(page);
+  {
+    const approved = await clientApproveGuardOnJob(page, 'Field Test');
+    await shot(page, 'jane-approve-john');
+    log('jane-approve-john', approved.ok, approved.detail);
+    await adShot(page, 'desktop', '11-client-approve-guard');
+  }
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 9 — Staff operator: full ops tour + issue panels + ads
+  // PHASE 9 — Guard John: clock in + complete shift on map
+  // ══════════════════════════════════════════════════════════════
+  await loginAsGuardJohn(page, context);
+  {
+    const shift = await completeGuardShiftOnMap(page, log, (n) => shot(page, n));
+    log('guard-shift-workflow', shift.ok, shift.detail);
+    await page.goto(`${BASE}/guard/payments`, { waitUntil: 'domcontentloaded' });
+    await waitReady(page);
+    await shot(page, 'guard-payments');
+    await adShot(page, 'desktop', '16-guard-earnings');
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // PHASE 10 — Client Jane: review after completed shift
+  // ══════════════════════════════════════════════════════════════
+  await loginAsClientJane(page, context);
+  await tryClientReviewAfterShift(page);
+
+  // ══════════════════════════════════════════════════════════════
+  // PHASE 11 — Staff operator: full ops tour + issue panels + ads
   // ══════════════════════════════════════════════════════════════
   await loginAsStaffOperator(page, context);
   for (const section of STAFF_SECTIONS) {
@@ -446,7 +459,7 @@ async function run() {
   await adShot(page, 'desktop', '24-staff-disputes');
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 10 — Each ladder staff: sign in as themselves + tour
+  // PHASE 12 — Each ladder staff: sign in as themselves + tour
   // ══════════════════════════════════════════════════════════════
   for (const role of STAFF_LADDER_ROLES) {
     await hardReset(page, context);
@@ -459,7 +472,7 @@ async function run() {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // PHASE 11 — Viewport sweep (each role signs in on each device)
+  // PHASE 13 — Viewport sweep (each role signs in on each device)
   // ══════════════════════════════════════════════════════════════
   for (const [device, vp] of Object.entries(VIEWPORTS)) {
     const sweepCtx = await browser.newContext({
