@@ -16,6 +16,7 @@ import {
   matchesApplicationKindFilter,
   matchesApplicationStatusFilter,
   matchesClientRosterFilter,
+  matchesCredentialAudienceFilter,
   matchesCredentialStatusFilter,
   matchesGuardRosterFilter,
   matchesStaffTeamFilter,
@@ -187,5 +188,52 @@ describe('staffListFilters', () => {
     assert.equal(matchesClientRosterFilter(activeClient, 'active'), true);
     assert.equal(matchesStaffTeamFilter(pendingStaff, 'pending'), true);
     assert.equal(matchesStaffTeamFilter(activeStaff, 'active'), true);
+  });
+
+  it('filters credential feed items by staff vs guard audience', () => {
+    const guard = {
+      id: 'g-1',
+      name: 'Field Guard',
+      email: 'g@test.com',
+      userStatus: 'approved',
+      verified: true,
+      mustChangePassword: false,
+      isStaff: false,
+      idVerificationStatus: 'pending',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      certifications: [],
+    } as SecurityGuard;
+    const staffMember = {
+      id: 's-1',
+      name: 'Staff Member',
+      email: 's@test.com',
+      userStatus: 'approved',
+      mustChangePassword: false,
+      isStaff: true,
+      staffRole: 'Moderator',
+      badgeNumber: 'MOD-00001',
+      idVerificationStatus: 'pending',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+      certifications: [],
+    } as SecurityGuard;
+
+    const feed = buildStaffApprovalsFeed({
+      guards: [guard, staffMember],
+      clients: [],
+      requests: [],
+    }).filter((item) => item.queue === 'credentials');
+
+    const guardItem = feed.find((item) => item.id === govIdApprovalItemId('g-1'));
+    const staffItem = feed.find((item) => item.id === govIdApprovalItemId('s-1'));
+    assert.ok(guardItem);
+    assert.ok(staffItem);
+    assert.equal(matchesCredentialAudienceFilter(guardItem!, 'guards', [guard, staffMember]), true);
+    assert.equal(matchesCredentialAudienceFilter(guardItem!, 'staff', [guard, staffMember]), false);
+    assert.equal(matchesCredentialAudienceFilter(staffItem!, 'staff', [guard, staffMember]), true);
+    assert.equal(matchesCredentialAudienceFilter(staffItem!, 'guards', [guard, staffMember]), false);
   });
 });

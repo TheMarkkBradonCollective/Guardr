@@ -10,6 +10,7 @@ import {
 import type { ApprovalFeedItem } from './staffApprovalsFeed';
 import {
   CREDENTIAL_PENDING_UPLOAD_LABEL,
+  credentialFeedItemAudience,
   isApplicationFeedItemPending,
   isCredentialFeedItemAwaitingStaffReview,
   isCredentialFeedItemRejected,
@@ -19,6 +20,8 @@ export type ApplicationStatusFilter = 'all' | 'pending' | 'approved' | 'denied';
 export type ApplicationKindFilter = 'all' | 'client' | 'guard' | 'staff';
 
 export type CredentialStatusFilter = 'pending_upload' | 'pending_review' | 'verified' | 'rejected' | 'all';
+
+export type CredentialAudienceFilter = 'staff' | 'guards';
 
 export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
@@ -76,6 +79,16 @@ export function matchesCredentialStatusFilter(
     case 'rejected':
       return isCredentialFeedItemRejected(item);
   }
+}
+
+export function matchesCredentialAudienceFilter(
+  item: ApprovalFeedItem,
+  filter: CredentialAudienceFilter,
+  guards: SecurityGuard[]
+): boolean {
+  const audience = credentialFeedItemAudience(item, guards);
+  if (!audience) return false;
+  return filter === 'staff' ? audience === 'staff' : audience === 'guard';
 }
 
 export function matchesGuardRosterFilter(guard: SecurityGuard, filter: GuardRosterFilter): boolean {

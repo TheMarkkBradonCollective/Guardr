@@ -13,6 +13,7 @@ import {
   resolveApprovalFocusItemId,
   resolveCredentialFeedContext,
   credentialFeedThumbnailUrl,
+  enrichCredentialFeedItemDisplay,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import {
@@ -22,8 +23,12 @@ import {
 import { approvalFeedItemMatchesSearch } from '../../lib/credentialSearch';
 import {
   matchesCredentialStatusFilter,
+  matchesCredentialAudienceFilter,
   type CredentialStatusFilter,
+  type CredentialAudienceFilter,
 } from '../../lib/staffListFilters';
+import { isExecutiveOpsRole } from '../../lib/permissions';
+import type { PlatformRole } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
@@ -58,6 +63,7 @@ import {
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
   canVerifyCredentials: boolean;
+  currentUserRole?: PlatformRole;
   initialItemId?: string | null;
   initialGuardId?: string | null;
   onItemIdChange?: (itemId: string | null) => void;
@@ -80,6 +86,7 @@ interface StaffCredentialsProps {
   ) => void | Promise<void>;
   onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
+  onOpenStaffProfile?: (staffId: string) => void;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -159,6 +166,7 @@ function CredentialFeedRow({
 export function StaffCredentials({
   guards,
   canVerifyCredentials,
+  currentUserRole,
   initialItemId = null,
   initialGuardId = null,
   onItemIdChange,
@@ -173,11 +181,14 @@ export function StaffCredentials({
   onReviewGuardInsurance,
   onRequestCoiUpdate,
   onOpenGuardProfile,
+  onOpenStaffProfile,
   onUpdateGuardIdImages,
   onAddCertification,
 }: StaffCredentialsProps) {
   const { formFactor } = useDevice();
+  const [audienceFilter, setAudienceFilter] = useState<CredentialAudienceFilter>('guards');
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
+  const showStaffBadge = Boolean(currentUserRole && isExecutiveOpsRole(currentUserRole));
   const [search, setSearch] = useState('');
   const [activeItemId, setActiveItemId] = useState<string | null>(initialItemId);
   const [auditLog, setAuditLog] = useState<Awaited<ReturnType<typeof loadAuditLog>>>([]);
@@ -197,9 +208,15 @@ export function StaffCredentials({
     return filterApprovalsFeedByQueue(feed, 'credentials');
   }, [guards, auditLog]);
 
+  const displayCredentialFeed = useMemo(() => {
+    return credentialFeed.map((item) => enrichCredentialFeedItemDisplay(item, guards, showStaffBadge));
+  }, [credentialFeed, guards, showStaffBadge]);
+
   const visibleFeed = useMemo(() => {
-    return credentialFeed.filter((item) => matchesCredentialStatusFilter(item, filter));
-  }, [credentialFeed, filter]);
+    return displayCredentialFeed
+      .filter((item) => matchesCredentialAudienceFilter(item, audienceFilter, guards))
+      .filter((item) => matchesCredentialStatusFilter(item, filter));
+  }, [displayCredentialFeed, audienceFilter, filter, guards]);
 
   const filteredFeed = useMemo(() => {
     return visibleFeed.filter((item) => approvalFeedItemMatchesSearch(item, search));
@@ -474,16 +491,16 @@ export function StaffCredentials({
   };
 
   const pendingUploadCount = useMemo(
-    () => countPendingCredentialUploads(guards),
-    [guards]
+    () => countPendingCredentialUploads(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
+    [guards, audienceFilter]
   );
   const pendingReviewCount = useMemo(
-    () => countPendingCredentialReviews(guards),
-    [guards]
+    () => countPendingCredentialReviews(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
+    [guards, audienceFilter]
   );
   const rejectedCount = useMemo(
-    () => countRejectedCredentials(guards),
-    [guards]
+    () => countRejectedCredentials(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
+    [guards, audienceFilter]
   );
 
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
@@ -497,7 +514,7 @@ export function StaffCredentials({
     }
     const stillVisible = activeItemId ? filteredFeed.some((item) => item.id === activeItemId) : false;
     if (!stillVisible) openItem(filteredFeed[0].id);
-  }, [filter, filteredFeed, activeItemId, formFactor]);
+  }, [filter, audienceFilter, filteredFeed, activeItemId, formFactor]);
 
   const credentialColumns: GuardrTableColumn<ApprovalFeedItem>[] = useMemo(
     () => [
@@ -551,14 +568,24 @@ export function StaffCredentials({
     if (!context) return null;
 
     const { guard } = context;
-    const profileLink = onOpenGuardProfile ? () => onOpenGuardProfile(guard.id) : undefined;
+    const profileLink = guard.isStaff
+      ? onOpenStaffProfile
+        ? () => onOpenStaffProfile(guard.id)
+        : undefined
+      : onOpenGuardProfile
+        ? () => onOpenGuardProfile(guard.id)
+        : undefined;
+    const profileName =
+      showStaffBadge && guard.isStaff && guard.badgeNumber?.trim()
+        ? guard.badgeNumber.trim()
+        : guard.name;
 
     const detailBody =
       context.kind === 'cert' ? (
         <StaffCertReviewDetail
           cert={context.cert}
           feedItem={feedItem}
-          guardName={guard.name}
+          guardName={profileName}
           onOpenGuardProfile={profileLink}
           actions={renderCertActions(guard, context.cert)}
         />
@@ -566,7 +593,7 @@ export function StaffCredentials({
         <StaffCoiReviewDetail
           guard={guard}
           feedItem={feedItem}
-          guardName={guard.name}
+          guardName={profileName}
           onOpenGuardProfile={profileLink}
           actions={
             <>
@@ -579,7 +606,7 @@ export function StaffCredentials({
         <StaffGovIdReviewDetail
           guard={guard}
           feedItem={feedItem}
-          guardName={guard.name}
+          guardName={profileName}
           onOpenGuardProfile={profileLink}
           actions={
             <>
@@ -593,7 +620,7 @@ export function StaffCredentials({
           guard={guard}
           stepKey={context.stepKey}
           feedItem={feedItem}
-          guardName={guard.name}
+          guardName={profileName}
           onOpenGuardProfile={profileLink}
         />
       );
@@ -624,7 +651,7 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
-      {onAddCertification ? (
+      {onAddCertification && audienceFilter === 'guards' ? (
         <div className="staff-ops-cta-stack">
           <StaffCredentialAddForGuardForm
             guards={guards}
@@ -639,18 +666,29 @@ export function StaffCredentials({
         placeholder="Search credentials..."
         className="max-w-md"
       />
-      <StaffListFilterTabs
-        aria-label="Credential status"
-        activeId={filter}
-        onChange={(id) => setFilter(id as CredentialStatusFilter)}
-        tabs={[
-          { id: 'all', label: 'All' },
-          { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
-          { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
-          { id: 'verified', label: 'Verified' },
-          { id: 'rejected', label: 'Rejected', count: rejectedCount },
-        ]}
-      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label="Credential audience"
+          activeId={audienceFilter}
+          onChange={(id) => setAudienceFilter(id as CredentialAudienceFilter)}
+          tabs={[
+            { id: 'staff', label: 'Staff' },
+            { id: 'guards', label: 'Guards' },
+          ]}
+        />
+        <StaffListFilterTabs
+          aria-label="Credential status"
+          activeId={filter}
+          onChange={(id) => setFilter(id as CredentialStatusFilter)}
+          tabs={[
+            { id: 'all', label: 'All' },
+            { id: 'pending_review', label: 'Pending review', count: pendingReviewCount },
+            { id: 'pending_upload', label: 'Pending upload', count: pendingUploadCount },
+            { id: 'verified', label: 'Verified' },
+            { id: 'rejected', label: 'Rejected', count: rejectedCount },
+          ]}
+        />
+      </div>
     </>
   ) : null;
 
