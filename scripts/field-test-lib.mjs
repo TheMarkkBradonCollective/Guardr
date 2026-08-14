@@ -178,6 +178,7 @@ export async function dismissOverlays(page) {
       /^Skip$/i,
       /^Close$/i,
       /Finish/i,
+      /Accept and continue/i,
     ]) {
       const b = page.getByRole('button', { name }).first();
       if (await b.isVisible({ timeout: 250 }).catch(() => false)) {
@@ -196,7 +197,7 @@ export async function dismissOverlays(page) {
       }
     }
     const cont = page
-      .getByRole('button', { name: /^(Continue|Accept|I agree|Agree)$/i })
+      .getByRole('button', { name: /^(Continue|Accept and continue|Accept|I agree|Agree)$/i })
       .first();
     if (await cont.isVisible({ timeout: 300 }).catch(() => false)) {
       await cont.click({ force: true }).catch(() => {});
@@ -469,6 +470,8 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
       await cityBox.check({ force: true }).catch(() => {});
     }
     await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true });
+    await dismissOverlays(page);
+    await page.getByRole('button', { name: /add staff member|add staff|create/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(2000);
     const body = await page.locator('body').innerText();
     const ok = new RegExp(email.split('@')[0], 'i').test(body) || /added|created|pending|default sign-in/i.test(body);
@@ -514,6 +517,7 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     await clickNamedCta(page, String.raw`\+?\s*Add client`);
     const open = await page.getByText(/Add client account/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add client form did not open' };
+    await dismissOverlays(page);
     await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
     await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
     await page.getByPlaceholder('client@company.com').fill(email, { timeout: 4000 }).catch(async () => {
@@ -526,9 +530,11 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     await page.getByPlaceholder('Optional — shows on job posts').fill(company).catch(() => {});
     await page.locator('label', { hasText: /^Phone$/i }).locator('xpath=..').locator('input').fill(phone).catch(() => {});
     await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true });
+    await dismissOverlays(page);
+    await page.getByRole('button', { name: /create client account|add client/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
-    return { ok: /added|created|Jane|default sign-in/i.test(body), detail: body.slice(0, 400) };
+    return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
@@ -542,6 +548,7 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     await clickNamedCta(page, String.raw`\+?\s*Add guard`);
     const open = await page.getByText(/Add field guard/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add guard form did not open' };
+    await dismissOverlays(page);
     await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
     await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
     await page.getByPlaceholder('guard@example.com').fill(email, { timeout: 4000 }).catch(async () => {
@@ -549,9 +556,11 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     });
     await page.getByPlaceholder('Optional').fill(phone).catch(() => {});
     await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true });
+    await dismissOverlays(page);
+    await page.getByRole('button', { name: /create guard profile|add guard/i }).last().click({ force: true }).catch(() => {});
     await page.waitForTimeout(1800);
     const body = await page.locator('body').innerText();
-    return { ok: /added|created|John|default sign-in/i.test(body), detail: body.slice(0, 400) };
+    return { ok: new RegExp(`${firstName}\\s+${lastName}|${email}`, 'i').test(body), detail: body.slice(0, 400) };
   } catch (err) {
     return { ok: false, detail: String(err).slice(0, 400) };
   }
