@@ -15,7 +15,6 @@ import {
   FIELD_TEST_PASSWORD,
   GUARD_PATHS,
   OUT,
-  PROVISIONED_PASSWORD,
   PUBLIC_PATHS,
   STAFF_EMAIL,
   STAFF_LADDER_ROLES,
@@ -23,9 +22,6 @@ import {
   STAFF_SECTIONS,
   VIEWPORTS,
   VIEWPORT_SWEEP_PATHS,
-  addClientViaStaff,
-  addGuardViaStaff,
-  addStaffViaTeam,
   adShot,
   approvePendingClient,
   approvePendingGuard,
@@ -44,6 +40,8 @@ import {
   postJobThroughWizard,
   searchAndOpen,
   shot,
+  signUpClient,
+  signUpGuard,
   signUpStaff,
   staffVerifyOpenCredentials,
   tryScroll,
@@ -92,8 +90,13 @@ async function staffApproveApplication(page, searchTerm) {
     2500
   );
   if (approved) {
-    await page.waitForTimeout(800);
-    await clickFirstMatching(page, [/Confirm/i, /^Approve$/i, /Yes/i], 1200);
+    await confirmAppDialog(page, [
+      /^Approve account$/i,
+      /^Approve profile$/i,
+      /^Approve application$/i,
+      /^Confirm$/i,
+      /^Yes$/i,
+    ]);
     await page.waitForTimeout(1200);
   }
   const body = await page.locator('body').innerText();
@@ -216,7 +219,43 @@ async function run() {
   }
   await adShot(page, 'desktop', '01-landing-hero');
 
-  // ── Staff operator login ─────────────────────────────────────
+  // ── Public self-signup from main page (Jane / John / ladder staff) ─
+  await hardReset(page, context);
+  {
+    const { ok, body, url } = await signUpClient(page, emails.client, FIELD_TEST_PASSWORD, {
+      firstName: AD.client.first,
+      lastName: AD.client.last,
+      company: AD.client.company,
+    });
+    await shot(page, 'public-signup-jane-doe');
+    log('public-signup-jane-doe', ok, ok ? url : body.slice(0, 300));
+  }
+
+  await hardReset(page, context);
+  {
+    const { ok, body, url } = await signUpGuard(page, emails.guard, FIELD_TEST_PASSWORD, {
+      firstName: AD.guard.first,
+      lastName: AD.guard.last,
+    });
+    await shot(page, 'public-signup-john-doe');
+    log('public-signup-john-doe', ok, ok ? url : body.slice(0, 300));
+  }
+
+  for (const role of STAFF_LADDER_ROLES) {
+    await hardReset(page, context);
+    try {
+      const { ok, body, url } = await signUpStaff(page, emails.staff[role], FIELD_TEST_PASSWORD, {
+        firstName: 'Field',
+        lastName: role,
+      });
+      await shot(page, `public-signup-staff-${role.toLowerCase()}`);
+      log(`public-signup-staff-${role.toLowerCase()}`, ok, ok ? url : body.slice(0, 300));
+    } catch (err) {
+      log(`public-signup-staff-${role.toLowerCase()}`, false, String(err).slice(0, 300));
+    }
+  }
+
+  // ── Staff operator login + tour ──────────────────────────────
   await hardReset(page, context);
   {
     const { failed, body, url } = await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
@@ -236,66 +275,27 @@ async function run() {
   }
   await inspectStaffIssuePanels(page);
 
-  // ── Create Jane Doe (client) + John Doe (guard) in the app ───
+  // ── Staff approves public applicants (Jane / John / ladder staff) ─
   {
-    const jane = await addClientViaStaff(page, {
-      firstName: AD.client.first,
-      lastName: AD.client.last,
-      email: emails.client,
-      company: AD.client.company,
-      phone: '(555) 010-1001',
-    });
-    await shot(page, 'staff-add-jane-doe');
-    log('staff-add-jane-doe', jane.ok, jane.detail);
+    const janeApprove = await staffApproveApplication(page, emails.client);
+    await shot(page, 'staff-approve-jane-doe');
+    log('staff-approve-jane-doe', janeApprove.ok, janeApprove.detail);
   }
   {
-    const john = await addGuardViaStaff(page, {
-      firstName: AD.guard.first,
-      lastName: AD.guard.last,
-      email: emails.guard,
-      phone: '(555) 010-2002',
-    });
-    await shot(page, 'staff-add-john-doe');
-    log('staff-add-john-doe', john.ok, john.detail);
+    const johnApprove = await staffApproveApplication(page, emails.guard);
+    await shot(page, 'staff-approve-john-doe');
+    log('staff-approve-john-doe', johnApprove.ok, johnApprove.detail);
   }
-
-  // ── Provision staff of each ladder role via Team UI ──────────
   for (const role of STAFF_LADDER_ROLES) {
-    try {
-      const email = emails.staff[role];
-      const added = await addStaffViaTeam(page, {
-        firstName: 'Field',
-        lastName: role,
-        email,
-        role,
-      });
-      await shot(page, `staff-add-${role.toLowerCase()}`);
-      log(`staff-provision-${role.toLowerCase()}`, added.ok, added.detail);
-    } catch (err) {
-      log(`staff-provision-${role.toLowerCase()}`, false, String(err).slice(0, 300));
-    }
-  }
-
-  // ── Public staff application (extra intake path) ─────────────
-  await hardReset(page, context);
-  {
-    const { ok, body, url } = await signUpStaff(page, emails.staffSignup, FIELD_TEST_PASSWORD);
-    await shot(page, 'staff-public-signup');
-    log('staff-public-signup', ok, ok ? url : body.slice(0, 300));
-  }
-
-  await hardReset(page, context);
-  await login(page, 'staff', STAFF_EMAIL, STAFF_PASSWORD);
-  {
-    const staffApprove = await staffApproveApplication(page, emails.staffSignup);
-    await shot(page, 'staff-approve-staff-app');
-    log('staff-approve-public-staff', staffApprove.ok, staffApprove.detail);
+    const approved = await staffApproveApplication(page, emails.staff[role]);
+    await shot(page, `staff-approve-${role.toLowerCase()}`);
+    log(`staff-approve-${role.toLowerCase()}`, approved.ok, approved.detail);
   }
 
   // ── Jane Doe: all routes, post job, pay, review ──────────────
   await hardReset(page, context);
   {
-    const { failed, url, body } = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+    const { failed, url, body } = await login(page, 'client', emails.client, FIELD_TEST_PASSWORD);
     await shot(page, 'client-login-jane');
     log('client-login-jane', !failed, failed ? 'sign-in failed' : url);
     if (!failed && /Account pending approval/i.test(body || '')) {
@@ -308,7 +308,7 @@ async function run() {
       await shot(page, 'staff-approve-jane-retry');
       log('staff-approve-jane-retry', retry.ok, retry.detail);
       await hardReset(page, context);
-      const again = await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+      const again = await login(page, 'client', emails.client, FIELD_TEST_PASSWORD);
       log('client-login-jane-after-approve', !again.failed, again.url);
     }
   }
@@ -335,7 +335,7 @@ async function run() {
   // ── John Doe: activation + fake credentials ──────────────────
   await hardReset(page, context);
   {
-    const { failed, body, url } = await login(page, 'guard', emails.guard, PROVISIONED_PASSWORD);
+    const { failed, body, url } = await login(page, 'guard', emails.guard, FIELD_TEST_PASSWORD);
     await shot(page, 'guard-login-john');
     const activation = /activation|government id|guard card|application under review/i.test(body);
     log('guard-login-john', !failed, failed ? body.slice(0, 300) : activation ? 'activation checklist' : url);
@@ -369,7 +369,7 @@ async function run() {
 
   // ── John: marketplace apply, pay, shift ──────────────────────
   await hardReset(page, context);
-  await login(page, 'guard', emails.guard, PROVISIONED_PASSWORD);
+  await login(page, 'guard', emails.guard, FIELD_TEST_PASSWORD);
   {
     const apply = await tryGuardApply(page);
     log('guard-apply', apply.ok, apply.detail);
@@ -381,7 +381,7 @@ async function run() {
 
   // ── Jane approves John's application if still pending ────────
   await hardReset(page, context);
-  await login(page, 'client', emails.client, PROVISIONED_PASSWORD);
+  await login(page, 'client', emails.client, FIELD_TEST_PASSWORD);
   await page.goto(`${BASE}/client/jobs`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await searchAndOpen(page, 'Field Test');
@@ -422,7 +422,7 @@ async function run() {
       page,
       'staff',
       emails.staff[role],
-      PROVISIONED_PASSWORD
+      FIELD_TEST_PASSWORD
     );
     await shot(page, `staff-login-${role.toLowerCase()}`);
     log(
@@ -465,7 +465,7 @@ async function run() {
     }
 
     await hardReset(sp, sweepCtx);
-    const clientIn = await login(sp, 'client', emails.client, PROVISIONED_PASSWORD);
+    const clientIn = await login(sp, 'client', emails.client, FIELD_TEST_PASSWORD);
     log(`${device}-client-login`, !clientIn.failed, sp.url());
     for (const p of VIEWPORT_SWEEP_PATHS.client) {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);
@@ -474,7 +474,7 @@ async function run() {
     }
 
     await hardReset(sp, sweepCtx);
-    const guardIn = await login(sp, 'guard', emails.guard, PROVISIONED_PASSWORD);
+    const guardIn = await login(sp, 'guard', emails.guard, FIELD_TEST_PASSWORD);
     log(`${device}-guard-login`, !guardIn.failed, sp.url());
     for (const p of VIEWPORT_SWEEP_PATHS.guard) {
       await visitPath(sp, log, `${device}${p.replace(/\//g, '-')}`, p);

@@ -6,9 +6,9 @@ Run a **100% app-driven** field test against production (or preview). No Supabas
 
 This is a full **head-to-toe** diagnostic **and** advertisement capture:
 
-- Sign in as `staff@guardr.co`
-- Create **client, guard, and staff (each ladder role)** in the website/app
-- Use **Jane Doe** (client) and **John Doe** (guard) display names
+- Sign in as `staff@guardr.co` to **approve** applicants created on the main site
+- **Jane Doe** and **John Doe** self-sign up from the landing page (client + guard flows)
+- Each ladder staff role self-applies from the public staff intake form
 - Upload **fake credentials** for John and staff-verify them in the UI
 - Walk jobs through apply → approve → shift → complete → payments
 - Test violations, disputes, reviews, and every staff/client/guard surface
@@ -55,7 +55,7 @@ GUARDR_BASE_URL=http://127.0.0.1:4173 npm run fieldtest
 | `FIELD_TEST_STAFF_PASSWORD` | `#FieldTestStaff2026` |
 | `FIELD_TEST_PASSWORD` | `#FieldTest2026` (public self-signup) |
 
-Staff-provisioned Jane/John and ladder staff sign in with `#Qwerty12345`.
+Staff-provisioned Jane/John and ladder staff sign in with `#FieldTest2026` (the password they chose on the public sign-up form).
 
 ## What it must do (all through the UI)
 
@@ -63,16 +63,17 @@ Staff-provisioned Jane/John and ladder staff sign in with `#Qwerty12345`.
 
 Sign in as `staff@guardr.co`. Visit every `/staff/*` section. Click filter tabs on violations, disputes, incidents, payments, credentials, support.
 
-### 2. Create accounts in the app (Jane / John Doe)
+### 2. Create accounts on the main site (Jane / John Doe + staff applicants)
 
-From the staff console (not SQL):
+From the **public landing page** — not the staff console:
 
-1. **Clients → Add client** — Jane Doe, Jane Doe Properties, `jane.doe.<tag>@guardr.test`
-2. **Guards → Add guard** — John Doe, `john.doe.<tag>@guardr.test`
-3. **Team → Add staff** for each ladder role: Support, Moderator, Administrator, Manager, Director
-4. Optional: public staff application (Support intake)
-5. Approve pending Jane / John / staff applications from Applications
-6. Sign in as each provisioned ladder role to confirm access
+1. **Client sign-up** (`/?auth=sign-up&ar=client`) — Jane Doe, Jane Doe Properties, `jane.doe.<tag>@guardr.test`
+2. **Guard sign-up** (`/?auth=sign-up&ar=guard`) — John Doe, `john.doe.<tag>@guardr.test`
+3. **Staff application** (`/?auth=sign-up&ar=staff`) — one application per ladder role email: Support, Moderator, Administrator, Manager, Director (`fieldtest.staff.<role>.<tag>@guardr.test`)
+
+Then sign in as **`staff@guardr.co`** and approve every pending application from **Applications** (Jane, John, each staff applicant).
+
+Sign in as each provisioned ladder role to confirm access after approval.
 
 ### 3. Fake credentials + activation (John Doe)
 

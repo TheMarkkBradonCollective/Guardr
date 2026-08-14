@@ -346,14 +346,19 @@ export async function visitPath(page, log, label, pathSeg) {
   return !broken && !loggedOut;
 }
 
-export async function signUpClient(page, email, password) {
+export async function signUpClient(
+  page,
+  email,
+  password,
+  { firstName = AD.client.first, lastName = AD.client.last, company = AD.client.company } = {}
+) {
   await page.goto(`${BASE}/?auth=sign-up&ar=client`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
-  await fillIfVisible(page, /^First name$/i, 'Field');
-  await fillIfVisible(page, /^Last name$/i, 'Client');
+  await fillIfVisible(page, /^First name$/i, firstName);
+  await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
   await page.locator('input[type="password"]').first().fill(password);
-  await fillIfVisible(page, /Acme Corp/i, 'Field Test Properties LLC');
+  await fillIfVisible(page, /Acme Corp/i, company);
   await fillIfVisible(page, /\+1 \(555\)/i, '(555) 010-1001');
   await selectFirstCity(page, /Primary city of operations/i);
   await acceptTerms(page);
@@ -365,11 +370,16 @@ export async function signUpClient(page, email, password) {
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
-export async function signUpGuard(page, email, password) {
+export async function signUpGuard(
+  page,
+  email,
+  password,
+  { firstName = AD.guard.first, lastName = AD.guard.last } = {}
+) {
   await page.goto(`${BASE}/?auth=sign-up&ar=guard`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
-  await fillIfVisible(page, /^First name$/i, 'Field');
-  await fillIfVisible(page, /^Last name$/i, 'Guard');
+  await fillIfVisible(page, /^First name$/i, firstName);
+  await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
   await page.locator('input[type="password"]').first().fill(password);
   await fillLabeled(page, /^Phone$/i, '(555) 010-2002');
@@ -401,11 +411,11 @@ export async function signUpGuard(page, email, password) {
   return { ok, body: body.slice(0, 1500), url: page.url() };
 }
 
-export async function signUpStaff(page, email, password) {
+export async function signUpStaff(page, email, password, { firstName = 'Field', lastName = 'Support' } = {}) {
   await page.goto(`${BASE}/?auth=sign-up&ar=staff`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
-  await fillIfVisible(page, /^First name$/i, 'Field');
-  await fillIfVisible(page, /^Last name$/i, 'Support');
+  await fillIfVisible(page, /^First name$/i, firstName);
+  await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
   await page.locator('input[type="password"]').first().fill(password);
   await fillLabeled(page, /^Phone$/i, '(555) 010-4004');
