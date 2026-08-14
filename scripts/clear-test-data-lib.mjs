@@ -6,6 +6,18 @@ import fs from 'node:fs';
 
 const CONFIG_PATH = process.env.SUPABASE_CONFIG || '/tmp/supabase-prod.json';
 
+/** Fake credential numbers issued during fieldtest guard activation uploads. */
+const FIELD_TEST_CERT_OR_FILTER = [
+  'number.eq.FT-DOE-guard-card',
+  'number.eq.PTA-DOE-2026',
+  'number.eq.CE-DOE-2026',
+  'number.eq.COI-DOE-2026',
+  'number.eq.D1234567',
+  'number.ilike.*-DOE-*',
+  'name.ilike.*Field Test*',
+  'issuer.ilike.*Field Test*',
+].join(',');
+
 function loadConfig() {
   return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 }
@@ -74,6 +86,29 @@ async function collectTestProfiles(url, key) {
   };
 }
 
+async function collectFieldtestCertifications(url, key) {
+  const byPattern = await select(
+    url,
+    key,
+    'certifications',
+    `or=(${FIELD_TEST_CERT_OR_FILTER})`,
+    'id,guard_id,number,name'
+  ).catch(() => []);
+  const guardIds = new Set();
+  for (const row of await collectTestProfiles(url, key).then((p) => p.guards)) {
+    guardIds.add(row.id);
+  }
+  const byGuard = [];
+  for (const guardId of guardIds) {
+    byGuard.push(
+      ...(await select(url, key, 'certifications', `guard_id=eq.${guardId}`, 'id,guard_id,number,name').catch(
+        () => []
+      ))
+    );
+  }
+  return [...new Map([...byPattern, ...byGuard].map((c) => [c.id, c])).values()];
+}
+
 async function deleteJobsForClient(url, key, clientId, dryRun) {
   const jobs = await select(url, key, 'security_requests', `client_id=eq.${clientId}`, 'id,title');
   for (const job of jobs) {
@@ -88,6 +123,7 @@ async function deleteJobsForClient(url, key, clientId, dryRun) {
 
 async function deleteGuardData(url, key, guardId, dryRun) {
   const tables = [
+    ['job_guard_slots', `guard_id=eq.${guardId}`],
     ['certifications', `guard_id=eq.${guardId}`],
     ['experience', `guard_id=eq.${guardId}`],
     ['education', `guard_id=eq.${guardId}`],
@@ -149,15 +185,18 @@ async function verifyClean(url, key) {
 
   const testClientIds = new Set(remaining.clients.map((c) => c.id));
   const testJobs = jobs.filter((j) => testClientIds.has(j.client_id));
+  const fieldtestCerts = await collectFieldtestCertifications(url, key).catch(() => []);
 
   return {
     remaining,
     testJobs,
+    fieldtestCerts,
     clean:
       remaining.guards.length === 0 &&
       remaining.clients.length === 0 &&
       remaining.staff.length === 0 &&
-      testJobs.length === 0,
+      testJobs.length === 0 &&
+      fieldtestCerts.length === 0,
   };
 }
 
@@ -171,6 +210,7 @@ export async function clearTestData(options = {}) {
   const { url, anon: key } = loadConfig();
 
   const profiles = await collectTestProfiles(url, key);
+  const fieldtestCerts = await collectFieldtestCertifications(url, key);
   const emails = [
     ...profiles.guards.map((g) => g.email),
     ...profiles.clients.map((c) => c.email),
@@ -187,7 +227,17 @@ export async function clearTestData(options = {}) {
     await deleteStaffData(url, key, staffMember.id, dryRun);
   }
 
-  const removed = { guards: 0, clients: 0, staff: 0 };
+  const removedCerts = { count: 0 };
+  if (!dryRun) {
+    for (const cert of fieldtestCerts) {
+      const r = await del(url, key, 'certifications', `id=eq.${cert.id}`, false).catch(() => ({ count: 0 }));
+      removedCerts.count += r.count || 0;
+    }
+  } else {
+    removedCerts.count = fieldtestCerts.length;
+  }
+
+  const removed = { guards: 0, clients: 0, staff: 0, certifications: removedCerts.count };
   if (!dryRun) {
     for (const guard of profiles.guards) {
       const r = await del(url, key, 'guards', `id=eq.${guard.id}`, false);
@@ -206,12 +256,14 @@ export async function clearTestData(options = {}) {
   let verifyPayload;
   if (dryRun) {
     verifyPayload = {
-      clean: profiles.guards.length + profiles.clients.length + profiles.staff.length === 0,
+      clean:
+        profiles.guards.length + profiles.clients.length + profiles.staff.length + fieldtestCerts.length === 0,
       remaining: {
         guards: profiles.guards.length,
         clients: profiles.clients.length,
         staff: profiles.staff.length,
         testJobs: 0,
+        certifications: fieldtestCerts.length,
       },
     };
   } else {
@@ -223,6 +275,7 @@ export async function clearTestData(options = {}) {
         clients: v.remaining.clients.length,
         staff: v.remaining.staff.length,
         testJobs: v.testJobs.length,
+        certifications: v.fieldtestCerts.length,
       },
     };
   }
@@ -236,6 +289,7 @@ export async function clearTestData(options = {}) {
       guards: profiles.guards.length,
       clients: profiles.clients.length,
       staff: profiles.staff.length,
+      certifications: fieldtestCerts.length,
     },
     removed,
     verify: verifyPayload,

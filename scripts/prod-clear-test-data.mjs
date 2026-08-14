@@ -13,7 +13,7 @@ async function main() {
   console.log(`Guardr test-data cleanup${result.dryRun ? ' (DRY RUN)' : ''}`);
   console.log(`Supabase: ${result.supabaseUrl}`);
   console.log(
-    `Found ${result.found.guards} guard(s), ${result.found.clients} client(s), ${result.found.staff} staff`
+    `Found ${result.found.guards} guard(s), ${result.found.clients} client(s), ${result.found.staff} staff, ${result.found.certifications} field-test certification(s)`
   );
   for (const email of result.emails) console.log(`  ${email}`);
   console.log(
