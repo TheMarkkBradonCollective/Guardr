@@ -27,8 +27,8 @@ node scripts/seed-field-test-staff.mjs
 | Email | `staff@guardr.co` |
 | Password | `#FieldTestStaff2026` |
 | Sign-in path | Staff (`/?auth=sign-in&ar=staff`) |
-| Display name | Staff (Field Test) |
-| Access | Founder-level ops (QA operator only) |
+| Display name | Guardr |
+| Access | Director-level ops (QA operator only; branded Guardr in Staff chat) |
 
 ## Run
 

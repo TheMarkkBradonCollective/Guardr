@@ -109,6 +109,19 @@ export function isGuardrSupportSender(senderId: string, senderName?: string): bo
   return normalized === 'guardr staff' || normalized === 'guardr support';
 }
 
+/** Field-test automation account — branded as Guardr in Staff chat (not Founder). */
+export const GUARDR_FIELDTEST_ACTOR = {
+  id: 'staff-field-test-guardr',
+  name: 'Guardr',
+  role: 'director' as const,
+};
+
+export function isGuardrFieldTestSender(senderId: string, senderName?: string): boolean {
+  if (senderId === GUARDR_FIELDTEST_ACTOR.id) return true;
+  const normalized = senderName?.trim().toLowerCase();
+  return normalized === 'guardr' || normalized === 'staff (field test)';
+}
+
 export function guardNeedsActivationSupportChat(
   guard: Pick<SecurityGuard, 'id' | 'email' | 'isStaff' | 'userStatus' | 'certifications'>,
   tickets: SupportTicket[]

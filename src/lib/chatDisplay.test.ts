@@ -50,6 +50,15 @@ describe('chatDisplay staff privacy', () => {
     );
   });
 
+  it('brands field-test automation as Guardr in staff chat', async () => {
+    const { staffChatSenderLabel } = await import('./staffMessenger');
+    assert.equal(
+      staffChatSenderLabel('owner', 'Staff (Field Test)', 'staff-field-test-guardr'),
+      'Guardr'
+    );
+    assert.equal(staffChatSenderLabel('director', 'Guardr', 'staff-field-test-guardr'), 'Guardr');
+  });
+
   it('masks quoted reply senders when they are staff', () => {
     const thread = [{ senderName: 'Jane Director', senderRole: 'director' as const }];
     assert.equal(maskReplySenderName('client', 'Jane Director', thread), 'Director');

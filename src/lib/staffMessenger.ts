@@ -1,4 +1,5 @@
 import { PlatformRole, StaffMessage, SessionUser } from '../types';
+import { isGuardrFieldTestSender } from './support';
 import { isStaffRole, ROLE_LABELS } from './permissions';
 
 const STORAGE_KEY = 'guardr_staff_messages';
@@ -65,7 +66,14 @@ export function sortedStaffMessages(messages: StaffMessage[]): StaffMessage[] {
 }
 
 /** Staff chat bubble label — Guardr brand, role, then person's name. */
-export function staffChatSenderLabel(role: PlatformRole, name: string): string {
+export function staffChatSenderLabel(
+  role: PlatformRole,
+  name: string,
+  senderId?: string
+): string {
+  if (isGuardrFieldTestSender(senderId ?? '', name)) {
+    return 'Guardr';
+  }
   const roleLabel = ROLE_LABELS[role] ?? role;
   const displayName = name.trim() || 'Staff';
   return `Guardr · ${roleLabel} · ${displayName}`;
