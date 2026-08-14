@@ -456,7 +456,7 @@ export async function addStaffViaTeam(page, { firstName, lastName, email, role }
     }
     await clearBlockingModals(page);
     await page.getByPlaceholder('First name').fill(firstName, { timeout: 4000 });
-    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
     await page.getByRole('button', { name: /use next/i }).click({ force: true }).catch(() => {});
     const emailInput = page.getByPlaceholder(/signaturesecurityspecialist/i).first();
     if (await emailInput.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -501,22 +501,20 @@ export async function assertJaneJohn(page, log, label) {
 }
 
 export async function clearBlockingModals(page) {
-  for (let i = 0; i < 8; i++) {
-    await dismissOverlays(page);
-    const clicked = await page.evaluate(() => {
-      const labels = [/Accept and continue/i, /^Continue$/i, /^I agree$/i, /^Accept$/i];
-      const buttons = [...document.querySelectorAll('button')];
-      for (const re of labels) {
-        const btn = buttons.find((b) => re.test((b.textContent || '').trim()));
-        if (btn && btn.offsetParent !== null) {
-          btn.click();
-          return true;
-        }
-      }
-      return false;
-    });
-    if (!clicked) break;
-    await page.waitForTimeout(400);
+  for (let i = 0; i < 6; i++) {
+    const boxes = page.locator('input[type="checkbox"]:visible');
+    const n = await boxes.count();
+    for (let j = 0; j < n; j++) {
+      const box = boxes.nth(j);
+      if (!(await box.isChecked().catch(() => true))) await box.check({ force: true }).catch(() => {});
+    }
+    const accept = page.getByRole('button', { name: /Accept and continue/i }).first();
+    if (await accept.isVisible({ timeout: 400 }).catch(() => false)) {
+      await accept.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(400);
+      continue;
+    }
+    break;
   }
 }
 
@@ -541,8 +539,8 @@ export async function addClientViaStaff(page, { firstName, lastName, email, comp
     const open = await page.getByText(/Add client account/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add client form did not open' };
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').fill(firstName, { timeout: 8000 });
-    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
+    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
     await page.getByPlaceholder('client@company.com').fill(email, { timeout: 4000 }).catch(async () => {
       await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
     });
@@ -572,8 +570,8 @@ export async function addGuardViaStaff(page, { firstName, lastName, email, phone
     const open = await page.getByText(/Add field guard/i).isVisible({ timeout: 4000 }).catch(() => false);
     if (!open) return { ok: false, detail: 'Add guard form did not open' };
     await clearBlockingModals(page);
-    await page.getByPlaceholder('First name').fill(firstName, { timeout: 8000 });
-    await page.getByPlaceholder('Last name').fill(lastName, { timeout: 4000 });
+    await page.getByPlaceholder('First name').first().fill(firstName, { force: true, timeout: 8000 });
+    await page.getByPlaceholder('Last name').first().fill(lastName, { force: true, timeout: 5000 });
     await page.getByPlaceholder('guard@example.com').fill(email, { timeout: 4000 }).catch(async () => {
       await page.locator('form input[type="email"]').first().fill(email, { timeout: 4000 });
     });
