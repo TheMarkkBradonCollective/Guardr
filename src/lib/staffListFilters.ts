@@ -1,4 +1,6 @@
-import type { Client, SecurityGuard } from '../types';
+import type { Client, ClientType, SecurityGuard, StaffRole } from '../types';
+import { normalizeClientType } from './clientType';
+import { computeGuardArmedStatus, type GuardArmedStatus } from './guardArmedStatus';
 import {
   getClientAccountStatus,
   getGuardUserStatus,
@@ -29,6 +31,12 @@ export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 export type ClientRosterFilter = 'pending' | 'active' | 'suspended' | 'all';
 
 export type StaffTeamFilter = 'pending' | 'inactive' | 'active' | 'suspended' | 'all';
+
+export type ClientKindFilter = ClientType;
+
+export type GuardArmedFilter = GuardArmedStatus;
+
+export type StaffRoleFilter = 'all' | StaffRole;
 
 export function isCredentialFeedItemOpen(item: ApprovalFeedItem): boolean {
   return item.status === 'pending' || item.status === 'in_review';
@@ -122,6 +130,25 @@ export function matchesClientRosterFilter(client: Client, filter: ClientRosterFi
     case 'suspended':
       return status === 'suspended';
   }
+}
+
+export function matchesClientKindFilter(client: Client, filter: ClientKindFilter): boolean {
+  return normalizeClientType(client.clientType) === filter;
+}
+
+export function matchesGuardArmedFilter(
+  guard: SecurityGuard,
+  filter: GuardArmedFilter,
+  state = 'CA',
+): boolean {
+  if (guard.isStaff) return false;
+  return computeGuardArmedStatus(guard, state) === filter;
+}
+
+export function matchesStaffRoleFilter(member: SecurityGuard, filter: StaffRoleFilter): boolean {
+  if (!member.isStaff) return false;
+  if (filter === 'all') return true;
+  return member.staffRole === filter;
 }
 
 export function matchesStaffTeamFilter(member: SecurityGuard, filter: StaffTeamFilter): boolean {

@@ -20,9 +20,10 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import {
-  matchesGuardRosterFilter,
-  type GuardRosterFilter,
+  matchesGuardArmedFilter,
+  type GuardArmedFilter,
 } from '../../lib/staffListFilters';
+import { GUARD_ARMED_STATUS_LABELS } from '../../lib/guardArmedStatus';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
@@ -166,7 +167,7 @@ export function StaffGuardsPanel({
 }: StaffGuardsPanelProps) {
   const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<GuardRosterFilter>('all');
+  const [armedFilter, setArmedFilter] = useState<GuardArmedFilter>('unarmed');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -189,7 +190,7 @@ export function StaffGuardsPanel({
         g.email.toLowerCase().includes(search.toLowerCase()) ||
         g.badgeNumber.toLowerCase().includes(search.toLowerCase())
     )
-    .filter((g) => matchesGuardRosterFilter(g, statusFilter))
+    .filter((g) => matchesGuardArmedFilter(g, armedFilter))
     .sort((a, b) => {
       const rank = guardRosterSortRank(a) - guardRosterSortRank(b);
       if (rank !== 0) return rank;
@@ -206,7 +207,7 @@ export function StaffGuardsPanel({
     }
     const stillVisible = selectedId ? filtered.some((g) => g.id === selectedId) : false;
     if (!stillVisible) setSelectedId(filtered[0].id);
-  }, [statusFilter, filtered, selectedId, formFactor]);
+  }, [armedFilter, filtered, selectedId, formFactor]);
 
   const guardColumns: GuardrTableColumn<SecurityGuard>[] = useMemo(
     () => [
@@ -323,14 +324,13 @@ export function StaffGuardsPanel({
         className="max-w-md"
       />
       <StaffListFilterTabs
-        aria-label="Guard roster status"
-        activeId={statusFilter}
-        onChange={(id) => setStatusFilter(id as GuardRosterFilter)}
+        aria-label="Guard armed classification"
+        activeId={armedFilter}
+        onChange={(id) => setArmedFilter(id as GuardArmedFilter)}
         tabs={[
-          { id: 'all', label: 'All' },
-          { id: 'pending', label: 'Pending' },
-          { id: 'activated', label: 'Approved' },
-          { id: 'active', label: 'Active' },
+          { id: 'unarmed', label: GUARD_ARMED_STATUS_LABELS.unarmed },
+          { id: 'light-armed', label: GUARD_ARMED_STATUS_LABELS['light-armed'] },
+          { id: 'armed', label: GUARD_ARMED_STATUS_LABELS.armed },
         ]}
       />
     </>
@@ -393,26 +393,14 @@ export function StaffGuardsPanel({
               ? 'No guards on the roster'
               : search.trim()
                 ? 'No guards match your search'
-                : statusFilter === 'pending'
-                  ? 'No pending guards'
-                  : statusFilter === 'activated'
-                    ? 'No approved guards'
-                    : statusFilter === 'active'
-                      ? 'No active guards'
-                      : 'No guards to show'}
+                : `No ${GUARD_ARMED_STATUS_LABELS[armedFilter].toLowerCase()} guards`}
           </p>
           <p className="app-empty-state-body">
             {roster.length === 0
               ? 'Add the first guard profile to get started.'
               : search.trim()
                 ? 'Try adjusting your search term.'
-                : statusFilter === 'pending'
-                  ? 'No guard applications are waiting for approval.'
-                  : statusFilter === 'activated'
-                    ? 'No approved guard profiles yet.'
-                    : statusFilter === 'active'
-                      ? 'No guards are currently active.'
-                      : 'Try a different status filter.'}
+                : `No guards are classified as ${GUARD_ARMED_STATUS_LABELS[armedFilter].toLowerCase()} yet.`}
           </p>
         </div>
       ) : (

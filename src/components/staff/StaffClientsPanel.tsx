@@ -10,8 +10,8 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { CLIENT_ACCOUNT_STATUS_LABELS, clientRosterSortRank, getClientAccountStatus } from '../../lib/accountStatus';
 import {
-  matchesClientRosterFilter,
-  type ClientRosterFilter,
+  matchesClientKindFilter,
+  type ClientKindFilter,
 } from '../../lib/staffListFilters';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -67,7 +67,7 @@ export function StaffClientsPanel({
 }: StaffClientsPanelProps) {
   const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('all');
+  const [kindFilter, setKindFilter] = useState<ClientKindFilter>('personal');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -89,7 +89,7 @@ export function StaffClientsPanel({
         c.email.toLowerCase().includes(search.toLowerCase()) ||
         (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
     )
-    .filter((c) => matchesClientRosterFilter(c, statusFilter))
+    .filter((c) => matchesClientKindFilter(c, kindFilter))
     .sort((a, b) => {
       const rank = clientRosterSortRank(a) - clientRosterSortRank(b);
       if (rank !== 0) return rank;
@@ -106,7 +106,7 @@ export function StaffClientsPanel({
     }
     const stillVisible = selectedId ? filtered.some((c) => c.id === selectedId) : false;
     if (!stillVisible) setSelectedId(filtered[0].id);
-  }, [statusFilter, filtered, selectedId, formFactor]);
+  }, [kindFilter, filtered, selectedId, formFactor]);
 
   const clientColumns: GuardrTableColumn<Client>[] = useMemo(
     () => [
@@ -193,14 +193,12 @@ export function StaffClientsPanel({
         className="max-w-md"
       />
       <StaffListFilterTabs
-        aria-label="Client roster status"
-        activeId={statusFilter}
-        onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+        aria-label="Client account type"
+        activeId={kindFilter}
+        onChange={(id) => setKindFilter(id as ClientKindFilter)}
         tabs={[
-          { id: 'all', label: 'All' },
-          { id: 'pending', label: 'Pending' },
-          { id: 'active', label: 'Active' },
-          { id: 'suspended', label: 'Suspended' },
+          { id: 'personal', label: 'Personal' },
+          { id: 'business', label: 'Business' },
         ]}
       />
     </>

@@ -15,12 +15,16 @@ import {
   isCredentialFeedItemVerified,
   matchesApplicationKindFilter,
   matchesApplicationStatusFilter,
+  matchesClientKindFilter,
   matchesClientRosterFilter,
   matchesCredentialAudienceFilter,
   matchesCredentialStatusFilter,
+  matchesGuardArmedFilter,
   matchesGuardRosterFilter,
+  matchesStaffRoleFilter,
   matchesStaffTeamFilter,
 } from './staffListFilters';
+import { computeGuardArmedStatus } from './guardArmedStatus';
 
 describe('staffListFilters', () => {
   it('splits credential items into upload, review, and verified tabs', () => {
@@ -176,6 +180,35 @@ describe('staffListFilters', () => {
     assert.equal(matchesGuardRosterFilter(activated, 'activated'), true);
     assert.equal(matchesGuardRosterFilter(active, 'active'), true);
     assert.equal(matchesGuardRosterFilter(active, 'pending'), false);
+  });
+
+  it('filters client kind tabs', () => {
+    const personalClient = { id: 'c-p', clientType: 'personal' } as Client;
+    const businessClient = { id: 'c-b', clientType: 'business' } as Client;
+    const legacyClient = { id: 'c-l' } as Client;
+
+    assert.equal(matchesClientKindFilter(personalClient, 'personal'), true);
+    assert.equal(matchesClientKindFilter(personalClient, 'business'), false);
+    assert.equal(matchesClientKindFilter(businessClient, 'business'), true);
+    assert.equal(matchesClientKindFilter(legacyClient, 'business'), true);
+  });
+
+  it('filters guard armed classification tabs', () => {
+    const unarmed = { id: 'g-u', isStaff: false, certifications: [] } as SecurityGuard;
+    assert.equal(matchesGuardArmedFilter(unarmed, 'unarmed'), true);
+    assert.equal(matchesGuardArmedFilter(unarmed, 'armed'), false);
+    assert.equal(computeGuardArmedStatus(unarmed), 'unarmed');
+  });
+
+  it('filters staff role tabs', () => {
+    const moderator = { id: 's-mod', isStaff: true, staffRole: 'Moderator' } as SecurityGuard;
+    const financeOnly = { id: 's-fin', isStaff: true, sideRole: 'Finance' } as SecurityGuard;
+
+    assert.equal(matchesStaffRoleFilter(moderator, 'all'), true);
+    assert.equal(matchesStaffRoleFilter(moderator, 'Moderator'), true);
+    assert.equal(matchesStaffRoleFilter(moderator, 'Manager'), false);
+    assert.equal(matchesStaffRoleFilter(financeOnly, 'all'), true);
+    assert.equal(matchesStaffRoleFilter(financeOnly, 'Support'), false);
   });
 
   it('filters client and staff roster tabs', () => {
