@@ -120,6 +120,15 @@ body[data-surface='mobile'] {
   cursor: pointer;
 }
 
+.sfm-shell-chrome {
+  position: relative;
+  z-index: 1100;
+  flex-shrink: 0;
+  pointer-events: auto;
+  isolation: isolate;
+  background: var(--sf-paper);
+}
+
 .sfm-shell-extension {
   flex-shrink: 0;
   border-bottom: 1px solid var(--sf-line);
@@ -1304,15 +1313,24 @@ body[data-surface='mobile'] .sfm-more-footer .uber-direct-sidebar-footer-legal-w
   bottom: calc(var(--sf-bottom-bar-h) + var(--sf-gutter) + var(--sf-safe-bottom));
 }
 
-/* Map / bleed: keep the header in the flex column (not absolute) so the map
-   cannot paint over it. Leaflet panes use z-index 400+; the shell header must
-   stay above the canvas stack. */
+/* Map / bleed: chrome stays in the flex column above the canvas. Leaflet panes
+   use z-index 400+; the chrome band must sit above the map stack and receive taps. */
+.sfm-shell[data-bleed='true'] .sfm-shell-chrome {
+  z-index: 1100;
+}
+
 .sfm-shell[data-bleed='true'] .sfm-shell-header:not(.sfm-shell-header--custom) {
   position: relative;
-  z-index: 1000;
   flex-shrink: 0;
   background: var(--sf-paper);
   border-bottom: 1px solid var(--sf-line);
+}
+
+.sfm-shell[data-bleed='true'] .sfm-shell-canvas {
+  z-index: 0;
+  isolation: isolate;
+  contain: layout paint;
+  padding-bottom: 0;
 }
 
 .sfm-account-sheet {
@@ -1506,8 +1524,13 @@ body[data-surface='mobile'] .sfm-more-footer .uber-direct-sidebar-footer-legal-w
    are untouched because everything is scoped to body[data-surface='mobile'].
    ========================================================================= */
 
-body[data-surface='mobile'] .sfm-shell {
+body[data-surface='mobile'] .sfm-shell:not([data-bleed='true']) {
   touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+body[data-surface='mobile'] .sfm-shell[data-bleed='true'] {
+  touch-action: auto;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -1695,14 +1718,30 @@ body[data-surface='mobile'] .sfm-shell[data-bleed='true'] .leaflet-container,
 body[data-surface='mobile'] .sfm-shell-canvas[data-bleed='true'] .leaflet-container {
   width: 100%;
   height: 100%;
+  touch-action: none;
 }
 
-body[data-surface='mobile'] .sfm-shell .leaflet-control-container .leaflet-top {
+/* Drawer nav: header is in-flow above the map — controls sit in the canvas band. */
+body[data-surface='mobile'] .sfm-shell[data-nav='drawer'] .leaflet-control-container .leaflet-top {
+  top: 8px;
+}
+
+body[data-surface='mobile'] .sfm-shell[data-tabs='true'] .leaflet-control-container .leaflet-top {
   top: calc(var(--sf-chrome-h) + 8px);
+}
+
+body[data-surface='mobile'] .sfm-shell[data-nav='drawer'] .leaflet-control-container .leaflet-bottom {
+  bottom: calc(var(--sf-safe-bottom) + 8px);
 }
 
 body[data-surface='mobile'] .sfm-shell[data-tabs='true'] .leaflet-bottom {
   bottom: calc(var(--sf-bottom-bar-h) + var(--sf-safe-bottom) + 8px);
+}
+
+body[data-surface='mobile'] .sfm-shell[data-bleed='true'] .map-filter-step-controls,
+body[data-surface='mobile'] .sfm-shell[data-bleed='true'] .map-top-right-cluster,
+body[data-surface='mobile'] .sfm-shell[data-bleed='true'] .map-route-banner-slot {
+  top: 10px;
 }
 
 body[data-surface='mobile'] .sfm-shell .leaflet-control a {
@@ -1993,9 +2032,16 @@ body[data-surface='mobile'] .uber-job-row {
   border-radius: var(--sf-radius-card);
 }
 
-/* Map selection sits as a card above the tab bar, not under it. */
-body[data-surface='mobile'] .sfm-shell .map-selection-layer,
-body[data-surface='mobile'] .sfm-shell .map-jobs-browse-sheet {
+/* Map selection sits above bottom chrome (tab bar or safe area). */
+body[data-surface='mobile'] .sfm-shell[data-nav='drawer'] .map-selection-layer,
+body[data-surface='mobile'] .sfm-shell[data-nav='drawer'] .map-jobs-browse-sheet {
+  right: 12px;
+  bottom: calc(var(--sf-safe-bottom) + 8px);
+  left: 12px;
+}
+
+body[data-surface='mobile'] .sfm-shell[data-tabs='true'] .map-selection-layer,
+body[data-surface='mobile'] .sfm-shell[data-tabs='true'] .map-jobs-browse-sheet {
   right: 12px;
   bottom: calc(var(--sf-bottom-bar-h) + var(--sf-safe-bottom) + 8px);
   left: 12px;
@@ -2019,9 +2065,6 @@ body[data-surface='mobile'] .sfm-shell .map-offer-card-close {
   height: 44px;
 }
 
-body[data-surface='mobile'] .sfm-shell .leaflet-control-container .leaflet-bottom {
-  bottom: calc(var(--sf-bottom-bar-h) + var(--sf-safe-bottom) + 8px);
-}
 
 /* Inbox / message rows — thumb-sized, no hover-only chevrons. */
 body[data-surface='mobile'] .sfm-shell .app-inbox-row {

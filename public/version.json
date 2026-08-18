@@ -6,9 +6,9 @@
     "versionCode": 225,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.125.apk",
-    "fileSize": 77589594,
-    "sha256": "d1b17623087bc76723daf4a67c98cfe2649a031304da1c1917d834dac5d4a7b9",
+    "fileSize": 85565580,
+    "sha256": "52f12fc52cfb1949a590d782216ef458f4a15d69705423872039c1e75f4a3ca0",
     "releaseNotes": "Mobile hamburger drawer for all roles (guard, client, staff); notification bell and profile on the header right; map pages keep the shell header visible; three-surface UI sculpt (mobile, tablet, desktop ops layouts)."
   },
-  "updatedAt": "2026-08-18T13:12:26.130Z"
+  "updatedAt": "2026-08-18T13:24:50.923Z"
 }
