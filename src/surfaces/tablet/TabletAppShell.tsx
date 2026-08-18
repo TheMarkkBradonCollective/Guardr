@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Circle, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { useMediaQuery } from '../../lib/platform';
 import { buildTabletNavigation, type SurfaceDestination } from '../surfaceNavigation';
 import { Logo } from '../../components/Logo';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
@@ -7,21 +8,12 @@ import type { SurfaceShellProps } from '../surfaceShellTypes';
 /**
  * The tablet application shell.
  *
- * Structure: a persistent icon+label rail on the leading edge, a quick-switch
- * strip for the destinations used mid-shift, and a single content canvas that
- * pages fill with split views. The rail collapses to icons to hand the canvas
- * more room in portrait, but it never becomes a drawer — a tablet has the width
- * to keep navigation permanently visible, and hiding it behind a hamburger would
- * be borrowing the phone's constraint.
+ * Persistent labelled rail on the leading edge. In portrait the rail starts
+ * collapsed so the canvas is not squeezed into a third column. There is no
+ * quick-switch strip — those icons duplicated the rail and ate width. The
+ * header shows the current page title, not a second copy of the workspace name.
  *
- * Title ownership differs per surface, and this is the tablet's rule: the *page*
- * owns its title, rendered large in the content area. The shell header carries
- * workspace context and global actions only — not duplicate page CTAs like
- * "+ Add client", which belong in the page title band. (Mobile puts the title in its
- * collapsing header band; desktop puts it in the top bar breadcrumb.) Keeping
- * this to one place per surface is what stops the two headers duplicating.
- *
- * There is no bottom tab bar, no collapsing hero title, and no command palette.
+ * The rail never becomes a drawer: collapse is icons, not a hamburger.
  */
 export function TabletAppShell({
   title,
@@ -41,14 +33,20 @@ export function TabletAppShell({
   bleed = false,
   onBack,
 }: SurfaceShellProps) {
-  const [railExpanded, setRailExpanded] = useState(true);
+  const portrait = useMediaQuery('(orientation: portrait)');
+  const [railExpanded, setRailExpanded] = useState(() => !portrait);
   const navigation = useMemo(() => buildTabletNavigation(destinations), [destinations]);
+
+  useEffect(() => {
+    setRailExpanded(!portrait);
+  }, [portrait]);
 
   return (
     <div
       className="sf-shell sft-shell"
       data-surface="tablet"
       data-rail={railExpanded ? 'expanded' : 'collapsed'}
+      data-orientation={portrait ? 'portrait' : 'landscape'}
       data-bleed={bleed ? 'true' : undefined}
     >
       {!hidePrimaryNav ? (
@@ -62,24 +60,6 @@ export function TabletAppShell({
               </span>
             ) : null}
           </div>
-
-          {navigation.quick.length > 0 ? (
-            <div className="sft-rail-quick" role="group" aria-label="Quick switch">
-              {navigation.quick.map((item) => (
-                <button
-                  key={`quick-${item.id}`}
-                  type="button"
-                  className="sft-rail-quick-btn"
-                  data-active={item.id === activeId ? 'true' : undefined}
-                  onClick={() => onNavigate(item.id)}
-                  title={item.label}
-                  aria-label={item.label}
-                >
-                  {item.icon ? <item.icon size={20} strokeWidth={2.25} aria-hidden /> : <Circle size={20} aria-hidden />}
-                </button>
-              ))}
-            </div>
-          ) : null}
 
           <div className="sft-rail-scroll">
             {navigation.sections.map((section) => (
@@ -130,8 +110,7 @@ export function TabletAppShell({
                     <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
                   </button>
                 ) : null}
-                {/* Context, not the page title — the page renders that itself. */}
-                <span className="sft-shell-context">{workspaceLabel ?? 'Workspace'}</span>
+                <span className="sft-shell-context">{title}</span>
               </div>
               <div className="sft-shell-header-trail">
                 {pageActions}

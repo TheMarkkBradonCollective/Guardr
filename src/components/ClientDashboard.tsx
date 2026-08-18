@@ -8,6 +8,7 @@ import { getClientRehireableGuards } from '../lib/guardDirectory';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { ClientHomeDesktop } from './client/ClientHomeDesktop';
+import { useMediaQuery } from '../lib/platform';
 import { useLayoutFormFactor } from '../surfaces';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates, PlatformSettings } from '../lib/platformSettings';
@@ -272,6 +273,7 @@ export function ClientDashboard({
   };
   const accountPending = isClientAccountPending({ accountStatus, approved });
   const formFactor = useLayoutFormFactor();
+  const tabletPortrait = useMediaQuery('(orientation: portrait)');
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -559,7 +561,11 @@ export function ClientDashboard({
         'guards',
         <>
           {tutorialDemoBanner}
-          <div className="tablet-split-panel">
+          <div
+            className="tablet-split-panel"
+            data-selected={selectedGuard ? 'true' : undefined}
+            data-orientation={tabletPortrait ? 'portrait' : 'landscape'}
+          >
             <div className="split-list-pane">
               <GuardDirectoryScreen
                 guards={guards}

@@ -71,6 +71,8 @@ describe('surface design scales', () => {
     assert.ok(SURFACE_DESIGN.tablet.layout.navWidth > 0);
     assert.ok(SURFACE_DESIGN.desktop.layout.navWidth > 0);
     assert.notEqual(SURFACE_DESIGN.tablet.layout.navWidth, SURFACE_DESIGN.desktop.layout.navWidth);
+    assert.equal(SURFACE_DESIGN.tablet.layout.navWidth, 200);
+    assert.equal(SURFACE_DESIGN.tablet.layout.navCollapsedWidth, 72);
   });
 
   it('speeds motion up as the surface gets more pointer-driven', () => {
