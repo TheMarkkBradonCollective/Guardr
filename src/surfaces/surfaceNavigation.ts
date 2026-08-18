@@ -91,7 +91,7 @@ function sectionOf(destination: SurfaceDestination): string {
   return destination.section?.trim() || DEFAULT_SECTION;
 }
 
-function groupBySection(
+export function groupDestinationsBySection(
   destinations: SurfaceDestination[],
 ): { title: string; items: SurfaceDestination[] }[] {
   const order: string[] = [];
@@ -132,7 +132,7 @@ export function buildMobileNavigation(
   return {
     kind: 'bottom-tabs',
     tabs,
-    overflow: groupBySection(rest),
+    overflow: groupDestinationsBySection(rest),
     overflowBadge: rest.reduce((sum, item) => {
       if (item.notification) return sum + 1;
       return sum + Math.max(0, item.badge ?? 0);
@@ -150,7 +150,7 @@ export function buildTabletNavigation(
 
   return {
     kind: 'side-rail',
-    sections: groupBySection(enabled),
+    sections: groupDestinationsBySection(enabled),
     // Falling back to the first few destinations keeps the row from collapsing
     // for roles that have not pinned anything.
     quick: quick.length > 0 ? quick : enabled.slice(0, 3),
@@ -163,7 +163,7 @@ export function buildDesktopNavigation(
   extraCommands: SurfaceCommand[] = [],
 ): DesktopSidebarNavigation {
   const enabled = destinations.filter((item) => !item.disabled);
-  const groups = groupBySection(enabled);
+  const groups = groupDestinationsBySection(enabled);
 
   const commands: SurfaceCommand[] = enabled.map((item, index) => ({
     id: item.id,
