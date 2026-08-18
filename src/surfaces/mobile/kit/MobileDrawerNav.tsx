@@ -9,7 +9,6 @@ export interface MobileDrawerNavProps {
   activeId: string;
   onNavigate: (id: string) => void;
   workspaceLabel?: string;
-  identity?: React.ReactNode;
   footer?: React.ReactNode;
   primaryAction?: React.ReactNode;
 }
@@ -25,7 +24,6 @@ export function MobileDrawerNav({
   activeId,
   onNavigate,
   workspaceLabel,
-  identity,
   footer,
   primaryAction,
 }: MobileDrawerNavProps) {
@@ -63,7 +61,6 @@ export function MobileDrawerNav({
       >
         <div className="sfm-drawer-head">
           {workspaceLabel ? <p className="sfm-drawer-workspace">{workspaceLabel}</p> : null}
-          {identity ? <div className="sfm-drawer-identity">{identity}</div> : null}
           {primaryAction ? <div className="sfm-drawer-primary">{primaryAction}</div> : null}
         </div>
 

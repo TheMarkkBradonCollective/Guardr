@@ -80,7 +80,32 @@ body[data-surface='mobile'] {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+}
+
+.sfm-noti-btn {
+  position: relative;
+}
+
+.sfm-noti-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--sf-ink);
+  color: var(--sf-paper);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.sfm-shell-identity--header {
+  margin-left: 2px;
 }
 
 .sfm-shell-identity {
