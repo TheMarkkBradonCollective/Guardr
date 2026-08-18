@@ -44,7 +44,6 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useLayoutFormFactor } from '../../surfaces';
 
 interface GuardDirectoryScreenProps {
   guards: SecurityGuard[];
