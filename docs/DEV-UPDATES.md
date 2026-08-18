@@ -1,7 +1,7 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Friday, August 14, 2026  
+**Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
 **Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.123**
 
@@ -9,9 +9,53 @@
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
+The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Tuesday, August 18, 2026 — Personal vs Business clients (#976)
+
+In progress on **#976**. One client system: **Personal** vs **Business** is who hires and pays — not how often they book and not the site type. Live site is still **v1.0.123** until the next `/update` release.
+
+| Time | What shipped |
+|------|----------------|
+| 8:13 AM | Split client signup into Personal and Business accounts |
+| 8:20 AM | Treat Personal vs Business as the contracting party (`client_type`) |
+| 8:31 AM | Gate client tools by Personal vs Business capabilities |
+| 8:36 AM | Let personal clients request, rebook, and schedule recurring coverage |
+| 9:13 AM | Separate personal and business platform fees by guard type |
+| 9:19 AM | Freeze posted job and contract prices when fee tables change |
+| 9:47 AM | Bounce unverified staff IDs and add a client credential library |
+| 9:55 AM | Update Guide, Dev notes, manuals, and /update activity-cloud checklist |
+
+**Shipped (this PR)**
+- **Signup** — three doors: I need security / I want to work → Personal vs Business → licensed guard vs Apply to work at Guardr
+- **Capabilities** — both types are repeat clients (request, rebook, recurring). Business-only: multiple sites, staffing, reporting, team contacts, company documents
+- **Platform fees** — two schedules (personal / business), each with per-guard-type rates. Live tables apply to **new** jobs only; posted/approved/contracted jobs keep snapshotted `platformFeePerHour` / `guardPay`
+- **Staff government ID** — verified-without-photos is bounced to pending upload; active staff missing ID photos are restricted (**Reactivation**) until front + back + selfie are verified. Founder can still open ops to review IDs
+- **Client credential library** — always-required government ID (personal) or authorized-representative ID (business); other licenses stay library-only unless Required For is set. Staff **Credentials → Clients** tab + library editor (Manager+). Posting a job blocks until required creds for that client type + job type are verified
+
+**SQL to run**
+- `supabase/migrations/20260818010000_client_account_kind.sql`
+- `supabase/migrations/20260818020000_client_authorized_contacts.sql`
+- `supabase/migrations/20260818030000_client_credentials_staff_id_bounce.sql`
+
+**Docs**
+- Guide, Dev notes, user manuals (Quick Start / Client / Staff), and `/update` now always refresh Guide + dates + activity-cloud Time tables
+
 ---
 
 ## Friday, August 14, 2026 — /update → v1.0.123
+
+| Time | What shipped |
+|------|----------------|
+| 2:40 AM | Write fieldtest Staff chat reports in plain English |
+| 2:50 AM | Let users delete their own chat messages; higher staff can delete others |
+| 2:52 AM | Post a Staff chat heads-up before fieldtest runs |
+| 2:55 AM | Release v1.0.123-beta: fieldtest chat, message delete, Google Play prep |
+| 2:58 AM | Use Google Chrome for fieldtest Playwright runs |
+| 3:15 AM | Sweep fieldtest certifications during test data cleanup |
+| 3:17 AM | Default staff list filters to All tab on each page |
 
 **PR cleanup (merged to `main`)**
 - **#953** — Separate printable user manuals; combined PDF merges standalone files
@@ -34,6 +78,21 @@ This is my running log of what shipped on Guardr. I'm building the on-demand sec
 ---
 
 ## Tuesday, August 11, 2026 — /update → v1.0.122
+
+Same-day activity on `main` (field-test fixes, ICN rename, and the user-manuals release). Time rows cloud the heatmap for this Tuesday.
+
+| Time | What shipped |
+|------|----------------|
+| 12:06 AM | Fix marketplace apply and guard activation blockers |
+| 2:31 AM | Remove cash payment and cash pickup flows (Stripe-only) |
+| 2:32 AM | Show closed disputes; fix mobile staff layout overflow |
+| 2:34 AM | Fix Violations resolve actions for open audit flags |
+| 2:40 AM | Rename guard Badge GR- to Independent Contractor Number ICN- |
+| 3:42 AM | Fix client approve and late shift clock-in for field test |
+| 3:56 AM | Chain end-shift package after late clock-out |
+| 6:05 AM | Jane/John Doe ad workflow through payments |
+| 6:35 AM | Harden mobile ad screenshots |
+| 8:28 AM | Fix GuardInsurancePolicy pendingUpdate TypeScript error |
 
 **PR cleanup (merged to `main`)**
 - **#953** — Separate printable user manuals; combined PDF merges standalone files
@@ -1057,6 +1116,9 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jun 26 – Jul 14** | 300+ | Applications/Credentials, redesign, PWA/APK |
 | **Jul 16** | 50+ | Push/FCM fix, APK parity, invoices, realtime sync, notification sound, v1.0.67 |
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
+| **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
+| **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
+| **Aug 18** | 7+ | Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |
 
 ---
 

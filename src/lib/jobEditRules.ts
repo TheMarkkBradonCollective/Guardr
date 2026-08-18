@@ -158,19 +158,25 @@ export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
   return 'Schedule cannot be changed in this job status.';
 }
 
-/** Strip schedule/billing fields when payment has cleared. */
+/** Strip schedule/billing fields when payment has cleared. Posted jobs keep frozen platform fees. */
 export function sanitizeJobListingUpdates(
   existing: SecurityRequest,
   updates: Partial<SecurityRequest>
 ): Partial<SecurityRequest> {
+  const {
+    platformFeePerHour: _platformFeePerHour,
+    agreementFeeConfig: _agreementFeeConfig,
+    ...withoutLiveFeeRewrite
+  } = updates;
+
   if (!isJobPaid(existing)) {
-    return updates;
+    return withoutLiveFeeRewrite;
   }
 
   const safe: Partial<SecurityRequest> = {};
   for (const key of TITLE_LOCATION_FIELDS) {
-    if (updates[key] !== undefined) {
-      (safe as Record<string, unknown>)[key] = updates[key];
+    if (withoutLiveFeeRewrite[key] !== undefined) {
+      (safe as Record<string, unknown>)[key] = withoutLiveFeeRewrite[key];
     }
   }
   return safe;

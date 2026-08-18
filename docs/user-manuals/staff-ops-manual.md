@@ -8,7 +8,7 @@ For **Guardr platform employees**: Support → Moderator → Administrator → M
 
 | Staff (this manual) | Marketplace guards & clients |
 |---------------------|------------------------------|
-| **Employees / operators** of Signature Security Specialist, LLC via **Apply to work at Guardr** | **Independent contractors** (guards) and **business clients** using the marketplace |
+| **Employees / operators** of Signature Security Specialist, LLC via **Apply to work at Guardr** | **Independent contractors** (guards) and **personal / business clients** using the marketplace |
 | Run verification, ops, payments pipeline, and platform governance | Post jobs, accept work, and contract **directly with each other** per assignment |
 | Paid through **staff compensation** (revenue share + hourly add-ons) | Guards paid per shift; clients pay posted rates |
 | **Cannot** accept field guard jobs or work client sites as marketplace guards | Cannot access staff ops tools |
@@ -37,9 +37,11 @@ Sign in anytime while pending/approved. Complete:
 | **Government ID verified** | Upload front, back, selfie | **Director** verifies |
 | **Payout bank connected** | Finish Stripe Connect (payouts enabled) | — |
 
-When the checklist is ready, your account moves to **active** automatically (`pending` → `approved` → `active`).
+When the checklist is ready, your account moves to **active** automatically (`pending` → `approved` → `active`). Government ID counts as verified only when **front, back, and selfie** photos are on file — a verified status with no photos is treated as **pending upload**.
 
 Until active, you stay on the staff pending/activation experience — finish ID and Stripe rather than using full ops tools.
+
+**Already active, missing ID photos:** you see **Staff reactivation**. Ops access is restricted until you upload ID and a Director verifies it. Founder accounts can still open the console so someone can review IDs.
 
 ### A3. After you are active
 
@@ -277,6 +279,7 @@ Credential verification and day-to-day marketplace operations.
 ### Can (in addition to Moderator)
 
 - Verify government ID, guard card, COI, PTA/UOF, CE, and optional extras
+- Review **client** credential uploads on **Credentials → Clients** (government ID plus library items)
 - Approve or decline **job offers**
 - Handle **Disputes**; suspend/restore users
 - **Analytics**; general **Settings**
@@ -285,6 +288,8 @@ Credential verification and day-to-day marketplace operations.
 
 - **Reject with clear reason** when documents are unreadable, expired, or wrong type.
 - **Never verify** a credential you cannot read or that fails BSIS/insurance requirements.
+- Staff government ID without front/back/selfie photos is **not** verified — leave it **Pending upload** and keep the account restricted until photos are in.
+- Client library: government ID is always required (personal client, or business authorized representative). Other items are required only when **Required For** matches the job type. Manager+ edits that library on **Credentials → Clients**.
 - Job offer review: confirm location, schedule, pay, and requirements match marketplace policy before **Slide to approve job**.
 
 ### Cannot
@@ -367,7 +372,9 @@ Client posts → Admin+ reviews job offer → Open
 |-----------|------------|
 | Client or guard account pending | Moderator+ (application) |
 | Guard credentials uploaded | Administrator+ (verify) |
+| Client credentials uploaded | Administrator+ (Credentials → Clients) |
 | Staff applicant pending | Director (app + ID) |
+| Active staff missing ID photos | Staff uploads; Director verifies — ops stay restricted until then |
 | Job offer pending review | Administrator+ |
 | Guard applied to marketplace job | **Client** |
 | Self-audit photos submitted | **Client** confirm |

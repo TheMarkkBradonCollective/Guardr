@@ -3,7 +3,7 @@ import { SecurityRequest } from '../../types';
 import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
-import { computeGuardPay } from '../../lib/payments';
+import { rebillJobFromSnapshot } from '../../lib/payments';
 import { cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity, type CaliforniaCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { listingFieldsFromJob } from '../../lib/jobListing';
@@ -14,6 +14,8 @@ import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields
 import { operationalDetailsFromJob, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
 import { Loader2 } from 'lucide-react';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
+import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
 
 interface EditRequestFormProps {
   request: SecurityRequest;
@@ -35,6 +37,7 @@ export function EditRequestForm({
   sheet = false,
 }: EditRequestFormProps) {
   const selectableClientCities = getSelectableCityNamesForClients();
+  const caps = useClientCapabilities();
   const [title, setTitle] = useState(request.title);
   const [siteName, setSiteName] = useState(request.siteName || '');
   const [address, setAddress] = useState(request.address || request.location);
@@ -96,9 +99,10 @@ export function EditRequestForm({
           longitude: submitLongitude,
         });
       } else if (paidReschedule) {
-        const guardPay = computeGuardPay(request.hourlyRate);
-        const guardsNeeded = request.guardsNeeded ?? 1;
-        const estimatedPayout = Math.round(durationHours * request.hourlyRate * guardsNeeded * 100) / 100;
+        const billing = rebillJobFromSnapshot(request, {
+          durationHours,
+          guardsNeeded: request.guardsNeeded ?? 1,
+        });
         await onSave(request.id, {
           title: trimmedTitle,
           siteName: siteName.trim(),
@@ -108,14 +112,22 @@ export function EditRequestForm({
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
           durationHours,
-          estimatedPayout,
-          guardPay,
+          estimatedPayout: billing.estimatedPayout,
+          guardPay: billing.guardPay,
           latitude: submitLatitude,
           longitude: submitLongitude,
         });
       } else {
-        const guardPay = computeGuardPay(hourlyRate);
-        const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
+        const nextGuards = clampClientGuardsNeeded(
+          guardsNeeded,
+          caps.clientType,
+          request.guardsNeeded ?? 1
+        );
+        const billing = rebillJobFromSnapshot(request, {
+          hourlyRate,
+          durationHours,
+          guardsNeeded: nextGuards,
+        });
         await onSave(request.id, {
           title: trimmedTitle,
           siteName: siteName.trim(),
@@ -125,10 +137,10 @@ export function EditRequestForm({
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
           durationHours,
-          guardsNeeded,
+          guardsNeeded: nextGuards,
           hourlyRate,
-          guardPay,
-          estimatedPayout,
+          guardPay: billing.guardPay,
+          estimatedPayout: billing.estimatedPayout,
           description: listing.description.trim(),
           uniformRequirements: listing.uniformRequirements.trim(),
           equipmentRequirements: listing.equipmentRequirements.trim(),
@@ -261,8 +273,17 @@ export function EditRequestForm({
                   <input
                     type="number"
                     min={1}
+                    max={Math.max(caps.maxGuardsPerRequest, request.guardsNeeded ?? 1)}
                     value={guardsNeeded}
-                    onChange={(e) => setGuardsNeeded(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    onChange={(e) =>
+                      setGuardsNeeded(
+                        clampClientGuardsNeeded(
+                          parseInt(e.target.value, 10) || 1,
+                          caps.clientType,
+                          request.guardsNeeded ?? 1
+                        )
+                      )
+                    }
                     className="uber-input w-full"
                   />
                 </div>

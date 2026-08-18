@@ -1,4 +1,6 @@
 import { showAppToast } from '../ui/AppToast';
+import { clientJobCredentialBlocker } from '../../lib/clientCredentials';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import {
@@ -12,8 +14,14 @@ import {
 import { clientServiceGroups } from '../../lib/clientServiceGroups';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
-import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
+import {
+  computePlatformFee,
+  computeJobBilling,
+  resolveClientJobFeeConfig,
+  type ClientPlatformFeeSchedules,
+  type PlatformFeeConfig,
+} from '../../lib/payments';
+import type { AgreementPlatformFeeConfig, Client, ClientType, PricingMode } from '../../types';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
@@ -38,6 +46,7 @@ import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -46,6 +55,10 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
   feeConfig: PlatformFeeConfig;
+  feeSchedules?: ClientPlatformFeeSchedules;
+  clientType?: ClientType;
+  clientRecord?: Client;
+  clientCredentialRules?: ClientCredentialRuleOverride[];
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -57,10 +70,15 @@ interface DirectGuardRequestFlowProps {
 export function DirectGuardRequestFlow({
   guard,
   feeConfig,
+  feeSchedules,
+  clientType,
+  clientRecord,
+  clientCredentialRules,
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
   const { formFactor } = useDevice();
+  const caps = useClientCapabilities();
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => getDefaultShiftStart(), []);
   const [step, setStep] = useState<FlowStep>(1);
@@ -95,11 +113,17 @@ export function DirectGuardRequestFlow({
 
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
+  const resolvedFeeConfig = resolveClientJobFeeConfig(
+    feeSchedules,
+    clientType ?? caps.clientType,
+    serviceToJobType(serviceId),
+    feeConfig
+  );
   const billing = computeJobBilling(
     effectiveRate,
     durationHours,
     1,
-    feeConfig,
+    resolvedFeeConfig,
     pricingMode === 'open_contract' ? agreementFeeConfig : undefined
   );
   const platformFeePerHour = billing.platformFeePerHour;
@@ -154,6 +178,14 @@ export function DirectGuardRequestFlow({
     if (scheduleError) {
       showAppToast(scheduleError, { tone: 'error' });
       return;
+    }
+    const jobType = serviceToJobType(serviceId);
+    if (clientRecord) {
+      const credentialBlocker = clientJobCredentialBlocker(clientRecord, jobType, clientCredentialRules);
+      if (credentialBlocker) {
+        showAppToast(credentialBlocker, { tone: 'error' });
+        return;
+      }
     }
     const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({
@@ -389,7 +421,7 @@ export function DirectGuardRequestFlow({
 
         {step === 4 && (
           <OpenContractRateStep
-            feeConfig={feeConfig}
+            feeConfig={resolvedFeeConfig}
             durationHours={durationHours}
             guardsNeeded={1}
             pricingMode={pricingMode}

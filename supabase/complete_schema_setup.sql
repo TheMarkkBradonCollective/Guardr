@@ -239,6 +239,21 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_prior_security_service BOOLEAN;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAULT 'client-approve';
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS authorized_contacts JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS credentials JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+UPDATE clients
+SET client_type = 'business'
+WHERE client_type IS NULL OR client_type NOT IN ('personal', 'business');
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_kind_check;
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_client_type_check;
+ALTER TABLE clients ADD CONSTRAINT clients_client_type_check
+  CHECK (client_type IN ('personal', 'business'));
+
+ALTER TABLE clients ALTER COLUMN client_type SET DEFAULT 'business';
+ALTER TABLE clients ALTER COLUMN client_type SET NOT NULL;
 
 UPDATE clients SET favorite_guard_ids = '[]'::jsonb WHERE favorite_guard_ids IS NULL;
 UPDATE guards SET trusted = FALSE WHERE trusted IS NULL;
@@ -1081,6 +1096,15 @@ ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_document_type TEXT
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_license_class TEXT;
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_revision_history JSONB;
 
+UPDATE staff
+SET id_verification_status = 'not_submitted'
+WHERE id_verification_status = 'verified'
+  AND (
+    COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
+
 COMMENT ON COLUMN staff.personal_email IS 'Optional personal contact email; staff.email remains work/login email';
 
 COMMENT ON COLUMN staff.headline IS 'Professional title shown on staff roster profiles';
@@ -1719,6 +1743,10 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config
   }
 }'::jsonb;
 COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — ~50% of collected platform fees across roles, caps/floors, cadence.';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS client_credential_rules JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN platform_settings.client_credential_rules IS
+  'Admin overrides for the client credential library (applicable to / required for).';
 
 CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
   id TEXT PRIMARY KEY,

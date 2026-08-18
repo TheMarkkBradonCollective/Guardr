@@ -43,6 +43,8 @@ export function StaffApplicationCredentialViewModal({
     );
   }
 
+  if (context.kind !== 'coi') return null;
+
   return (
     <GuardCoiDetailModal
       guard={guard}

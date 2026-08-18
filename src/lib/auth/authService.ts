@@ -2,6 +2,9 @@
  * Unified auth: Supabase Auth when linked, legacy password fallback, auto-migration on sign-in.
  */
 
+import { clientDisplayName } from '../clientType';
+import { parseAuthorizedContacts } from '../clientAuthorizedContacts';
+import { parseClientCredentials } from '../clientCredentials';
 import { supabase } from '../supabase';
 import { verifyAccountPassword } from '../accountPasswords';
 import { hashPassword, isPasswordHash, verifyPasswordHash } from './passwordHash';
@@ -71,7 +74,7 @@ function sessionUserFromProfile(profile: AuthProfile): SessionUser {
   if (profile.client) {
     return {
       ...base,
-      clientName: profile.client.companyName || profile.client.name,
+      clientName: clientDisplayName(profile.client),
       avatar: profile.client.avatar,
     };
   }
@@ -94,6 +97,7 @@ function clientFromRow(row: Record<string, unknown>): Client {
     lastName: nameParts.lastName,
     email: String(row.email ?? ''),
     companyName: typeof row.company_name === 'string' ? row.company_name : '',
+    clientType: row.client_type === 'personal' ? 'personal' : 'business',
     phone: typeof row.phone === 'string' ? row.phone : '',
     avatar: typeof row.avatar === 'string' ? row.avatar : '',
     totalRequests: typeof row.total_requests === 'number' ? row.total_requests : 0,
@@ -107,6 +111,8 @@ function clientFromRow(row: Record<string, unknown>): Client {
     password: typeof row.password === 'string' ? row.password : undefined,
     mustChangePassword: row.must_change_password === true,
     passwordHash: typeof row.password_hash === 'string' ? row.password_hash : undefined,
+    authorizedContacts: parseAuthorizedContacts(row.authorized_contacts),
+    credentials: parseClientCredentials(row.credentials),
   };
 }
 

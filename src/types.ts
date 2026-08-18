@@ -211,6 +211,27 @@ export type GuardSpecialty = (typeof GUARD_SPECIALTY_OPTIONS)[number];
 export type GuardCardStatus = 'active' | 'in_progress' | 'none';
 export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
 
+/** Who is hiring and paying — the contracting party, not the job site type. */
+export type ClientType = 'personal' | 'business';
+
+/** People Guardr or assigned guards can contact for this account. */
+export type ClientAuthorizedContactRole =
+  | 'contact'
+  | 'family'
+  | 'emergency'
+  | 'owner'
+  | 'manager'
+  | 'employee';
+
+export interface ClientAuthorizedContact {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  role?: ClientAuthorizedContactRole;
+  notes?: string;
+}
+
 /** A client account — stored separately from guards */
 export interface Client {
   id: string;
@@ -220,6 +241,8 @@ export interface Client {
   lastName?: string;
   email: string;
   companyName: string;
+  /** Personal (individual pays) vs business (organization pays). Defaults to business for legacy rows. */
+  clientType?: ClientType;
   phone: string;
   avatar: string;
   totalRequests: number;
@@ -296,6 +319,27 @@ export interface Client {
 
   /** Default guard placement mode for new job posts. */
   defaultAssignmentMode?: AssignmentMode;
+
+  /** People Guardr or assigned guards can contact — family for personal, managers/employees for business. */
+  authorizedContacts?: ClientAuthorizedContact[];
+
+  /** Uploaded client credentials from the Client Credential Library. */
+  credentials?: ClientCredential[];
+}
+
+export type ClientCredentialStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
+
+export interface ClientCredential {
+  id: string;
+  typeId: string;
+  status: ClientCredentialStatus;
+  documentUrl?: string;
+  expirationDate?: string;
+  notes?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';

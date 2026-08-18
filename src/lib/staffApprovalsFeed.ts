@@ -1,4 +1,5 @@
-import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
+import type { Certification, Client, ClientCredential, SecurityGuard, SecurityRequest } from '../types';
+import { clientDisplayName } from './clientType';
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
@@ -17,9 +18,11 @@ import {
 } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import {
+  bounceUnverifiedGovernmentIdStatus,
   getGuardIdVerificationStatus,
   guardGovIdBelongsInCredentialFeed,
   guardGovIdNeedsDocumentTypeSelection,
+  guardIdVerificationPhotosComplete,
   ID_VERIFICATION_STATUS_LABELS,
 } from './guardIdentityVerification';
 import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
@@ -31,6 +34,14 @@ import {
 } from './guardApplicationCredentialSteps';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
+import type { ClientCredentialRuleOverride, ClientCredentialTypeDef } from './clientCredentialCatalog';
+import {
+  clientCredentialFeedItemId,
+  clientCredentialFeedSlots,
+  clientCredentialStatusLabel,
+  isClientCredentialFeedItemId,
+  parseClientCredentialFeedItemId,
+} from './clientCredentials';
 
 export type ApprovalFeedQueue = Exclude<ApprovalQueueId, 'accounts' | 'all'>;
 
@@ -62,6 +73,7 @@ export interface StaffApprovalsFeedInput {
   guards: SecurityGuard[];
   clients: Client[];
   auditLog?: AuditLogEntry[];
+  clientCredentialRules?: ClientCredentialRuleOverride[];
 }
 
 export const APPLICATION_FEED_STATUS_LABELS = {
@@ -285,24 +297,27 @@ function appendStaffGovIdCredentialItem(
   items: ApprovalFeedItem[],
   existingIds: Set<string>
 ): void {
-  const idStatus = getGuardIdVerificationStatus(member);
-  if (!guardGovIdBelongsInCredentialFeed(member)) return;
-
+  const idStatus = bounceUnverifiedGovernmentIdStatus(member);
+  const photosComplete = guardIdVerificationPhotosComplete(member);
   const itemId = govIdApprovalItemId(member.id);
   if (existingIds.has(itemId)) return;
 
-  const needsDocumentType = guardGovIdNeedsDocumentTypeSelection(member);
-  const awaitingReview = idStatus === 'pending' || idStatus === 'not_submitted';
+  const needsDocumentType = photosComplete && guardGovIdNeedsDocumentTypeSelection(member);
+  const pendingUpload = !photosComplete && idStatus !== 'rejected';
+  const awaitingReview = !pendingUpload && (idStatus === 'pending' || idStatus === 'not_submitted');
   items.push({
     id: itemId,
     queue: 'credentials',
     title: `${member.name} — Government ID`,
-    subtitle: needsDocumentType
-      ? 'Select Government ID or driver’s license'
-      : ID_VERIFICATION_STATUS_LABELS[idStatus === 'not_submitted' ? 'pending' : idStatus],
-    status: idStatus === 'verified' ? 'approved' : idStatus === 'rejected' ? 'denied' : 'pending',
-    statusLabel:
-      idStatus === 'verified'
+    subtitle: pendingUpload
+      ? 'Government-issued ID required'
+      : needsDocumentType
+        ? 'Select Government ID or driver’s license'
+        : ID_VERIFICATION_STATUS_LABELS[idStatus === 'not_submitted' ? 'pending' : idStatus],
+    status: idStatus === 'verified' && photosComplete ? 'approved' : idStatus === 'rejected' ? 'denied' : 'pending',
+    statusLabel: pendingUpload
+      ? CREDENTIAL_PENDING_UPLOAD_LABEL
+      : idStatus === 'verified' && photosComplete
         ? 'Verified'
         : idStatus === 'rejected'
           ? 'Rejected'
@@ -313,12 +328,56 @@ function appendStaffGovIdCredentialItem(
     reviewedByEmail: undefined,
     sortKey:
       new Date(member.idVerificationReviewedAt ?? member.idVerificationSubmittedAt ?? 0).getTime() ||
-      (awaitingReview ? Date.now() : 0),
+      (awaitingReview || pendingUpload ? Date.now() : 0),
   });
   existingIds.add(itemId);
 }
 
-function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
+function appendClientCredentialItems(
+  clients: Client[],
+  items: ApprovalFeedItem[],
+  rules?: ClientCredentialRuleOverride[]
+): void {
+  for (const client of clients) {
+    const name = clientDisplayName(client);
+    for (const slot of clientCredentialFeedSlots(client, rules)) {
+      const credential = slot.credential;
+      const pendingUpload = !credential?.documentUrl?.trim();
+      const statusLabel = pendingUpload
+        ? CREDENTIAL_PENDING_UPLOAD_LABEL
+        : clientCredentialStatusLabel(credential);
+      const status =
+        !pendingUpload && credential?.status === 'verified'
+          ? 'approved'
+          : credential?.status === 'rejected'
+            ? 'denied'
+            : 'pending';
+      items.push({
+        id: clientCredentialFeedItemId(client.id, slot.type.id, credential?.id),
+        queue: 'credentials',
+        title: `${name} — ${slot.type.name}`,
+        subtitle: slot.type.requiredForDescription || slot.type.description || clientTypeSubtitle(client),
+        status,
+        statusLabel,
+        submittedAt: credential?.submittedAt,
+        reviewedAt: credential?.reviewedAt,
+        reviewedByName: credential?.reviewedBy,
+        sortKey: new Date(credential?.reviewedAt ?? credential?.submittedAt ?? 0).getTime() || Date.now(),
+      });
+    }
+  }
+}
+
+function clientTypeSubtitle(client: Client): string {
+  return client.clientType === 'personal' ? 'Personal client' : 'Business client';
+}
+
+function credentialItems(
+  guards: SecurityGuard[],
+  clients: Client[],
+  auditLog: AuditLogEntry[],
+  rules?: ClientCredentialRuleOverride[]
+): ApprovalFeedItem[] {
   const items: ApprovalFeedItem[] = [];
 
   for (const guard of guards) {
@@ -430,6 +489,8 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
 
     appendMissingActivationCredentialItems(guard, items, guardItemIds);
   }
+
+  appendClientCredentialItems(clients, items, rules);
 
   return items;
 }
@@ -568,7 +629,7 @@ function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): Appro
       return {
         id: client.id,
         queue: 'client-accounts',
-        title: client.companyName || client.name,
+        title: clientDisplayName(client),
         subtitle: client.email,
         status,
         statusLabel:
@@ -595,7 +656,7 @@ export function buildStaffApprovalsFeed(input: StaffApprovalsFeedInput): Approva
     ...jobOfferItems(input.requests, auditLog),
     ...scheduleChangeItems(input.requests, auditLog),
     ...accountSignupApplicationItems(input.guards, input.clients, auditLog),
-    ...credentialItems(input.guards, auditLog),
+    ...credentialItems(input.guards, input.clients, auditLog, input.clientCredentialRules),
     ...guardAccountItems(input.guards, auditLog),
     ...staffAccountItems(input.guards, auditLog),
     ...clientAccountItems(input.clients, auditLog),
@@ -663,6 +724,12 @@ export type CredentialFeedContext =
       guard: SecurityGuard;
       stepKey: ActivationCredentialKey;
       label: string;
+    }
+  | {
+      kind: 'client-credential';
+      client: Client;
+      type: ClientCredentialTypeDef;
+      credential?: ClientCredential;
     };
 
 const ACTIVATION_STEP_LABELS: Record<ActivationCredentialKey, string> = {
@@ -676,8 +743,22 @@ const ACTIVATION_STEP_LABELS: Record<ActivationCredentialKey, string> = {
 /** Resolve a credentials-queue feed item to its guard and credential kind. */
 export function resolveCredentialFeedContext(
   guards: SecurityGuard[],
-  itemId: string
+  itemId: string,
+  clients: Client[] = [],
+  rules?: ClientCredentialRuleOverride[]
 ): CredentialFeedContext | null {
+  if (isClientCredentialFeedItemId(itemId)) {
+    const parsed = parseClientCredentialFeedItemId(itemId);
+    if (!parsed) return null;
+    const client = clients.find((entry) => entry.id === parsed.clientId);
+    if (!client) return null;
+    const slots = clientCredentialFeedSlots(client, rules);
+    const slot = parsed.credentialId
+      ? slots.find((entry) => entry.credential?.id === parsed.credentialId)
+      : slots.find((entry) => entry.type.id === parsed.typeId);
+    if (!slot) return null;
+    return { kind: 'client-credential', client, type: slot.type, credential: slot.credential };
+  }
   if (isCoiApprovalItemId(itemId)) {
     const guardId = guardIdFromCoiApprovalItemId(itemId);
     const guard = guards.find((g) => g.id === guardId);
@@ -707,9 +788,14 @@ export function resolveCredentialFeedContext(
 }
 
 /** Thumbnail for credentials-queue list rows (cert photo, COI doc, or ID front). */
-export function credentialFeedThumbnailUrl(guards: SecurityGuard[], itemId: string): string | undefined {
-  const context = resolveCredentialFeedContext(guards, itemId);
+export function credentialFeedThumbnailUrl(
+  guards: SecurityGuard[],
+  itemId: string,
+  clients: Client[] = []
+): string | undefined {
+  const context = resolveCredentialFeedContext(guards, itemId, clients);
   if (!context) return undefined;
+  if (context.kind === 'client-credential') return context.credential?.documentUrl?.trim() || undefined;
   if (context.kind === 'cert') return resolveCertImageUrl(context.cert);
   if (context.kind === 'coi') return context.guard.insurancePolicy?.documentUrl?.trim() || undefined;
   if (context.kind === 'activation-pending') return undefined;
@@ -736,9 +822,13 @@ export function isCredentialFeedItemAwaitingStaffReview(item: ApprovalFeedItem):
   return item.statusLabel !== CREDENTIAL_PENDING_UPLOAD_LABEL;
 }
 
-function credentialQueueFeed(guards: SecurityGuard[]): ApprovalFeedItem[] {
+function credentialQueueFeed(
+  guards: SecurityGuard[],
+  clients: Client[] = [],
+  rules?: ClientCredentialRuleOverride[]
+): ApprovalFeedItem[] {
   return filterApprovalsFeedByQueue(
-    buildStaffApprovalsFeed({ guards, clients: [], requests: [] }),
+    buildStaffApprovalsFeed({ guards, clients, requests: [], clientCredentialRules: rules }),
     'credentials'
   );
 }
@@ -746,9 +836,11 @@ function credentialQueueFeed(guards: SecurityGuard[]): ApprovalFeedItem[] {
 /** Activation slots awaiting guard upload — Credentials “Pending upload” tab. */
 export function countPendingCredentialUploads(
   guards: SecurityGuard[],
-  audience?: CredentialAudienceKind
+  audience?: CredentialAudienceKind,
+  clients: Client[] = [],
+  rules?: ClientCredentialRuleOverride[]
 ): number {
-  return credentialQueueFeed(guards).filter(
+  return credentialQueueFeed(guards, clients, rules).filter(
     (item) =>
       credentialQueueFeedMatchesAudience(item, guards, audience) &&
       item.statusLabel === CREDENTIAL_PENDING_UPLOAD_LABEL
@@ -758,9 +850,11 @@ export function countPendingCredentialUploads(
 /** Credentials submitted and awaiting staff review — Credentials “Pending review” tab. */
 export function countPendingCredentialReviews(
   guards: SecurityGuard[],
-  audience?: CredentialAudienceKind
+  audience?: CredentialAudienceKind,
+  clients: Client[] = [],
+  rules?: ClientCredentialRuleOverride[]
 ): number {
-  return credentialQueueFeed(guards).filter(
+  return credentialQueueFeed(guards, clients, rules).filter(
     (item) =>
       credentialQueueFeedMatchesAudience(item, guards, audience) &&
       isCredentialFeedItemAwaitingStaffReview(item)
@@ -770,9 +864,11 @@ export function countPendingCredentialReviews(
 /** Rejected credentials — Credentials “Rejected” tab. */
 export function countRejectedCredentials(
   guards: SecurityGuard[],
-  audience?: CredentialAudienceKind
+  audience?: CredentialAudienceKind,
+  clients: Client[] = [],
+  rules?: ClientCredentialRuleOverride[]
 ): number {
-  return credentialQueueFeed(guards).filter(
+  return credentialQueueFeed(guards, clients, rules).filter(
     (item) =>
       credentialQueueFeedMatchesAudience(item, guards, audience) &&
       isCredentialFeedItemRejected(item)
@@ -789,12 +885,13 @@ export function countPendingCredentialApprovals(guards: SecurityGuard[]): number
   return countPendingCredentialUploads(guards) + countPendingCredentialReviews(guards);
 }
 
-export type CredentialAudienceKind = 'staff' | 'guard';
+export type CredentialAudienceKind = 'staff' | 'guard' | 'client';
 
 export function guardIdForCredentialFeedItem(
   item: ApprovalFeedItem,
   guards: SecurityGuard[]
 ): string | null {
+  if (isClientCredentialFeedItemId(item.id)) return null;
   if (isCoiApprovalItemId(item.id)) return guardIdFromCoiApprovalItemId(item.id);
   if (isGovIdApprovalItemId(item.id)) return guardIdFromGovIdApprovalItemId(item.id);
   const activation = parseActivationCredentialItemId(item.id);
@@ -807,6 +904,7 @@ export function credentialFeedItemAudience(
   guards: SecurityGuard[]
 ): CredentialAudienceKind | null {
   if (item.queue !== 'credentials') return null;
+  if (isClientCredentialFeedItemId(item.id)) return 'client';
   const guardId = guardIdForCredentialFeedItem(item, guards);
   if (!guardId) return 'guard';
   const member = guards.find((guard) => guard.id === guardId);

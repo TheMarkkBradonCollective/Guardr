@@ -6,6 +6,7 @@ import {
   canEditUnpaidJobSchedule,
   canStaffEditUnpaidJobSchedule,
   isJobPaid,
+  sanitizeJobListingUpdates,
 } from './jobEditRules.ts';
 
 function baseJob(overrides: Partial<SecurityRequest> = {}): SecurityRequest {
@@ -58,5 +59,46 @@ describe('jobEditRules unpaid schedule', () => {
     assert.equal(canStaffEditUnpaidJobSchedule(baseJob({ status: 'in-progress' }), 'administrator'), true);
     assert.equal(canStaffEditUnpaidJobSchedule(baseJob({ status: 'completed' }), 'director'), true);
     assert.equal(canStaffEditUnpaidJobSchedule(baseJob({ status: 'closed' }), 'director'), false);
+  });
+});
+
+describe('jobEditRules preserve posted pricing', () => {
+  it('strips platform fee fields so listing edits cannot rewrite frozen rates', () => {
+    const existing = baseJob({
+      platformFeePerHour: 12,
+      hourlyRate: 40,
+      guardPay: 28,
+      paymentStatus: 'unpaid',
+    });
+    const safe = sanitizeJobListingUpdates(existing, {
+      title: 'Updated',
+      hourlyRate: 45,
+      guardPay: 33,
+      platformFeePerHour: 5,
+      agreementFeeConfig: { model: 'flat', flatFeePerHour: 5 },
+    });
+    assert.equal(safe.title, 'Updated');
+    assert.equal(safe.hourlyRate, 45);
+    assert.equal(safe.guardPay, 33);
+    assert.equal(safe.platformFeePerHour, undefined);
+    assert.equal(safe.agreementFeeConfig, undefined);
+  });
+
+  it('keeps only title and location fields after payment', () => {
+    const existing = baseJob({
+      paymentStatus: 'paid',
+      platformFeePerHour: 12,
+      hourlyRate: 40,
+    });
+    const safe = sanitizeJobListingUpdates(existing, {
+      title: 'Updated',
+      hourlyRate: 99,
+      guardPay: 1,
+      platformFeePerHour: 2,
+    });
+    assert.equal(safe.title, 'Updated');
+    assert.equal(safe.hourlyRate, undefined);
+    assert.equal(safe.guardPay, undefined);
+    assert.equal(safe.platformFeePerHour, undefined);
   });
 });

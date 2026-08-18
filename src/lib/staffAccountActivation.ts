@@ -1,8 +1,10 @@
 import type { SecurityGuard } from '../types';
 import {
-  getGuardIdVerificationStatus,
+  bounceUnverifiedGovernmentIdStatus,
+  governmentIdEffectivelyVerified,
 } from './guardIdentityVerification';
 import {
+  getGuardUserStatus,
   isStaffAccountApproved,
   isStaffAccountPending,
   isStaffAccountPreActive,
@@ -30,8 +32,8 @@ export function getStaffActivationChecklist(
   member: SecurityGuard,
   options?: { stripePayoutsEnabled?: boolean },
 ): StaffActivationStep[] {
-  const idStatus = getGuardIdVerificationStatus(member);
-  const idComplete = idStatus === 'verified';
+  const idStatus = bounceUnverifiedGovernmentIdStatus(member);
+  const idComplete = governmentIdEffectivelyVerified(member);
   const stripeReady = staffStripePayoutReady(member, options?.stripePayoutsEnabled === true);
 
   return [
@@ -97,7 +99,22 @@ export function staffReadyForAutoActivation(
   options?: { stripePayoutsEnabled?: boolean },
 ): boolean {
   if (!member.isStaff || !isStaffAccountApproved(member)) return false;
+  if (!governmentIdEffectivelyVerified(member)) return false;
   return staffActivationBlockers(member, options).length === 0;
+}
+
+/** Active staff missing a real government ID, or pre-active staff still onboarding. */
+export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
+  if (!member.isStaff) return false;
+  const status = getGuardUserStatus(member);
+  if (status === 'suspended' || status === 'blocked') return false;
+  if (!governmentIdEffectivelyVerified(member)) return true;
+  return isStaffAccountPreActive(member);
+}
+
+/** Existing active staff who must re-complete ID verification. */
+export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
+  return Boolean(member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member));
 }
 
 export function staffActivationProgress(member: SecurityGuard): {

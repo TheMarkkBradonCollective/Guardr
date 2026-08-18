@@ -22,6 +22,7 @@ import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { createSquareCheckoutSession } from '../../lib/paymentProcessorApi';
 import { showAppToast } from '../ui/AppToast';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
 import {
   AppEmptyState,
   AppList,
@@ -75,6 +76,8 @@ export function ClientInvoiceScreen({
 }: ClientInvoiceScreenProps) {
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [payingSquareJobId, setPayingSquareJobId] = useState<string | null>(null);
+  const caps = useClientCapabilities();
+  const invoicesTitle = caps.isPersonal ? 'Payments' : 'Billing';
 
   const clientInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.clientId === client.id),
@@ -140,7 +143,7 @@ export function ClientInvoiceScreen({
           title="Invoice"
           hideTitle
           onBack={() => onSelectRequestId?.(null)}
-          backLabel="Invoices"
+          backLabel={invoicesTitle}
         />
         <div className="px-5 space-y-5">
           <div className="staff-mgmt-detail-row space-y-3 py-3">
@@ -286,7 +289,7 @@ export function ClientInvoiceScreen({
   return (
     <AppScreen className="pb-8">
       {onBack ? (
-        <AppSubScreenHeader title="Invoices" onBack={onBack} backLabel="Home" hideTitle />
+        <AppSubScreenHeader title={invoicesTitle} onBack={onBack} backLabel="Home" hideTitle />
       ) : null}
 
       {unpaid.length > 0 ? (
@@ -303,8 +306,10 @@ export function ClientInvoiceScreen({
       ) : null}
 
       {clientInvoices.length === 0 ? (
-        <AppEmptyState icon={<FileText className="w-5 h-5" />} title="No invoices yet">
-          When Guardr approves your job, an invoice will appear here for payment.
+        <AppEmptyState icon={<FileText className="w-5 h-5" />} title={caps.isPersonal ? 'No payments yet' : 'No invoices yet'}>
+          {caps.isPersonal
+            ? 'Invoices and payment history for your services will appear here.'
+            : 'When Guardr approves your job, an invoice will appear here for payment.'}
         </AppEmptyState>
       ) : (
         <AppList>

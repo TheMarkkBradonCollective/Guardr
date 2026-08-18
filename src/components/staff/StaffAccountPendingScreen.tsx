@@ -5,7 +5,7 @@ import {
   isStaffAccountApproved,
   isStaffAccountPending,
 } from '../../lib/accountStatus';
-import { getStaffActivationChecklist, staffActivationProgress } from '../../lib/staffAccountActivation';
+import { getStaffActivationChecklist, staffActivationProgress, staffNeedsIdReactivation } from '../../lib/staffAccountActivation';
 import {
   GuardIdentityVerificationPanel,
   type GuardIdentityVerificationPayload,
@@ -158,17 +158,24 @@ export function StaffAccountPendingScreen({
 }: StaffAccountPendingScreenProps) {
   const pending = isStaffAccountPending(member);
   const approved = isStaffAccountApproved(member);
+  const reactivation = staffNeedsIdReactivation(member);
   const progress = staffActivationProgress(member);
 
-  const title = approved
-    ? 'Finish onboarding'
-    : pending
-      ? 'Complete your staff application'
-      : 'Staff onboarding';
+  const title = reactivation
+    ? 'Complete credential verification'
+    : approved
+      ? 'Finish onboarding'
+      : pending
+        ? 'Complete your staff application'
+        : 'Staff activation';
 
-  const subtitle = approved
-    ? 'Your application is approved. Complete government ID verification and Stripe bank setup — Guardr activates your ops access when both are done.'
-    : 'Sign in anytime to upload your government ID and connect payouts. A Director reviews your application while you finish these steps.';
+  const subtitle = reactivation
+    ? 'Your ops access is restricted until your government-issued ID is uploaded and verified. Submit ID front, back, and a live selfie to continue.'
+    : approved
+      ? 'Your application is approved. Complete government ID verification and Stripe bank setup — Guardr activates your ops access when both are done.'
+      : 'Sign in anytime to upload your government ID and connect payouts. A Director reviews your application while you finish these steps.';
+
+  const eyebrow = reactivation ? 'Staff reactivation' : 'Staff activation';
 
   return (
     <div className="adm-pending-page flex min-h-full flex-col overflow-y-auto overscroll-contain bg-brand-bg">
@@ -177,7 +184,7 @@ export function StaffAccountPendingScreen({
           <Clock className="h-7 w-7 text-brand-primary" />
         </span>
         <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-brand-primary">
-          Staff onboarding
+          {eyebrow}
         </p>
         <h1 className="text-2xl font-black tracking-tight text-brand-text">{title}</h1>
         <p className="mt-2 text-left text-sm font-medium leading-relaxed text-brand-text-muted">

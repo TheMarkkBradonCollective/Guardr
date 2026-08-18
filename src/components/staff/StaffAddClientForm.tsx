@@ -5,6 +5,7 @@ import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
+import type { ClientType } from '../../types';
 
 export interface StaffAddClientInput {
   firstName: string;
@@ -13,6 +14,7 @@ export interface StaffAddClientInput {
   email: string;
   companyName: string;
   phone: string;
+  clientType: ClientType;
 }
 
 interface StaffAddClientFormProps {
@@ -32,6 +34,7 @@ export function StaffAddClientForm({
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [clientType, setClientType] = useState<ClientType>('business');
   const [phone, setPhone] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -43,6 +46,7 @@ export function StaffAddClientForm({
     setLastName('');
     setEmail('');
     setCompanyName('');
+    setClientType('business');
     setPhone('');
     setError('');
     setMsg('');
@@ -71,6 +75,7 @@ export function StaffAddClientForm({
         email: email.trim(),
         companyName: companyName.trim(),
         phone: phone.trim(),
+        clientType,
       });
       const displayName = personNameFromPayload({
         firstName: firstName.trim(),
@@ -120,6 +125,30 @@ export function StaffAddClientForm({
             editing
           />
 
+          <div>
+            <p className="uber-label block mb-2">Who is hiring?</p>
+            <p className="text-xs text-brand-text-muted mb-2">
+              Personal is billed to the individual. Business is billed to the company or organization.
+              Job site type does not change this.
+            </p>
+            <div className="flex gap-2">
+              {(['personal', 'business'] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => setClientType(kind)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    clientType === kind
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                  }`}
+                >
+                  {kind === 'personal' ? 'Personal' : 'Business'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="uber-label block mb-1">Email</label>
@@ -128,12 +157,13 @@ export function StaffAddClientForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="uber-input w-full"
-                placeholder="client@company.com"
+                placeholder={clientType === 'personal' ? 'you@email.com' : 'client@company.com'}
                 required
               />
             </div>
+            {clientType === 'business' ? (
             <div>
-              <label className="uber-label block mb-1">Company / site name</label>
+              <label className="uber-label block mb-1">Business name</label>
               <input
                 type="text"
                 value={companyName}
@@ -142,6 +172,7 @@ export function StaffAddClientForm({
                 placeholder="Optional — shows on job posts"
               />
             </div>
+            ) : null}
             <div>
               <label className="uber-label block mb-1">Phone</label>
               <input

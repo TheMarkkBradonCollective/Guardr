@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   getStaffActivationChecklist,
+  staffNeedsCredentialCompletion,
+  staffNeedsIdReactivation,
   staffReadyForAutoActivation,
 } from './staffAccountActivation';
 import { withAutoStaffActivation } from './staffAutoActivation';
@@ -28,6 +30,9 @@ function staffMember(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
     staffRole: 'Support',
     userStatus: 'approved',
     idVerificationStatus: 'verified',
+    idFrontUrl: 'front.jpg',
+    idBackUrl: 'back.jpg',
+    idSelfieUrl: 'selfie.jpg',
     stripeConnectAccountId: 'acct_123',
     ...overrides,
   } as SecurityGuard;
@@ -40,7 +45,32 @@ describe('staffAccountActivation', () => {
     assert.equal(checklist.find((s) => s.id === 'stripe_payout')?.complete, true);
   });
 
-  it('auto-activates approved staff when ID and Stripe payouts are ready', () => {
+  it('does not treat verified staff IDs as complete without photos', () => {
+    const member = staffMember({
+      idVerificationStatus: 'verified',
+      idFrontUrl: undefined,
+      idBackUrl: undefined,
+      idSelfieUrl: undefined,
+    });
+    const checklist = getStaffActivationChecklist(member, { stripePayoutsEnabled: true });
+    assert.equal(checklist.find((s) => s.id === 'government_id')?.complete, false);
+    assert.equal(staffReadyForAutoActivation(member, { stripePayoutsEnabled: true }), false);
+  });
+
+  it('restricts active staff until government ID photos are verified', () => {
+    const member = staffMember({
+      userStatus: 'active',
+      verified: true,
+      idVerificationStatus: 'verified',
+      idFrontUrl: undefined,
+      idBackUrl: undefined,
+      idSelfieUrl: undefined,
+    });
+    assert.equal(staffNeedsCredentialCompletion(member), true);
+    assert.equal(staffNeedsIdReactivation(member), true);
+  });
+
+  it('auto-activates approved staff when ID photos and Stripe payouts are ready', () => {
     const member = staffMember();
     assert.equal(staffReadyForAutoActivation(member, { stripePayoutsEnabled: true }), true);
     const activated = withAutoStaffActivation(member, { stripePayoutsEnabled: true });

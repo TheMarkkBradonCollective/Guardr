@@ -3,6 +3,7 @@ import { Client } from '../../types';
 import { WfBadge } from '../ui/wireframe';
 import { Globe, MapPin } from 'lucide-react';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
+import { clientTypeLabel } from '../../lib/clientType';
 
 function IntakeField({ label, value }: { label: string; value: string | number | undefined | null }) {
   if (!value && value !== 0) return null;
@@ -42,6 +43,10 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
     return (
       <section className="staff-detail-section space-y-2 !px-0">
         <p className="text-sm font-semibold text-brand-text">Application details</p>
+        <p className="text-xs text-brand-text-muted">
+          {clientTypeLabel(client.clientType)} — billed to the{' '}
+          {client.clientType === 'personal' ? 'individual' : 'organization'}
+        </p>
         <AppNoticeChip
           label="No intake on file"
           title="No sign-up intake on file"
@@ -55,6 +60,10 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
     <section className="staff-detail-section space-y-4 !px-0">
       <div>
         <p className="text-sm font-semibold text-brand-text">Application details</p>
+        <p className="text-xs text-brand-text-muted mt-0.5">
+          {clientTypeLabel(client.clientType)} — billed to the{' '}
+          {client.clientType === 'personal' ? 'individual' : 'organization'}
+        </p>
       </div>
 
       {(client.businessType || client.businessLicense || client.website || client.industries?.length) && (
