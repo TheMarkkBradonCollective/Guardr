@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewStaffCompensation, isFinanceDeskOnly } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, isFinanceDeskOnly } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -14,9 +14,10 @@ import {
   Building2,
   Briefcase,
   ClipboardList,
-  CreditCard,
   FileText,
   DollarSign,
+  Percent,
+  Wallet,
   LayoutDashboard,
   Map,
   MapPin,
@@ -76,8 +77,9 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   support: 'Support',
   'team-chat': 'Messages',
   'job-chats': 'Messages',
-  payments: 'Payments',
-  'payment-settings': 'Payment settings',
+  payments: 'Payments & invoices',
+  'platform-fees': 'Platform fees',
+  'staff-compensation': 'Staff compensation',
   agreements: 'Agreements',
   'audit-log': 'Audit log',
   disputes: 'Disputes',
@@ -119,7 +121,7 @@ export function StaffOpsLayout({
   canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
-  const showPayments = showFinance || canViewStaffCompensation(currentUser);
+  const showPayments = showFinance;
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
@@ -138,8 +140,9 @@ export function StaffOpsLayout({
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'messages', label: 'Messages', icon: MessagesSquare },
       { id: 'support', label: 'Support', icon: LifeBuoy },
-      { id: 'payments', label: 'Payments', icon: DollarSign, paymentsOnly: true },
-      { id: 'payment-settings', label: 'Payment settings', icon: CreditCard, financeOnly: true },
+      { id: 'payments', label: 'Payments & invoices', icon: DollarSign, financeOnly: true },
+      { id: 'platform-fees', label: 'Platform fees', icon: Percent, financeOnly: true },
+      { id: 'staff-compensation', label: 'Staff compensation', icon: Wallet },
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
       { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
       { id: 'incidents', label: 'Incidents', icon: AlertTriangle },

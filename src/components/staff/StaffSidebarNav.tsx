@@ -9,7 +9,7 @@ export interface StaffNavItem {
   id: StaffSection;
   label: string;
   icon: typeof LayoutDashboard;
-  /** Visible to finance staff and all compensatable staff (Payments includes staff pay). */
+  /** Visible only to finance staff (Payments & invoices). */
   paymentsOnly?: boolean;
   /** Visible only to Director and Founder (payments / fund handling) */
   financeOnly?: boolean;

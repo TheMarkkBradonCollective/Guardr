@@ -25,7 +25,7 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 interface StaffTimesheetsPanelProps {
   staffId: string;
   platformSettings: PlatformSettings;
-  /** When true, note that managers can adjust time in Payments. */
+  /** When true, note that managers can adjust time in Staff compensation. */
   showManagerHint?: boolean;
 }
 
@@ -151,7 +151,7 @@ export function StaffTimesheetsPanel({
       <WfSectionHeader title="Timesheets" className="!px-0" />
       <p className="text-sm text-brand-text-muted -mt-2">
         {showManagerHint
-          ? 'Tracked active time for this pay period. Managers can adjust sessions in Payments → Time adjustments.'
+          ? 'Tracked active time for this pay period. Managers can adjust sessions in Staff compensation → Time adjustments.'
           : 'Your automatically tracked active time for this pay period.'}
       </p>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
-import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
+import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { openGuardPayoutInvoices, guardPayoutInvoiceLines, guardPayoutInvoiceTotal } from '../../lib/guardPayoutInvoiceStorage';
 import {
   PIPELINE_SECTION_META,
@@ -27,18 +27,14 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
 import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
-import { StaffCompensationSection } from './StaffCompensationPanel';
 
 interface StaffPaymentsPanelProps {
-  currentUser: SessionUser;
-  platformSettings: PlatformSettings;
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   payments: Payment[];
   payoutInvoices?: GuardPayoutInvoice[];
   isDirector: boolean;
   canManagePayments: boolean;
-  showStaffCompensation?: boolean;
   paymentGates: ClientPaymentGates;
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
@@ -169,15 +165,12 @@ function queueItemAmount(item: PaymentQueueItem): string {
 }
 
 export function StaffPaymentsPanel({
-  currentUser,
-  platformSettings,
   requests,
   guards,
   payments,
   payoutInvoices = [],
   isDirector,
   canManagePayments,
-  showStaffCompensation = true,
   paymentGates,
   onMakeGuardPayoutAvailable,
   onReleasePayout,
@@ -288,17 +281,6 @@ export function StaffPaymentsPanel({
 
   const selectedItem = filteredQueue.find((item) => item.id === selectedId) ?? null;
 
-  const staffPayAdjustmentsBlock = showStaffCompensation ? (
-    <StaffCompensationSection
-      embedded
-      hideTimeSections
-      currentUser={currentUser}
-      guards={guards}
-      requests={requests}
-      platformSettings={platformSettings}
-    />
-  ) : null;
-
   const exportButton = showGuardPayments && canManagePayments ? (
     formFactor === 'desktop' ? (
       <GuardrButton
@@ -349,11 +331,11 @@ export function StaffPaymentsPanel({
           toolbar={
             <WorkbenchToolbar
               eyebrow="Finance"
-              subtitle="Revenue-share payouts and Prop 22–ready pay adjustments."
+              subtitle="Guard payouts, client billing, and invoices."
             />
           }
         >
-          {staffPayAdjustmentsBlock}
+          <WorkbenchEmpty message="Payments & invoices are available to staff with finance permissions." />
         </StaffOpsPageShell>
       );
     }
@@ -378,16 +360,13 @@ export function StaffPaymentsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Guard payouts, client billing, and staff compensation."
+            subtitle="Guard payouts, client billing, and invoices."
             actions={exportButton}
           />
         }
       >
         {allQueueItems.length === 0 ? (
-          <>
-            <WorkbenchEmpty message="No guard payment activity yet. Jobs will appear here once clients post security requests." />
-            {staffPayAdjustmentsBlock}
-          </>
+          <WorkbenchEmpty message="No guard payment activity yet. Jobs will appear here once clients post security requests." />
         ) : (
           <>
             <StaffPaymentSummary summary={summary} financials={financials} variant="desktop" />
@@ -448,9 +427,6 @@ export function StaffPaymentsPanel({
                 }
               />
             )}
-            {staffPayAdjustmentsBlock ? (
-              <div className="mt-8 pt-8 border-t border-brand-border">{staffPayAdjustmentsBlock}</div>
-            ) : null}
           </>
         )}
       </StaffOpsPageShell>
@@ -460,7 +436,7 @@ export function StaffPaymentsPanel({
   if (!showGuardPayments) {
     return (
       <div className="animate-fade-in staff-payments-panel">
-        {staffPayAdjustmentsBlock}
+        {emptyState}
       </div>
     );
   }
@@ -509,12 +485,6 @@ export function StaffPaymentsPanel({
         <PipelineSection stage="settled" items={summary.settled} {...sectionProps} readOnly limit={8} />
 
         {allQueueItems.length === 0 && emptyState}
-
-        {staffPayAdjustmentsBlock ? (
-          <section className="space-y-3 mt-8 pt-6 border-t border-brand-border">
-            {staffPayAdjustmentsBlock}
-          </section>
-        ) : null}
       </div>
     </div>
   );

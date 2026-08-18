@@ -117,7 +117,8 @@ import type { StaffPermissionsPatch } from './staff/StaffPermissionsPanel';
 import { StaffIntegrationsPanel } from './staff/StaffIntegrationsPanel';
 import { StaffCitiesPanel } from './staff/StaffCitiesPanel';
 import { StaffLocationsPanel } from './staff/StaffLocationsPanel';
-import { StaffPaymentSettingsPanel } from './staff/StaffPaymentSettingsPanel';
+import { StaffPlatformFeesPanel } from './staff/StaffPlatformFeesPanel';
+import { StaffCompensationPage } from './staff/StaffCompensationPage';
 import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
@@ -585,7 +586,7 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
-  const showPayments = showFinance || canViewStaffCompensation(currentUser);
+  const showPayments = showFinance;
   const showPermissions = canAccessStaffPermissions(currentUser);
   const financeDeskOnly = isFinanceDeskOnly(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
@@ -623,6 +624,10 @@ export function StaffDashboard({
       showCities,
       financeDeskOnly,
     };
+    if (section === 'payments' && !showFinance) {
+      navigateSection('staff-compensation');
+      return;
+    }
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
@@ -1099,15 +1104,12 @@ export function StaffDashboard({
         return showPayments ? (
           <PaymentsPage role="staff">
             <StaffPaymentsPanel
-              currentUser={currentUser}
-              platformSettings={platformSettings}
               requests={requests}
               guards={guards}
               payments={payments}
               payoutInvoices={guardPayoutInvoices}
               isDirector={hasExecutivePaymentControls(currentUser)}
               canManagePayments={showFinance}
-              showStaffCompensation={canViewStaffCompensation(currentUser)}
               paymentGates={clientPaymentGates(platformSettings)}
               onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
               onReleasePayout={onReleasePayout}
@@ -1120,7 +1122,37 @@ export function StaffDashboard({
           <AppBlockedAccessScreen
             title={STAFF_SECTION_ACCESS_MESSAGES.payments!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES.payments!.message}
-            placeholders={['Guard payouts', 'Staff compensation', 'Platform fees']}
+            placeholders={['Guard payouts', 'Client invoices']}
+          />
+        );
+      case 'platform-fees':
+        return showFinance ? (
+          <StaffPlatformFeesPanel
+            currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['platform-fees']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['platform-fees']!.message}
+            placeholders={['Personal fees', 'Business fees']}
+          />
+        );
+      case 'staff-compensation':
+        return canViewStaffCompensation(currentUser) ? (
+          <StaffCompensationPage
+            currentUser={currentUser}
+            guards={guards}
+            requests={requests}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
+          />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['staff-compensation']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['staff-compensation']!.message}
+            placeholders={['Revenue-share', 'Staff payouts']}
           />
         );
       case 'violations':
@@ -1205,20 +1237,6 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.message}
             placeholders={['Release notes', 'Build history']}
-          />
-        );
-      case 'payment-settings':
-        return showFinance ? (
-          <StaffPaymentSettingsPanel
-            currentUser={currentUser}
-            platformSettings={platformSettings}
-            onUpdatePlatformSettings={onUpdatePlatformSettings}
-          />
-        ) : (
-          <AppBlockedAccessScreen
-            title={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.title}
-            message={STAFF_SECTION_ACCESS_MESSAGES['payment-settings']!.message}
-            placeholders={['Platform fees']}
           />
         );
       case 'agreements':
