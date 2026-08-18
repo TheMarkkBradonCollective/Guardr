@@ -47,6 +47,9 @@ import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { useClientCapabilities } from './ClientCapabilitiesContext';
 import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
+import { clientJobCredentialBlocker } from '../../lib/clientCredentials';
+import type { Client } from '../../types';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -65,6 +68,8 @@ interface RequestSecurityFlowProps {
   jobLocations?: JobLocation[];
   clientId?: string;
   defaultAssignmentMode?: AssignmentMode;
+  clientRecord?: Client;
+  clientCredentialRules?: ClientCredentialRuleOverride[];
 }
 
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
@@ -82,6 +87,8 @@ export function RequestSecurityFlow({
   jobLocations = [],
   clientId,
   defaultAssignmentMode = 'client-approve',
+  clientRecord,
+  clientCredentialRules,
 }: RequestSecurityFlowProps) {
   const { formFactor } = useDevice();
   const caps = useClientCapabilities();
@@ -263,6 +270,14 @@ export function RequestSecurityFlow({
     if (scheduleError) {
       showAppToast(scheduleError, { tone: 'error' });
       return;
+    }
+    const jobType = serviceToJobType(serviceId);
+    if (clientRecord) {
+      const credentialBlocker = clientJobCredentialBlocker(clientRecord, jobType, clientCredentialRules);
+      if (credentialBlocker) {
+        showAppToast(credentialBlocker, { tone: 'error' });
+        return;
+      }
     }
     const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({

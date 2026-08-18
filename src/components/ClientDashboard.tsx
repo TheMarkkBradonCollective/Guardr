@@ -461,6 +461,8 @@ export function ClientDashboard({
         jobLocations={jobLocations}
         clientId={clientId}
         defaultAssignmentMode={clientRecord?.defaultAssignmentMode}
+        clientRecord={clientRecord}
+        clientCredentialRules={crewSettings?.clientCredentialRules}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
@@ -492,6 +494,8 @@ export function ClientDashboard({
         feeConfig={feeConfig}
         feeSchedules={crewSettings?.clientFeeSchedules}
         clientType={clientRecord?.clientType}
+        clientRecord={clientRecord}
+        clientCredentialRules={crewSettings?.clientCredentialRules}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');

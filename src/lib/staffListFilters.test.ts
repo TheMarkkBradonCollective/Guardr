@@ -238,4 +238,27 @@ describe('staffListFilters', () => {
     assert.equal(matchesCredentialAudienceFilter(guardItem!, 'all', [guard, staffMember]), true);
     assert.equal(matchesCredentialAudienceFilter(staffItem!, 'all', [guard, staffMember]), true);
   });
+
+  it('filters client credential feed items onto the Clients tab', () => {
+    const client = {
+      id: 'c-1',
+      name: 'Alex Rivera',
+      email: 'alex@test.com',
+      companyName: '',
+      clientType: 'personal',
+      phone: '',
+      avatar: '',
+      totalRequests: 0,
+      credentials: [],
+    } as Client;
+    const feed = buildStaffApprovalsFeed({ guards: [], clients: [client], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+    const item = feed[0];
+    assert.ok(item);
+    assert.equal(matchesCredentialAudienceFilter(item!, 'clients', []), true);
+    assert.equal(matchesCredentialAudienceFilter(item!, 'staff', []), false);
+    assert.equal(matchesCredentialAudienceFilter(item!, 'guards', []), false);
+    assert.equal(matchesCredentialAudienceFilter(item!, 'all', []), true);
+  });
 });

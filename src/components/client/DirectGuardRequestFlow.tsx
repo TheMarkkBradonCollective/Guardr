@@ -1,4 +1,6 @@
 import { showAppToast } from '../ui/AppToast';
+import { clientJobCredentialBlocker } from '../../lib/clientCredentials';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import {
@@ -19,7 +21,7 @@ import {
   type ClientPlatformFeeSchedules,
   type PlatformFeeConfig,
 } from '../../lib/payments';
-import type { AgreementPlatformFeeConfig, ClientType, PricingMode } from '../../types';
+import type { AgreementPlatformFeeConfig, Client, ClientType, PricingMode } from '../../types';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
@@ -55,6 +57,8 @@ interface DirectGuardRequestFlowProps {
   feeConfig: PlatformFeeConfig;
   feeSchedules?: ClientPlatformFeeSchedules;
   clientType?: ClientType;
+  clientRecord?: Client;
+  clientCredentialRules?: ClientCredentialRuleOverride[];
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -68,6 +72,8 @@ export function DirectGuardRequestFlow({
   feeConfig,
   feeSchedules,
   clientType,
+  clientRecord,
+  clientCredentialRules,
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
@@ -172,6 +178,14 @@ export function DirectGuardRequestFlow({
     if (scheduleError) {
       showAppToast(scheduleError, { tone: 'error' });
       return;
+    }
+    const jobType = serviceToJobType(serviceId);
+    if (clientRecord) {
+      const credentialBlocker = clientJobCredentialBlocker(clientRecord, jobType, clientCredentialRules);
+      if (credentialBlocker) {
+        showAppToast(credentialBlocker, { tone: 'error' });
+        return;
+      }
     }
     const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({

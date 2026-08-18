@@ -42,6 +42,7 @@ import {
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 import { normalizeClientType } from '../../lib/clientType';
 import { ClientAuthorizedContactsSection } from '../client/ClientAuthorizedContactsSection';
+import { ClientCredentialsSection } from '../client/ClientCredentialsSection';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -86,6 +87,7 @@ interface UserProfileScreenProps {
   ) => Promise<void>;
   requests?: SecurityRequest[];
   platformSettings?: PlatformSettings;
+  onSubmitClientCredential?: (credential: import('../../types').ClientCredential) => void | Promise<void>;
 }
 
 export function UserProfileScreen({
@@ -104,6 +106,7 @@ export function UserProfileScreen({
   onSaveVehicleInsurance,
   requests = [],
   platformSettings,
+  onSubmitClientCredential,
 }: UserProfileScreenProps) {
   const { formFactor } = useDevice();
   const [editing, setEditing] = useState(false);
@@ -529,6 +532,14 @@ export function UserProfileScreen({
             contacts={authorizedContacts}
             editing={editing}
             onChange={setAuthorizedContacts}
+          />
+        ) : null}
+        {isClient && client ? (
+          <ClientCredentialsSection
+            client={client}
+            rules={platformSettings?.clientCredentialRules}
+            editing={editing}
+            onSubmitCredential={onSubmitClientCredential}
           />
         ) : null}
         {isStaffAccount && (

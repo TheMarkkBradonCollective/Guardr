@@ -14,6 +14,10 @@ import {
   normalizeStaffCompensationConfig,
   type StaffCompensationConfig,
 } from './staffCompensation';
+import {
+  parseClientCredentialRuleOverrides,
+  type ClientCredentialRuleOverride,
+} from './clientCredentialCatalog';
 
 export type {
   AgreementPlatformFeeConfig,
@@ -90,6 +94,8 @@ export interface PlatformSettings {
   teamLeadBonusPlatformSharePercent?: number;
   /** Staff revenue-share compensation — % of collected platform fees per role. */
   staffCompensation?: StaffCompensationConfig;
+  /** Admin overrides for the client credential library (applicable to / required for). */
+  clientCredentialRules?: ClientCredentialRuleOverride[];
   updatedAt?: string;
 }
 
@@ -119,6 +125,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   teamLeadBonusClientSharePercent: 100,
   teamLeadBonusPlatformSharePercent: 0,
   staffCompensation: { ...DEFAULT_STAFF_COMPENSATION_CONFIG },
+  clientCredentialRules: [],
 };
 
 const STORAGE_KEY = 'guardr_platform_settings';
@@ -236,6 +243,7 @@ export function normalizePlatformSettings(
     staffCompensation: normalizeStaffCompensationConfig(
       input.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
     ),
+    clientCredentialRules: parseClientCredentialRuleOverrides(input.clientCredentialRules),
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   };
 }
@@ -299,6 +307,7 @@ export function platformSettingsFromDbRow(row: {
   company_placard_public_enabled?: boolean | null;
   staff_role_permissions?: unknown;
   staff_compensation_config?: unknown;
+  client_credential_rules?: unknown;
   updated_at?: string | null;
 }): PlatformSettings {
   const feeConfig = normalizePlatformFeeConfig(
@@ -340,6 +349,7 @@ export function platformSettingsFromDbRow(row: {
         (row.staff_compensation_config as StaffCompensationConfig | null | undefined) ??
           DEFAULT_STAFF_COMPENSATION_CONFIG,
       ),
+      clientCredentialRules: parseClientCredentialRuleOverrides(row.client_credential_rules),
       updatedAt: row.updated_at ?? undefined,
     }) ?? {
       ...DEFAULT_PLATFORM_SETTINGS,
@@ -369,6 +379,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     company_placard_public_enabled: settings.companyPlacardPublicEnabled ?? true,
     staff_role_permissions: settings.staffRolePermissions ?? null,
     staff_compensation_config: settings.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
+    client_credential_rules: settings.clientCredentialRules ?? [],
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

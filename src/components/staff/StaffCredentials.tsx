@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronRight, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
-import { Certification, SecurityGuard } from '../../types';
+import { Certification, Client, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildStaffApprovalsFeed,
@@ -39,6 +39,9 @@ import { StaffCoiReviewDetail } from './StaffCoiReviewDetail';
 import { StaffGovIdReviewDetail } from './StaffGovIdReviewDetail';
 import { StaffActivationReviewDetail } from './StaffActivationReviewDetail';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { StaffClientCredentialReviewDetail } from './StaffClientCredentialReviewDetail';
+import { ClientCredentialLibraryEditor } from './ClientCredentialLibraryEditor';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
@@ -62,6 +65,9 @@ import {
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
+  clients?: Client[];
+  clientCredentialRules?: ClientCredentialRuleOverride[];
+  onUpdateClientCredentialRules?: (rules: ClientCredentialRuleOverride[]) => void | Promise<void>;
   canVerifyCredentials: boolean;
   currentUserRole?: PlatformRole;
   initialItemId?: string | null;
@@ -92,6 +98,9 @@ interface StaffCredentialsProps {
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onApproveClientCredential?: (clientId: string, credentialId: string) => void | Promise<void>;
+  onRejectClientCredential?: (clientId: string, credentialId: string, reason?: string) => void | Promise<void>;
+  onOpenClientProfile?: (clientId: string) => void;
 }
 
 function credentialStatusTone(status: ApprovalFeedItem['status']): StatusTone {
@@ -104,11 +113,13 @@ function credentialStatusTone(status: ApprovalFeedItem['status']): StatusTone {
 function CredentialFeedRow({
   item,
   guards,
+  clients,
   isSelected,
   onSelect,
 }: {
   item: ApprovalFeedItem;
   guards: SecurityGuard[];
+  clients: Client[];
   isSelected: boolean;
   onSelect: () => void;
 }) {
@@ -118,7 +129,7 @@ function CredentialFeedRow({
       : item.status === 'approved' || item.status === 'active'
         ? 'success'
         : 'danger';
-  const thumbnailUrl = credentialFeedThumbnailUrl(guards, item.id);
+  const thumbnailUrl = credentialFeedThumbnailUrl(guards, item.id, clients);
   const pending = item.status === 'pending' || item.status === 'in_review';
 
   return (
@@ -165,6 +176,9 @@ function CredentialFeedRow({
 
 export function StaffCredentials({
   guards,
+  clients = [],
+  clientCredentialRules = [],
+  onUpdateClientCredentialRules,
   canVerifyCredentials,
   currentUserRole,
   initialItemId = null,
@@ -184,6 +198,9 @@ export function StaffCredentials({
   onOpenStaffProfile,
   onUpdateGuardIdImages,
   onAddCertification,
+  onApproveClientCredential,
+  onRejectClientCredential,
+  onOpenClientProfile,
 }: StaffCredentialsProps) {
   const { formFactor } = useDevice();
   const [audienceFilter, setAudienceFilter] = useState<CredentialAudienceFilter>('all');
@@ -204,9 +221,15 @@ export function StaffCredentials({
   }, [guards]);
 
   const credentialFeed = useMemo(() => {
-    const feed = buildStaffApprovalsFeed({ requests: [], guards, clients: [], auditLog });
+    const feed = buildStaffApprovalsFeed({
+      requests: [],
+      guards,
+      clients,
+      auditLog,
+      clientCredentialRules,
+    });
     return filterApprovalsFeedByQueue(feed, 'credentials');
-  }, [guards, auditLog]);
+  }, [guards, clients, auditLog, clientCredentialRules]);
 
   const displayCredentialFeed = useMemo(() => {
     return credentialFeed.map((item) => enrichCredentialFeedItemDisplay(item, guards, showStaffBadge));
@@ -490,17 +513,25 @@ export function StaffCredentials({
     );
   };
 
+  const countAudience =
+    audienceFilter === 'all'
+      ? undefined
+      : audienceFilter === 'staff'
+        ? 'staff'
+        : audienceFilter === 'clients'
+          ? 'client'
+          : 'guard';
   const pendingUploadCount = useMemo(
-    () => countPendingCredentialUploads(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
-    [guards, audienceFilter]
+    () => countPendingCredentialUploads(guards, countAudience, clients, clientCredentialRules),
+    [guards, countAudience, clients, clientCredentialRules]
   );
   const pendingReviewCount = useMemo(
-    () => countPendingCredentialReviews(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
-    [guards, audienceFilter]
+    () => countPendingCredentialReviews(guards, countAudience, clients, clientCredentialRules),
+    [guards, countAudience, clients, clientCredentialRules]
   );
   const rejectedCount = useMemo(
-    () => countRejectedCredentials(guards, audienceFilter === 'staff' ? 'staff' : 'guard'),
-    [guards, audienceFilter]
+    () => countRejectedCredentials(guards, countAudience, clients, clientCredentialRules),
+    [guards, countAudience, clients, clientCredentialRules]
   );
 
   const { showDetailOnly } = useSplitListDetail(activeItemId, 'page');
@@ -564,66 +595,97 @@ export function StaffCredentials({
 
   const renderCredentialDetail = (item: ApprovalFeedItem, options?: { onBack?: () => void }) => {
     const feedItem = findFeedItem(credentialFeed, item.id) ?? item;
-    const context = resolveCredentialFeedContext(guards, item.id);
+    const context = resolveCredentialFeedContext(guards, item.id, clients, clientCredentialRules);
     if (!context) return null;
 
-    const { guard } = context;
-    const profileLink = guard.isStaff
-      ? onOpenStaffProfile
-        ? () => onOpenStaffProfile(guard.id)
-        : undefined
-      : onOpenGuardProfile
-        ? () => onOpenGuardProfile(guard.id)
-        : undefined;
-    const profileName =
-      showStaffBadge && guard.isStaff && guard.badgeNumber?.trim()
+    const clientDetail =
+      context.kind === 'client-credential' ? (
+        <StaffClientCredentialReviewDetail
+          client={context.client}
+          type={context.type}
+          credential={context.credential}
+          feedTitle={feedItem.title}
+          onOpenClientProfile={onOpenClientProfile ? () => onOpenClientProfile(context.client.id) : undefined}
+          canVerify={canVerifyCredentials}
+          onApprove={
+            context.credential && onApproveClientCredential
+              ? () => onApproveClientCredential(context.client.id, context.credential!.id)
+              : undefined
+          }
+          onReject={
+            context.credential && onRejectClientCredential
+              ? () =>
+                  void (async () => {
+                    const note = await promptStaffResubmitNote(context.type.name);
+                    if (note === null) return;
+                    await onRejectClientCredential(context.client.id, context.credential!.id, note || undefined);
+                  })()
+              : undefined
+          }
+        />
+      ) : null;
+
+    const guard = context.kind === 'client-credential' ? null : context.guard;
+    const profileLink = guard
+      ? guard.isStaff
+        ? onOpenStaffProfile
+          ? () => onOpenStaffProfile(guard.id)
+          : undefined
+        : onOpenGuardProfile
+          ? () => onOpenGuardProfile(guard.id)
+          : undefined
+      : undefined;
+    const profileName = guard
+      ? showStaffBadge && guard.isStaff && guard.badgeNumber?.trim()
         ? guard.badgeNumber.trim()
-        : guard.name;
+        : guard.name
+      : '';
 
     const detailBody =
-      context.kind === 'cert' ? (
+      clientDetail ??
+      (context.kind === 'cert' ? (
         <StaffCertReviewDetail
           cert={context.cert}
           feedItem={feedItem}
           guardName={profileName}
           onOpenGuardProfile={profileLink}
-          actions={renderCertActions(guard, context.cert)}
+          actions={renderCertActions(guard!, context.cert)}
         />
       ) : context.kind === 'coi' ? (
         <StaffCoiReviewDetail
-          guard={guard}
+          guard={guard!}
           feedItem={feedItem}
           guardName={profileName}
           onOpenGuardProfile={profileLink}
           actions={
             <>
-              {renderCoiActions(guard)}
-              {renderCoiUpdateRequest(guard)}
+              {renderCoiActions(guard!)}
+              {renderCoiUpdateRequest(guard!)}
             </>
           }
         />
       ) : context.kind === 'gov-id' ? (
         <StaffGovIdReviewDetail
-          guard={guard}
+          guard={guard!}
           feedItem={feedItem}
           guardName={profileName}
           onOpenGuardProfile={profileLink}
           actions={
             <>
-              {renderGovIdActions(guard)}
-              {renderGovIdUpdateRequest(guard)}
+              {renderGovIdActions(guard!)}
+              {renderGovIdUpdateRequest(guard!)}
             </>
           }
         />
-      ) : (
+      ) : context.kind === 'activation-pending' ? (
         <StaffActivationReviewDetail
-          guard={guard}
+          guard={guard!}
           stepKey={context.stepKey}
           feedItem={feedItem}
           guardName={profileName}
           onOpenGuardProfile={profileLink}
         />
-      );
+      ) : null);
 
     if (options?.onBack) {
       return (
@@ -660,6 +722,15 @@ export function StaffCredentials({
           />
         </div>
       ) : null}
+      {audienceFilter === 'clients' && onUpdateClientCredentialRules ? (
+        <div className="staff-ops-cta-stack">
+          <ClientCredentialLibraryEditor
+            rules={clientCredentialRules}
+            canEdit={Boolean(currentUserRole && isExecutiveOpsRole(currentUserRole))}
+            onChange={(rules) => void onUpdateClientCredentialRules(rules)}
+          />
+        </div>
+      ) : null}
       <WfSearchBar
         value={search}
         onChange={setSearch}
@@ -675,6 +746,7 @@ export function StaffCredentials({
             { id: 'all', label: 'All' },
             { id: 'staff', label: 'Staff' },
             { id: 'guards', label: 'Guards' },
+            { id: 'clients', label: 'Clients' },
           ]}
         />
         <StaffListFilterTabs
@@ -773,7 +845,7 @@ export function StaffCredentials({
             </div>
           }
           renderItem={(item, isSelected, onSelect) => (
-            <CredentialFeedRow item={item} guards={guards} isSelected={isSelected} onSelect={onSelect} />
+            <CredentialFeedRow item={item} guards={guards} clients={clients} isSelected={isSelected} onSelect={onSelect} />
           )}
           renderDetail={(item, options) => renderCredentialDetail(item, options)}
         />

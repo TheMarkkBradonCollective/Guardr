@@ -81,6 +81,12 @@ describe('staffCredentialRules', () => {
       ),
       false
     );
+    assert.equal(
+      staffCanSetGovernmentIdDocumentType(
+        guard({ isStaff: true, userStatus: 'active', idVerificationStatus: 'pending' })
+      ),
+      true
+    );
   });
 
   it('gates certification / ID / COI helpers consistently', () => {

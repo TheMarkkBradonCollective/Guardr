@@ -381,4 +381,52 @@ describe('buildApplicationFeed', () => {
     assert.equal(enriched.title, 'MGR-00001 — Government ID');
     assert.match(enriched.subtitle ?? '', /Ops Manager/);
   });
+
+  it('bounces staff government IDs marked verified without photos to pending upload', () => {
+    const staffMember = {
+      id: 's-field',
+      name: 'Guardr',
+      email: 'staff@guardr.co',
+      userStatus: 'active',
+      mustChangePassword: false,
+      isStaff: true,
+      staffRole: 'Director',
+      badgeNumber: 'STF-FIELD01',
+      idVerificationStatus: 'verified',
+      certifications: [],
+    } as SecurityGuard;
+
+    const feed = buildStaffApprovalsFeed({ guards: [staffMember], clients: [], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+
+    assert.equal(feed.length, 1);
+    assert.equal(feed[0]?.statusLabel, CREDENTIAL_PENDING_UPLOAD_LABEL);
+    assert.equal(feed[0]?.status, 'pending');
+    assert.equal(countPendingCredentialUploads([staffMember], 'staff'), 1);
+    assert.equal(countPendingCredentialReviews([staffMember], 'staff'), 0);
+  });
+
+  it('includes required client credentials as pending upload until the client submits them', () => {
+    const client = {
+      id: 'c-1',
+      name: 'Alex Rivera',
+      email: 'alex@test.com',
+      companyName: '',
+      clientType: 'personal',
+      phone: '',
+      avatar: '',
+      totalRequests: 0,
+      credentials: [],
+    } as Client;
+
+    const feed = buildStaffApprovalsFeed({ guards: [], clients: [client], requests: [] }).filter(
+      (item) => item.queue === 'credentials'
+    );
+    const govId = feed.find((item) => item.title.includes('Government-issued ID'));
+    assert.ok(govId);
+    assert.equal(govId?.statusLabel, CREDENTIAL_PENDING_UPLOAD_LABEL);
+    assert.equal(credentialFeedItemAudience(govId!, []), 'client');
+    assert.equal(countPendingCredentialUploads([], 'client', [client]), 1);
+  });
 });

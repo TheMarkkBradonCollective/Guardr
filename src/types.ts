@@ -322,6 +322,24 @@ export interface Client {
 
   /** People Guardr or assigned guards can contact — family for personal, managers/employees for business. */
   authorizedContacts?: ClientAuthorizedContact[];
+
+  /** Uploaded client credentials from the Client Credential Library. */
+  credentials?: ClientCredential[];
+}
+
+export type ClientCredentialStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
+
+export interface ClientCredential {
+  id: string;
+  typeId: string;
+  status: ClientCredentialStatus;
+  documentUrl?: string;
+  expirationDate?: string;
+  notes?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
