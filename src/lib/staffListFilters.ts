@@ -27,7 +27,7 @@ export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
 export type ClientRosterFilter = 'pending' | 'active' | 'suspended' | 'all';
 
-export type StaffTeamFilter = 'pending' | 'active' | 'suspended' | 'all';
+export type StaffTeamFilter = 'pending' | 'inactive' | 'active' | 'suspended' | 'all';
 
 export function isCredentialFeedItemOpen(item: ApprovalFeedItem): boolean {
   return item.status === 'pending' || item.status === 'in_review';
@@ -131,6 +131,8 @@ export function matchesStaffTeamFilter(member: SecurityGuard, filter: StaffTeamF
       return true;
     case 'pending':
       return isStaffAccountPending(member);
+    case 'inactive':
+      return status === 'approved';
     case 'active':
       return status === 'active';
     case 'suspended':

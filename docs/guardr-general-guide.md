@@ -43,7 +43,7 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
-| **Staff (pending / reactivation)** | **Onboarding checklist** — upload government ID (front, back, selfie) and connect Stripe for payouts; **Settings** (sign out). Ops pages stay blocked until **active**. Existing active staff missing real ID photos see **Staff reactivation** until ID is verified. Founder can still open the console to review IDs. |
+| **Staff (pending / reactivation)** | **Onboarding checklist** — upload government ID (front, back, selfie) and connect Stripe for payouts; **Settings** (sign out). Ops pages stay blocked until **active**. Staff with pending or missing ID are **Inactive** and see **Staff reactivation** until ID is verified. Founder can still open the console to review IDs. |
 | **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile → Timesheets** for clock in/out; Directors/Founders also use **Payments** for staff compensation |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -1271,7 +1271,7 @@ Staff who apply via **Work at Guardr** can **sign in while pending** and complet
 
 While **pending** or **approved** (checklist incomplete), only the onboarding checklist and **Settings** are available — not ops panels (**Jobs**, **Guards**, etc.).
 
-**Reactivation (existing active staff):** Government ID is only treated as verified when **front, back, and selfie** photos are on file. A status of verified with no photos is bounced to **pending upload**. Those staff stay in the Credentials queue and see **Staff reactivation** — ops access is restricted until ID is uploaded and a Director verifies it. **Founder** can still open the staff console so someone can review IDs (avoids a deadlock).
+**Reactivation (approved or previously active staff):** Government ID is only treated as verified when **front, back, and selfie** photos are on file. A status of verified with no photos is bounced to **pending upload**. Staff with pending or missing ID are marked **Inactive** (`approved`) and see **Staff reactivation** — ops access is restricted until ID is uploaded and a Director verifies it. Pre-approved applications added in the database still show their full application details in **Applications**. **Founder** can still open the staff console so someone can review IDs (avoids a deadlock).
 
 New staff still use **Staff activation** copy. Auto-activation requires photos, not status alone.
 

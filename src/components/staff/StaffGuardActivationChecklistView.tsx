@@ -154,7 +154,7 @@ export function StaffGuardActivationChecklistView({
         <p className="text-xs text-brand-text-muted mt-1">
           {hasSnapshot
             ? 'What was submitted with this application. Later uploads do not change this package.'
-            : 'Credentials on file for this application (package seals when approved).'}
+            : 'Credentials on file for this application — including details added on the profile. Later uploads live under Credentials.'}
         </p>
       </div>
       <div className="app-checklist-steps mt-3">

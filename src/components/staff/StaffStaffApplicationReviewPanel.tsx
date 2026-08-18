@@ -4,6 +4,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { Mail, Phone } from 'lucide-react';
 import { getGuardUserStatus } from '../../lib/accountStatus';
+import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 import { ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
@@ -33,17 +34,14 @@ export function StaffStaffApplicationReviewPanel({
   const displayName = member.badgeNumber || member.name;
   const staffRole = member.staffRole || 'Support';
   const statusTone =
-    isPending ? 'warning' : accountStatus === 'suspended' || accountStatus === 'blocked' ? 'danger' : 'success';
-  const statusLabel =
     isPending
-      ? 'Pending Director approval'
-      : accountStatus === 'active'
-        ? 'Active'
-        : accountStatus === 'suspended'
-          ? 'Suspended'
-          : accountStatus === 'blocked'
-            ? 'Blocked'
-            : 'Reviewed';
+      ? 'warning'
+      : accountStatus === 'suspended' || accountStatus === 'blocked'
+        ? 'danger'
+        : accountStatus === 'active'
+          ? 'success'
+          : 'default';
+  const statusLabel = getStaffRosterStatusLabel(member);
 
   const handleApprove = async () => {
     if (!onApproveStaffAccount) return;

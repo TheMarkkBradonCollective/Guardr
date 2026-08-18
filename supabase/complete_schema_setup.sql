@@ -1107,6 +1107,18 @@ WHERE id_verification_status = 'verified'
     OR COALESCE(btrim(id_selfie_url), '') = ''
   );
 
+-- Active staff missing a real verified ID are inactive (approved) until reactivation.
+UPDATE staff
+SET user_status = 'approved'
+WHERE user_status = 'active'
+  AND COALESCE(staff_role, '') IS DISTINCT FROM 'Founder'
+  AND (
+    id_verification_status IS DISTINCT FROM 'verified'
+    OR COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
+
 COMMENT ON COLUMN staff.personal_email IS 'Optional personal contact email; staff.email remains work/login email';
 
 COMMENT ON COLUMN staff.headline IS 'Professional title shown on staff roster profiles';
@@ -1672,6 +1684,18 @@ FROM guards g
 LEFT JOIN staff s_live ON s_live.id = g.id
 WHERE g.is_staff = true OR g.migrated_to_staff_at IS NOT NULL
 ON CONFLICT (id) DO NOTHING;
+
+-- Seed inserts may mark directors active; bounce those missing a real ID.
+UPDATE staff
+SET user_status = 'approved'
+WHERE user_status = 'active'
+  AND COALESCE(staff_role, '') IS DISTINCT FROM 'Founder'
+  AND (
+    id_verification_status IS DISTINCT FROM 'verified'
+    OR COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
 
 DELETE FROM guard_payout_invoices WHERE guard_id IN (SELECT id FROM staff);
 

@@ -29,6 +29,7 @@ describe('staff section routing', () => {
     assert.equal(staffSectionFromApprovalQueue('credentials'), 'credentials');
     assert.equal(staffSectionFromApprovalQueue('guard-accounts'), 'applications');
     assert.equal(staffSectionFromApprovalQueue('client-accounts'), 'applications');
+    assert.equal(staffSectionFromApprovalQueue('staff-accounts'), 'applications');
   });
 
   it('deep-links account application overview actions to the first pending guard', () => {
@@ -72,6 +73,32 @@ describe('staff section routing', () => {
       { requests: [], guards: [], clients }
     );
     assert.equal(selection.clientId, 'client-1');
+  });
+
+  it('deep-links pending staff application overview actions to the first pending staff member', () => {
+    const guards = [
+      {
+        id: 'staff-1',
+        name: 'Alex Ops',
+        email: 'alex@guardr.test',
+        userStatus: 'pending',
+        isStaff: true,
+        staffRole: 'Support',
+        certifications: [],
+      } as SecurityGuard,
+    ];
+    const selection = resolveOverviewActionSelection(
+      {
+        id: 'pending-staff-accounts',
+        title: '',
+        description: '',
+        count: 1,
+        section: 'applications',
+        tone: 'urgent',
+      },
+      { requests: [], guards, clients: [] }
+    );
+    assert.equal(selection.guardId, 'staff-1');
   });
 
   it('deep-links credential overview actions to the first pending credential item', () => {

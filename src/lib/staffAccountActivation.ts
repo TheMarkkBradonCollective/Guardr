@@ -112,9 +112,40 @@ export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
   return isStaffAccountPreActive(member);
 }
 
-/** Existing active staff who must re-complete ID verification. */
+/**
+ * Approved or previously active staff who must finish ID (and related) verification.
+ * First-time pending applicants stay on the activation page, not reactivation.
+ */
 export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
-  return Boolean(member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member));
+  if (!member.isStaff) return false;
+  const status = getGuardUserStatus(member);
+  if (status === 'suspended' || status === 'blocked' || status === 'pending') return false;
+  return !governmentIdEffectivelyVerified(member);
+}
+
+export function getStaffRosterStatusLabel(member: SecurityGuard): string {
+  const status = getGuardUserStatus(member);
+  if (status === 'pending') return 'Pending approval';
+  if (status === 'suspended') return 'Suspended';
+  if (status === 'blocked') return 'Blocked';
+  if (status === 'active' && governmentIdEffectivelyVerified(member)) return 'Active';
+  return 'Inactive';
+}
+
+export function staffHasApplicationIntake(member: SecurityGuard): boolean {
+  return Boolean(
+    member.phone?.trim() ||
+      member.firstName?.trim() ||
+      member.lastName?.trim() ||
+      member.bio?.trim() ||
+      member.summary?.trim() ||
+      member.about?.trim() ||
+      member.yearsExperience != null ||
+      member.availabilityNotes?.trim() ||
+      member.referredBy?.trim() ||
+      (member.specialties?.length ?? 0) > 0 ||
+      (member.managedCities?.length ?? 0) > 0
+  );
 }
 
 export function staffActivationProgress(member: SecurityGuard): {

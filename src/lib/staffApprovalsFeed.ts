@@ -564,23 +564,33 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
     });
 }
 
+function staffBelongsInApplicationFeed(member: SecurityGuard): boolean {
+  if (!member.isStaff) return false;
+  const status = getGuardUserStatus(member);
+  return (
+    status === 'pending' ||
+    status === 'approved' ||
+    status === 'active' ||
+    status === 'suspended' ||
+    status === 'blocked'
+  );
+}
+
 function staffAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return guards
-    .filter((g) => {
-      if (!g.isStaff) return false;
-      if (g.userStatus === 'pending') return true;
-      return Boolean(latestAudit(auditLog, g.id, ['staff_approved', 'staff_rejected']));
-    })
+    .filter(staffBelongsInApplicationFeed)
     .map((member) => {
-      const userStatus = member.userStatus ?? 'active';
+      const userStatus = getGuardUserStatus(member);
       const pending = userStatus === 'pending';
       const audit = latestAudit(auditLog, member.id, ['staff_approved', 'staff_rejected']);
       const actor = actorLabel(audit);
       const status: ApprovalFeedStatus = pending
         ? 'pending'
-        : userStatus === 'suspended' || userStatus === 'blocked'
-          ? 'denied'
-          : 'approved';
+        : userStatus === 'active'
+          ? 'active'
+          : userStatus === 'suspended' || userStatus === 'blocked'
+            ? 'denied'
+            : 'approved';
 
       return {
         id: member.id,
@@ -596,7 +606,7 @@ function staffAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
               ? 'Suspended'
               : userStatus === 'blocked'
                 ? 'Blocked'
-                : 'Reviewed',
+                : APPLICATION_FEED_STATUS_LABELS.approved,
         submittedAt: member.id.includes('-') ? undefined : undefined,
         reviewedAt: actor.at,
         reviewedByName: actor.name,

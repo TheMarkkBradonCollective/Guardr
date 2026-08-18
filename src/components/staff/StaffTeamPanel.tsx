@@ -16,6 +16,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import type { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { getStaffDisplayName } from '../../lib/staffProfile';
+import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -153,6 +154,7 @@ export function StaffTeamPanel({
         tabs={[
           { id: 'all', label: 'All' },
           { id: 'pending', label: 'Pending' },
+          { id: 'inactive', label: 'Inactive' },
           { id: 'active', label: 'Active' },
           { id: 'suspended', label: 'Suspended' },
         ]}
@@ -184,7 +186,7 @@ export function StaffTeamPanel({
           getItemId={(member) => member.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           renderItem={(member, isActive, onSelect) => {
-            const accountStatus = member.userStatus || 'active';
+            const accountStatusLabel = getStaffRosterStatusLabel(member);
             const displayName = getStaffDisplayName(member);
 
             return (
@@ -204,7 +206,7 @@ export function StaffTeamPanel({
                           : 'Staff'}
                     </WfBadge>
                     <span className="text-xs text-brand-text-muted">{member.badgeNumber}</span>
-                    <span className="capitalize">{accountStatus}</span>
+                    <span>{accountStatusLabel}</span>
                   </div>
                 }
                 onClick={onSelect}

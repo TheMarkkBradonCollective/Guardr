@@ -2,7 +2,7 @@ import React from 'react';
 import type { SecurityGuard } from '../../types';
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
-import { getStaffActivationChecklist } from '../../lib/staffAccountActivation';
+import { getStaffActivationChecklist, staffHasApplicationIntake } from '../../lib/staffAccountActivation';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
@@ -25,12 +25,7 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
   const staffRole = member.staffRole || (isFinanceDesk ? null : 'Support');
   const platformRole = staffRole ? staffRoleToPlatformRole(staffRole) : 'finance';
   const cities = (member.managedCities ?? []).filter(Boolean);
-  const hasIntake =
-    Boolean(member.phone?.trim()) ||
-    Boolean(member.firstName?.trim()) ||
-    Boolean(member.lastName?.trim()) ||
-    Boolean(member.bio?.trim()) ||
-    cities.length > 0;
+  const hasIntake = staffHasApplicationIntake(member);
   const requestedRoleLabel = isFinanceDesk
     ? `Finance desk — ${ROLE_LABELS.finance}`
     : member.sideRole === 'Finance' && staffRole

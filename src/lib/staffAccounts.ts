@@ -58,7 +58,9 @@ export type StaffRow = {
   id_revision_history?: unknown;
 };
 
-function bounceStaffIdVerificationStatus(row: StaffRow): GuardIdVerificationStatus {
+function bounceStaffIdVerificationStatus(
+  row: Pick<StaffRow, 'id_verification_status' | 'id_front_url' | 'id_back_url' | 'id_selfie_url'>,
+): GuardIdVerificationStatus {
   const stored =
     row.id_verification_status === 'pending' ||
     row.id_verification_status === 'verified' ||
@@ -88,6 +90,30 @@ function normalizeStaffUserStatus(raw: unknown): GuardUserStatus {
   return 'pending';
 }
 
+/**
+ * Active staff without a real verified ID (photos on file) are treated as approved /
+ * inactive so they land on reactivation instead of ops. Founder stays active so
+ * someone can still review IDs.
+ */
+export function bounceUnverifiedStaffUserStatus(
+  row: Pick<
+    StaffRow,
+    | 'user_status'
+    | 'staff_role'
+    | 'id_verification_status'
+    | 'id_front_url'
+    | 'id_back_url'
+    | 'id_selfie_url'
+  >,
+): GuardUserStatus {
+  const status = normalizeStaffUserStatus(row.user_status);
+  if (status !== 'active') return status;
+  if (row.staff_role === 'Founder') return status;
+  const idStatus = bounceStaffIdVerificationStatus(row);
+  if (idStatus === 'verified') return status;
+  return 'approved';
+}
+
 export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
   const nameParts = resolvePersonNameParts({
     firstName: row.first_name,
@@ -95,7 +121,7 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     lastName: row.last_name,
     name: row.name,
   });
-  const userStatus = normalizeStaffUserStatus(row.user_status);
+  const userStatus = bounceUnverifiedStaffUserStatus(row);
 
   return {
     id: row.id,

@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   getStaffActivationChecklist,
+  getStaffRosterStatusLabel,
+  staffHasApplicationIntake,
   staffNeedsCredentialCompletion,
   staffNeedsIdReactivation,
   staffReadyForAutoActivation,
 } from './staffAccountActivation';
+import { bounceUnverifiedStaffUserStatus, mapStaffRowToSecurityGuard } from './staffAccounts';
 import { withAutoStaffActivation } from './staffAutoActivation';
 import { isStaffAccountApproved, isStaffAccountPreActive } from './accountStatus';
 
@@ -68,6 +71,90 @@ describe('staffAccountActivation', () => {
     });
     assert.equal(staffNeedsCredentialCompletion(member), true);
     assert.equal(staffNeedsIdReactivation(member), true);
+    assert.equal(getStaffRosterStatusLabel(member), 'Inactive');
+  });
+
+  it('sends approved staff with pending ID to reactivation and marks them inactive', () => {
+    const member = staffMember({
+      userStatus: 'approved',
+      verified: false,
+      idVerificationStatus: 'pending',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+    });
+    assert.equal(staffNeedsIdReactivation(member), true);
+    assert.equal(staffNeedsCredentialCompletion(member), true);
+    assert.equal(getStaffRosterStatusLabel(member), 'Inactive');
+  });
+
+  it('keeps first-time pending staff on activation, not reactivation', () => {
+    const member = staffMember({
+      userStatus: 'pending',
+      verified: false,
+      idVerificationStatus: 'not_submitted',
+      idFrontUrl: undefined,
+      idBackUrl: undefined,
+      idSelfieUrl: undefined,
+    });
+    assert.equal(staffNeedsIdReactivation(member), false);
+    assert.equal(staffNeedsCredentialCompletion(member), true);
+    assert.equal(getStaffRosterStatusLabel(member), 'Pending approval');
+  });
+
+  it('treats manually added staff application fields as complete intake', () => {
+    const member = staffMember({
+      userStatus: 'approved',
+      phone: '555-0199',
+      yearsExperience: 8,
+      availabilityNotes: 'Weekdays',
+      referredBy: 'Director',
+      bio: 'Ops background from the field.',
+      summary: 'Platform operations',
+    });
+    assert.equal(staffHasApplicationIntake(member), true);
+  });
+
+  it('bounces active staff missing ID photos to approved except Founder', () => {
+    assert.equal(
+      bounceUnverifiedStaffUserStatus({
+        user_status: 'active',
+        staff_role: 'Director',
+        id_verification_status: 'pending',
+        id_front_url: 'front.jpg',
+        id_back_url: 'back.jpg',
+        id_selfie_url: 'selfie.jpg',
+      }),
+      'approved'
+    );
+    assert.equal(
+      bounceUnverifiedStaffUserStatus({
+        user_status: 'active',
+        staff_role: 'Founder',
+        id_verification_status: 'not_submitted',
+        id_front_url: null,
+        id_back_url: null,
+        id_selfie_url: null,
+      }),
+      'active'
+    );
+    const mapped = mapStaffRowToSecurityGuard({
+      id: 'staff-1',
+      name: 'Alex Ops',
+      email: 'alex@guardr.test',
+      badge_number: 'STF-10001',
+      staff_role: 'Support',
+      user_status: 'active',
+      id_verification_status: 'pending',
+      phone: '555-0100',
+      bio: 'Added in the database',
+      years_experience: 4,
+      availability_notes: 'Evenings',
+    });
+    assert.equal(mapped.userStatus, 'approved');
+    assert.equal(mapped.verified, false);
+    assert.equal(staffNeedsIdReactivation(mapped), true);
+    assert.equal(staffHasApplicationIntake(mapped), true);
   });
 
   it('auto-activates approved staff when ID photos and Stripe payouts are ready', () => {
