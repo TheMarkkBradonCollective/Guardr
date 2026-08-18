@@ -6,8 +6,14 @@ import { MobileDrawerNav } from './kit/MobileDrawerNav';
 import { MobileSheet } from './kit/MobileSheet';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
 import type { AccountMenuProps } from '../../components/layouts/AccountMenu';
+import { accountMenuUnreadCount } from '../../components/notifications/NotificationInboxSection';
 
 type MobileAppShellProps = SurfaceShellProps;
+
+function readAccountMenuProps(accountMenu: SurfaceShellProps['accountMenu']): AccountMenuProps | undefined {
+  if (!accountMenu || !isValidElement(accountMenu)) return undefined;
+  return accountMenu.props as AccountMenuProps;
+}
 
 /**
  * The mobile application shell.
@@ -41,6 +47,14 @@ export function MobileAppShell({
   const [moreOpen, setMoreOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [accountSheetView, setAccountSheetView] = useState<'main' | 'notifications'>('main');
+
+  const accountMenuProps = readAccountMenuProps(accountMenu);
+  const showNotificationBell =
+    accountMenuProps?.notifications &&
+    accountMenuProps.onNotificationClick &&
+    accountMenuProps.onMarkAllNotificationsRead;
+  const notificationUnread = accountMenuUnreadCount(accountMenuProps?.notifications);
 
   const navigation = useMemo(
     () => (useDrawerNav ? null : buildMobileNavigation(destinations)),
@@ -74,9 +88,15 @@ export function MobileAppShell({
   const showTabs = !hidePrimaryNav && !useDrawerNav && navigation && navigation.tabs.length > 0;
   const showDrawer = !hidePrimaryNav && useDrawerNav;
 
+  const openAccountSheet = useCallback((view: 'main' | 'notifications') => {
+    setAccountSheetView(view);
+    setAccountOpen(true);
+  }, []);
+
   const accountSheet = isValidElement(accountMenu)
     ? cloneElement(accountMenu as React.ReactElement<AccountMenuProps>, {
         presentation: 'sheet',
+        sheetView: accountSheetView,
         onDismiss: () => setAccountOpen(false),
       })
     : accountMenu;
@@ -115,15 +135,6 @@ export function MobileAppShell({
               >
                 <Menu size={22} strokeWidth={2.25} aria-hidden />
               </button>
-            ) : identity && accountMenu ? (
-              <button
-                type="button"
-                className="sfm-shell-identity"
-                onClick={() => setAccountOpen(true)}
-                aria-label="Account"
-              >
-                {identity}
-              </button>
             ) : (
               <span className="sfm-shell-head-spacer" aria-hidden />
             )}
@@ -132,11 +143,39 @@ export function MobileAppShell({
 
             <div className="sfm-shell-actions">
               {notifications}
-              {accountMenu && (showDrawer || !identity) ? (
+              {showNotificationBell ? (
+                <button
+                  type="button"
+                  className="sfm-icon-btn sfm-noti-btn"
+                  onClick={() => openAccountSheet('notifications')}
+                  aria-label={
+                    notificationUnread > 0
+                      ? `Notifications, ${notificationUnread} unread`
+                      : 'Notifications'
+                  }
+                >
+                  <Bell size={20} strokeWidth={2.25} aria-hidden />
+                  {notificationUnread > 0 ? (
+                    <span className="sfm-noti-badge">
+                      {notificationUnread > 9 ? '9+' : notificationUnread}
+                    </span>
+                  ) : null}
+                </button>
+              ) : null}
+              {identity && accountMenu ? (
+                <button
+                  type="button"
+                  className="sfm-shell-identity sfm-shell-identity--header"
+                  onClick={() => openAccountSheet('main')}
+                  aria-label="Account"
+                >
+                  {identity}
+                </button>
+              ) : accountMenu ? (
                 <button
                   type="button"
                   className="sfm-icon-btn"
-                  onClick={() => setAccountOpen(true)}
+                  onClick={() => openAccountSheet('main')}
                   aria-label="Account menu"
                 >
                   <Bell size={20} strokeWidth={2.25} aria-hidden />
@@ -175,22 +214,6 @@ export function MobileAppShell({
           activeId={activeId}
           onNavigate={handleNavigate}
           workspaceLabel={workspaceLabel}
-          identity={
-            identity && accountMenu ? (
-              <button
-                type="button"
-                className="sfm-drawer-identity-btn"
-                onClick={() => {
-                  setDrawerOpen(false);
-                  setAccountOpen(true);
-                }}
-              >
-                {identity}
-              </button>
-            ) : (
-              identity
-            )
-          }
           footer={navFooter}
           primaryAction={drawerPrimaryAction}
         />
@@ -228,8 +251,11 @@ export function MobileAppShell({
 
       <MobileSheet
         open={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        title="Account"
+        onClose={() => {
+          setAccountOpen(false);
+          setAccountSheetView('main');
+        }}
+        title={accountSheetView === 'notifications' ? 'Notifications' : 'Account'}
         snapPoints={['half', 'full']}
       >
         <div className="sfm-account-sheet">{accountSheet}</div>

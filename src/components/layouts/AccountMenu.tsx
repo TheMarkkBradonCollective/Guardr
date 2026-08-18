@@ -53,6 +53,8 @@ export interface AccountMenuProps {
   presentation?: 'menu' | 'sheet';
   /** Fired after any action that should dismiss the host overlay. */
   onDismiss?: () => void;
+  /** When `presentation` is `sheet`, opens directly to notifications or main. */
+  sheetView?: 'main' | 'notifications';
 }
 
 export function AccountMenu({
@@ -75,6 +77,7 @@ export function AccountMenu({
   triggerVariant = 'default',
   presentation = 'menu',
   onDismiss,
+  sheetView = 'main',
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const [menuView, setMenuView] = useState<'main' | 'notifications'>('main');
@@ -96,6 +99,12 @@ export function AccountMenu({
       setMenuView('main');
     }
   }, [open]);
+
+  useEffect(() => {
+    if (presentation === 'sheet') {
+      setMenuView(sheetView);
+    }
+  }, [presentation, sheetView]);
 
   useEffect(() => {
     if (!open) return;
