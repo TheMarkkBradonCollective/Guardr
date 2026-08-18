@@ -183,7 +183,21 @@ describe('staffListFilters', () => {
     const activeClient = { id: 'c-2', accountStatus: 'active', approved: true } as Client;
     const pendingStaff = { id: 's-1', isStaff: true, userStatus: 'pending' } as SecurityGuard;
     const inactiveStaff = { id: 's-inactive', isStaff: true, userStatus: 'approved' } as SecurityGuard;
-    const activeStaff = { id: 's-2', isStaff: true, userStatus: 'active' } as SecurityGuard;
+    const activeStaff = {
+      id: 's-2',
+      isStaff: true,
+      userStatus: 'active',
+      idVerificationStatus: 'verified',
+      idFrontUrl: 'front.jpg',
+      idBackUrl: 'back.jpg',
+      idSelfieUrl: 'selfie.jpg',
+    } as SecurityGuard;
+    const reactivatingStaff = {
+      id: 's-reactivate',
+      isStaff: true,
+      userStatus: 'active',
+      idVerificationStatus: 'pending',
+    } as SecurityGuard;
 
     assert.equal(matchesClientRosterFilter(pendingClient, 'pending'), true);
     assert.equal(matchesClientRosterFilter(activeClient, 'active'), true);
@@ -191,6 +205,8 @@ describe('staffListFilters', () => {
     assert.equal(matchesStaffTeamFilter(inactiveStaff, 'inactive'), true);
     assert.equal(matchesStaffTeamFilter(inactiveStaff, 'active'), false);
     assert.equal(matchesStaffTeamFilter(activeStaff, 'active'), true);
+    assert.equal(matchesStaffTeamFilter(reactivatingStaff, 'inactive'), true);
+    assert.equal(matchesStaffTeamFilter(reactivatingStaff, 'active'), false);
   });
 
   it('filters credential feed items by staff vs guard audience', () => {

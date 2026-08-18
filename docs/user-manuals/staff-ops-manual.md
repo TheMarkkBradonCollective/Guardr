@@ -41,7 +41,9 @@ When the checklist is ready, your account moves to **active** automatically (`pe
 
 Until active, you stay on the staff pending/activation experience — finish ID and Stripe rather than using full ops tools.
 
-**Already approved or previously active, missing ID:** you see **Staff reactivation** and your roster status is **Inactive**. Ops access stays restricted until you upload ID and a Director verifies it. Founder accounts can still open the console so someone can review IDs.
+**Already active, missing ID photos:** you see **Staff reactivation** and your roster status is **Inactive**. Ops access stays restricted until you upload ID and a Director verifies it. Founder accounts can still open the console so someone can review IDs.
+
+**Newly approved (never active):** you see **Staff activation** — finish government ID and Stripe. Roster status is **Inactive** until those steps complete.
 
 ### A3. After you are active
 

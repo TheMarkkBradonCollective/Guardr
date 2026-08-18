@@ -91,9 +91,9 @@ function normalizeStaffUserStatus(raw: unknown): GuardUserStatus {
 }
 
 /**
- * Active staff without a real verified ID (photos on file) are treated as approved /
- * inactive so they land on reactivation instead of ops. Founder stays active so
- * someone can still review IDs.
+ * SQL helper: active staff without a real verified ID are stored as approved /
+ * inactive. Founder stays active so someone can still review IDs. Newly approved
+ * hires keep Staff activation; only remaining `active` rows missing ID see reactivation.
  */
 export function bounceUnverifiedStaffUserStatus(
   row: Pick<
@@ -121,7 +121,7 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     lastName: row.last_name,
     name: row.name,
   });
-  const userStatus = bounceUnverifiedStaffUserStatus(row);
+  const userStatus = normalizeStaffUserStatus(row.user_status);
 
   return {
     id: row.id,

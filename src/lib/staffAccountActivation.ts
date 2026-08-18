@@ -113,14 +113,13 @@ export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
 }
 
 /**
- * Approved or previously active staff who must finish ID (and related) verification.
- * First-time pending applicants stay on the activation page, not reactivation.
+ * Existing active staff who must re-complete ID verification.
+ * New pending or approved hires stay on Staff activation, not reactivation.
  */
 export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
-  if (!member.isStaff) return false;
-  const status = getGuardUserStatus(member);
-  if (status === 'suspended' || status === 'blocked' || status === 'pending') return false;
-  return !governmentIdEffectivelyVerified(member);
+  return Boolean(
+    member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member)
+  );
 }
 
 export function getStaffRosterStatusLabel(member: SecurityGuard): string {

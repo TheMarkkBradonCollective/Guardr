@@ -74,7 +74,7 @@ describe('staffAccountActivation', () => {
     assert.equal(getStaffRosterStatusLabel(member), 'Inactive');
   });
 
-  it('sends approved staff with pending ID to reactivation and marks them inactive', () => {
+  it('sends newly approved staff to activation, not reactivation', () => {
     const member = staffMember({
       userStatus: 'approved',
       verified: false,
@@ -83,7 +83,7 @@ describe('staffAccountActivation', () => {
       idBackUrl: 'back.jpg',
       idSelfieUrl: 'selfie.jpg',
     });
-    assert.equal(staffNeedsIdReactivation(member), true);
+    assert.equal(staffNeedsIdReactivation(member), false);
     assert.equal(staffNeedsCredentialCompletion(member), true);
     assert.equal(getStaffRosterStatusLabel(member), 'Inactive');
   });
@@ -151,10 +151,26 @@ describe('staffAccountActivation', () => {
       years_experience: 4,
       availability_notes: 'Evenings',
     });
-    assert.equal(mapped.userStatus, 'approved');
-    assert.equal(mapped.verified, false);
+    assert.equal(mapped.userStatus, 'active');
     assert.equal(staffNeedsIdReactivation(mapped), true);
+    assert.equal(getStaffRosterStatusLabel(mapped), 'Inactive');
     assert.equal(staffHasApplicationIntake(mapped), true);
+
+    const approvedHire = mapStaffRowToSecurityGuard({
+      id: 'staff-2',
+      name: 'New Hire',
+      email: 'hire@guardr.test',
+      badge_number: 'SUP-00012',
+      staff_role: 'Support',
+      user_status: 'approved',
+      id_verification_status: 'not_submitted',
+      phone: '555-0101',
+      bio: 'New staff application',
+    });
+    assert.equal(approvedHire.userStatus, 'approved');
+    assert.equal(staffNeedsIdReactivation(approvedHire), false);
+    assert.equal(staffNeedsCredentialCompletion(approvedHire), true);
+    assert.equal(getStaffRosterStatusLabel(approvedHire), 'Inactive');
   });
 
   it('auto-activates approved staff when ID photos and Stripe payouts are ready', () => {

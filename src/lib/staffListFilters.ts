@@ -7,6 +7,7 @@ import {
   isGuardAccountPending,
   isStaffAccountPending,
 } from './accountStatus';
+import { staffNeedsIdReactivation } from './staffAccountActivation';
 import type { ApprovalFeedItem } from './staffApprovalsFeed';
 import {
   CREDENTIAL_PENDING_UPLOAD_LABEL,
@@ -132,9 +133,9 @@ export function matchesStaffTeamFilter(member: SecurityGuard, filter: StaffTeamF
     case 'pending':
       return isStaffAccountPending(member);
     case 'inactive':
-      return status === 'approved';
+      return status === 'approved' || staffNeedsIdReactivation(member);
     case 'active':
-      return status === 'active';
+      return status === 'active' && !staffNeedsIdReactivation(member);
     case 'suspended':
       return status === 'suspended' || status === 'blocked';
   }
