@@ -256,7 +256,7 @@
   margin-top: 4px;
 }
 
-body[data-view-surface$="-desktop"] .staff-overview-uber .uber-mobile-action-grid {
+body[data-surface="desktop"] .staff-overview-uber .uber-mobile-action-grid {
   display: none;
 }
 
@@ -279,61 +279,61 @@ body[data-view-surface="native-mobile"] .staff-overview-uber .uber-direct-home-h
 
 /* ─── Desktop overview dashboard ─────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .staff-overview-uber,
-body[data-view-surface$="-desktop"] .staff-overview-uber {
+body[data-surface="desktop"] .staff-overview-uber,
+body[data-surface="desktop"] .staff-overview-uber {
   gap: 20px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .uber-mobile-overview-header,
-body[data-view-surface$="-desktop"] .staff-overview-uber .uber-mobile-overview-header {
+body[data-surface="desktop"] .staff-overview-uber .uber-mobile-overview-header,
+body[data-surface="desktop"] .staff-overview-uber .uber-mobile-overview-header {
   display: none;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .staff-overview-desktop-grid,
-body[data-view-surface$="-desktop"] .staff-overview-uber .staff-overview-desktop-grid {
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-desktop-grid,
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-desktop-grid {
   padding-top: 0;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .staff-overview-quicklinks-panel,
-body[data-view-surface$="-desktop"] .staff-overview-uber .staff-overview-quicklinks-panel {
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-quicklinks-panel,
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-quicklinks-panel {
   margin: 0 1.5rem;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .staff-overview-financials-grid,
-body[data-view-surface$="-desktop"] .staff-overview-uber .staff-overview-financials-grid {
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-financials-grid,
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-financials-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .staff-overview-insights-grid,
-body[data-view-surface$="-desktop"] .staff-overview-uber .staff-overview-insights-grid {
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-insights-grid,
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-insights-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-uber .staff-overview-insights-panel .staff-overview-feed-card,
-body[data-view-surface$="-desktop"] .staff-overview-uber .staff-overview-insights-panel .staff-overview-feed-card {
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-insights-panel .staff-overview-feed-card,
+body[data-surface="desktop"] .staff-overview-uber .staff-overview-insights-panel .staff-overview-feed-card {
   grid-column: 1 / -1;
 }
 
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid {
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 12px !important;
 }
 
 @media (max-width: 1280px) {
-  body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid,
-  body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid {
+  body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid,
+  body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-card,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-card {
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-card,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-visual-card {
   background: var(--uber-surface, #f6f6f6) !important;
   border: 1px solid var(--uber-border, #eeeeee) !important;
   border-radius: 10px !important;
@@ -342,8 +342,8 @@ body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-ove
   box-shadow: none !important;
 }
 
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-financials-grid .staff-summary-cell,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-financials-grid .staff-summary-cell {
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-financials-grid .staff-summary-cell,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-financials-grid .staff-summary-cell {
   background: var(--uber-surface, #f6f6f6) !important;
   border: 1px solid var(--uber-border, #eeeeee) !important;
   border-radius: 10px !important;
@@ -351,10 +351,10 @@ body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-ove
   border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
 }
 
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-chart-card,
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-feed-card,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-chart-card,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-feed-card {
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-chart-card,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-feed-card,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-chart-card,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-feed-card {
   background: var(--uber-surface, #f6f6f6) !important;
   border: 1px solid var(--uber-border, #eeeeee) !important;
   border-radius: 10px !important;
@@ -362,8 +362,8 @@ body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-ove
   min-height: auto !important;
 }
 
-body[data-form-factor="desktop"] .staff-shell .staff-overview-uber .staff-overview-empty-card--panel,
-body[data-view-surface$="-desktop"] .staff-shell .staff-overview-uber .staff-overview-empty-card--panel {
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-empty-card--panel,
+body[data-surface="desktop"] .staff-shell .staff-overview-uber .staff-overview-empty-card--panel {
   background: var(--uber-surface, #f6f6f6) !important;
   border: 1px solid var(--uber-border, #eeeeee) !important;
   border-radius: 10px !important;
@@ -1075,46 +1075,46 @@ body[data-view-surface$="-tablet"] .staff-overview-pro-title {
   font-size: 32px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro,
-body[data-view-surface$="-desktop"] .staff-overview-pro {
+body[data-surface="desktop"] .staff-overview-pro,
+body[data-surface="desktop"] .staff-overview-pro {
   gap: 20px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-kpi,
-body[data-view-surface$="-desktop"] .staff-overview-pro-kpi {
+body[data-surface="desktop"] .staff-overview-pro-kpi,
+body[data-surface="desktop"] .staff-overview-pro-kpi {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-ops,
-body[data-view-surface$="-desktop"] .staff-overview-pro-ops {
+body[data-surface="desktop"] .staff-overview-pro-ops,
+body[data-surface="desktop"] .staff-overview-pro-ops {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-queue-grid,
-body[data-view-surface$="-desktop"] .staff-overview-pro-queue-grid {
+body[data-surface="desktop"] .staff-overview-pro-queue-grid,
+body[data-surface="desktop"] .staff-overview-pro-queue-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-financials,
-body[data-view-surface$="-desktop"] .staff-overview-pro-financials {
+body[data-surface="desktop"] .staff-overview-pro-financials,
+body[data-surface="desktop"] .staff-overview-pro-financials {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-main.staff-overview-desktop-grid,
-body[data-view-surface$="-desktop"] .staff-overview-pro-main.staff-overview-desktop-grid {
+body[data-surface="desktop"] .staff-overview-pro-main.staff-overview-desktop-grid,
+body[data-surface="desktop"] .staff-overview-pro-main.staff-overview-desktop-grid {
   gap: 16px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-title,
-body[data-view-surface$="-desktop"] .staff-overview-pro-title {
+body[data-surface="desktop"] .staff-overview-pro-title,
+body[data-surface="desktop"] .staff-overview-pro-title {
   font-size: 36px;
 }
 
-body[data-form-factor="desktop"] .staff-overview-pro-hub.uber-direct-home-hub,
-body[data-view-surface$="-desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
+body[data-surface="desktop"] .staff-overview-pro-hub.uber-direct-home-hub,
+body[data-surface="desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }

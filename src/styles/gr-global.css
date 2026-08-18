@@ -38,8 +38,9 @@ html.theme-dark .guardr-logo:not(.guardr-logo--opaque) {
 .guardr-logo--on-dark,
 .uber-landing-logo,
 .dsk-landing-logo-svg,
-body[data-form-factor="desktop"] .dsk-sidebar-logo,
-body[data-form-factor="desktop"] .dsk-auth-logo {
+.sfd-sidebar .guardr-logo,
+body[data-surface="desktop"] .dsk-sidebar-logo,
+body[data-surface="desktop"] .dsk-auth-logo {
   filter: brightness(0) invert(1);
 }
 
@@ -563,13 +564,13 @@ html.theme-dark .uber-overlay-sheet-title { color: var(--uber-text, #fff); }
 }
 
 /* Desktop workspace */
-body[data-form-factor="desktop"] .uber-form-wizard {
+body[data-surface="desktop"] .uber-form-wizard {
   max-width: min(52rem, 100%);
   margin: 0 auto;
   padding: 1.25rem 1.25rem 0;
 }
 
-body[data-form-factor="desktop"] .uber-form-wizard-actions {
+body[data-surface="desktop"] .uber-form-wizard-actions {
   position: static;
   padding: 1rem 0 1.5rem;
   border-top: 1px solid var(--uber-border, #eeeeee);

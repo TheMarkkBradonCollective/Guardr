@@ -1,7 +1,8 @@
 import React from 'react';
-import { isWideFormFactor, useDevice } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
-import { WorkbenchEmpty, WorkbenchSplit } from '../../baseui/layout/WorkbenchLayout';
+import { WorkbenchEmpty } from '../../baseui/layout/WorkbenchLayout';
+import { useSurfaceKind } from '../../../surfaces';
+import { DesktopPanelGroup } from '../../../surfaces/desktop/kit/DesktopPanels';
 
 export type ListDetailMobilePresentation = 'inline' | 'page';
 
@@ -27,12 +28,11 @@ export function useSplitListDetail(
   selectedId: string | null,
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
-  const { formFactor } = useDevice();
-  const desktopView = formFactor === 'desktop';
-  const splitView = formFactor === 'tablet';
-  const wideView = isWideFormFactor(formFactor);
+  const surface = useSurfaceKind();
+  const desktopView = surface === 'desktop';
+  const splitView = surface === 'tablet';
   const showDetailOnly =
-    mobilePresentation === 'page' && Boolean(selectedId && !wideView);
+    mobilePresentation === 'page' && Boolean(selectedId && surface === 'mobile');
 
   return { splitView, desktopView, showDetailOnly };
 }
@@ -66,30 +66,33 @@ export function ListDetailLayout<T>({
     onSelectId(id);
   };
 
+  const list = (
+    <AppItemCardStack>
+      {items.map((item) => {
+        const id = getItemId(item);
+        const isSelected = resolvedSelectedId === id;
+        return (
+          <React.Fragment key={id}>
+            {renderItem(item, isSelected, () => handleSelect(id))}
+          </React.Fragment>
+        );
+      })}
+    </AppItemCardStack>
+  );
+
   if (desktopView) {
     return (
-      <WorkbenchSplit
-        list={
-          <div className={listScrollClassName}>
-            <AppItemCardStack>
-              {items.map((item) => {
-                const id = getItemId(item);
-                const isSelected = resolvedSelectedId === id;
-                return (
-                  <React.Fragment key={id}>
-                    {renderItem(item, isSelected, () => handleSelect(id))}
-                  </React.Fragment>
-                );
-              })}
-            </AppItemCardStack>
-          </div>
-        }
-        detail={
-          selected
-            ? <div className={detailClassName}>{renderDetail(selected)}</div>
-            : emptyDetail ?? <WorkbenchEmpty message="Select an item to view details" variant="detail" />
-        }
-      />
+      <div className="h-full min-h-[60vh]">
+        <DesktopPanelGroup
+          primary={<div className={listScrollClassName}>{list}</div>}
+          secondary={
+            selected
+              ? <div className={detailClassName}>{renderDetail(selected)}</div>
+              : emptyDetail ?? <WorkbenchEmpty message="Select an item to view details" variant="detail" />
+          }
+          storageKey="list-detail"
+        />
+      </div>
     );
   }
 
@@ -109,19 +112,7 @@ export function ListDetailLayout<T>({
 
     return (
       <div className="tablet-split-panel">
-        <div className={`split-list-pane ${tabletListScrollClassName}`}>
-          <AppItemCardStack>
-            {items.map((item) => {
-              const id = getItemId(item);
-              const isSelected = resolvedSelectedId === id;
-              return (
-                <React.Fragment key={id}>
-                  {renderItem(item, isSelected, () => handleSelect(id))}
-                </React.Fragment>
-              );
-            })}
-          </AppItemCardStack>
-        </div>
+        <div className={`split-list-pane ${tabletListScrollClassName}`}>{list}</div>
         <div className={`split-detail-pane min-h-0 ${detailClassName}`}>
           {selected ? renderDetail(selected) : emptyDetail}
         </div>

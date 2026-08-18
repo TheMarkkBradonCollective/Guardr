@@ -1,6 +1,6 @@
 import React from 'react';
-import { useDevice } from '../../../lib/platform';
 import { AppScreen } from '../../ui/app/AppPrimitives';
+import { useSurfaceKind } from '../../../surfaces';
 
 /** Desktop admin page wrapper — replaces AppScreen inside adm-app on desktop. */
 export function DesktopPage({
@@ -31,8 +31,8 @@ export function ResponsivePage({
   screenClassName?: string;
   'data-tour'?: string;
 }) {
-  const { formFactor } = useDevice();
-  if (formFactor === 'desktop') {
+  const surface = useSurfaceKind();
+  if (surface === 'desktop') {
     return (
       <DesktopPage className={className} data-tour={dataTour}>
         {children}
@@ -58,8 +58,8 @@ export function ResponsiveFormPage({
   subtitle?: string;
   className?: string;
 }) {
-  const { formFactor } = useDevice();
-  if (formFactor === 'desktop') {
+  const surface = useSurfaceKind();
+  if (surface === 'desktop') {
     return (
       <div className={`adm-form-page ${className}`.trim()}>
         {title ? (
@@ -85,8 +85,8 @@ export function ResponsiveProfilePage({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { formFactor } = useDevice();
-  if (formFactor === 'desktop') {
+  const surface = useSurfaceKind();
+  if (surface === 'desktop') {
     return (
       <div className={`adm-profile-page ${className}`.trim()}>
         <aside className="adm-profile-sidebar">{sidebar}</aside>
