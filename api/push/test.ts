@@ -542,6 +542,8 @@ function rolesForNotificationType(type) {
       return ["guard"];
     case "company_placard_expiry":
       return ["dispatch", "admin"];
+    case "account_update":
+      return ["guard", "client", "dispatch", "admin"];
     case "test":
       return [];
     default:
@@ -889,6 +891,530 @@ async function verifySession(db, credentials) {
   return verifyAccountSession(db, credentials);
 }
 
+// lib/push/routing.ts
+function pushRoleToPlatformRole2(pushRole) {
+  switch (pushRole) {
+    case "guard":
+      return "guard";
+    case "client":
+      return "client";
+    case "dispatch":
+    case "admin":
+      return "administrator";
+    default:
+      return "administrator";
+  }
+}
+function resolveNotificationUrl2(type, options = {}) {
+  switch (type) {
+    case "missed_checkin":
+    case "guard_checkin":
+    case "guard_clockout":
+    case "guard_arrived":
+    case "guard_en_route":
+    case "guard_left_site":
+    case "guard_break_start":
+    case "guard_break_end":
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "job_open_to_guards":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "client_cash_payment_requested":
+    case "guard_cash_payout_requested":
+    case "stripe_payment_complete":
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "assignment":
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "emergency_alert":
+      if (options.requestId) {
+        return `/staff/jobs?j=${encodeURIComponent(options.requestId)}`;
+      }
+      if (options.ticketId) {
+        return `/staff/support?st=${encodeURIComponent(options.ticketId)}`;
+      }
+      return "/staff/incidents";
+    case "support_message":
+      return options.ticketId ? `/staff/support?st=${encodeURIComponent(options.ticketId)}` : "/staff/support";
+    case "job_chat_message":
+      return options.requestId ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=jobs";
+    case "staff_message":
+      return "/staff/messages?mtab=team";
+    case "guard_message":
+      return "/guard/guard-chat";
+    case "client_message":
+      return "/client/messages";
+    case "job_submitted":
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "guard_application":
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "crew_lead_request":
+      return "/staff/jobs";
+    case "guard_pending_approval":
+      return options.guardId ? `/staff/applications?g=${encodeURIComponent(options.guardId)}` : "/staff/applications";
+    case "client_pending_approval":
+      return "/staff/applications";
+    case "credential_pending":
+      return options.guardId ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}` : "/staff/credentials";
+    case "payment_attention":
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "client_invoice_ready":
+      return options.requestId ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}` : "/client/invoices";
+    case "support_ticket":
+    case "support_ticket_status":
+      return options.ticketId ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}` : "/staff/messages";
+    case "account_update":
+      return "/staff/settings";
+    case "job_status_update":
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "payout_ready":
+      return "/guard/earnings";
+    case "dispute_update":
+      return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
+    case "guard_trusted_status":
+      return options.guardId ? `/guard/profile?g=${encodeURIComponent(options.guardId)}` : "/guard/profile";
+    case "client_trusted_status":
+      return "/client/profile";
+    case "job_relisted":
+      return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+    case "job_schedule_changed":
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "team_chat_message":
+      return options.requestId ? `/staff/messages?jc=${encodeURIComponent(options.requestId)}` : "/staff/messages";
+    case "standing_crew_invite":
+      return "/guard/jobs";
+    case "company_placard_expiry":
+      return "/staff/settings";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "test":
+      return "/";
+    default:
+      return "/";
+  }
+}
+function resolveNotificationUrlForRole2(type, role, options = {}) {
+  const isStaff = role === "support" || role === "moderator" || role === "administrator" || role === "manager" || role === "director" || role === "owner";
+  switch (type) {
+    case "guard_arrived":
+    case "guard_en_route":
+    case "guard_left_site":
+      if (role === "client") {
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "job_open_to_guards":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "client_cash_payment_requested":
+    case "guard_cash_payout_requested":
+    case "stripe_payment_complete":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return "/guard/earnings";
+      }
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "payment_attention":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return "/guard/earnings";
+      }
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "support_message":
+      if (role === "client") {
+        return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
+      }
+      if (role === "guard") {
+        return options.ticketId ? `/guard/support?st=${encodeURIComponent(options.ticketId)}` : "/guard/support";
+      }
+      return options.ticketId ? `/staff/support?st=${encodeURIComponent(options.ticketId)}` : "/staff/support";
+    case "job_chat_message":
+      if (role === "client") {
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}&chat=1` : "/client/messages";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}&chat=1` : "/guard/my-jobs";
+      }
+      return options.requestId ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=jobs";
+    case "emergency_alert":
+      if (role === "client") {
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      if (options.requestId) {
+        return `/staff/jobs?j=${encodeURIComponent(options.requestId)}`;
+      }
+      if (options.ticketId) {
+        return `/staff/support?st=${encodeURIComponent(options.ticketId)}`;
+      }
+      return "/staff/incidents";
+    case "missed_checkin":
+    case "guard_checkin":
+    case "guard_clockout":
+    case "guard_break_start":
+    case "guard_break_end":
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      if (role === "client") {
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
+      }
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "staff_message":
+      return "/staff/messages?mtab=team";
+    case "guard_message":
+      return "/guard/guard-chat";
+    case "client_message":
+      if (role === "client") return "/client/messages";
+      return "/staff/messages?mtab=team";
+    case "support_ticket":
+    case "support_ticket_status":
+      if (role === "client" && options.requestId) {
+        return `/client/requests?jc=${encodeURIComponent(options.requestId)}`;
+      }
+      if (role === "client") {
+        return options.ticketId ? `/client/messages?st=${encodeURIComponent(options.ticketId)}` : "/client/messages";
+      }
+      if (role === "guard") {
+        return options.ticketId ? `/guard/messages?st=${encodeURIComponent(options.ticketId)}` : "/guard/messages";
+      }
+      return options.ticketId ? `/staff/messages?st=${encodeURIComponent(options.ticketId)}` : "/staff/messages";
+    case "account_update":
+      if (role === "client") return "/client/settings";
+      if (role === "guard") return "/guard/settings";
+      return "/staff/settings";
+    case "job_status_update":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "client_invoice_ready":
+      return options.requestId ? `/client/invoices?inv=${encodeURIComponent(options.requestId)}` : "/client/invoices";
+    case "payout_ready":
+      return role === "guard" ? "/guard/earnings" : "/staff/payments";
+    case "dispute_update":
+      if (role === "client") {
+        return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
+      }
+      if (role === "guard") {
+        return options.ticketId ? `/guard/support?st=${encodeURIComponent(options.ticketId)}` : "/guard/support";
+      }
+      return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
+    case "assignment":
+    case "guard_application":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (type === "guard_application") {
+        return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+      }
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "guard_trusted_status":
+      return "/guard/profile";
+    case "client_trusted_status":
+      return "/client/profile";
+    case "job_relisted":
+      return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+    case "job_schedule_changed":
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "pre_shift_briefing":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "team_chat_message":
+      if (role === "guard") {
+        return options.requestId ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
+      }
+      return options.requestId ? `/staff/messages?jc=${encodeURIComponent(options.requestId)}` : "/staff/messages";
+    case "standing_crew_invite":
+      return "/guard/jobs";
+    default:
+      if (isStaff) return resolveNotificationUrl2(type, options);
+      if (role === "client") return "/client/home";
+      if (role === "guard") return "/guard/map";
+      return resolveNotificationUrl2(type, options);
+  }
+}
+function buildNotificationData2(type, options = {}) {
+  const urlOptions = {
+    guardId: options.guardId,
+    requestId: options.requestId,
+    ticketId: options.ticketId
+  };
+  const url = options.url ?? (options.role ? resolveNotificationUrlForRole2(type, options.role, urlOptions) : resolveNotificationUrl2(type, urlOptions));
+  return {
+    type,
+    url,
+    siteId: options.siteId,
+    guardId: options.guardId,
+    requestId: options.requestId,
+    ticketId: options.ticketId,
+    priority: options.priority ?? (type === "emergency_alert" ? "high" : "normal")
+  };
+}
+
+// lib/push/delivery.ts
+var PREF_COLUMN2 = {
+  assignment: "assignment",
+  guard_checkin: "guard_checkin",
+  guard_clockout: "guard_clockout",
+  guard_arrived: "guard_arrived",
+  guard_left_site: "guard_left_site",
+  guard_break_start: "guard_break_start",
+  guard_break_end: "guard_break_end",
+  missed_checkin: "missed_checkin",
+  emergency_alert: "emergency_alert",
+  support_message: "support_message",
+  job_chat_message: "job_chat_message",
+  staff_message: "staff_message",
+  guard_message: "guard_message",
+  client_message: "client_message",
+  job_submitted: "job_submitted",
+  job_open_to_guards: "job_open_to_guards",
+  guard_application: "guard_application",
+  guard_pending_approval: "guard_pending_approval",
+  client_pending_approval: "client_pending_approval",
+  credential_pending: "credential_pending",
+  payment_attention: "payment_attention",
+  client_invoice_ready: "client_invoice_ready",
+  client_cash_payment_requested: "payment_attention",
+  guard_cash_payout_requested: "payment_attention",
+  stripe_payment_complete: "payment_attention",
+  support_ticket: "support_ticket",
+  support_ticket_status: "support_ticket_status",
+  dispute_update: "dispute_update",
+  guard_trusted_status: "guard_trusted_status",
+  client_trusted_status: "client_trusted_status",
+  job_relisted: "job_relisted",
+  job_schedule_changed: "job_schedule_changed",
+  team_chat_message: "team_chat_message",
+  standing_crew_invite: "standing_crew_invite",
+  crew_lead_request: "crew_lead_request",
+  pre_shift_briefing: "pre_shift_briefing",
+  guard_en_route: "guard_arrived",
+  account_update: "support_ticket_status",
+  job_status_update: "assignment",
+  payout_ready: "assignment",
+  company_placard_expiry: "company_placard_expiry"
+};
+async function isTypeEnabledForUser2(db, userId, type) {
+  const column = PREF_COLUMN2[type];
+  if (!column) return true;
+  const { data, error } = await db.from("notification_preferences").select(column).eq("user_id", userId).maybeSingle();
+  if (error || !data) return true;
+  return data[column] !== false;
+}
+var MAX_RETRIES2 = 2;
+var RETRY_DELAY_MS2 = 500;
+var vapidConfigured2 = false;
+var webPushModule2 = null;
+async function getWebPush2() {
+  if (!webPushModule2) {
+    const mod = await import("web-push");
+    webPushModule2 = "default" in mod && mod.default ? mod.default : mod;
+  }
+  return webPushModule2;
+}
+async function ensureVapidConfigured2() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:support@guardr.co";
+  if (!publicKey || !privateKey) return false;
+  if (vapidConfigured2) return true;
+  const webpush = await getWebPush2();
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+  vapidConfigured2 = true;
+  return true;
+}
+function isInQuietHours2(quietStart, quietEnd, now = /* @__PURE__ */ new Date()) {
+  if (!quietStart || !quietEnd) return false;
+  const toMinutes = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const current = now.getHours() * 60 + now.getMinutes();
+  const start = toMinutes(quietStart);
+  const end = toMinutes(quietEnd);
+  if (start === end) return false;
+  if (start < end) return current >= start && current < end;
+  return current >= start || current < end;
+}
+async function sleep2(ms) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function sendToSubscription2(subscription, payload, attempt = 0) {
+  if (isFcmNativeEndpoint(subscription.endpoint)) {
+    return sendFcmNativeNotification(subscription.endpoint, payload, attempt);
+  }
+  if (!await ensureVapidConfigured2()) {
+    return { ok: false, endpoint: subscription.endpoint };
+  }
+  try {
+    const webpush = await getWebPush2();
+    await webpush.sendNotification(
+      {
+        endpoint: subscription.endpoint,
+        keys: { p256dh: subscription.p256dh, auth: subscription.auth }
+      },
+      JSON.stringify(payload),
+      {
+        TTL: 60 * 60,
+        urgency: payload.priority === "high" ? "high" : "normal"
+      }
+    );
+    return { ok: true };
+  } catch (err) {
+    const statusCode = err && typeof err === "object" && "statusCode" in err ? Number(err.statusCode) : void 0;
+    if (attempt < MAX_RETRIES2 && statusCode !== 404 && statusCode !== 410) {
+      await sleep2(RETRY_DELAY_MS2 * (attempt + 1));
+      return sendToSubscription2(subscription, payload, attempt + 1);
+    }
+    return { ok: false, statusCode, endpoint: subscription.endpoint };
+  }
+}
+async function removeInvalidSubscriptions2(db, endpoints) {
+  if (!endpoints.length) return;
+  await db.from("push_subscriptions").delete().in("endpoint", endpoints);
+}
+async function deliverToSubscriptions2(db, subscriptions, payload) {
+  if (!subscriptions.length) return { sent: 0, failed: 0 };
+  const webPushReady = await ensureVapidConfigured2();
+  const fcmReady = isFcmConfigured();
+  if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
+  const prefCache = /* @__PURE__ */ new Map();
+  const filtered = [];
+  for (const sub of subscriptions) {
+    if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
+      continue;
+    }
+    if (!sub.user_id) {
+      filtered.push(sub);
+      continue;
+    }
+    let enabled = prefCache.get(sub.user_id);
+    if (enabled === void 0) {
+      enabled = await isTypeEnabledForUser2(db, sub.user_id, payload.type);
+      prefCache.set(sub.user_id, enabled);
+    }
+    if (enabled) filtered.push(sub);
+  }
+  if (!filtered.length) return { sent: 0, failed: 0 };
+  const urlOptions = {
+    guardId: payload.guardId,
+    requestId: payload.requestId,
+    ticketId: payload.ticketId
+  };
+  let sent = 0;
+  let failed = 0;
+  const staleEndpoints = [];
+  for (const sub of filtered) {
+    if (payload.type !== "emergency_alert" && payload.priority !== "high" && isInQuietHours2(sub.quiet_hours_start, sub.quiet_hours_end)) {
+      continue;
+    }
+    const platformRole = pushRoleToPlatformRole2(sub.push_role);
+    const data = buildNotificationData2(payload.type, {
+      url: payload.url ?? resolveNotificationUrlForRole2(payload.type, platformRole, urlOptions),
+      siteId: payload.siteId,
+      guardId: payload.guardId,
+      requestId: payload.requestId,
+      ticketId: payload.ticketId,
+      priority: payload.priority,
+      role: platformRole
+    });
+    const message = {
+      title: payload.title,
+      body: payload.body,
+      url: data.url,
+      eventType: payload.type,
+      data,
+      tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
+      priority: data.priority
+    };
+    const result = await sendToSubscription2(sub, message);
+    if (result.ok) {
+      sent += 1;
+    } else {
+      failed += 1;
+      if (result.statusCode === 404 || result.statusCode === 410) {
+        staleEndpoints.push(result.endpoint);
+      }
+    }
+  }
+  await removeInvalidSubscriptions2(db, staleEndpoints);
+  return { sent, failed };
+}
+async function sendNotificationToRole2(db, role, payload) {
+  const roles = role === "dispatch" ? ["dispatch", "admin"] : [role];
+  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").in("push_role", roles);
+  if (error) throw new Error(error.message);
+  return deliverToSubscriptions2(db, subscriptions ?? [], payload);
+}
+
+// lib/push/broadcast.ts
+var BROADCAST_ROLES = ["guard", "client", "dispatch", "admin"];
+function canSessionBroadcast(platformRole) {
+  return platformRole === "owner" || platformRole === "director";
+}
+async function collectBroadcastRecipientIds(db) {
+  const ids = /* @__PURE__ */ new Set();
+  const tables = ["clients", "staff", "guards"];
+  for (const table of tables) {
+    const { data, error } = await db.from(table).select("id");
+    if (error) throw new Error(error.message);
+    for (const row of data ?? []) {
+      if (row?.id) ids.add(String(row.id));
+    }
+  }
+  return [...ids];
+}
+async function persistBroadcastInbox(db, input) {
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const rows = input.recipientIds.map((userId) => ({
+    id: `broadcast-${now}-${userId}`,
+    user_id: userId,
+    type: "account_update",
+    title: input.title,
+    body: input.body,
+    url: input.url ?? "/",
+    metadata: { broadcast: true },
+    created_at: now
+  }));
+  for (let i = 0; i < rows.length; i += 100) {
+    const chunk = rows.slice(i, i + 100);
+    const { error } = await db.from("user_notifications").upsert(chunk);
+    if (error) throw new Error(error.message);
+  }
+  return rows.length;
+}
+async function sendPlatformBroadcast(db, input) {
+  const title = input.title.trim() || "Guardr";
+  const body = input.body.trim();
+  const payload = {
+    title,
+    body,
+    type: "account_update",
+    url: "/",
+    priority: "high"
+  };
+  let sent = 0;
+  let failed = 0;
+  for (const role of BROADCAST_ROLES) {
+    const result = await sendNotificationToRole2(db, role, payload);
+    sent += result.sent;
+    failed += result.failed;
+  }
+  const recipientIds = await collectBroadcastRecipientIds(db);
+  const inbox = await persistBroadcastInbox(db, { title, body, url: "/", recipientIds });
+  return { sent, failed, inbox };
+}
+
 // api/_push/handlers.ts
 function pushNotConfiguredResponse() {
   return { status: 503, body: { error: "Web Push is not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY." } };
@@ -900,6 +1426,18 @@ async function handlePushTest(db, body) {
   }
   if (!isPushConfigured()) {
     return pushNotConfiguredResponse();
+  }
+  if (body.broadcast) {
+    if (!canSessionBroadcast(session.platformRole)) {
+      return { status: 403, body: { error: "Only Directors and Founders can broadcast" } };
+    }
+    const message = typeof body.body === "string" ? body.body.trim() : "";
+    if (!message) {
+      return { status: 400, body: { error: "Broadcast message is required" } };
+    }
+    const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : "Guardr";
+    const result2 = await sendPlatformBroadcast(db, { title, body: message });
+    return { status: 200, body: { ok: true, ...result2 } };
   }
   const data = buildNotificationData("test", { siteId: body.siteId });
   const result = await dispatchPushNotification(db, {
