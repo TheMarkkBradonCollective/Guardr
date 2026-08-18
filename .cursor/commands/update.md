@@ -16,7 +16,7 @@ Use this when **shipping a version** to production. For git/PR cleanup only, use
 
 - Every mergeable open PR is on `main` (or closed if superseded)
 - Migrations and `complete_schema_setup.sql` are current
-- `package.json`, download version, PWA cache, and APK binary share the **same version**
+- `package.json`, download version, PWA cache, APK binary, and Play AAB share the **same version**
 - Auth, push notifications, and realtime work on web, PWA, and APK
 - `npm run lint`, `npm test`, and `npm run build` pass
 - `docs/DEV-UPDATES.md` and `docs/guardr-general-guide.md` are updated (dates, missing product copy, and activity-cloud Time tables)
@@ -49,8 +49,9 @@ Do not proceed to release steps with open PRs that should ship in this release.
 2. Run `npm run generate:download-version`
 3. Bust PWA/service worker cache when needed
 4. Run `npm run lint`, `npm test`, and `npm run build`
-5. Rebuild Android APK via CI (**no** `ALLOW_APK_WITHOUT_FCM`)
+5. Rebuild Android **APK and AAB** via `npm run android:release` or CI (**no** `ALLOW_APK_WITHOUT_FCM`)
 6. Confirm APK binary version matches `package.json` — not just `version.json`
+7. Confirm Play AAB is uploaded (`dist/play-store/guardr-play-release.aab`) alongside the sideload APK
 
 ## Phase 4 — Verify surfaces
 
@@ -108,7 +109,8 @@ After merging what belongs on `main`:
 - Branch names: `cursor/<descriptive-name>-97bf`
 - Commit and push as you go
 - Never ship an APK where `version.json` says N but the binary is N-1
-- Website, PWA, and APK must be on the **same build** for a release
+- Website, PWA, APK, and AAB must be on the **same build** for a release
+- Every `/update` ships **both** sideload APK (`public/download/guardr.apk`) and Play AAB (`dist/play-store/guardr-play-release.aab`)
 - Always end on `main` merged and deployed
 
 ## Report back
@@ -117,7 +119,7 @@ After merging what belongs on `main`:
 - Which PRs merged and which were cleared/skipped
 - Test count and lint/build status
 - SQL to run in Supabase (if any)
-- APK download link
+- APK download link and AAB artifact path
 - Auth, notification, and sync verification results
 - Docs: Last updated date, Guide sections filled, Dev notes Time table (activity cloud), manuals/PDF if regenerated
 - What to do next

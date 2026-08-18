@@ -1,7 +1,7 @@
 {
   "name": "guardr",
   "private": true,
-  "version": "1.0.125-beta",
+  "version": "1.0.126-beta",
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp && npm run generate:download-version",
@@ -28,6 +28,7 @@
     "cap:sync": "npm run build && npx cap sync android",
     "android:apk": "node scripts/build-android-apk.mjs",
     "android:aab": "node scripts/build-android-play.mjs",
+    "android:release": "node scripts/build-android-release.mjs",
     "android:play": "node scripts/build-android-play.mjs",
     "android:open": "npx cap open android"
   },

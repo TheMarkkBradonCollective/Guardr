@@ -3,13 +3,44 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.124**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.126**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Tuesday, August 18, 2026 — /update → v1.0.126
+
+**PR cleanup (merged to `main`)**
+- **#997** — Staff roster category tabs, Management page, status sub-filters, job posting settings moved to Permissions
+
+Staff roster pages now use **two filter rows**: category tabs on top (Personal/Business, armed class, or role) and status sub-filters underneath (default **All**). Manager+ executives moved to a separate **Management** page hidden from lower staff.
+
+| Time | What shipped |
+|------|----------------|
+| 1:39 PM | Remove Roster and Job posting tabs from Clients screen |
+| 1:42 PM | Replace roster status filters with type, armed, and role tabs |
+| 1:49 PM | Split Manager+ into dedicated Management roster page |
+| 1:54 PM | Hide management profiles from staff below Manager rank |
+| 1:55 PM | Restore status sub-filters on roster pages with All default |
+| 2:00 PM | Release v1.0.126-beta — version bump, PWA cache, APK + AAB release pipeline |
+| 2:01 PM | Land v1.0.126 on `main` |
+
+**Shipped**
+- **Clients** — Personal / Business tabs; status row: All / Pending / Active / Suspended. Job posting review settings moved to **Permissions → Job posting review**
+- **Guards** — Unarmed / Light Armed / Armed tabs; status row: All / Pending / Approved / Active
+- **Staff** — Support / Moderator / Administrator role tabs (operations only); status row: All / Pending / Inactive / Active / Suspended
+- **Management** (Manager+) — Manager / Director / Founder roster; same status sub-filters; nav and profiles hidden from staff below Manager
+- **v1.0.126** (build **226**) web + PWA version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-126-beta`
+- **Android release** — `/update` and CI always build **both** sideload APK and Play AAB (`npm run android:release`)
+
+**Release verification**
+- Lint, test, build green
 
 ---
 
@@ -1133,6 +1164,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
+| **Aug 18** | 14+ | /update v1.0.126 — staff roster category tabs, Management page, status sub-filters, APK + AAB release pipeline |
 | **Aug 18** | 9+ | /update v1.0.124 — Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |
 
 ---

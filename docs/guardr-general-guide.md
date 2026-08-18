@@ -999,6 +999,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 | **Analytics** | — | — | ✓ | + Financials | ✓ |
 | **Payments** | — | — | — | ✓ | ✓ |
 | **Staff** | — | — | — | ✓ | + Directors |
+| **Management** | — | — | — | ✓ (Manager+) | ✓ |
 | **Locations** | — | Review/QC | ✓ | ✓ | ✓ |
 | **Service Areas** | — | — | — | ✓ | ✓ |
 | **Payment settings** | — | — | — | ✓ | + Payment methods |
@@ -1028,7 +1029,8 @@ The summary cards below list the key permissions for each role. Expand the topic
 | **Stats** (desktop) | ✓ | ✓ | ✓ | ✓ |
 | **Disputes**, **Analytics** | — | ✓ | ✓ | ✓ |
 | **Payments** | — | — | ✓ | ✓ |
-| **Staff** (team roster) | — | — | ✓ | + Directors |
+| **Staff** (operations roster) | — | — | ✓ | + Directors |
+| **Management** (Manager+) | — | — | ✓ | ✓ |
 | **Locations** (shared job sites) | — | QC / approve | ✓ | ✓ |
 | **Service Areas** (city markets) | — | — | ✓ | ✓ |
 | **Payment settings** | — | — | ✓ edit platform fees | + payment methods |
@@ -1059,7 +1061,7 @@ Everything Moderators can do, plus:
 - Verify government ID, guard card, COI, and training credentials
 - Approve or decline job offers
 - Handle disputes and suspend or restore users
-- View analytics and manage general **Settings** (integrations, homepage messages); job posting approval under **Clients → Job posting**
+- View analytics and manage general **Settings** (integrations, homepage messages); job posting approval under **Permissions → Job posting review**
 - **Cannot:** access **Payments**, **Payment settings**, **Marketplace agreements**, **Audit log**, or change payment methods
 
 ### Director permissions
@@ -1305,7 +1307,12 @@ New staff still use **Staff activation** copy. Auto-activation requires photos, 
 
 **Where:** Staff sidebar → **Guards**
 
-The Guards panel lists all field guard accounts. Staff can:
+The Guards panel lists all field guard accounts. Two filter rows:
+
+- **Armed class:** Unarmed / Light Armed / Armed (default Unarmed)
+- **Status:** All / Pending / Approved / Active (default All)
+
+Staff can:
 
 - Search and filter the guard roster.
 - Open a guard profile to view credentials, eligibility status, jobs, and contact info.
@@ -1320,7 +1327,12 @@ The Guards panel lists all field guard accounts. Staff can:
 
 **Where:** Staff sidebar → **Clients**
 
-The Clients panel lists all client accounts. Staff can:
+The Clients panel lists all client accounts. Two filter rows:
+
+- **Account type:** Personal / Business (default Personal)
+- **Status:** All / Pending / Active / Suspended (default All)
+
+Staff can:
 
 - Search and filter the client roster (Personal vs Business).
 - Open a client profile to view account status, jobs, contact info, and **credential** uploads.
@@ -1332,13 +1344,29 @@ The Clients panel lists all client accounts. Staff can:
 
 **Where:** Staff sidebar → **Staff**
 
-The Staff panel lists all platform staff accounts. Staff can:
+The Staff panel lists **operations** staff (Support, Moderator, Administrator). Two filter rows:
 
-- View the team roster.
+- **Role:** All / Support / Moderator / Administrator (default All)
+- **Status:** All / Pending / Inactive / Active / Suspended (default All)
+
+Staff can:
+
+- View the operations team roster.
 - Add new staff accounts (**Add staff** button) — Directors and Founders only.
 - Review each member's role — see **Guide → Staff role permissions** for what each tier can do.
 
 Staff accounts manage the platform only and cannot accept field guard jobs.
+
+#### Management panel
+
+**Where:** Staff sidebar → **Management** (Manager, Director, and Founder only)
+
+The Management panel lists executive staff (Manager, Director, Founder). Same two-row filters as **Staff**:
+
+- **Role:** All / Manager / Director / Founder (default All)
+- **Status:** All / Pending / Inactive / Active / Suspended (default All)
+
+Profiles on this page are **not visible** to Support, Moderator, or Administrator anywhere in the app (nav, Applications, Credentials, or deep links).
 
 #### Applications panel
 
