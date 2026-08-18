@@ -34,6 +34,7 @@ One client system: **Personal** vs **Business** is who hires and pays — not ho
 | 9:58 AM | Release v1.0.124-beta — version bump, PWA cache, download notes |
 | 10:00 AM | Land v1.0.124 on `main` |
 | 10:01 AM | Fix sideload APK signing so CI can build 1.0.124 |
+| 10:41 AM | Rename Test all users to **Broadcast** — Director/Founder push + inbox to everyone |
 
 **Shipped**
 - **Signup** — three doors: I need security / I want to work → Personal vs Business → licensed guard vs Apply to work at Guardr
