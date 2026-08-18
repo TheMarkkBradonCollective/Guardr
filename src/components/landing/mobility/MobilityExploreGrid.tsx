@@ -43,8 +43,7 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
           Explore Guardr
         </Block>
 
-        {/* Service tiles — gray card grid */}
-        <Block display="grid" className="uber-landing-explore-grid" gridTemplateColumns={columns} gridGap="scale500">
+        <Block display="grid" className="uber-landing-explore-grid" gridTemplateColumns={columns} gridGap="scale500" minWidth={0} width="100%">
           {EXPLORE_SERVICES.map((service) => {
             const Icon = service.icon;
             const go = () => onNavigateToAuth(service.role ?? 'client', 'sign-up');

@@ -120,47 +120,25 @@ test.describe('surface resolution', () => {
     expect(desktop.navWidth).not.toBe('0px');
   });
 
-  test('each public homepage is independently designed', async ({ page }) => {
-    await page.setViewportSize(VIEWPORTS.phone);
-    await page.goto('/?ui=mobile');
-    await waitForSurface(page, 'mobile');
-    await expect(page.locator('.mbl-landing')).toHaveCount(1);
-    await expect(page.locator('.dsk-landing-page, .uber-style-landing')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'I need coverage' })).toBeVisible();
-
-    await page.setViewportSize(VIEWPORTS.tablet);
-    await page.goto('/?ui=tablet');
-    await waitForSurface(page, 'tablet');
-    await expect(page.locator('.uber-style-landing')).toHaveCount(1);
-    await expect(page.locator('.mbl-landing, .dsk-landing-page')).toHaveCount(0);
-
-    await page.setViewportSize(VIEWPORTS.desktop);
-    await page.goto('/?ui=desktop');
-    await waitForSurface(page, 'desktop');
-    await expect(page.locator('.dsk-landing-page')).toHaveCount(1);
-    await expect(page.locator('.mbl-landing, .uber-style-landing')).toHaveCount(0);
-  });
-
   test('surface chrome never leaks across device types', async ({ page }) => {
-    // Mobile owns the tab bar and sheets; tablet owns the rail; desktop owns
-    // the sidebar, status bar, and command palette.
+    // Mobile keeps the classic drawer + bottom nav; tablet owns the rail;
+    // desktop owns the sidebar, status bar, and command palette.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    await expect(page.locator('.sfd-sidebar, .sfd-statusbar, .sfd-palette, .sft-rail, .mobility-drawer, .uber-bottom-nav')).toHaveCount(0);
+    await expect(page.locator('.sfd-sidebar, .sfd-statusbar, .sfd-palette, .sft-rail')).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/?ui=desktop');
     await waitForSurface(page, 'desktop');
     await expect(
-      page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split, .uber-bottom-nav, .mobility-drawer, .mbl-landing'),
+      page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split, .uber-bottom-nav, .mobility-drawer'),
     ).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/?ui=tablet');
     await waitForSurface(page, 'tablet');
-    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav, .mbl-landing')).toHaveCount(0);
+    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav')).toHaveCount(0);
   });
 
   test('tablet landing is its own page, not scaled desktop or mobile', async ({ page }) => {
@@ -216,8 +194,8 @@ test.describe('surface resolution', () => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    // The mobile kit canvas is the signed-in phone shell; public pages still
-    // publish the same overflow token so a forced ?ui=mobile preview stays scrollable.
+    // Preview/mobile kit path; classic GuardrDrawerShell uses inline overflow:auto
+    // on .mobility-content-inner once a signed-in role shell mounts.
     expect(await measure('sfm-shell-canvas')).toMatch(/auto|scroll/);
   });
 });

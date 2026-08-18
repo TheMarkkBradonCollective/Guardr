@@ -44,12 +44,8 @@ export interface AccountMenuProps {
   onMarkAllNotificationsRead?: () => void | Promise<void>;
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
-  /**
-   * `default` — avatar + chevron dropdown (tablet).
-   * `uber-direct` — compact avatar only (desktop top bar).
-   * `panel` — inline list with no trigger. Used by the mobile account sheet.
-   */
-  triggerVariant?: 'default' | 'uber-direct' | 'panel';
+  /** Guardr Direct desktop — black circle avatar only, no chevron. */
+  triggerVariant?: 'default' | 'uber-direct';
 }
 
 export function AccountMenu({
@@ -112,10 +108,7 @@ export function AccountMenu({
     };
   }, [open]);
 
-  const isPanel = triggerVariant === 'panel';
-  const close = () => {
-    if (!isPanel) setOpen(false);
-  };
+  const close = () => setOpen(false);
 
   const openNotifications = () => {
     setMenuView('notifications');
@@ -145,8 +138,14 @@ export function AccountMenu({
     onSignOut();
   };
 
-  const menuBody = (
-    <>
+  const menuPanel = open ? (
+    <div
+      ref={menuRef}
+      id={menuId}
+      role="menu"
+      className="account-menu-panel fixed z-[3000] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
+      style={{ top: position.top, left: position.left, right: position.right }}
+    >
       <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
         {menuView === 'notifications' ? (
           <button
@@ -278,26 +277,6 @@ export function AccountMenu({
           ) : null}
         </>
       )}
-    </>
-  );
-
-  if (isPanel) {
-    return (
-      <div className="account-menu account-menu--panel" role="menu" aria-label="Account">
-        {menuBody}
-      </div>
-    );
-  }
-
-  const menuPanel = open ? (
-    <div
-      ref={menuRef}
-      id={menuId}
-      role="menu"
-      className="account-menu-panel fixed z-[3000] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
-      style={{ top: position.top, left: position.left, right: position.right }}
-    >
-      {menuBody}
     </div>
   ) : null;
 
