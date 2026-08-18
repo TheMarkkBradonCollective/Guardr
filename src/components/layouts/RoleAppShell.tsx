@@ -1,18 +1,19 @@
 import React, { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
-import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
+import { GuardrDrawerShell, type SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
 import type { SurfacePrimaryAction } from '../../surfaces/surfaceShellTypes';
 import { useSurface } from '../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../surfaces/surfaceNavigation';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { MobileDrawerIdentity } from './MobileDrawerIdentity';
 
 /**
  * A destination a role can reach.
  *
- * Position-free on purpose: this says nothing about tabs, sidebars, or rails,
- * so each surface can arrange the same list its own way.
+ * Position-free on purpose for tablet/desktop: this says nothing about tabs,
+ * sidebars, or rails, so each surface can arrange the same list its own way.
+ * Mobile keeps the pre-remaster drawer + bottom-nav chrome.
  */
 export interface RoleNavItem {
   id: string;
@@ -49,12 +50,14 @@ interface RoleAppShellProps {
   headerContext?: React.ReactNode;
 }
 
+const MOBILE_BOTTOM_TAB_COUNT = 4;
+
 /**
  * Guard and client entry point into the three surface applications.
  *
- * Each form factor loads its own shell via `SurfaceAppShell`: bottom tabs and
- * sheets on mobile, a persistent rail on tablet, and a sidebar workspace on
- * desktop. None of the three is a scaled copy of another.
+ * Mobile keeps the original Guardr-style drawer sidebar + bottom footer nav.
+ * Tablet and desktop load their own independent shells via `SurfaceAppShell`
+ * so they never piggyback off the phone layout (or vice versa).
  */
 export function RoleAppShell({
   title,
@@ -83,6 +86,30 @@ export function RoleAppShell({
   const isMobileShell = surface === 'mobile';
   const bleed = fullBleed || isMapMode;
 
+  const navGroups = useMemo(
+    () => [
+      { items: navItems },
+      ...(messagesNavItems.length > 0 ? [{ title: 'Messages', items: messagesNavItems }] : []),
+      ...(overflowNavItems.length > 0 ? [{ title: 'Management', items: overflowNavItems }] : []),
+    ],
+    [navItems, messagesNavItems, overflowNavItems],
+  );
+
+  const allNavItems = useMemo(
+    () => [...navItems, ...messagesNavItems, ...overflowNavItems],
+    [navItems, messagesNavItems, overflowNavItems],
+  );
+
+  const mobileBottomNavItems = useMemo(
+    () => (isMobileShell ? allNavItems.slice(0, MOBILE_BOTTOM_TAB_COUNT) : undefined),
+    [isMobileShell, allNavItems],
+  );
+
+  const mobileBottomNavOverflow = useMemo(() => {
+    if (!isMobileShell) return undefined;
+    return allNavItems.slice(MOBILE_BOTTOM_TAB_COUNT);
+  }, [isMobileShell, allNavItems]);
+
   const destinations = useMemo<SurfaceDestination[]>(() => {
     const build = (
       items: RoleNavItem[],
@@ -106,6 +133,41 @@ export function RoleAppShell({
     ];
   }, [navItems, messagesNavItems, overflowNavItems]);
 
+  // Mobile: restore the original drawer + bottom-nav application.
+  if (isMobileShell) {
+    return (
+      <GuardrDrawerShell
+        forceLayout="mobile"
+        workspaceLabel={workspaceLabel ?? 'Client workspace'}
+        title={title}
+        navGroups={navGroups}
+        activeNavId={activeNavId}
+        onNavigate={onNavigate}
+        accountMenu={<AccountMenu {...accountMenu} triggerVariant="default" />}
+        notifications={notifications ?? headerRight}
+        hideHeader={hideHeader}
+        headerExtension={headerExtension}
+        headerOverride={headerOverride}
+        bleed={bleed}
+        variant={variant}
+        mobileBottomNavItems={hideBottomNav ? undefined : mobileBottomNavItems}
+        mobileBottomNavOverflow={hideBottomNav ? undefined : mobileBottomNavOverflow}
+        sidebarPrimaryAction={sidebarPrimaryAction}
+        sidebarFooter={sidebarFooter}
+        sidebarIdentity={
+          <MobileDrawerIdentity
+            userName={accountMenu.userName}
+            avatarUrl={accountMenu.avatarUrl}
+            onClick={accountMenu.hideProfile ? accountMenu.onOpenSettings : accountMenu.onOpenProfile}
+          />
+        }
+        headerContext={headerContext}
+      >
+        {children}
+      </GuardrDrawerShell>
+    );
+  }
+
   return (
     <SurfaceAppShell
       title={title}
@@ -114,22 +176,10 @@ export function RoleAppShell({
       activeId={activeNavId}
       onNavigate={onNavigate}
       notifications={notifications ?? headerRight}
-      identity={
-        isMobileShell ? (
-          <ProfileAvatar
-            src={accountMenu.avatarUrl}
-            name={accountMenu.userName}
-            size="sm"
-            className="sfm-shell-avatar"
-          />
-        ) : undefined
-      }
       accountMenu={
         <AccountMenu
           {...accountMenu}
-          triggerVariant={
-            isMobileShell ? 'panel' : surface === 'desktop' ? 'uber-direct' : 'default'
-          }
+          triggerVariant={surface === 'desktop' ? 'uber-direct' : 'default'}
         />
       }
       navFooter={sidebarFooter}

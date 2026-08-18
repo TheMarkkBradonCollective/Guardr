@@ -44,7 +44,7 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
         </Block>
 
         {/* Service tiles — gray card grid */}
-        <Block display="grid" gridTemplateColumns={columns} gridGap="scale500">
+        <Block display="grid" gridTemplateColumns={columns} gridGap="scale500" minWidth={0} width="100%">
           {EXPLORE_SERVICES.map((service) => {
             const Icon = service.icon;
             const go = () => onNavigateToAuth(service.role ?? 'client', 'sign-up');
