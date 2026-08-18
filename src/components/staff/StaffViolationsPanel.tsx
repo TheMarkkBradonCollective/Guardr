@@ -4,6 +4,8 @@ import { OpsShiftViolation } from '../../lib/staffOps';
 import { WfBadge } from '../ui/wireframe';
 import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
+import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -110,7 +112,7 @@ export function StaffViolationsPanel({
   ];
 
   useEffect(() => {
-    if (formFactor === 'desktop' && filtered.length > 0 && !selectedId) {
+    if ((formFactor === 'desktop' || formFactor === 'tablet') && filtered.length > 0 && !selectedId) {
       setSelectedId(filtered[0].id);
     }
     if (selectedId && !filtered.some((v) => v.id === selectedId)) {
@@ -343,14 +345,53 @@ export function StaffViolationsPanel({
     );
   }
 
+  const renderViolationDetail = (v: OpsShiftViolation, options?: { onBack?: () => void }) => (
+    <div className="app-full-page-detail min-w-0 max-w-full">
+      {options?.onBack ? (
+        <AppSubScreenHeader title={v.label} onBack={options.onBack} backLabel="Violations" />
+      ) : null}
+      {renderViolationCard(v)}
+    </div>
+  );
+
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}
-      <div className="border-t border-brand-border">
-        {filtered.map((v) => (
-          <React.Fragment key={v.id}>{renderViolationCard(v)}</React.Fragment>
-        ))}
-      </div>
+      <ListDetailLayout
+        items={filtered}
+        selectedId={selectedId}
+        onSelectId={setSelectedId}
+        getItemId={(v) => v.id}
+        autoSelectFirst={formFactor === 'tablet'}
+        mobilePresentation="page"
+        emptyDetail={
+          <div className="sft-empty">
+            <p className="sft-empty-title">Select a violation</p>
+            <p className="sft-empty-message">Choose a flag from the list to review evidence and take action.</p>
+          </div>
+        }
+        renderItem={(v, isActive, onSelect) => {
+          const status = statusMap[v.id] ?? v.status;
+          return (
+            <button
+              type="button"
+              onClick={onSelect}
+              data-selected={isActive ? 'true' : undefined}
+              className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 text-left w-full"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-sm">{v.label}</p>
+                <WfBadge tone={statusTone(status)}>{statusLabel(status)}</WfBadge>
+              </div>
+              <p className="text-xs text-brand-text-muted">
+                {v.jobTitle} · {v.guardName}
+              </p>
+              <p className="text-xs text-brand-text-muted">{formatWhen(v.createdAt)}</p>
+            </button>
+          );
+        }}
+        renderDetail={(v, options) => renderViolationDetail(v, options)}
+      />
     </StaffOpsPageShell>
   );
 }

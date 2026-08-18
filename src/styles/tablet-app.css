@@ -715,8 +715,86 @@ body.sf-tablet .staff-stats-mobile-head {
   display: none;
 }
 
-body.sf-tablet .staff-stats-mobile {
+body.sf-tablet .staff-stats-mobile,
+body.sf-tablet .staff-stats-tablet {
   padding: 0;
+}
+
+body.sf-tablet .staff-stats-tablet .staff-stats-metric-grid,
+body.sf-tablet .staff-stats-tablet .staff-stats-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.sf-tablet .staff-stats-tablet .staff-stats-guard-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.sf-tablet .staff-audit-tablet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+body.sf-tablet .guard-earnings-tablet {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 0;
+}
+
+body.sf-tablet .guard-earnings-tablet-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.sf-tablet .guard-earnings-tablet-metrics .guard-performance-stat {
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-card, 14px);
+  padding: 12px 14px;
+}
+
+body.sf-tablet .client-locations-tablet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.9fr);
+  gap: 18px;
+  align-items: start;
+  min-height: 0;
+  height: 100%;
+}
+
+body.sf-tablet .client-locations-tablet-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (orientation: landscape) {
+  body.sf-tablet .staff-stats-tablet .staff-stats-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .guard-earnings-tablet-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .staff-audit-tablet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .client-locations-tablet,
+  body.sf-tablet .staff-audit-tablet-grid,
+  body.sf-tablet .staff-stats-tablet .staff-stats-guard-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 body.sf-tablet .app-inbox-row-chevron {
