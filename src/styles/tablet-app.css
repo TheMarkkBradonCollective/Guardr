@@ -334,8 +334,112 @@ body.sf-tablet .client-home-screen .grid-cols-2 {
 }
 
 body.sf-tablet .client-home-quick-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 12px !important;
+}
+
+body.sf-tablet .client-home-tablet-command {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+body.sf-tablet .client-home-tablet-command .app-dashboard-hero {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+body.sf-tablet .client-home-tablet-banner {
+  padding: 0;
+}
+
+body.sf-tablet .client-home-tablet-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.sf-tablet .client-home-tablet-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--sf-target, 44px);
+  padding: 14px 16px;
+  text-align: left;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #ffffff);
+  color: inherit;
+}
+
+body.sf-tablet .client-home-tablet-metric-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: var(--sf-tracking-display, -0.025em);
+  line-height: 1.15;
+}
+
+body.sf-tablet .client-home-tablet-metric-label {
+  font-size: var(--sf-type-label, 13px);
+  font-weight: 700;
+}
+
+body.sf-tablet .client-home-tablet-metric-sub {
+  font-size: 12px;
+  color: var(--sf-ink-secondary, #5c5c5c);
+}
+
+body.sf-tablet .client-home-tablet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+body.sf-tablet .client-home-tablet-panel {
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-surface, 16px);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .client-home-tablet-panel--wide {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .client-home-tablet-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+body.sf-tablet .client-home-tablet-panel-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+body.sf-tablet .client-home-tablet-job-list,
+body.sf-tablet .client-home-tablet-panel .app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.sf-tablet .client-home-tablet-quick {
+  padding: 0 !important;
+}
+
+body.sf-tablet .client-home-tablet-guards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 body.sf-tablet .app-metric-strip {
@@ -365,8 +469,12 @@ body.sf-tablet .staff-overview-tablet-command .staff-overview-pro-kpi {
 }
 
 @media (orientation: landscape) {
-  body.sf-tablet .client-home-quick-grid {
+  body.sf-tablet .client-home-quick-grid:not(.client-home-tablet-quick) {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  body.sf-tablet .client-home-tablet-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   body.sf-tablet .staff-overview-pro-kpi,
@@ -652,44 +760,77 @@ body.sf-tablet .sft-jobs-toolbar {
   background: var(--sf-paper, #ffffff);
 }
 
-/* Two-column fields on stacked forms that still use the mobile substrate */
-body.sf-tablet .staff-payment-settings-scroll,
-body.sf-tablet .app-form-section,
-body.sf-tablet .settings-section,
-body.sf-tablet .guard-form-shell .space-y-4,
-body.sf-tablet .client-form-shell form,
-body.sf-tablet .sft-shell-canvas .app-profile-screen .space-y-4 {
+/* Two-column field groups — never split section titles into a wasteland column */
+body.sf-tablet .sft-request-fields,
+body.sf-tablet .sft-field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px 18px;
+  align-content: start;
+}
+
+body.sf-tablet .sft-request-fields > h2,
+body.sf-tablet .sft-request-fields > h3,
+body.sf-tablet .sft-request-fields > p,
+body.sf-tablet .sft-request-fields > button,
+body.sf-tablet .sft-request-fields > .app-error-banner,
+body.sf-tablet .sft-request-fields > [data-full-width='true'] {
+  grid-column: 1 / -1;
 }
 
 body.sf-tablet .app-form-section > .app-form-section-title,
 body.sf-tablet .settings-section > .settings-section-head,
-body.sf-tablet .staff-payment-settings-scroll > p,
-body.sf-tablet .staff-payment-settings-scroll > .segmented-control,
-body.sf-tablet .app-form-section > .app-error-banner {
-  grid-column: 1 / -1;
+body.sf-tablet .staff-mgmt-section > .staff-mgmt-section-title {
+  display: block;
+  width: 100%;
+}
+
+body.sf-tablet .sft-request-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.sf-tablet .sft-request-flow .sft-request-scroll {
+  padding-bottom: 8px;
 }
 
 body.sf-tablet .client-form-shell,
 body.sf-tablet .guard-form-shell {
   max-width: none;
   margin-inline: 0;
-  padding: 18px var(--sf-gutter, 24px) 32px;
+  padding: 18px var(--sf-gutter, 24px) 0;
 }
 
-body.sf-tablet .client-form-shell .fixed.bottom-\[calc\(3\.5rem\+env\(safe-area-inset-bottom\,0px\)\)\],
-body.sf-tablet .uber-form-wizard-actions,
-body.sf-tablet .client-form-shell [class*='bottom-[calc'] {
+body.sf-tablet .sft-request-flow-actions {
   position: sticky;
   bottom: 0;
   left: auto;
   right: auto;
   z-index: 2;
-  padding: 12px 0 8px;
+  flex-shrink: 0;
+  margin: 0 calc(-1 * var(--sf-gutter, 24px));
+  padding: 12px var(--sf-gutter, 24px) calc(10px + env(safe-area-inset-bottom, 0px));
   background: var(--sf-paper, #ffffff);
   border-top: 1px solid var(--sf-line, #e2e2e2);
+}
+
+body.sf-tablet .sft-request-flow-actions .client-form-shell {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
+body.sf-tablet .sft-request-flow .space-y-4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+body.sf-tablet .sft-request-flow .space-y-4 > h2,
+body.sf-tablet .sft-request-flow .space-y-4 > h3,
+body.sf-tablet .sft-request-flow .space-y-4 > p {
+  grid-column: 1 / -1;
 }
 
 /* Metrics and finance summaries use the canvas, not a phone stack */
@@ -775,17 +916,120 @@ body.sf-tablet .client-locations-tablet-list {
   overscroll-behavior: contain;
 }
 
+/* Guard performance / availability / preferences — denser metric grids */
+html body.sf-tablet .guard-performance-tablet .guard-factors-grid,
+html body.sf-tablet .guard-performance-tablet .guard-factors-grid.guard-factors-grid-compact {
+  display: grid !important;
+  flex-direction: unset !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 0 !important;
+}
+
+html body.sf-tablet .guard-performance-tablet .guard-performance-stats,
+html body.sf-tablet .guard-preferences-tablet .guard-performance-stats.guard-pref-summary-stats,
+html body.sf-tablet .guard-earnings-tablet .guard-performance-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border-top: none;
+}
+
+html body.sf-tablet .guard-performance-tablet .guard-performance-stat,
+html body.sf-tablet .guard-preferences-tablet .guard-performance-stat {
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-card, 14px);
+  padding: 12px 14px;
+}
+
+html body.sf-tablet .guard-availability-tablet .availability-day-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+html body.sf-tablet .guard-preferences-tablet .guard-pref-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+html body.sf-tablet .guard-availability-tablet .guard-pref-body,
+html body.sf-tablet .guard-preferences-tablet .guard-pref-body {
+  max-width: none;
+}
+
+/* Staff fees / compensation / permissions / integrations / analytics */
+body.sf-tablet .staff-compensation-tablet-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+body.sf-tablet .staff-compensation-tablet-payouts[data-full-width='true'] {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-permissions-tablet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+body.sf-tablet .staff-permissions-tablet .space-y-5 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+body.sf-tablet .staff-permissions-tablet .space-y-5 > :first-child {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-fees-tablet .staff-payment-settings-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.sf-tablet .staff-analytics-tablet .staff-sla-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.sf-tablet .staff-analytics-tablet .grid.grid-cols-1 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body.sf-tablet .staff-analytics-tablet .staff-analytics-chart,
+body.sf-tablet .staff-fees-tablet .segmented-control,
+body.sf-tablet .staff-fees-tablet > p,
+body.sf-tablet .staff-permissions-tablet-body > p {
+  grid-column: 1 / -1;
+}
+
 @media (orientation: landscape) {
   body.sf-tablet .staff-stats-tablet .staff-stats-metric-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  body.sf-tablet .guard-earnings-tablet-metrics {
+  body.sf-tablet .guard-earnings-tablet-metrics,
+  html body.sf-tablet .guard-performance-tablet .guard-performance-stats,
+  html body.sf-tablet .guard-preferences-tablet .guard-performance-stats.guard-pref-summary-stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   body.sf-tablet .staff-audit-tablet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .staff-analytics-tablet .staff-sla-metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -908,11 +1152,24 @@ body.sf-tablet .guard-map-layout .map-zoom-controls {
 @media (orientation: portrait) {
   body.sf-tablet .sft-form-page-body,
   body.sf-tablet .sft-settings-grid,
+  body.sf-tablet .sft-request-fields,
+  body.sf-tablet .sft-field-grid,
+  body.sf-tablet .sft-request-service-grid,
+  body.sf-tablet .sft-request-flow .space-y-4,
   body.sf-tablet .staff-payments-summary,
-  body.sf-tablet .staff-payment-settings-scroll,
-  body.sf-tablet .app-form-section,
-  body.sf-tablet .settings-section {
-    grid-template-columns: 1fr;
+  body.sf-tablet .client-home-tablet-grid,
+  body.sf-tablet .client-home-tablet-metrics,
+  body.sf-tablet .staff-compensation-tablet-grid,
+  body.sf-tablet .staff-permissions-tablet .space-y-5,
+  html body.sf-tablet .guard-availability-tablet .availability-day-cards,
+  html body.sf-tablet .guard-preferences-tablet .guard-pref-type-grid,
+  html body.sf-tablet .guard-performance-tablet .guard-factors-grid,
+  html body.sf-tablet .guard-performance-tablet .guard-factors-grid.guard-factors-grid-compact {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.sf-tablet .client-home-tablet-guards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   body.sf-tablet .sft-profile-page {
@@ -959,7 +1216,10 @@ body.sf-tablet .guard-map-layout .map-zoom-controls {
 html.theme-dark body.sf-tablet .sft-profile-page,
 html.theme-dark body.sf-tablet .sft-settings-grid .staff-mgmt-section,
 html.theme-dark body.sf-tablet .sft-map-inspector,
-html.theme-dark body.sf-tablet .auth-experience--tablet .auth-form-page-form {
+html.theme-dark body.sf-tablet .auth-experience--tablet .auth-form-page-form,
+html.theme-dark body.sf-tablet .client-home-tablet-panel,
+html.theme-dark body.sf-tablet .client-home-tablet-metric,
+html.theme-dark body.sf-tablet .sft-request-flow-actions {
   background: var(--sf-paper-raised, #161616);
   border-color: var(--sf-line, #2a2a2a);
 }
@@ -972,6 +1232,18 @@ html.theme-dark body.sf-tablet .sft-shell-canvas {
 html.theme-dark body.sf-tablet .uber-job-row[data-selected='true'],
 html.theme-dark body.sf-tablet .app-item-card[data-selected='true'] {
   background: var(--sf-paper-muted, #202020);
+}
+
+html.theme-dark body.sf-tablet .client-home-tablet-metric-sub,
+html.theme-dark body.sf-tablet .sft-form-page-kicker {
+  color: var(--sf-ink-secondary, #a3a3a3);
+}
+
+html.theme-dark body.sf-tablet .guard-performance-tablet .guard-performance-stat,
+html.theme-dark body.sf-tablet .guard-preferences-tablet .guard-performance-stat,
+html.theme-dark body.sf-tablet .guard-earnings-tablet-metrics .guard-performance-stat {
+  background: var(--sf-paper-raised, #161616);
+  border-color: var(--sf-line, #2a2a2a);
 }
 
 /* Overflow safety for operational lists and payment cards */

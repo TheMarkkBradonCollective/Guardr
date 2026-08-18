@@ -23,6 +23,17 @@ export function GuardAvailabilityScreen({ guard }: GuardAvailabilityScreenProps)
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <ResponsivePage
+        screenClassName="guard-tiered-screen"
+        className="adm-page--calendar guard-availability-tablet"
+      >
+        {calendar}
+      </ResponsivePage>
+    );
+  }
+
   return (
     <ResponsivePage screenClassName="guard-tiered-screen" className="adm-page--calendar">
       {calendar}

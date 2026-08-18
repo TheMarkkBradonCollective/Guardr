@@ -38,5 +38,8 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.sft-form-page-body'));
     assert.ok(css.includes('.sft-profile-page'));
     assert.ok(css.includes('.sft-settings-grid'));
+    assert.ok(css.includes('.sft-request-fields'));
+    assert.ok(css.includes('.sft-request-flow-actions'));
+    assert.ok(css.includes('.client-home-tablet-command'));
   });
 });
