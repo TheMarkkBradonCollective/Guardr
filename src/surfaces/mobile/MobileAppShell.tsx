@@ -1,24 +1,25 @@
 import React, { isValidElement, cloneElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, ChevronLeft, ChevronRight, Circle, type LucideIcon } from 'lucide-react';
-import { buildMobileNavigation, type SurfaceDestination } from '../surfaceNavigation';
+import { Bell, ChevronLeft, ChevronRight, Circle, Menu, type LucideIcon } from 'lucide-react';
+import { buildMobileNavigation, groupDestinationsBySection, type SurfaceDestination } from '../surfaceNavigation';
 import { MobileBottomTabs } from './kit/MobileBottomTabs';
+import { MobileDrawerNav } from './kit/MobileDrawerNav';
 import { MobileSheet } from './kit/MobileSheet';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
 import type { AccountMenuProps } from '../../components/layouts/AccountMenu';
 
+type MobileAppShellProps = SurfaceShellProps;
+
 /**
  * The mobile application shell.
  *
- * Structure: a 56px header band, an edge-to-edge scrolling canvas, and a fixed
- * bottom tab bar inside the safe area. Overflow destinations live in a bottom
- * sheet from the "More" tab. Account is a sheet opened from the avatar. There
- * is no sidebar, no hamburger of primary destinations, and no shell FAB —
- * primary actions stay on the page so they never cover a scrolling list.
- *
- * This shell shares nothing structural with the tablet or desktop shells.
+ * Default: 56px header, scrolling canvas, fixed bottom tabs + More sheet.
+ * Drawer mode (`mobilePrimaryNav="drawer"`): hamburger opens a left sidebar with
+ * every destination grouped by section — used for staff ops where the catalog
+ * is too large for a bottom bar.
  */
 export function MobileAppShell({
   title,
+  workspaceLabel,
   destinations,
   activeId,
   onNavigate,
@@ -33,32 +34,45 @@ export function MobileAppShell({
   hidePrimaryNav = false,
   bleed = false,
   onBack,
-}: SurfaceShellProps) {
+  mobilePrimaryNav = 'tabs',
+  primaryAction,
+}: MobileAppShellProps) {
+  const useDrawerNav = mobilePrimaryNav === 'drawer';
   const [moreOpen, setMoreOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
-  const navigation = useMemo(() => buildMobileNavigation(destinations), [destinations]);
-  const moreActive = navigation.overflow.some((group) =>
-    group.items.some((item) => item.id === activeId),
+  const navigation = useMemo(
+    () => (useDrawerNav ? null : buildMobileNavigation(destinations)),
+    [destinations, useDrawerNav],
   );
+  const drawerSections = useMemo(
+    () =>
+      groupDestinationsBySection(destinations.filter((item) => !item.disabled)),
+    [destinations],
+  );
+
+  const moreActive =
+    navigation?.overflow.some((group) => group.items.some((item) => item.id === activeId)) ?? false;
 
   useEffect(() => {
     setMoreOpen(false);
+    setDrawerOpen(false);
     setAccountOpen(false);
   }, [activeId]);
 
   const handleNavigate = useCallback(
     (id: string) => {
       setMoreOpen(false);
+      setDrawerOpen(false);
       setAccountOpen(false);
       onNavigate(id);
     },
     [onNavigate],
   );
 
-  const showTabs = !hidePrimaryNav && navigation.tabs.length > 0;
-  // Primary actions belong on the page (sticky bar, list CTA, map card). A
-  // shell FAB covers lists and duplicates those in-page controls.
+  const showTabs = !hidePrimaryNav && !useDrawerNav && navigation && navigation.tabs.length > 0;
+  const showDrawer = !hidePrimaryNav && useDrawerNav;
 
   const accountSheet = isValidElement(accountMenu)
     ? cloneElement(accountMenu as React.ReactElement<AccountMenuProps>, {
@@ -67,10 +81,18 @@ export function MobileAppShell({
       })
     : accountMenu;
 
+  const drawerPrimaryAction = primaryAction ? (
+    <button type="button" className="sfm-drawer-cta" onClick={primaryAction.onClick}>
+      {primaryAction.icon}
+      <span>{primaryAction.label}</span>
+    </button>
+  ) : null;
+
   return (
     <div
       className="sf-shell sfm-shell"
       data-surface="mobile"
+      data-nav={useDrawerNav ? 'drawer' : 'tabs'}
       data-tabs={showTabs ? 'true' : undefined}
       data-bleed={bleed ? 'true' : undefined}
     >
@@ -82,6 +104,16 @@ export function MobileAppShell({
             {onBack ? (
               <button type="button" className="sfm-icon-btn" onClick={onBack} aria-label="Back">
                 <ChevronLeft size={24} strokeWidth={2.25} aria-hidden />
+              </button>
+            ) : showDrawer ? (
+              <button
+                type="button"
+                className="sfm-icon-btn"
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={drawerOpen}
+              >
+                <Menu size={22} strokeWidth={2.25} aria-hidden />
               </button>
             ) : identity && accountMenu ? (
               <button
@@ -100,7 +132,7 @@ export function MobileAppShell({
 
             <div className="sfm-shell-actions">
               {notifications}
-              {accountMenu && !identity ? (
+              {accountMenu && (showDrawer || !identity) ? (
                 <button
                   type="button"
                   className="sfm-icon-btn"
@@ -123,7 +155,7 @@ export function MobileAppShell({
         {children}
       </main>
 
-      {showTabs ? (
+      {showTabs && navigation ? (
         <MobileBottomTabs
           tabs={navigation.tabs}
           activeId={activeId}
@@ -135,15 +167,46 @@ export function MobileAppShell({
         />
       ) : null}
 
-      <MobileSheet
-        open={moreOpen}
-        onClose={() => setMoreOpen(false)}
-        title="More"
-        snapPoints={['half', 'full']}
-      >
-        <div className="sfm-more">
-          {(navigation.overflow.length > 0 ? navigation.overflow : [{ title: 'Destinations', items: navigation.tabs }]).map(
-            (group) => (
+      {showDrawer ? (
+        <MobileDrawerNav
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          sections={drawerSections}
+          activeId={activeId}
+          onNavigate={handleNavigate}
+          workspaceLabel={workspaceLabel}
+          identity={
+            identity && accountMenu ? (
+              <button
+                type="button"
+                className="sfm-drawer-identity-btn"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setAccountOpen(true);
+                }}
+              >
+                {identity}
+              </button>
+            ) : (
+              identity
+            )
+          }
+          footer={navFooter}
+          primaryAction={drawerPrimaryAction}
+        />
+      ) : null}
+
+      {!useDrawerNav ? (
+        <MobileSheet
+          open={moreOpen}
+          onClose={() => setMoreOpen(false)}
+          title="More"
+          snapPoints={['half', 'full']}
+        >
+          <div className="sfm-more">
+            {(navigation && navigation.overflow.length > 0
+              ? navigation.overflow
+              : [{ title: 'Destinations', items: navigation?.tabs ?? [] }]).map((group) => (
               <section className="sfm-more-group" key={group.title}>
                 <h3 className="sfm-more-group-title">{group.title}</h3>
                 <div className="sfm-more-list">
@@ -157,11 +220,11 @@ export function MobileAppShell({
                   ))}
                 </div>
               </section>
-            ),
-          )}
-          {navFooter ? <div className="sfm-more-footer">{navFooter}</div> : null}
-        </div>
-      </MobileSheet>
+            ))}
+            {navFooter ? <div className="sfm-more-footer">{navFooter}</div> : null}
+          </div>
+        </MobileSheet>
+      ) : null}
 
       <MobileSheet
         open={accountOpen}

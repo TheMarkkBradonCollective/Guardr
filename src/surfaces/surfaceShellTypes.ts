@@ -67,4 +67,10 @@ export interface SurfaceShellProps {
 
   /** Extra command palette actions. Desktop only; ignored elsewhere. */
   commands?: SurfaceCommand[];
+
+  /**
+   * Mobile primary navigation model. Guards/clients use thumb tabs; staff uses a
+   * hamburger drawer because the ops catalog is too large for a bottom bar.
+   */
+  mobilePrimaryNav?: 'tabs' | 'drawer';
 }
