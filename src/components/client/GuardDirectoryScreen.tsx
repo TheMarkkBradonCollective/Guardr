@@ -28,6 +28,9 @@ import {
   isGuardProfileApproved,
   isGuardTrusted,
 } from '../../lib/guardTrust';
+import { useLayoutFormFactor } from '../../surfaces';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
+import { StatusChip } from '../baseui/StatusChip';
 import {
   Award,
   ChevronDown,
@@ -87,6 +90,7 @@ export function GuardDirectoryScreen({
   requests = [],
   onRequestGuard,
 }: GuardDirectoryScreenProps) {
+  const formFactor = useLayoutFormFactor();
   const [filters, setFilters] = useState<GuardDirectoryFilters>(DEFAULT_GUARD_FILTERS);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -140,9 +144,71 @@ export function GuardDirectoryScreen({
   }
 
   const currentSort = SORT_OPTIONS.find((s) => s.id === filters.sortBy) ?? SORT_OPTIONS[0];
+  const filtersOpen = formFactor === 'desktop' || showFilterPanel;
+
+  const directoryColumns: GuardrTableColumn<SecurityGuard>[] = [
+    {
+      id: 'guard',
+      header: 'Guard',
+      grow: true,
+      sortValue: (guard) => guard.name.toLowerCase(),
+      render: (guard) => (
+        <>
+          <p className="uber-workbench-table-primary">{guard.name}</p>
+          <p className="uber-workbench-table-secondary">{getGuardDisplayHeadline(guard)}</p>
+        </>
+      ),
+    },
+    {
+      id: 'rating',
+      header: 'Rating',
+      numeric: true,
+      align: 'right',
+      sortValue: (guard) => guard.rating,
+      render: (guard) => `★ ${guard.rating.toFixed(1)}`,
+    },
+    {
+      id: 'jobs',
+      header: 'Jobs',
+      numeric: true,
+      align: 'right',
+      hideOnNarrow: true,
+      sortValue: (guard) => guard.jobsCompleted,
+      render: (guard) => String(guard.jobsCompleted),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      render: (guard) => (
+        <span className="inline-flex flex-wrap items-center gap-1.5">
+          {isGuardTrusted(guard) ? <StatusChip tone="accent">{GUARD_TRUSTED_BADGE_LABEL}</StatusChip> : null}
+          {isGuardProfileApproved(guard) ? <StatusChip tone="positive">{GUARD_APPROVED_BADGE_LABEL}</StatusChip> : null}
+          {previouslyWorkedIds.has(guard.id) ? <StatusChip tone="neutral">Worked with before</StatusChip> : null}
+        </span>
+      ),
+    },
+    {
+      id: 'hire',
+      header: '',
+      render: (guard) =>
+        onRequestGuard ? (
+          <button
+            type="button"
+            className="app-button-outline app-btn-sm"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onRequestGuard(guard);
+            }}
+          >
+            Hire
+          </button>
+        ) : null,
+    },
+  ];
 
   return (
-    <AppScreen>
+    <AppScreen className={formFactor === 'desktop' ? 'sfd-directory' : undefined}>
       {onBack && <AppSubScreenHeader title="Find Guards" onBack={onBack} backLabel="Home" />}
 
       {/* ── Search + filter bar ───────────────────────────────────── */}
@@ -165,7 +231,7 @@ export function GuardDirectoryScreen({
               showFilterPanel || activeFilterCount > 0
                 ? 'bg-brand-primary border-brand-primary text-white'
                 : 'border-brand-border text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
-            }`}
+            }${formFactor === 'desktop' ? ' hidden' : ''}`}
             aria-label="Filters"
             
           >
@@ -276,7 +342,7 @@ export function GuardDirectoryScreen({
       </div>
 
       {/* ── Expandable filter panel ───────────────────────────────── */}
-      {showFilterPanel && (
+      {filtersOpen && (
         <div className="border-b border-brand-border bg-brand-bg-sec px-4 py-4 space-y-5">
           {/* Armed */}
           <FilterToggleRow
@@ -410,6 +476,14 @@ export function GuardDirectoryScreen({
             filters={filters}
             favoritesOnly={filters.favoritesOnly}
             onClearFilters={clearAllFilters}
+          />
+        ) : formFactor === 'desktop' ? (
+          <GuardrDataTable
+            columns={directoryColumns}
+            rows={filtered}
+            rowKey={(guard) => guard.id}
+            onRowClick={onSelectGuard}
+            caption="Guards"
           />
         ) : (
           <AppItemCardStack>

@@ -651,6 +651,34 @@ body[data-surface='desktop'] .sfd-shell-canvas .uber-map-panel {
   max-width: min(420px, 38vw);
 }
 
+/* ── Maps: reserved list column, not a floating overlay ──────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.dsk-map-inspector) .guardr-map-root {
+  right: 22rem !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector,
+body[data-surface='desktop'] .sfd-shell-canvas .dsk-map-inspector {
+  width: 22rem;
+  box-shadow: none;
+  border-left: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+@media (min-width: 1680px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector,
+  body[data-surface='desktop'] .sfd-shell-canvas .dsk-map-inspector {
+    width: 26rem;
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+  body[data-surface='desktop'] .sfd-shell-canvas .guard-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+  body[data-surface='desktop'] .sfd-shell-canvas .client-map-layout:has(.desktop-map-inspector) .guardr-map-root {
+    right: 26rem !important;
+  }
+}
+
 /* ── Messages ────────────────────────────────────────────────────────────── */
 
 body[data-surface='desktop'] .sfd-shell-canvas .app-inbox,
@@ -668,6 +696,171 @@ body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-home {
   padding: 20px var(--sfd-cmd-gutter) 48px;
   max-width: var(--sf-content-max, 1760px);
   margin: 0 auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-kpis {
+  margin: 0 0 16px;
+  border: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-destinations {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 8px);
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:hover {
+  background: var(--sf-paper-sunken);
+  border-color: var(--sf-line-strong, var(--sf-ink));
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:focus-visible {
+  box-shadow: var(--sf-focus-ring);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink);
+  flex-shrink: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-desc {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--sf-ink-secondary);
+}
+
+@media (max-width: 1280px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-destinations {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Hub tiles: keep the destinations, drop the yellow/green/orange icon fills. */
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--green,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--yellow,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--orange {
+  background: var(--sf-paper-sunken) !important;
+  color: var(--sf-ink) !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-destinations-grid .uber-direct-hub-card,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-hub .uber-direct-hub-card {
+  border: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+  box-shadow: none;
+}
+
+/* ── Form wizards: workspace with sticky actions, not a phone stepper ────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard {
+  max-width: min(1100px, 100%);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--sfd-cmd-gutter);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard .guard-scroll-panel,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard .guard-scroll-panel {
+  padding-top: 20px;
+  padding-bottom: 24px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 20px;
+  align-items: start;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid > .space-y-3,
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid > [class*='JobLocation'] {
+  grid-column: 1 / -1;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  flex-shrink: 0;
+  margin: 0 calc(-1 * var(--sfd-cmd-gutter));
+  padding: 12px var(--sfd-cmd-gutter) 16px;
+  border-top: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions .client-form-shell {
+  max-width: none;
+  margin: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard h2,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard h2 {
+  font-size: 22px !important;
+  letter-spacing: -0.03em;
+}
+
+/* ── Guard directory ─────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory .border-b.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory .bg-brand-bg-sec.px-4.py-4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
 }
 
 body[data-surface='desktop'] .sfd-shell-canvas .guard-my-jobs,
@@ -712,10 +905,22 @@ html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-l
   background: #1a1a1a;
 }
 
-html.theme-dark body[data-surface='desktop'] .sfd-topbar,
-html.theme-dark body[data-surface='desktop'] .sfd-statusbar {
-  background: #0a0a0a;
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-kpis,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector {
+  background: var(--sf-paper-raised, #161616);
   border-color: #2a2a2a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:hover {
+  background: #1a1a1a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-icon {
+  background: #0a0a0a;
+  color: #fff;
 }
 
 /* ── Focus / keyboard ────────────────────────────────────────────────────── */

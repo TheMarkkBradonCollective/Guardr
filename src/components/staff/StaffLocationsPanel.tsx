@@ -41,6 +41,8 @@ import { useStaffShellCreateRegistration } from './StaffShellCreateContext';
 import { AppButton } from '../ui/AppButton';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { MapPin, Plus } from 'lucide-react';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 
 interface StaffLocationsPanelProps {
   currentUser: SessionUser;
@@ -56,6 +58,13 @@ const STATUS_TONES: Record<JobLocationStatus, 'warning' | 'success' | 'danger' |
   active: 'success',
   rejected: 'danger',
   archived: 'muted',
+};
+
+const STATUS_CHIP_TONE: Record<JobLocationStatus, StatusTone> = {
+  pending: 'warning',
+  active: 'positive',
+  rejected: 'negative',
+  archived: 'neutral',
 };
 
 function emptyDraft(): {
@@ -541,6 +550,50 @@ export function StaffLocationsPanel({
     </div>
   );
 
+  const locationColumns: GuardrTableColumn<JobLocation>[] = [
+    {
+      id: 'site',
+      header: 'Site',
+      grow: true,
+      sortValue: (loc) => loc.name.toLowerCase(),
+      render: (loc) => (
+        <>
+          <p className="uber-workbench-table-primary">{loc.name}</p>
+          <p className="uber-workbench-table-secondary">{loc.address}</p>
+        </>
+      ),
+    },
+    {
+      id: 'city',
+      header: 'City',
+      hideOnNarrow: true,
+      sortValue: (loc) => loc.state ?? '',
+      render: (loc) => loc.state || 'City TBD',
+    },
+    {
+      id: 'jobs',
+      header: 'Jobs',
+      numeric: true,
+      align: 'right',
+      sortValue: (loc) => countJobsUsingLocation(jobs, loc.id),
+      render: (loc) => String(countJobsUsingLocation(jobs, loc.id)),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (loc) => loc.status,
+      render: (loc) => {
+        const archivedActive = jobLocationBrowseBucket(loc, jobs) === 'archived' && loc.status === 'active';
+        return (
+          <StatusChip tone={archivedActive ? 'neutral' : STATUS_CHIP_TONE[loc.status]}>
+            {archivedActive ? 'Archived' : JOB_LOCATION_STATUS_LABELS[loc.status]}
+            {!isLocationListed(loc) ? ' · Private' : ''}
+          </StatusChip>
+        );
+      },
+    },
+  ];
+
   const list = (
     <div className="space-y-2">
       {filtered.length === 0 ? (
@@ -625,7 +678,21 @@ export function StaffLocationsPanel({
           <WorkbenchEmpty message="No saved locations yet. Approve a client job to add its site, or use + Add location." />
         ) : (
           <WorkbenchSplit
-            list={list}
+            list={
+              <GuardrDataTable
+                columns={locationColumns}
+                rows={filtered}
+                rowKey={(loc) => loc.id}
+                selectedKey={creating ? undefined : selected?.id}
+                onRowClick={(loc) => {
+                  setCreating(false);
+                  setSelectedId(loc.id);
+                }}
+                caption="Locations"
+                emptyMessage="No locations match your filters."
+                cardLayout={{ title: 'site', subtitle: 'city', trailing: 'status' }}
+              />
+            }
             detail={
               creating || selected ? (
                 editor

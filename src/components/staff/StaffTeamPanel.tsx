@@ -17,9 +17,28 @@ import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import type { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
+import { getGuardUserStatus } from '../../lib/accountStatus';
+import { useLayoutFormFactor } from '../../surfaces';
+import { StatusChip, type StatusTone } from '../baseui/StatusChip';
+import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
+import {
+  WorkbenchEmpty,
+  WorkbenchSplit,
+} from '../baseui/layout/WorkbenchLayout';
+import { Users } from 'lucide-react';
 
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+
+function staffRosterStatusTone(member: SecurityGuard): StatusTone {
+  const status = getGuardUserStatus(member);
+  const label = getStaffRosterStatusLabel(member);
+  if (status === 'suspended' || status === 'blocked') return 'negative';
+  if (status === 'pending') return 'warning';
+  if (label === 'Active') return 'positive';
+  if (label === 'Inactive') return 'warning';
+  return 'neutral';
+}
 
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
@@ -84,6 +103,7 @@ export function StaffTeamPanel({
   onSelectedIdChange,
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
+  const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('all');
   const [staffTeamTab, setStaffTeamTab] = useState<StaffTeamDetailTab>('profile');
@@ -117,6 +137,51 @@ export function StaffTeamPanel({
       if (rank !== 0) return rank;
       return a.name.localeCompare(b.name);
     });
+
+  const selectedMember = selectedId ? filtered.find((member) => member.id === selectedId) ?? null : null;
+
+  const teamColumns: GuardrTableColumn<SecurityGuard>[] = [
+    {
+      id: 'staff',
+      header: 'Staff',
+      grow: true,
+      sortValue: (member) => getStaffDisplayName(member).toLowerCase(),
+      render: (member) => (
+        <>
+          <p className="uber-workbench-table-primary">{getStaffDisplayName(member)}</p>
+          <p className="uber-workbench-table-secondary">{member.email}</p>
+        </>
+      ),
+    },
+    {
+      id: 'role',
+      header: 'Role',
+      sortValue: (member) => member.staffRole ?? member.sideRole ?? '',
+      render: (member) =>
+        member.staffRole
+          ? member.sideRole === 'Finance'
+            ? `${member.staffRole} · Finance`
+            : member.staffRole
+          : member.sideRole === 'Finance'
+            ? 'Finance desk'
+            : 'Staff',
+    },
+    {
+      id: 'badge',
+      header: 'Badge',
+      hideOnNarrow: true,
+      sortValue: (member) => member.badgeNumber ?? '',
+      render: (member) => member.badgeNumber || '—',
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      sortValue: (member) => getStaffRosterStatusLabel(member),
+      render: (member) => (
+        <StatusChip tone={staffRosterStatusTone(member)}>{getStaffRosterStatusLabel(member)}</StatusChip>
+      ),
+    },
+  ];
 
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
@@ -161,6 +226,61 @@ export function StaffTeamPanel({
       />
     </>
   ) : null;
+
+  const detailPanel = selectedMember ? (
+    <StaffTeamDetailPanel
+      member={selectedMember}
+      roster={filtered}
+      platformCities={platformCities}
+      managerOptions={guards.filter((g) => g.isStaff && g.staffRole === 'Manager')}
+      currentUserId={currentUserId}
+      currentUserRole={currentUserRole}
+      actorManagedCities={actorManagedCities}
+      canManageStaff={canManageStaff}
+      canApproveStaffAccounts={canApproveStaffAccounts}
+      onUpdateUserStatus={onUpdateUserStatus}
+      onApproveStaffAccount={onApproveStaffAccount}
+      onRejectStaffAccount={onRejectStaffAccount}
+      onUpdateStaffRole={onUpdateStaffRole}
+      onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+      onUpdateStaffProfile={onUpdateStaffProfile}
+      platformSettings={platformSettings}
+      staffTeamTab={staffTeamTab}
+      onStaffTeamTabChange={setStaffTeamTab}
+    />
+  ) : null;
+
+  if (formFactor === 'desktop') {
+    return (
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={Users}
+                message={roster.length === 0 ? 'No staff accounts yet' : 'No staff match your search'}
+              />
+            ) : (
+              <GuardrDataTable
+                columns={teamColumns}
+                rows={filtered}
+                rowKey={(member) => member.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(member) => setSelectedId(member.id)}
+                caption="Staff"
+                cardLayout={{ title: 'staff', subtitle: 'role', trailing: 'status' }}
+              />
+            )
+          }
+          detail={
+            detailPanel ?? (
+              <WorkbenchEmpty icon={Users} message="Select a staff member to review profile and access" variant="detail" />
+            )
+          }
+        />
+      </StaffOpsPageShell>
+    );
+  }
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">

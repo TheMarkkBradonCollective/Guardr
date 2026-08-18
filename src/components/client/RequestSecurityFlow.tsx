@@ -341,7 +341,7 @@ export function RequestSecurityFlow({
 
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
-    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
+    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard sfd-form-wizard' : ''}`}>
       <div className="app-subscreen-header app-subscreen-header--wrap shrink-0">
         <button type="button" onClick={goBack} className="app-subscreen-back">
           <ArrowLeft className="w-4 h-4" aria-hidden />
@@ -371,7 +371,7 @@ export function RequestSecurityFlow({
               {clientServiceGroups().map((group) => (
                 <div key={group.label} className="space-y-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">{group.label}</p>
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className={`grid gap-2 ${formFactor === 'desktop' ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {group.options.map((opt) => (
                       <button
                         key={opt.id}
@@ -426,6 +426,7 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Where?</h2>
             </div>
+            <div className={formFactor === 'desktop' ? 'sfd-form-grid' : 'space-y-5'}>
             <div>
               <label className="uber-label block mb-1.5">Address</label>
               <input
@@ -532,6 +533,7 @@ export function RequestSecurityFlow({
               longitude={longitude}
               onCoordsChange={onCoordsChange}
             />
+            </div>
           </div>
         )}
 
@@ -919,7 +921,7 @@ export function RequestSecurityFlow({
         )}
       </div>
 
-      <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
+      <div className={formFactor === 'desktop' ? 'sfd-form-wizard-actions' : 'fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border'}>
         <div className="client-form-shell mx-auto">
           {step < 9 ? (
             <GuardrButton
