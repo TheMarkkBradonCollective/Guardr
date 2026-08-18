@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.126-beta",
+  "webVersion": "1.0.127-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.126",
-    "versionCode": 226,
+    "version": "1.0.127",
+    "versionCode": 227,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.126.apk",
+    "downloadName": "guardr-v1.0.127.apk",
     "fileSize": 85565580,
     "sha256": "52f12fc52cfb1949a590d782216ef458f4a15d69705423872039c1e75f4a3ca0",
-    "releaseNotes": "Staff roster tabs: Clients Personal/Business, Guards armed class, Staff role tabs; Management page for Manager+; status sub-filters on every roster; job posting review moved to Permissions."
+    "releaseNotes": "Staff activation fixes: approved hires locked to activation; management stays approved until Profile ID upload; client credential library moved to Permissions; Android APK+AAB CI."
   },
-  "updatedAt": "2026-08-18T14:00:04.945Z"
+  "updatedAt": "2026-08-18T15:09:02.170Z"
 }

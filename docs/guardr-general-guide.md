@@ -43,8 +43,9 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
-| **Staff (pending / reactivation)** | **Onboarding checklist** — upload government ID (front, back, selfie) and connect Stripe for payouts; **Settings** (sign out). Ops pages stay blocked until **active**. New approved staff see **Staff activation**. Existing active staff missing ID are **Inactive** and see **Staff reactivation**. Founder can still open the console to review IDs. |
-| **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile → Timesheets** for clock in/out; Directors/Founders also use **Payments** for staff compensation |
+| **Staff (pending / approved ops)** | **Staff activation** — upload government ID (front, back, selfie) and connect Stripe; ops panels blocked until **active** |
+| **Staff (management, Manager+)** | Ops dashboard available while **approved** (inactive on roster); upload government ID from **Profile** until verified and auto-activated — not the activation screen |
+| **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile** for government ID updates and **Timesheets**; Directors/Founders also use **Payments** for staff compensation |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
 | **Founder** | Everything Directors can do plus platform governance settings (payment modes, homepage messages, top-tier staff management) |
@@ -1271,9 +1272,11 @@ Staff who apply via **Work at Guardr** can **sign in while pending** and complet
 | **Stripe payouts** | Connect bank account via Stripe Connect for employee compensation |
 | **Activation** | Account becomes **active** when ID is verified and Stripe payouts are enabled |
 
-While **pending** or **approved** (checklist incomplete), only the onboarding checklist and **Settings** are available — not ops panels (**Jobs**, **Guards**, etc.).
+While **pending** or **approved** (checklist incomplete), operations staff only see the onboarding checklist and **Settings** — not ops panels (**Jobs**, **Guards**, etc.).
 
-**Reactivation (existing active staff):** Government ID is only treated as verified when **front, back, and selfie** photos are on file. A status of verified with no photos is bounced to **pending upload**. Those staff stay **Inactive** on the roster and see **Staff reactivation** until ID is uploaded and a Director verifies it. **Newly approved** staff (and pending applicants) see **Staff activation**, not reactivation. Pre-approved applications added in the database still show their full application details in **Applications**. **Founder** can still open the staff console so someone can review IDs (avoids a deadlock).
+**Management (Manager, Director, Founder)** skip the activation screen lock but stay **approved** (roster shows Inactive) until government ID is uploaded from **Profile** and verified. Only **Founder** (and legacy **Owner**) may remain **active** without ID so credentials can still be reviewed.
+
+**Reactivation (operations staff):** Government ID is only treated as verified when **front, back, and selfie** photos are on file. Active staff missing photos are bounced to **approved** / **Inactive** and see **Staff reactivation** until ID is uploaded and a Director verifies it. **Newly approved** operations staff see **Staff activation**, not reactivation. Blank management entries no longer appear in **Applications**. **Founder** can still open the staff console so someone can review IDs (avoids a deadlock).
 
 New staff still use **Staff activation** copy. Auto-activation requires photos, not status alone.
 

@@ -3,13 +3,48 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.126**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.127**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Tuesday, August 18, 2026 — /update → v1.0.127
+
+**PR cleanup (merged to `main`)**
+- **#998** — Client credential library editor moved off Credentials Clients tab to Permissions
+- **#999** — Staff activation lock, management Profile ID upload, Applications feed cleanup
+
+| Time | What shipped |
+|------|----------------|
+| 2:10 PM | Fix Android CI: build APK always, AAB when Play keystore secrets exist |
+| 2:11 PM | Trigger Android CI when workflow file changes |
+| 2:50 PM | Fix client credentials tab showing library editor on top of review list |
+| 2:58 PM | Fix staff activation: lock approved hires, exempt management, profile ID upload |
+| 3:05 PM | Keep management approved until ID upload from Profile |
+| 3:07 PM | Sync staff ID demotion SQL snippet; exempt Owner role with Founder |
+| 3:10 PM | Release v1.0.127-beta — version bump, docs, PWA cache |
+| 3:11 PM | Land v1.0.127 on `main` |
+
+**Shipped**
+- **Credentials → Clients** — review queue only; credential library editor moved to **Permissions** with Save/Discard (no per-keystroke DB writes)
+- **Staff activation** — approved-but-not-active operations staff locked to activation screen until **active**
+- **Management (Manager+)** — skip activation lock; stay **approved** (inactive) until government ID uploaded from **Profile**; blank management entries removed from Applications
+- **Active staff** — upload/re-upload government ID from **Profile**
+- **v1.0.127** (build **227**) web + PWA version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-127-beta`
+
+**SQL to run**
+- `supabase/migrations/20260818040000_staff_inactive_missing_id.sql`
+- Or `supabase/snippets/staff_demote_active_missing_id.sql` in Supabase SQL Editor
+- Or re-run `supabase/complete_schema_setup.sql` (idempotent)
+
+**Release verification**
+- Lint, test (**697**), build green
 
 ---
 
@@ -1164,6 +1199,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
+| **Aug 18** | 20+ | /update v1.0.127 — staff activation lock, management Profile ID, client credentials fix, staff ID demotion SQL |
 | **Aug 18** | 14+ | /update v1.0.126 — staff roster category tabs, Management page, status sub-filters, APK + AAB release pipeline |
 | **Aug 18** | 9+ | /update v1.0.124 — Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |
 
