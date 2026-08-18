@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole, StaffSideRole } from '../../types';
-import { getAssignableStaffRoles, ROLE_LABELS, STAFF_ROLES_ORDERED, staffRoleToPlatformRole } from '../../lib/permissions';
+import { getAssignableStaffRoles, MANAGEMENT_STAFF_ROLES, ROLE_LABELS, STAFF_OPERATIONS_ROLES, staffRoleToPlatformRole } from '../../lib/permissions';
 import type { PlatformCity } from '../../lib/platformCities';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import type { StaffTeamDetailTab } from '../../lib/appNavigation';
 import {
   matchesStaffRoleFilter,
+  matchesStaffTierFilter,
   staffRosterSortRank,
   type StaffRoleFilter,
+  type StaffRosterTier,
 } from '../../lib/staffListFilters';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
@@ -41,6 +43,7 @@ function staffRosterStatusTone(member: SecurityGuard): StatusTone {
 }
 
 interface StaffTeamPanelProps {
+  tier: StaffRosterTier;
   guards: SecurityGuard[];
   platformCities?: PlatformCity[];
   currentUserId: string;
@@ -82,6 +85,7 @@ interface StaffTeamPanelProps {
 }
 
 export function StaffTeamPanel({
+  tier,
   guards,
   platformCities = [],
   currentUserId,
@@ -110,6 +114,9 @@ export function StaffTeamPanel({
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
+  const tierRoleOptions = tier === 'management' ? MANAGEMENT_STAFF_ROLES : STAFF_OPERATIONS_ROLES;
+  const rosterLabel = tier === 'management' ? 'Management' : 'Staff';
+  const searchPlaceholder = tier === 'management' ? 'Search management...' : 'Search staff...';
 
   const setSelectedId = (id: string | null) => {
     if (!isControlled) setInternalSelectedId(id);
@@ -121,7 +128,7 @@ export function StaffTeamPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
-  const roster = guards.filter((g) => g.isStaff);
+  const roster = guards.filter((g) => g.isStaff).filter((member) => matchesStaffTierFilter(member, tier));
 
   const filtered = roster
     .filter(
@@ -189,7 +196,7 @@ export function StaffTeamPanel({
   const toolbar = !showDetailOnly ? (
     <>
       <div className="staff-ops-cta-stack">
-        {canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
+        {tier === 'operations' && canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
           <StaffAddStaffForm
             assignableRoles={assignableRoles}
             requiresDirectorApproval={requiresDirectorApproval}
@@ -209,16 +216,16 @@ export function StaffTeamPanel({
       <WfSearchBar
         value={search}
         onChange={setSearch}
-        placeholder="Search staff..."
+        placeholder={searchPlaceholder}
         className="max-w-md"
       />
       <StaffListFilterTabs
-        aria-label="Staff role"
+        aria-label={`${rosterLabel} role`}
         activeId={roleFilter}
         onChange={(id) => setRoleFilter(id as StaffRoleFilter)}
         tabs={[
           { id: 'all', label: 'All' },
-          ...STAFF_ROLES_ORDERED.map((role) => ({
+          ...tierRoleOptions.map((role) => ({
             id: role,
             label: ROLE_LABELS[staffRoleToPlatformRole(role)],
           })),
@@ -258,7 +265,7 @@ export function StaffTeamPanel({
             filtered.length === 0 ? (
               <WorkbenchEmpty
                 icon={Users}
-                message={roster.length === 0 ? 'No staff accounts yet' : 'No staff match your search'}
+                message={roster.length === 0 ? `No ${rosterLabel.toLowerCase()} accounts yet` : `No ${rosterLabel.toLowerCase()} match your search`}
               />
             ) : (
               <GuardrDataTable
@@ -267,7 +274,7 @@ export function StaffTeamPanel({
                 rowKey={(member) => member.id}
                 selectedKey={selectedId ?? undefined}
                 onRowClick={(member) => setSelectedId(member.id)}
-                caption="Staff"
+                caption={rosterLabel}
                 cardLayout={{ title: 'staff', subtitle: 'role', trailing: 'status' }}
               />
             )
@@ -290,11 +297,13 @@ export function StaffTeamPanel({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </div>
           <p className="app-empty-state-title">
-            {roster.length === 0 ? 'No staff accounts yet' : 'No staff match your search'}
+            {roster.length === 0 ? `No ${rosterLabel.toLowerCase()} accounts yet` : `No ${rosterLabel.toLowerCase()} match your search`}
           </p>
           <p className="app-empty-state-body">
             {roster.length === 0
-              ? 'Administrators can submit staff for approval. Directors and Founders can add staff directly.'
+              ? tier === 'management'
+                ? 'Manager, Director, and Founder accounts appear here.'
+                : 'Administrators can submit staff for approval. Directors and Founders can add staff directly.'
               : 'Try adjusting your search.'}
           </p>
         </div>

@@ -1,6 +1,7 @@
 import type { Client, ClientType, SecurityGuard, StaffRole } from '../types';
 import { normalizeClientType } from './clientType';
 import { computeGuardArmedStatus, type GuardArmedStatus } from './guardArmedStatus';
+import { isManagementStaffMember, isOperationsStaffMember } from './permissions';
 import {
   getClientAccountStatus,
   getGuardUserStatus,
@@ -37,6 +38,8 @@ export type ClientKindFilter = ClientType;
 export type GuardArmedFilter = GuardArmedStatus;
 
 export type StaffRoleFilter = 'all' | StaffRole;
+
+export type StaffRosterTier = 'operations' | 'management';
 
 export function isCredentialFeedItemOpen(item: ApprovalFeedItem): boolean {
   return item.status === 'pending' || item.status === 'in_review';
@@ -149,6 +152,12 @@ export function matchesStaffRoleFilter(member: SecurityGuard, filter: StaffRoleF
   if (!member.isStaff) return false;
   if (filter === 'all') return true;
   return member.staffRole === filter;
+}
+
+export function matchesStaffTierFilter(member: SecurityGuard, tier: StaffRosterTier): boolean {
+  return tier === 'management'
+    ? isManagementStaffMember(member)
+    : isOperationsStaffMember(member);
 }
 
 export function matchesStaffTeamFilter(member: SecurityGuard, filter: StaffTeamFilter): boolean {

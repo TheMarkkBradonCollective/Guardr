@@ -41,10 +41,12 @@ import {
   canViewAnalytics,
   canViewCityMarkets,
   canViewIncidents,
+  canViewManagementRoster,
   canViewStats,
   canViewViolations,
   isStaffRole,
   isFinanceDeskOnly,
+  staffSectionForStaffMember,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -547,12 +549,47 @@ export function StaffDashboard({
     navigateSection('jobs', { jobId });
   };
 
+  const openStaffProfile = (staffId: string) => {
+    const member = guards.find((guard) => guard.id === staffId);
+    navigateSection(member ? staffSectionForStaffMember(member) : 'team', { teamId: staffId });
+  };
+
+  const renderStaffTeamPanel = (tier: 'operations' | 'management') => (
+    <StaffTeamPanel
+      tier={tier}
+      guards={guards}
+      platformCities={platformCities}
+      platformSettings={platformSettings}
+      currentUserId={currentUser.id}
+      currentUserRole={currentUser.role}
+      actorManagedCities={actorStaffProfile?.managedCities}
+      canManageStaff={canManageStaff}
+      canProposeStaff={canProposeStaff}
+      canApproveStaffAccounts={canApproveStaff}
+      requiresDirectorApproval={requiresDirectorApproval}
+      onUpdateUserStatus={onUpdateGuardUserStatus}
+      onAddStaff={
+        canProposeStaff
+          ? (input) => onAddStaffProfile(input)
+          : undefined
+      }
+      onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
+      onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
+      onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
+      onUpdateStaffCityAccess={onUpdateStaffCityAccess}
+      onUpdateStaffProfile={onUpdateGuardProfile}
+      selectedId={selectedTeamId}
+      onSelectedIdChange={setSelectedTeamId}
+      initialSelectedId={selectedTeamId}
+    />
+  );
+
   const navigateSection = (next: StaffSection, selection: StaffSectionSelection = {}) => {
     if (!isControlled) setInternalSection(next);
     const nextGuardId = next === 'guards' || next === 'applications'
       ? selection.guardId !== undefined ? selection.guardId : selectedGuardId
       : null;
-    const nextTeamId = next === 'team'
+    const nextTeamId = next === 'team' || next === 'management'
       ? selection.teamId !== undefined ? selection.teamId : selectedTeamId
       : null;
     const nextClientId = next === 'clients' || next === 'applications'
@@ -606,6 +643,7 @@ export function StaffDashboard({
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
   const showCities = canViewCityMarkets(currentUser);
+  const showManagement = canViewManagementRoster(currentUser);
   const showAnalytics = canViewAnalytics(currentUser);
   const showStats = canViewStats(currentUser);
   const showIncidents = canViewIncidents(currentUser);
@@ -622,6 +660,7 @@ export function StaffDashboard({
       showPermissions,
       showDisputes,
       showCities,
+      showManagement,
       financeDeskOnly,
     };
     if (section === 'payments' && !showFinance) {
@@ -631,7 +670,7 @@ export function StaffDashboard({
     if (!isStaffNavSectionAccessible(section, accessFlags)) {
       navigateSection('overview');
     }
-  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities, financeDeskOnly]);
+  }, [section, showFinance, showPayments, showPermissions, showDisputes, showCities, showManagement, financeDeskOnly]);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -854,7 +893,7 @@ export function StaffDashboard({
             onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
-            onOpenStaffProfile={(staffId) => navigateSection('team', { teamId: staffId })}
+            onOpenStaffProfile={openStaffProfile}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}
             initialGuardId={selectedGuardId}
@@ -892,7 +931,7 @@ export function StaffDashboard({
             onReviewGuardInsurance={onReviewGuardInsurance}
             onRequestCoiUpdate={onRequestCoiUpdate}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
-            onOpenStaffProfile={(staffId) => navigateSection('team', { teamId: staffId })}
+            onOpenStaffProfile={openStaffProfile}
             onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
@@ -981,32 +1020,15 @@ export function StaffDashboard({
           />
         );
       case 'team':
-        return (
-          <StaffTeamPanel
-            guards={guards}
-            platformCities={platformCities}
-            platformSettings={platformSettings}
-            currentUserId={currentUser.id}
-            currentUserRole={currentUser.role}
-            actorManagedCities={actorStaffProfile?.managedCities}
-            canManageStaff={canManageStaff}
-            canProposeStaff={canProposeStaff}
-            canApproveStaffAccounts={canApproveStaff}
-            requiresDirectorApproval={requiresDirectorApproval}
-            onUpdateUserStatus={onUpdateGuardUserStatus}
-            onAddStaff={
-              canProposeStaff
-                ? (input) => onAddStaffProfile(input)
-                : undefined
-            }
-            onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
-            onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
-            onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
-            onUpdateStaffCityAccess={onUpdateStaffCityAccess}
-            onUpdateStaffProfile={onUpdateGuardProfile}
-            selectedId={selectedTeamId}
-            onSelectedIdChange={setSelectedTeamId}
-            initialSelectedId={selectedTeamId}
+        return renderStaffTeamPanel('operations');
+      case 'management':
+        return showManagement ? (
+          renderStaffTeamPanel('management')
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES.management!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES.management!.message}
+            placeholders={['Managers', 'Directors', 'Founders']}
           />
         );
       case 'clients':

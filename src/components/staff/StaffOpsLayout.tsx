@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, isFinanceDeskOnly } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewManagementRoster, isFinanceDeskOnly } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
 import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -71,6 +71,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   map: 'Map',
   guards: 'Guards',
   team: 'Staff',
+  management: 'Management',
   clients: 'Clients',
   incidents: 'Incidents',
   messages: 'Messages',
@@ -125,6 +126,7 @@ export function StaffOpsLayout({
   const showPermissions = canAccessStaffPermissions(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
   const showCities = canViewCityMarkets(currentUser);
+  const showManagement = canViewManagementRoster(currentUser);
   const financeDeskOnly = isFinanceDeskOnly(currentUser);
 
   const navItems: StaffNavItem[] = useMemo(
@@ -138,6 +140,7 @@ export function StaffOpsLayout({
       { id: 'guards', label: 'Guards', icon: Shield },
       { id: 'clients', label: 'Clients', icon: Building2 },
       { id: 'team', label: 'Staff', icon: Users },
+      { id: 'management', label: 'Management', icon: UsersRound, managementOnly: true },
       { id: 'messages', label: 'Messages', icon: MessagesSquare },
       { id: 'support', label: 'Support', icon: LifeBuoy },
       { id: 'payments', label: 'Payments & invoices', icon: DollarSign, financeOnly: true },
@@ -186,6 +189,7 @@ export function StaffOpsLayout({
         showPermissions={showPermissions}
         showDisputes={showDisputes}
         showCities={showCities}
+        showManagement={showManagement}
         financeDeskOnly={financeDeskOnly}
         onOpenLegal={onOpenLegal}
         onOpenDownload={onOpenDownload}
@@ -217,6 +221,7 @@ interface StaffOpsLayoutInnerProps
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  showManagement: boolean;
   financeDeskOnly?: boolean;
 }
 
@@ -238,6 +243,7 @@ function StaffOpsLayoutInner({
   showPermissions,
   showDisputes,
   showCities,
+  showManagement,
   financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
@@ -279,6 +285,7 @@ function StaffOpsLayoutInner({
       showPermissions={showPermissions}
       showDisputes={showDisputes}
       showCities={showCities}
+      showManagement={showManagement}
       financeDeskOnly={financeDeskOnly}
       onOpenLegal={onOpenLegal}
       onOpenDownload={onOpenDownload}

@@ -7,6 +7,8 @@ export interface StaffNavAccessFlags {
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  /** Manager+ executive roster */
+  showManagement?: boolean;
   /** Finance desk only — hide ops nav; payment tools + overview/profile/help */
   financeDeskOnly?: boolean;
 }
@@ -28,6 +30,7 @@ const PAYMENTS_SECTIONS = new Set<StaffSection>(['payments']);
 const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
+const MANAGEMENT_SECTIONS = new Set<StaffSection>(['management']);
 
 /** Sections a finance-only (null ladder) seat may open */
 export const FINANCE_DESK_ALLOWED_SECTIONS = new Set<StaffSection>([
@@ -87,6 +90,13 @@ export function getStaffNavAccessNotice(
         'Dispute resolution is limited to Administrator roles and above. Escalate open disputes to your Administrator or Director.',
     };
   }
+  if (MANAGEMENT_SECTIONS.has(section) && !flags.showManagement) {
+    return {
+      title: 'Manager access required',
+      message:
+        'The management roster is limited to Manager roles and above. Ask your Director if you need access.',
+    };
+  }
   return null;
 }
 
@@ -101,6 +111,7 @@ export interface StaffNavItemAccess {
   permissionsOnly?: boolean;
   citiesOnly?: boolean;
   disputesOnly?: boolean;
+  managementOnly?: boolean;
 }
 
 /** Hide nav items the current role cannot use (desktop already did this; mobile menu did not). */
@@ -117,6 +128,7 @@ export function isStaffNavItemVisible(
   if (item.permissionsOnly && !flags.showPermissions) return false;
   if (item.citiesOnly && !flags.showCities) return false;
   if (item.disputesOnly && !flags.showDisputes) return false;
+  if (item.managementOnly && !flags.showManagement) return false;
   return true;
 }
 
@@ -175,6 +187,11 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     title: 'Locations',
     message:
       'Location quality control requires Manage shared locations or Review job postings. Ask your Administrator if you need access.',
+  },
+  management: {
+    title: 'Management',
+    message:
+      'The management roster is limited to Manager roles and above. Ask your Director if you need access.',
   },
   messages: {
     title: 'Messages unavailable',

@@ -21,6 +21,8 @@ export interface StaffNavItem {
   citiesOnly?: boolean;
   /** Visible to Administrator and above (dispute resolution) */
   disputesOnly?: boolean;
+  /** Visible to Manager and above (executive roster) */
+  managementOnly?: boolean;
 }
 
 interface StaffSidebarNavProps {

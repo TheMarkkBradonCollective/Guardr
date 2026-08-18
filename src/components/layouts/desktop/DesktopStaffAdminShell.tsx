@@ -33,6 +33,7 @@ interface DesktopStaffAdminShellProps {
   showPermissions: boolean;
   showDisputes: boolean;
   showCities: boolean;
+  showManagement: boolean;
   financeDeskOnly?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenDownload?: () => void;
@@ -74,6 +75,7 @@ export function DesktopStaffAdminShell({
   showPermissions,
   showDisputes,
   showCities,
+  showManagement,
   financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
@@ -94,6 +96,7 @@ export function DesktopStaffAdminShell({
     showPermissions,
     showDisputes,
     showCities,
+    showManagement,
     financeDeskOnly,
   };
   const isMap = isStaffOpsMapSection(activeSection);
@@ -123,6 +126,7 @@ export function DesktopStaffAdminShell({
     showPermissions,
     showDisputes,
     showCities,
+    showManagement,
     financeDeskOnly,
   ]);
 

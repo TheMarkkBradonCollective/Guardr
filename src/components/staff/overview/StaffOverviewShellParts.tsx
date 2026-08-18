@@ -49,6 +49,7 @@ export const QUICK_LINK_META: Record<
   locations: { label: 'Locations', icon: MapPin, sub: 'Sites' },
   guards: { label: 'Guards', icon: Shield, sub: 'Field roster' },
   team: { label: 'Staff', icon: Users, sub: 'Platform team' },
+  management: { label: 'Management', icon: UsersRound, sub: 'Executive roster' },
   clients: { label: 'Clients', icon: Building2, sub: 'Accounts' },
   incidents: { label: 'Incidents', icon: AlertTriangle, sub: 'Follow-up' },
   violations: { label: 'Violations', icon: ShieldAlert, sub: 'Shift issues' },

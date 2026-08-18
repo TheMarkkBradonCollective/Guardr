@@ -1,4 +1,4 @@
-import { PlatformRole, SessionUser, StaffRole, StaffSideRole } from '../types';
+import { PlatformRole, SecurityGuard, SessionUser, StaffRole, StaffSideRole } from '../types';
 
 /** Platform permission keys aligned with Guardr role spec */
 export type Permission =
@@ -227,6 +227,12 @@ export const STAFF_ROLES_ORDERED: StaffRole[] = [
   'Founder',
 ];
 
+/** Ops ladder roles shown on the Staff roster (below Manager). */
+export const STAFF_OPERATIONS_ROLES: StaffRole[] = ['Support', 'Moderator', 'Administrator'];
+
+/** Executive roles shown on the Management roster (Manager and above). */
+export const MANAGEMENT_STAFF_ROLES: StaffRole[] = ['Manager', 'Director', 'Founder'];
+
 /** Staff permissions that can be toggled per role on the Permissions page. */
 export const STAFF_PERMISSION_CATALOG: {
   permission: Permission;
@@ -308,6 +314,38 @@ export function normalizeStaffRole(staffRole?: string | null): StaffRole | undef
 
 export function staffRoleRank(staffRole: StaffRole): number {
   return STAFF_ROLE_RANK[staffRole];
+}
+
+export function isManagementStaffRole(staffRole?: StaffRole | string | null): boolean {
+  const normalized = normalizeStaffRole(staffRole);
+  if (!normalized) return false;
+  return staffRoleRank(normalized) >= staffRoleRank('Manager');
+}
+
+export function isOperationsStaffMember(
+  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'>,
+): boolean {
+  if (!member.isStaff) return false;
+  if (!member.staffRole) return true;
+  return !isManagementStaffRole(member.staffRole);
+}
+
+export function isManagementStaffMember(
+  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'>,
+): boolean {
+  if (!member.isStaff || !member.staffRole) return false;
+  return isManagementStaffRole(member.staffRole);
+}
+
+export function canViewManagementRoster(user: Pick<SessionUser, 'role'>): boolean {
+  const rank = platformStaffRank(user.role);
+  return rank !== null && rank >= staffRoleRank('Manager');
+}
+
+export function staffSectionForStaffMember(
+  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'>,
+): 'team' | 'management' {
+  return isManagementStaffMember(member) ? 'management' : 'team';
 }
 
 export function platformStaffRank(role: PlatformRole): number | null {

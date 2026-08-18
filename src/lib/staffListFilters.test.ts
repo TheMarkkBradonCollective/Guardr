@@ -23,7 +23,9 @@ import {
   matchesGuardRosterFilter,
   matchesStaffRoleFilter,
   matchesStaffTeamFilter,
+  matchesStaffTierFilter,
 } from './staffListFilters';
+import { isManagementStaffMember, isOperationsStaffMember } from './permissions';
 import { computeGuardArmedStatus } from './guardArmedStatus';
 
 describe('staffListFilters', () => {
@@ -202,6 +204,7 @@ describe('staffListFilters', () => {
 
   it('filters staff role tabs', () => {
     const moderator = { id: 's-mod', isStaff: true, staffRole: 'Moderator' } as SecurityGuard;
+    const manager = { id: 's-mgr', isStaff: true, staffRole: 'Manager' } as SecurityGuard;
     const financeOnly = { id: 's-fin', isStaff: true, sideRole: 'Finance' } as SecurityGuard;
 
     assert.equal(matchesStaffRoleFilter(moderator, 'all'), true);
@@ -209,6 +212,11 @@ describe('staffListFilters', () => {
     assert.equal(matchesStaffRoleFilter(moderator, 'Manager'), false);
     assert.equal(matchesStaffRoleFilter(financeOnly, 'all'), true);
     assert.equal(matchesStaffRoleFilter(financeOnly, 'Support'), false);
+    assert.equal(matchesStaffTierFilter(moderator, 'operations'), true);
+    assert.equal(matchesStaffTierFilter(manager, 'operations'), false);
+    assert.equal(matchesStaffTierFilter(manager, 'management'), true);
+    assert.equal(isOperationsStaffMember(financeOnly), true);
+    assert.equal(isManagementStaffMember(manager), true);
   });
 
   it('filters client and staff roster tabs', () => {

@@ -37,7 +37,7 @@ import {
   UserNotification,
   ClientType,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, isFounder, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, isFounder, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole, staffSectionForStaffMember } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -1534,7 +1534,7 @@ export default function App() {
     const nextClientId = normalizedSection === 'clients' || normalizedSection === 'applications'
       ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
       : undefined;
-    const nextTeamId = normalizedSection === 'team'
+    const nextTeamId = normalizedSection === 'team' || normalizedSection === 'management'
       ? selection.teamId !== undefined ? selection.teamId ?? undefined : staffTeamId ?? undefined
       : undefined;
     const keepsMessages = normalizedSection === 'messages';
@@ -1633,14 +1633,16 @@ export default function App() {
   };
 
   const setStaffTeamId = (teamId: string | null) => {
+    const member = teamId ? guards.find((guard) => guard.id === teamId) : undefined;
+    const section = member ? staffSectionForStaffMember(member) : staffSection === 'management' ? 'management' : 'team';
     if (currentUser && isStaffRole(currentUser.role) && teamId) {
-      emitStaffTravelAction({ section: 'team', label: `team:${teamId}` });
+      emitStaffTravelAction({ section, label: `team:${teamId}` });
     }
     setStaffTeamIdState(teamId);
     syncAppRoute(
       buildAppRoute({
         role: 'staff',
-        staffSection: 'team',
+        staffSection: section,
         staffTeamId: teamId ?? undefined,
       })
     );
