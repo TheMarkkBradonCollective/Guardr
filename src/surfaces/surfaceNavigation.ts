@@ -4,8 +4,8 @@
  * The destination list is the only thing the surfaces share. What each surface
  * does with it is completely different:
  *
- *   mobile   — at most five thumb-reachable tabs; everything else moves into a
- *              bottom "More" sheet grouped by section.
+ *   mobile   — hamburger drawer with destinations grouped by section (all roles).
+ *              Bottom tabs are legacy; use `mobilePrimaryNav="tabs"` only for QA.
  *   tablet   — a persistent icon+label rail with every section expanded, plus a
  *              compact quick-switch row for the destinations used mid-shift.
  *   desktop  — a permanent grouped sidebar showing every destination at once,

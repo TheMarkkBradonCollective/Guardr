@@ -121,7 +121,7 @@ test.describe('surface resolution', () => {
   });
 
   test('surface chrome never leaks across device types', async ({ page }) => {
-    // Mobile owns the tab bar + sheets; tablet owns the rail;
+    // Mobile owns the hamburger drawer + sheets; tablet owns the rail;
     // desktop owns the sidebar, status bar, and command palette.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');

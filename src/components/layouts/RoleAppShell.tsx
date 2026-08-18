@@ -53,8 +53,7 @@ interface RoleAppShellProps {
  * Guard and client entry point into the three surface applications.
  *
  * Mobile, tablet, and desktop each load their own independent shell via
- * `SurfaceAppShell`. Destinations are position-free; the phone arranges them as
- * bottom tabs + a More sheet, never as a shrunk desktop sidebar.
+ * `SurfaceAppShell`. On phone, every role uses the same hamburger drawer nav.
  */
 export function RoleAppShell({
   title,
@@ -86,21 +85,20 @@ export function RoleAppShell({
     const build = (
       items: RoleNavItem[],
       section: string,
-      options: { rankOffset?: number; quick?: boolean } = {},
+      options: { quick?: boolean } = {},
     ): SurfaceDestination[] =>
-      items.map((item, index) => ({
+      items.map((item) => ({
         id: item.id,
         label: item.label,
         icon: item.icon,
         badge: item.badge,
         section,
-        mobileRank: options.rankOffset != null ? options.rankOffset + index : undefined,
         tabletQuick: options.quick,
       }));
 
     return [
-      ...build(navItems, 'Work', { rankOffset: 1, quick: true }),
-      ...build(messagesNavItems, 'Messages', { rankOffset: 100 }),
+      ...build(navItems, 'Work', { quick: true }),
+      ...build(messagesNavItems, 'Messages'),
       ...build(overflowNavItems, 'Manage'),
     ];
   }, [navItems, messagesNavItems, overflowNavItems]);
@@ -112,6 +110,7 @@ export function RoleAppShell({
       destinations={destinations}
       activeId={activeNavId}
       onNavigate={onNavigate}
+      mobilePrimaryNav="drawer"
       notifications={notifications ?? headerRight}
       identity={
         <ProfileAvatar
