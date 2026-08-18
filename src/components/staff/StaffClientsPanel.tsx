@@ -253,14 +253,14 @@ export function StaffClientsPanel({
   if (formFactor === 'desktop' && pageTab === 'roster') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
-        {filtered.length === 0 ? (
-          <WorkbenchEmpty
-            icon={search ? Search : Building2}
-            message={search ? 'No clients match your search' : 'No clients yet'}
-          />
-        ) : (
-          <WorkbenchSplit
-            list={
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : Building2}
+                message={search ? 'No clients match your search' : 'No clients yet'}
+              />
+            ) : (
               <GuardrDataTable
                 columns={clientColumns}
                 rows={filtered}
@@ -270,16 +270,16 @@ export function StaffClientsPanel({
                 caption="Clients"
                 cardLayout={{ title: 'client', subtitle: 'jobs', trailing: 'status' }}
               />
-            }
-            detail={
-              selectedClient ? (
-                renderClientDetail(selectedClient)
-              ) : (
-                <WorkbenchEmpty icon={Building2} message="Select a client to review account details" variant="detail" />
-              )
-            }
-          />
-        )}
+            )
+          }
+          detail={
+            selectedClient ? (
+              renderClientDetail(selectedClient)
+            ) : (
+              <WorkbenchEmpty icon={Building2} message="Select a client to review account details" variant="detail" />
+            )
+          }
+        />
       </StaffOpsPageShell>
     );
   }

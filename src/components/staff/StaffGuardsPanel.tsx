@@ -339,14 +339,14 @@ export function StaffGuardsPanel({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
-        {filtered.length === 0 ? (
-          <WorkbenchEmpty
-            icon={search ? Search : Users}
-            message={search ? 'No guards match your search' : 'No guards on the roster'}
-          />
-        ) : (
-          <WorkbenchSplit
-            list={
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : Users}
+                message={search ? 'No guards match your search' : 'No guards on the roster'}
+              />
+            ) : (
               <GuardrDataTable
                 columns={guardColumns}
                 rows={filtered}
@@ -356,24 +356,24 @@ export function StaffGuardsPanel({
                 caption="Guards"
                 cardLayout={{ title: 'guard', subtitle: 'rating', trailing: 'status' }}
               />
-            }
-            detail={
-              selectedGuard ? (
-                <StaffGuardDetailPanel
-                  {...buildDetailProps(selectedGuard)}
-                  editing={staffEdit}
-                  onEditingChange={onStaffEditChange}
-                  staffGuardTab={staffGuardTab}
-                  onStaffGuardTabChange={onStaffGuardTabChange}
-                  performanceFactorId={performanceFactorId}
-                  onPerformanceFactorChange={onPerformanceFactorChange}
-                />
-              ) : (
-                <WorkbenchEmpty icon={Users} message="Select a guard to review profile and actions" variant="detail" />
-              )
-            }
-          />
-        )}
+            )
+          }
+          detail={
+            selectedGuard ? (
+              <StaffGuardDetailPanel
+                {...buildDetailProps(selectedGuard)}
+                editing={staffEdit}
+                onEditingChange={onStaffEditChange}
+                staffGuardTab={staffGuardTab}
+                onStaffGuardTabChange={onStaffGuardTabChange}
+                performanceFactorId={performanceFactorId}
+                onPerformanceFactorChange={onPerformanceFactorChange}
+              />
+            ) : (
+              <WorkbenchEmpty icon={Users} message="Select a guard to review profile and actions" variant="detail" />
+            )
+          }
+        />
       </StaffOpsPageShell>
     );
   }

@@ -766,14 +766,14 @@ export function StaffCredentials({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">
-        {filteredFeed.length === 0 ? (
-          <WorkbenchEmpty
-            icon={search ? Search : ShieldCheck}
-            message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
-          />
-        ) : (
-          <WorkbenchSplit
-            list={
+        <WorkbenchSplit
+          list={
+            filteredFeed.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : ShieldCheck}
+                message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
+              />
+            ) : (
               <GuardrDataTable
                 columns={credentialColumns}
                 rows={filteredFeed}
@@ -783,16 +783,16 @@ export function StaffCredentials({
                 caption="Credentials"
                 cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
               />
-            }
-            detail={
-              activeItem ? (
-                renderCredentialDetail(activeItem)
-              ) : (
-                <WorkbenchEmpty icon={ShieldCheck} message="Select a credential to review" variant="detail" />
-              )
-            }
-          />
-        )}
+            )
+          }
+          detail={
+            activeItem ? (
+              renderCredentialDetail(activeItem)
+            ) : (
+              <WorkbenchEmpty icon={ShieldCheck} message="Select a credential to review" variant="detail" />
+            )
+          }
+        />
       </StaffOpsPageShell>
     );
   }

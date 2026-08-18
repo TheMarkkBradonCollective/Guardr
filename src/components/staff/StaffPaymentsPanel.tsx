@@ -330,7 +330,6 @@ export function StaffPaymentsPanel({
           className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
           toolbar={
             <WorkbenchToolbar
-              eyebrow="Finance"
               subtitle="Guard payouts, client billing, and invoices."
             />
           }
@@ -358,11 +357,10 @@ export function StaffPaymentsPanel({
       <StaffOpsPageShell
         className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
         toolbar={
-          <WorkbenchToolbar
-            eyebrow="Finance"
-            subtitle="Guard payouts, client billing, and invoices."
-            actions={exportButton}
-          />
+            <WorkbenchToolbar
+              subtitle="Guard payouts, client billing, and invoices."
+              actions={exportButton}
+            />
         }
       >
         {allQueueItems.length === 0 ? (

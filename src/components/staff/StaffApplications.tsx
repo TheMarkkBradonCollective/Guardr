@@ -626,14 +626,14 @@ export function StaffApplications({
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
-        {visibleEntries.length === 0 ? (
-          <WorkbenchEmpty
-            icon={search ? Search : UserCheck}
-            message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
-          />
-        ) : (
-          <WorkbenchSplit
-            list={
+        <WorkbenchSplit
+          list={
+            visibleEntries.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : UserCheck}
+                message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
+              />
+            ) : (
               <GuardrDataTable
                 columns={applicationColumns}
                 rows={visibleEntries}
@@ -643,16 +643,16 @@ export function StaffApplications({
                 caption="Applications"
                 cardLayout={{ title: 'applicant', subtitle: 'submitted', trailing: 'status' }}
               />
-            }
-            detail={
-              activeEntry ? (
-                renderApplicationDetail(activeEntry)
-              ) : (
-                <WorkbenchEmpty icon={UserCheck} message="Select an application to review" variant="detail" />
-              )
-            }
-          />
-        )}
+            )
+          }
+          detail={
+            activeEntry ? (
+              renderApplicationDetail(activeEntry)
+            ) : (
+              <WorkbenchEmpty icon={UserCheck} message="Select an application to review" variant="detail" />
+            )
+          }
+        />
       </StaffOpsPageShell>
     );
   }

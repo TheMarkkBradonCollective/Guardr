@@ -95,7 +95,8 @@ export function GuardrDataTable<T>({
     containerWidth != null && containerWidth < Math.min(CARD_BREAKPOINT_PX, columns.length * 130);
   const useCards =
     layout === 'cards' ||
-    (layout === 'auto' && (formFactor === 'mobile' || tooNarrowForTable));
+    (layout === 'auto' && formFactor !== 'desktop' && (formFactor === 'mobile' || tooNarrowForTable));
+  const resolvedDensity = formFactor === 'desktop' && density === 'default' ? 'compact' : density;
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
@@ -184,7 +185,7 @@ export function GuardrDataTable<T>({
 
   return (
     <div ref={measureRef as React.RefObject<HTMLDivElement | null>} className={`uber-table-wrap ${className}`.trim()}>
-      <table className={`uber-table${density === 'compact' ? ' uber-table--compact' : ''}`}>
+      <table className={`uber-table${resolvedDensity === 'compact' ? ' uber-table--compact' : ''}`}>
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <thead>
           <tr>
