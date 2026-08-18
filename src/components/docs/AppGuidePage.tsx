@@ -18,7 +18,7 @@ import { UserManualDownloads } from './UserManualDownloads';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StaffListFilterTabs } from '../staff/StaffListFilterTabs';
 import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
 import { WorkbenchEmpty, WorkbenchSplit } from '../baseui/layout/WorkbenchLayout';
@@ -510,7 +510,7 @@ export function AppGuidePage({
   tutorialActive,
   onStartTutorial,
 }: AppGuidePageProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
 
   const tabs = useMemo(

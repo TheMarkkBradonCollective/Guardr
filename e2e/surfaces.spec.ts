@@ -97,39 +97,95 @@ test.describe('surface resolution', () => {
     await waitForSurface(page, 'mobile');
     const mobile = await read();
 
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    const tablet = await read();
+
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/');
     await waitForSurface(page, 'desktop');
     const desktop = await read();
 
-    // Touch surfaces clear the 48px hit-area floor; the pointer surface trades
-    // hit area for density. If these ever match, one surface is being scaled.
+    // Each application authors its own control scale. If tablet ever matches
+    // mobile or desktop, one surface is being stretched instead of designed.
     expect(mobile.target).toBe('48px');
+    expect(tablet.target).toBe('44px');
     expect(desktop.target).toBe('32px');
     expect(mobile.navWidth).toBe('0px');
-    expect(desktop.navWidth).not.toBe('0px');
+    expect(tablet.navWidth).not.toBe('0px');
+    expect(tablet.navWidth).not.toBe(desktop.navWidth);
     expect(mobile.bottomBar).not.toBe('0px');
+    expect(tablet.bottomBar).toBe('0px');
+    expect(desktop.navWidth).not.toBe('0px');
   });
 
-  test('surface chrome never leaks across device types', async ({ page }) => {
-    // Mobile keeps the classic drawer + bottom nav; tablet owns the rail;
-    // desktop owns the sidebar, status bar, and command palette.
+  test('each public homepage is independently designed', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    await expect(page.locator('.sfd-sidebar, .sfd-statusbar, .sfd-palette, .sft-rail')).toHaveCount(0);
+    await expect(page.locator('.mbl-landing')).toHaveCount(1);
+    await expect(page.locator('.dsk-landing-page, .uber-style-landing')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'I need coverage' })).toBeVisible();
+
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/?ui=tablet');
+    await waitForSurface(page, 'tablet');
+    await expect(page.locator('.uber-style-landing')).toHaveCount(1);
+    await expect(page.locator('.mbl-landing, .dsk-landing-page')).toHaveCount(0);
+
+    await page.setViewportSize(VIEWPORTS.desktop);
+    await page.goto('/?ui=desktop');
+    await waitForSurface(page, 'desktop');
+    await expect(page.locator('.dsk-landing-page')).toHaveCount(1);
+    await expect(page.locator('.mbl-landing, .uber-style-landing')).toHaveCount(0);
+  });
+
+  test('surface chrome never leaks across device types', async ({ page }) => {
+    // Mobile owns the tab bar and sheets; tablet owns the rail; desktop owns
+    // the sidebar, status bar, and command palette.
+    await page.setViewportSize(VIEWPORTS.phone);
+    await page.goto('/?ui=mobile');
+    await waitForSurface(page, 'mobile');
+    await expect(page.locator('.sfd-sidebar, .sfd-statusbar, .sfd-palette, .sft-rail, .mobility-drawer, .uber-bottom-nav')).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/?ui=desktop');
     await waitForSurface(page, 'desktop');
     await expect(
-      page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split, .uber-bottom-nav, .mobility-drawer'),
+      page.locator('.sfm-tabbar, .sfm-sheet, .sft-rail, .sft-split, .uber-bottom-nav, .mobility-drawer, .mbl-landing'),
     ).toHaveCount(0);
 
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/?ui=tablet');
     await waitForSurface(page, 'tablet');
-    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav')).toHaveCount(0);
+    await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav, .mbl-landing')).toHaveCount(0);
+  });
+
+  test('tablet landing is its own page, not scaled desktop or mobile', async ({ page }) => {
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    await expect(page.locator('.uber-style-landing--tablet')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--mobile')).toHaveCount(0);
+    await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
+  });
+
+  test('a 1100px landscape width stays on the tablet app, not desktop', async ({ page }) => {
+    // Tailwind's lg floor is 1024px, so formFactor would be desktop here. The
+    // tablet application owns 744–1179px and must keep its own landing + tokens.
+    await page.setViewportSize({ width: 1100, height: 820 });
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    expect(await surfaceOf(page)).toBe('tablet');
+    await expect(page.locator('body.sf-tablet')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--tablet')).toHaveCount(1);
+    await expect(page.locator('.dsk-landing-nav, body.sf-desktop')).toHaveCount(0);
+    const target = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--sf-target').trim(),
+    );
+    expect(target).toBe('44px');
   });
 
   test('shell canvases are scrollable when content overflows', async ({ page }) => {
@@ -160,8 +216,8 @@ test.describe('surface resolution', () => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    // Preview/mobile kit path; classic GuardrDrawerShell uses inline overflow:auto
-    // on .mobility-content-inner once a signed-in role shell mounts.
+    // The mobile kit canvas is the signed-in phone shell; public pages still
+    // publish the same overflow token so a forced ?ui=mobile preview stays scrollable.
     expect(await measure('sfm-shell-canvas')).toMatch(/auto|scroll/);
   });
 });

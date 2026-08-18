@@ -25,6 +25,7 @@ export function MobilityLandingNav({
 }: MobilityLandingNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = formFactor === 'mobile';
+  const isTablet = formFactor === 'tablet';
 
   const navLinks = [
     { label: 'For clients',  onClick: () => onNavigateToAuth('client', 'sign-up') },
@@ -40,8 +41,8 @@ export function MobilityLandingNav({
       role="banner"
       paddingTop={`max(12px, env(safe-area-inset-top))`}
       paddingBottom="scale400"
-      paddingLeft={isMobile ? 'scale500' : 'scale800'}
-      paddingRight={isMobile ? 'scale500' : 'scale800'}
+      paddingLeft={isMobile ? 'scale500' : isTablet ? 'scale700' : 'scale800'}
+      paddingRight={isMobile ? 'scale500' : isTablet ? 'scale700' : 'scale800'}
     >
       <Block
         display="flex"
@@ -79,7 +80,7 @@ export function MobilityLandingNav({
           </Block>
 
           {!isMobile ? (
-            <Block as="nav" display="flex" alignItems="center" gridGap="scale500" aria-label="Main">
+            <Block as="nav" display="flex" alignItems="center" gridGap={isTablet ? 'scale400' : 'scale500'} aria-label="Main">
               {navLinks.map((link) => (
                 <button key={link.label} type="button" className="uber-landing-nav-link" onClick={link.onClick}>
                   {link.label}
@@ -199,13 +200,14 @@ interface MobilityLandingHeroProps {
 export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }: MobilityLandingHeroProps) {
   const [, theme] = useStyletron();
   const isMobile  = formFactor === 'mobile';
+  const isTablet  = formFactor === 'tablet';
   const isDesktop = formFactor === 'desktop';
 
   const goClient = () => onNavigateToAuth('client', 'sign-up');
   const goGuard  = () => onNavigateToAuth('guard',  'sign-up');
 
   const heroPanel = (
-    <Block maxWidth={isDesktop ? '460px' : '100%'} width="100%">
+    <Block maxWidth={isDesktop ? '460px' : isTablet ? '32rem' : '100%'} width="100%">
       {/* Location context */}
       <Block display="flex" alignItems="center" gridGap="scale200" marginBottom="scale500">
         <MapPin size={14} color={theme.colors.contentSecondary} />
@@ -223,9 +225,9 @@ export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }
           fontWeight: 700,
           fontSize: isMobile
             ? 'clamp(2.25rem, 8vw, 2.75rem)'
-            : isDesktop
-            ? 'clamp(2.75rem, 4vw, 3.5rem)'
-            : 'clamp(2.25rem, 5vw, 3rem)',
+            : isTablet
+            ? 'clamp(2.35rem, 4.6vw, 3.05rem)'
+            : 'clamp(2.75rem, 4vw, 3.5rem)',
           lineHeight: 1.05,
           letterSpacing: '-0.03em',
           color: theme.colors.contentPrimary,
@@ -280,7 +282,8 @@ export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }
           overrides={{
             BaseButton: {
               style: {
-                borderRadius: '8px',
+                borderRadius: isTablet ? '10px' : '8px',
+                minHeight: isTablet ? '46px' : undefined,
                 minWidth: isMobile ? undefined : '160px',
                 width: isMobile ? '100%' : undefined,
               },
@@ -295,7 +298,8 @@ export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }
           overrides={{
             BaseButton: {
               style: {
-                borderRadius: '8px',
+                borderRadius: isTablet ? '10px' : '8px',
+                minHeight: isTablet ? '46px' : undefined,
                 width: isMobile ? '100%' : undefined,
               },
             },
@@ -313,27 +317,33 @@ export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }
     </Block>
   );
 
-  if (isDesktop || formFactor === 'tablet') {
+  if (isDesktop || isTablet) {
     return (
       <Block
         as="section"
         aria-label="Hero"
-        className="uber-landing-hero"
-        padding={isMobile ? 'scale600' : 'scale1000'}
-        paddingTop={isMobile ? 'scale800' : 'scale1200'}
+        className={`uber-landing-hero${isTablet ? ' uber-landing-hero--tablet' : ''}`}
+        padding={isTablet ? 'scale800' : 'scale1000'}
+        paddingTop={isTablet ? 'scale900' : 'scale1200'}
         backgroundColor="backgroundPrimary"
       >
         <Block
-          maxWidth="1280px"
+          maxWidth={isTablet ? '1080px' : '1280px'}
           margin="0 auto"
           display="grid"
-          gridTemplateColumns={['1fr', '1fr', '1fr 1fr']}
-          gridGap="scale1000"
+          gridTemplateColumns={
+            isTablet ? 'minmax(0, 1.15fr) minmax(16rem, 0.85fr)' : ['1fr', '1fr', '1fr 1fr']
+          }
+          gridGap={isTablet ? 'scale800' : 'scale1000'}
           alignItems="center"
         >
           {heroPanel}
           {heroVisual ? (
-            <Block className="uber-landing-hero-visual" role="img" aria-label="Guardr operations preview">
+            <Block
+              className={`uber-landing-hero-visual${isTablet ? ' uber-landing-hero-visual--tablet' : ''}`}
+              role="img"
+              aria-label="Guardr operations preview"
+            >
               {heroVisual}
             </Block>
           ) : null}

@@ -44,7 +44,7 @@ import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { useClientCapabilities } from './ClientCapabilitiesContext';
 
@@ -77,7 +77,7 @@ export function DirectGuardRequestFlow({
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const caps = useClientCapabilities();
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => getDefaultShiftStart(), []);

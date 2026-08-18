@@ -5,7 +5,7 @@ import { PlatformSettings } from '../../lib/platformSettings';
 import { canBroadcastToAllUsers } from '../../lib/permissions';
 import { sendBroadcastPush } from '../../lib/pushApi';
 import { AppFormSection } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import { StaffMgmtSection } from './StaffMgmtSection';
@@ -53,7 +53,7 @@ export function StaffSettingsPanel({
   onSaveCompanyPublicDocument,
   onSetCompanyPlacardPublicEnabled,
 }: StaffSettingsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const isDesktop = formFactor === 'desktop';
   const canBroadcast = canBroadcastToAllUsers(currentUser);
   const [broadcastTitle, setBroadcastTitle] = useState('Guardr');

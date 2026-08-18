@@ -1064,3 +1064,492 @@ body[data-surface='mobile'] {
   flex-direction: column;
   gap: 10px;
 }
+
+.sfm-shell-head-spacer {
+  width: var(--sf-target);
+  height: var(--sf-target);
+  flex-shrink: 0;
+}
+
+.sfm-shell-identity .sfm-shell-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+.sfm-more-footer {
+  margin-top: var(--sf-section-gap);
+  padding-top: 12px;
+  border-top: 1px solid var(--sf-line);
+}
+
+.sfm-account-sheet .account-menu--panel {
+  width: 100%;
+}
+
+.sfm-account-sheet .account-menu-item {
+  min-height: var(--sf-target);
+}
+
+/* ── Landscape (phone rotated) ───────────────────────────────────────────── */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-surface='mobile'] .sfm-shell-header {
+    height: calc(44px + var(--sf-safe-top));
+  }
+
+  body[data-surface='mobile'] .sfm-tab-label {
+    display: none;
+  }
+
+  body[data-surface='mobile'] .sfm-tabbar-inner {
+    height: 48px;
+  }
+
+  body[data-surface='mobile'] .sfm-shell[data-tabs='true'] .sfm-shell-canvas {
+    padding-bottom: calc(48px + var(--sf-safe-bottom));
+  }
+
+  body[data-surface='mobile'] .mbl-landing-hero {
+    padding-top: 12px;
+  }
+
+  body[data-surface='mobile'] .mbl-landing-title {
+    font-size: 28px;
+  }
+}
+
+/* ── In-app pages inside the mobile shell ──────────────────────────────────
+   Feature screens still share domain components with tablet/desktop. These
+   rules keep that content on the phone's density and hide chrome that belongs
+   to the other two applications. */
+
+body[data-surface='mobile'] .sfm-shell .uber-page-band,
+body[data-surface='mobile'] .sfm-shell .uber-direct-top-header,
+body[data-surface='mobile'] .sfm-shell .uber-rail,
+body[data-surface='mobile'] .sfm-shell .sfd-statusbar,
+body[data-surface='mobile'] .sfm-shell .mobility-drawer,
+body[data-surface='mobile'] .sfm-shell .uber-bottom-nav {
+  display: none !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .uber-workbench-split,
+body[data-surface='mobile'] .sfm-shell .workbench-split {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-screen-padded {
+  padding-left: var(--sf-gutter);
+  padding-right: var(--sf-gutter);
+}
+
+body[data-surface='mobile'] .sfm-shell .app-item-card,
+body[data-surface='mobile'] .sfm-shell .app-inbox-row {
+  min-height: var(--sf-row-h);
+}
+
+/* ── Independent mobile landing ──────────────────────────────────────────── */
+
+body[data-surface='mobile'] .mbl-landing {
+  min-height: 100dvh;
+  padding-top: var(--sf-safe-top);
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  font-family: var(--sf-font);
+}
+
+body[data-surface='mobile'] .mbl-landing-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sf-line);
+  background: color-mix(in srgb, var(--sf-paper) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(16px);
+}
+
+body[data-surface='mobile'] .mbl-landing-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  font-family: var(--sf-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+body[data-surface='mobile'] .mbl-landing-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body[data-surface='mobile'] .mbl-landing-login,
+body[data-surface='mobile'] .mbl-landing-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--sf-target);
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--sf-radius-pill);
+  background: none;
+  color: var(--sf-ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body[data-surface='mobile'] .mbl-landing-menu {
+  width: var(--sf-target);
+  padding: 0;
+}
+
+body[data-surface='mobile'] .mbl-landing-menu-sheet {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='mobile'] .mbl-landing-menu-item {
+  display: flex;
+  align-items: center;
+  min-height: var(--sf-target);
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--sf-line);
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+body[data-surface='mobile'] .mbl-landing-menu-item:last-child {
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .mbl-landing-main {
+  padding-bottom: calc(88px + var(--sf-safe-bottom));
+}
+
+body[data-surface='mobile'] .mbl-landing-hero {
+  padding: 28px var(--sf-gutter) 8px;
+}
+
+body[data-surface='mobile'] .mbl-landing-kicker {
+  margin: 0 0 10px;
+  color: var(--sf-ink-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+body[data-surface='mobile'] .mbl-landing-title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(2rem, 8.4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: var(--sf-tracking-display);
+  line-height: 1.08;
+}
+
+body[data-surface='mobile'] .mbl-landing-lede {
+  max-width: 34ch;
+  margin: 12px 0 0;
+  color: var(--sf-ink-secondary);
+  font-size: var(--sf-type-body);
+  line-height: var(--sf-leading-body);
+}
+
+body[data-surface='mobile'] .mbl-landing-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+body[data-surface='mobile'] .mbl-landing-role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card);
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-surface='mobile'] .mbl-landing-role:active {
+  transform: scale(0.985);
+}
+
+body[data-surface='mobile'] .mbl-landing-role--primary {
+  border-color: transparent;
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
+}
+
+body[data-surface='mobile'] .mbl-landing-role-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+body[data-surface='mobile'] .mbl-landing-role-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+body[data-surface='mobile'] .mbl-landing-role-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+body[data-surface='mobile'] .mbl-landing-role-sub {
+  color: inherit;
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+body[data-surface='mobile'] .mbl-landing-trust {
+  padding: 8px 0 4px;
+}
+
+body[data-surface='mobile'] .mbl-landing-trust-scroller {
+  display: flex;
+  gap: 8px;
+  padding: 0 var(--sf-gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+body[data-surface='mobile'] .mbl-landing-trust-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-surface='mobile'] .mbl-landing-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-paper);
+  font-size: 13px;
+  font-weight: 600;
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+
+body[data-surface='mobile'] .mbl-landing-list,
+body[data-surface='mobile'] .mbl-landing-apps {
+  padding: 20px var(--sf-gutter) 8px;
+}
+
+body[data-surface='mobile'] .mbl-landing-section-title {
+  margin: 0 0 12px;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+body[data-surface='mobile'] .mbl-landing-rows {
+  overflow: hidden;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card);
+  background: var(--sf-paper);
+}
+
+body[data-surface='mobile'] .mbl-landing-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--sf-row-h);
+  padding: 14px 14px;
+  border: none;
+  border-bottom: 1px solid var(--sf-line);
+  background: none;
+  color: inherit;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+body[data-surface='mobile'] .mbl-landing-row:last-child {
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .mbl-landing-row:active {
+  background: var(--sf-paper-sunken);
+}
+
+body[data-surface='mobile'] .mbl-landing-row-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sf-paper-sunken);
+}
+
+body[data-surface='mobile'] .mbl-landing-row-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+body[data-surface='mobile'] .mbl-landing-row-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+body[data-surface='mobile'] .mbl-landing-row-body {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--sf-ink-secondary);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+body[data-surface='mobile'] .mbl-landing-signin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px var(--sf-gutter);
+  padding: 16px;
+  border-radius: var(--sf-radius-card);
+  background: var(--sf-paper-sunken);
+}
+
+body[data-surface='mobile'] .mbl-landing-signin-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+body[data-surface='mobile'] .mbl-landing-signin-copy h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+body[data-surface='mobile'] .mbl-landing-signin-copy p {
+  margin: 4px 0 0;
+  color: var(--sf-ink-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+body[data-surface='mobile'] .mbl-landing-signin-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--sf-line-strong);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body[data-surface='mobile'] .mbl-landing-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px var(--sf-gutter) 16px;
+  color: var(--sf-ink-secondary);
+  font-size: 12px;
+}
+
+body[data-surface='mobile'] .mbl-landing-footer p {
+  margin: 0;
+}
+
+body[data-surface='mobile'] .mbl-landing-legal {
+  justify-content: flex-start;
+}
+
+body[data-surface='mobile'] .mbl-landing-dock {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  padding: 10px var(--sf-gutter) calc(10px + var(--sf-safe-bottom));
+  border-top: 1px solid var(--sf-line);
+  background: color-mix(in srgb, var(--sf-paper) 92%, transparent);
+  backdrop-filter: saturate(160%) blur(16px);
+}
+
+body[data-surface='mobile'] .mbl-landing-dock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--sf-button-h);
+  border: none;
+  border-radius: var(--sf-radius-control);
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body[data-surface='mobile'] .mbl-landing-dock-btn:active {
+  transform: scale(0.98);
+}
+
+/* Public marketing chrome from the other two applications must never paint here. */
+body[data-surface='mobile'] .dsk-landing-page,
+body[data-surface='mobile'] .uber-style-landing,
+body[data-surface='mobile'] .uber-landing-nav,
+body[data-surface='mobile'] .mobility-landing-cta-bar {
+  display: none !important;
+}

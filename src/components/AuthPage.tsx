@@ -57,6 +57,7 @@ import {
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { useSurfaceKind } from '../surfaces';
 import { useStyletron } from 'baseui';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
 import {
@@ -326,8 +327,10 @@ export function AuthPage({
   open = true,
 }: AuthPageProps) {
   const isSheet = presentation === 'sheet';
-  const { formFactor, shellKind, viewSurface } = useDevice();
-  const isDesktopAuth = !isSheet && formFactor === 'desktop';
+  const { shellKind, viewSurface } = useDevice();
+  const surface = useSurfaceKind();
+  const isDesktopAuth = !isSheet && surface === 'desktop';
+  const isTabletAuth = !isSheet && surface === 'tablet';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client' | 'staff'>(
     initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client'
@@ -1767,7 +1770,7 @@ export function AuthPage({
 
   return (
     <div
-      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}${useRoleChoiceAuthLayout ? ' auth-experience--role-choice' : ''}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience auth-experience--uber${isDesktopAuth ? ' dsk-auth' : ''}${isTabletAuth ? ' auth-experience--tablet' : ''}${useRoleChoiceAuthLayout ? ' auth-experience--role-choice' : ''}`}
       id="guardr-auth-root"
     >
       {isDesktopAuth ? (

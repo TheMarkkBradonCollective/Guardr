@@ -28,7 +28,7 @@ import {
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
 import { isStaffRole } from '../../lib/permissions';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
   WorkbenchPanel,
@@ -150,7 +150,7 @@ export function StaffOverviewDesktop({
   canUpdateJobs = false,
   staffRole,
 }: StaffOverviewDesktopProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const {
     config,
     metrics,

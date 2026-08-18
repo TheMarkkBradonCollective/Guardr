@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   type StaffCreateActionKey,
   useStaffShellCreateRegistration,
@@ -11,7 +11,7 @@ export function useStaffCreateFormOpen(
   options?: { showInlineTriggerOnDesktop?: boolean },
 ) {
   const [open, setOpen] = useState(false);
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const hideTrigger = formFactor === 'desktop' && !options?.showInlineTriggerOnDesktop;
 
   const requestOpen = useCallback(() => setOpen(true), []);

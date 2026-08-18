@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../../types';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffAnalyticsPanel } from './StaffAnalyticsPanel';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
@@ -24,7 +24,7 @@ export function StaffAnalyticsInsightsPanel({
   tickets = [],
   showFinancials,
 }: StaffAnalyticsInsightsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [tab, setTab] = useState<AnalyticsInsightsTab>('sla');
   const isDesktop = formFactor === 'desktop';
 

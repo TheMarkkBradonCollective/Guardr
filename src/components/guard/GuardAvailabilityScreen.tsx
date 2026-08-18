@@ -2,7 +2,7 @@ import React from 'react';
 import type { SecurityGuard } from '../../types';
 import { GuardAvailabilityCalendar } from './GuardAvailabilityCalendar';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface GuardAvailabilityScreenProps {
@@ -10,7 +10,7 @@ interface GuardAvailabilityScreenProps {
 }
 
 export function GuardAvailabilityScreen({ guard }: GuardAvailabilityScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const calendar = <GuardAvailabilityCalendar guardId={guard.id} />;
 
   if (formFactor === 'desktop') {

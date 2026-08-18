@@ -21,38 +21,43 @@
   -webkit-text-size-adjust: 100%;
 }
 
-/* ─── WEBSITE — DESKTOP (browser-desktop) ──────────────────────────────── */
+/* ─── WEBSITE — DESKTOP operations centre ──────────────────────────────── */
 
-body[data-view-surface="browser-desktop"] {
+body[data-surface="desktop"] {
 
-  /* Wider content areas, more generous whitespace */
+  /* Wider content areas, denser than tablet — pointer can read small type */
   .app-page-content-inner,
   .uber-workbench,
-  .dashboard-content { max-width: 1600px; }
+  .dashboard-content { max-width: 1760px; }
 
-  /* Desktop tables — full data density */
+  /* Compact table density — not the tablet 44px-row treatment */
   .uber-workbench-table td,
-  .uber-workbench-table th { padding: 14px 16px; }
+  .uber-workbench-table th { padding: 8px 12px; }
 
-  /* Hover states visible on mouse */
+  /* Hover states carry meaning on a pointer surface */
   .app-metric-cell-clickable:hover .guardr-card-root {
-    border-color: var(--uber-accent, #000000);
+    border-color: var(--sf-line-strong, #c9c9c9);
   }
-
-  /* Desktop nav persistent sidebar */
-  .uber-app-shell .mobility-header { border-bottom-width: 1px; }
 
   /* Dense multi-column workbench */
   .uber-workbench-grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 1.25rem;
+    gap: 1rem;
+  }
+
+  /* Sharper cards than the tablet 14px radius */
+  .uber-card,
+  .guardr-card-root,
+  .app-item-card {
+    border-radius: 8px;
   }
 }
 
-/* Ultra-wide desktop — prevent stretched emptiness */
-@media (min-width: 1600px) {
-  body[data-view-surface="browser-desktop"] .mobility-content-inner {
-    max-width: 1600px;
+/* Ultra-wide — cap the canvas so workbench columns do not stretch empty */
+@media (min-width: 1760px) {
+  body[data-surface="desktop"] .sfd-workspace,
+  body[data-surface="desktop"] .uber-workbench {
+    max-width: 1760px;
     margin-inline: auto;
   }
 }

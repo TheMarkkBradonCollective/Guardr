@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Override legacy index.css flex-row auth layout — we use dsk-auth-split grid */
-body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth {
+body[data-surface="desktop"] .page-shell.auth-experience.dsk-auth {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
@@ -17,7 +17,7 @@ body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth {
   font-family: var(--uber-font-text, "Uber Move Text", system-ui, sans-serif);
 }
 
-body[data-form-factor="desktop"] .dsk-auth-split {
+body[data-surface="desktop"] .dsk-auth-split {
   display: grid;
   grid-template-columns: minmax(22rem, 1fr) minmax(22rem, 1fr);
   width: 100%;
@@ -28,7 +28,7 @@ body[data-form-factor="desktop"] .dsk-auth-split {
 
 /* ─── Left: black editorial panel ─────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .dsk-auth-editorial {
+body[data-surface="desktop"] .dsk-auth-editorial {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -38,17 +38,17 @@ body[data-form-factor="desktop"] .dsk-auth-editorial {
   min-height: 100%;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-editorial-top {
+body[data-surface="desktop"] .dsk-auth-editorial-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-editorial-spacer {
+body[data-surface="desktop"] .dsk-auth-editorial-spacer {
   flex: 1;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-brand {
+body[data-surface="desktop"] .dsk-auth-brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -56,7 +56,7 @@ body[data-form-factor="desktop"] .dsk-auth-brand {
 
 /* dsk-auth-logo inversion is handled by .guardr-logo rules in Base Web-global.css */
 
-body[data-form-factor="desktop"] .dsk-auth-wordmark {
+body[data-surface="desktop"] .dsk-auth-wordmark {
   font-family: var(--uber-font-display, "Uber Move", sans-serif);
   font-size: 1.125rem;
   font-weight: 800;
@@ -64,12 +64,12 @@ body[data-form-factor="desktop"] .dsk-auth-wordmark {
   color: #ffffff;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-quote {
+body[data-surface="desktop"] .dsk-auth-quote {
   margin: 0;
   max-width: 30rem;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-quote-text {
+body[data-surface="desktop"] .dsk-auth-quote-text {
   margin: 0 0 1rem;
   font-size: 1.0625rem;
   line-height: 1.6;
@@ -77,20 +77,20 @@ body[data-form-factor="desktop"] .dsk-auth-quote-text {
   color: #ffffff;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-quote-author {
+body[data-surface="desktop"] .dsk-auth-quote-author {
   font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-quote-role {
+body[data-surface="desktop"] .dsk-auth-quote-role {
   font-weight: 400;
   color: rgba(255, 255, 255, 0.62);
 }
 
 /* ─── Right: white form panel ─────────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .dsk-auth-form-panel {
+body[data-surface="desktop"] .dsk-auth-form-panel {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -100,7 +100,7 @@ body[data-form-factor="desktop"] .dsk-auth-form-panel {
   overflow: hidden;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-topbar {
+body[data-surface="desktop"] .dsk-auth-form-topbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -110,13 +110,13 @@ body[data-form-factor="desktop"] .dsk-auth-form-topbar {
   width: 100%;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-topbar-actions {
+body[data-surface="desktop"] .dsk-auth-topbar-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-back {
+body[data-surface="desktop"] .dsk-auth-back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -134,12 +134,12 @@ body[data-form-factor="desktop"] .dsk-auth-back {
   transition: opacity 120ms ease, transform 120ms ease;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-back:hover {
+body[data-surface="desktop"] .dsk-auth-back:hover {
   opacity: 0.88;
   color: var(--uber-bg, #ffffff);
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-scroll {
+body[data-surface="desktop"] .dsk-auth-form-scroll {
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -152,7 +152,7 @@ body[data-form-factor="desktop"] .dsk-auth-form-scroll {
   overscroll-behavior: contain;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-inner {
+body[data-surface="desktop"] .dsk-auth-form-inner {
   width: 100%;
   max-width: 24rem;
   /* Auto margins centre the card without clipping a tall form. */
@@ -165,37 +165,37 @@ body[data-form-factor="desktop"] .dsk-auth-form-inner {
   -webkit-backdrop-filter: none !important;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-input {
+body[data-surface="desktop"] .dsk-auth-form-inner .uber-input {
   border-radius: 8px;
   border-color: #e2e2e2;
   font-size: 0.9375rem;
   width: 100%;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-inner .uber-label {
+body[data-surface="desktop"] .dsk-auth-form-inner .uber-label {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--uber-text, #000000);
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-inner form > .mt-3 {
+body[data-surface="desktop"] .dsk-auth-form-inner form > .mt-3 {
   margin-top: 1.25rem;
 }
 
-body[data-form-factor="desktop"] .dsk-auth-form-inner .app-checkbox + span,
-body[data-form-factor="desktop"] .dsk-auth-form-inner label:has(.app-checkbox) {
+body[data-surface="desktop"] .dsk-auth-form-inner .app-checkbox + span,
+body[data-surface="desktop"] .dsk-auth-form-inner label:has(.app-checkbox) {
   font-size: 0.75rem;
   line-height: 1.5;
   color: var(--uber-text-muted, #767676);
 }
 
 /* Hide mobile auth hero when desktop split is active */
-body[data-form-factor="desktop"] .auth-experience:not(.dsk-auth) .auth-hero {
+body[data-surface="desktop"] .auth-experience:not(.dsk-auth) .auth-hero {
   display: none;
 }
 
 @media (min-width: 1280px) {
-  body[data-form-factor="desktop"] .dsk-auth-split {
+  body[data-surface="desktop"] .dsk-auth-split {
     grid-template-columns: minmax(26rem, 46%) minmax(0, 1fr);
   }
 }

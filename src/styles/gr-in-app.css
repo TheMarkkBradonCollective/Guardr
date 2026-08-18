@@ -693,18 +693,18 @@ html.theme-dark .app-form-input:focus { background: var(--uber-elevated, #2b2b2b
 
 /* ─── Desktop workspace — Guardr desktop app layout ────────────────────────── */
 
-body[data-form-factor="desktop"] .app-item-card,
-body[data-form-factor="desktop"] .wf-list-card {
+body[data-surface="desktop"] .app-item-card,
+body[data-surface="desktop"] .wf-list-card {
   padding: 14px 24px;
 }
 
-body[data-form-factor="desktop"] .app-screen-title { font-size: 2rem; padding: 28px 32px 8px; }
-body[data-form-factor="desktop"] .app-section-head { padding: 24px 32px 12px; }
-body[data-form-factor="desktop"] .app-search-inline { margin: 0 32px 16px; }
-body[data-form-factor="desktop"] .uber-quick-grid { padding: 12px 32px; }
-body[data-form-factor="desktop"] .uber-live-card { margin: 12px 32px; }
-body[data-form-factor="desktop"] .uber-earnings-banner { padding: 28px 32px; }
-body[data-form-factor="desktop"] .uber-profile-row { padding: 18px 32px; }
+body[data-surface="desktop"] .app-screen-title { font-size: 2rem; padding: 28px 32px 8px; }
+body[data-surface="desktop"] .app-section-head { padding: 24px 32px 12px; }
+body[data-surface="desktop"] .app-search-inline { margin: 0 32px 16px; }
+body[data-surface="desktop"] .uber-quick-grid { padding: 12px 32px; }
+body[data-surface="desktop"] .uber-live-card { margin: 12px 32px; }
+body[data-surface="desktop"] .uber-earnings-banner { padding: 28px 32px; }
+body[data-surface="desktop"] .uber-profile-row { padding: 18px 32px; }
 
 /* ─── Tablet refinements ─────────────────────────────────────────────────── */
 
@@ -850,7 +850,7 @@ html.theme-dark .uber-cta-ghost { color: #fff; border-color: #fff; }
 }
 
 html.theme-dark .uber-sticky-cta { background: var(--uber-bg, #000); }
-body[data-form-factor="desktop"] .uber-sticky-cta { padding: 16px 32px; }
+body[data-surface="desktop"] .uber-sticky-cta { padding: 16px 32px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LEGACY CLASS OVERRIDES — map existing class names to Uber design language

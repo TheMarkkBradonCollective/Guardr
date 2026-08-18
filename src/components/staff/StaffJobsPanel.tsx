@@ -3,7 +3,7 @@ import { Briefcase, Clock, Search } from 'lucide-react';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPlatformFeeSchedules, PlatformFeeConfig } from '../../lib/payments';
 import { formatShiftRange } from '../../lib/dates';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
@@ -111,7 +111,7 @@ export function StaffJobsPanel({
   feeConfig,
   feeSchedules,
 }: StaffJobsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);

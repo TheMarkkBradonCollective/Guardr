@@ -1,89 +1,379 @@
-/* Tablet merge shell — persistent sidebar + touch content (768–1023px).
-   Signed-in chrome uses GuardrDrawerShell via resolveMobilityChrome (not a separate icon rail).
-   Applies to browser, PWA, and APK at tablet widths. */
+/* ============================================================================
+   Tablet application look & feel.
+   ============================================================================
+   Scoped to the loaded tablet surface (body.sf-tablet / data-surface="tablet"),
+   not Tailwind's 768–1023 form-factor window. A 1100px iPad and a 13" Android
+   tablet must not inherit desktop workbench chrome or the phone stack.
 
-body[data-form-factor="tablet"] {
-  --sidebar-width-tablet: 220px;
-  --space-touch-tablet: 44px;
+   Design: two-handed touch on a large canvas. Persistent labelled rail, split
+   views, 44px targets, sunken paper, 14px cards. No bottom tab bar. No hover-
+   only meaning. Portrait stacks splits; landscape keeps master/detail beside.
+   ========================================================================= */
+
+body.sf-tablet,
+body[data-surface="tablet"] {
+  --sidebar-width-tablet: var(--sf-nav-w, 236px);
+  --space-touch-tablet: var(--sf-target, 44px);
+  --space-gutter: var(--sf-gutter, 24px);
+  --space-touch: var(--sf-target, 44px);
+  --space-card: 1rem;
+  --radius-app: var(--sf-radius-card, 14px);
+  --radius-app-sm: var(--sf-radius-control, 10px);
+  --radius-app-lg: var(--sf-radius-surface, 16px);
+  --radius-input: var(--sf-radius-control, 10px);
+  --ops-list-bleed: 1.25rem;
 }
 
-body[data-form-factor="tablet"] .uber-app-shell.mobility-shell {
-  --mobility-sidebar-width: var(--sidebar-width-tablet, 220px);
+/* ── Chrome: never the phone footer, never the desktop icon rail ─────────── */
+
+body.sf-tablet .uber-bottom-nav,
+body.sf-tablet .bottom-nav-inner,
+body.sf-tablet .uber-bottom-nav-inner,
+body.sf-tablet .mobility-bottom-nav,
+body[data-surface="tablet"] .uber-bottom-nav,
+body[data-surface="tablet"] .bottom-nav-inner {
+  display: none !important;
 }
 
-/* Touch-first controls — no hover-only affordances */
-body[data-form-factor="tablet"] .mobility-icon-btn,
-body[data-form-factor="tablet"] button:not(.link-btn),
-body[data-form-factor="tablet"] [role="button"] {
+body.sf-tablet .sft-shell {
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .sft-shell-canvas {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .sft-shell-header {
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .sft-rail {
+  background: var(--sf-paper, #ffffff);
+}
+
+/* Touch-first controls — press/active carries meaning, not hover */
+body.sf-tablet .mobility-icon-btn,
+body.sf-tablet button:not(.link-btn):not(.uber-landing-nav-link):not(.uber-landing-text-link),
+body.sf-tablet [role="button"]:not(.uber-landing-nav-link) {
   min-height: var(--space-touch-tablet, 44px);
 }
 
-body[data-form-factor="tablet"] .uber-workbench-table td,
-body[data-form-factor="tablet"] .uber-workbench-table th {
+body.sf-tablet .sft-rail-item,
+body.sf-tablet .sft-rail-quick-btn,
+body.sf-tablet .sft-icon-btn {
+  min-height: var(--sf-target, 44px);
+}
+
+body.sf-tablet .uber-workbench-table td,
+body.sf-tablet .uber-workbench-table th {
   padding: 12px 14px;
 }
 
-/* List/detail split — hybrid density */
-body[data-form-factor="tablet"] .tablet-split-panel {
-  display: grid;
-  grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr);
-  gap: 1rem;
-  min-height: 0;
-  align-items: stretch;
+body.sf-tablet input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body.sf-tablet select,
+body.sf-tablet textarea {
+  min-height: var(--sf-input-h, 46px);
+  border-radius: var(--sf-radius-control, 10px);
 }
 
-body[data-form-factor="tablet"] .tablet-split-panel .split-list-pane,
-body[data-form-factor="tablet"] .tablet-split-panel .split-detail-pane {
+/* ── Operations canvas (not the phone field shell) ───────────────────────── */
+
+body.sf-tablet .staff-ops-tablet-shell,
+body.sf-tablet .sft-shell-canvas .staff-ops-mobile-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  background: transparent;
+}
+
+body.sf-tablet .staff-ops-tablet-toolbar,
+body.sf-tablet .sft-shell-canvas .staff-ops-mobile-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px;
+}
+
+body.sf-tablet .staff-ops-tablet-body,
+body.sf-tablet .sft-shell-canvas .staff-ops-mobile-body {
+  min-height: 0;
+  overflow: visible;
+}
+
+body.sf-tablet .sft-shell-canvas .app-screen,
+body.sf-tablet .sft-shell-canvas .app-screen-padded,
+body.sf-tablet .client-content-shell {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+body.sf-tablet .sft-shell-canvas .app-dashboard-hero-title,
+body.sf-tablet .sft-shell-canvas .app-screen-header-title,
+body.sf-tablet .sft-screen-title {
+  letter-spacing: var(--sf-tracking-display, -0.025em);
+}
+
+/* ── Master/detail split — tablet's default page structure ───────────────── */
+
+body.sf-tablet .tablet-split-panel,
+body[data-surface="tablet"] .tablet-split-panel {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.4fr) minmax(0, 1fr);
+  gap: 0;
+  min-height: min(70dvh, 42rem);
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-surface, 16px);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .tablet-split-panel .split-list-pane,
+body.sf-tablet .tablet-split-panel .split-detail-pane {
   min-height: 0;
   overflow: visible;
   overscroll-behavior: contain;
 }
 
-/* Staff ops on tablet: full-page scroll (toolbar + list/detail together). */
-body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.staff-ops-mobile-shell),
-body[data-form-factor="tablet"] .uber-app-shell .mobility-content-inner:has(.app-full-page-detail) {
-  overflow-x: hidden;
-  overflow-y: auto;
+body.sf-tablet .tablet-split-panel .split-list-pane {
+  border-right: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper, #ffffff);
+  padding: 12px;
 }
 
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-shell,
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body,
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel {
-  height: auto;
-  min-height: 0;
+body.sf-tablet .tablet-split-panel .split-detail-pane {
+  background: var(--sf-paper-sunken, #f6f6f6);
+  padding: 16px 18px;
 }
 
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-list-pane,
-body[data-form-factor="tablet"] .uber-app-shell .staff-ops-mobile-body > .tablet-split-panel .split-detail-pane {
-  max-height: none !important;
-  overflow: visible;
+body.sf-tablet .app-messages-split {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.38fr) minmax(0, 1fr);
+  min-height: min(70dvh, 42rem);
+  overflow: hidden;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-surface, 16px);
+  background: var(--sf-paper, #ffffff);
 }
 
-/* Landscape tablet — wider list column, more horizontal breathing room */
-@media (orientation: landscape) and (min-width: 768px) and (max-width: 1023px) {
-  body[data-form-factor="tablet"] .tablet-split-panel {
-    grid-template-columns: minmax(18rem, 0.38fr) minmax(0, 1fr);
-    gap: 1.25rem;
+body.sf-tablet .app-messages-split-list {
+  border-right: 1px solid var(--sf-line, #e2e2e2);
+}
+
+/* Cards — 14px radius, 60px rows, inset selection (not mobile pills, not dense tables) */
+body.sf-tablet .app-item-card,
+body.sf-tablet .wf-list-card,
+body.sf-tablet .sft-shell-canvas .uber-card {
+  border-radius: var(--sf-radius-card, 14px);
+  min-height: var(--sf-row-h, 60px);
+  padding: 14px 16px;
+}
+
+body.sf-tablet .app-item-card[aria-current="true"],
+body.sf-tablet .wf-list-card[data-selected="true"],
+body.sf-tablet .app-item-card.is-selected {
+  box-shadow: inset 3px 0 0 var(--sf-accent, #000);
+}
+
+body.sf-tablet .staff-ops-tablet-shell .app-item-card-stack,
+body.sf-tablet .staff-ops-tablet-body .app-item-card-stack,
+body.sf-tablet .sft-shell-canvas .staff-ops-mobile-body .app-item-card-stack {
+  margin-inline: 0;
+  width: 100%;
+}
+
+/* Landscape — room for a wider list and horizontal gutters */
+@media (orientation: landscape) {
+  body.sf-tablet .tablet-split-panel,
+  body[data-surface="tablet"] .tablet-split-panel {
+    grid-template-columns: minmax(18rem, 0.36fr) minmax(0, 1fr);
   }
 
-  body[data-form-factor="tablet"] .mobility-content-inner {
-    padding-inline: 1.25rem;
+  body.sf-tablet .sft-shell-canvas {
+    padding-inline: 0;
+  }
+
+  body.sf-tablet .staff-overview-tablet-ops {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* Portrait tablet — slightly taller list, tighter gutters */
-@media (orientation: portrait) and (min-width: 768px) and (max-width: 1023px) {
-  body[data-form-factor="tablet"] .tablet-split-panel {
-    grid-template-columns: minmax(14rem, 0.46fr) minmax(0, 1fr);
+/* Portrait — stacking beats two unusable columns beside a 236px rail */
+@media (orientation: portrait) {
+  body.sf-tablet .tablet-split-panel,
+  body[data-surface="tablet"] .tablet-split-panel,
+  body.sf-tablet .app-messages-split {
+    grid-template-columns: 1fr;
+    min-height: 0;
   }
 
-  body[data-form-factor="tablet"] {
-    --space-gutter: 0.875rem;
+  body.sf-tablet .tablet-split-panel .split-list-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--sf-line, #e2e2e2);
+  }
+
+  body.sf-tablet .staff-overview-tablet-ops,
+  body.sf-tablet .staff-overview-tablet-insights .staff-overview-pro-insights {
+    grid-template-columns: 1fr;
+  }
+
+  body.sf-tablet {
+    --space-gutter: 1.125rem;
   }
 }
 
-/* App welcome tablet split — hero left, sign-in dock right */
-body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-main--tablet {
+/* ── Dashboards: 2-up command, not phone stack and not 4–5-up desktop ────── */
+
+body.sf-tablet .client-home-screen .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.sf-tablet .client-home-quick-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+body.sf-tablet .app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.sf-tablet .guard-home-glance-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.sf-tablet .client-home-stat-pill {
+  border-radius: var(--sf-radius-card, 14px);
+  padding: 12px 14px;
+}
+
+body.sf-tablet .staff-overview-tablet-command {
+  gap: 18px;
+}
+
+body.sf-tablet .staff-overview-pro-kpi,
+body.sf-tablet .staff-overview-tablet-command .staff-overview-pro-kpi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (orientation: landscape) {
+  body.sf-tablet .client-home-quick-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  body.sf-tablet .staff-overview-pro-kpi,
+  body.sf-tablet .staff-overview-tablet-command .staff-overview-pro-kpi {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .client-home-screen .grid-cols-2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── Landing: framed visual, compact nav, 2-up portrait explore ──────────── */
+
+body.sf-tablet .uber-style-landing--tablet {
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-nav {
+  min-height: calc(56px + env(safe-area-inset-top, 0px));
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-nav-link,
+body.sf-tablet .uber-style-landing--tablet .uber-landing-signup-pill {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+body.sf-tablet .uber-landing-hero--tablet {
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .uber-landing-hero-visual--tablet {
+  overflow: hidden;
+  border-radius: var(--sf-radius-surface, 16px);
+  border: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper-sunken, #f6f6f6);
+  min-height: 280px;
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-explore-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-explore-card {
+  min-height: 168px;
+  border-radius: var(--sf-radius-card, 14px);
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-input-row {
+  min-height: 46px;
+  border-radius: 10px;
+}
+
+@media (orientation: landscape) {
+  body.sf-tablet .uber-style-landing--tablet .uber-landing-explore-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body.sf-tablet .uber-landing-hero-visual--tablet {
+    min-height: 320px;
+  }
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .uber-landing-hero--tablet {
+    padding-block: 28px 24px;
+  }
+}
+
+/* ── Auth / welcome: centered card, not desktop editorial split ──────────── */
+
+body.sf-tablet .auth-experience--tablet,
+body.sf-tablet .auth-role-choice-page--tablet {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .auth-experience--tablet .auth-form-page-form,
+body.sf-tablet .auth-role-choice-page--tablet .auth-form-page-form {
+  width: 100%;
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 1.25rem 1.35rem 1.5rem;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-surface, 16px);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-hero {
+  min-height: clamp(200px, 32vh, 360px);
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-option {
+  min-height: 44px;
+}
+
+body.sf-tablet .auth-experience--tablet .dsk-auth-split {
+  display: none;
+}
+
+body.sf-tablet .app-welcome--tablet {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .app-welcome--tablet .app-welcome-main--tablet {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
   gap: 2rem;
@@ -91,28 +381,77 @@ body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-main--tablet {
   padding: 0 1.75rem 1.25rem;
 }
 
-body[data-form-factor="tablet"] .app-welcome-hero--tablet {
+body.sf-tablet .app-welcome-hero--tablet {
   max-width: none;
   padding-top: 1rem;
 }
 
-body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-brand {
+body.sf-tablet .app-welcome--tablet .app-welcome-brand {
   font-size: clamp(3.5rem, 7vw, 5rem);
 }
 
-body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-headline {
+body.sf-tablet .app-welcome--tablet .app-welcome-headline {
   font-size: clamp(1.5rem, 2.8vw, 2rem);
 }
 
-body[data-form-factor="tablet"] .app-welcome--tablet .app-welcome-dock {
+body.sf-tablet .app-welcome--tablet .app-welcome-dock {
   margin: 0;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
+  padding: 1.25rem;
+  border-radius: var(--sf-radius-surface, 16px);
+  border: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper, #ffffff);
+  box-shadow: var(--sf-elev-2, 0 4px 14px rgba(0, 0, 0, 0.08));
 }
 
-body[data-form-factor="tablet"] .app-welcome-shell-status {
+body.sf-tablet .app-welcome-shell-status {
   font-size: 0.75rem;
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .app-welcome--tablet .app-welcome-main--tablet {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 0 1.25rem 1rem;
+  }
+}
+
+/* Maps / forms — touch gutters, no phone bottom-nav offset */
+body.sf-tablet .client-map-layout .map-selection-layer,
+body.sf-tablet .guard-map-layout .map-route-banner {
+  bottom: 1rem;
+}
+
+body.sf-tablet .guard-map-layout .guardr-map-root {
+  border-radius: 0;
+}
+
+body.sf-tablet .guard-side-panel {
+  width: min(26rem, 42vw);
+}
+
+body.sf-tablet .client-form-shell,
+body.sf-tablet .guard-form-shell {
+  max-width: min(40rem, 100%);
+  margin-inline: auto;
+}
+
+body.sf-tablet .tablet-card-lg {
+  border-radius: var(--sf-radius-surface, 16px);
+  padding: 1.15rem 1.25rem;
+}
+
+/* Hover must never be the only affordance on a touch canvas */
+@media (hover: hover) {
+  body.sf-tablet .sft-rail-item:hover:not([data-active='true']),
+  body.sf-tablet .sft-master-row:hover:not([data-selected='true']),
+  body.sf-tablet .app-item-card:hover {
+    background: var(--sf-paper-sunken, #f6f6f6);
+  }
+}
+
+body.sf-tablet .sft-rail-item:active,
+body.sf-tablet .app-item-card:active,
+body.sf-tablet .wf-list-card:active,
+body.sf-tablet .sft-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }

@@ -122,11 +122,11 @@ body[data-view-surface="native-tablet"] .uber-app-shell.mobility-shell aside {
 
 /* ─── Desktop — multi-column workspace ─────────────────────────────────── */
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell .uber-shell-content {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell .uber-shell-content {
   background-color: var(--uber-surface, #f6f6f6);
 }
 
-body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobility-content-inner {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell .mobility-content-inner {
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -157,7 +157,7 @@ body[data-view-surface="browser-desktop"] .uber-app-shell.mobility-shell .mobili
   min-height: 100%;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-workspace {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-workspace {
   background: var(--uber-bg, #ffffff) !important;
 }
 
@@ -228,7 +228,7 @@ body[data-form-factor="tablet"] .uber-app-shell.mobility-shell aside {
 
 /* ─── Desktop admin legacy remap ───────────────────────────────────────── */
 
-body[data-form-factor="desktop"] {
+body[data-surface="desktop"] {
   --adm-accent: var(--uber-accent, #000000);
   --adm-sand: var(--uber-accent, #000000);
   --adm-sand-dark: var(--uber-accent, #000000);
@@ -276,57 +276,57 @@ html.theme-dark .uber-app-shell .app-button-primary {
 
 /* ─── Desktop — Guardr Direct workspace (white sidebar + gray canvas) ─────── */
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] aside {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] aside {
   background: var(--uber-bg, #ffffff);
   border-right: 1px solid var(--uber-border, #eeeeee);
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .uber-shell-content {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .uber-shell-content {
   background: var(--uber-bg, #ffffff) !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-workspace,
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .uber-workbench {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-workspace,
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .uber-workbench {
   background: var(--uber-bg, #ffffff) !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-content-inner {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell[data-uber-direct="true"] .mobility-content-inner {
   padding-top: 0;
 }
 
 /* Legacy black header — only when not using Guardr Direct layout */
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header {
   background: #000 !important;
   border-bottom: none !important;
   min-height: 60px;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header * {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header * {
   color: #fff !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-icon-btn {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-icon-btn {
   background: rgba(255,255,255,0.10) !important;
   border: none !important;
   color: #fff !important;
   border-radius: 8px !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-icon-btn:hover {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-icon-btn:hover {
   background: rgba(255,255,255,0.18) !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) aside {
+body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) aside {
   background: #fff;
   border-right: 1px solid var(--uber-border, #eeeeee);
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) aside {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) aside {
   background: #000;
   border-right-color: var(--uber-border, #1a1a1a);
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell.mobility-shell:not([data-uber-direct="true"]) .mobility-header {
   background: #000 !important;
 }
 

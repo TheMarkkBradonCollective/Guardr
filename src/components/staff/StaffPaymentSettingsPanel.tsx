@@ -19,7 +19,7 @@ import {
   type StaffRoleCompensationRule,
 } from '../../lib/staffCompensation';
 import { AppFormSection } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
@@ -80,7 +80,7 @@ export function StaffPaymentSettingsPanel({
   platformSettings,
   onUpdatePlatformSettings,
 }: StaffPaymentSettingsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canEditFees = hasExecutivePaymentControls(currentUser);
   const canEditCompensation = canManageStaffCompensation(currentUser);
   const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);

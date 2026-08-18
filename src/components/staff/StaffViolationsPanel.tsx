@@ -6,7 +6,7 @@ import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -58,7 +58,7 @@ export function StaffViolationsPanel({
   onOpenJob,
   onItemHandled,
 }: StaffViolationsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [tab, setTab] = useState<ViolationTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, string>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
