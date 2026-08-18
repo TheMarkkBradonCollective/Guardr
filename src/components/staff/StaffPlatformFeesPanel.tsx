@@ -140,6 +140,14 @@ export function StaffPlatformFeesPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-payment-settings-panel staff-mgmt-panel staff-roster-panel staff-fees-tablet">
+        <div className="staff-payment-settings-scroll min-w-0">{body}</div>
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <StaffOpsPageShell className="staff-payment-settings-panel staff-mgmt-panel staff-roster-panel">
       <div className="staff-payment-settings-scroll min-w-0">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
+import { useSurfaceKind } from '../../surfaces';
 
 interface MapDesktopInspectorProps {
   label: string;
@@ -10,11 +11,13 @@ interface MapDesktopInspectorProps {
 /** Map overlay shell: side inspector on website desktop; bottom sheet on mobile / PWA / APK. */
 export function MapDesktopInspector({ label, children, className = '' }: MapDesktopInspectorProps) {
   const { viewSurface } = useDevice();
+  const surface = useSurfaceKind();
+  const sideInspector = !prefersMobileGestureUi(viewSurface) || surface === 'tablet';
 
-  if (!prefersMobileGestureUi(viewSurface)) {
+  if (sideInspector) {
     return (
       <aside
-        className={`dsk-map-inspector desktop-map-inspector ${className}`.trim()}
+        className={`dsk-map-inspector desktop-map-inspector${surface === 'tablet' ? ' sft-map-inspector' : ''} ${className}`.trim()}
         aria-label={label}
       >
         <div className="desktop-map-inspector-header">
@@ -39,8 +42,9 @@ export function MapMobileBottomSheet({
   mode?: 'sheet' | 'trip';
 }) {
   const { viewSurface } = useDevice();
-  // Website desktop: content is hosted in MapDesktopInspector side panel — no slide-up chrome.
-  if (!prefersMobileGestureUi(viewSurface)) return <>{children}</>;
+  const surface = useSurfaceKind();
+  // Website desktop and tablet: content is hosted in MapDesktopInspector.
+  if (!prefersMobileGestureUi(viewSurface) || surface === 'tablet') return <>{children}</>;
   return (
     <div
       className={[

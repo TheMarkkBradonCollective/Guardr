@@ -237,6 +237,54 @@ export function GuardPerformanceScreen({
     );
   }
 
+  if (formFactor === 'tablet') {
+    const factorOpen =
+      activeTab === 'overall' &&
+      Boolean(performanceFactorId) &&
+      Boolean(selectedFactor) &&
+      isPerformanceFactorId(performanceFactorId);
+    const metricOpen = Boolean(selectedModalityMetric);
+    return (
+      <div
+        className="tablet-split-panel guard-performance-tablet h-full min-h-0"
+        data-selected={factorOpen || metricOpen ? 'true' : undefined}
+      >
+        <div className="split-list-pane">{tabbedContent}</div>
+        <div className="split-detail-pane">
+          {factorOpen && selectedFactor && performanceFactorId && isPerformanceFactorId(performanceFactorId) ? (
+            <GuardPerformanceFactorDetail
+              factor={selectedFactor}
+              factorId={performanceFactorId}
+              guardId={guard.id}
+              requests={requests}
+              onBack={() => onPerformanceFactorChange?.(null)}
+            />
+          ) : selectedModalityMetric ? (
+            <GuardModalityMetricDetail
+              card={selectedModalityMetric.card}
+              metricId={selectedModalityMetric.metricId}
+              modality={selectedModalityMetric.modality}
+              guardId={guard.id}
+              requests={requests}
+              onBack={() => setSelectedModalityMetric(null)}
+            />
+          ) : (
+            <div className="sft-empty">
+              <p className="sft-empty-title">
+                {activeTab === 'overall' ? 'Select a performance factor' : 'Select a requirement'}
+              </p>
+              <p className="sft-empty-message">
+                {activeTab === 'overall'
+                  ? 'Choose a factor from the list to see the breakdown beside it.'
+                  : `Choose a ${workModalityLabel(activeTab as WorkModality).toLowerCase()} requirement to see the breakdown.`}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (formFactor === 'desktop') {
     return (
       <WorkbenchFlatSplit

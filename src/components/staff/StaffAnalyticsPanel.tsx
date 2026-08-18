@@ -51,6 +51,62 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
       : []),
   ];
 
+  if (formFactor === 'tablet') {
+    return (
+      <div className="staff-analytics-tablet-canvas min-w-0">
+        {showFinancials && (
+          <section className="staff-analytics-tablet-finance">
+            {buildDirectorFinancialCells(financials).map(({ label, value, sub }) => (
+              <article key={label} className="staff-summary-cell">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-brand-text-muted">{label}</p>
+                <p className="text-lg font-bold mt-1">{value}</p>
+                <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{sub}</p>
+              </article>
+            ))}
+            <ul className="staff-analytics-tablet-ops">
+              {operationsLines.map((line) => (
+                <li key={line.label}>
+                  <span>{line.label}</span>
+                  <span>{line.value}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section className="staff-analytics-tablet-metrics">
+          {metrics.map(({ label, value, pct }) => (
+            <article key={label} className="staff-analytics-tablet-metric">
+              <WfMetricTile label={label} value={value} accent={pct != null} />
+              {pct != null && (
+                <div className="mt-2 h-1.5 rounded-full bg-brand-border overflow-hidden">
+                  <div
+                    className="h-full bg-brand-primary rounded-full transition-all"
+                    style={{ width: `${Math.min(100, pct)}%` }}
+                  />
+                </div>
+              )}
+            </article>
+          ))}
+        </section>
+        <section className="staff-analytics-chart">
+          <h2 className="text-sm font-semibold mb-4">Completed Jobs Trend</h2>
+          {hasWeeklyData ? (
+            <div className="flex items-end gap-2 h-32">
+              {weeklyTrend.map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full bg-brand-primary/80 rounded-t" style={{ height: `${Math.min(100, h)}%` }} />
+                  <span className="text-xs text-brand-text-muted">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-brand-text-muted py-8 text-center">No completed jobs this week yet.</p>
+          )}
+        </section>
+      </div>
+    );
+  }
+
   if (formFactor === 'desktop') {
     return (
       <div className="staff-analytics-panel">

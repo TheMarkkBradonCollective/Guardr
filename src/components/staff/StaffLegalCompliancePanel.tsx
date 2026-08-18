@@ -137,7 +137,7 @@ export function StaffLegalCompliancePanel({
   ];
 
   useEffect(() => {
-    if (formFactor !== 'desktop') return;
+    if (formFactor === 'mobile') return;
     if (filtered.length === 0) {
       setSelectedId(null);
       return;
@@ -199,6 +199,49 @@ export function StaffLegalCompliancePanel({
                 <WorkbenchEmpty message="Select a user to review agreements" variant="detail" />
               )
             }
+          />
+        )}
+      </StaffOpsPageShell>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel sft-legal-compliance">
+        {filterTabsControl}
+        {filtered.length === 0 ? (
+          <AppEmptyState title="No users match this filter." />
+        ) : (
+          <ListDetailLayout
+            items={filtered}
+            selectedId={selectedId}
+            onSelectId={setSelectedId}
+            getItemId={(row) => row.userId}
+            autoSelectFirst
+            mobilePresentation="page"
+            emptyDetail={
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select a user</p>
+                <p className="sft-empty-message">Choose someone from the roster to review accepted agreements.</p>
+              </div>
+            }
+            renderItem={(row, isActive, onSelect) => (
+              <WfListCard
+                title={row.name}
+                subtitle={row.email}
+                meta={
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-brand-text-muted">{row.roleLabel}</span>
+                    <WfBadge tone={row.complete ? 'success' : 'warning'}>
+                      {row.complete ? 'Complete' : 'Missing'}
+                    </WfBadge>
+                  </div>
+                }
+                onClick={onSelect}
+                className={isActive ? 'app-item-card-selected' : ''}
+              />
+            )}
+            renderDetail={(row, options) => <ComplianceDetail row={row} onBack={options?.onBack} />}
           />
         )}
       </StaffOpsPageShell>

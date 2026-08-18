@@ -31,6 +31,7 @@ import {
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { CityManagerPicker } from './CityManagerPicker';
@@ -304,10 +305,10 @@ export function StaffCitiesPanel({
       return;
     }
     if (selectedId && !filtered.some((city) => city.id === selectedId)) {
-      setSelectedId(formFactor === 'desktop' ? filtered[0].id : null);
+      setSelectedId(formFactor === 'mobile' ? null : filtered[0].id);
       return;
     }
-    if (formFactor === 'desktop' && !selectedId) {
+    if (formFactor !== 'mobile' && !selectedId) {
       setSelectedId(filtered[0].id);
     }
   }, [filtered, selectedId, formFactor]);
@@ -451,51 +452,29 @@ export function StaffCitiesPanel({
   }
 
   return (
-    <div className="staff-ops-mobile-shell flex flex-col min-w-0 animate-fade-in">
-      {selectedCity ? (
-        <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
-          <AppSubScreenHeader
-            title={selectedCity.name}
-            onBack={() => setSelectedId(null)}
-            backLabel="Service Areas"
-          />
-          <div className="staff-ops-mobile-body min-w-0 pb-8">
-            {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
-            <CityDetailPanel
-              city={selectedCity}
-              busy={savingId === selectedCity.id}
-              canManageStatus={canManageStatus}
-              canRecommend={canRecommend}
-              canEditStaffAccess={canEditStaffAccessForCity(selectedCity.name)}
-              staffRoster={staffRoster}
-              platformCities={cities}
-              currentUser={currentUser}
-              onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
-              onAssignCityManager={onAssignCityManager}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="staff-ops-mobile-body min-w-0 space-y-3">
+    <StaffOpsPageShell
+      className="staff-mgmt-panel staff-roster-panel"
+      toolbar={
+        <div className="flex flex-col gap-3">
           {canRecommend && !canManageStatus && (
-            <p className="text-xs text-amber-400 px-1">
+            <p className="text-xs text-brand-text-muted px-1">
               As a Manager you can recommend cities for review. Directors and Founders control open, closed, and wait list status.
             </p>
           )}
-
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <WfSearchBar
               value={search}
               onChange={setSearch}
               placeholder="Search by city, status, or wait list audience..."
               className="w-full"
             />
-            <label className="flex flex-col gap-1.5 w-full">
+            <label className="flex flex-col gap-1.5 w-full sm:w-auto sm:min-w-[12rem]">
               <span className="uber-label">Sort by</span>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as CityMarketSort)}
                 className="uber-select w-full"
+                aria-label="Sort cities"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.id} value={option.id}>
@@ -505,103 +484,131 @@ export function StaffCitiesPanel({
               </select>
             </label>
           </div>
-
           {filterTabs}
-
           <p className="text-xs text-brand-text-muted">
             Showing {filtered.length} of {visibleCities.length} cities
           </p>
-
           {error && <p className="text-sm text-red-400">{error}</p>}
-
-          {filtered.length === 0 ? (
-            <div className="app-empty-state app-empty-state--dashed">
-              <p className="app-empty-state-title">No cities match your filters</p>
-              <p className="app-empty-state-body">
-                Try a different search term, status tab, or sort order.
-              </p>
+        </div>
+      }
+    >
+      {filtered.length === 0 ? (
+        <div className="app-empty-state app-empty-state--dashed">
+          <p className="app-empty-state-title">No cities match your filters</p>
+          <p className="app-empty-state-body">Try a different search term, status tab, or sort order.</p>
+        </div>
+      ) : (
+        <ListDetailLayout
+          items={filtered}
+          selectedId={selectedId}
+          onSelectId={setSelectedId}
+          getItemId={(city) => city.id}
+          autoSelectFirst={formFactor === 'tablet'}
+          mobilePresentation="page"
+          emptyDetail={
+            <div className="sft-empty">
+              <p className="sft-empty-title">Select a city</p>
+              <p className="sft-empty-message">Choose a market from the list to manage status, wait lists, and staff access.</p>
             </div>
-          ) : (
-            <div className="app-list">
-              {filtered.map((city) => {
-                const busy = savingId === city.id;
-                const directorValue = getDirectorActionValue(city);
-                const managerValue = getManagerActionValue(city);
-
-                return (
-                  <div key={city.id} className="app-list-row app-list-row-align-top">
-                    <button
-                      type="button"
-                      className="min-w-0 flex-1 text-left"
-                      onClick={() => setSelectedId(city.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold leading-snug truncate">{city.name}</p>
-                        <span className="text-xs text-brand-text-muted shrink-0">{city.stateCode}</span>
-                        <WfBadge tone={STATUS_TONES[city.status]}>
-                          {CITY_STATUS_LABELS[city.status]}
-                        </WfBadge>
-                        {city.recommendOpen && <WfBadge tone="primary">Rec.</WfBadge>}
-                      </div>
-                      {city.status === 'waitlist' && (
-                        <p className="text-xs text-brand-text-muted mt-0.5 capitalize">
-                          Wait list · {city.waitlistAudience}
-                        </p>
-                      )}
-                    </button>
-
-                    {canManageStatus ? (
-                      <label className="shrink-0">
-                        <span className="sr-only">Set service area status for {city.name}</span>
-                        <select
-                          value={directorValue}
-                          disabled={busy}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            const next = e.target.value as DirectorActionValue;
-                            if (next === directorValue) return;
-                            void applyUpdate(city, parseDirectorAction(next));
-                          }}
-                          className="uber-select text-xs"
-                          style={{ minWidth: 120 }}
-                        >
-                          {DIRECTOR_ACTION_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : canRecommend ? (
-                      <label className="shrink-0">
-                        <span className="sr-only">Recommend {city.name}</span>
-                        <select
-                          value={managerValue}
-                          disabled={busy}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            const next = e.target.value as ManagerActionValue;
-                            if (next === managerValue) return;
-                            void applyUpdate(city, { recommendOpen: next === 'recommend' });
-                          }}
-                          className="uber-select text-xs"
-                          style={{ minWidth: 100 }}
-                        >
-                          {MANAGER_ACTION_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : null}
+          }
+          renderItem={(city, isActive, onSelect) => {
+            const busy = savingId === city.id;
+            const directorValue = getDirectorActionValue(city);
+            const managerValue = getManagerActionValue(city);
+            return (
+              <div
+                className="app-list-row app-list-row-align-top"
+                data-selected={isActive ? 'true' : undefined}
+              >
+                <button type="button" className="min-w-0 flex-1 text-left" onClick={onSelect}>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold leading-snug truncate">{city.name}</p>
+                    <span className="text-xs text-brand-text-muted shrink-0">{city.stateCode}</span>
+                    <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
+                    {city.recommendOpen && <WfBadge tone="primary">Rec.</WfBadge>}
                   </div>
-                );
-              })}
+                  {city.status === 'waitlist' && (
+                    <p className="text-xs text-brand-text-muted mt-0.5 capitalize">
+                      Wait list · {city.waitlistAudience}
+                    </p>
+                  )}
+                </button>
+                {formFactor === 'mobile' && canManageStatus ? (
+                  <label className="shrink-0">
+                    <span className="sr-only">Set service area status for {city.name}</span>
+                    <select
+                      value={directorValue}
+                      disabled={busy}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        const next = e.target.value as DirectorActionValue;
+                        if (next === directorValue) return;
+                        void applyUpdate(city, parseDirectorAction(next));
+                      }}
+                      className="uber-select text-xs"
+                      style={{ minWidth: 120 }}
+                    >
+                      {DIRECTOR_ACTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : formFactor === 'mobile' && canRecommend ? (
+                  <label className="shrink-0">
+                    <span className="sr-only">Recommend {city.name}</span>
+                    <select
+                      value={managerValue}
+                      disabled={busy}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        const next = e.target.value as ManagerActionValue;
+                        if (next === managerValue) return;
+                        void applyUpdate(city, { recommendOpen: next === 'recommend' });
+                      }}
+                      className="uber-select text-xs"
+                      style={{ minWidth: 100 }}
+                    >
+                      {MANAGER_ACTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
+            );
+          }}
+          renderDetail={(city, options) => (
+            <div className="app-full-page-detail min-w-0 max-w-full">
+              {options?.onBack ? (
+                <AppSubScreenHeader
+                  title={city.name}
+                  onBack={options.onBack}
+                  backLabel="Service Areas"
+                />
+              ) : null}
+              <div className="min-w-0 pb-8">
+                {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
+                <CityDetailPanel
+                  city={city}
+                  busy={savingId === city.id}
+                  canManageStatus={canManageStatus}
+                  canRecommend={canRecommend}
+                  canEditStaffAccess={canEditStaffAccessForCity(city.name)}
+                  staffRoster={staffRoster}
+                  platformCities={cities}
+                  currentUser={currentUser}
+                  onUpdate={(patch) => void applyUpdate(city, patch)}
+                  onAssignCityManager={onAssignCityManager}
+                />
+              </div>
             </div>
           )}
-        </div>
+        />
       )}
-    </div>
+    </StaffOpsPageShell>
   );
 }

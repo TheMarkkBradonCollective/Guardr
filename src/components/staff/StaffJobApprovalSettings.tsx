@@ -92,6 +92,15 @@ export function StaffJobApprovalSettings({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <section className="sft-approval-rules">
+        <h2 className="sft-approval-rules-title">Approval rules</h2>
+        {fields}
+      </section>
+    );
+  }
+
   return (
     <AppFormSection title="Approval rules">
       <div className="pb-6">{fields}</div>

@@ -40,6 +40,17 @@ export function GuardPreferencesScreen({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <ResponsivePage
+        screenClassName="guard-tiered-screen h-full min-h-0"
+        className="adm-page--flush guard-preferences-tablet"
+      >
+        {panel}
+      </ResponsivePage>
+    );
+  }
+
   return (
     <ResponsivePage screenClassName="guard-tiered-screen h-full min-h-0" className="adm-page--flush">
       {panel}

@@ -64,6 +64,15 @@ export function StaffAnalyticsInsightsPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-analytics-tablet">
+        {tabBar}
+        {content}
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}

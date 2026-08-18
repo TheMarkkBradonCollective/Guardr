@@ -694,7 +694,7 @@ export function StaffApplications({
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           detailClassName="staff-detail-pane"
           mobilePresentation="page"
-          autoSelectFirst={false}
+          autoSelectFirst={formFactor === 'tablet'}
           emptyDetail={
             <div className="flex items-center justify-center h-full min-h-[40vh] p-8 text-center">
               <p className="text-sm text-brand-text-muted">Select an application to review</p>

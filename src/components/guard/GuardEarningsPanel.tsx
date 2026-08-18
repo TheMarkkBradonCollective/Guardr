@@ -116,6 +116,131 @@ export function GuardEarningsPanel({
     </section>
   );
 
+  const stripeConnectBanner = !stripeReady && onConnectStripe ? (
+    <div className="guard-pref-empty-banner guard-pay-connect-banner">
+      <Link2 className="guard-pref-empty-banner-icon" aria-hidden />
+      <div>
+        <p className="guard-pref-empty-banner-title">
+          {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid'}
+        </p>
+        <p className="guard-pref-empty-banner-text">
+          {stripeConnected
+            ? 'Stripe still needs a few payout details before bank transfers are enabled.'
+            : 'Link your bank through Stripe to receive payouts for completed shifts.'}
+        </p>
+        <AppButton
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={onConnectStripe}
+          disabled={connectPending}
+          className="mt-3"
+        >
+          {connectPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
+            </>
+          ) : (
+            <>
+              <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
+            </>
+          )}
+        </AppButton>
+      </div>
+    </div>
+  ) : null;
+
+  const invoiceNotice = openStripeInvoices > 0 ? (
+    <p className="guard-pay-invoice-notice">
+      {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
+      {' '}You can send another invoice when more jobs are ready to collect.
+    </p>
+  ) : null;
+
+  const bankStatus = stripeConnected && stripeReady ? (
+    <p className="guard-pay-bank-status">Bank account connected — online payouts enabled</p>
+  ) : null;
+
+  const shiftsList =
+    sortedShifts.length === 0 ? (
+      <AppEmptyState icon={<CreditCard className="w-5 h-5" />} title="No completed shifts yet">
+        Your earnings history will appear here after you complete jobs.
+      </AppEmptyState>
+    ) : (
+      <AppList>
+        {sortedShifts.map((job) => {
+          const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
+          const earned = getEstimatedGuardEarnings(job);
+          return (
+            <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-semibold text-sm">{job.title}</p>
+                <p className="text-xs uber-text-muted mt-0.5">{job.clientName}</p>
+                <p className="text-xs uber-text-muted mt-0.5">
+                  {formatShiftRange(job.startDate, job.endDate)}
+                </p>
+                <p className="text-xs font-medium uber-text mt-2">{pay.headline}</p>
+                {pay.subtext && (
+                  <p className="text-xs uber-text-muted mt-0.5">{pay.subtext}</p>
+                )}
+              </div>
+              <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>
+            </AppListRow>
+          );
+        })}
+      </AppList>
+    );
+
+  if (formFactor === 'tablet') {
+    return (
+      <AppScreen className="guard-tiered-screen h-full min-h-0">
+        <div className="guard-earnings-tablet">
+          <div className="guard-earnings-tablet-metrics" aria-label="Earnings summary">
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Ready to collect</p>
+              <p className="guard-performance-stat-value">${readyToCollect.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">
+                {breakdown.onlineAvailable > 0
+                  ? `Bank transfer $${breakdown.onlineAvailable.toFixed(2)}`
+                  : 'Complete shifts to start earning'}
+              </p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Total received</p>
+              <p className="guard-performance-stat-value">${alreadyPaid.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">Already paid to you</p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Bank</p>
+              <p className="guard-performance-stat-value">${breakdown.stripePaid.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">Stripe payouts</p>
+            </div>
+            <div className="guard-performance-stat">
+              <p className="guard-performance-stat-label">Total earned</p>
+              <p className="guard-performance-stat-value">${breakdown.totalEarnings.toFixed(2)}</p>
+              <p className="guard-performance-stat-sub">From all completed jobs</p>
+            </div>
+          </div>
+
+          {payHeroActions}
+          {stripeConnectBanner}
+          {invoiceNotice}
+          {bankStatus}
+
+          <section className="guard-factors-section guard-pay-jobs-section">
+            <div className="guard-factors-header">
+              <h3 className="guard-factors-heading">Completed jobs ({sortedShifts.length})</h3>
+              <p className="guard-factors-subheading">
+                Each row shows what you earned and whether you&apos;ve been paid yet.
+              </p>
+            </div>
+            <div className="guard-pay-jobs-list">{shiftsList}</div>
+          </section>
+        </div>
+      </AppScreen>
+    );
+  }
+
   return (
     <AppScreen className="guard-tiered-screen">
       <div className="guard-tiered-screen-pinned">
@@ -149,46 +274,8 @@ export function GuardEarningsPanel({
       <div className="guard-tiered-screen-scroll">
         <div className="guard-rating-body">
           {payHeroActions}
-          {!stripeReady && onConnectStripe && (
-            <div className="guard-pref-empty-banner guard-pay-connect-banner">
-              <Link2 className="guard-pref-empty-banner-icon" aria-hidden />
-              <div>
-                <p className="guard-pref-empty-banner-title">
-                  {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid'}
-                </p>
-                <p className="guard-pref-empty-banner-text">
-                  {stripeConnected
-                    ? 'Stripe still needs a few payout details before bank transfers are enabled.'
-                    : 'Link your bank through Stripe to receive payouts for completed shifts.'}
-                </p>
-                <AppButton
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={onConnectStripe}
-                  disabled={connectPending}
-                  className="mt-3"
-                >
-                  {connectPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
-                    </>
-                  )}
-                </AppButton>
-              </div>
-            </div>
-          )}
-
-          {openStripeInvoices > 0 && (
-            <p className="guard-pay-invoice-notice">
-              {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
-              {' '}You can send another invoice when more jobs are ready to collect.
-            </p>
-          )}
+          {stripeConnectBanner}
+          {invoiceNotice}
 
           <div className="guard-performance-stats guard-pay-stats" aria-label="Earnings summary">
             <div className="guard-performance-stat">
@@ -208,9 +295,7 @@ export function GuardEarningsPanel({
             </div>
           </div>
 
-          {stripeConnected && stripeReady && (
-            <p className="guard-pay-bank-status">Bank account connected — online payouts enabled</p>
-          )}
+          {bankStatus}
 
           <section className="guard-factors-section guard-pay-jobs-section">
             <div className="guard-factors-header">
@@ -219,37 +304,7 @@ export function GuardEarningsPanel({
                 Each row shows what you earned and whether you&apos;ve been paid yet.
               </p>
             </div>
-
-            {sortedShifts.length === 0 ? (
-              <AppEmptyState icon={<CreditCard className="w-5 h-5" />} title="No completed shifts yet">
-                Your earnings history will appear here after you complete jobs.
-              </AppEmptyState>
-            ) : (
-              <div className="guard-pay-jobs-list">
-                <AppList>
-                  {sortedShifts.map((job) => {
-                  const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
-                  const earned = getEstimatedGuardEarnings(job);
-                  return (
-                    <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="font-semibold text-sm">{job.title}</p>
-                        <p className="text-xs uber-text-muted mt-0.5">{job.clientName}</p>
-                        <p className="text-xs uber-text-muted mt-0.5">
-                          {formatShiftRange(job.startDate, job.endDate)}
-                        </p>
-                        <p className="text-xs font-medium uber-text mt-2">{pay.headline}</p>
-                        {pay.subtext && (
-                          <p className="text-xs uber-text-muted mt-0.5">{pay.subtext}</p>
-                        )}
-                      </div>
-                      <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>
-                    </AppListRow>
-                  );
-                  })}
-                </AppList>
-              </div>
-            )}
+            <div className="guard-pay-jobs-list">{shiftsList}</div>
           </section>
         </div>
       </div>

@@ -447,6 +447,19 @@ export function StaffIntegrationsPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-integrations-tablet">
+        <div className="sft-settings-grid">
+          <StaffMgmtSection title="Payment methods">{paymentMethodsBody}</StaffMgmtSection>
+          <StaffMgmtSection title="SMS notifications">{smsBody}</StaffMgmtSection>
+          <StaffMgmtSection title="Background check">{backgroundCheckBody}</StaffMgmtSection>
+          <StaffMgmtSection title="Insurance verification">{insuranceBody}</StaffMgmtSection>
+        </div>
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <div className="animate-fade-in min-w-0 max-w-full">
       <AppFormSection title="Payment methods">

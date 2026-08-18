@@ -144,6 +144,22 @@ export function DevNotesPage() {
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="sft-dev-notes">
+        <div className="sft-dev-notes-grid">
+          <aside className="sft-dev-notes-sidebar">
+            <DevActivityGrid grid={activityGrid} variant="desktop" />
+            {summary ? <MarkdownDoc source={summary} /> : null}
+          </aside>
+          <div className="sft-dev-notes-main">
+            <MarkdownDoc source={mainNotes} />
+          </div>
+        </div>
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain max-w-3xl">
       {mobileContent}

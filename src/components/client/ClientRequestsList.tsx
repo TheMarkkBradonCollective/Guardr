@@ -15,6 +15,7 @@ import {
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
 import { useLayoutFormFactor } from '../../surfaces';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { ClientRequestsDesktop } from './ClientRequestsDesktop';
 import {
   isJobScheduleLocked,
@@ -91,14 +92,17 @@ function JobRow({
   job,
   onSelect,
   showRate = false,
+  selected = false,
 }: {
   job: SecurityRequest;
   onSelect: () => void;
   showRate?: boolean;
+  selected?: boolean;
 }) {
   return (
     <AppItemCard
       onClick={onSelect}
+      selected={selected}
       className={showRate ? 'border-brand-primary/30 bg-brand-primary/8' : undefined}
     >
       <div className="min-w-0 flex-1 text-left">
@@ -274,6 +278,12 @@ export function ClientRequestsList({
 
   const selectedRequest = selectedId ? requests.find((r) => r.id === selectedId) ?? null : null;
 
+  const tabJobs =
+    activeTab === 'open' ? openJobs :
+    activeTab === 'scheduled' ? scheduledJobs :
+    activeTab === 'completed' ? completedJobs :
+    missedJobs;
+
   if (formFactor === 'desktop') {
     return (
       <ClientRequestsDesktop
@@ -370,6 +380,110 @@ export function ClientRequestsList({
           allRequests={requests}
         />
       </div>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    const emptyTitle =
+      activeTab === 'open' ? 'No open offers' :
+      activeTab === 'scheduled' ? 'No scheduled coverage' :
+      activeTab === 'completed' ? 'No completed jobs yet' :
+      'No missed coverage';
+    const emptyBody =
+      activeTab === 'open' ? 'Post your first security request to get matched with licensed guards.' :
+      activeTab === 'scheduled' ? 'Accepted jobs will appear here leading up to their start date.' :
+      activeTab === 'completed' ? 'Your completed jobs will appear here once shifts are closed out.' :
+      'No-call and no-show shifts will appear here.';
+
+    return (
+      <AppScreen className="h-full min-h-0" data-tour="client-jobs">
+        <div className="sft-jobs-toolbar">
+          <ListFilterTabs
+            aria-label="Job status"
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as JobTab)}
+            tabs={tabOptions.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              count: tallies[tab.id],
+            }))}
+          />
+          {onRequestNew ? (
+            <button
+              type="button"
+              onClick={onRequestNew}
+              className="app-button-primary app-btn-md app-btn-inline flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Post a job
+            </button>
+          ) : null}
+        </div>
+        {tabJobs.length === 0 ? (
+          <AppEmptyState
+            icon={<ClipboardList className="w-5 h-5" />}
+            title={emptyTitle}
+            action={
+              activeTab === 'open' && onRequestNew ? (
+                <button
+                  type="button"
+                  onClick={onRequestNew}
+                  className="app-button-primary app-btn-md app-btn-inline flex items-center gap-2 mx-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  Post a job
+                </button>
+              ) : undefined
+            }
+          >
+            {emptyBody}
+          </AppEmptyState>
+        ) : (
+          <ListDetailLayout
+            items={tabJobs}
+            selectedId={selectedId}
+            onSelectId={updateSelectedId}
+            getItemId={(job) => job.id}
+            autoSelectFirst
+            mobilePresentation="page"
+            emptyDetail={
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select a job</p>
+                <p className="sft-empty-message">Choose a posting from the list to review coverage, billing, and actions.</p>
+              </div>
+            }
+            renderItem={(job, isSelected, onSelect) => (
+              <JobRow
+                job={job}
+                onSelect={onSelect}
+                selected={isSelected}
+                showRate={activeTab === 'open' || activeTab === 'scheduled'}
+              />
+            )}
+            renderDetail={(job, options) => (
+              <>
+                {options?.onBack ? (
+                  <AppSubScreenHeader
+                    title={job.title}
+                    hideTitle
+                    onBack={options.onBack}
+                    backLabel="Requests"
+                  />
+                ) : null}
+                <div className="px-5 pb-8">{renderSelectedRequestDetail(job)}</div>
+              </>
+            )}
+          />
+        )}
+        <EditRequestSheet
+          open={!!editingRequest}
+          request={editingRequest}
+          scheduleLocked={editingRequest ? isJobScheduleLocked(editingRequest) : false}
+          paidReschedule={editingRequest ? canClientReschedulePaidSchedule(editingRequest) : false}
+          onSave={onEditRequest}
+          onClose={() => setEditingId(null)}
+        />
+      </AppScreen>
     );
   }
 

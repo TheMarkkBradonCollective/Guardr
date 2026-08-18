@@ -3,7 +3,8 @@ import { OpsIncident } from '../../lib/staffOps';
 import { IncidentReportViewContext } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { WfBadge } from '../ui/wireframe';
-import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { AlertTriangle } from 'lucide-react';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -84,11 +85,50 @@ export function StaffIncidentsPanel({
   ];
 
   useEffect(() => {
-    if (formFactor === 'desktop' && !selectedId && incidents.length > 0) {
+    if ((formFactor === 'desktop' || formFactor === 'tablet') && !selectedId && incidents.length > 0) {
       const first = incidents.find((inc) => incidentDetails.some((d) => d.id === inc.id));
       if (first) setSelectedId(first.id);
     }
   }, [formFactor, incidents.length]);
+
+  const emptyState = (
+    <div className="app-empty-state">
+      <div className="app-empty-state-icon">
+        <AlertTriangle className="w-5 h-5" />
+      </div>
+      <p className="app-empty-state-title">No incidents on file</p>
+      <p className="app-empty-state-body">Incident reports submitted during active shifts will appear here.</p>
+    </div>
+  );
+
+  const renderIncidentDetail = (inc: OpsIncident, options?: { onBack?: () => void }) => {
+    const detail = incidentDetails.find((d) => d.id === inc.id);
+    if (!detail) return null;
+    return (
+      <div className="app-full-page-detail min-w-0 max-w-full">
+        {options?.onBack ? (
+          <AppSubScreenHeader
+            title={inc.location}
+            onBack={options.onBack}
+            backLabel="Incidents"
+          />
+        ) : null}
+        <div className="pb-8 space-y-4">
+          {!options?.onBack ? <h2 className="text-lg font-bold m-0">{inc.location}</h2> : null}
+          <IncidentReportDetailView report={detail} compact />
+          {onOpenJob ? (
+            <button
+              type="button"
+              onClick={() => onOpenJob(inc.requestId)}
+              className="app-button-outline app-btn-sm"
+            >
+              Open job
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
 
   if (formFactor === 'desktop') {
     return (
@@ -134,53 +174,32 @@ export function StaffIncidentsPanel({
     );
   }
 
-  if (selectedIncident && selectedDetail) {
-    return (
-      <div className="staff-ops-mobile-shell flex flex-col animate-fade-in min-w-0">
-        <div className="app-full-page-detail min-w-0 max-w-full">
-          <AppSubScreenHeader
-            title={selectedIncident.location}
-            onBack={() => setSelectedId(null)}
-            backLabel="Incidents"
-          />
-          <div className="pb-8 space-y-4">
-            <IncidentReportDetailView report={selectedDetail} compact />
-            {onOpenJob && (
-              <button
-                type="button"
-                onClick={() => onOpenJob(selectedIncident.requestId)}
-                className="app-button-outline app-btn-sm"
-              >
-                Open job
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="staff-ops-mobile-shell flex flex-col animate-fade-in min-w-0">
-      <div className="staff-ops-mobile-body min-w-0 max-w-full">
+    <StaffOpsPageShell className="staff-roster-panel">
       {incidents.length === 0 ? (
-        <div className="app-empty-state">
-          <div className="app-empty-state-icon">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <p className="app-empty-state-title">No incidents on file</p>
-          <p className="app-empty-state-body">Incident reports submitted during active shifts will appear here.</p>
-        </div>
+        emptyState
       ) : (
-        <AppList>
-          {incidents.map((inc) => {
+        <ListDetailLayout
+          items={incidents}
+          selectedId={selectedId}
+          onSelectId={setSelectedId}
+          getItemId={(inc) => inc.id}
+          autoSelectFirst={formFactor === 'tablet'}
+          mobilePresentation="page"
+          emptyDetail={
+            <div className="sft-empty">
+              <p className="sft-empty-title">Select an incident</p>
+              <p className="sft-empty-message">Choose a report from the list to review details and open the job.</p>
+            </div>
+          }
+          renderItem={(inc, isActive, onSelect) => {
             const detail = incidentDetails.find((d) => d.id === inc.id);
             return (
               <button
-                key={inc.id}
                 type="button"
-                onClick={() => detail && setSelectedId(inc.id)}
+                onClick={onSelect}
                 disabled={!detail}
+                data-selected={isActive ? 'true' : undefined}
                 className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 text-left w-full disabled:opacity-60"
               >
                 <p className="font-semibold text-sm">{inc.location}</p>
@@ -199,10 +218,10 @@ export function StaffIncidentsPanel({
                 </p>
               </button>
             );
-          })}
-        </AppList>
+          }}
+          renderDetail={(inc, options) => renderIncidentDetail(inc, options)}
+        />
       )}
-      </div>
-    </div>
+    </StaffOpsPageShell>
   );
 }
