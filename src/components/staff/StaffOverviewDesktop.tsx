@@ -300,7 +300,7 @@ export function StaffOverviewDesktop({
 
   const financialsPanel = config.showDirectorFinancials ? (
     <WorkbenchPanel className="staff-overview-list-panel staff-overview-financials-panel" padding>
-      <StaffOverviewSectionHeader title="Company financials" actionLabel="Payments" onAction={() => onNavigate('payments')} />
+      <StaffOverviewSectionHeader title="Company financials" actionLabel="Payments & invoices" onAction={() => onNavigate('payments')} />
       <div className="staff-overview-financials-grid staff-overview-pro-financials">
         {directorFinancialCells.map(({ label, value, sub, accent }) => (
           <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />

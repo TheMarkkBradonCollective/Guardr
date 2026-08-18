@@ -51,7 +51,13 @@ const MENU_GROUPS = STAFF_NAV_GROUPS;
 
 /** Thumb-order tabs for the mobile staff app. Everything else lives in the More sheet. */
 const MOBILE_TAB_ORDER: StaffSection[] = ['overview', 'jobs', 'guards', 'messages'];
-const FINANCE_TAB_ORDER: StaffSection[] = ['overview', 'payments', 'payment-settings', 'agreements'];
+const FINANCE_TAB_ORDER: StaffSection[] = [
+  'overview',
+  'payments',
+  'platform-fees',
+  'staff-compensation',
+  'agreements',
+];
 
 /** Destinations pinned to the tablet quick-switch row — live ops, not admin. */
 const TABLET_QUICK: StaffSection[] = ['overview', 'map', 'jobs'];

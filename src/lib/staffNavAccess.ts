@@ -17,7 +17,7 @@ export interface StaffNavAccessNotice {
 }
 
 const FINANCE_SECTIONS = new Set<StaffSection>([
-  'payment-settings',
+  'platform-fees',
   'agreements',
   'audit-log',
   'dev-updates',
@@ -33,7 +33,8 @@ const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
 export const FINANCE_DESK_ALLOWED_SECTIONS = new Set<StaffSection>([
   'overview',
   'payments',
-  'payment-settings',
+  'platform-fees',
+  'staff-compensation',
   'agreements',
   'audit-log',
   'guide',
@@ -54,15 +55,15 @@ export function getStaffNavAccessNotice(
   }
   if (PAYMENTS_SECTIONS.has(section) && !flags.showPayments) {
     return {
-      title: 'Payments',
-      message: 'Payments are available to staff with finance permissions or active staff compensation access.',
+      title: 'Payments & invoices',
+      message: 'Payments & invoices are available to staff with finance permissions.',
     };
   }
   if (FINANCE_SECTIONS.has(section) && !flags.showFinance) {
     return {
       title: 'Finance access required',
       message:
-        'Financial controls, payment settings, agreements, audit log, and dev notes require finance permissions. Ask your Director if you need access.',
+        'Financial controls, platform fees, agreements, audit log, and dev notes require finance permissions. Ask your Director if you need access.',
     };
   }
   if (PERMISSIONS_SECTIONS.has(section) && !flags.showPermissions) {
@@ -121,9 +122,8 @@ export function isStaffNavItemVisible(
 
 export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNavAccessNotice>> = {
   payments: {
-    title: 'Payments',
-    message:
-      'Payments are available to staff with finance permissions or active staff compensation access.',
+    title: 'Payments & invoices',
+    message: 'Payments & invoices are available to staff with finance permissions.',
   },
   disputes: {
     title: 'Disputes',
@@ -134,10 +134,14 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     title: 'Dev notes',
     message: 'Dev notes require finance permissions (Manager defaults and above).',
   },
-  'payment-settings': {
-    title: 'Payment settings',
+  'platform-fees': {
+    title: 'Platform fees',
     message:
-      'Platform fee and crew pay settings require finance permissions. Ask your Director to review or update these controls.',
+      'Platform fee tables require finance permissions. Ask your Director to review or update these controls.',
+  },
+  'staff-compensation': {
+    title: 'Staff compensation',
+    message: 'Staff compensation is available to active staff accounts.',
   },
   agreements: {
     title: 'Agreements',
