@@ -27,6 +27,7 @@
     "play:assets": "node scripts/generate-play-store-assets.mjs",
     "cap:sync": "npm run build && npx cap sync android",
     "android:apk": "node scripts/build-android-apk.mjs",
+    "android:aab": "node scripts/build-android-play.mjs",
     "android:play": "node scripts/build-android-play.mjs",
     "android:open": "npx cap open android"
   },

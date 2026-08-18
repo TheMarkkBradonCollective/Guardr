@@ -416,3 +416,17 @@ html.theme-dark .uber-landing-dock-btn--primary {
 }
 
 .uber-style-landing .mobility-landing-cta-bar { display: none; }
+
+/* Desktop landing — mobility homepage with pointer-sized targets and four-up explore */
+body.sf-desktop .uber-style-landing--desktop .uber-landing-explore-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body.sf-desktop .uber-style-landing--desktop .uber-landing-nav-link,
+body.sf-desktop .uber-style-landing--desktop .uber-landing-signup-pill {
+  min-height: 36px;
+}
+
+body.sf-desktop .uber-style-landing--desktop .uber-landing-explore-card:hover {
+  transform: translateY(-2px);
+}
