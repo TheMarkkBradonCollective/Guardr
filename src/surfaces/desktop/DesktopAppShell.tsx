@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ChevronRight,
   Circle,
@@ -16,6 +16,24 @@ import { DesktopDialog, DesktopStatusBar } from './kit/DesktopPanels';
 import { formatCombo, useIsMacPlatform, useKeyboardShortcuts, type KeyboardShortcut } from './kit/useKeyboardShortcuts';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
+
+const SIDEBAR_OPEN_KEY = 'guardr_desktop_sidebar_open';
+
+function readSidebarOpen(): boolean {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_OPEN_KEY);
+    if (stored === '0') return false;
+    if (stored === '1') return true;
+  } catch {
+    /* ignore */
+  }
+  return true;
+}
+
+function desktopActionLabel(label: string, hasIcon: boolean): string {
+  if (!hasIcon) return label;
+  return label.replace(/^\+\s*/, '');
+}
 
 /**
  * The desktop operations centre shell.
@@ -48,11 +66,19 @@ export function DesktopAppShell({
   bleed = false,
   commands = [],
 }: SurfaceShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(readSidebarOpen);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const isMac = useIsMacPlatform();
   const online = useOnlineStatus();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [sidebarOpen]);
 
   const navigation = useMemo(
     () => buildDesktopNavigation(destinations, commands),
@@ -135,9 +161,16 @@ export function DesktopAppShell({
         </div>
 
         {primaryAction ? (
-          <button type="button" className="sfd-sidebar-cta" onClick={primaryAction.onClick} title={primaryAction.label}>
+          <button
+            type="button"
+            className="sfd-sidebar-cta"
+            onClick={primaryAction.onClick}
+            title={primaryAction.label}
+          >
             {primaryAction.icon}
-            {sidebarOpen ? <span>{primaryAction.label}</span> : null}
+            {sidebarOpen ? (
+              <span>{desktopActionLabel(primaryAction.label, Boolean(primaryAction.icon))}</span>
+            ) : null}
           </button>
         ) : null}
 

@@ -132,7 +132,7 @@ export function StaffSettingsPanel({
         publicEnabled={platformSettings.companyPlacardPublicEnabled !== false}
         onSaveDocument={onSaveCompanyPublicDocument}
         onSetPublicEnabled={onSetCompanyPlacardPublicEnabled}
-        variant={isDesktop ? 'desktop' : 'mobile'}
+        variant={isDesktop ? 'desktop' : formFactor === 'tablet' ? 'desktop' : 'mobile'}
       />
     ) : null;
 
@@ -180,10 +180,10 @@ export function StaffSettingsPanel({
     </div>
   );
 
-  if (isDesktop) {
+  if (isDesktop || formFactor === 'tablet') {
     return (
       <StaffOpsPageShell
-        className="staff-mgmt-panel staff-roster-panel adm-platform-page adm-platform-settings-page"
+        className={`staff-mgmt-panel staff-roster-panel adm-platform-page adm-platform-settings-page${formFactor === 'tablet' ? ' sft-settings-page' : ''}`}
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
@@ -191,7 +191,7 @@ export function StaffSettingsPanel({
           />
         }
       >
-        <div className="adm-platform-settings-grid adm-platform-settings-grid--split">
+        <div className={formFactor === 'tablet' ? 'sft-settings-grid' : 'adm-platform-settings-grid adm-platform-settings-grid--split'}>
           <DesktopSettingsCard title="Homepage messages">{homepageMessagesBody}</DesktopSettingsCard>
           <DesktopSettingsCard title="Broadcast">{broadcastBodySection}</DesktopSettingsCard>
           {companyPlacardBody && (

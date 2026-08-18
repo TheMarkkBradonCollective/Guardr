@@ -63,10 +63,9 @@ export function LegalAcceptanceModal({
       open
       onClose={() => {}}
       dismissable={false}
-      align="center"
       zIndex={10000}
       ariaLabelledBy="legal-acceptance-title"
-      className="w-full max-w-lg"
+      className="w-full sfm-legal-gate"
     >
       <Block padding="scale800">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-muted mb-2">

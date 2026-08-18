@@ -229,7 +229,7 @@ export function StaffCompensationSettings({
     </div>
   );
 
-  if (formFactor === 'desktop') {
+  if (formFactor === 'desktop' || formFactor === 'tablet') {
     return <StaffMgmtSection title="Pay rules">{body}</StaffMgmtSection>;
   }
 

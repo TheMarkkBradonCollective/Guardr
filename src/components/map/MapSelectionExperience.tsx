@@ -5,6 +5,7 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
 import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
+import { useSurfaceKind } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -50,16 +51,19 @@ export function MapSelectionExperience({
   staffActions,
 }: MapSelectionExperienceProps) {
   const { viewSurface } = useDevice();
-  // Side inspector only on website desktop — PWA/APK keep slide-up offer cards.
+  const surface = useSurfaceKind();
+  // Side inspector on website desktop and on the tablet app. Mobile keeps the
+  // slide-up offer card so one-handed map use is unchanged.
   const websiteDesktop = !prefersMobileGestureUi(viewSurface);
-  const [expanded, setExpanded] = useState(websiteDesktop);
-  const cardInsetRef = useMapBottomOverlayInset(!websiteDesktop);
+  const sideInspector = websiteDesktop || surface === 'tablet';
+  const [expanded, setExpanded] = useState(sideInspector);
+  const cardInsetRef = useMapBottomOverlayInset(!sideInspector);
   const selected = useMemo(() => job, [job?.id]);
   const guardBody = guardFullBody ?? detailActions;
 
   React.useEffect(() => {
-    setExpanded(websiteDesktop);
-  }, [selected?.id, websiteDesktop]);
+    setExpanded(sideInspector);
+  }, [selected?.id, sideInspector]);
 
   if (!selected) return null;
 
@@ -100,9 +104,12 @@ export function MapSelectionExperience({
     </div>
   );
 
-  if (websiteDesktop) {
+  if (sideInspector) {
     return (
-      <aside className="desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop" aria-label="Job details">
+      <aside
+        className={`desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop${surface === 'tablet' ? ' sft-map-inspector' : ''}`}
+        aria-label="Job details"
+      >
         <div className="desktop-map-inspector-header">
           <p className="desktop-map-inspector-header-label">
             {'title' in selected ? selected.title : 'Job details'}

@@ -165,6 +165,36 @@ export function StaffAuditLogPanel() {
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell
+        className="staff-mgmt-panel staff-roster-panel staff-audit-tablet"
+        toolbar={
+          <div className="flex items-center justify-end">
+            {refreshButton}
+          </div>
+        }
+      >
+        {entries.length >= 200 && (
+          <p className="text-xs text-brand-text-muted">
+            Showing the 200 most recent entries. Older activity is still retained but not shown here.
+          </p>
+        )}
+        {loading ? (
+          <AppEmptyState title="Loading…" />
+        ) : entries.length === 0 ? (
+          <AppEmptyState title="No audit entries yet." />
+        ) : (
+          <div className="staff-audit-tablet-grid">
+            {entries.map((entry) => (
+              <AuditLogCard key={entry.id} entry={entry} />
+            ))}
+          </div>
+        )}
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

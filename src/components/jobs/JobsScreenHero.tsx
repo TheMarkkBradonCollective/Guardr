@@ -9,6 +9,19 @@ export const JOBS_PIE_COLORS = {
   missed: '#ffb38a',
 } as const;
 
+/** Phone jobs charts stay inside the black-and-white identity. */
+export const MOBILE_JOBS_PIE_COLORS = {
+  available: 'var(--sf-ink)',
+  open: 'var(--sf-ink)',
+  scheduled: 'var(--sf-ink-secondary)',
+  completed: 'var(--sf-ink-tertiary)',
+  missed: 'var(--sf-line-strong)',
+} as const;
+
+export function jobsPieColorsForSurface(isMobile: boolean) {
+  return isMobile ? MOBILE_JOBS_PIE_COLORS : JOBS_PIE_COLORS;
+}
+
 export const GUARD_BRAND_HERO_CLASS = 'guard-tier-hero-brand';
 
 interface JobsScreenHeroProps<T extends string> {

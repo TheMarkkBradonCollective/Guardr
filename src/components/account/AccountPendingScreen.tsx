@@ -13,8 +13,8 @@ import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
 } from '../profile/GuardIdentityVerificationPanel';
-import { AppScreen } from '../ui/app/AppPrimitives';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
+import { useLayoutFormFactor } from '../../surfaces';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -78,6 +78,7 @@ export function AccountPendingScreen({
   const revisionOpen = Boolean(
     guard?.applicationRevisionRequestedAt || client?.applicationRevisionRequestedAt
   );
+  const formFactor = useLayoutFormFactor();
   const revisionNote =
     guard?.applicationRevisionNote?.trim() || client?.applicationRevisionNote?.trim();
 
@@ -107,8 +108,11 @@ export function AccountPendingScreen({
     : 'Your account is pending staff approval. Application details stay locked after submission unless staff requests an update.';
 
   return (
-    <ResponsivePage screenClassName="flex flex-col min-h-full overflow-y-auto overscroll-contain" className="adm-pending-page">
-      <div className="px-5 pt-8 pb-6 border-b border-brand-border shrink-0 text-center">
+    <ResponsivePage
+      screenClassName="flex flex-col min-h-full overflow-y-auto overscroll-contain"
+      className={`adm-pending-page${formFactor === 'desktop' ? ' adm-pending-page--desktop' : ''}`}
+    >
+      <section className="adm-pending-identity px-5 pt-8 pb-6 border-b border-brand-border shrink-0 text-center">
         {isGuard && restricted ? (
           <span className="w-14 h-14 rounded-full border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mx-auto mb-5">
             <AlertTriangle className="w-7 h-7 text-red-500" />
@@ -193,8 +197,9 @@ export function AccountPendingScreen({
             </p>
           </div>
         )}
-      </div>
+      </section>
 
+      <section className="adm-pending-workspace">
       {isGuard && guard && canUploadCredentials && onSubmitIdentityVerification && (
         <div className="px-5 py-6">
           <GuardActivationUploadChecklist
@@ -240,6 +245,7 @@ export function AccountPendingScreen({
           <UserManualDownloads audienceFilter={isGuard ? 'guard' : 'client'} variant="embedded" />
         </div>
       </div>
+      </section>
     </ResponsivePage>
   );
 }

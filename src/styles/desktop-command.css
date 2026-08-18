@@ -1,0 +1,972 @@
+/* ============================================================================
+   Desktop command centre — product layer
+   ============================================================================
+   Scoped to body[data-surface="desktop"] only.
+
+   The shell (sidebar, top bar, palette, status bar) lives in surface-desktop.css.
+   This file is the signed-in product: workbenches, tables, filters, forms,
+   records, maps, activation, and the legacy markup those screens still emit.
+
+   Intent: a purpose-built operations workspace. Not a stretched phone. Not a
+   wider tablet. Black / white / grey with existing status hues. Both themes
+   authored, not inverted.
+   ========================================================================= */
+
+body[data-surface='desktop'] {
+  --sfd-cmd-gutter: var(--sf-gutter, 24px);
+  --sfd-cmd-band: 48px;
+}
+
+/* ── Canvas ──────────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas {
+  background: var(--sf-paper-sunken);
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas,
+html[data-theme='dark'] body[data-surface='desktop'] .sfd-shell-canvas {
+  background: #000000;
+}
+
+/* Split / table workspaces fill the canvas and scroll internally. */
+body[data-surface='desktop'] .sfd-shell-canvas:has(.uber-workbench-split),
+body[data-surface='desktop'] .sfd-shell-canvas:has(.sfd-panels),
+body[data-surface='desktop'] .sfd-shell-canvas:has(.sfd-ops-page),
+body[data-surface='desktop'] .sfd-shell-canvas:has(.uber-workbench-body) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas:has(.uber-workbench-split) > *,
+body[data-surface='desktop'] .sfd-shell-canvas:has(.sfd-panels) > *,
+body[data-surface='desktop'] .sfd-shell-canvas:has(.sfd-ops-page) > *,
+body[data-surface='desktop'] .sfd-shell-canvas:has(.uber-workbench-body) > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Kill the "phone column in a huge window" letterbox. Maps stay full-bleed;
+   reading pages get an intelligent max width below. */
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-surface='desktop'] .sfd-shell .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+  max-width: none !important;
+  width: 100%;
+  margin: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .client-content-shell,
+body[data-surface='desktop'] .sfd-shell-canvas .client-home-screen {
+  max-width: none !important;
+  width: 100%;
+}
+
+/* ── Ops page wrapper ────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-ops-page,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-ops-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: transparent;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-toolbar,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-toolbar,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-ops-mobile-toolbar,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-list-filter-tabs {
+  flex-shrink: 0;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-toolbar,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px var(--sfd-cmd-gutter) 0;
+  background: var(--sf-paper);
+  border-bottom: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-ops-page-toolbar > .max-w-md,
+body[data-surface='desktop'] .sfd-ops-page-toolbar .wf-search {
+  max-width: 420px;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-body,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-body,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-body > .uber-workbench-split,
+body[data-surface='desktop'] .sfd-ops-page-body > .uber-workbench-empty,
+body[data-surface='desktop'] .sfd-ops-page-body > .sfd-panels {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-toolbar .staff-list-filter-tabs,
+body[data-surface='desktop'] .sfd-ops-page-toolbar .app-inbox-tabs {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-bottom: none;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-toolbar .uber-workbench-toolbar {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0 12px;
+  border: none;
+  background: transparent;
+}
+
+/* Not every surface is a floating card. Ops panels sit flush on the canvas. */
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-panel {
+  border: none;
+  border-radius: 0;
+  background: var(--sf-paper);
+  overflow: hidden;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-panel--padded {
+  padding: 16px var(--sfd-cmd-gutter);
+  overflow: auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-eyebrow {
+  margin: 0 0 2px;
+  color: var(--sf-ink-tertiary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-subtitle {
+  margin: 0;
+  color: var(--sf-ink-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Sidebar already owns the primary create action — don't duplicate it in the page. */
+body[data-surface='desktop'] .sfd-shell .staff-ops-cta-stack {
+  display: none;
+}
+
+/* ── Split / master-detail ───────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-split {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 38%) minmax(0, 1fr);
+  border-top: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-list {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--sf-paper);
+  border-right: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-detail {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-detail-inner {
+  padding: 20px 24px 32px;
+  max-width: 880px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-panels {
+  height: 100%;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+@media (max-width: 1360px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-split {
+    grid-template-columns: minmax(240px, 34%) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1180px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-list {
+    border-right: none;
+    border-bottom: 1px solid var(--sf-line);
+    max-height: 42vh;
+  }
+}
+
+/* ── Search, filters, tabs ───────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-field,
+body[data-surface='desktop'] .sfd-shell-canvas .wf-search,
+body[data-surface='desktop'] .sfd-shell-canvas .app-search,
+body[data-surface='desktop'] .sfd-shell-canvas input[type='search'] {
+  min-height: 36px;
+  height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-field {
+  max-width: 420px;
+  background: var(--sf-paper-sunken);
+  border: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-field:focus-within {
+  border-color: var(--sf-ink);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-inbox-tab,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-tab,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-list-filter-tabs button {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-list-filter-tabs,
+body[data-surface='desktop'] .sfd-shell-canvas .app-inbox-tabs {
+  padding: 0 var(--sfd-cmd-gutter);
+  background: var(--sf-paper);
+  border-bottom: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-row {
+  margin: 0;
+  padding: 12px var(--sfd-cmd-gutter);
+  background: var(--sf-paper);
+  border-bottom: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-stat-chip {
+  min-width: 4.75rem;
+  padding: 8px 12px;
+  border-radius: var(--sf-radius-control, 6px);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-stat-chip-value {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table th,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-table th,
+body[data-surface='desktop'] .sfd-shell-canvas [class*='workbench-table'] thead th {
+  height: 34px;
+  padding: 0 14px;
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table td {
+  padding: 10px 14px;
+  height: var(--sf-row-h, 40px);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table-row:hover td,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table tbody tr:hover td {
+  background: var(--sf-paper-sunken);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table-row--selected td {
+  background: var(--sf-paper-muted);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table-primary {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table-secondary {
+  font-size: 12px;
+  color: var(--sf-ink-secondary);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-record {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+/* ── Status language (existing hues, compact, never color-only) ──────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip {
+  min-height: 22px;
+  padding: 0 8px;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink-secondary);
+  border: 1px solid var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--positive {
+  background: var(--sf-positive-soft);
+  color: var(--sf-positive);
+  border-color: transparent;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--negative,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--critical {
+  background: var(--sf-critical-soft);
+  color: var(--sf-critical);
+  border-color: transparent;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--warning {
+  background: var(--sf-warning-soft);
+  color: var(--sf-warning);
+  border-color: transparent;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--info {
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink);
+  border-color: var(--sf-line);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-status-chip--accent {
+  background: var(--sf-ink);
+  color: var(--sf-ink-inverse);
+  border-color: transparent;
+}
+
+/* Role badges stay on-brand. Rank is hierarchy, not a rainbow. */
+body[data-surface='desktop'] .staff-overview-role-badge,
+body[data-surface='desktop'] .staff-overview-role-badge--moderator,
+body[data-surface='desktop'] .staff-overview-role-badge--administrator,
+body[data-surface='desktop'] .staff-overview-role-badge--director,
+body[data-surface='desktop'] .staff-overview-role-badge--operator,
+body[data-surface='desktop'] .staff-overview-role-badge--owner,
+body[data-surface='desktop'] .adm-role-badge {
+  background: var(--sf-paper-sunken) !important;
+  color: var(--sf-ink) !important;
+  border: 1px solid var(--sf-line-strong) !important;
+  box-shadow: none !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+body[data-surface='desktop'] .staff-overview-role-badge--owner,
+body[data-surface='desktop'] .staff-overview-role-badge--director {
+  background: var(--sf-ink) !important;
+  color: var(--sf-ink-inverse) !important;
+  border-color: var(--sf-ink) !important;
+}
+
+/* ── Actions: no green / amber / red fills ───────────────────────────────── */
+
+body[data-surface='desktop'] .staff-detail-actions,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok,
+body[data-surface='desktop'] button.staff-action-btn--ok,
+body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--warn,
+body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--warn {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid var(--sf-line-strong) !important;
+  color: var(--sf-ink) !important;
+}
+
+body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok:hover:not(:disabled),
+body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--warn:hover:not(:disabled) {
+  background-color: var(--sf-paper-sunken) !important;
+  border-color: var(--sf-ink) !important;
+  color: var(--sf-ink) !important;
+}
+
+body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--danger,
+body[data-surface='desktop'] .staff-detail-actions button[class*='danger'] {
+  background-color: transparent !important;
+  border: 1px solid var(--sf-critical) !important;
+  color: var(--sf-critical) !important;
+}
+
+body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--danger:hover:not(:disabled) {
+  background-color: var(--sf-critical-soft) !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-button-primary,
+body[data-surface='desktop'] .sfd-shell-canvas button.app-button-primary {
+  min-height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-button-outline,
+body[data-surface='desktop'] .sfd-shell-canvas .app-button-ghost {
+  min-height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+}
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-label,
+body[data-surface='desktop'] .sfd-shell-canvas .app-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sf-ink);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+body[data-surface='desktop'] .sfd-shell-canvas select,
+body[data-surface='desktop'] .sfd-shell-canvas textarea {
+  min-height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+  font-size: 14px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas textarea {
+  min-height: 88px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-form-section {
+  padding: 18px 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-form-page {
+  max-width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 24px var(--sfd-cmd-gutter) 48px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-profile-page {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-profile-sidebar {
+  padding: 20px;
+  border-right: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+  overflow: auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-profile-main {
+  padding: 24px 28px 48px;
+  overflow: auto;
+  background: var(--sf-paper);
+}
+
+@media (min-width: 1440px) {
+  body[data-surface='desktop'] .sfd-shell-canvas form .grid.grid-cols-1.sm\:grid-cols-2,
+  body[data-surface='desktop'] .sfd-shell-canvas .app-form-grid {
+    gap: 14px 20px;
+  }
+}
+
+/* ── Empty / loading ─────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-empty,
+body[data-surface='desktop'] .sfd-shell-canvas .app-empty-state,
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-empty {
+  min-height: 280px;
+  padding: 48px 24px;
+  color: var(--sf-ink-secondary);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-empty--detail {
+  min-height: 100%;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-empty-state-title,
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-empty-title {
+  color: var(--sf-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ── Overview command board ──────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-command {
+  padding: 20px var(--sfd-cmd-gutter) 40px;
+  max-width: var(--sf-content-max, 1760px);
+  margin: 0 auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-eyebrow {
+  margin: 0 0 4px;
+  color: var(--sf-ink-tertiary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-grid {
+  padding: 0;
+  gap: 16px;
+  max-width: none;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-list-panel,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-chart-panel {
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 8px);
+  background: var(--sf-paper);
+  box-shadow: none;
+}
+
+@media (min-width: 1680px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-visual-grid,
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-command .staff-overview-visual-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── Guard activation: two-column workspace, not a phone card ────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page {
+  display: grid;
+  grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :first-child {
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 28px 28px 32px !important;
+  border-right: 1px solid var(--sf-line);
+  border-bottom: none !important;
+  text-align: left !important;
+  overflow: auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :first-child .mx-auto {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :first-child h1 {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :not(:first-child) {
+  grid-column: 2;
+  padding: 24px 32px 40px !important;
+  overflow: auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page .app-button-primary,
+body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page .app-button-outline {
+  width: auto !important;
+  max-width: 100%;
+}
+
+@media (max-width: 1280px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :first-child {
+    grid-row: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--sf-line) !important;
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page > :not(:first-child) {
+    grid-column: auto;
+  }
+}
+
+/* ── Maps ────────────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell[data-bleed='true'] .sfd-shell-canvas {
+  overflow: hidden;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .leaflet-container {
+  background: var(--sf-paper-sunken);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .map-inspector,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-map-panel {
+  max-width: min(420px, 38vw);
+}
+
+/* ── Maps: reserved list column, not a floating overlay ──────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.dsk-map-inspector) .guardr-map-root {
+  right: 22rem !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector,
+body[data-surface='desktop'] .sfd-shell-canvas .dsk-map-inspector {
+  width: 22rem;
+  box-shadow: none;
+  border-left: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+@media (min-width: 1680px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector,
+  body[data-surface='desktop'] .sfd-shell-canvas .dsk-map-inspector {
+    width: 26rem;
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+  body[data-surface='desktop'] .sfd-shell-canvas .guard-map-layout:has(.desktop-map-inspector) .guardr-map-root,
+  body[data-surface='desktop'] .sfd-shell-canvas .client-map-layout:has(.desktop-map-inspector) .guardr-map-root {
+    right: 26rem !important;
+  }
+}
+
+/* ── Messages ────────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-inbox,
+body[data-surface='desktop'] .sfd-shell-canvas .messages-hub {
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Client / guard hubs ─────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .client-home-desktop,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-home {
+  height: auto;
+  min-height: 100%;
+  padding: 20px var(--sfd-cmd-gutter) 48px;
+  max-width: var(--sf-content-max, 1760px);
+  margin: 0 auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-kpis {
+  margin: 0 0 16px;
+  border: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-destinations {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 8px);
+  background: var(--sf-paper);
+  color: var(--sf-ink);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:hover {
+  background: var(--sf-paper-sunken);
+  border-color: var(--sf-line-strong, var(--sf-ink));
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:focus-visible {
+  box-shadow: var(--sf-focus-ring);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink);
+  flex-shrink: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-desc {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--sf-ink-secondary);
+}
+
+@media (max-width: 1280px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-destinations {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Hub tiles: keep the destinations, drop the yellow/green/orange icon fills. */
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--green,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--yellow,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-direct-hub-card-icon--orange {
+  background: var(--sf-paper-sunken) !important;
+  color: var(--sf-ink) !important;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-destinations-grid .uber-direct-hub-card,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-hub .uber-direct-hub-card {
+  border: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+  box-shadow: none;
+}
+
+/* ── Form wizards: workspace with sticky actions, not a phone stepper ────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard {
+  max-width: min(1100px, 100%);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--sfd-cmd-gutter);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard .guard-scroll-panel,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard .guard-scroll-panel {
+  padding-top: 20px;
+  padding-bottom: 24px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 20px;
+  align-items: start;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid > .space-y-3,
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-grid > [class*='JobLocation'] {
+  grid-column: 1 / -1;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  flex-shrink: 0;
+  margin: 0 calc(-1 * var(--sfd-cmd-gutter));
+  padding: 12px var(--sfd-cmd-gutter) 16px;
+  border-top: 1px solid var(--sf-line);
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions .client-form-shell {
+  max-width: none;
+  margin: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard h2,
+body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard h2 {
+  font-size: 22px !important;
+  letter-spacing: -0.03em;
+}
+
+/* ── Guard directory ─────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory .border-b.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--sf-paper);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .sfd-directory .bg-brand-bg-sec.px-4.py-4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .guard-my-jobs,
+body[data-surface='desktop'] .sfd-shell-canvas .guard-earnings,
+body[data-surface='desktop'] .sfd-shell-canvas .user-settings-screen {
+  padding: 20px var(--sfd-cmd-gutter) 48px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-guide-page,
+body[data-surface='desktop'] .sfd-shell-canvas .legal-page,
+body[data-surface='desktop'] .sfd-shell-canvas .docs-page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px var(--sfd-cmd-gutter) 64px;
+}
+
+/* ── Dark theme (authored, not inverted) ─────────────────────────────────── */
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-panel,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-list,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-detail,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-toolbar,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .staff-list-filter-tabs,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-row,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .adm-profile-sidebar,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .adm-profile-main,
+html[data-theme='dark'] body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-panel {
+  background: var(--sf-paper-raised, #161616);
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-search-field,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table th {
+  background: #0a0a0a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table-row:hover td,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-list-panel {
+  background: #1a1a1a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-kpis,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-form-wizard-actions,
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .desktop-map-inspector {
+  background: var(--sf-paper-raised, #161616);
+  border-color: #2a2a2a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest:hover {
+  background: #1a1a1a;
+}
+
+html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas .sfd-client-command-dest-icon {
+  background: #0a0a0a;
+  color: #fff;
+}
+
+/* ── Focus / keyboard ────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell :focus-visible {
+  outline: none;
+  box-shadow: var(--sf-focus-ring);
+}
+
+body[data-surface='desktop'] .sfd-sidebar-item:focus-visible {
+  box-shadow: 0 0 0 2px #111, 0 0 0 4px #fff;
+}
+
+/* ── Ultrawide: don't stretch reading columns; do use the extra ops space ── */
+
+@media (min-width: 1920px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-split {
+    grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+  }
+
+  body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-detail-inner {
+    max-width: 1040px;
+  }
+}
+
+@media (min-width: 2400px) {
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop,
+  body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-command {
+    max-width: 1920px;
+  }
+}
+
+/* ── Misc polish ─────────────────────────────────────────────────────────── */
+
+body[data-surface='desktop'] .sfd-shell-canvas .rounded-xl,
+body[data-surface='desktop'] .sfd-shell-canvas .rounded-2xl {
+  border-radius: var(--sf-radius-card, 8px);
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .shadow-lg,
+body[data-surface='desktop'] .sfd-shell-canvas .shadow-xl,
+body[data-surface='desktop'] .sfd-shell-canvas .shadow-2xl {
+  box-shadow: none;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sf-line-strong) transparent;
+}

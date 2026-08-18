@@ -289,16 +289,81 @@ html[data-theme='dark'] .sfd-sidebar-cta {
   color: rgba(255, 255, 255, 0.88);
 }
 
+.sfd-sidebar-links .uber-direct-sidebar-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .sfd-sidebar-links .uber-direct-sidebar-footer-link,
 .sfd-sidebar-links a,
 .sfd-sidebar-links button {
   color: rgba(255, 255, 255, 0.62);
 }
 
+.sfd-sidebar-links .uber-direct-sidebar-footer-link--primary {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 8px;
+  border-radius: var(--sf-radius-control);
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.sfd-sidebar-links .uber-direct-sidebar-footer-link--primary:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.sfd-sidebar-links .uber-direct-sidebar-footer-legal-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  padding: 4px 8px 6px;
+}
+
+.sfd-sidebar-links .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
+  padding: 0;
+  min-height: 0;
+  font-size: 11px;
+  font-weight: 600;
+  background: none !important;
+}
+
 .sfd-sidebar-links .uber-direct-sidebar-footer-link:hover,
 .sfd-sidebar-links a:hover,
 .sfd-sidebar-links button:hover {
   color: #ffffff;
+}
+
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-cta {
+  margin: 10px 8px 4px;
+  padding: 0;
+}
+
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-cta span,
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-search > span,
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-search .sfd-kbd {
+  display: none;
+}
+
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-item {
+  justify-content: center;
+  padding: 0;
+}
+
+.sfd-shell[data-sidebar='collapsed'] .sfd-sidebar-item-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 14px;
+  padding: 0 3px;
+  font-size: 8px;
+  line-height: 14px;
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────────────── */

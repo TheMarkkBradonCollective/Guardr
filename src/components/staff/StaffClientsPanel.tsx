@@ -24,8 +24,6 @@ import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -254,38 +252,35 @@ export function StaffClientsPanel({
 
   if (formFactor === 'desktop' && pageTab === 'roster') {
     return (
-      <WorkbenchPage className="staff-roster-panel">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
-          <WorkbenchSplit
-            list={
-              filtered.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : Building2}
-                  message={search ? 'No clients match your search' : 'No clients yet'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={clientColumns}
-                  rows={filtered}
-                  rowKey={(client) => client.id}
-                  selectedKey={selectedId ?? undefined}
-                  onRowClick={(client) => setSelectedId(client.id)}
-                  caption="Clients"
-                  cardLayout={{ title: 'client', subtitle: 'jobs', trailing: 'status' }}
-                />
-              )
-            }
-            detail={
-              selectedClient ? (
-                renderClientDetail(selectedClient)
-              ) : (
-                <WorkbenchEmpty icon={Building2} message="Select a client to review account details" variant="detail" />
-              )
-            }
-          />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : Building2}
+                message={search ? 'No clients match your search' : 'No clients yet'}
+              />
+            ) : (
+              <GuardrDataTable
+                columns={clientColumns}
+                rows={filtered}
+                rowKey={(client) => client.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(client) => setSelectedId(client.id)}
+                caption="Clients"
+                cardLayout={{ title: 'client', subtitle: 'jobs', trailing: 'status' }}
+              />
+            )
+          }
+          detail={
+            selectedClient ? (
+              renderClientDetail(selectedClient)
+            ) : (
+              <WorkbenchEmpty icon={Building2} message="Select a client to review account details" variant="detail" />
+            )
+          }
+        />
+      </StaffOpsPageShell>
     );
   }
 

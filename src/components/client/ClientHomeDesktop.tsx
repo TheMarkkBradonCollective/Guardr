@@ -16,7 +16,7 @@ import { OverviewLineChart, OverviewSegmentBar } from '../staff/overview/Overvie
 import { AppEmptyState, AppStatusBanner } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { GuardrCard } from '../baseui/GuardrCard';
-import { DirectHubCard } from '../baseui/dashboard';
+import { MetricCell, MetricStrip } from '../baseui/dashboard';
 import {
   WorkbenchPage,
   WorkbenchPanel,
@@ -27,6 +27,7 @@ import {
   Briefcase,
   Clock,
   CreditCard,
+  Map as MapIcon,
   Star,
   Users,
 } from 'lucide-react';
@@ -175,12 +176,43 @@ export function ClientHomeDesktop({
   const visibleJobs = tableJobs.slice(0, HOME_TABLE_LIMIT);
   const hasMoreJobs = tableJobs.length > HOME_TABLE_LIMIT;
 
+  const destinations: { id: ClientHomeAction | 'map'; label: string; description: string; icon: typeof Briefcase; action: () => void }[] = [
+    {
+      id: 'requests',
+      label: 'Jobs',
+      description: caps.isPersonal ? 'Upcoming and past requests' : 'Create and manage coverage',
+      icon: Briefcase,
+      action: () => run('requests'),
+    },
+    {
+      id: 'invoices',
+      label: caps.isPersonal ? 'Payments' : 'Billing',
+      description: caps.isPersonal ? 'Invoices and payment history' : 'Statements and invoices',
+      icon: CreditCard,
+      action: () => run('invoices'),
+    },
+    {
+      id: 'guards',
+      label: 'Guards',
+      description: caps.isPersonal ? 'Assigned guards and rehires' : 'Browse and rehire licensed guards',
+      icon: Users,
+      action: () => run('guards'),
+    },
+    {
+      id: 'map',
+      label: 'Map',
+      description: 'Live coverage and job sites',
+      icon: MapIcon,
+      action: () => run('map'),
+    },
+  ];
+
   return (
-    <WorkbenchPage className="client-home-desktop mobility-workspace uber-direct-home">
+    <WorkbenchPage className="client-home-desktop mobility-workspace uber-direct-home sfd-client-command">
       {accountPending ? (
         <Block paddingBottom="scale500">
           <AppStatusBanner
-            icon={<Clock className="w-5 h-5 text-amber-400" />}
+            icon={<Clock className="w-5 h-5" />}
             title="Account pending approval"
             action={
               onOpenProfile ? (
@@ -197,29 +229,34 @@ export function ClientHomeDesktop({
         </Block>
       ) : null}
 
-      <div className="uber-direct-home-hub" data-tour="client-home-cta">
-        <DirectHubCard
-          title="Jobs"
-          description={caps.isPersonal ? 'Upcoming and past requests — request again anytime' : 'Create and manage jobs for your locations'}
-          icon={Briefcase}
-          iconTone="yellow"
-          onClick={() => run('requests')}
+      <MetricStrip className="sfd-client-command-kpis">
+        <MetricCell label="Jobs" value={requests.length} onClick={() => run('requests')} />
+        <MetricCell label="Live" value={coverage.activeAssignments} highlight={coverage.activeAssignments > 0} />
+        <MetricCell label="Scheduled" value={upcoming.length} />
+        <MetricCell
+          label="Needs action"
+          value={pendingActions}
+          highlight={pendingActions > 0}
+          onClick={pendingActions > 0 ? () => run('requests') : undefined}
         />
-        <DirectHubCard
-          title={caps.isPersonal ? 'Payments' : 'Billing'}
-          description={caps.isPersonal ? 'View invoices and payment history' : 'Business billing, statements, and invoices'}
-          icon={CreditCard}
-          iconTone="green"
-          onClick={() => run('invoices')}
-        />
-        <DirectHubCard
-          title="Guards"
-          description={caps.isPersonal ? 'See assigned guards and request coverage again' : 'Browse licensed guards and rehire trusted coverage'}
-          icon={Users}
-          iconTone="orange"
-          onClick={() => run('guards')}
-        />
-      </div>
+      </MetricStrip>
+
+      <nav className="sfd-client-command-destinations" aria-label="Client destinations" data-tour="client-home-cta">
+        {destinations.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button key={item.id} type="button" className="sfd-client-command-dest" onClick={item.action}>
+              <span className="sfd-client-command-dest-icon" aria-hidden>
+                <Icon size={16} strokeWidth={2.25} />
+              </span>
+              <span className="sfd-client-command-dest-copy">
+                <span className="sfd-client-command-dest-title">{item.label}</span>
+                <span className="sfd-client-command-dest-desc">{item.description}</span>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
 
       {recentGuards.length > 0 && (onHireGuard || onViewGuard) ? (
         <WorkbenchPanel className="uber-direct-home-recent-guards">

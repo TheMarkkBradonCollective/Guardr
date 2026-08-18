@@ -94,6 +94,7 @@ export function GuardProfileScreen({
   onToggleFavorite,
 }: GuardProfileScreenProps) {
   const formFactor = useLayoutFormFactor();
+  const isTablet = formFactor === 'tablet';
   const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
@@ -140,11 +141,11 @@ export function GuardProfileScreen({
   );
 
   return (
-    <AppScreen className={`app-full-page-detail${formFactor === 'desktop' ? '' : ''}`}>
+    <AppScreen className={`app-full-page-detail${isTablet ? ' sft-guard-profile' : ''}`}>
       {formFactor !== 'desktop' ? (
         <AppSubScreenHeader title={guard.name} onBack={onBack} backLabel="Guards" />
       ) : null}
-      <div className={`px-4 py-4 space-y-6 max-w-3xl mx-auto${formFactor === 'desktop' ? '' : ' pb-28'}`}>
+      <div className={`px-4 py-4 space-y-6 max-w-3xl mx-auto${formFactor === 'desktop' || isTablet ? '' : ' pb-28'}${isTablet ? ' sft-guard-profile-body' : ''}`}>
           {formFactor === 'desktop' ? (
             <div className="space-y-4">
               <DashboardHero
@@ -447,7 +448,7 @@ export function GuardProfileScreen({
           )}
         </div>
 
-      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
+      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl w-full space-y-2${isTablet ? ' sft-guard-profile-actions' : ' max-w-3xl mx-auto'}`}>
         {canMessageFromProfile && messageableRequest && (
           <AppButton
             variant="outline"

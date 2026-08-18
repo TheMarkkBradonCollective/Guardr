@@ -91,6 +91,7 @@ export function RequestSecurityFlow({
   clientCredentialRules,
 }: RequestSecurityFlowProps) {
   const formFactor = useLayoutFormFactor();
+  const isTablet = formFactor === 'tablet';
   const caps = useClientCapabilities();
   const allowMultiGuard = caps.has('multi-guard-requests');
   const maxGuards = caps.maxGuardsPerRequest;
@@ -341,7 +342,7 @@ export function RequestSecurityFlow({
 
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
-    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
+    <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard sfd-form-wizard' : ''}${isTablet ? ' sft-request-flow' : ''}`}>
       <div className="app-subscreen-header app-subscreen-header--wrap shrink-0">
         <button type="button" onClick={goBack} className="app-subscreen-back">
           <ArrowLeft className="w-4 h-4" aria-hidden />
@@ -361,17 +362,25 @@ export function RequestSecurityFlow({
         </div>
       </div>
 
-      <div className="guard-scroll-panel flex-1 pb-24">
+      <div className={`guard-scroll-panel flex-1${isTablet ? ' sft-request-scroll' : ' pb-24'}`}>
         {step === 1 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">What do you need?</h2>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-5" data-full-width="true">
               {clientServiceGroups().map((group) => (
                 <div key={group.label} className="space-y-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">{group.label}</p>
-                  <div className="grid grid-cols-1 gap-2">
+                  <div
+                    className={
+                      formFactor === 'desktop'
+                        ? 'grid grid-cols-2 gap-2'
+                        : isTablet
+                          ? 'sft-request-service-grid'
+                          : 'grid grid-cols-1 gap-2'
+                    }
+                  >
                     {group.options.map((opt) => (
                       <button
                         key={opt.id}
@@ -414,6 +423,7 @@ export function RequestSecurityFlow({
             <button
               type="button"
               onClick={skipServiceStep}
+              data-full-width="true"
               className="w-full text-sm font-semibold text-brand-text-muted hover:text-brand-primary transition-colors py-2"
             >
               Skip for now — describe in listing details
@@ -422,11 +432,12 @@ export function RequestSecurityFlow({
         )}
 
         {step === 2 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Where?</h2>
             </div>
-            <div>
+            <div className={formFactor === 'desktop' ? 'sfd-form-grid' : ''}>
+            <div data-full-width="true">
               <label className="uber-label block mb-1.5">Address</label>
               <input
                 type="text"
@@ -437,6 +448,7 @@ export function RequestSecurityFlow({
                 autoFocus
               />
             </div>
+            <div data-full-width="true">
             <UseCurrentLocationButton
               onLocated={({ coords, addressLine, stateCode }) => {
                 applyLocatedCoords(coords);
@@ -444,6 +456,7 @@ export function RequestSecurityFlow({
                 setJobState(cityFromGeocode(addressLine, stateCode));
               }}
             />
+            </div>
             <div>
               <label className="uber-label block mb-1.5">City</label>
               <select
@@ -468,7 +481,7 @@ export function RequestSecurityFlow({
               />
             </div>
             {(savedLocations.length > 0 || familiarLocations.length > 0) && (
-              <div className="space-y-3">
+              <div className={isTablet ? 'sft-request-fields' : 'space-y-3'} data-full-width="true">
                 {savedLocations.length > 0 && (
                   <div>
                     <label className="uber-label block mb-1.5">Your locations (optional)</label>
@@ -526,21 +539,24 @@ export function RequestSecurityFlow({
                 )}
               </div>
             )}
+            <div data-full-width="true">
             <JobLocationCoordsFields
               ref={coordsFieldsRef}
               latitude={latitude}
               longitude={longitude}
               onCoordsChange={onCoordsChange}
             />
+            </div>
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">When?</h2>
             </div>
-            <div className="segmented-control segmented-control-full">
+            <div className="segmented-control segmented-control-full" data-full-width="true">
               <button
                 type="button"
                 onClick={() => setScheduleType('one-time')}
@@ -561,7 +577,7 @@ export function RequestSecurityFlow({
               </button>
             </div>
             {scheduleType === 'recurring' && (
-              <div className="space-y-4 rounded-2xl border border-brand-border p-4">
+              <div className="space-y-4 rounded-2xl border border-brand-border p-4" data-full-width="true">
                 <div>
                   <label className="uber-label block mb-1.5">Repeat on (optional)</label>
                   <div className="flex flex-wrap gap-2">
@@ -593,7 +609,7 @@ export function RequestSecurityFlow({
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3" data-full-width="true">
               <div>
                 <label className="uber-label block mb-1.5">Start Date</label>
                 <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => {
@@ -625,7 +641,7 @@ export function RequestSecurityFlow({
               !validateShiftSchedule(startDate, endDate) && durationHours > 0
                 ? 'border-brand-primary/30 bg-brand-primary/5 text-brand-primary'
                 : 'border-red-500/30 text-red-400'
-            }`}>
+            }`} data-full-width="true">
               {validateShiftSchedule(startDate, endDate) ??
                 (durationHours <= 0
                   ? 'End must be after start'
@@ -675,8 +691,8 @@ export function RequestSecurityFlow({
         )}
 
         {step === 4 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
               <p className="text-sm text-brand-text-muted mt-2 font-medium">
                 {allowMultiGuard
@@ -687,7 +703,7 @@ export function RequestSecurityFlow({
             {/* Disable count picker when a favourite is selected (direct = 1 guard) */}
             {!selectedFavoriteGuardId && (
               <>
-                <div className="segmented-control segmented-control-full">
+                <div className="segmented-control segmented-control-full" data-full-width="true">
                   {GUARD_COUNT_PRESETS.filter((n) => n <= maxGuards).map((n) => (
                     <button
                       key={n}
@@ -719,7 +735,7 @@ export function RequestSecurityFlow({
             )}
 
             {favouriteGuards.length > 0 && (
-              <div className="space-y-3 pt-1">
+              <div className="space-y-3 pt-1" data-full-width="true">
                 <div className="flex items-center gap-2">
                   <Heart className="w-4 h-4 text-rose-500" />
                   <p className="uber-label">Request a favourite guard (optional)</p>
@@ -727,7 +743,7 @@ export function RequestSecurityFlow({
                 <p className="text-xs text-brand-text-muted -mt-1">
                   Selecting a guard sends the job directly to them instead of the marketplace.
                 </p>
-                <div className="space-y-2">
+                <div className={isTablet ? 'sft-request-service-grid' : 'space-y-2'}>
                   {favouriteGuards.map((g) => {
                     const isSelected = selectedFavoriteGuardId === g.id;
                     return (
@@ -760,9 +776,9 @@ export function RequestSecurityFlow({
               </div>
             )}
 
-            <div className="space-y-3 pt-2 border-t border-brand-border">
+            <div className="space-y-3 pt-2 border-t border-brand-border" data-full-width="true">
               <p className="uber-label">How should guards be placed?</p>
-              <div className="grid grid-cols-1 gap-2">
+              <div className={isTablet ? 'sft-request-service-grid' : 'grid grid-cols-1 gap-2'}>
                 {ASSIGNMENT_MODE_OPTIONS.map((opt) => (
                   <button
                     key={opt.id}
@@ -808,7 +824,7 @@ export function RequestSecurityFlow({
                 Differential pay by armed status
               </label>
               {useTierPay && (
-                <div className="grid grid-cols-1 gap-3">
+                <div className={isTablet ? 'sft-request-fields' : 'grid grid-cols-1 gap-3'}>
                   {([
                     ['unarmed', 'Unarmed ($/hr)'],
                     ['lightArmed', 'Light armed ($/hr)'],
@@ -849,20 +865,24 @@ export function RequestSecurityFlow({
         )}
 
         {step === 7 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Listing details</h2>
             </div>
+            <div data-full-width="true">
             <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
+            </div>
           </div>
         )}
 
         {step === 8 && (
-          <div className="space-y-5">
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-5'}>
+            <div data-full-width="true">
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Site briefing</h2>
             </div>
+            <div data-full-width="true">
             <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+            </div>
           </div>
         )}
 
@@ -919,7 +939,15 @@ export function RequestSecurityFlow({
         )}
       </div>
 
-      <div className={`fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
+      <div
+        className={
+          formFactor === 'desktop'
+            ? 'sfd-form-wizard-actions'
+            : isTablet
+              ? 'sft-request-flow-actions'
+              : 'fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border'
+        }
+      >
         <div className="client-form-shell mx-auto">
           {step < 9 ? (
             <GuardrButton

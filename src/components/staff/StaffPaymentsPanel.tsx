@@ -13,6 +13,7 @@ import { buildPayoutExportRows, downloadPayoutCsv } from '../../lib/payoutExport
 import { staffJobMoneySummary } from '../../lib/paymentDisplay';
 import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfSectionHeader } from '../ui/wireframe';
 import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
@@ -269,7 +270,7 @@ export function StaffPaymentsPanel({
   ];
 
   useEffect(() => {
-    if (formFactor !== 'desktop') return;
+    if (formFactor === 'mobile') return;
     if (filteredQueue.length === 0) {
       setSelectedId(null);
       return;
@@ -330,7 +331,6 @@ export function StaffPaymentsPanel({
           className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
           toolbar={
             <WorkbenchToolbar
-              eyebrow="Finance"
               subtitle="Guard payouts, client billing, and invoices."
             />
           }
@@ -358,11 +358,10 @@ export function StaffPaymentsPanel({
       <StaffOpsPageShell
         className="staff-mgmt-panel staff-roster-panel adm-finance-page adm-payments-workbench"
         toolbar={
-          <WorkbenchToolbar
-            eyebrow="Finance"
-            subtitle="Guard payouts, client billing, and invoices."
-            actions={exportButton}
-          />
+            <WorkbenchToolbar
+              subtitle="Guard payouts, client billing, and invoices."
+              actions={exportButton}
+            />
         }
       >
         {allQueueItems.length === 0 ? (
@@ -428,6 +427,119 @@ export function StaffPaymentsPanel({
               />
             )}
           </>
+        )}
+      </StaffOpsPageShell>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    if (!showGuardPayments) {
+      return (
+        <StaffOpsPageShell className="staff-payments-panel">
+          {emptyState}
+        </StaffOpsPageShell>
+      );
+    }
+
+    const filterTabs: { id: PaymentsFilter; label: string; count?: number }[] = [
+      { id: 'action', label: 'Needs action', count: actionCount },
+      { id: 'all', label: 'All', count: allQueueItems.length },
+      { id: 'invoices', label: 'Invoices', count: openInvoices.length },
+      ...PIPELINE_STAGE_ORDER.map((stage) => ({
+        id: stage as PaymentsFilter,
+        label: PIPELINE_SECTION_META[stage].title,
+        count: pipelineStageRequests(summary, stage).length,
+      })),
+    ];
+    const visibleFilterTabs = filterTabs.filter(
+      (tab) => tab.id === 'all' || tab.id === 'action' || (tab.count ?? 0) > 0
+    );
+
+    const renderQueueDetail = (item: PaymentQueueItem) =>
+      item.kind === 'invoice' ? (
+        <StaffPayoutInvoiceRow
+          invoice={item.invoice}
+          requests={requests}
+          guards={guards}
+          isDirector={isDirector}
+          onReleasePayout={onReleasePayout}
+          onCompleteInvoice={onCompletePayoutInvoice}
+        />
+      ) : (
+        <JobPaymentRow
+          req={item.req}
+          guard={guards.find((g) => g.id === item.req.assignedGuardId)}
+          payment={payments.find((p) => p.jobId === item.req.id)}
+          isDirector={isDirector}
+          canManagePayments={canManagePayments}
+          paymentGates={paymentGates}
+          readOnly={
+            item.stage === 'guard-collection-pending' ||
+            item.stage === 'client-paid-active' ||
+            item.stage === 'settled'
+          }
+          {...sectionProps}
+        />
+      );
+
+    return (
+      <StaffOpsPageShell
+        className="staff-payments-panel staff-payments-tablet"
+        toolbar={
+          <div className="flex flex-col gap-3">
+            {actionCount > 0 && (
+              <p className="staff-payments-attention">
+                {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
+              </p>
+            )}
+            <StaffPaymentSummary summary={summary} financials={financials} />
+            {exportButton}
+            {allQueueItems.length > 0 ? (
+              <StaffListFilterTabs
+                aria-label="Payment queue"
+                activeId={filter}
+                onChange={(id) => setFilter(id as PaymentsFilter)}
+                tabs={visibleFilterTabs}
+              />
+            ) : null}
+          </div>
+        }
+      >
+        {allQueueItems.length === 0 ? (
+          emptyState
+        ) : filteredQueue.length === 0 ? (
+          <div className="sft-empty">
+            <p className="sft-empty-title">No items in this queue</p>
+            <p className="sft-empty-message">Try another filter to review payouts, invoices, or client billing.</p>
+          </div>
+        ) : (
+          <ListDetailLayout
+            items={filteredQueue}
+            selectedId={selectedId}
+            onSelectId={setSelectedId}
+            getItemId={(item) => item.id}
+            autoSelectFirst
+            mobilePresentation="page"
+            emptyDetail={
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select a payment</p>
+                <p className="sft-empty-message">Choose a job or invoice to review who paid what.</p>
+              </div>
+            }
+            renderItem={(item, isSelected, onSelect) => (
+              <button
+                type="button"
+                onClick={onSelect}
+                data-selected={isSelected ? 'true' : undefined}
+                className="app-list-row app-list-row-align-top flex-col !items-stretch gap-1 text-left w-full"
+              >
+                <p className="font-semibold text-sm">{queueItemPrimary(item)}</p>
+                <p className="text-xs text-brand-text-muted">{queueItemSecondary(item, guards)}</p>
+                <p className="text-xs font-semibold">{queueItemLabel(item)} · {queueItemAmount(item)}</p>
+              </button>
+            )}
+            renderDetail={(item) => renderQueueDetail(item)}
+          />
         )}
       </StaffOpsPageShell>
     );

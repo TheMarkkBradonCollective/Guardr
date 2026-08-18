@@ -78,6 +78,7 @@ export function DirectGuardRequestFlow({
   onSubmit,
 }: DirectGuardRequestFlowProps) {
   const formFactor = useLayoutFormFactor();
+  const isTablet = formFactor === 'tablet';
   const caps = useClientCapabilities();
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => getDefaultShiftStart(), []);
@@ -236,7 +237,7 @@ export function DirectGuardRequestFlow({
 
   return (
     <ResponsivePage screenClassName="h-full min-h-0">
-    <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' uber-form-wizard' : ''}`}>
+    <div className={`h-full flex flex-col client-content-shell client-form-shell animate-fade-in${formFactor === 'desktop' ? ' uber-form-wizard sfd-form-wizard' : ''}${isTablet ? ' sft-request-flow' : ''}`}>
       <div className="shrink-0 space-y-4">
         <div className="px-4 pt-4">
           <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
@@ -269,15 +270,15 @@ export function DirectGuardRequestFlow({
         </div>
       </div>
 
-      <div className="guard-scroll-panel flex-1 px-4 py-4 pb-28">
+      <div className={`guard-scroll-panel flex-1 px-4 py-4${isTablet ? ' sft-request-scroll' : ' pb-28'}`}>
         {step === 1 && (
-          <div className="space-y-3">
-            <h2 className="text-xl font-bold">What do you need?</h2>
-            <div className="space-y-4">
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-3'}>
+            <h2 className="text-xl font-bold" data-full-width="true">What do you need?</h2>
+            <div className="space-y-4" data-full-width="true">
               {clientServiceGroups().map((group) => (
                 <div key={group.label} className="space-y-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted">{group.label}</p>
-                  <div className="grid gap-2">
+                  <div className={isTablet ? 'sft-request-service-grid' : 'grid gap-2'}>
                     {group.options.filter((opt) => opt.id !== 'custom').map((opt) => (
                       <button
                         key={opt.id}
@@ -318,9 +319,9 @@ export function DirectGuardRequestFlow({
         )}
 
         {step === 2 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Where?</h2>
-            <div>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-4'}>
+            <h2 className="text-xl font-bold" data-full-width="true">Where?</h2>
+            <div data-full-width="true">
               <label className="uber-label block mb-1">Address</label>
               <input
                 type="text"
@@ -331,6 +332,7 @@ export function DirectGuardRequestFlow({
                 autoFocus
               />
             </div>
+            <div data-full-width="true">
             <UseCurrentLocationButton
               onLocated={({ coords, addressLine, stateCode }) => {
                 applyLocatedCoords(coords);
@@ -338,6 +340,7 @@ export function DirectGuardRequestFlow({
                 setJobState(cityFromGeocode(addressLine, stateCode));
               }}
             />
+            </div>
             <div>
               <label className="uber-label block mb-1">City</label>
               <select value={jobState} onChange={(e) => setJobState(resolveJobCity(e.target.value))} className="uber-select w-full" required>
@@ -350,19 +353,21 @@ export function DirectGuardRequestFlow({
               <label className="uber-label block mb-1">Site name (optional)</label>
               <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
             </div>
+            <div data-full-width="true">
             <JobLocationCoordsFields
               ref={coordsFieldsRef}
               latitude={latitude}
               longitude={longitude}
               onCoordsChange={onCoordsChange}
             />
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">When?</h2>
-            <div className="grid grid-cols-2 gap-3">
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-4'}>
+            <h2 className="text-xl font-bold" data-full-width="true">When?</h2>
+            <div className="grid grid-cols-2 gap-3" data-full-width="true">
               <div>
                 <label className="uber-label block mb-1">Start date</label>
                 <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => setStartDate(`${e.target.value}T${startDate.slice(11) || '18:00'}`)} className="uber-input" />
@@ -384,7 +389,7 @@ export function DirectGuardRequestFlow({
               !validateShiftSchedule(startDate, endDate) && durationHours > 0
                 ? 'border-brand-primary/30 text-brand-primary'
                 : 'border-red-500/30 text-red-400'
-            }`}>
+            }`} data-full-width="true">
               {validateShiftSchedule(startDate, endDate) ??
                 (durationHours <= 0 ? 'End must be after start' : formatDuration(durationHours))}
             </p>
@@ -448,19 +453,23 @@ export function DirectGuardRequestFlow({
         )}
 
         {step === 6 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Assignment details for {guard.name.split(' ')[0]}</h2>
-            <p className="text-sm text-brand-text-muted">
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-4'}>
+            <h2 className="text-xl font-bold" data-full-width="true">Assignment details for {guard.name.split(' ')[0]}</h2>
+            <p className="text-sm text-brand-text-muted" data-full-width="true">
               Professional post orders — dress code, equipment, access, and on-site instructions.
             </p>
+            <div data-full-width="true">
             <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
+            </div>
           </div>
         )}
 
         {step === 7 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Site briefing</h2>
+          <div className={isTablet ? 'sft-request-fields' : 'space-y-4'}>
+            <h2 className="text-xl font-bold" data-full-width="true">Site briefing</h2>
+            <div data-full-width="true">
             <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+            </div>
           </div>
         )}
 
@@ -515,7 +524,15 @@ export function DirectGuardRequestFlow({
         )}
       </div>
 
-      <div className={`shrink-0 p-4 border-t border-brand-border bg-brand-bg/95${formFactor === 'desktop' ? ' uber-form-wizard-actions' : ''}`}>
+      <div
+        className={
+          formFactor === 'desktop'
+            ? 'sfd-form-wizard-actions'
+            : isTablet
+              ? 'sft-request-flow-actions'
+              : 'shrink-0 p-4 border-t border-brand-border bg-brand-bg/95'
+        }
+      >
         {step < 8 ? (
           <GuardrButton kind="primary" onClick={goNext} disabled={!canNext()} endEnhancer={<ArrowRight className="w-4 h-4" />}>
             Continue

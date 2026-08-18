@@ -30,8 +30,10 @@ import {
   AppScreen,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge } from '../ui/wireframe';
 import { formatShiftRange } from '../../lib/dates';
+import { useLayoutFormFactor } from '../../surfaces';
 
 interface ClientInvoiceScreenProps {
   client: Client;
@@ -74,6 +76,7 @@ export function ClientInvoiceScreen({
   onSelectRequestId,
   onBack,
 }: ClientInvoiceScreenProps) {
+  const formFactor = useLayoutFormFactor();
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [payingSquareJobId, setPayingSquareJobId] = useState<string | null>(null);
   const caps = useClientCapabilities();
@@ -125,6 +128,255 @@ export function ClientInvoiceScreen({
       setPayingSquareJobId(null);
     }
   };
+
+  const renderInvoiceDetail = (
+    invoice: ClientInvoice,
+    options?: { onBack?: () => void }
+  ) => {
+    const request = invoice.requestId ? requestById.get(invoice.requestId) : undefined;
+    const awaitingPayment = request
+      ? invoiceAwaitingPayment(invoice, request)
+      : invoice.status === 'sent';
+    const canPayStripe = request ? canClientPayWithStripe(request, paymentGates) : false;
+    const canPaySquare = request ? canClientPayWithSquare(request, paymentGates) : false;
+
+    return (
+      <div className="app-full-page-detail min-w-0 max-w-full">
+        {options?.onBack ? (
+          <AppSubScreenHeader
+            title="Invoice"
+            hideTitle
+            onBack={options.onBack}
+            backLabel={invoicesTitle}
+          />
+        ) : null}
+        <div className="px-5 space-y-5">
+          <div className="staff-mgmt-detail-row space-y-3 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-brand-text-muted">Invoice</p>
+                <p className="text-lg font-bold text-brand-text">{invoice.invoiceNumber}</p>
+              </div>
+              <WfBadge tone={invoiceStatusTone(invoice, request)}>
+                {invoiceStatusLabel(invoice, request)}
+              </WfBadge>
+            </div>
+            {request ? (
+              <>
+                <p className="text-sm font-semibold text-brand-text">{request.title}</p>
+                <p className="text-xs text-brand-text-muted">
+                  {request.siteName || request.address || request.location}
+                </p>
+                <p className="text-xs text-brand-text-muted">
+                  {formatShiftRange(request.startDate, request.endDate)}
+                </p>
+              </>
+            ) : null}
+            <p className="text-xs text-brand-text-muted">
+              Issued{' '}
+              {new Date(invoice.issuedAt ?? invoice.createdAt).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+
+          <div className="border-t border-brand-border">
+            {invoice.lineItems.map((line) => (
+              <div
+                key={`${line.description}-${line.amount}`}
+                className="flex items-start justify-between gap-3 py-3 border-b border-brand-border last:border-b-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-brand-text">{line.description}</p>
+                  <p className="text-xs text-brand-text-muted">
+                    {line.quantity} × {formatInvoiceCurrency(line.unitPrice)}
+                  </p>
+                </div>
+                <p className="text-sm font-medium text-brand-text shrink-0">
+                  {formatInvoiceCurrency(line.amount)}
+                </p>
+              </div>
+            ))}
+            <div className="py-3 space-y-1">
+              <div className="flex justify-between text-sm text-brand-text-muted">
+                <span>Subtotal</span>
+                <span>{formatInvoiceCurrency(invoice.subtotal)}</span>
+              </div>
+              {invoice.platformFee > 0 ? (
+                <div className="flex justify-between text-sm text-brand-text-muted">
+                  <span>Platform fee</span>
+                  <span>{formatInvoiceCurrency(invoice.platformFee)}</span>
+                </div>
+              ) : null}
+              {invoice.tax > 0 ? (
+                <div className="flex justify-between text-sm text-brand-text-muted">
+                  <span>Tax</span>
+                  <span>{formatInvoiceCurrency(invoice.tax)}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between text-base font-bold text-brand-text pt-1">
+                <span>Total due</span>
+                <span>{formatInvoiceCurrency(invoice.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          {awaitingPayment && request && (canPayStripe || canPaySquare) ? (
+            <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/10 p-4 space-y-3">
+              <p className="text-sm font-semibold text-brand-text">Pay this invoice</p>
+              <p className="text-xs text-brand-text-muted leading-relaxed">
+                Complete payment to publish your job on the Guardr marketplace and let guards apply.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                {canPayStripe ? (
+                  <button
+                    type="button"
+                    onClick={() => void handlePayWithStripe(request)}
+                    disabled={payingJobId === request.id || payingSquareJobId === request.id}
+                    className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-1.5 disabled:opacity-50"
+                  >
+                    {payingJobId === request.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Redirecting...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4" /> Pay with Stripe
+                      </>
+                    )}
+                  </button>
+                ) : null}
+                {canPaySquare ? (
+                  <button
+                    type="button"
+                    onClick={() => void handlePayWithSquare(request)}
+                    disabled={payingJobId === request.id || payingSquareJobId === request.id}
+                    className="app-button-outline !w-auto !h-10 !px-5 !text-sm gap-1.5 disabled:opacity-50"
+                  >
+                    {payingSquareJobId === request.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Redirecting...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4" /> Pay with Square
+                      </>
+                    )}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {!awaitingPayment ? (
+            <p className="text-xs text-emerald-400/90 flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4" />
+              Payment received — thank you.
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => downloadInvoicePdf(invoice, client)}
+            className="app-button-outline !w-full gap-2"
+          >
+            <Download className="w-4 h-4" /> Download invoice
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  if (formFactor === 'tablet') {
+    const unpaidBanner = unpaid.length > 0 ? (
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <p className="text-sm font-semibold text-amber-200">
+          {unpaid.length} invoice{unpaid.length === 1 ? '' : 's'} awaiting payment
+        </p>
+        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+          Pay approved jobs to publish them on the marketplace.
+        </p>
+      </div>
+    ) : null;
+
+    return (
+      <AppScreen className="h-full min-h-0">
+        {onBack ? (
+          <AppSubScreenHeader title={invoicesTitle} onBack={onBack} backLabel="Home" hideTitle />
+        ) : null}
+        {unpaidBanner ? <div className="px-4 mb-4">{unpaidBanner}</div> : null}
+        {clientInvoices.length === 0 ? (
+          <AppEmptyState icon={<FileText className="w-5 h-5" />} title={caps.isPersonal ? 'No payments yet' : 'No invoices yet'}>
+            {caps.isPersonal
+              ? 'Invoices and payment history for your services will appear here.'
+              : 'When Guardr approves your job, an invoice will appear here for payment.'}
+          </AppEmptyState>
+        ) : (
+          <ListDetailLayout
+            items={clientInvoices}
+            selectedId={selectedRequestId}
+            onSelectId={(id) => onSelectRequestId?.(id)}
+            getItemId={(invoice) => invoice.requestId ?? invoice.id}
+            autoSelectFirst
+            mobilePresentation="page"
+            emptyDetail={
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select an invoice</p>
+                <p className="sft-empty-message">Choose a bill from the list to review line items and pay.</p>
+              </div>
+            }
+            renderItem={(invoice, isSelected, onSelect) => {
+              const request = invoice.requestId ? requestById.get(invoice.requestId) : undefined;
+              const tone = invoiceStatusTone(invoice, request);
+              return (
+                <button
+                  type="button"
+                  onClick={invoice.requestId ? onSelect : undefined}
+                  disabled={!invoice.requestId}
+                  data-selected={isSelected ? 'true' : undefined}
+                  className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 text-left w-full disabled:opacity-60"
+                >
+                  <div className="flex items-start justify-between gap-2 w-full">
+                    <div>
+                      <p className="font-semibold text-sm">{invoice.invoiceNumber}</p>
+                      <p className="text-sm text-brand-text-muted mt-0.5">
+                        {request?.title ?? 'Security services'}
+                      </p>
+                      {request ? (
+                        <p className="text-xs text-brand-text-muted mt-0.5">
+                          {request.siteName || request.address || request.location}
+                        </p>
+                      ) : null}
+                    </div>
+                    <WfBadge tone={tone}>{invoiceStatusLabel(invoice, request)}</WfBadge>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <p className="text-sm font-medium text-brand-text">
+                      {formatInvoiceCurrency(invoice.total)}
+                    </p>
+                    <p className="text-xs text-brand-text-muted">
+                      {request
+                        ? formatShiftRange(request.startDate, request.endDate)
+                        : new Date(invoice.issuedAt ?? invoice.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                    </p>
+                  </div>
+                </button>
+              );
+            }}
+            renderDetail={(invoice, options) => renderInvoiceDetail(invoice, options)}
+          />
+        )}
+      </AppScreen>
+    );
+  }
 
   if (selectedInvoice) {
     const awaitingPayment = selectedRequest

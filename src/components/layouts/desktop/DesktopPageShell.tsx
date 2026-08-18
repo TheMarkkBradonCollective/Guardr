@@ -39,6 +39,13 @@ export function ResponsivePage({
       </DesktopPage>
     );
   }
+  if (surface === 'tablet') {
+    return (
+      <div className={`sft-page ${className}`.trim()} data-tour={dataTour}>
+        {children}
+      </div>
+    );
+  }
   return (
     <AppScreen className={screenClassName} data-tour={dataTour}>
       {children}
@@ -72,6 +79,14 @@ export function ResponsiveFormPage({
       </div>
     );
   }
+  if (surface === 'tablet') {
+    return (
+      <div className={`sft-form-page ${className}`.trim()} aria-label={title}>
+        {subtitle ? <p className="sft-form-page-kicker">{subtitle}</p> : null}
+        <div className="sft-form-page-body">{children}</div>
+      </div>
+    );
+  }
   return <>{children}</>;
 }
 
@@ -91,6 +106,14 @@ export function ResponsiveProfilePage({
       <div className={`adm-profile-page ${className}`.trim()}>
         <aside className="adm-profile-sidebar">{sidebar}</aside>
         <div className="adm-profile-main">{children}</div>
+      </div>
+    );
+  }
+  if (surface === 'tablet') {
+    return (
+      <div className={`sft-profile-page ${className}`.trim()}>
+        <aside className="sft-profile-sidebar">{sidebar}</aside>
+        <div className="sft-profile-main">{children}</div>
       </div>
     );
   }

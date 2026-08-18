@@ -861,13 +861,9 @@ export function ClientDashboard({
     guards,
   };
 
-  return page(
-    'home',
-    formFactor === 'desktop' ? (
-      <ClientHomeDesktop {...homeProps} />
-    ) : (
-      <ClientHomeScreen {...homeProps} />
-    ),
-    'client-home'
-  );
+  if (formFactor === 'desktop') {
+    return page('home', <ClientHomeDesktop {...homeProps} />, 'client-home');
+  }
+
+  return page('home', <ClientHomeScreen {...homeProps} />, 'client-home');
 }

@@ -32,8 +32,6 @@ import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTab
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -340,46 +338,43 @@ export function StaffGuardsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-roster-panel">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
-          <WorkbenchSplit
-            list={
-              filtered.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : Users}
-                  message={search ? 'No guards match your search' : 'No guards on the roster'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={guardColumns}
-                  rows={filtered}
-                  rowKey={(guard) => guard.id}
-                  selectedKey={selectedId ?? undefined}
-                  onRowClick={(guard) => setSelectedId(guard.id)}
-                  caption="Guards"
-                  cardLayout={{ title: 'guard', subtitle: 'rating', trailing: 'status' }}
-                />
-              )
-            }
-            detail={
-              selectedGuard ? (
-                <StaffGuardDetailPanel
-                  {...buildDetailProps(selectedGuard)}
-                  editing={staffEdit}
-                  onEditingChange={onStaffEditChange}
-                  staffGuardTab={staffGuardTab}
-                  onStaffGuardTabChange={onStaffGuardTabChange}
-                  performanceFactorId={performanceFactorId}
-                  onPerformanceFactorChange={onPerformanceFactorChange}
-                />
-              ) : (
-                <WorkbenchEmpty icon={Users} message="Select a guard to review profile and actions" variant="detail" />
-              )
-            }
-          />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : Users}
+                message={search ? 'No guards match your search' : 'No guards on the roster'}
+              />
+            ) : (
+              <GuardrDataTable
+                columns={guardColumns}
+                rows={filtered}
+                rowKey={(guard) => guard.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(guard) => setSelectedId(guard.id)}
+                caption="Guards"
+                cardLayout={{ title: 'guard', subtitle: 'rating', trailing: 'status' }}
+              />
+            )
+          }
+          detail={
+            selectedGuard ? (
+              <StaffGuardDetailPanel
+                {...buildDetailProps(selectedGuard)}
+                editing={staffEdit}
+                onEditingChange={onStaffEditChange}
+                staffGuardTab={staffGuardTab}
+                onStaffGuardTabChange={onStaffGuardTabChange}
+                performanceFactorId={performanceFactorId}
+                onPerformanceFactorChange={onPerformanceFactorChange}
+              />
+            ) : (
+              <WorkbenchEmpty icon={Users} message="Select a guard to review profile and actions" variant="detail" />
+            )
+          }
+        />
+      </StaffOpsPageShell>
     );
   }
 

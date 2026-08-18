@@ -61,6 +61,30 @@ export function StaffCompensationPage({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-compensation-panel staff-mgmt-panel staff-payment-settings-panel staff-compensation-tablet">
+        <div className="staff-compensation-tablet-grid min-w-0">
+          {showPayRules ? (
+            <div className="staff-compensation-tablet-rules">
+              <StaffCompensationSettings
+                currentUser={currentUser}
+                platformSettings={platformSettings}
+                onUpdatePlatformSettings={onUpdatePlatformSettings}
+              />
+            </div>
+          ) : null}
+          <div
+            className="staff-compensation-tablet-payouts"
+            data-full-width={showPayRules ? undefined : 'true'}
+          >
+            {payouts}
+          </div>
+        </div>
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <StaffOpsPageShell className="staff-compensation-panel staff-mgmt-panel staff-payment-settings-panel">
       <div className="staff-payment-settings-scroll min-w-0 space-y-4">

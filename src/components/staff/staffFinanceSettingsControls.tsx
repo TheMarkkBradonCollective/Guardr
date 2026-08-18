@@ -20,6 +20,8 @@ export function FinanceSettingsSaveRow({
   onDiscard: () => void;
 }) {
   const formFactor = useLayoutFormFactor();
+  const actionClass =
+    formFactor === 'tablet' ? 'staff-payment-settings-actions sft-finance-actions' : 'staff-payment-settings-actions';
 
   if (formFactor === 'desktop') {
     return (
@@ -37,7 +39,7 @@ export function FinanceSettingsSaveRow({
   }
 
   return (
-    <div className="staff-payment-settings-actions">
+    <div className={actionClass}>
       <button
         type="button"
         className="staff-payment-settings-save"

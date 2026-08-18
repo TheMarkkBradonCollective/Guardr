@@ -7,6 +7,8 @@ import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
+import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -120,7 +122,7 @@ export function StaffDisputesPanel({
   );
 
   useEffect(() => {
-    if (formFactor === 'desktop' && visibleDisputes.length > 0 && !selectedId) {
+    if ((formFactor === 'desktop' || formFactor === 'tablet') && visibleDisputes.length > 0 && !selectedId) {
       setSelectedId(visibleDisputes[0].id);
     }
     if (selectedId && !visibleDisputes.some((d) => d.id === selectedId)) {
@@ -469,14 +471,55 @@ export function StaffDisputesPanel({
     );
   }
 
+  const renderDisputeDetail = (d: OpsDispute, options?: { onBack?: () => void }) => (
+    <div className="app-full-page-detail min-w-0 max-w-full">
+      {options?.onBack ? (
+        <AppSubScreenHeader title={d.jobTitle} onBack={options.onBack} backLabel="Disputes" />
+      ) : null}
+      {renderDisputeCard(d)}
+    </div>
+  );
+
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       {tabBar}
-      <div className="border-t border-brand-border">
-        {visibleDisputes.map((d) => (
-          <React.Fragment key={d.id}>{renderDisputeCard(d)}</React.Fragment>
-        ))}
-      </div>
+      <ListDetailLayout
+        items={visibleDisputes}
+        selectedId={selectedId}
+        onSelectId={setSelectedId}
+        getItemId={(d) => d.id}
+        autoSelectFirst={formFactor === 'tablet'}
+        mobilePresentation="page"
+        emptyDetail={
+          <div className="sft-empty">
+            <p className="sft-empty-title">Select a dispute</p>
+            <p className="sft-empty-message">Choose a case from the list to review statements and resolve billing.</p>
+          </div>
+        }
+        renderItem={(d, isActive, onSelect) => {
+          const status = effectiveStatus(d, statusMap);
+          return (
+            <button
+              type="button"
+              onClick={onSelect}
+              data-selected={isActive ? 'true' : undefined}
+              className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 text-left w-full"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-sm">{d.jobTitle}</p>
+                <WfBadge tone={status === 'open' ? 'warning' : status === 'resolved' ? 'success' : 'default'}>
+                  {statusLabel(status)}
+                </WfBadge>
+              </div>
+              <p className="text-xs text-brand-text-muted">
+                {d.type === 'overtime' ? 'Overtime' : d.type.replace('-', ' ')} · {d.guardName} vs {d.clientName}
+              </p>
+              <p className="text-xs text-brand-text-muted">Opened {formatWhen(d.openedAt)}</p>
+            </button>
+          );
+        }}
+        renderDetail={(d, options) => renderDisputeDetail(d, options)}
+      />
     </StaffOpsPageShell>
   );
 }

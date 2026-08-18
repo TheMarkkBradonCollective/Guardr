@@ -186,6 +186,22 @@ export function StaffPermissionsPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-permissions-tablet">
+        <div className="staff-permissions-tablet-body">
+          {!canEdit ? (
+            <p className="text-xs text-brand-text-muted mb-3">
+              View-only — Manager access or above is required to change role permissions.
+            </p>
+          ) : null}
+          {roleTabs}
+          {roleEditor}
+        </div>
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       <div className="space-y-6">

@@ -19,7 +19,7 @@ interface ListFilterTabsProps {
   'aria-label'?: string;
 }
 
-/** Status / sort tabs — same underline inbox style as Messages / Support. */
+/** Status / sort tabs. Phone restyles these as a segmented control. */
 export function ListFilterTabs({
   tabs,
   activeId,
@@ -36,6 +36,7 @@ export function ListFilterTabs({
         tabs={tabs.map((tab) => ({
           id: tab.id,
           label: tab.label,
+          badge: tab.count,
         }))}
       />
     </div>

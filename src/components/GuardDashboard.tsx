@@ -2001,7 +2001,7 @@ export function GuardDashboard({
       sidebarPrimaryAction={
         !accountNeedsActivation
           ? {
-              label: '+ Find jobs',
+              label: 'Find jobs',
               icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
               onClick: () => setTab('map'),
             }

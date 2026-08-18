@@ -9,8 +9,6 @@ import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTab
 import { jobStatusLabel, jobStatusTone } from '../../lib/jobStatusTone';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
@@ -262,38 +260,35 @@ export function StaffJobsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage data-tour="staff-jobs">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
-          <WorkbenchSplit
-            list={
-              filtered.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : Briefcase}
-                  message={search ? 'No matching jobs' : 'No jobs yet'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={jobColumns}
-                  rows={filtered}
-                  rowKey={(req) => req.id}
-                  selectedKey={selectedId ?? undefined}
-                  onRowClick={(req) => setSelectedId(req.id)}
-                  caption="Jobs"
-                  cardLayout={{ title: 'job', subtitle: 'schedule', trailing: 'status' }}
-                />
-              )
-            }
-            detail={
-              selectedRequest ? (
-                renderJobDetail(selectedRequest)
-              ) : (
-                <WorkbenchEmpty icon={Clock} message="Select a job to review details and actions" variant="detail" />
-              )
-            }
-          />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-jobs">
+        <WorkbenchSplit
+          list={
+            filtered.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : Briefcase}
+                message={search ? 'No matching jobs' : 'No jobs yet'}
+              />
+            ) : (
+              <GuardrDataTable
+                columns={jobColumns}
+                rows={filtered}
+                rowKey={(req) => req.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(req) => setSelectedId(req.id)}
+                caption="Jobs"
+                cardLayout={{ title: 'job', subtitle: 'schedule', trailing: 'status' }}
+              />
+            )
+          }
+          detail={
+            selectedRequest ? (
+              renderJobDetail(selectedRequest)
+            ) : (
+              <WorkbenchEmpty icon={Clock} message="Select a job to review details and actions" variant="detail" />
+            )
+          }
+        />
+      </StaffOpsPageShell>
     );
   }
 

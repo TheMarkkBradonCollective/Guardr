@@ -58,8 +58,6 @@ import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -767,38 +765,35 @@ export function StaffCredentials({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-roster-panel" data-tour="staff-credentials">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
-          <WorkbenchSplit
-            list={
-              filteredFeed.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : ShieldCheck}
-                  message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={credentialColumns}
-                  rows={filteredFeed}
-                  rowKey={(item) => item.id}
-                  selectedKey={activeItemId ?? undefined}
-                  onRowClick={(item) => openItem(item.id)}
-                  caption="Credentials"
-                  cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
-                />
-              )
-            }
-            detail={
-              activeItem ? (
-                renderCredentialDetail(activeItem)
-              ) : (
-                <WorkbenchEmpty icon={ShieldCheck} message="Select a credential to review" variant="detail" />
-              )
-            }
-          />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">
+        <WorkbenchSplit
+          list={
+            filteredFeed.length === 0 ? (
+              <WorkbenchEmpty
+                icon={search ? Search : ShieldCheck}
+                message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
+              />
+            ) : (
+              <GuardrDataTable
+                columns={credentialColumns}
+                rows={filteredFeed}
+                rowKey={(item) => item.id}
+                selectedKey={activeItemId ?? undefined}
+                onRowClick={(item) => openItem(item.id)}
+                caption="Credentials"
+                cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
+              />
+            )
+          }
+          detail={
+            activeItem ? (
+              renderCredentialDetail(activeItem)
+            ) : (
+              <WorkbenchEmpty icon={ShieldCheck} message="Select a credential to review" variant="detail" />
+            )
+          }
+        />
+      </StaffOpsPageShell>
     );
   }
 
@@ -839,6 +834,7 @@ export function StaffCredentials({
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           detailClassName="staff-detail-pane"
           mobilePresentation="page"
+          autoSelectFirst={formFactor === 'tablet'}
           emptyDetail={
             <div className="flex items-center justify-center h-full min-h-[40vh] p-8 text-center">
               <p className="text-sm text-brand-text-muted">Select a credential to review</p>

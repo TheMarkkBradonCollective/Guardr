@@ -121,7 +121,7 @@ test.describe('surface resolution', () => {
   });
 
   test('surface chrome never leaks across device types', async ({ page }) => {
-    // Mobile keeps the classic drawer + bottom nav; tablet owns the rail;
+    // Mobile owns the tab bar + sheets; tablet owns the rail;
     // desktop owns the sidebar, status bar, and command palette.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
@@ -147,6 +147,15 @@ test.describe('surface resolution', () => {
     await waitForSurface(page, 'tablet');
     await expect(page.locator('.uber-style-landing--tablet')).toHaveCount(1);
     await expect(page.locator('.uber-style-landing--mobile')).toHaveCount(0);
+    await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
+  });
+
+  test('desktop landing uses the merged mobility homepage pattern', async ({ page }) => {
+    await page.setViewportSize(VIEWPORTS.desktop);
+    await page.goto('/');
+    await waitForSurface(page, 'desktop');
+    await expect(page.locator('.uber-style-landing--desktop')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--mobile, .uber-style-landing--tablet')).toHaveCount(0);
     await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
   });
 
@@ -194,8 +203,6 @@ test.describe('surface resolution', () => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    // Preview/mobile kit path; classic GuardrDrawerShell uses inline overflow:auto
-    // on .mobility-content-inner once a signed-in role shell mounts.
     expect(await measure('sfm-shell-canvas')).toMatch(/auto|scroll/);
   });
 });

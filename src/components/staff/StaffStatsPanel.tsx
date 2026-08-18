@@ -546,6 +546,15 @@ export function StaffStatsPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-stats-tablet">
+        {tabBar}
+        {content}
+      </StaffOpsPageShell>
+    );
+  }
+
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-stats-mobile">
       <div className="staff-stats-mobile-head">
