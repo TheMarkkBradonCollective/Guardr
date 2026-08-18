@@ -343,6 +343,11 @@ export function isDirectorTierRole(role: PlatformRole): boolean {
   return role === 'director' || role === 'owner';
 }
 
+/** Director and Founder — platform-wide push + inbox broadcast. */
+export function canBroadcastToAllUsers(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirectorTierRole(user.role);
+}
+
 export function isDirector(user: Pick<SessionUser, 'role'>): boolean {
   return user.role === 'director';
 }

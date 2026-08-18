@@ -112,6 +112,27 @@ export async function sendTestPush(user: SessionUser, siteId?: string): Promise<
   return { sent: data.sent ?? 0, failed: data.failed ?? 0 };
 }
 
+export async function sendBroadcastPush(
+  user: SessionUser,
+  input: { title?: string; body: string }
+): Promise<{ sent: number; failed: number; inbox: number }> {
+  const res = await fetchWithRetry(apiUrl('/api/push/test'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(
+      sessionBody(user, { broadcast: true, title: input.title, body: input.body })
+    ),
+  });
+  const data = await parseApiResponse<{
+    sent?: number;
+    failed?: number;
+    inbox?: number;
+    error?: string;
+  }>(res);
+  if (!res.ok) throw new Error(data.error || 'Failed to broadcast');
+  return { sent: data.sent ?? 0, failed: data.failed ?? 0, inbox: data.inbox ?? 0 };
+}
+
 export type PushEventType =
   | 'guard_checkin'
   | 'guard_clockout'

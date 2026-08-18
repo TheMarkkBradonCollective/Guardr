@@ -967,6 +967,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 |--------|-------|
 | Change payment methods and platform modes | **Payment settings** |
 | Edit Founder homepage message | **Settings → Founder message** |
+| **Broadcast** (Director+) | **Settings → Broadcast** — send a push and in-app notification to every client, guard, and staff account |
 | Manage Director accounts | **Staff** |
 | Ultimate platform governance | All panels |
 

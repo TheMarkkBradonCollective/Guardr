@@ -8,6 +8,7 @@ import { authorizePushEvent } from './eventAuth';
 import { buildNotificationData, platformRoleToPushRole } from './routing';
 import { isInternalPushAuthorized, verifySession } from './sessionAuth';
 import { removePushSubscription, upsertPushSubscription } from './subscriptions';
+import { sendPlatformBroadcast, canSessionBroadcast } from './broadcast';
 import type { PushSendPayload, PushSubscriptionPayload, SessionCredentials } from './types';
 
 export function handlePushVapidPublicKey() {
@@ -101,7 +102,7 @@ export async function handlePushSend(
 
 export async function handlePushTest(
   db: SupabaseClient,
-  body: SessionCredentials & { siteId?: string }
+  body: SessionCredentials & { siteId?: string; broadcast?: boolean; title?: string; body?: string }
 ) {
   const session = await verifySession(db, body);
   if (!session) {
@@ -110,6 +111,19 @@ export async function handlePushTest(
 
   if (!isPushConfigured()) {
     return pushNotConfiguredResponse();
+  }
+
+  if (body.broadcast) {
+    if (!canSessionBroadcast(session.platformRole)) {
+      return { status: 403, body: { error: 'Only Directors and Founders can broadcast' } };
+    }
+    const message = typeof body.body === 'string' ? body.body.trim() : '';
+    if (!message) {
+      return { status: 400, body: { error: 'Broadcast message is required' } };
+    }
+    const title = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : 'Guardr';
+    const result = await sendPlatformBroadcast(db, { title, body: message });
+    return { status: 200, body: { ok: true, ...result } };
   }
 
   const data = buildNotificationData('test', { siteId: body.siteId });

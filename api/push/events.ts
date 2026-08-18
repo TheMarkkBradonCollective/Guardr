@@ -561,6 +561,8 @@ function rolesForNotificationType(type) {
       return ["guard"];
     case "company_placard_expiry":
       return ["dispatch", "admin"];
+    case "account_update":
+      return ["guard", "client", "dispatch", "admin"];
     case "test":
       return [];
     default:
