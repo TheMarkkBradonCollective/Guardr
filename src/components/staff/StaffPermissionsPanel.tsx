@@ -15,6 +15,7 @@ import {
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
@@ -160,6 +161,38 @@ export function StaffPermissionsPanel({
     />
   );
 
+  const jobApprovalSettings = (
+    <StaffJobApprovalSettings
+      currentUser={currentUser}
+      platformSettings={platformSettings}
+      canEdit={canEdit}
+      onPersistSettings={onUpdateStaffPermissions}
+      embedded
+    />
+  );
+
+  const permissionsSections = (
+    <>
+      <StaffMgmtSection title="Job posting review">
+        {!canEdit ? (
+          <p className="text-xs text-brand-text-muted mb-3">
+            View-only — Manager access or above is required to change approval rules.
+          </p>
+        ) : null}
+        {jobApprovalSettings}
+      </StaffMgmtSection>
+      <StaffMgmtSection title="Staff role permissions">
+        {!canEdit ? (
+          <p className="text-xs text-brand-text-muted mb-3">
+            View-only — Manager access or above is required to change role permissions.
+          </p>
+        ) : null}
+        {roleTabs}
+        {roleEditor}
+      </StaffMgmtSection>
+    </>
+  );
+
   if (isDesktop) {
     return (
       <StaffOpsPageShell
@@ -172,15 +205,7 @@ export function StaffPermissionsPanel({
         }
       >
         <div className="space-y-3">
-          <StaffMgmtSection title="Staff role permissions">
-            {!canEdit ? (
-              <p className="text-xs text-brand-text-muted mb-3">
-                View-only — Manager access or above is required to change role permissions.
-              </p>
-            ) : null}
-            {roleTabs}
-            {roleEditor}
-          </StaffMgmtSection>
+          {permissionsSections}
         </div>
       </StaffOpsPageShell>
     );
@@ -189,14 +214,25 @@ export function StaffPermissionsPanel({
   if (formFactor === 'tablet') {
     return (
       <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel staff-permissions-tablet">
-        <div className="staff-permissions-tablet-body">
-          {!canEdit ? (
-            <p className="text-xs text-brand-text-muted mb-3">
-              View-only — Manager access or above is required to change role permissions.
-            </p>
-          ) : null}
-          {roleTabs}
-          {roleEditor}
+        <div className="staff-permissions-tablet-body space-y-6">
+          <section>
+            <h3 className="adm-card-title pb-3">Job posting review</h3>
+            {!canEdit ? (
+              <p className="text-xs text-brand-text-muted mb-3">
+                View-only — Manager access or above is required to change approval rules.
+              </p>
+            ) : null}
+            {jobApprovalSettings}
+          </section>
+          <section>
+            {!canEdit ? (
+              <p className="text-xs text-brand-text-muted mb-3">
+                View-only — Manager access or above is required to change role permissions.
+              </p>
+            ) : null}
+            {roleTabs}
+            {roleEditor}
+          </section>
         </div>
       </StaffOpsPageShell>
     );
@@ -205,6 +241,15 @@ export function StaffPermissionsPanel({
   return (
     <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel">
       <div className="space-y-6">
+        <section>
+          <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Job posting review</h3>
+          {!canEdit ? (
+            <p className="text-xs text-brand-text-muted px-4 sm:px-5 mb-3">
+              View-only — Manager access or above is required to change approval rules.
+            </p>
+          ) : null}
+          <div className="px-4 sm:px-5 pb-6">{jobApprovalSettings}</div>
+        </section>
         <section>
           <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Staff role permissions</h3>
           {!canEdit ? (

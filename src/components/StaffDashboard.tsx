@@ -1012,12 +1012,9 @@ export function StaffDashboard({
       case 'clients':
         return (
           <StaffClientsPanel
-            currentUser={currentUser}
             clients={clients}
             requests={requests}
             canManage={canManageClientAccounts}
-            platformSettings={platformSettings}
-            onUpdateStaffPermissions={onUpdateStaffPermissions}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}

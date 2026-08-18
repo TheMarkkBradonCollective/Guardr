@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Building2, Search } from 'lucide-react';
-import { Client, SecurityRequest, SessionUser } from '../../types';
+import { Client, SecurityRequest } from '../../types';
 import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
@@ -15,10 +15,6 @@ import {
 } from '../../lib/staffListFilters';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
-import type { PlatformSettings } from '../../lib/platformSettings';
-import { canManageStaffPermissions } from '../../lib/permissions';
-import type { StaffPermissionsPatch } from './StaffPermissionsPanel';
 import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
@@ -27,15 +23,10 @@ import {
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
-type ClientsPageTab = 'roster' | 'job-posting';
-
 interface StaffClientsPanelProps {
-  currentUser: SessionUser;
   clients: Client[];
   requests: SecurityRequest[];
   canManage: boolean;
-  platformSettings: PlatformSettings;
-  onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onDeleteClient?: (id: string) => void | Promise<void>;
@@ -61,12 +52,9 @@ function clientStatusTone(status: ReturnType<typeof getClientAccountStatus>): St
 }
 
 export function StaffClientsPanel({
-  currentUser,
   clients,
   requests,
   canManage,
-  platformSettings,
-  onUpdateStaffPermissions,
   onApproveClient,
   onRejectClient,
   onDeleteClient,
@@ -78,13 +66,11 @@ export function StaffClientsPanel({
   onAddClient,
 }: StaffClientsPanelProps) {
   const formFactor = useLayoutFormFactor();
-  const [pageTab, setPageTab] = useState<ClientsPageTab>('roster');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
-  const canEditApprovalRules = canManageStaffPermissions(currentUser);
 
   const setSelectedId = (id: string | null) => {
     if (!isControlled) setInternalSelectedId(id);
@@ -113,14 +99,14 @@ export function StaffClientsPanel({
   const selectedClient = selectedId ? clients.find((c) => c.id === selectedId) ?? null : null;
 
   useEffect(() => {
-    if (formFactor === 'mobile' || pageTab !== 'roster') return;
+    if (formFactor === 'mobile') return;
     if (filtered.length === 0) {
       if (selectedId) setSelectedId(null);
       return;
     }
     const stillVisible = selectedId ? filtered.some((c) => c.id === selectedId) : false;
     if (!stillVisible) setSelectedId(filtered[0].id);
-  }, [statusFilter, filtered, selectedId, formFactor, pageTab]);
+  }, [statusFilter, filtered, selectedId, formFactor]);
 
   const clientColumns: GuardrTableColumn<Client>[] = useMemo(
     () => [
@@ -189,68 +175,38 @@ export function StaffClientsPanel({
 
   const toolbar = !showDetailOnly ? (
     <>
-      {pageTab === 'roster' && (
-        <>
-          <div className="staff-ops-cta-stack">
-            {canManage && onAddClient && (
-              <StaffAddClientForm
-                onAdd={onAddClient}
-                onCreated={(clientId) => {
-                  setSearch('');
-                  setSelectedId(clientId);
-                }}
-              />
-            )}
-          </div>
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search clients..."
-            className="max-w-md"
-          />
-        </>
-      )}
-      <div className="space-y-2">
-        <StaffListFilterTabs
-          aria-label="Clients section"
-          activeId={pageTab}
-          onChange={(id) => setPageTab(id as ClientsPageTab)}
-          tabs={[
-            { id: 'roster', label: 'Roster' },
-            { id: 'job-posting', label: 'Job posting' },
-          ]}
-        />
-        {pageTab === 'roster' && (
-          <StaffListFilterTabs
-            aria-label="Client roster status"
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
-            tabs={[
-              { id: 'all', label: 'All' },
-              { id: 'pending', label: 'Pending' },
-              { id: 'active', label: 'Active' },
-              { id: 'suspended', label: 'Suspended' },
-            ]}
+      <div className="staff-ops-cta-stack">
+        {canManage && onAddClient && (
+          <StaffAddClientForm
+            onAdd={onAddClient}
+            onCreated={(clientId) => {
+              setSearch('');
+              setSelectedId(clientId);
+            }}
           />
         )}
       </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search clients..."
+        className="max-w-md"
+      />
+      <StaffListFilterTabs
+        aria-label="Client roster status"
+        activeId={statusFilter}
+        onChange={(id) => setStatusFilter(id as ClientRosterFilter)}
+        tabs={[
+          { id: 'all', label: 'All' },
+          { id: 'pending', label: 'Pending' },
+          { id: 'active', label: 'Active' },
+          { id: 'suspended', label: 'Suspended' },
+        ]}
+      />
     </>
   ) : null;
 
-  if (pageTab === 'job-posting' && !showDetailOnly) {
-    return (
-      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
-        <StaffJobApprovalSettings
-          currentUser={currentUser}
-          platformSettings={platformSettings}
-          canEdit={canEditApprovalRules}
-          onPersistSettings={onUpdateStaffPermissions}
-        />
-      </StaffOpsPageShell>
-    );
-  }
-
-  if (formFactor === 'desktop' && pageTab === 'roster') {
+  if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
         <WorkbenchSplit
