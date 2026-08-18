@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.124-beta",
+  "webVersion": "1.0.125-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.124",
-    "versionCode": 224,
+    "version": "1.0.125",
+    "versionCode": 225,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.124.apk",
-    "fileSize": 69619009,
-    "sha256": "5d93b4975971123219451830425e512f38a9268302fa8c6946aacda26919aaed",
-    "releaseNotes": "Personal vs Business client accounts (who hires and pays); separate platform fee tables by account and guard type; posted job prices stay frozen when fees change; staff ID bounce without photos; client credential library."
+    "downloadName": "guardr-v1.0.125.apk",
+    "fileSize": 77589594,
+    "sha256": "d1b17623087bc76723daf4a67c98cfe2649a031304da1c1917d834dac5d4a7b9",
+    "releaseNotes": "Mobile hamburger drawer for all roles (guard, client, staff); notification bell and profile on the header right; map pages keep the shell header visible; three-surface UI sculpt (mobile, tablet, desktop ops layouts)."
   },
-  "updatedAt": "2026-08-18T09:57:47.770Z"
+  "updatedAt": "2026-08-18T13:12:26.130Z"
 }

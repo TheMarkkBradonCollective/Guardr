@@ -1304,12 +1304,13 @@ body[data-surface='mobile'] .sfm-more-footer .uber-direct-sidebar-footer-legal-w
   bottom: calc(var(--sf-bottom-bar-h) + var(--sf-gutter) + var(--sf-safe-bottom));
 }
 
+/* Map / bleed: keep the header in the flex column (not absolute) so the map
+   cannot paint over it. Leaflet panes use z-index 400+; the shell header must
+   stay above the canvas stack. */
 .sfm-shell[data-bleed='true'] .sfm-shell-header:not(.sfm-shell-header--custom) {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 50;
+  position: relative;
+  z-index: 1000;
+  flex-shrink: 0;
   background: var(--sf-paper);
   border-bottom: 1px solid var(--sf-line);
 }
