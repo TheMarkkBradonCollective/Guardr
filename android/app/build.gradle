@@ -44,9 +44,14 @@ android {
     productFlavors {
         sideload {
             dimension 'distribution'
+            // Sideload APKs for guardr.co/download — debug-signed (CI has no upload keystore).
+            signingConfig signingConfigs.debug
         }
         play {
             dimension 'distribution'
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
@@ -58,16 +63,15 @@ android {
     }
 }
 
-android.applicationVariants.configureEach { variant ->
-    if (variant.name == 'sideloadRelease') {
-        variant.signingConfig = android.signingConfigs.debug
-    } else if (variant.name == 'playRelease') {
-        if (!hasReleaseKeystore) {
-            throw new GradleException(
-                'Play release requires android/keystore.properties — copy keystore.properties.example and add your upload keystore.'
-            )
+afterEvaluate {
+    tasks.matching { it.name ==~ /.*(assemble|bundle)PlayRelease.*/ }.configureEach { task ->
+        task.doFirst {
+            if (!hasReleaseKeystore) {
+                throw new GradleException(
+                    'Play release requires android/keystore.properties — copy keystore.properties.example and add your upload keystore.'
+                )
+            }
         }
-        variant.signingConfig = android.signingConfigs.release
     }
 }
 
