@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.129':
+    'Full platform release: CI-built sideload APK and Play AAB; web + PWA alignment for Aug 18 session (roster tabs, staff activation, client credentials, SQL catch-up).',
   '1.0.128':
     'Consolidated Supabase SQL catch-up snippet for Aug 18 session (client types, credentials, staff ID bounce).',
   '1.0.127':

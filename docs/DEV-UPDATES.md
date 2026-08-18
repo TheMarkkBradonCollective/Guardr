@@ -3,13 +3,35 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.128**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.129**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Tuesday, August 18, 2026 — /update → v1.0.129
+
+| Time | What shipped |
+|------|----------------|
+| 3:21 PM | Release v1.0.129-beta — full platform update, APK + AAB via CI |
+| 3:22 PM | Land v1.0.129 on `main` |
+
+**Shipped**
+- **v1.0.129** (build **229**) — web + PWA + sideload APK + Play AAB version alignment
+- Packages Aug 18 session: roster category tabs, Management page, client credentials fix, staff activation lock, management Profile ID upload, consolidated SQL catch-up
+- PWA service worker cache bust: `guardr-cache-v1-0-129-beta`
+- Android CI builds **APK** always; **AAB** when Play keystore secrets are configured
+
+**SQL to run** (if not already applied)
+- `supabase/snippets/20260818_full_session_update.sql`
+
+**Release verification**
+- Lint, test, build green
+- Android Release workflow: `guardr-android-apk` artifact + `guardr-android-aab` when keystore present
 
 ---
 
@@ -1218,6 +1240,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
+| **Aug 18** | 24+ | /update v1.0.129 — full platform release, APK + AAB via CI |
 | **Aug 18** | 22+ | /update v1.0.128 — consolidated Aug 18 Supabase SQL catch-up snippet |
 | **Aug 18** | 20+ | /update v1.0.127 — staff activation lock, management Profile ID, client credentials fix, staff ID demotion SQL |
 | **Aug 18** | 14+ | /update v1.0.126 — staff roster category tabs, Management page, status sub-filters, APK + AAB release pipeline |
