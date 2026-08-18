@@ -7,6 +7,7 @@ import {
   staffHasApplicationIntake,
   staffNeedsCredentialCompletion,
   staffNeedsIdReactivation,
+  staffCanUploadIdFromProfile,
   staffReadyForAutoActivation,
 } from './staffAccountActivation';
 import { bounceUnverifiedStaffUserStatus, mapStaffRowToSecurityGuard } from './staffAccounts';
@@ -115,7 +116,7 @@ describe('staffAccountActivation', () => {
     assert.equal(staffHasApplicationIntake(member), true);
   });
 
-  it('exempts management staff from activation gate and ID reactivation', () => {
+  it('exempts management from activation gate but bounces missing ID to approved', () => {
     const director = staffMember({
       staffRole: 'Director',
       userStatus: 'active',
@@ -136,8 +137,15 @@ describe('staffAccountActivation', () => {
         id_back_url: null,
         id_selfie_url: null,
       }),
-      'active',
+      'approved',
     );
+    const approvedDirector = staffMember({
+      staffRole: 'Director',
+      userStatus: 'approved',
+      verified: false,
+      idVerificationStatus: 'not_submitted',
+    });
+    assert.equal(staffCanUploadIdFromProfile(approvedDirector), true);
   });
 
   it('bounces active operations staff missing verified ID to approved', () => {

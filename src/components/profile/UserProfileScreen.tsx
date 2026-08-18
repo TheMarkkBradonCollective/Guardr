@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Client, ClientAuthorizedContact, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
-import { isStaffUserStatusActive } from '../../lib/accountStatus';
+import { staffCanUploadIdFromProfile } from '../../lib/staffAccountActivation';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
@@ -203,7 +203,7 @@ export function UserProfileScreen({
 
   const isStaffAccount = isStaffRole(currentUser.role);
   const staffCanManageIdFromProfile = Boolean(
-    isStaffAccount && guard && isStaffUserStatusActive(guard) && onSubmitIdentityVerification,
+    isStaffAccount && guard && staffCanUploadIdFromProfile(guard) && onSubmitIdentityVerification,
   );
   const isGuardAccount = currentUser.role === 'guard';
   const isClient = currentUser.role === 'client';

@@ -126,6 +126,13 @@ export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
   );
 }
 
+/** Active staff, or approved management, may upload government ID from Profile (not activation). */
+export function staffCanUploadIdFromProfile(member: SecurityGuard): boolean {
+  if (!member.isStaff) return false;
+  if (isStaffUserStatusActive(member)) return true;
+  return isManagementStaffMember(member) && isStaffAccountApproved(member);
+}
+
 export function getStaffRosterStatusLabel(member: SecurityGuard): string {
   const status = getGuardUserStatus(member);
   if (status === 'pending') return 'Pending approval';

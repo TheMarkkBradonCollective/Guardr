@@ -8,7 +8,7 @@ import {
   bounceUnverifiedGovernmentIdStatus,
   type GuardIdVerificationStatus,
 } from './guardIdentityVerification';
-import { normalizeStaffRole, normalizeStaffSideRole, isManagementStaffRole } from './permissions';
+import { normalizeStaffRole, normalizeStaffSideRole } from './permissions';
 
 export type StaffRow = {
   id: string;
@@ -91,9 +91,9 @@ function normalizeStaffUserStatus(raw: unknown): GuardUserStatus {
 }
 
 /**
- * SQL helper: active operations staff without a real verified ID are stored as approved /
- * inactive. Management (Manager+) and Founder stay active so executives can still review IDs.
- * Newly approved hires keep Staff activation; only remaining `active` rows missing ID see reactivation.
+ * SQL helper: active staff without a real verified ID are stored as approved /
+ * inactive. Founder stays active so someone can still review IDs. Management is
+ * bounced to approved like operations staff but skips the activation screen lock.
  */
 export function bounceUnverifiedStaffUserStatus(
   row: Pick<
@@ -108,7 +108,7 @@ export function bounceUnverifiedStaffUserStatus(
 ): GuardUserStatus {
   const status = normalizeStaffUserStatus(row.user_status);
   if (status !== 'active') return status;
-  if (isManagementStaffRole(row.staff_role)) return status;
+  if (normalizeStaffRole(row.staff_role) === 'Founder') return status;
   const idStatus = bounceStaffIdVerificationStatus(row);
   if (idStatus === 'verified') return status;
   return 'approved';
