@@ -10,6 +10,7 @@ import {
   isStaffAccountPreActive,
   isStaffUserStatusActive,
 } from './accountStatus';
+import { isManagementStaffMember } from './permissions';
 
 export type StaffActivationStepId = 'application' | 'government_id' | 'stripe_payout';
 
@@ -106,10 +107,12 @@ export function staffReadyForAutoActivation(
 /** Active staff missing a real government ID, or pre-active staff still onboarding. */
 export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
   if (!member.isStaff) return false;
+  if (isManagementStaffMember(member)) return false;
   const status = getGuardUserStatus(member);
   if (status === 'suspended' || status === 'blocked') return false;
-  if (!governmentIdEffectivelyVerified(member)) return true;
-  return isStaffAccountPreActive(member);
+  if (isStaffAccountPreActive(member)) return true;
+  if (isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member)) return true;
+  return false;
 }
 
 /**
@@ -117,6 +120,7 @@ export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
  * New pending or approved hires stay on Staff activation, not reactivation.
  */
 export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
+  if (isManagementStaffMember(member)) return false;
   return Boolean(
     member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member)
   );

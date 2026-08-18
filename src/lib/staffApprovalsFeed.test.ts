@@ -91,6 +91,34 @@ describe('buildApplicationFeed', () => {
     assert.equal(item?.queue, 'applications');
   });
 
+  it('omits blank management staff applications from the feed', () => {
+    const blankDirector = {
+      id: 's-director',
+      name: 'Exec Lead',
+      email: 'exec@guardr.test',
+      badgeNumber: 'DIR-00001',
+      isStaff: true,
+      staffRole: 'Director',
+      userStatus: 'active',
+      certifications: [],
+    } as SecurityGuard;
+    const pendingManagerWithIntake = {
+      id: 's-manager',
+      name: 'New Manager',
+      email: 'mgr@guardr.test',
+      badgeNumber: 'MGR-00002',
+      isStaff: true,
+      staffRole: 'Manager',
+      userStatus: 'pending',
+      phone: '555-0100',
+      bio: 'Leadership background',
+      certifications: [],
+    } as SecurityGuard;
+    const feed = buildApplicationFeed([blankDirector, pendingManagerWithIntake], []);
+    assert.equal(feed.some((entry) => entry.id === 's-director'), false);
+    assert.equal(feed.some((entry) => entry.id === 's-manager'), true);
+  });
+
   it('counts staff-provisioned pending applications', () => {
     const count = countPendingAccountSignupApplications(
       [staffProvisionedGuard()],

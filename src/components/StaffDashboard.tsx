@@ -1372,6 +1372,11 @@ export function StaffDashboard({
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             platformSettings={platformSettings}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
+            onSubmitIdentityVerification={
+              onSubmitGuardIdentityVerification
+                ? (payload) => onSubmitGuardIdentityVerification(currentUser.id, payload)
+                : undefined
+            }
           />
         );
       case 'preferences':

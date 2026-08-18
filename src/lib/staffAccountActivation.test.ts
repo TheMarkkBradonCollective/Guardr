@@ -115,17 +115,42 @@ describe('staffAccountActivation', () => {
     assert.equal(staffHasApplicationIntake(member), true);
   });
 
-  it('bounces active staff missing ID photos to approved except Founder', () => {
+  it('exempts management staff from activation gate and ID reactivation', () => {
+    const director = staffMember({
+      staffRole: 'Director',
+      userStatus: 'active',
+      verified: true,
+      idVerificationStatus: 'not_submitted',
+      idFrontUrl: undefined,
+      idBackUrl: undefined,
+      idSelfieUrl: undefined,
+    });
+    assert.equal(staffNeedsCredentialCompletion(director), false);
+    assert.equal(staffNeedsIdReactivation(director), false);
     assert.equal(
       bounceUnverifiedStaffUserStatus({
         user_status: 'active',
         staff_role: 'Director',
+        id_verification_status: 'not_submitted',
+        id_front_url: null,
+        id_back_url: null,
+        id_selfie_url: null,
+      }),
+      'active',
+    );
+  });
+
+  it('bounces active operations staff missing verified ID to approved', () => {
+    assert.equal(
+      bounceUnverifiedStaffUserStatus({
+        user_status: 'active',
+        staff_role: 'Support',
         id_verification_status: 'pending',
         id_front_url: 'front.jpg',
         id_back_url: 'back.jpg',
         id_selfie_url: 'selfie.jpg',
       }),
-      'approved'
+      'approved',
     );
     assert.equal(
       bounceUnverifiedStaffUserStatus({
@@ -136,7 +161,7 @@ describe('staffAccountActivation', () => {
         id_back_url: null,
         id_selfie_url: null,
       }),
-      'active'
+      'active',
     );
     const mapped = mapStaffRowToSecurityGuard({
       id: 'staff-1',
@@ -151,8 +176,9 @@ describe('staffAccountActivation', () => {
       years_experience: 4,
       availability_notes: 'Evenings',
     });
-    assert.equal(mapped.userStatus, 'active');
-    assert.equal(staffNeedsIdReactivation(mapped), true);
+    assert.equal(mapped.userStatus, 'approved');
+    assert.equal(staffNeedsIdReactivation(mapped), false);
+    assert.equal(staffNeedsCredentialCompletion(mapped), true);
     assert.equal(getStaffRosterStatusLabel(mapped), 'Inactive');
     assert.equal(staffHasApplicationIntake(mapped), true);
 

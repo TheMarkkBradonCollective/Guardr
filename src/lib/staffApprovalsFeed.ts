@@ -26,6 +26,8 @@ import {
   ID_VERIFICATION_STATUS_LABELS,
 } from './guardIdentityVerification';
 import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
+import { staffHasApplicationIntake } from './staffAccountActivation';
+import { isManagementStaffMember } from './permissions';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 import {
@@ -567,6 +569,10 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
 function staffBelongsInApplicationFeed(member: SecurityGuard): boolean {
   if (!member.isStaff) return false;
   const status = getGuardUserStatus(member);
+  if (isManagementStaffMember(member)) {
+    if (status !== 'pending') return false;
+    return staffHasApplicationIntake(member);
+  }
   return (
     status === 'pending' ||
     status === 'approved' ||

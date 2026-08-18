@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Client, ClientAuthorizedContact, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
+import { isStaffUserStatusActive } from '../../lib/accountStatus';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
@@ -36,6 +37,7 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { StaffProfileSection, type StaffProfilePayload } from './StaffProfileSection';
 import { getStaffDisplayHeadline } from '../../lib/staffProfile';
 import {
+  GuardIdentityVerificationPanel,
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
@@ -200,6 +202,9 @@ export function UserProfileScreen({
   const displayName = formatPersonName({ firstName, middleName, lastName });
 
   const isStaffAccount = isStaffRole(currentUser.role);
+  const staffCanManageIdFromProfile = Boolean(
+    isStaffAccount && guard && isStaffUserStatusActive(guard) && onSubmitIdentityVerification,
+  );
   const isGuardAccount = currentUser.role === 'guard';
   const isClient = currentUser.role === 'client';
   const isPersonalClient = isClient && normalizeClientType(client?.clientType) === 'personal';
@@ -555,6 +560,19 @@ export function UserProfileScreen({
             className="pt-2"
           />
         )}
+        {staffCanManageIdFromProfile && guard ? (
+          <AppDashboardZone title="Government ID">
+            <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
+              Upload or update your government-issued ID. Submissions go to the credentials queue for
+              Director review.
+            </p>
+            <GuardIdentityVerificationPanel
+              guard={guard}
+              onSubmit={onSubmitIdentityVerification!}
+              compact
+            />
+          </AppDashboardZone>
+        ) : null}
         {isGuardAccount && (
           <Field
             label="Minimum hourly rate ($)"
