@@ -9,7 +9,7 @@ import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -66,7 +66,7 @@ export function StaffDisputesPanel({
   onResolveOvertimeDispute,
   onItemHandled,
 }: StaffDisputesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [statusTab, setStatusTab] = useState<DisputeStatusTab>('all');
   const [typeTab, setTypeTab] = useState<DisputeTypeTab>('all');
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});

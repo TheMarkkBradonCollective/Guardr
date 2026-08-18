@@ -32,7 +32,7 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
@@ -276,7 +276,7 @@ export function StaffApplications({
   initialClientId = null,
   onSelectionChange,
 }: StaffApplicationsProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [statusFilter, setStatusFilter] = useState<ApplicationStatusFilter>('all');
   const [kindFilter, setKindFilter] = useState<ApplicationKindFilter>('all');
   const [search, setSearch] = useState('');

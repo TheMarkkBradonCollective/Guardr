@@ -9,7 +9,7 @@ import { computeAnalytics, computePlatformStats, computeWeeklyCompletedJobs } fr
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { StaffMgmtSection } from './StaffMgmtSection';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { MetricCell } from '../baseui/dashboard';
 import { WorkbenchGrid, WorkbenchGridCell } from '../baseui/layout/WorkbenchLayout';
 
@@ -21,7 +21,7 @@ interface StaffAnalyticsPanelProps {
 }
 
 export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials }: StaffAnalyticsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const data = computeAnalytics(guards, clients, requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const weeklyTrend = computeWeeklyCompletedJobs(requests);

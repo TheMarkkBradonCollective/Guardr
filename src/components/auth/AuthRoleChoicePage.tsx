@@ -256,7 +256,8 @@ export function AuthRoleChoicePage({
 }: AuthRoleChoicePageProps) {
   const [, theme] = useStyletron();
   const surface = useSurfaceKind();
-  const isMobile = surface === 'mobile';
+  const factor = surface === 'tablet' ? 'tablet' : surface === 'desktop' ? 'desktop' : 'mobile';
+  const isMobile = factor === 'mobile';
   const copyKey = mode === 'sign-in' ? 'sign-in' : signupStep;
   const copy = COPY[copyKey];
   const backLabel = mode === 'sign-up' && signupStep !== 'path' ? 'Back' : 'Home';
@@ -291,7 +292,7 @@ export function AuthRoleChoicePage({
     <Block
       minHeight="100dvh"
       height="100dvh"
-      className="auth-role-choice-page"
+      className={`auth-role-choice-page${factor === 'tablet' ? ' auth-role-choice-page--tablet' : ''}`}
       data-landing-factor={surface}
       data-signup-step={mode === 'sign-up' ? signupStep : 'sign-in'}
       backgroundColor="backgroundPrimary"
@@ -310,7 +311,9 @@ export function AuthRoleChoicePage({
             margin="0 auto"
             width="100%"
             display="grid"
-            gridTemplateColumns={isMobile ? '1fr' : ['1fr', '1fr', '1fr 1fr']}
+            gridTemplateColumns={
+              isMobile ? '1fr' : factor === 'tablet' ? 'minmax(0, 1.15fr) minmax(14rem, 0.85fr)' : ['1fr', '1fr', '1fr 1fr']
+            }
             gridGap="scale1000"
             alignItems="center"
           >
@@ -338,7 +341,11 @@ export function AuthRoleChoicePage({
                 $style={{
                   fontFamily: HEADING_FONT,
                   fontWeight: 700,
-                  fontSize: isMobile ? 'clamp(2rem, 7vw, 2.5rem)' : 'clamp(2.5rem, 4vw, 3.25rem)',
+                  fontSize: isMobile
+                    ? 'clamp(2rem, 7vw, 2.5rem)'
+                    : factor === 'tablet'
+                      ? 'clamp(2.2rem, 4.2vw, 2.85rem)'
+                      : 'clamp(2.5rem, 4vw, 3.25rem)',
                   lineHeight: 1.05,
                   letterSpacing: '-0.03em',
                   color: theme.colors.contentPrimary,

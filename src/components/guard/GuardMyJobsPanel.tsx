@@ -21,7 +21,7 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardMyJobsDesktop } from './GuardMyJobsDesktop';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
@@ -149,7 +149,7 @@ export function GuardMyJobsPanel({
   onAcceptPriceOffer,
   onViewBriefing,
 }: GuardMyJobsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [internalTab, setInternalTab] = useState<GuardJobsBrowseTab>('available');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
 

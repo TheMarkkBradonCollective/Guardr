@@ -20,7 +20,7 @@ import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { WfBadge } from '../ui/wireframe';
 import { FileText, LifeBuoy, Trash2 } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
 type SupportInboxSection = 'support' | 'reports';
@@ -62,7 +62,7 @@ export function StaffSupportPanel({
   onDetailOpenChange,
   onMessagesChromeChange,
 }: StaffSupportPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
   const [section, setSection] = useState<SupportInboxSection>('support');

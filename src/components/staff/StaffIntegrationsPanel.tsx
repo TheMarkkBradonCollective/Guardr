@@ -22,7 +22,7 @@ import { Block } from 'baseui/block';
 import { LabelSmall, LabelXSmall, ParagraphSmall } from 'baseui/typography';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { GuardrTag } from '../baseui/GuardrTag';
 import { showAppToast } from '../ui/AppToast';
@@ -172,7 +172,7 @@ export function StaffIntegrationsPanel({
   platformSettings,
   onUpdateStaffIntegrations,
 }: StaffIntegrationsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canEdit = canManageStaffPlatformContent(currentUser);
   const isDesktop = formFactor === 'desktop';
   const readOnlyNote = !canEdit

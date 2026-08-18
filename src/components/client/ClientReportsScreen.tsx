@@ -5,7 +5,7 @@ import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { AppEmptyState, AppList, AppListRow, AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { ChevronRight, FileText } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { ClientReportsDesktop } from './ClientReportsDesktop';
 import { ClientInvoicePanel } from './ClientInvoicePanel';
 import type { Client, SecurityRequest } from '../../types';
@@ -35,7 +35,7 @@ export function ClientReportsScreen({
   client,
   requests = [],
 }: ClientReportsScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const selectedIncident = selectedIncidentId
     ? incidentDetails.find((d) => d.id === selectedIncidentId) ?? null
     : null;

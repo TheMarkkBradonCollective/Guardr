@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useDevice } from '../lib/platform';
+import type { FormFactor } from '../lib/platform/device';
 import {
   currentSurfaceOverride,
   detectCoarsePointer,
@@ -127,6 +128,18 @@ export function useSurface(): SurfaceContextValue {
 /** Convenience read for components that only branch on the surface id. */
 export function useSurfaceKind(): SurfaceKind {
   return useContext(SurfaceContext).surface;
+}
+
+/**
+ * Presentation layout for the loaded application.
+ *
+ * Width floors match `SURFACE_BOUNDS` / `FORM_FACTOR_BOUNDS` (744 / 1180), but
+ * installed PWA/APK shells and touch-only devices never load desktop. Page
+ * structure must follow the mounted surface so an iPad at 1100px or a 13"
+ * Android tablet is not dressed in the desktop workbench (or the phone stack).
+ */
+export function useLayoutFormFactor(): FormFactor {
+  return useSurfaceKind();
 }
 
 /** The active surface's design scale. */

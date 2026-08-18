@@ -31,6 +31,19 @@ describe('resolveSurfaceKind', () => {
     }
   });
 
+  it('keeps iPad landscape (Tailwind desktop) on the tablet application', () => {
+    // device.ts treats ≥1024 as desktop form-factor. Layout must still follow
+    // the surface, or the tablet app would render the desktop workbench.
+    assert.equal(
+      resolveSurfaceKind({ viewportWidth: 1024, shellKind: 'browser' }),
+      'tablet',
+    );
+    assert.equal(
+      resolveSurfaceKind({ viewportWidth: 1179, shellKind: 'browser' }),
+      'tablet',
+    );
+  });
+
   it('loads the desktop operations center only on a wide pointer browser', () => {
     assert.equal(
       resolveSurfaceKind({ viewportWidth: SURFACE_BOUNDS.desktopMin, shellKind: 'browser' }),

@@ -49,7 +49,7 @@ import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffTimeAdjustmentsPanel } from './StaffTimeAdjustmentsPanel';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 
 interface StaffCompensationSectionProps {
   currentUser: SessionUser;
@@ -83,7 +83,7 @@ export function StaffCompensationSection({
   embedded = false,
   hideTimeSections = false,
 }: StaffCompensationSectionProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const config = platformSettings.staffCompensation!;
   const canManage = canManageStaffCompensation(currentUser);
   const canConfirm = canConfirmStaffCompensationPayout(currentUser);

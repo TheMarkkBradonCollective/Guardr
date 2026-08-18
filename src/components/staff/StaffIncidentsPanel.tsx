@@ -6,7 +6,7 @@ import { WfBadge } from '../ui/wireframe';
 import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AlertTriangle } from 'lucide-react';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
@@ -42,7 +42,7 @@ export function StaffIncidentsPanel({
   incidentDetails = [],
   onOpenJob,
 }: StaffIncidentsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedIncident = selectedId ? incidents.find((inc) => inc.id === selectedId) ?? null : null;

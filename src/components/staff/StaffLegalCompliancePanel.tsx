@@ -12,7 +12,7 @@ import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { StatusChip } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -90,7 +90,7 @@ export function StaffLegalCompliancePanel({
   clients,
   legalAcceptances,
 }: StaffLegalCompliancePanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [filter, setFilter] = useState<'all' | 'missing' | 'complete'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const report = useMemo(

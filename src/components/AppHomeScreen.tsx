@@ -2,6 +2,7 @@ import React from 'react';
 import { Block } from 'baseui/block';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { useLayoutFormFactor } from '../surfaces';
 import type { FormFactor } from '../lib/platform/device';
 import type { ShellKind } from '../lib/platform/shellKind';
 import type { ViewSurface } from '../lib/platform/viewSurface';
@@ -43,12 +44,13 @@ export function AppHomeScreen({
   previewOverrides,
 }: AppHomeScreenProps) {
   const device = useDevice();
+  const layoutFormFactor = useLayoutFormFactor();
   const shellKind = previewOverrides?.shellKind ?? device.shellKind;
-  const formFactor = previewOverrides?.formFactor ?? device.formFactor;
+  const formFactor = previewOverrides?.formFactor ?? layoutFormFactor;
   const viewSurface: ViewSurface =
     previewOverrides != null
       ? resolveViewSurface(previewOverrides.shellKind, previewOverrides.formFactor)
-      : device.viewSurface;
+      : resolveViewSurface(shellKind, formFactor);
   const experienceTier: ExperienceTier =
     previewOverrides?.experienceTier ??
     (previewOverrides != null

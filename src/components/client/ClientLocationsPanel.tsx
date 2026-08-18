@@ -12,7 +12,7 @@ import { browsableSharedLocations, isLocationListed } from '../../lib/jobLocatio
 import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { MapPin, Plus } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface ClientLocationsPanelProps {
@@ -28,7 +28,7 @@ export function ClientLocationsPanel({
   sharedLocations = [],
   onSave,
 }: ClientLocationsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const caps = useClientCapabilities();
   const selectableClientCities = getSelectableCityNamesForClients();
   const [name, setName] = useState('');

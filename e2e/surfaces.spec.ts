@@ -97,18 +97,27 @@ test.describe('surface resolution', () => {
     await waitForSurface(page, 'mobile');
     const mobile = await read();
 
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    const tablet = await read();
+
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/');
     await waitForSurface(page, 'desktop');
     const desktop = await read();
 
-    // Touch surfaces clear the 48px hit-area floor; the pointer surface trades
-    // hit area for density. If these ever match, one surface is being scaled.
+    // Each application authors its own control scale. If tablet ever matches
+    // mobile or desktop, one surface is being stretched instead of designed.
     expect(mobile.target).toBe('48px');
+    expect(tablet.target).toBe('44px');
     expect(desktop.target).toBe('32px');
     expect(mobile.navWidth).toBe('0px');
-    expect(desktop.navWidth).not.toBe('0px');
+    expect(tablet.navWidth).not.toBe('0px');
+    expect(tablet.navWidth).not.toBe(desktop.navWidth);
     expect(mobile.bottomBar).not.toBe('0px');
+    expect(tablet.bottomBar).toBe('0px');
+    expect(desktop.navWidth).not.toBe('0px');
   });
 
   test('each public homepage is independently designed', async ({ page }) => {
@@ -152,6 +161,31 @@ test.describe('surface resolution', () => {
     await page.goto('/?ui=tablet');
     await waitForSurface(page, 'tablet');
     await expect(page.locator('.sfm-tabbar, .sfd-sidebar, .sfd-statusbar, .uber-bottom-nav, .mbl-landing')).toHaveCount(0);
+  });
+
+  test('tablet landing is its own page, not scaled desktop or mobile', async ({ page }) => {
+    await page.setViewportSize(VIEWPORTS.tablet);
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    await expect(page.locator('.uber-style-landing--tablet')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--mobile')).toHaveCount(0);
+    await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
+  });
+
+  test('a 1100px landscape width stays on the tablet app, not desktop', async ({ page }) => {
+    // Tailwind's lg floor is 1024px, so formFactor would be desktop here. The
+    // tablet application owns 744–1179px and must keep its own landing + tokens.
+    await page.setViewportSize({ width: 1100, height: 820 });
+    await page.goto('/');
+    await waitForSurface(page, 'tablet');
+    expect(await surfaceOf(page)).toBe('tablet');
+    await expect(page.locator('body.sf-tablet')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--tablet')).toHaveCount(1);
+    await expect(page.locator('.dsk-landing-nav, body.sf-desktop')).toHaveCount(0);
+    const target = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--sf-target').trim(),
+    );
+    expect(target).toBe('44px');
   });
 
   test('shell canvases are scrollable when content overflows', async ({ page }) => {
