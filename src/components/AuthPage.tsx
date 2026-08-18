@@ -57,6 +57,7 @@ import {
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { useSurfaceKind } from '../surfaces';
 import { useStyletron } from 'baseui';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
 import {
@@ -326,8 +327,9 @@ export function AuthPage({
   open = true,
 }: AuthPageProps) {
   const isSheet = presentation === 'sheet';
-  const { formFactor, shellKind, viewSurface } = useDevice();
-  const isDesktopAuth = !isSheet && formFactor === 'desktop';
+  const { shellKind, viewSurface } = useDevice();
+  const surface = useSurfaceKind();
+  const isDesktopAuth = !isSheet && surface === 'desktop';
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client' | 'staff'>(
     initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client'

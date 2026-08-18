@@ -3,7 +3,7 @@ import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
 import { ArrowRight, Briefcase, Building2, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
-import { useDevice } from '../../lib/platform';
+import { useSurfaceKind } from '../../surfaces';
 import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
 import type { ClientType } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
@@ -255,9 +255,8 @@ export function AuthRoleChoicePage({
   onBack,
 }: AuthRoleChoicePageProps) {
   const [, theme] = useStyletron();
-  const { formFactor } = useDevice();
-  const factor = formFactor === 'tablet' ? 'tablet' : formFactor === 'desktop' ? 'desktop' : 'mobile';
-  const isMobile = factor === 'mobile';
+  const surface = useSurfaceKind();
+  const isMobile = surface === 'mobile';
   const copyKey = mode === 'sign-in' ? 'sign-in' : signupStep;
   const copy = COPY[copyKey];
   const backLabel = mode === 'sign-up' && signupStep !== 'path' ? 'Back' : 'Home';
@@ -293,7 +292,7 @@ export function AuthRoleChoicePage({
       minHeight="100dvh"
       height="100dvh"
       className="auth-role-choice-page"
-      data-landing-factor={formFactor}
+      data-landing-factor={surface}
       data-signup-step={mode === 'sign-up' ? signupStep : 'sign-in'}
       backgroundColor="backgroundPrimary"
       display="flex"

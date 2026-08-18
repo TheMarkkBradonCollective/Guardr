@@ -39,9 +39,16 @@ Guardr ships **three independent applications**, not one responsive layout. See
 | Native APK | All | mobile or tablet | Capacitor shell; native safe areas; haptics |
 
 Which application loads is decided **only** in `src/surfaces/surfaceKind.ts` and
-published via `useSurface()` / `body[data-surface]`. Boundaries are 744px (mobile →
-tablet) and 1180px (tablet → desktop); installed PWA/APK shells and touch-only
-devices never resolve to desktop. Override with `?ui=mobile|tablet|desktop`.
+published via `useSurface()` / `body[data-surface]`. Width floors are 744px
+(mobile → tablet) and 1180px (tablet → desktop). `formFactor` /
+`body[data-form-factor]` uses the same floors (`FORM_FACTOR_BOUNDS`) so a 13"
+laptop is not labelled desktop while the tablet application is mounted.
+Installed PWA/APK shells and touch-only devices never resolve to desktop.
+Override with `?ui=mobile|tablet|desktop`.
+
+Desktop look-and-feel CSS targets `body[data-surface="desktop"]` only. Do not
+reuse `data-form-factor="desktop"` or `data-view-surface="browser-desktop"` for
+chrome that must stay off tablet and mobile.
 
 Each shell is a separate lazy chunk, so a phone never downloads the desktop data
 table or command palette.

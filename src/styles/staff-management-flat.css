@@ -13,18 +13,18 @@ html.theme-dark .uber-app-shell {
   --adm-card: var(--uber-bg, #000000);
 }
 
-html.theme-dark body[data-form-factor="desktop"] {
+html.theme-dark body[data-surface="desktop"] {
   --adm-bg: var(--uber-bg, #000000);
   --adm-card: var(--uber-bg, #000000);
 }
 
 /* Alias ops page body class (TSX uses Base Web-*, legacy CSS used adm-*) */
-body[data-form-factor="desktop"] .uber-ops-page {
+body[data-surface="desktop"] .uber-ops-page {
   height: 100%;
   min-height: 0;
 }
 
-body[data-form-factor="desktop"] .uber-ops-page-body {
+body[data-surface="desktop"] .uber-ops-page-body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -35,12 +35,12 @@ body[data-form-factor="desktop"] .uber-ops-page-body {
   gap: 0.75rem;
 }
 
-body[data-form-factor="desktop"] .adm-platform-page .uber-ops-page-body,
-body[data-form-factor="desktop"] .adm-platform-settings-page .uber-ops-page-body,
-body[data-form-factor="desktop"] .adm-integrations-page .uber-ops-page-body,
-body[data-form-factor="desktop"] .adm-dev-notes-page .uber-ops-page-body,
-body[data-form-factor="desktop"] .adm-guide-page .uber-ops-page-body,
-body[data-form-factor="desktop"] .adm-payment-settings-page .uber-ops-page-body {
+body[data-surface="desktop"] .adm-platform-page .uber-ops-page-body,
+body[data-surface="desktop"] .adm-platform-settings-page .uber-ops-page-body,
+body[data-surface="desktop"] .adm-integrations-page .uber-ops-page-body,
+body[data-surface="desktop"] .adm-dev-notes-page .uber-ops-page-body,
+body[data-surface="desktop"] .adm-guide-page .uber-ops-page-body,
+body[data-surface="desktop"] .adm-payment-settings-page .uber-ops-page-body {
   overflow-y: auto;
   padding-right: 0.25rem;
 }
@@ -263,26 +263,26 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
 }
 
 @media (min-width: 1100px) {
-  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split {
+  body[data-surface="desktop"] .uber-app-shell .adm-platform-settings-grid--split,
+  body[data-surface="desktop"] .uber-app-shell .adm-payment-settings-grid--split {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem 2rem;
     align-items: start;
   }
 
-  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split .staff-mgmt-section,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-grid--split .adm-card,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card {
+  body[data-surface="desktop"] .uber-app-shell .adm-platform-settings-grid--split .staff-mgmt-section,
+  body[data-surface="desktop"] .uber-app-shell .adm-platform-settings-grid--split .adm-card,
+  body[data-surface="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section,
+  body[data-surface="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card {
     margin-bottom: 0 !important;
     border-bottom: none !important;
     padding-bottom: 0 !important;
   }
 
-  body[data-form-factor="desktop"] .uber-app-shell .adm-platform-settings-card--full,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section--full,
-  body[data-form-factor="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card:nth-child(2) {
+  body[data-surface="desktop"] .uber-app-shell .adm-platform-settings-card--full,
+  body[data-surface="desktop"] .uber-app-shell .adm-payment-settings-grid--split .staff-mgmt-section--full,
+  body[data-surface="desktop"] .uber-app-shell .adm-payment-settings-grid--split .adm-card:nth-child(2) {
     grid-column: 1 / -1;
   }
 }
@@ -332,11 +332,11 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
 }
 
 @media (min-width: 900px) {
-  body[data-form-factor="desktop"] .uber-app-shell .staff-mgmt-panel .staff-sla-metric-grid {
+  body[data-surface="desktop"] .uber-app-shell .staff-mgmt-panel .staff-sla-metric-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  body[data-form-factor="desktop"] .uber-app-shell .staff-mgmt-panel .staff-stats-metric-grid {
+  body[data-surface="desktop"] .uber-app-shell .staff-mgmt-panel .staff-stats-metric-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

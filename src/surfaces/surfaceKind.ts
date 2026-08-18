@@ -13,7 +13,7 @@
  * own shell, kit, page composition, and CSS layer.
  */
 
-import type { FormFactor } from '../lib/platform/device';
+import { FORM_FACTOR_BOUNDS, type FormFactor } from '../lib/platform/device';
 import type { ShellKind } from '../lib/platform/shellKind';
 
 export type SurfaceKind = 'mobile' | 'tablet' | 'desktop';
@@ -21,19 +21,14 @@ export type SurfaceKind = 'mobile' | 'tablet' | 'desktop';
 export const SURFACE_KINDS: readonly SurfaceKind[] = ['mobile', 'tablet', 'desktop'];
 
 /**
- * Surface boundaries.
+ * Surface boundaries — same floors as `FORM_FACTOR_BOUNDS`.
  *
- * These deliberately differ from the Tailwind breakpoints in `device.ts`: those
- * describe CSS breakpoints for shared utilities, while these choose an entire
- * application. The tablet floor is raised to 744px so large phones in landscape
- * keep the one-handed UI instead of jumping into split view mid-shift.
+ * Tailwind `md`/`lg` in `device.ts` stay at 768/1024 for utility CSS. These
+ * numbers choose which of the three applications loads: 744px so large phones
+ * in landscape keep the one-handed UI, 1180px so a 13" laptop is not a
+ * squeezed desktop operations centre.
  */
-export const SURFACE_BOUNDS = {
-  /** Minimum width that gets the tablet application. */
-  tabletMin: 744,
-  /** Minimum width that gets the desktop operations center. */
-  desktopMin: 1180,
-} as const;
+export const SURFACE_BOUNDS = FORM_FACTOR_BOUNDS;
 
 const OVERRIDE_KEY = 'guardr_surface_override';
 const OVERRIDE_PARAM = 'ui';

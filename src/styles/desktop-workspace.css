@@ -3,7 +3,7 @@
    Black top bar · gray content surface · white panels · clean data tables
    ═══════════════════════════════════════════════════════════════════════════ */
 
-body[data-form-factor="desktop"] .desktop-workspace {
+body[data-surface="desktop"] .desktop-workspace {
   display: grid;
   grid-template-columns: 19rem minmax(0, 1fr);
   grid-template-rows: 1fr;
@@ -12,9 +12,9 @@ body[data-form-factor="desktop"] .desktop-workspace {
 }
 
 /* No ambient orbs — Guardr is flat/clean */
-body[data-form-factor="desktop"] .desktop-workspace-ambient { display: none; }
+body[data-surface="desktop"] .desktop-workspace-ambient { display: none; }
 
-body[data-form-factor="desktop"] .desktop-workspace-main {
+body[data-surface="desktop"] .desktop-workspace-main {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -26,7 +26,7 @@ body[data-form-factor="desktop"] .desktop-workspace-main {
 
 /* ─── Left navigation rail — Base Web clean white sidebar ─────────────────── */
 
-body[data-form-factor="desktop"] .desktop-nav-rail {
+body[data-surface="desktop"] .desktop-nav-rail {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -36,17 +36,17 @@ body[data-form-factor="desktop"] .desktop-nav-rail {
   z-index: 20;
 }
 
-html.theme-dark body[data-form-factor="desktop"] .desktop-nav-rail {
+html.theme-dark body[data-surface="desktop"] .desktop-nav-rail {
   background: var(--uber-bg, #000);
   border-right-color: var(--uber-border, #1a1a1a);
 }
 
-html.theme-light body[data-form-factor="desktop"] .desktop-nav-rail {
+html.theme-light body[data-surface="desktop"] .desktop-nav-rail {
   background:
     linear-gradient(180deg, #f8f8f8 0%, #f1f1f1 100%);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-brand {
+body[data-surface="desktop"] .desktop-nav-rail-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -55,14 +55,14 @@ body[data-form-factor="desktop"] .desktop-nav-rail-brand {
   flex-shrink: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-brand-copy {
+body[data-surface="desktop"] .desktop-nav-rail-brand-copy {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
   min-width: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-brand-name {
+body[data-surface="desktop"] .desktop-nav-rail-brand-name {
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -70,7 +70,7 @@ body[data-form-factor="desktop"] .desktop-nav-rail-brand-name {
   color: var(--brand-text);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-brand-tag {
+body[data-surface="desktop"] .desktop-nav-rail-brand-tag {
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -79,7 +79,7 @@ body[data-form-factor="desktop"] .desktop-nav-rail-brand-tag {
   opacity: 0.75;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-scroll {
+body[data-surface="desktop"] .desktop-nav-rail-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -88,11 +88,11 @@ body[data-form-factor="desktop"] .desktop-nav-rail-scroll {
   scrollbar-width: thin;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-section {
+body[data-surface="desktop"] .desktop-nav-rail-section {
   margin-bottom: 0.35rem;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-section-label {
+body[data-surface="desktop"] .desktop-nav-rail-section-label {
   margin: 0.85rem 0.5rem 0.35rem;
   font-size: 0.5625rem;
   font-weight: 700;
@@ -102,13 +102,13 @@ body[data-form-factor="desktop"] .desktop-nav-rail-section-label {
   opacity: 0.55;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-group {
+body[data-surface="desktop"] .desktop-nav-rail-group {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item {
+body[data-surface="desktop"] .desktop-nav-rail-item {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr) auto;
   align-items: center;
@@ -127,12 +127,12 @@ body[data-form-factor="desktop"] .desktop-nav-rail-item {
   transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item:hover:not(.desktop-nav-rail-item--active):not(.desktop-nav-rail-item--locked) {
+body[data-surface="desktop"] .desktop-nav-rail-item:hover:not(.desktop-nav-rail-item--active):not(.desktop-nav-rail-item--locked) {
   background: #eeeeee;
   color: var(--brand-text);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item--active {
+body[data-surface="desktop"] .desktop-nav-rail-item--active {
   background: #000000;
   border-color: transparent;
   color: #ffffff;
@@ -140,20 +140,20 @@ body[data-form-factor="desktop"] .desktop-nav-rail-item--active {
   box-shadow: none;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item--active .desktop-nav-rail-item-icon-wrap {
+body[data-surface="desktop"] .desktop-nav-rail-item--active .desktop-nav-rail-item-icon-wrap {
   background: rgba(255, 255, 255, 0.14);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item--active .desktop-nav-rail-item-icon {
+body[data-surface="desktop"] .desktop-nav-rail-item--active .desktop-nav-rail-item-icon {
   color: #ffffff;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item--locked {
+body[data-surface="desktop"] .desktop-nav-rail-item--locked {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item-icon-wrap {
+body[data-surface="desktop"] .desktop-nav-rail-item-icon-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,19 +163,19 @@ body[data-form-factor="desktop"] .desktop-nav-rail-item-icon-wrap {
   background: color-mix(in srgb, var(--brand-surface) 70%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item-icon {
+body[data-surface="desktop"] .desktop-nav-rail-item-icon {
   width: 1.05rem;
   height: 1.05rem;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item-label {
+body[data-surface="desktop"] .desktop-nav-rail-item-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-item-badge {
+body[data-surface="desktop"] .desktop-nav-rail-item-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -190,24 +190,24 @@ body[data-form-factor="desktop"] .desktop-nav-rail-item-badge {
   line-height: 1;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-footer {
+body[data-surface="desktop"] .desktop-nav-rail-footer {
   flex-shrink: 0;
   padding: 0.85rem 0.9rem 1rem;
   border-top: 1px solid color-mix(in srgb, var(--brand-border) 70%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-account {
+body[data-surface="desktop"] .desktop-nav-rail-account {
   width: 100%;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail-account .account-menu-trigger {
+body[data-surface="desktop"] .desktop-nav-rail-account .account-menu-trigger {
   width: 100%;
   justify-content: flex-start;
 }
 
 /* ─── Command bar ───────────────────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-command-bar {
+body[data-surface="desktop"] .desktop-command-bar {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -216,12 +216,12 @@ body[data-form-factor="desktop"] .desktop-command-bar {
   backdrop-filter: blur(16px) saturate(140%);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar--map {
+body[data-surface="desktop"] .desktop-command-bar--map {
   background: color-mix(in srgb, var(--brand-bg) 90%, transparent);
   border-bottom-color: color-mix(in srgb, var(--brand-border) 55%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-primary {
+body[data-surface="desktop"] .desktop-command-bar-primary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -230,11 +230,11 @@ body[data-form-factor="desktop"] .desktop-command-bar-primary {
   padding: 0.75rem 1.75rem;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-context {
+body[data-surface="desktop"] .desktop-command-bar-context {
   min-width: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-breadcrumb {
+body[data-surface="desktop"] .desktop-command-bar-breadcrumb {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -246,19 +246,19 @@ body[data-form-factor="desktop"] .desktop-command-bar-breadcrumb {
   color: var(--brand-text-muted);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-breadcrumb-root {
+body[data-surface="desktop"] .desktop-command-bar-breadcrumb-root {
   color: var(--brand-primary);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-breadcrumb-sep {
+body[data-surface="desktop"] .desktop-command-bar-breadcrumb-sep {
   opacity: 0.45;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-titles {
+body[data-surface="desktop"] .desktop-command-bar-titles {
   min-width: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-title {
+body[data-surface="desktop"] .desktop-command-bar-title {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 900;
@@ -267,7 +267,7 @@ body[data-form-factor="desktop"] .desktop-command-bar-title {
   color: var(--brand-text);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-subtitle {
+body[data-surface="desktop"] .desktop-command-bar-subtitle {
   margin: 0.2rem 0 0;
   font-size: 0.75rem;
   font-weight: 600;
@@ -276,14 +276,14 @@ body[data-form-factor="desktop"] .desktop-command-bar-subtitle {
   text-transform: uppercase;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-actions {
+body[data-surface="desktop"] .desktop-command-bar-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-status {
+body[data-surface="desktop"] .desktop-command-bar-status {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -298,7 +298,7 @@ body[data-form-factor="desktop"] .desktop-command-bar-status {
   border: 1px solid color-mix(in srgb, var(--status-success) 22%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-status-dot {
+body[data-surface="desktop"] .desktop-command-bar-status-dot {
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 50%;
@@ -312,19 +312,19 @@ body[data-form-factor="desktop"] .desktop-command-bar-status-dot {
   50% { opacity: 0.65; transform: scale(0.92); }
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-extension {
+body[data-surface="desktop"] .desktop-command-bar-extension {
   padding: 0 1.5rem 0.85rem;
   border-top: 1px solid color-mix(in srgb, var(--brand-border) 55%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-command-bar-slot {
+body[data-surface="desktop"] .desktop-command-bar-slot {
   border-bottom: 1px solid var(--brand-border);
   background: var(--brand-surface);
 }
 
 /* ─── Workspace canvas ──────────────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas {
+body[data-surface="desktop"] .desktop-workspace-canvas {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -332,11 +332,11 @@ body[data-form-factor="desktop"] .desktop-workspace-canvas {
   padding: 1.35rem 1.75rem 1.75rem;
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas--bleed {
+body[data-surface="desktop"] .desktop-workspace-canvas--bleed {
   padding: 0;
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas-inner {
+body[data-surface="desktop"] .desktop-workspace-canvas-inner {
   border-radius: 1rem;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--brand-surface) 98%, transparent), var(--brand-surface));
@@ -347,20 +347,20 @@ body[data-form-factor="desktop"] .desktop-workspace-canvas-inner {
     0 0 0 1px color-mix(in srgb, var(--brand-primary) 5%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas--bleed .desktop-workspace-canvas-inner {
+body[data-surface="desktop"] .desktop-workspace-canvas--bleed .desktop-workspace-canvas-inner {
   border-radius: 0;
   border: none;
   box-shadow: none;
   background: transparent;
 }
 
-body[data-form-factor="desktop"] .desktop-workspace--staff .desktop-workspace-canvas-inner {
+body[data-surface="desktop"] .desktop-workspace--staff .desktop-workspace-canvas-inner {
   max-width: 96rem;
   margin-inline: auto;
   width: 100%;
 }
 
-body[data-form-factor="desktop"] .desktop-workspace--staff .desktop-workspace-canvas:not(.desktop-workspace-canvas--bleed) .desktop-workspace-canvas-inner {
+body[data-surface="desktop"] .desktop-workspace--staff .desktop-workspace-canvas:not(.desktop-workspace-canvas--bleed) .desktop-workspace-canvas-inner {
   padding: 1.25rem 1.5rem 1.75rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -369,7 +369,7 @@ body[data-form-factor="desktop"] .desktop-workspace--staff .desktop-workspace-ca
 
 /* ─── Master-detail (staff lists, records) ───────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-master-detail {
+body[data-surface="desktop"] .desktop-master-detail {
   display: grid;
   grid-template-columns: minmax(19rem, 24rem) minmax(0, 1fr);
   gap: 0;
@@ -382,7 +382,7 @@ body[data-form-factor="desktop"] .desktop-master-detail {
   box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
 }
 
-body[data-form-factor="desktop"] .desktop-master-detail-list {
+body[data-surface="desktop"] .desktop-master-detail-list {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -391,12 +391,12 @@ body[data-form-factor="desktop"] .desktop-master-detail-list {
   overflow-y: auto;
 }
 
-body[data-form-factor="desktop"] .desktop-master-detail-list .app-item-card-stack {
+body[data-surface="desktop"] .desktop-master-detail-list .app-item-card-stack {
   gap: 0.5rem;
   padding: 0.85rem;
 }
 
-body[data-form-factor="desktop"] .desktop-master-detail-detail {
+body[data-surface="desktop"] .desktop-master-detail-detail {
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
@@ -406,7 +406,7 @@ body[data-form-factor="desktop"] .desktop-master-detail-detail {
 
 /* ─── Messages workbench ────────────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-messages-workbench {
+body[data-surface="desktop"] .desktop-messages-workbench {
   display: grid;
   grid-template-columns: 24rem minmax(0, 1fr);
   height: 100%;
@@ -415,7 +415,7 @@ body[data-form-factor="desktop"] .desktop-messages-workbench {
   background: var(--brand-bg);
 }
 
-body[data-form-factor="desktop"] .desktop-messages-inbox {
+body[data-surface="desktop"] .desktop-messages-inbox {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -423,13 +423,13 @@ body[data-form-factor="desktop"] .desktop-messages-inbox {
   background: color-mix(in srgb, var(--brand-bg-sec) 60%, var(--brand-surface));
 }
 
-body[data-form-factor="desktop"] .desktop-messages-inbox-body {
+body[data-surface="desktop"] .desktop-messages-inbox-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-body[data-form-factor="desktop"] .desktop-messages-thread {
+body[data-surface="desktop"] .desktop-messages-thread {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -437,7 +437,7 @@ body[data-form-factor="desktop"] .desktop-messages-thread {
   background: var(--brand-surface);
 }
 
-body[data-form-factor="desktop"] .desktop-messages-empty {
+body[data-surface="desktop"] .desktop-messages-empty {
   flex: 1;
   display: flex;
   align-items: center;
@@ -450,7 +450,7 @@ body[data-form-factor="desktop"] .desktop-messages-empty {
 
 /* ─── Map inspector panel (guard) ───────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-map-inspector {
+body[data-surface="desktop"] .desktop-map-inspector {
   position: absolute;
   top: 0;
   right: 0;
@@ -467,14 +467,14 @@ body[data-form-factor="desktop"] .desktop-map-inspector {
   pointer-events: auto;
 }
 
-body[data-form-factor="desktop"] .desktop-map-inspector-header {
+body[data-surface="desktop"] .desktop-map-inspector-header {
   flex-shrink: 0;
   padding: 1rem 1.15rem;
   border-bottom: 1px solid var(--brand-border);
   background: color-mix(in srgb, var(--brand-bg-sec) 40%, var(--brand-surface));
 }
 
-body[data-form-factor="desktop"] .desktop-map-inspector-header-label {
+body[data-surface="desktop"] .desktop-map-inspector-header-label {
   margin: 0;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -483,60 +483,60 @@ body[data-form-factor="desktop"] .desktop-map-inspector-header-label {
   color: var(--brand-text-muted);
 }
 
-body[data-form-factor="desktop"] .desktop-map-inspector-body {
+body[data-surface="desktop"] .desktop-map-inspector-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: 1rem 1.15rem 1.5rem;
 }
 
-body[data-form-factor="desktop"] .guard-map-layout:has(.desktop-map-inspector, .guard-side-panel) .guardr-map-root {
+body[data-surface="desktop"] .guard-map-layout:has(.desktop-map-inspector, .guard-side-panel) .guardr-map-root {
   right: 28rem !important;
 }
 
-body[data-view-surface="browser-desktop"] .client-map-layout:has(.map-selection-layer--desktop, .desktop-map-inspector) .guardr-map-root {
+body[data-surface="desktop"] .client-map-layout:has(.map-selection-layer--desktop, .desktop-map-inspector) .guardr-map-root {
   right: 28rem !important;
 }
 
 /* ─── Content width helpers ─────────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .client-content-shell {
+body[data-surface="desktop"] .client-content-shell {
   max-width: min(68rem, 100%);
   margin-inline: auto;
   padding-inline: 0.5rem;
 }
 
-body[data-form-factor="desktop"] .client-form-shell {
+body[data-surface="desktop"] .client-form-shell {
   max-width: min(44rem, 100%);
   margin-inline: auto;
 }
 
-body[data-form-factor="desktop"] .staff-ops-root main {
+body[data-surface="desktop"] .staff-ops-root main {
   max-width: none;
 }
 
 /* Desktop map + inspector sizing lives in styles/desktop-workspace.css */
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas .app-card,
-body[data-form-factor="desktop"] .desktop-workspace-canvas .uber-card,
-body[data-form-factor="desktop"] .desktop-master-detail-detail .app-card {
+body[data-surface="desktop"] .desktop-workspace-canvas .app-card,
+body[data-surface="desktop"] .desktop-workspace-canvas .uber-card,
+body[data-surface="desktop"] .desktop-master-detail-detail .app-card {
   padding: 1.35rem 1.5rem;
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas .app-item-card {
+body[data-surface="desktop"] .desktop-workspace-canvas .app-item-card {
   border-radius: var(--radius-app);
 }
 
-body[data-form-factor="desktop"] .desktop-workspace-canvas .wf-metric-tile {
+body[data-surface="desktop"] .desktop-workspace-canvas .wf-metric-tile {
   padding: 1.15rem 1.35rem;
 }
 
 /* ─── Staff desktop nav density ─────────────────────────────────────────── */
 
-body[data-form-factor="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-scroll {
+body[data-surface="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-scroll {
   padding-top: 0.65rem;
 }
 
-body[data-form-factor="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-brand {
+body[data-surface="desktop"] .desktop-nav-rail--staff .desktop-nav-rail-brand {
   justify-content: space-between;
 }
