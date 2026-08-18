@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
+import { useMediaQuery } from '../../lib/platform';
 import { AppEmptyState } from '../ui/app/AppPrimitives';
 import { useSurfaceKind } from '../../surfaces';
 
@@ -42,6 +43,7 @@ export function MessagesHubLayout({
   const surface = useSurfaceKind();
   const splitView = surface === 'tablet';
   const desktopView = surface === 'desktop';
+  const portrait = useMediaQuery('(orientation: portrait)');
   const inboxHeader = shellInboxHeader ? null : header;
 
   const emptyDetail = (
@@ -74,7 +76,11 @@ export function MessagesHubLayout({
 
   if (splitView) {
     return (
-      <div className="app-messages-split h-full min-h-0">
+      <div
+        className="app-messages-split h-full min-h-0"
+        data-selected={hasSelection ? 'true' : undefined}
+        data-orientation={portrait ? 'portrait' : 'landscape'}
+      >
         <div className="app-messages-split-list flex flex-col min-h-0">
           {inboxHeader ? <div className="flex-shrink-0">{inboxHeader}</div> : null}
           <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>

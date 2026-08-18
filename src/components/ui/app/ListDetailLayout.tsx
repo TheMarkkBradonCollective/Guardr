@@ -1,4 +1,6 @@
 import React from 'react';
+import { ChevronLeft } from 'lucide-react';
+import { useMediaQuery } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
 import { WorkbenchEmpty } from '../../baseui/layout/WorkbenchLayout';
 import { useSurfaceKind } from '../../../surfaces';
@@ -51,12 +53,15 @@ export function ListDetailLayout<T>({
   mobilePresentation = 'inline',
 }: ListDetailLayoutProps<T>) {
   const { splitView, desktopView, showDetailOnly } = useSplitListDetail(selectedId, mobilePresentation);
+  const portrait = useMediaQuery('(orientation: portrait)');
 
+  const allowAutoSelect = autoSelectFirst && (desktopView || (splitView && !portrait));
   const resolvedSelectedId =
-    selectedId ??
-    ((splitView || desktopView) && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
+    selectedId ?? (allowAutoSelect && items.length > 0 ? getItemId(items[0]) : null);
 
   const selected = items.find((item) => getItemId(item) === resolvedSelectedId) ?? null;
+  const hasSelection = selected != null;
+  const closeDetail = () => onSelectId(null);
 
   const handleSelect = (id: string) => {
     if (mobilePresentation === 'inline' && !splitView && !desktopView && id === selectedId) {
@@ -97,7 +102,6 @@ export function ListDetailLayout<T>({
   }
 
   if (splitView) {
-    // Tablet: full-page scroll — drop nested max-height / overflow scroll classes.
     const tabletListScrollClassName = listScrollClassName
       .split(/\s+/)
       .filter(
@@ -111,17 +115,31 @@ export function ListDetailLayout<T>({
       .join(' ');
 
     return (
-      <div className="tablet-split-panel">
+      <div
+        className="tablet-split-panel"
+        data-selected={hasSelection ? 'true' : undefined}
+        data-orientation={portrait ? 'portrait' : 'landscape'}
+      >
         <div className={`split-list-pane ${tabletListScrollClassName}`}>{list}</div>
         <div className={`split-detail-pane min-h-0 ${detailClassName}`}>
-          {selected ? renderDetail(selected) : emptyDetail}
+          {hasSelection && portrait ? (
+            <div className="tablet-split-back">
+              <button type="button" className="sft-icon-btn" onClick={closeDetail} aria-label="Back to list">
+                <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
+              </button>
+              <span className="tablet-split-back-title">Back to list</span>
+            </div>
+          ) : null}
+          {selected
+            ? renderDetail(selected, portrait ? { onBack: closeDetail } : undefined)
+            : emptyDetail}
         </div>
       </div>
     );
   }
 
   if (showDetailOnly && selected) {
-    return renderDetail(selected, { onBack: () => onSelectId(null) });
+    return renderDetail(selected, { onBack: closeDetail });
   }
 
   return (

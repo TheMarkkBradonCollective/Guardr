@@ -37,11 +37,11 @@ export function StaffOpsPageShell({
   if (formFactor === 'tablet') {
     return (
       <div
-        className={`staff-ops-tablet-shell animate-fade-in flex flex-col min-w-0 ${className}`.trim()}
+        className={`staff-ops-tablet-shell animate-fade-in flex flex-col min-w-0 h-full min-h-0 ${className}`.trim()}
         {...rest}
       >
         {toolbar ? <div className="staff-ops-tablet-toolbar shrink-0">{toolbar}</div> : null}
-        <div className="staff-ops-tablet-body min-w-0">{children}</div>
+        <div className="staff-ops-tablet-body min-w-0 min-h-0 flex-1 flex flex-col">{children}</div>
       </div>
     );
   }

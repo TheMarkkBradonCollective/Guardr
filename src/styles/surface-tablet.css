@@ -49,15 +49,15 @@
   min-width: 0;
 }
 
-/* Workspace context, deliberately quiet: the page owns the loud title. */
+/* Page title in the shell header — not a second copy of the workspace name. */
 .sft-shell-context {
   overflow: hidden;
-  color: var(--sf-ink-tertiary);
-  font-size: var(--sf-type-caption);
+  color: var(--sf-ink);
+  font-size: var(--sf-type-subheading);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: -0.02em;
   text-overflow: ellipsis;
-  text-transform: uppercase;
+  text-transform: none;
   white-space: nowrap;
 }
 
@@ -152,14 +152,9 @@
   white-space: nowrap;
 }
 
-/* Quick-switch strip: the destinations a user bounces between mid-shift,
-   always reachable without scanning the full rail. */
+/* Removed from the live shell — those squares duplicated the rail and ate width. */
 .sft-rail-quick {
-  display: flex;
-  flex-shrink: 0;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--sf-line);
+  display: none;
 }
 
 .sft-rail-quick-btn {
