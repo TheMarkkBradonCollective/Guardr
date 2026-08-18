@@ -3,7 +3,7 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.123**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.124**
 
 ---
 
@@ -13,9 +13,12 @@ The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | Wha
 
 ---
 
-## Tuesday, August 18, 2026 — Personal vs Business clients (#976)
+## Tuesday, August 18, 2026 — /update → v1.0.124
 
-In progress on **#976**. One client system: **Personal** vs **Business** is who hires and pays — not how often they book and not the site type. Live site is still **v1.0.123** until the next `/update` release.
+**PR cleanup (merged to `main`)**
+- **#976** — One client system with Personal vs Business capabilities (signup, tools, dual fee tables, frozen posted prices, staff ID bounce, client credential library, Guide/Dev notes)
+
+One client system: **Personal** vs **Business** is who hires and pays — not how often they book and not the site type.
 
 | Time | What shipped |
 |------|----------------|
@@ -27,21 +30,29 @@ In progress on **#976**. One client system: **Personal** vs **Business** is who 
 | 9:19 AM | Freeze posted job and contract prices when fee tables change |
 | 9:47 AM | Bounce unverified staff IDs and add a client credential library |
 | 9:55 AM | Update Guide, Dev notes, manuals, and /update activity-cloud checklist |
+| 9:57 AM | Merge #976 onto the v1.0.124 /update branch |
+| 9:58 AM | Release v1.0.124-beta — version bump, PWA cache, download notes |
 
-**Shipped (this PR)**
+**Shipped**
 - **Signup** — three doors: I need security / I want to work → Personal vs Business → licensed guard vs Apply to work at Guardr
 - **Capabilities** — both types are repeat clients (request, rebook, recurring). Business-only: multiple sites, staffing, reporting, team contacts, company documents
 - **Platform fees** — two schedules (personal / business), each with per-guard-type rates. Live tables apply to **new** jobs only; posted/approved/contracted jobs keep snapshotted `platformFeePerHour` / `guardPay`
 - **Staff government ID** — verified-without-photos is bounced to pending upload; active staff missing ID photos are restricted (**Reactivation**) until front + back + selfie are verified. Founder can still open ops to review IDs
 - **Client credential library** — always-required government ID (personal) or authorized-representative ID (business); other licenses stay library-only unless Required For is set. Staff **Credentials → Clients** tab + library editor (Manager+). Posting a job blocks until required creds for that client type + job type are verified
+- **v1.0.124** (build **224**) web + PWA version alignment
+- PWA service worker cache bust: `guardr-cache-v1-0-124-beta`
 
 **SQL to run**
 - `supabase/migrations/20260818010000_client_account_kind.sql`
 - `supabase/migrations/20260818020000_client_authorized_contacts.sql`
 - `supabase/migrations/20260818030000_client_credentials_staff_id_bounce.sql`
+- Or re-run `supabase/complete_schema_setup.sql` (idempotent)
 
 **Docs**
-- Guide, Dev notes, user manuals (Quick Start / Client / Staff), and `/update` now always refresh Guide + dates + activity-cloud Time tables
+- Guide, Dev notes, user manuals (Quick Start / Client / Guard / Staff), and `/update` always refresh Guide + dates + activity-cloud Time tables
+
+**Release verification**
+- Lint, test, build (this /update)
 
 ---
 
@@ -1118,7 +1129,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
-| **Aug 18** | 7+ | Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |
+| **Aug 18** | 9+ | /update v1.0.124 — Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |
 
 ---
 

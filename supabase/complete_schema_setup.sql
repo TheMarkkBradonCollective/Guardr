@@ -242,6 +242,8 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAUL
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS authorized_contacts JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS credentials JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN clients.credentials IS
+  'Client credential library uploads: type, document, expiration, and verification status.';
 
 UPDATE clients
 SET client_type = 'business'
