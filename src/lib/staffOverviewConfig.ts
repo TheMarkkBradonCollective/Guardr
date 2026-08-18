@@ -59,7 +59,8 @@ const EXECUTIVE_OVERVIEW_FIELDS = {
 const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
   'map',
   'payments',
-  'payment-settings',
+  'platform-fees',
+  'staff-compensation',
   'agreements',
   'audit-log',
   'team',
@@ -172,7 +173,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Platform is clear. Review governance settings, financials, or staff activity.',
-    quickLinkSections: ['settings', 'payment-settings', 'agreements', 'audit-log', 'team', 'payments', 'analytics', 'map', 'applications'],
+    quickLinkSections: ['settings', 'platform-fees', 'staff-compensation', 'agreements', 'audit-log', 'team', 'payments', 'analytics', 'map', 'applications'],
   },
   finance: {
     roleLabel: ROLE_LABELS.finance,
@@ -188,8 +189,8 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showPipelineInsight: false,
     showWeeklyInsight: false,
     showActivityFeed: true,
-    emptyAttentionCopy: 'No payment items waiting. Open Payments or Payment settings to continue.',
-    quickLinkSections: ['payments', 'payment-settings', 'agreements', 'audit-log'],
+    emptyAttentionCopy: 'No payment items waiting. Open Payments & invoices or Platform fees to continue.',
+    quickLinkSections: ['payments', 'platform-fees', 'staff-compensation', 'agreements', 'audit-log'],
   },
 };
 

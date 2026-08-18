@@ -270,7 +270,7 @@ export const STAFF_DESTINATIONS: SurfaceDestination[] = [
   { id: 'credentials', label: 'Credentials', icon: ShieldCheck, section: 'Operations', badge: 7 },
   { id: 'messages', label: 'Messages', icon: MessagesSquare, section: 'Communications', mobileRank: 4, badge: 3 },
   { id: 'support', label: 'Support', icon: LifeBuoy, section: 'Communications' },
-  { id: 'payments', label: 'Payments', icon: CreditCard, section: 'Management' },
+  { id: 'payments', label: 'Payments & invoices', icon: CreditCard, section: 'Management' },
   { id: 'agreements', label: 'Agreements', icon: FileText, section: 'Management' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, section: 'Oversight' },
   { id: 'settings', label: 'Settings', icon: Settings, section: 'Platform' },

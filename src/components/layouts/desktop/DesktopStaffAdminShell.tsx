@@ -139,7 +139,7 @@ export function DesktopStaffAdminShell({
   const mobileBottomNavItems = useMemo(() => {
     if (!isMobileShell) return undefined;
     const bottomIds = financeDeskOnly
-      ? (['overview', 'payments', 'payment-settings', 'agreements', 'audit-log'] as StaffSection[])
+      ? (['overview', 'payments', 'platform-fees', 'staff-compensation', 'agreements'] as StaffSection[])
       : STAFF_BOTTOM_NAV_IDS;
     return bottomIds.map((id) => {
       const item = flatNavItems.find((nav) => nav.id === id);

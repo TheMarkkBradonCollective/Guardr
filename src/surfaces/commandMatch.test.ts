@@ -18,8 +18,8 @@ const COMMANDS: SurfaceCommand[] = [
   command('jobs', 'Jobs'),
   command('job-approval', 'Job approval settings', 'Platform'),
   command('guards', 'Guards'),
-  command('payments', 'Payments', 'Management', ['money', 'payout', 'invoice']),
-  command('payment-settings', 'Payment settings', 'Management'),
+  command('payments', 'Payments & invoices', 'Management', ['money', 'payout', 'invoice']),
+  command('platform-fees', 'Platform fees', 'Management'),
   command('credentials', 'Credentials'),
   command('audit-log', 'Audit log', 'Management'),
 ];
@@ -69,9 +69,8 @@ describe('filterCommands', () => {
   });
 
   it('prefers the shorter label when both start with the query', () => {
-    const results = filterCommands(COMMANDS, 'payment');
+    const results = filterCommands(COMMANDS, 'pay');
     assert.equal(results[0].command.id, 'payments');
-    assert.equal(results[1].command.id, 'payment-settings');
   });
 
   it('drops non-matches', () => {

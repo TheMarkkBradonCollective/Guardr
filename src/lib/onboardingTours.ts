@@ -601,7 +601,7 @@ export const STAFF_ONBOARDING_TOUR: OnboardingTour = {
     },
     {
       id: 'payments-intro',
-      title: 'Payments — releases & holds',
+      title: 'Payments & invoices — releases & holds',
       body: 'Monitor payout pipeline, payment holds, and client billing exceptions.',
       detail:
         'Completed shifts flow through approval, platform fee calculation, guard Stripe transfer, and client invoice. Holds appear when hours are disputed, incidents are open, or credentials lapse mid-shift. Directors can override holds with logged justification.',
