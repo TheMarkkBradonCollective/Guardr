@@ -40,7 +40,7 @@ import {
   type IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
-import { normalizeClientAccountKind } from '../../lib/clientAccountKind';
+import { normalizeClientType } from '../../lib/clientType';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -193,7 +193,7 @@ export function UserProfileScreen({
   const isStaffAccount = isStaffRole(currentUser.role);
   const isGuardAccount = currentUser.role === 'guard';
   const isClient = currentUser.role === 'client';
-  const isPersonalClient = isClient && normalizeClientAccountKind(client?.accountKind) === 'personal';
+  const isPersonalClient = isClient && normalizeClientType(client?.clientType) === 'personal';
 
   const buildPayload = (avatarOverride?: string): ProfileSavePayload => {
     const normalized = personNameFromPayload({ firstName, middleName, lastName });
@@ -482,9 +482,9 @@ export function UserProfileScreen({
           onLastNameChange={setLastName}
           editing={applicationFieldsEditable}
         />
-        {isClient && (
+        {isClient && !isPersonalClient && (
           <Field
-            label={isPersonalClient ? 'Household / event name' : 'Company'}
+            label="Company"
             value={companyName}
             onChange={setCompanyName}
             editing={applicationFieldsEditable}

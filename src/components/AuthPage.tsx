@@ -37,8 +37,8 @@ import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { personNameFromPayload } from '../lib/personName';
-import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientAccountKind } from '../types';
-import { normalizeClientAccountKind } from '../lib/clientAccountKind';
+import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientType } from '../types';
+import { normalizeClientType } from '../lib/clientType';
 import { ROLE_LABELS } from '../lib/permissions';
 import { generateGuardIndependentContractorNumber } from '../lib/guardContractorNumber';
 import type { LegalPageId } from '../lib/legalContent';
@@ -96,6 +96,8 @@ const SERVICE_TYPE_OPTIONS = [
 ] as const;
 
 const PROPERTY_TYPE_OPTIONS = [
+  'Home / residence',
+  'Private event',
   'Retail storefront',
   'Office building',
   'Warehouse / industrial',
@@ -106,14 +108,7 @@ const PROPERTY_TYPE_OPTIONS = [
   'School / campus',
   'Restaurant / bar',
   'Hotel / hospitality',
-  'Other',
-] as const;
-
-const PERSONAL_PROPERTY_TYPE_OPTIONS = [
-  'Home / residence',
-  'Private event',
-  'Vacation / rental property',
-  'Residential / HOA',
+  'Nightclub / bar',
   'Other',
 ] as const;
 
@@ -280,7 +275,7 @@ interface AuthPageProps {
   onAuthRoleChange?: (role: 'guard' | 'client' | 'staff') => void;
   initialRole?: 'guard' | 'client' | 'staff';
   initialMode?: 'sign-in' | 'sign-up';
-  initialClientKind?: ClientAccountKind;
+  initialClientType?: ClientType;
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
@@ -322,7 +317,7 @@ export function AuthPage({
   onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
-  initialClientKind = 'business',
+  initialClientType = 'business',
   themeMode = 'light',
   onChangeTheme,
   isDbConnected = false,
@@ -367,8 +362,8 @@ export function AuthPage({
   const [guardReliableTransport, setGuardReliableTransport] = useState<'' | 'yes' | 'no'>('');
 
   const [clientCompanyName, setClientCompanyName] = useState('');
-  const [clientKind, setClientKind] = useState<ClientAccountKind>(() =>
-    normalizeClientAccountKind(initialClientKind)
+  const [clientKind, setClientKind] = useState<ClientType>(() =>
+    normalizeClientType(initialClientType)
   );
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -400,9 +395,9 @@ export function AuthPage({
   useEffect(() => {
     setRole(initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client');
     setIsSignUp(initialMode === 'sign-up');
-    setClientKind(normalizeClientAccountKind(initialClientKind));
+    setClientKind(normalizeClientType(initialClientType));
     setErrorMsg('');
-  }, [initialRole, initialMode, initialClientKind]);
+  }, [initialRole, initialMode, initialClientType]);
 
   const guardSignupCities = getSignupCityNamesForRole('guard');
   const clientSignupCities = getSignupCityNamesForRole('client');
@@ -607,7 +602,11 @@ export function AuthPage({
           setErrorMsg(clientCityAccess.message);
           return;
         }
-        const company = clientKind === 'personal' ? clientCompanyName.trim() : clientCompanyName.trim();
+        if (clientKind === 'business' && !clientCompanyName.trim()) {
+          setErrorMsg('Enter the business or organization name that will be billed.');
+          return;
+        }
+        const company = clientKind === 'personal' ? '' : clientCompanyName.trim();
         const clientProfile: Client = {
           id: randomId,
           name: normalized.name,
@@ -616,7 +615,7 @@ export function AuthPage({
           lastName: normalized.lastName,
           email: emailLower,
           companyName: company,
-          accountKind: clientKind,
+          clientType: clientKind,
           phone: phone.trim() || '',
           avatar: '',
           totalRequests: 0,
@@ -1263,41 +1262,42 @@ export function AuthPage({
                 <div className="space-y-5 pt-4 border-t border-brand-border">
                   <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
 
-                  {/* ── Contact & Business ── */}
                   <p className="uber-label">
-                    {clientKind === 'personal' ? 'Personal marketplace account' : 'Business marketplace account'}
+                    {clientKind === 'personal' ? 'Personal client' : 'Business client'}
                   </p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     {clientKind === 'personal'
-                      ? 'For homes, events, and private coverage — not a job application to Guardr.'
-                      : 'For companies and sites that hire guards on the platform — not a job application to Guardr.'}
+                      ? 'You are the contracting party and pay as an individual. Coverage can still be at a home, venue, or other site — that does not make this a business account.'
+                      : 'The company or organization is the contracting party and pays the invoice. You can still post a private event if the business is hiring.'}
                   </p>
-                  <div className={clientKind === 'personal' ? '' : 'grid grid-cols-2 gap-3'}>
-                    <div>
-                      <label className="uber-label block mb-2">Phone <span className="font-normal">(optional)</span></label>
-                      <div className="relative">
-                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-                        <input
-                          type="tel"
-                          placeholder="+1 (555) 000-0000"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="uber-input pl-10"
-                        />
-                      </div>
-                    </div>
-                    {clientKind === 'business' ? (
-                    <div>
-                      <label className="uber-label block mb-2">Company name <span className="font-normal">(optional)</span></label>
+                  {clientKind === 'business' ? (
+                  <div>
+                    <label className="uber-label block mb-2">Business name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ABC Nightclub"
+                      value={clientCompanyName}
+                      onChange={(e) => setClientCompanyName(e.target.value)}
+                      className="uber-input"
+                    />
+                  </div>
+                  ) : null}
+                  <div>
+                    <label className="uber-label block mb-2">
+                      {clientKind === 'personal' ? 'Phone' : 'Contact phone'}{' '}
+                      <span className="font-normal">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
                       <input
-                        type="text"
-                        placeholder="Acme Corp"
-                        value={clientCompanyName}
-                        onChange={(e) => setClientCompanyName(e.target.value)}
-                        className="uber-input"
+                        type="tel"
+                        placeholder="+1 (555) 000-0000"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="uber-input pl-10"
                       />
                     </div>
-                    ) : null}
                   </div>
                   {clientKind === 'business' ? (
                   <>
@@ -1468,7 +1468,10 @@ export function AuthPage({
                     />
                   </div>
                   <div>
-                    <label className="uber-label block mb-2">Budget range <span className="font-normal">(optional)</span></label>
+                    <label className="uber-label block mb-2">
+                      {clientKind === 'personal' ? 'Payment estimate' : 'Billing estimate'}{' '}
+                      <span className="font-normal">(optional)</span>
+                    </label>
                     <div className="relative">
                       <select
                         value={budgetRange}
@@ -1485,14 +1488,19 @@ export function AuthPage({
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                     </div>
+                    <p className="text-xs text-brand-text-muted mt-1.5">
+                      {clientKind === 'personal'
+                        ? 'Invoices are billed to you as an individual.'
+                        : 'Invoices are billed to the business or organization.'}
+                    </p>
                   </div>
 
-                  {/* ── Location ── */}
-                  <p className="uber-label pt-2 border-t border-brand-border">Location</p>
+                  {/* ── Address ── */}
+                  <p className="uber-label pt-2 border-t border-brand-border">
+                    {clientKind === 'personal' ? 'Address' : 'Business address'}
+                  </p>
                   <div>
-                    <label className="uber-label block mb-2">
-                      {clientKind === 'personal' ? 'City where you need coverage' : 'Primary city of operations'}
-                    </label>
+                    <label className="uber-label block mb-2">City</label>
                     <div className="relative">
                       <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                       <select
@@ -1521,9 +1529,12 @@ export function AuthPage({
                     <p className="text-xs text-brand-text-muted mt-1.5">Guardr operates in California only. All licensing follows CA BSIS rules.</p>
                   </div>
                   <div>
-                    <label className="uber-label block mb-2">Property type <span className="font-normal">(optional — select all that apply)</span></label>
+                    <label className="uber-label block mb-2">
+                      {clientKind === 'business' ? 'Site(s)' : 'Job site type'}{' '}
+                      <span className="font-normal">(optional — does not change who is billed)</span>
+                    </label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {(clientKind === 'personal' ? PERSONAL_PROPERTY_TYPE_OPTIONS : PROPERTY_TYPE_OPTIONS).map((opt) => (
+                      {PROPERTY_TYPE_OPTIONS.map((opt) => (
                         <button
                           key={opt}
                           type="button"

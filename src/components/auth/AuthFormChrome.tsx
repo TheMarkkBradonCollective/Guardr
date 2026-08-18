@@ -55,10 +55,10 @@ export function AuthFormHeader({
             : 'Client workspace';
 
   const clientSignupSubtitle = isPersonalClient
-    ? 'Hire licensed guards for your home, event, or private coverage.'
+    ? 'You hire and pay as an individual. Coverage can still be at a venue, home, or other site.'
     : isBusinessClient
-      ? 'Post jobs, browse guards, and manage site coverage from your dashboard.'
-      : 'Post jobs, browse guards, and manage site coverage from your dashboard.';
+      ? 'Your organization hires and pays. You can still post a private event if the business is the contracting party.'
+      : 'Post jobs, browse guards, and manage coverage from your dashboard.';
 
   const subtitle =
     variant === 'sheet'

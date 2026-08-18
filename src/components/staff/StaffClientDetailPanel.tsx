@@ -18,7 +18,7 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
-import { clientAccountKindLabel, clientDisplayName } from '../../lib/clientAccountKind';
+import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -146,7 +146,7 @@ export function StaffClientDetailPanel({
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
-            <WfBadge>{clientAccountKindLabel(client.accountKind)}</WfBadge>
+            <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
             {client.trusted && <WfBadge tone="primary">Trusted</WfBadge>}
             {client.rating != null && (
               <WfBadge className="inline-flex items-center gap-1">

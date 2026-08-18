@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
-import { clientDisplayName } from '../../lib/clientAccountKind';
+import { clientDisplayName } from '../../lib/clientType';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import { getClientAccountStatus } from '../../lib/accountStatus';
 import {

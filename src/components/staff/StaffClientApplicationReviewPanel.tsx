@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Client } from '../../types';
-import { clientAccountKindLabel, clientDisplayName } from '../../lib/clientAccountKind';
+import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { Mail, Phone } from 'lucide-react';
@@ -108,7 +108,7 @@ export function StaffClientApplicationReviewPanel({
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
-            <WfBadge>{clientAccountKindLabel(client.accountKind)}</WfBadge>
+            <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
           </div>
         </div>
       </div>

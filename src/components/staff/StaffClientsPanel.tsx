@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Building2, Search } from 'lucide-react';
 import { Client, SecurityRequest, SessionUser } from '../../types';
-import { clientAccountKindLabel, clientDisplayName } from '../../lib/clientAccountKind';
+import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -135,7 +135,7 @@ export function StaffClientsPanel({
           <>
             <p className="uber-workbench-table-primary">{clientDisplayName(client)}</p>
             <p className="uber-workbench-table-secondary">
-              {clientAccountKindLabel(client.accountKind)} · {client.email}
+              {clientTypeLabel(client.clientType)} · {client.email}
             </p>
           </>
         ),

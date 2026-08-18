@@ -38,17 +38,23 @@ describe('auth role choice URLs', () => {
   });
 
   it('parses personal vs business client sign-up', () => {
+    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ct=personal'), {
+      role: 'client',
+      authView: 'sign-up',
+      authRole: 'client',
+      authClientType: 'personal',
+    });
+    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ct=business'), {
+      role: 'client',
+      authView: 'sign-up',
+      authRole: 'client',
+      authClientType: 'business',
+    });
     assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ck=personal'), {
       role: 'client',
       authView: 'sign-up',
       authRole: 'client',
-      authClientKind: 'personal',
-    });
-    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ck=business'), {
-      role: 'client',
-      authView: 'sign-up',
-      authRole: 'client',
-      authClientKind: 'business',
+      authClientType: 'personal',
     });
   });
 });

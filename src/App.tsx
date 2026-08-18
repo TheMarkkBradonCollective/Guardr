@@ -35,7 +35,7 @@ import {
   AssignmentMode,
   DifferentialPayRates,
   UserNotification,
-  ClientAccountKind,
+  ClientType,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
@@ -92,8 +92,8 @@ import { AuthRoleChoicePage } from './components/auth/AuthRoleChoicePage';
 import {
   clientDisplayName,
   clientWorkspaceLabel,
-  normalizeClientAccountKind,
-} from './lib/clientAccountKind';
+  normalizeClientType,
+} from './lib/clientType';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { AccountMenu, type AccountMenuNotificationProps } from './components/layouts/AccountMenu';
@@ -669,8 +669,8 @@ export default function App() {
   const [authSignupPick, setAuthSignupPick] = useState<AuthSignupPick | null>(
     () => readAuthSignupPickFromWindow()
   );
-  const [initialClientKind, setInitialClientKind] = useState<ClientAccountKind>(
-    () => readAppRouteFromWindow()?.authClientKind ?? 'business'
+  const [initialClientType, setInitialClientType] = useState<ClientType>(
+    () => readAppRouteFromWindow()?.authClientType ?? 'business'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [downloadPageOpen, setDownloadPageOpen] = useState(false);
@@ -1646,7 +1646,7 @@ export default function App() {
         role: 'client',
         authView: initialAuthMode,
         authRole: role,
-        authClientKind: role === 'client' ? initialClientKind : undefined,
+        authClientType: role === 'client' ? initialClientType : undefined,
       },
       true
     );
@@ -1659,25 +1659,25 @@ export default function App() {
         role: 'client',
         authView: mode,
         authRole: initialAuthRole,
-        authClientKind: initialAuthRole === 'client' ? initialClientKind : undefined,
+        authClientType: initialAuthRole === 'client' ? initialClientType : undefined,
       },
       true
     );
   };
 
-  const openAuthView = (role: AuthViewRole, mode: AuthViewMode, clientKind?: ClientAccountKind) => {
-    const kind = role === 'client' && mode === 'sign-up' ? normalizeClientAccountKind(clientKind) : undefined;
+  const openAuthView = (role: AuthViewRole, mode: AuthViewMode, clientKind?: ClientType) => {
+    const kind = role === 'client' && mode === 'sign-up' ? normalizeClientType(clientKind) : undefined;
     setAuthChoiceMode(null);
     setAuthSignupPick(null);
     setInitialAuthRole(role);
     setInitialAuthMode(mode);
-    if (kind) setInitialClientKind(kind);
+    if (kind) setInitialClientType(kind);
     setIsAuthView(true);
     syncAppRoute({
       role: 'client',
       authView: mode,
       authRole: role,
-      authClientKind: kind,
+      authClientType: kind,
     });
   };
 
@@ -1911,7 +1911,7 @@ export default function App() {
         setIsAuthView(true);
         setInitialAuthRole(route.authRole ?? 'client');
         setInitialAuthMode(route.authView);
-        if (route.authClientKind) setInitialClientKind(route.authClientKind);
+        if (route.authClientType) setInitialClientType(route.authClientType);
         if (options.source !== 'popstate') {
           syncAppRoute(route, true);
         }
@@ -2582,7 +2582,7 @@ export default function App() {
         return {
         id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email,
         companyName: c.company_name, phone: c.phone, avatar: c.avatar,
-        accountKind: normalizeClientAccountKind(c.account_kind),
+        clientType: normalizeClientType(c.client_type),
         totalRequests: c.total_requests || 0,
         approved: c.account_status === 'active' || (c.approved ?? false),
         accountStatus: c.account_status || (c.approved === false ? 'suspended' : 'active'),
@@ -4373,7 +4373,7 @@ export default function App() {
       // Intake fields — written in a separate update so a missing migration
       // column never breaks the core sign-up flow
       const intakePayload: Record<string, unknown> = {
-        account_kind: client.accountKind ?? 'business',
+        client_type: client.clientType ?? 'business',
         business_type: client.businessType ?? null,
         industries: client.industries ?? null,
         business_license: client.businessLicense ?? null,
@@ -5869,7 +5869,7 @@ export default function App() {
     email: string;
     companyName?: string;
     phone?: string;
-    accountKind?: ClientAccountKind;
+    clientType?: ClientType;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
@@ -5887,8 +5887,8 @@ export default function App() {
       middleName: normalized.middleName,
       lastName: normalized.lastName,
       email: input.email.trim(),
-      companyName: input.companyName?.trim() || (input.accountKind === 'personal' ? '' : normalized.name),
-      accountKind: input.accountKind ?? 'business',
+      companyName: input.companyName?.trim() || (input.clientType === 'personal' ? '' : normalized.name),
+      clientType: input.clientType ?? 'business',
       phone: input.phone?.trim() || '',
       avatar: '',
       totalRequests: 0,
@@ -5923,10 +5923,10 @@ export default function App() {
       try {
         await supabase
           .from('clients')
-          .update({ account_kind: newClient.accountKind ?? 'business' })
+          .update({ client_type: newClient.clientType ?? 'business' })
           .eq('id', newClient.id);
       } catch {
-        /* account_kind column may not exist yet */
+        /* client_type column may not exist yet */
       }
     }
     setStoredPassword(emailLower, { password, mustChangePassword, role: 'client' });
@@ -12758,7 +12758,7 @@ export default function App() {
             onNavigateToAuth={navigateToAuth}
             onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
             onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-            onSelectClientKind={(kind) => openAuthView('client', 'sign-up', kind)}
+            onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
             onOpenGuide={openPublicGuide}
             onBack={closeAuthChoice}
           />
@@ -12784,7 +12784,7 @@ export default function App() {
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
-            initialClientKind={initialClientKind}
+            initialClientType={initialClientType}
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             presentation="page"
@@ -12805,7 +12805,7 @@ export default function App() {
               onNavigateToAuth={navigateToAuth}
               onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
               onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-              onSelectClientKind={(kind) => openAuthView('client', 'sign-up', kind)}
+              onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
               onOpenGuide={openPublicGuide}
               onBack={closeAuthChoice}
             />
@@ -12832,7 +12832,7 @@ export default function App() {
               onAuthRoleChange={setAuthViewRole}
               initialRole={initialAuthRole}
               initialMode={initialAuthMode}
-              initialClientKind={initialClientKind}
+              initialClientType={initialClientType}
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
               presentation="page"

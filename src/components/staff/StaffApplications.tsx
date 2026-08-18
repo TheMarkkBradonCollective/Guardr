@@ -18,7 +18,7 @@ import {
 } from '../../lib/staffListFilters';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
-import { clientDisplayName } from '../../lib/clientAccountKind';
+import { clientDisplayName } from '../../lib/clientType';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';

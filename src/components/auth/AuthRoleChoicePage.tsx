@@ -1,11 +1,11 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
-import { ArrowRight, Briefcase, Building2, Home, Shield, User } from 'lucide-react';
+import { ArrowRight, Briefcase, Building2, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
 import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
-import type { ClientAccountKind } from '../../types';
+import type { ClientType } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { FONT_DISPLAY } from '../../theme/typography';
@@ -34,7 +34,7 @@ const SIGN_IN_OPTIONS: ChoiceOption[] = [
     id: 'client',
     icon: User,
     title: 'Log in as client',
-    description: 'Personal or business — post coverage and manage sites.',
+    description: 'Personal or business — whoever is hiring and paying for coverage.',
   },
   {
     id: 'staff',
@@ -49,7 +49,8 @@ const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
     id: 'client',
     icon: User,
     title: 'I need security',
-    description: 'Hire licensed guards for a home, event, or business site. Not a job application to Guardr.',
+    description:
+      'Hire licensed guards as yourself or as a company. Not a job application to Guardr.',
   },
   {
     id: 'work',
@@ -62,15 +63,17 @@ const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
 const SIGNUP_CLIENT_KIND_OPTIONS: ChoiceOption[] = [
   {
     id: 'personal',
-    icon: Home,
+    icon: User,
     title: 'Personal',
-    description: 'Home, private events, and coverage you are hiring for yourself.',
+    description:
+      'You are hiring and paying as yourself — protection, a private event, residential coverage, or help for a family member. The job can still be at a venue or business site.',
   },
   {
     id: 'business',
     icon: Building2,
     title: 'Business',
-    description: 'Companies, venues, properties, and ongoing site coverage.',
+    description:
+      'A company, venue, or organization is the contracting party and pays the invoice. You can still post a private event if the business is hiring.',
   },
 ];
 
@@ -109,8 +112,9 @@ const COPY: Record<
     kicker: 'Create an account',
   },
   client: {
-    heading: 'Personal or business?',
-    subheading: 'Choose how you will hire security. Either account can post jobs and manage coverage.',
+    heading: 'Who is hiring?',
+    subheading:
+      'This is the person or organization that contracts and pays for coverage — not the type of location.',
     ariaLabel: 'Choose personal or business',
     kicker: 'I need security',
   },
@@ -229,7 +233,7 @@ interface AuthRoleChoicePageProps {
   onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
   onSelectRole: (role: AuthViewRole) => void;
   onSelectSignupPath?: (path: 'client' | 'work') => void;
-  onSelectClientKind?: (kind: ClientAccountKind) => void;
+  onSelectClientType?: (kind: ClientType) => void;
   onOpenGuide?: () => void;
   onBack?: () => void;
 }
@@ -246,7 +250,7 @@ export function AuthRoleChoicePage({
   onNavigateToAuth: _onNavigateToAuth,
   onSelectRole,
   onSelectSignupPath,
-  onSelectClientKind,
+  onSelectClientType,
   onOpenGuide: _onOpenGuide,
   onBack,
 }: AuthRoleChoicePageProps) {
@@ -269,7 +273,7 @@ export function AuthRoleChoicePage({
       return;
     }
     if (signupStep === 'client') {
-      if (id === 'personal' || id === 'business') onSelectClientKind?.(id);
+      if (id === 'personal' || id === 'business') onSelectClientType?.(id);
       return;
     }
     if (id === 'guard' || id === 'staff') onSelectRole(id);

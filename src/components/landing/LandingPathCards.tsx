@@ -68,7 +68,7 @@ export function LandingPathCards({ onNavigateToAuth, layout }: LandingPathCardsP
               I need security
             </Block>
             <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
-              Post coverage for a home, event, or business site — hire on the marketplace.
+              Hire as yourself or as a company — whoever pays is the client, not the type of location.
             </ParagraphMedium>
           </Block>
           <AccentIcon icon={Building2} size={22} strokeWidth={1.75} />

@@ -9,7 +9,7 @@ import type {
   SessionUser,
 } from '../../types';
 import { canReviewJobRequests } from '../../lib/permissions';
-import { clientDisplayName } from '../../lib/clientAccountKind';
+import { clientDisplayName } from '../../lib/clientType';
 import {
   JOB_LOCATION_STATUS_LABELS,
   LOCATION_RISK_OPTIONS,

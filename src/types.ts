@@ -211,8 +211,8 @@ export type GuardSpecialty = (typeof GUARD_SPECIALTY_OPTIONS)[number];
 export type GuardCardStatus = 'active' | 'in_progress' | 'none';
 export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
 
-/** How a client hires coverage — chosen during sign-up. */
-export type ClientAccountKind = 'personal' | 'business';
+/** Who is hiring and paying — the contracting party, not the job site type. */
+export type ClientType = 'personal' | 'business';
 
 /** A client account — stored separately from guards */
 export interface Client {
@@ -223,8 +223,8 @@ export interface Client {
   lastName?: string;
   email: string;
   companyName: string;
-  /** Personal (home/events) vs business (companies/sites). Defaults to business for legacy rows. */
-  accountKind?: ClientAccountKind;
+  /** Personal (individual pays) vs business (organization pays). Defaults to business for legacy rows. */
+  clientType?: ClientType;
   phone: string;
   avatar: string;
   totalRequests: number;

@@ -1,7 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
-import type { ClientAccountKind, SecurityGuard } from '../types';
-import { isClientAccountKind } from './clientAccountKind';
+import type { ClientType, SecurityGuard } from '../types';
+import { isClientType } from './clientType';
 import { isGuardAccountApproved, isGuardUserStatusActive } from './accountStatus';
 import type { GuardJobsBrowseTab } from './guardJobsBrowse';
 import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
@@ -97,8 +97,8 @@ export interface AppRoute {
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
-  /** Client sign-up — personal vs business. */
-  authClientKind?: ClientAccountKind;
+  /** Client sign-up — personal vs business contracting party. */
+  authClientType?: ClientType;
 }
 
 const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
@@ -247,7 +247,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const guardJobId = searchParams.get('gj');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
-  const authClientKind = searchParams.get('ck');
+  const authClientType = searchParams.get('ct') ?? searchParams.get('ck');
 
   if (staffGuardId) nested.staffGuardId = staffGuardId;
   if (staffClientId) nested.staffClientId = staffClientId;
@@ -303,7 +303,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const isAuthChoice = AUTH_CHOICE_PICKS.has(searchParams.get('pick') ?? '');
   if (!isAuthChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
-  if (isClientAccountKind(authClientKind)) nested.authClientKind = authClientKind;
+  if (isClientType(authClientType)) nested.authClientType = authClientType;
 
   return nested;
 }
@@ -335,7 +335,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.guardJobId) params.set('gj', route.guardJobId);
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
-  if (route.authClientKind) params.set('ck', route.authClientKind);
+  if (route.authClientType) params.set('ct', route.authClientType);
   return params;
 }
 

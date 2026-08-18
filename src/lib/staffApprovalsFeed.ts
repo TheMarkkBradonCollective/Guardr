@@ -1,5 +1,5 @@
 import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
-import { clientDisplayName } from './clientAccountKind';
+import { clientDisplayName } from './clientType';
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { certDisplayName } from './certCatalog';
