@@ -3,7 +3,6 @@ import { Bell, ChevronLeft, ChevronRight, Circle, type LucideIcon } from 'lucide
 import { buildMobileNavigation, type SurfaceDestination } from '../surfaceNavigation';
 import { MobileBottomTabs } from './kit/MobileBottomTabs';
 import { MobileSheet } from './kit/MobileSheet';
-import { MobileFab } from './kit/MobileControls';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
 import type { AccountMenuProps } from '../../components/layouts/AccountMenu';
 
@@ -13,7 +12,8 @@ import type { AccountMenuProps } from '../../components/layouts/AccountMenu';
  * Structure: a 56px header band, an edge-to-edge scrolling canvas, and a fixed
  * bottom tab bar inside the safe area. Overflow destinations live in a bottom
  * sheet from the "More" tab. Account is a sheet opened from the avatar. There
- * is no sidebar and no hamburger of primary destinations.
+ * is no sidebar, no hamburger of primary destinations, and no shell FAB —
+ * primary actions stay on the page so they never cover a scrolling list.
  *
  * This shell shares nothing structural with the tablet or desktop shells.
  */
@@ -29,7 +29,6 @@ export function MobileAppShell({
   navFooter,
   headerOverride,
   headerExtension,
-  primaryAction,
   hideChrome = false,
   hidePrimaryNav = false,
   bleed = false,
@@ -58,7 +57,8 @@ export function MobileAppShell({
   );
 
   const showTabs = !hidePrimaryNav && navigation.tabs.length > 0;
-  const showFab = Boolean(primaryAction) && !bleed && !hidePrimaryNav && !hideChrome;
+  // Primary actions belong on the page (sticky bar, list CTA, map card). A
+  // shell FAB covers lists and duplicates those in-page controls.
 
   const accountSheet = isValidElement(accountMenu)
     ? cloneElement(accountMenu as React.ReactElement<AccountMenuProps>, {
@@ -122,14 +122,6 @@ export function MobileAppShell({
       <main className="sfm-shell-canvas" data-bleed={bleed ? 'true' : undefined}>
         {children}
       </main>
-
-      {showFab && primaryAction ? (
-        <MobileFab
-          label={primaryAction.label.replace(/^\+\s*/, '')}
-          onClick={primaryAction.onClick}
-          extended
-        />
-      ) : null}
 
       {showTabs ? (
         <MobileBottomTabs

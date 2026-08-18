@@ -293,7 +293,59 @@ html.theme-dark .uber-landing-trust-item svg { color: #fff; }
 /* Phone landing — same page as tablet, tuned so it fits and scrolls. */
 .uber-style-landing--mobile {
   overflow-x: clip;
-  padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+}
+
+.uber-landing-dock {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--uber-border, #eeeeee);
+  background: var(--uber-bg, #ffffff);
+}
+
+html.theme-dark .uber-landing-dock {
+  border-top-color: #2a2a2a;
+  background: #0a0a0a;
+}
+
+.uber-landing-dock-btn {
+  flex: 1;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.uber-landing-dock-btn:active {
+  transform: scale(0.98);
+}
+
+.uber-landing-dock-btn--primary {
+  border: none;
+  background: #000000;
+  color: #ffffff;
+}
+
+html.theme-dark .uber-landing-dock-btn--primary {
+  background: #ffffff;
+  color: #000000;
+}
+
+.uber-landing-dock-btn--secondary {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
 }
 
 .uber-style-landing--mobile .uber-landing-nav {

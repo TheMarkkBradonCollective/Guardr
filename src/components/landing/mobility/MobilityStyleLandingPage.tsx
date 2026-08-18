@@ -188,6 +188,25 @@ export function MobilityStyleLandingPage({
           </Block>
         </Block>
       </Block>
+
+      {isMobile ? (
+        <nav className="uber-landing-dock" aria-label="Get started">
+          <button
+            type="button"
+            className="uber-landing-dock-btn uber-landing-dock-btn--primary"
+            onClick={() => onNavigateToAuth('client', 'sign-up')}
+          >
+            Post a job
+          </button>
+          <button
+            type="button"
+            className="uber-landing-dock-btn uber-landing-dock-btn--secondary"
+            onClick={() => onNavigateToAuth('guard', 'sign-up')}
+          >
+            Find work
+          </button>
+        </nav>
+      ) : null}
     </Block>
   );
 }

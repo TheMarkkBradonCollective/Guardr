@@ -108,7 +108,9 @@ not a title.
 The mobile surface is a thumb-first phone app: a 56px header (account avatar +
 title), an edge-to-edge scrolling canvas, a fixed bottom tab bar, and bottom
 sheets for overflow destinations and account. There is no hamburger drawer of
-primary destinations and no desktop sidebar scaled down.
+primary destinations, no desktop sidebar scaled down, and no shell floating
+action button. Page-level primary actions stay on the screen (sticky action bar,
+list CTA, or map card) so they never cover a scrolling list.
 
 Production mobile mounts `MobileAppShell` via `SurfaceAppShell` — the same router
 tablet and desktop use for their independent shells. `GuardrDrawerShell` is not

@@ -1646,3 +1646,245 @@ body[data-surface='mobile'] .uber-app-shell.mobility-shell .mobility-content-inn
     --mobility-header-h: 44px;
   }
 }
+
+/* ============================================================================
+   Second-pass phone sculpture — screens inside MobileAppShell
+   ============================================================================
+   Chrome is already native. These rules finish the screens themselves: one
+   title (the header band), thumb-sized filters, monochrome status, map cards
+   that sit above the tab bar, and lists that never hide behind chrome.
+   ========================================================================= */
+
+/* The shell header already names the screen. In-page heroes that repeat the
+   same word are hidden; contextual kickers and greetings stay. */
+body[data-surface='mobile'] .sfm-shell .guard-jobs-hero-name,
+body[data-surface='mobile'] .sfm-shell .staff-overview-pro-title {
+  display: none;
+}
+
+body[data-surface='mobile'] .sfm-shell .guard-tier-hero-glow {
+  display: none;
+}
+
+body[data-surface='mobile'] .sfm-shell .guard-jobs-tier-hero {
+  padding: 12px 16px 8px;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Filter strips become a pill segmented control — not desktop underline tabs. */
+body[data-surface='mobile'] .sfm-shell .app-inbox-tabs,
+body[data-surface='mobile'] .sfm-shell .staff-list-filter-tabs.app-inbox-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 8px 16px 12px;
+  padding: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 999px;
+  background: var(--sf-paper-sunken) !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tabs::-webkit-scrollbar,
+body[data-surface='mobile'] .sfm-shell .staff-list-filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab {
+  flex: 1 0 auto;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent !important;
+  color: var(--sf-ink-secondary) !important;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab::after {
+  display: none !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab-active,
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab.app-inbox-tab-active {
+  background: var(--sf-paper) !important;
+  color: var(--sf-ink) !important;
+  box-shadow: var(--sf-elev-1);
+  font-weight: 700;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab-badge {
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-tab-active .app-inbox-tab-badge {
+  background: var(--sf-ink);
+  color: var(--sf-ink-inverse);
+}
+
+/* Job-row status is labelled in type, then marked with ink/grey — never iOS rainbow. */
+body[data-surface='mobile'] .uber-job-row-badge,
+body[data-surface='mobile'] .uber-job-row-badge-open,
+body[data-surface='mobile'] .uber-job-row-badge-available,
+body[data-surface='mobile'] .uber-job-row-badge-live,
+body[data-surface='mobile'] .uber-job-row-badge-scheduled,
+body[data-surface='mobile'] .uber-job-row-badge-upcoming {
+  background: var(--sf-ink);
+  color: var(--sf-ink-inverse);
+}
+
+body[data-surface='mobile'] .uber-job-row-badge-direct {
+  background: var(--sf-paper-sunken);
+  color: var(--sf-ink);
+  box-shadow: inset 0 0 0 1px var(--sf-line-strong);
+}
+
+body[data-surface='mobile'] .uber-job-row-badge-completed,
+body[data-surface='mobile'] .uber-job-row-badge-past {
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink-secondary);
+}
+
+body[data-surface='mobile'] .uber-job-row-badge-missed,
+body[data-surface='mobile'] .uber-job-row-badge-cancelled {
+  background: transparent;
+  color: var(--sf-ink);
+  box-shadow: inset 0 0 0 1px var(--sf-ink);
+}
+
+body[data-surface='mobile'] .uber-job-row {
+  margin: 0 0 10px;
+  width: 100%;
+  min-height: var(--sf-row-h);
+  padding: 16px;
+  border-radius: var(--sf-radius-card);
+}
+
+/* Map selection sits as a card above the tab bar, not under it. */
+body[data-surface='mobile'] .sfm-shell .map-selection-layer,
+body[data-surface='mobile'] .sfm-shell .map-jobs-browse-sheet {
+  right: 12px;
+  bottom: calc(var(--sf-bottom-bar-h) + var(--sf-safe-bottom) + 8px);
+  left: 12px;
+}
+
+body[data-surface='mobile'] .sfm-shell .map-offer-card,
+body[data-surface='mobile'] .sfm-shell .map-jobs-browse-card,
+body[data-surface='mobile'] .sfm-shell .uber-map-sheet {
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid var(--sf-line);
+  box-shadow: var(--sf-elev-2);
+}
+
+body[data-surface='mobile'] .sfm-shell .map-offer-card-expanded {
+  max-height: min(78dvh, calc(100% - 12px));
+}
+
+body[data-surface='mobile'] .sfm-shell .map-offer-card-close {
+  width: 44px;
+  height: 44px;
+}
+
+body[data-surface='mobile'] .sfm-shell .leaflet-control-container .leaflet-bottom {
+  bottom: calc(var(--sf-bottom-bar-h) + var(--sf-safe-bottom) + 8px);
+}
+
+/* Inbox / message rows — thumb-sized, no hover-only chevrons. */
+body[data-surface='mobile'] .sfm-shell .app-inbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--sf-row-h);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--sf-line);
+}
+
+body[data-surface='mobile'] .sfm-shell .app-inbox-row-chevron {
+  display: block;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-subscreen-back {
+  min-height: var(--sf-target);
+  padding: 0 4px;
+  font-size: var(--sf-type-body);
+  font-weight: 600;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-subscreen-header {
+  padding: 4px 12px 8px;
+}
+
+/* Client home: greeting stays; quick actions stay two-up. */
+body[data-surface='mobile'] .sfm-shell .client-home-quick-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body[data-surface='mobile'] .sfm-shell .client-home-quick-tile {
+  min-height: 88px;
+}
+
+body[data-surface='mobile'] .sfm-shell .client-home-live-card,
+body[data-surface='mobile'] .sfm-shell .client-home-empty-live {
+  padding: 16px;
+  border-radius: var(--sf-radius-card);
+}
+
+body[data-surface='mobile'] .sfm-shell .client-home-stat-pill {
+  min-height: 56px;
+}
+
+/* Forms: labels on top, actions pinned above the tab bar. */
+body[data-surface='mobile'] .sfm-shell .app-form-actions > *,
+body[data-surface='mobile'] .sfm-shell .request-flow-footer > * {
+  min-height: var(--sf-button-h);
+}
+
+body[data-surface='mobile'] .sfm-shell [data-baseweb='select'] > div,
+body[data-surface='mobile'] .sfm-shell [data-baseweb='input'] > div,
+body[data-surface='mobile'] .sfm-shell [data-baseweb='textarea'] > div {
+  min-height: var(--sf-input-h);
+  font-size: 16px;
+}
+
+/* Empty / error states fill the canvas without looking like a desktop panel. */
+body[data-surface='mobile'] .sfm-shell .uber-jobs-empty,
+body[data-surface='mobile'] .sfm-shell .app-empty-state {
+  padding: 48px 24px calc(48px + var(--sf-safe-bottom));
+}
+
+body[data-surface='mobile'] .sfm-shell .uber-section-header {
+  margin: 8px 16px 10px;
+  color: var(--sf-ink-tertiary);
+  font-size: var(--sf-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-surface='mobile'] .uber-landing-dock {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  body[data-surface='mobile'] .uber-landing-dock-btn {
+    min-height: 44px;
+  }
+}
