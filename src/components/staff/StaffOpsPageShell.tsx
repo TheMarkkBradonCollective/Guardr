@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLayoutFormFactor } from '../../surfaces';
-import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface StaffOpsPageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -25,12 +24,10 @@ export function StaffOpsPageShell({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className={`uber-ops-page ${className}`.trim()} {...rest}>
-        {toolbar}
-        <WorkbenchPanel padding={false}>
-          <WorkbenchBody className="uber-ops-page-body">{children}</WorkbenchBody>
-        </WorkbenchPanel>
-      </WorkbenchPage>
+      <div className={`sfd-ops-page uber-ops-page ${className}`.trim()} {...rest}>
+        {toolbar ? <div className="sfd-ops-page-toolbar">{toolbar}</div> : null}
+        <div className="sfd-ops-page-body uber-ops-page-body">{children}</div>
+      </div>
     );
   }
 

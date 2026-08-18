@@ -58,8 +58,6 @@ import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -767,27 +765,24 @@ export function StaffCredentials({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-roster-panel" data-tour="staff-credentials">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-credentials">
+        {filteredFeed.length === 0 ? (
+          <WorkbenchEmpty
+            icon={search ? Search : ShieldCheck}
+            message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
+          />
+        ) : (
           <WorkbenchSplit
             list={
-              filteredFeed.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : ShieldCheck}
-                  message={search.trim() ? 'No credentials match your search' : 'No credentials in this view'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={credentialColumns}
-                  rows={filteredFeed}
-                  rowKey={(item) => item.id}
-                  selectedKey={activeItemId ?? undefined}
-                  onRowClick={(item) => openItem(item.id)}
-                  caption="Credentials"
-                  cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
-                />
-              )
+              <GuardrDataTable
+                columns={credentialColumns}
+                rows={filteredFeed}
+                rowKey={(item) => item.id}
+                selectedKey={activeItemId ?? undefined}
+                onRowClick={(item) => openItem(item.id)}
+                caption="Credentials"
+                cardLayout={{ title: 'credential', subtitle: 'submitted', trailing: 'status' }}
+              />
             }
             detail={
               activeItem ? (
@@ -797,8 +792,8 @@ export function StaffCredentials({
               )
             }
           />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+        )}
+      </StaffOpsPageShell>
     );
   }
 

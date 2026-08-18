@@ -11,6 +11,7 @@ const DESKTOP_STYLE_FILES = [
   'desktop-auth.css',
   'desktop-workspace.css',
   'desktop-landing.css',
+  'desktop-command.css',
   'gr-direct-desktop.css',
 ];
 

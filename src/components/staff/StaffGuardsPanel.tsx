@@ -32,8 +32,6 @@ import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTab
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -340,27 +338,24 @@ export function StaffGuardsPanel({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-roster-panel">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel">
+        {filtered.length === 0 ? (
+          <WorkbenchEmpty
+            icon={search ? Search : Users}
+            message={search ? 'No guards match your search' : 'No guards on the roster'}
+          />
+        ) : (
           <WorkbenchSplit
             list={
-              filtered.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : Users}
-                  message={search ? 'No guards match your search' : 'No guards on the roster'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={guardColumns}
-                  rows={filtered}
-                  rowKey={(guard) => guard.id}
-                  selectedKey={selectedId ?? undefined}
-                  onRowClick={(guard) => setSelectedId(guard.id)}
-                  caption="Guards"
-                  cardLayout={{ title: 'guard', subtitle: 'rating', trailing: 'status' }}
-                />
-              )
+              <GuardrDataTable
+                columns={guardColumns}
+                rows={filtered}
+                rowKey={(guard) => guard.id}
+                selectedKey={selectedId ?? undefined}
+                onRowClick={(guard) => setSelectedId(guard.id)}
+                caption="Guards"
+                cardLayout={{ title: 'guard', subtitle: 'rating', trailing: 'status' }}
+              />
             }
             detail={
               selectedGuard ? (
@@ -378,8 +373,8 @@ export function StaffGuardsPanel({
               )
             }
           />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+        )}
+      </StaffOpsPageShell>
     );
   }
 

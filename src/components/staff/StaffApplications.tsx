@@ -37,8 +37,6 @@ import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
   WorkbenchEmpty,
-  WorkbenchPage,
-  WorkbenchPanel,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
 
@@ -627,27 +625,24 @@ export function StaffApplications({
 
   if (formFactor === 'desktop') {
     return (
-      <WorkbenchPage className="staff-roster-panel" data-tour="staff-applications">
-        {toolbar}
-        <WorkbenchPanel padding={false}>
+      <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
+        {visibleEntries.length === 0 ? (
+          <WorkbenchEmpty
+            icon={search ? Search : UserCheck}
+            message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
+          />
+        ) : (
           <WorkbenchSplit
             list={
-              visibleEntries.length === 0 ? (
-                <WorkbenchEmpty
-                  icon={search ? Search : UserCheck}
-                  message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
-                />
-              ) : (
-                <GuardrDataTable
-                  columns={applicationColumns}
-                  rows={visibleEntries}
-                  rowKey={applicationListKey}
-                  selectedKey={activeItemKey ?? undefined}
-                  onRowClick={(entry) => setSelection(entry)}
-                  caption="Applications"
-                  cardLayout={{ title: 'applicant', subtitle: 'submitted', trailing: 'status' }}
-                />
-              )
+              <GuardrDataTable
+                columns={applicationColumns}
+                rows={visibleEntries}
+                rowKey={applicationListKey}
+                selectedKey={activeItemKey ?? undefined}
+                onRowClick={(entry) => setSelection(entry)}
+                caption="Applications"
+                cardLayout={{ title: 'applicant', subtitle: 'submitted', trailing: 'status' }}
+              />
             }
             detail={
               activeEntry ? (
@@ -657,8 +652,8 @@ export function StaffApplications({
               )
             }
           />
-        </WorkbenchPanel>
-      </WorkbenchPage>
+        )}
+      </StaffOpsPageShell>
     );
   }
 

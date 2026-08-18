@@ -30,6 +30,7 @@ import './styles/surface-foundation.css';
 import './styles/surface-mobile.css';
 import './styles/surface-tablet.css';
 import './styles/surface-desktop.css';
+import './styles/desktop-command.css';
 import './styles/gr-tokens.css';
 import './styles/gr-surfaces.css';
 import './styles/gr-mobility.css';

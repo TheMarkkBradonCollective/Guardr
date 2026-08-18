@@ -87,7 +87,7 @@ export function ListDetailLayout<T>({
 
   if (desktopView) {
     return (
-      <div className="h-full min-h-[60vh]">
+      <div className="h-full min-h-0">
         <DesktopPanelGroup
           primary={<div className={listScrollClassName}>{list}</div>}
           secondary={
