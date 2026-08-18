@@ -8,6 +8,7 @@ import {
   canManageStaffPermissions,
   getConfiguredStaffRolePermissions,
   getDefaultStaffRolePermissions,
+  isExecutiveOpsRole,
   staffRoleToPlatformRole,
   type Permission,
   type StaffRolePermissionOverrides,
@@ -16,6 +17,8 @@ import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
+import { ClientCredentialLibraryEditor } from './ClientCredentialLibraryEditor';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
@@ -28,6 +31,7 @@ interface StaffPermissionsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
   onUpdateStaffPermissions?: (patch: StaffPermissionsPatch) => void | Promise<void>;
+  onUpdateClientCredentialRules?: (rules: ClientCredentialRuleOverride[]) => void | Promise<void>;
 }
 
 function groupCatalogBySection() {
@@ -134,9 +138,11 @@ export function StaffPermissionsPanel({
   currentUser,
   platformSettings,
   onUpdateStaffPermissions,
+  onUpdateClientCredentialRules,
 }: StaffPermissionsPanelProps) {
   const formFactor = useLayoutFormFactor();
   const canEdit = canManageStaffPermissions(currentUser);
+  const canEditCredentialLibrary = isExecutiveOpsRole(currentUser.role);
   const isDesktop = formFactor === 'desktop';
   const [activeRole, setActiveRole] = useState<StaffRole>('Moderator');
 
@@ -171,6 +177,16 @@ export function StaffPermissionsPanel({
     />
   );
 
+  const clientCredentialLibrary = onUpdateClientCredentialRules ? (
+    <ClientCredentialLibraryEditor
+      rules={platformSettings.clientCredentialRules ?? []}
+      canEdit={canEditCredentialLibrary}
+      saveMode="manual"
+      embedded
+      onChange={(rules) => void onUpdateClientCredentialRules(rules)}
+    />
+  ) : null;
+
   const permissionsSections = (
     <>
       <StaffMgmtSection title="Job posting review">
@@ -181,6 +197,16 @@ export function StaffPermissionsPanel({
         ) : null}
         {jobApprovalSettings}
       </StaffMgmtSection>
+      {clientCredentialLibrary ? (
+        <StaffMgmtSection title="Client credential library">
+          {!canEditCredentialLibrary ? (
+            <p className="text-xs text-brand-text-muted mb-3">
+              View-only — Manager access or above is required to edit the credential library.
+            </p>
+          ) : null}
+          {clientCredentialLibrary}
+        </StaffMgmtSection>
+      ) : null}
       <StaffMgmtSection title="Staff role permissions">
         {!canEdit ? (
           <p className="text-xs text-brand-text-muted mb-3">
@@ -224,6 +250,17 @@ export function StaffPermissionsPanel({
             ) : null}
             {jobApprovalSettings}
           </section>
+          {clientCredentialLibrary ? (
+            <section>
+              <h3 className="adm-card-title pb-3">Client credential library</h3>
+              {!canEditCredentialLibrary ? (
+                <p className="text-xs text-brand-text-muted mb-3">
+                  View-only — Manager access or above is required to edit the credential library.
+                </p>
+              ) : null}
+              {clientCredentialLibrary}
+            </section>
+          ) : null}
           <section>
             {!canEdit ? (
               <p className="text-xs text-brand-text-muted mb-3">
@@ -250,6 +287,17 @@ export function StaffPermissionsPanel({
           ) : null}
           <div className="px-4 sm:px-5 pb-6">{jobApprovalSettings}</div>
         </section>
+        {clientCredentialLibrary ? (
+          <section>
+            <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Client credential library</h3>
+            {!canEditCredentialLibrary ? (
+              <p className="text-xs text-brand-text-muted px-4 sm:px-5 mb-3">
+                View-only — Manager access or above is required to edit the credential library.
+              </p>
+            ) : null}
+            <div className="px-4 sm:px-5 pb-6">{clientCredentialLibrary}</div>
+          </section>
+        ) : null}
         <section>
           <h3 className="adm-card-title px-4 sm:px-5 pt-2 pb-3">Staff role permissions</h3>
           {!canEdit ? (

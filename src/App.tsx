@@ -8803,7 +8803,13 @@ export default function App() {
       }
       if (error) {
         console.error('Client credential library save error:', error);
-        appToast('Could not save credential library to the database.', 'error');
+        const needsMigration = /client_credential_rules/i.test(error.message ?? '');
+        appToast(
+          needsMigration
+            ? 'Could not save credential library — run the latest platform_settings migration in Supabase (client_credential_rules column).'
+            : 'Could not save credential library to the database.',
+          'error',
+        );
         return;
       }
     }

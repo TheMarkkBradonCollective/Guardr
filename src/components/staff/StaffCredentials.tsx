@@ -41,7 +41,6 @@ import { StaffGovIdReviewDetail } from './StaffGovIdReviewDetail';
 import { StaffActivationReviewDetail } from './StaffActivationReviewDetail';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { StaffClientCredentialReviewDetail } from './StaffClientCredentialReviewDetail';
-import { ClientCredentialLibraryEditor } from './ClientCredentialLibraryEditor';
 import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
@@ -67,7 +66,6 @@ interface StaffCredentialsProps {
   clients?: Client[];
   currentUser: SessionUser;
   clientCredentialRules?: ClientCredentialRuleOverride[];
-  onUpdateClientCredentialRules?: (rules: ClientCredentialRuleOverride[]) => void | Promise<void>;
   canVerifyCredentials: boolean;
   currentUserRole?: PlatformRole;
   initialItemId?: string | null;
@@ -178,7 +176,6 @@ export function StaffCredentials({
   guards,
   clients = [],
   clientCredentialRules = [],
-  onUpdateClientCredentialRules,
   canVerifyCredentials,
   currentUser,
   currentUserRole,
@@ -726,15 +723,6 @@ export function StaffCredentials({
             guards={guards}
             onAddCertification={onAddCertification}
             onCredentialAdded={(guardId) => onOpenGuardProfile?.(guardId)}
-          />
-        </div>
-      ) : null}
-      {audienceFilter === 'clients' && onUpdateClientCredentialRules ? (
-        <div className="staff-ops-cta-stack">
-          <ClientCredentialLibraryEditor
-            rules={clientCredentialRules}
-            canEdit={Boolean(currentUserRole && isExecutiveOpsRole(currentUserRole))}
-            onChange={(rules) => void onUpdateClientCredentialRules(rules)}
           />
         </div>
       ) : null}

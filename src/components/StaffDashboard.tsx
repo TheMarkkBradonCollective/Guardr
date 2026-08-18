@@ -928,7 +928,6 @@ export function StaffDashboard({
             guards={guards}
             clients={clients}
             clientCredentialRules={platformSettings.clientCredentialRules}
-            onUpdateClientCredentialRules={onUpdateClientCredentialRules}
             canVerifyCredentials={canVerifyGuardCredentials}
             currentUser={currentUser}
             currentUserRole={currentUser.role}
@@ -1336,6 +1335,7 @@ export function StaffDashboard({
             currentUser={currentUser}
             platformSettings={platformSettings}
             onUpdateStaffPermissions={onUpdateStaffPermissions}
+            onUpdateClientCredentialRules={onUpdateClientCredentialRules}
           />
         ) : (
           <AppBlockedAccessScreen

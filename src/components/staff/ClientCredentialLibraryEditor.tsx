@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { ClientType, JobType } from '../../types';
+import { AppButton } from '../ui/AppButton';
 import {
   catalogTypesForClientType,
   formatClientCredentialApplicableTo,
@@ -12,6 +13,10 @@ interface ClientCredentialLibraryEditorProps {
   rules: ClientCredentialRuleOverride[];
   onChange: (rules: ClientCredentialRuleOverride[]) => void;
   canEdit: boolean;
+  /** Immediate saves on every edit (legacy). Manual shows Save / Discard for large forms. */
+  saveMode?: 'immediate' | 'manual';
+  /** Hide the panel title when wrapped in StaffMgmtSection. */
+  embedded?: boolean;
 }
 
 function RequiredForEditor({
@@ -122,30 +127,69 @@ export function ClientCredentialLibraryEditor({
   rules,
   onChange,
   canEdit,
+  saveMode = 'immediate',
+  embedded = false,
 }: ClientCredentialLibraryEditorProps) {
+  const [draft, setDraft] = useState(rules);
+  const activeRules = saveMode === 'manual' ? draft : rules;
+  const dirty = useMemo(
+    () => saveMode === 'manual' && JSON.stringify(draft) !== JSON.stringify(rules),
+    [draft, rules, saveMode],
+  );
+
+  useEffect(() => {
+    setDraft(rules);
+  }, [rules]);
+
+  const handleRulesChange = (next: ClientCredentialRuleOverride[]) => {
+    if (saveMode === 'manual') {
+      setDraft(next);
+      return;
+    }
+    onChange(next);
+  };
+
   return (
     <div className="space-y-5">
-      <div>
-        <p className="text-sm font-semibold">Client credential library</p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+      {embedded ? null : (
+        <div>
+          <p className="text-sm font-semibold">Client credential library</p>
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            Credential name → applicable to → required for. Government ID stays required. Licenses and
+            permits are selected per service so clients are not asked for documents they do not need.
+          </p>
+        </div>
+      )}
+      {embedded ? (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
           Credential name → applicable to → required for. Government ID stays required. Licenses and
           permits are selected per service so clients are not asked for documents they do not need.
         </p>
-      </div>
+      ) : null}
       <LibraryGroup
         clientType="personal"
         title="Personal clients"
-        rules={rules}
-        onChange={onChange}
+        rules={activeRules}
+        onChange={handleRulesChange}
         canEdit={canEdit}
       />
       <LibraryGroup
         clientType="business"
         title="Business clients"
-        rules={rules}
-        onChange={onChange}
+        rules={activeRules}
+        onChange={handleRulesChange}
         canEdit={canEdit}
       />
+      {saveMode === 'manual' && canEdit && dirty ? (
+        <div className="flex flex-wrap gap-2 pt-1">
+          <AppButton variant="primary" size="sm" onClick={() => onChange(draft)}>
+            Save library
+          </AppButton>
+          <AppButton variant="outline" size="sm" onClick={() => setDraft(rules)}>
+            Discard
+          </AppButton>
+        </div>
+      ) : null}
     </div>
   );
 }

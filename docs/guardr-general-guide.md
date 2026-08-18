@@ -1393,7 +1393,7 @@ Credential verification queue for **guards, staff, and clients**. Approve or rej
 
 **Staff government ID** always appears in this queue. Verified-without-photos shows as **Pending upload** until front, back, and selfie are on file.
 
-**Clients tab:** review client library uploads. Manager+ can open **Client credential library** to set Applicable To and Required For (which job types need which document). Personal government ID and business representative ID stay always-required.
+**Clients tab:** review client library uploads. Manager+ can edit the **Client credential library** under **Permissions** (Applicable To and Required For per job type). Personal government ID and business representative ID stay always-required.
 
 **Add credential** (Administrator+, **Guards** tab): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
 
